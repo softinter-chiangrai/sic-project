@@ -1,0 +1,134 @@
+<sic-sidebar>
+    <router-outlet></router-outlet>
+    <sic-stepper
+        [steps]="steps"
+        [(activeStep)]="currentStep"
+        (stepSkip)="onStepSkip()"
+        (finish)="onStepperFinish()">
+        <ng-template sicStep>
+            @if (gridPanelComponent && gridPanelTemplateDirective) {
+                <ng-container></ng-container>
+            }
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="space-y-3">
+                    <sic-input
+                    label="Email"
+                    type="email"
+                    [formControl]="inputMail"
+                    [errorMessages]="{
+                        required: 'Email is required',
+                        email: 'Email format is invalid'
+                    }"></sic-input>
+                    <sic-number 
+                        label="Amount" 
+                        [formControl]="amount"
+                    ></sic-number>
+                    <sic-combobox
+                        label="Combobox"
+                        [apiUrl]="apiCombobox"
+                        [paging]="true"
+                        [pageSize]="10"
+                        [params]="{ isActive: true }"
+                        valueField="id"
+                        textField="messageEn"
+                        [formControl]="comboId">
+                    </sic-combobox>
+                    <sic-datepicker
+                        label="Select Date"
+                        placeholder="Choose a date"
+                        dateFormat="D MMMM YYYY"
+                        [maxDate]="maxDate"
+                        [clearable]="true"
+                        [formControl]="date">
+                    </sic-datepicker>
+                    <sic-timepicker
+                        label="Select Time"
+                        placeholder="Choose a time"
+                        [formControl]="time"
+                        >
+                    </sic-timepicker>
+                    <sic-checkbox 
+                        [formControl]="checkbox"
+                        label="Remember me"
+                        [checkedValue]="1"
+                        [uncheckedValue]="0" >
+                    </sic-checkbox>
+                    <sic-colorpicker
+                        label="Select Color"
+                        placeholder="Choose a color"
+                        [formControl]="color"
+                    ></sic-colorpicker>
+                    <sic-input-area
+                        label="Description"
+                        placeholder="Enter your description"
+                        [rows]="4"
+                        [formControl]="textarea"
+                        [errorMessages]="{ required: 'Description is required', minlength: 'Must be at least 10 characters' }">
+                    </sic-input-area>
+                    <sic-radio
+                        label="Confirm"
+                        direction="vertical"
+                        [apiUrl]="apiRadio"
+                        [formControl]="answer">
+                    </sic-radio>
+                    <sic-upload
+                        label="Attachments"
+                        [multiple]="true"
+                        [visibility]="1"
+                        [formControl]="uploads"
+                        [uploadGroupId]="uploadGroupId.value"
+                        [helperText]="'Upload documents, images, and videos in the same field'"
+                        [errorMessages]="{ required: 'Please upload at least one file' }">
+                    </sic-upload>
+                    <sic-gridpanel
+                        [config]="gridConfig"
+                        (rowsChange)="onGridRowsChange($event)"
+                        (rowAction)="onGridAction($event)">
+                        <ng-template sicGridPanelTemplate="statusPill" let-row>
+                            <span class="feature-grid-status"
+                                [class.feature-grid-status--active]="row.isActive"
+                                [class.feature-grid-status--inactive]="!row.isActive">
+                                {{ row.isActive ? 'Active' : 'Inactive' }}
+                            </span>
+                        </ng-template>
+                    </sic-gridpanel>
+
+                    <!-- Business Chart Section -->
+                    <sic-organizational-chart
+                            [root]="organizationData()"
+                            (dataChanged)="onBusinessChartDataChanged($event)">
+                    </sic-organizational-chart>
+
+                    <sic-task
+                        label="Task Calendar"
+                        [config]="taskConfig"
+                        (tasksChange)="onCalendarTasksChange($event)">
+                    </sic-task>
+                    <sic-button type="submit">Submit</sic-button>
+                </div>
+            </form>
+        </ng-template>
+
+        <ng-template sicStep>
+            <div class="space-y-3">
+                <h2 class="text-lg font-semibold text-[var(--text-active)]">Review</h2>
+                <p class="text-sm text-[var(--text)]">Let users confirm the information before moving forward.</p>
+            </div>
+        </ng-template>
+
+        <ng-template sicStep>
+            <div class="space-y-3">
+                <h2 class="text-lg font-semibold text-[var(--text-active)]">Done</h2>
+                <p class="text-sm text-[var(--text)]">Show success or the next recommended action here.</p>
+            </div>
+        </ng-template>
+
+        <ng-template sicStep>
+            <div class="space-y-3">
+                <h2 class="text-lg font-semibold text-[var(--text-active)]">Done</h2>
+                <p class="text-sm text-[var(--text)]">Show success or the next recommended action here.</p>
+            </div>
+        </ng-template>
+    </sic-stepper>
+</sic-sidebar>

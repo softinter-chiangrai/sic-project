@@ -1,0 +1,66 @@
+<div class="sic-task" [attr.data-disabled]="disabled ? 'true' : null">
+  @if (label) {
+    <span class="sic-task__label">{{ label }}</span>
+  }
+
+  <div class="sic-task__toolbar">
+    <div class="sic-task__range">
+      @if (visibleRangeLabel) {
+        <span>{{ visibleRangeLabel }}</span>
+      } @else {
+        <span>Select a month to load tasks</span>
+      }
+    </div>
+  </div>
+
+  <sic-calendar
+    [tasks]="tasks"
+    [disabled]="disabled || loading || saving"
+    [readonly]="readonly"
+    [hint]="calendarHint"
+    [minDate]="minDate"
+    [maxDate]="maxDate"
+    [emptyStateTitle]="emptyStateTitle"
+    [emptyStateDescription]="emptyStateDescription"
+    (tasksChange)="onCalendarTasksChange($event)"
+    (taskAdded)="taskAdded.emit($event)"
+    (taskRemoved)="taskRemoved.emit($event)"
+    (taskSelected)="taskSelected.emit($event)"
+    (viewRangeChange)="onViewRangeChange($event)">
+    <div sicCalendarToolbarLeft class="sic-task__calendar-toolbar-left">
+      @if (loading) {
+        <span class="sic-task__status">Loading...</span>
+      }
+
+      <button
+        type="button"
+        class="sic-task__toolbar-button sic-task__toolbar-button--warning sic-task__toolbar-button--icon"
+        [disabled]="!canResetChanges"
+        aria-label="Reset changes"
+        (click)="resetChanges()"
+        (keydown.enter)="resetChanges()">
+        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+      </button>
+
+      @if (config.saveApi) {
+        <button
+          type="button"
+          class="sic-task__toolbar-button sic-task__toolbar-button--primary sic-task__toolbar-button--icon"
+          [disabled]="!canSaveChanges"
+          [attr.aria-label]="saving ? 'Saving' : 'Save'"
+          (click)="saveChanges()"
+          (keydown.enter)="saveChanges()">
+          <svg class="sic-task__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 4h11l3 3v13H5z"></path>
+            <path d="M8 4v6h8"></path>
+            <path d="M8 18v-5h8v5"></path>
+          </svg>
+        </button>
+      }
+    </div>
+  </sic-calendar>
+
+  @if (errorMessage) {
+    <span class="sic-task__error">{{ errorMessage }}</span>
+  }
+</div>

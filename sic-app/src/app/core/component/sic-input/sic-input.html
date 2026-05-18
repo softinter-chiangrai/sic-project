@@ -1,0 +1,54 @@
+<label class="sic-input" [class.sic-input--invalid]="showError" [class.sic-input--disabled]="disabled">
+  @if (label) {
+    <span class="sic-input__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-input__required">*</span>
+      }
+    </span>
+  }
+
+  @if (mask) {
+    <input
+      class="sic-input__field"
+      [class.sic-input__field--invalid]="showError"
+      [type]="type"
+      [value]="value"
+      [placeholder]="placeholder"
+      [autocomplete]="autocomplete"
+      [readOnly]="readonly"
+      [required]="required"
+      [disabled]="disabled"
+      [attr.inputmode]="inputMode"
+      [mask]="mask"
+      [prefix]="prefix"
+      [suffix]="suffix"
+      [thousandSeparator]="thousandSeparator"
+      [dropSpecialCharacters]="dropSpecialCharacters"
+      [clearIfNotMatch]="clearIfNotMatch"
+      [showMaskTyped]="showMaskTyped"
+      [validation]="validation"
+      (input)="handleInput($event)"
+      (blur)="handleBlur()" />
+  } @else {
+    <input
+      class="sic-input__field"
+      [class.sic-input__field--invalid]="showError"
+      [type]="type"
+      [value]="value"
+      [placeholder]="placeholder"
+      [autocomplete]="autocomplete"
+      [readOnly]="readonly"
+      [required]="required"
+      [disabled]="disabled"
+      [attr.inputmode]="inputMode"
+      (input)="handleInput($event)"
+      (blur)="handleBlur()" />
+  }
+
+  @if (showError && errorMessage) {
+    <span class="sic-input__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-input__hint">{{ hint }}</span>
+  }
+</label>

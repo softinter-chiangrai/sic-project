@@ -1,0 +1,31 @@
+<header
+    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md">
+    <div class="flex items-center gap-4">
+        <div class="relative">
+            <div class="grid place-items-center">
+                <img routerLink="/" src="images/softinter_chiangrai.png" alt="บริษัท ซอฟต์อินเตอร์ เชียงราย จำกัด"
+                    class="h-12 w-full rounded-full object-cover cursor-pointer"
+                    [class.brightness-0]="isDark()"
+                    [class.invert]="isDark()"
+                    />
+            </div>
+        </div>
+    </div>
+    <div class="flex items-center gap-3">
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate ">
+            <img src="images/language.png" (click)="toggleLanguage()" alt="English"
+                class="h-9 w-9 object-contain rounded-full cursor-pointer" />
+        </div>
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate ">
+            <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
+                class="h-9 w-9 object-contain cursor-pointer" />
+        </div>
+        <div class="flex-initial" >
+            <sic-button variant="danger" (click)="logout()" >{{ 'COMMON.ALL.APP_SIGNOUT' | translate }}</sic-button>
+        </div>
+    </div>
+</header>
+
+<sic-container>
+    <router-outlet></router-outlet>
+</sic-container>

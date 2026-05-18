@@ -1,0 +1,145 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0 0.9rem;
+}
+
+.sic-radio__label {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sic-radio__required {
+  color: var(--crm-danger);
+  font-weight: 600;
+}
+
+.sic-radio__group {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.sic-radio__group.sic-radio__align-left {
+  justify-content: flex-start;
+}
+
+.sic-radio__group.sic-radio__align-center {
+  justify-content: center;
+}
+
+.sic-radio__group.sic-radio__align-right {
+  justify-content: flex-end;
+}
+
+.sic-radio__state {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.sic-radio--vertical .sic-radio__group {
+  flex-direction: column;
+}
+
+.sic-radio--horizontal .sic-radio__group {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.sic-radio__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sic-radio__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.sic-radio__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 1.35rem;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.sic-radio__dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--crm-primary);
+  transform: scale(0);
+  transition: transform 0.18s ease;
+}
+
+.sic-radio__input:checked + .sic-radio__control {
+  border-color: var(--crm-primary);
+}
+
+.sic-radio__input:checked + .sic-radio__control .sic-radio__dot {
+  transform: scale(1);
+}
+
+.sic-radio__input:focus + .sic-radio__control {
+  border-color: var(--crm-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+
+.sic-radio__input:hover:not(:disabled) + .sic-radio__control {
+  border-color: color-mix(in srgb, var(--crm-primary) 60%, var(--border));
+}
+
+.sic-radio__text {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.sic-radio__option[data-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sic-radio__input:disabled + .sic-radio__control {
+  background: color-mix(in srgb, var(--sidebar) 30%, var(--bg));
+}
+
+.sic-radio__input[aria-invalid='true'] + .sic-radio__control {
+  border-color: var(--crm-danger);
+}
+
+.sic-radio__hint {
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.3;
+}
+
+.sic-radio__error {
+  color: var(--crm-danger);
+  font-size: 0.77rem;
+  line-height: 1.3;
+}

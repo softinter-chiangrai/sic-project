@@ -1,0 +1,40 @@
+<div class="flex flex-wrap items-center justify-center content-center gap-6 p-4 min-h-[80dvh] font-sans box-border transition-colors duration-300">
+  
+  <!-- Create Business -->
+  <button  routerLink="create" class="flex flex-col items-center justify-center w-full max-w-[220px] aspect-square gap-4 
+                 bg-[var(--crm-primary)] text-white border-none rounded-[24px] cursor-pointer 
+                 transition-all duration-300 ease-out shadow-[0_10px_20px_-5px_rgba(41,194,150,0.4)]
+                 hover:scale-105 hover:brightness-110 active:scale-95">
+    
+    <div class="w-[25%] h-[25%] min-w-[50px] min-h-[50px] flex items-center justify-center rounded-full bg-white/25">
+      <svg class="w-1/2 h-1/2" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+    </div>
+
+    <div class="text-center px-[10px]">
+      <div class="font-bold text-[clamp(1.1rem,5vw,1.3rem)]">Create</div>
+      <div class="text-[0.85rem] text-white/90 mt-1">New Business</div>
+    </div>
+  </button>
+
+  <!-- Join Business (เปลี่ยนไอคอนเป็นรูปตึก) -->
+  <button routerLink="join" routerLinkActive="router-link-active"  class="flex flex-col items-center justify-center w-full max-w-[220px] aspect-square gap-4 
+                 bg-[var(--crm-warning)] text-white border-none rounded-[24px] cursor-pointer 
+                 transition-all duration-300 ease-out shadow-[0_10px_20px_-5px_rgba(245,158,11,0.4)]
+                 hover:scale-105 hover:brightness-110 active:scale-95">
+    
+    <div class="w-[25%] h-[25%] min-w-[50px] min-h-[50px] flex items-center justify-center rounded-full bg-white/25">
+      <!-- ไอคอนรูปตึก (Building Icon) -->
+      <svg class="w-1/2 h-1/2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+      </svg>
+    </div>
+
+    <div class="text-center px-[10px]">
+      <div class="font-bold text-[clamp(1.1rem,5vw,1.3rem)]">Join</div>
+      <div class="text-[0.85rem] text-white/90 mt-1">Existing Business</div>
+    </div>
+  </button>
+
+</div>

@@ -1,0 +1,163 @@
+<div class="sic-upload" [class.sic-upload--disabled]="disabled">
+  @if (label) {
+    <div class="sic-upload__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-upload__required">*</span>
+      }
+    </div>
+  }
+  <input
+    #fileInput
+    class="sic-upload__native-input"
+    type="file"
+    [accept]="resolvedAccept"
+    [multiple]="multiple"
+    [disabled]="disabled"
+    (change)="onFileSelection($event)" />
+
+  <button
+    type="button"
+    class="sic-upload__dropzone"
+    [class.sic-upload__dropzone--drag-active]="dragActive"
+    [class.sic-upload__dropzone--invalid]="showError"
+    [disabled]="disabled"
+    (click)="openPicker()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)">
+    <div class="sic-upload__dropzone-icon">+</div>
+    <div class="sic-upload__dropzone-copy">
+      <div class="sic-upload__dropzone-title">{{ emptyText }}</div>
+      <div class="sic-upload__dropzone-subtitle">{{ helperText }}</div>
+    </div>
+  </button>
+
+  @if (items.length) {
+    <div class="sic-upload__grid">
+      @for (item of items; track trackItem($index, item)) {
+        @if (!isSoftDeleted(item)) {
+          <article class="sic-upload__card" [attr.data-status]="item.status">
+            <div class="sic-upload__media">
+              @if (getPreviewUrl(item); as previewUrl) {
+                @if (isImageItem(item)) {
+                  <img class="sic-upload__preview" [src]="previewUrl" [alt]="item.fileName" loading="lazy" />
+                } @else if (isVideoItem(item)) {
+                  <video
+                    class="sic-upload__preview sic-upload__preview--video"
+                    [src]="previewUrl"
+                    [attr.aria-label]="item.fileName"
+                    preload="metadata"
+                    muted
+                    playsinline
+                    controls>
+                    <track [src]="emptyTrackSrc" kind="captions" srclang="en" label="Captions unavailable" default />
+                    <track [src]="emptyTrackSrc" kind="descriptions" srclang="en" label="Descriptions unavailable" />
+                  </video>
+                }
+              } @else {
+                <div class="sic-upload__placeholder">
+                  <i class="bi" [class]="'bi ' + getFileBadgeIcon(item)" aria-hidden="true"></i>
+                </div>
+              }
+
+              @if (shouldShowUploadState(item)) {
+                <div class="sic-upload__status-chip">{{ statusLabel(item) }}</div>
+              }
+
+              @if (item.result?.isStreaming) {
+                <div class="sic-upload__streaming-chip">Streaming</div>
+              }
+
+              @if (isDocumentItem(item)) {
+                <div class="sic-upload__type-chip">{{ getFileBadgeLabel(item) }}</div>
+              }
+            </div>
+
+            <div class="sic-upload__card-body">
+              <div class="sic-upload__card-head">
+                <div class="sic-upload__card-name" [title]="item.fileName">{{ item.fileName }}</div>
+
+                <div class="sic-upload__actions">
+                  @if (item.status === 'uploading') {
+                    <button
+                      type="button"
+                      class="sic-upload__action"
+                      aria-label="Pause upload"
+                      title="Pause upload"
+                      (click)="pauseUpload(item)">
+                      <i class="bi bi-pause-fill" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="sic-upload__action sic-upload__action--danger"
+                      aria-label="Stop upload"
+                      title="Stop upload"
+                      (click)="stopUpload(item)">
+                      <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                    </button>
+                  }
+
+                  @if (item.status === 'paused' || item.status === 'failed' || item.status === 'stopped') {
+                    <button
+                      type="button"
+                      class="sic-upload__action"
+                      aria-label="Resume upload"
+                      title="Resume upload"
+                      (click)="resumeUpload(item)">
+                      <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    </button>
+                  }
+
+                  @if (canDownload(item)) {
+                    <button
+                      type="button"
+                      class="sic-upload__action"
+                      [disabled]="item.downloadLoading"
+                      [attr.aria-label]="item.downloadLoading ? 'Preparing download' : 'Download file'"
+                      [attr.title]="item.downloadLoading ? 'Preparing download' : 'Download file'"
+                      (click)="downloadItem(item)">
+                      <i class="bi bi-download" aria-hidden="true"></i>
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="sic-upload__action sic-upload__action--ghost"
+                    aria-label="Remove file"
+                    title="Remove file"
+                    (click)="removeItem(item)">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="sic-upload__card-meta">
+                <span>{{ formatSize(item.size) }}</span>
+                @if (shouldShowUploadState(item)) {
+                  <span>{{ item.progress }}%</span>
+                }
+              </div>
+
+              @if (shouldShowUploadState(item)) {
+                <div class="sic-upload__card-progress">
+                  <div class="sic-upload__progress-bar" [style.width.%]="item.progress"></div>
+                </div>
+              }
+
+              @if (item.errorMessage) {
+                <div class="sic-upload__error">{{ item.errorMessage }}</div>
+              }
+            </div>
+          </article>
+        }
+      }
+    </div>
+  }
+
+  @if (showError && errorMessage) {
+    <div class="sic-upload__error">{{ errorMessage }}</div>
+  } @else if (hint) {
+    <div class="sic-upload__hint">{{ hint }}</div>
+  }
+</div>

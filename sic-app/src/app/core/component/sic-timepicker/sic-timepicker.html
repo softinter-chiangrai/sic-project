@@ -1,0 +1,186 @@
+<div [attr.data-disabled]="disabled" class="sic-timepicker">
+  @if (label) {
+    <label class="sic-timepicker__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-timepicker__required">*</span>
+      }
+    </label>
+  }
+
+  <div class="sic-timepicker__control">
+    <div
+      #fieldInput
+      (focus)="onFieldFocus()"
+      (blur)="onFieldBlur()"
+      (click)="onFieldClick()"
+      (mousedown)="onFieldMouseDown()"
+      class="sic-timepicker__field"
+      [class.sic-timepicker__field--focused]="isFocused"
+      [attr.data-invalid]="ngControl?.invalid && (ngControl?.touched || touched)"
+      role="combobox"
+      [attr.aria-expanded]="opened"
+      tabindex="0"
+    >
+      <button
+        type="button"
+        class="sic-timepicker__toggle"
+        (click)="onFieldClick()"
+        [disabled]="disabled"
+        tabindex="-1"
+        aria-label="Toggle time picker"
+      >
+        <svg width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </button>
+
+      <input
+        class="sic-timepicker__field-input"
+        type="text"
+        [value]="inputText"
+        [placeholder]="placeholder"
+        [disabled]="disabled"
+        [readonly]="true"
+        tabindex="-1"
+        (focus)="onFieldFocus()"
+        (blur)="onFieldBlur()"
+        (keydown)="onKeyDown($event)"
+      />
+
+      <div class="sic-timepicker__field-actions">
+        @if (value && !disabled) {
+          <button
+            type="button"
+            class="sic-timepicker__clear"
+            (click)="onClear($event)"
+            tabindex="-1"
+            aria-label="Clear time"
+          >
+            <svg width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (opened && ready) {
+      <button
+        type="button"
+        class="sic-timepicker__backdrop"
+        (click)="closeDropdown()"
+        aria-label="Close time picker"
+      ></button>
+
+      <div #clockPanel class="sic-timepicker__clock-panel" [ngStyle]="clockPanelStyle">
+        <div class="sic-timepicker__clock">
+          <!-- Display area -->
+          <div class="sic-timepicker__display">
+            <div class="sic-timepicker__display-time">
+              <span
+                class="sic-timepicker__time-value"
+                [class.sic-timepicker__time-value--selected]="isHourSelected"
+                (click)="selectedMode = 'hour'"
+              >
+                {{ hour | number: '2.0-0' }}
+              </span>
+              <span class="sic-timepicker__time-separator">:</span>
+              <span
+                class="sic-timepicker__time-value"
+                [class.sic-timepicker__time-value--selected]="isMinuteSelected"
+                (click)="selectedMode = 'minute'"
+              >
+                {{ minute | number: '2.0-0' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Clock face -->
+          <div class="sic-timepicker__face">
+            <!-- Center display for 00 -->
+            <div class="sic-timepicker__center-display">
+              @if (isHourSelected) {
+                {{ hour | number: '2.0-0' }}
+              } @else {
+                {{ minute | number: '2.0-0' }}
+              }
+            </div>
+
+            <!-- Outer ring hand (hour 0-11) -->
+            <div
+              class="sic-timepicker__hand sic-timepicker__hand--hour sic-timepicker__hand--hour-outer"
+              [style.transform]="'rotate(' + ((hour % 12) * 30) + 'deg)'"
+              [class.hidden]="isMinuteSelected || hour >= 12"
+            ></div>
+
+            <!-- Inner ring hand (hour 12-23) -->
+            <div
+              class="sic-timepicker__hand sic-timepicker__hand--hour sic-timepicker__hand--hour-inner"
+              [style.transform]="'rotate(' + ((hour % 12) * 30) + 'deg)'"
+              [class.hidden]="isMinuteSelected || hour < 12"
+            ></div>
+
+            <!-- Minute hand (radial line) -->
+            <div
+              class="sic-timepicker__hand sic-timepicker__hand--minute"
+              [style.transform]="'rotate(' + getMinuteHandRotation() + 'deg)'"
+              [class.hidden]="isHourSelected"
+            ></div>
+
+            <!-- HOURS VIEW: all 24 hours displayed in 2 rings: 1-12 outer, 13-24 inner -->
+            @if (isHourSelected) {
+              @for (h of hours; track h) {
+                <div
+                  class="sic-timepicker__number"
+                  [ngStyle]="getHourPositionByIndex(h)"
+                  [class.sic-timepicker__number--selected]="hour === h"
+                  [class.sic-timepicker__number--inner]="h >= 12"
+                  (mousedown)="preventMouseDown($event)"
+                  (click)="selectHour(h)"
+                  role="button"
+                  [attr.tabindex]="hour === h ? 0 : -1"
+                >
+                  @if (h >= 12) {
+                    {{ h | number: '2.0-0' }}
+                  } @else {
+                    {{ h | number: '2.0-0' }}
+                  }
+                </div>
+              }
+            }
+
+            <!-- MINUTES VIEW: displayed as numbers around the circle -->
+            @if (isMinuteSelected) {
+              @for (m of minutes; track m) {
+                @if (m % 5 === 0) {
+                  <div
+                    class="sic-timepicker__number"
+                    [ngStyle]="getMinuteClockPosition(m / 5)"
+                    [class.sic-timepicker__number--selected]="minute === m"
+                    (mousedown)="preventMouseDown($event)"
+                    (click)="selectMinute(m)"
+                    role="button"
+                    [attr.tabindex]="minute === m ? 0 : -1"
+                  >
+                    {{ m }}
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (hint) {
+    <div class="sic-timepicker__hint">{{ hint }}</div>
+  }
+
+  @if (showError && errorMessage) {
+    <div class="sic-timepicker__error">{{ errorMessage }}</div>
+  }
+</div>

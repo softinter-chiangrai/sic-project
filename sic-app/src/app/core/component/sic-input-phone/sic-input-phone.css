@@ -1,0 +1,95 @@
+
+.sic-input-phone-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+.sic-input-phone__label {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.sic-input-phone__required {
+  color: var(--crm-danger);
+}
+.sic-input-phone {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  padding: 0.1rem 0.95rem;
+  min-height: 2.9rem;
+  box-shadow: 0 2px 8px 0 rgba(80,120,200,0.04);
+  font-family: var(--font-sans);
+  transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s;
+}
+.sic-input-phone__left {
+  width: 2.7rem;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+  text-align: center;
+  color: var(--text-active);
+  font-family: inherit;
+  padding: 0.3rem 0.1rem;
+}
+.sic-input-phone__right {
+  flex: 1 1 0%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+  color: var(--text-active);
+  font-family: inherit;
+  padding: 0.3rem 0.1rem;
+}
+.sic-input-phone__left::placeholder,
+.sic-input-phone__right::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+.sic-input-phone__dash {
+  color: #b0b3b8;
+  font-size: 1.1rem;
+  user-select: none;
+  font-weight: 600;
+}
+.sic-input-phone input:focus {
+  outline: none;
+}
+.sic-input-phone:focus-within {
+  border-color: color-mix(in srgb, var(--crm-primary) 40%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+.sic-input-phone input:disabled {
+  background: color-mix(in srgb, var(--sidebar) 88%, var(--bg));
+  color: var(--text-muted);
+}
+.sic-input-phone--invalid {
+  border-color: color-mix(in srgb, var(--crm-danger) 46%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-danger) 12%, transparent);
+}
+.sic-input-phone__error {
+  color: var(--crm-danger);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 0.1rem;
+}
+.sic-input-phone__hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 0.1rem;
+}
+.sic-input-phone--disabled .sic-input-phone__label {
+  color: var(--text-muted);
+}

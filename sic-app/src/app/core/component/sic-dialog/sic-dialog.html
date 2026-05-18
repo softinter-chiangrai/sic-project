@@ -1,0 +1,65 @@
+@if (state(); as dialog) {
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-[color-mix(in_srgb,var(--text-active)_28%,transparent)] px-4 backdrop-blur-sm"
+    (click)="close(false)"
+  >
+    @if (dialog.component) {
+      <div (click)="$event.stopPropagation()">
+        <ng-container
+          *ngComponentOutlet="dialog.component; inputs: dialog.componentInputs"
+        ></ng-container>
+      </div>
+    } @else {
+      <div
+        class="w-full max-w-md overflow-hidden rounded-3xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"
+        style="border-color: var(--border); box-shadow: 0 24px 70px color-mix(in srgb, var(--text-active) 18%, transparent);"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-start gap-4 px-6 pb-4 pt-6">
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
+            [class]="iconContainerClass()"
+          >
+            <i [class]="iconClass()"></i>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            @if (dialog.title) {
+              <h2 class="text-lg font-semibold text-[var(--text-active)]">
+                {{ dialog.title }}
+              </h2>
+            }
+            @if (dialog.description) {
+              <p class="mt-2 whitespace-pre-line text-sm leading-6 text-[var(--text)]">
+                {{ dialog.description }}
+              </p>
+            }
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-end gap-3 border-t px-6 py-4"
+          style="border-color: var(--border); background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));"
+        >
+          @if (dialog.type === 'confirm') {
+            <sic-button
+              variant="secondary"
+              size="sm"
+              (click)="close(false)"
+            >
+              {{ dialog.cancelText }}
+            </sic-button>
+          }
+
+          <sic-button
+            [variant]="confirmButtonVariant()"
+            size="sm"
+            (click)="close(true)"
+          >
+            {{ dialog.confirmText }}
+          </sic-button>
+        </div>
+      </div>
+    }
+  </div>
+}

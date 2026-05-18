@@ -1,0 +1,45 @@
+<div class="sic-checkbox" [attr.data-disabled]="disabled ? 'true' : null">
+  <label class="sic-checkbox__label">
+    <input
+      type="checkbox"
+      class="sic-checkbox__input"
+      [checked]="checked"
+      [disabled]="disabled || readonly"
+      (change)="onCheckboxChange()"
+      (blur)="onBlur()"
+      [attr.aria-invalid]="showError"
+      [attr.aria-describedby]="showError ? 'error-message' : hint ? 'hint-message' : null" />
+
+    <span class="sic-checkbox__box">
+      <svg
+        class="sic-checkbox__checkmark"
+        viewBox="0 0 24 24"
+        width="1em"
+        height="1em"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </span>
+
+    @if (label) {
+      <span class="sic-checkbox__text">
+        {{ label }}
+        @if (required) {
+          <span class="sic-checkbox__required">*</span>
+        }
+      </span>
+    }
+  </label>
+
+  @if (hint && !showError) {
+    <div class="sic-checkbox__hint" id="hint-message">{{ hint }}</div>
+  }
+
+  @if (showError) {
+    <div class="sic-checkbox__error" id="error-message">{{ errorMessage }}</div>
+  }
+</div>

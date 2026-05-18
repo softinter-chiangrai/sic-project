@@ -1,0 +1,68 @@
+<div class="sic-organizational-chart" *ngIf="root">
+  <div class="sic-organizational-chart__tree">
+    <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: root }"></ng-container>
+  </div>
+</div>
+
+<ng-template #nodeTemplate let-node="node">
+  <div class="sic-organizational-chart__node-container">
+    <div class="sic-organizational-chart__node-shell">
+      <button
+        type="button"
+      class="sic-organizational-chart__node"
+      [style.--node-color]="node.color"
+      [class.sic-organizational-chart__node--readonly]="node.editable === false"
+      (click)="node.editable !== false && editNode(node)"
+      title="Edit key: name_local / name_en"
+      aria-label="Edit keys name_local and name_en for {{ node.name_en }}">
+      <span class="sic-organizational-chart__node-badge">
+        {{ resolveNodeLabel(node) }}
+      </span>
+      </button>
+
+      @if (node.editable !== false) {
+        <div class="sic-organizational-chart__node-controls">
+          <button
+            type="button"
+            class="sic-organizational-chart__btn sic-organizational-chart__btn--add"
+            (click)="addChild(node)"
+            title="Add item to key: children[]"
+            aria-label="Add child to children for {{ node.name_en }}">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (node.children.length > 0) {
+      <div class="sic-organizational-chart__connector-vertical"></div>
+
+      <div class="sic-organizational-chart__children">
+        @if (node.children.length > 1) {
+          <div class="sic-organizational-chart__connector-horizontal"></div>
+        }
+
+        @for (child of node.children; track trackById($index, child); let last = $last; let first = $first) {
+          <div class="sic-organizational-chart__child-wrapper" [class.sic-organizational-chart__child-wrapper--first]="first" [class.sic-organizational-chart__child-wrapper--last]="last">
+            <div class="sic-organizational-chart__connector-branch"></div>
+
+            <div class="sic-organizational-chart__child-content">
+              <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: child }"></ng-container>
+
+              @if (child.editable !== false) {
+                <button
+                  type="button"
+                  class="sic-organizational-chart__btn sic-organizational-chart__btn--remove"
+                  (click)="removeChild(node, child.id, $index)"
+                  title="Remove item from key: children[]"
+                  aria-label="Remove child from children for {{ child.name_en }}">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

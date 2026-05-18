@@ -1,0 +1,69 @@
+<div class="sic-profile-cropper-box">
+  <div class="sic-profile-cropper__header">
+    <div>
+      <span class="sic-profile-cropper__eyebrow">Adjust photo</span>
+    </div>
+    <button type="button" class="sic-profile-cropper__ghost" (click)="reset()">Reset</button>
+  </div>
+
+  <div class="sic-profile-cropper__workspace">
+    <div class="sic-profile-cropper__canvas-wrap">
+      <canvas
+        #canvas
+        [width]="canvasSize"
+        [height]="canvasSize"
+        (wheel)="onWheel($event)"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onDragEnd()"
+        (pointerleave)="onDragEnd()"
+        tabindex="0"
+        aria-label="Crop image"
+      ></canvas>
+    </div>
+
+    <div class="sic-profile-cropper__controls">
+      <div class="sic-profile-cropper__stat">
+        <span>Zoom</span>
+        <strong>{{ zoomPercent }}%</strong>
+      </div>
+
+      <input
+        class="sic-profile-cropper__slider"
+        type="range"
+        [min]="minScale"
+        [max]="maxScale"
+        [step]="0.01"
+        [value]="scale"
+        (input)="onZoomChange($event)"
+        aria-label="Zoom image"
+      />
+    </div>
+  </div>
+
+  <div class="sic-profile-cropper-actions">
+    <button
+      type="button"
+      class="sic-profile-cropper__secondary"
+      [class.sic-profile-cropper__button--loading]="isSubmitting"
+      (click)="cancelCrop()"
+      [attr.aria-disabled]="isSubmitting"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="sic-profile-cropper__primary"
+      [class.sic-profile-cropper__button--loading]="isSubmitting"
+      (click)="doCrop()"
+      [attr.aria-disabled]="isSubmitting"
+    >
+      <span *ngIf="!isSubmitting">Use this photo</span>
+      <span *ngIf="isSubmitting" class="sic-profile-cropper__loading-inline">
+        <span class="sic-profile-cropper__spinner" aria-hidden="true"></span>
+        Uploading...
+      </span>
+    </button>
+  </div>
+</div>

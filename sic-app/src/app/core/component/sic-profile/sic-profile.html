@@ -1,0 +1,44 @@
+<div class="sic-profile">
+  <div class="sic-profile__frame">
+    <button
+      type="button"
+      class="sic-profile__avatar-button"
+      [class.sic-profile__button--loading]="isLoading"
+      (click)="openFile()"
+      aria-label="Upload profile picture"
+      [attr.aria-disabled]="isLoading"
+    >
+      <div
+        class="sic-profile__avatar-wrapper"
+        [style.width]="avatarSize"
+        [style.height]="avatarSize"
+      >
+        <div class="sic-profile__avatar">
+          <img [src]="displaySrc" alt=""/>
+        </div>
+        <div *ngIf="isLoading" class="sic-profile__loading">
+          <span class="sic-profile__spinner" aria-hidden="true"></span>
+          <span class="sic-profile__loading-text">Uploading...</span>
+        </div>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="sic-profile__edit-button"
+      [class.sic-profile__button--loading]="isLoading"
+      (click)="openFile()"
+      aria-label="Edit profile picture"
+      [attr.aria-disabled]="isLoading"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 20H8L18 10C18.5304 9.46957 18.8284 8.75022 18.8284 8C18.8284 7.24978 18.5304 6.53043 18 6C17.4696 5.46957 16.7502 5.17157 16 5.17157C15.2498 5.17157 14.5304 5.46957 14 6L4 16V20Z" />
+        <path d="M13 7L17 11" />
+      </svg>
+    </button>
+  </div>
+
+  <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+
+  <p *ngIf="fileError" class="sic-profile__error">{{ fileError }}</p>
+</div>

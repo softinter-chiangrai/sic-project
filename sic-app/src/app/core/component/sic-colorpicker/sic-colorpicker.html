@@ -1,0 +1,108 @@
+<div [attr.data-disabled]="disabled ? 'true' : null" class="sic-colorpicker">
+  @if (label) {
+    <label class="sic-colorpicker__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-colorpicker__required">*</span>
+      }
+    </label>
+  }
+
+  <div class="sic-colorpicker__control">
+    <div
+      #fieldContainer
+      class="sic-colorpicker__field"
+      [class.sic-colorpicker__field--focused]="isFocused || opened"
+      [attr.data-invalid]="ngControl?.invalid && (ngControl?.touched || touched)"
+      role="combobox"
+      [attr.aria-expanded]="opened"
+      tabindex="0"
+      (focus)="onFieldFocus()"
+      (blur)="onFieldBlur()"
+      (click)="onFieldClick()"
+      (mousedown)="onFieldMouseDown()"
+    >
+      <div class="sic-colorpicker__field-content">
+        <div class="sic-colorpicker__color-preview" [style.background-color]="displayValue || selectedColor"></div>
+        <div class="sic-colorpicker__field-copy">
+          <span class="sic-colorpicker__field-value">{{ displayValue || placeholder }}</span>
+        </div>
+      </div>
+
+      <div class="sic-colorpicker__field-actions">
+        @if (value && !disabled && !readonly) {
+          <button
+            type="button"
+            class="sic-colorpicker__clear"
+            tabindex="-1"
+            aria-label="Clear color"
+            (click)="clearValue(); $event.stopPropagation()"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (opened && ready) {
+      <button
+        type="button"
+        class="sic-colorpicker__backdrop"
+        tabindex="-1"
+        aria-hidden="true"
+        (click)="closeDropdown()"
+      ></button>
+
+      <div
+        #colorPanel
+        class="sic-colorpicker__panel"
+        [ngStyle]="colorPanelStyle"
+      >
+        <div class="sic-colorpicker__panel-header">
+          <input
+            #fieldInput
+            class="sic-colorpicker__hex-input"
+            type="text"
+            maxlength="7"
+            [value]="hexInput"
+            [style.background-color]="selectedColor"
+            [style.color]="getContrastingTextColor()"
+            (input)="onHexInputChange($any($event.target).value)"
+            (blur)="applyHexInput()"
+          />
+        </div>
+
+        <div class="sic-colorpicker__panel-body">
+          <div class="sic-colorpicker__wheel-card">
+            <div class="sic-colorpicker__wheel-container">
+              <canvas
+                #colorWheel
+                class="sic-colorpicker__wheel"
+                (mousedown)="onWheelMouseDown($event)"
+                (mousemove)="onWheelMouseMove($event)"
+              ></canvas>
+              <div
+                class="sic-colorpicker__indicator"
+                [style.left.%]="indicatorX"
+                [style.top.%]="indicatorY"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sic-colorpicker__panel-footer">
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (hint && !showError) {
+    <div class="sic-colorpicker__hint">{{ hint }}</div>
+  }
+
+  @if (showError) {
+    <div class="sic-colorpicker__error">{{ errorMessage }}</div>
+  }
+</div>

@@ -1,0 +1,450 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-input-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.sic-input-upload__label {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sic-input-upload__required {
+  color: var(--crm-danger);
+}
+
+.sic-input-upload__control {
+  position: relative;
+  width: 100%;
+}
+
+.sic-input-upload__native-input {
+  display: none;
+}
+
+.sic-input-upload__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: var(--bg);
+  color: var(--text-active);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  overflow: visible;
+}
+
+.sic-input-upload__field:hover:not(.sic-input-upload__field--disabled) {
+  border-color: color-mix(in srgb, var(--crm-primary) 22%, var(--border));
+}
+
+.sic-input-upload__field:focus-within {
+  outline: none;
+  border-color: color-mix(in srgb, var(--crm-primary) 40%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+
+.sic-input-upload__field--readonly {
+  background: color-mix(in srgb, var(--sidebar) 82%, var(--bg));
+}
+
+.sic-input-upload__field--disabled {
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--sidebar) 88%, var(--bg));
+  color: var(--text-muted);
+}
+
+.sic-input-upload__field--invalid,
+.sic-input-upload__field--invalid:focus-within {
+  border-color: color-mix(in srgb, var(--crm-danger) 46%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-danger) 12%, transparent);
+}
+
+.sic-input-upload__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sic-input-upload__stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 2.1rem;
+  padding-right: 0.4rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.sic-input-upload__stack--empty {
+  justify-content: center;
+}
+
+.sic-input-upload__placeholder-icon,
+.sic-input-upload__thumb,
+.sic-input-upload__overflow {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+}
+
+.sic-input-upload__placeholder-icon {
+  display: grid;
+  place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--crm-primary) 22%, var(--border));
+  background: color-mix(in srgb, var(--crm-primary) 5%, var(--bg));
+  color: color-mix(in srgb, var(--crm-primary) 60%, var(--text-muted));
+}
+
+.sic-input-upload__thumb,
+.sic-input-upload__overflow {
+  position: relative;
+  margin-left: -0.45rem;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 10px 18px -14px color-mix(in srgb, var(--text-active) 32%, transparent);
+}
+
+.sic-input-upload__thumb:first-child,
+.sic-input-upload__overflow:first-child {
+  margin-left: 0;
+}
+
+.sic-input-upload__thumb {
+  background: color-mix(in srgb, var(--sidebar) 42%, var(--bg));
+  cursor: pointer;
+}
+
+.sic-input-upload__thumb--active {
+  outline: 2px solid color-mix(in srgb, var(--crm-primary) 60%, white);
+  outline-offset: 1px;
+  z-index: 31 !important;
+}
+
+.sic-input-upload__thumb:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--crm-primary) 48%, white);
+  outline-offset: 1px;
+}
+
+.sic-input-upload__thumb-media {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: color-mix(in srgb, var(--sidebar) 76%, var(--bg));
+}
+
+.sic-input-upload__thumb-media--video {
+  background: #000;
+}
+
+.sic-input-upload__thumb-badge,
+.sic-input-upload__overflow {
+  display: grid;
+  place-items: center;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.sic-input-upload__thumb-badge {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--crm-primary) 15%, var(--bg)), color-mix(in srgb, var(--sidebar) 82%, var(--bg)));
+  color: var(--text-active);
+}
+
+.sic-input-upload__overflow {
+  color: var(--text-active);
+  background: color-mix(in srgb, var(--sidebar) 85%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+}
+
+.sic-input-upload__meta,
+.sic-input-upload__hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.sic-input-upload__action {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--crm-primary) 8%, var(--bg));
+  color: var(--crm-primary);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.sic-input-upload__action:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--crm-primary) 36%, var(--border));
+  background: color-mix(in srgb, var(--crm-primary) 12%, var(--bg));
+  transform: translateY(-1px);
+}
+
+.sic-input-upload__action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sic-input-upload__progress {
+  position: absolute;
+  left: 0.45rem;
+  right: 0.45rem;
+  bottom: 0.18rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--sidebar-hover) 80%, var(--bg));
+}
+
+.sic-input-upload__progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--crm-primary), color-mix(in srgb, var(--crm-primary) 70%, white));
+  transition: width 0.18s ease;
+}
+
+.sic-input-upload__preview {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.55rem);
+  z-index: 50;
+  width: min(20rem, 70vw);
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg) 92%, white);
+  box-shadow: 0 20px 34px -24px color-mix(in srgb, var(--text-active) 36%, transparent);
+}
+
+.sic-input-upload__preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.6rem;
+}
+
+.sic-input-upload__preview-name {
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sic-input-upload__preview-type {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-primary) 10%, var(--bg));
+  color: var(--crm-primary);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.sic-input-upload__preview-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  display: block;
+  object-fit: contain;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--sidebar) 78%, var(--bg));
+}
+
+.sic-input-upload__preview-media--video {
+  background: #000;
+}
+
+.sic-input-upload__error {
+  color: var(--crm-danger);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.sic-input-upload--disabled .sic-input-upload__label {
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .sic-input-upload__preview {
+    width: min(16rem, calc(100vw - 2rem));
+  }
+}
+
+/* ── Item action menu ── */
+.sic-input-upload__item-menu {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 0.5rem));
+  z-index: 9999;
+  min-width: 9rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--bg);
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--text-active) 22%, transparent),
+              0 2px 8px -4px color-mix(in srgb, var(--text-active) 10%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sic-input-upload__item-menu-title {
+  padding: 0.35rem 0.65rem 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 14rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  margin-bottom: 0.2rem;
+}
+
+.sic-input-upload__item-action {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.sic-input-upload__item-action:hover {
+  background: color-mix(in srgb, var(--sidebar-hover) 75%, var(--bg));
+}
+
+.sic-input-upload__item-action i {
+  font-size: 0.85rem;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.sic-input-upload__item-action:hover i {
+  color: var(--crm-primary);
+}
+
+.sic-input-upload__item-action--danger {
+  color: var(--crm-danger);
+}
+
+.sic-input-upload__item-action--danger i {
+  color: var(--crm-danger);
+}
+
+.sic-input-upload__item-action--danger:hover {
+  background: color-mix(in srgb, var(--crm-danger) 9%, var(--bg));
+}
+
+.sic-input-upload__item-action--danger:hover i {
+  color: var(--crm-danger);
+}
+
+/* ── Lightbox preview ── */
+.sic-input-upload__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #000 62%, transparent);
+  backdrop-filter: blur(4px);
+  padding: 1.5rem;
+}
+
+.sic-input-upload__lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  max-width: min(56rem, calc(100vw - 3rem));
+  max-height: calc(100vh - 3rem);
+  border-radius: 1.2rem;
+  background: var(--bg);
+  box-shadow: 0 32px 64px -24px color-mix(in srgb, #000 48%, transparent);
+  overflow: hidden;
+}
+
+.sic-input-upload__lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem 0.8rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.sic-input-upload__lightbox-name {
+  color: var(--text-active);
+  font-size: 0.86rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sic-input-upload__lightbox-close {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.sic-input-upload__lightbox-close:hover {
+  background: color-mix(in srgb, var(--crm-danger) 9%, var(--bg));
+  color: var(--crm-danger);
+  border-color: color-mix(in srgb, var(--crm-danger) 30%, var(--border));
+}
+
+.sic-input-upload__lightbox-media {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 8rem);
+  object-fit: contain;
+  background: color-mix(in srgb, var(--sidebar) 70%, var(--bg));
+}

@@ -1,0 +1,34 @@
+<label class="sic-number" [class.sic-number--invalid]="showError" [class.sic-number--disabled]="disabled">
+  @if (label) {
+    <span class="sic-number__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-number__required">*</span>
+      }
+    </span>
+  }
+
+  <input
+    class="sic-number__field"
+    [class.sic-number__field--invalid]="showError"
+    type="text"
+    [value]="displayValue"
+    [placeholder]="placeholder"
+    [readOnly]="readonly"
+    [required]="required"
+    [disabled]="disabled"
+    inputmode="decimal"
+    [mask]="maskExpression"
+    [thousandSeparator]="thousandSeparator"
+    [allowNegativeNumbers]="allowNegativeNumbers"
+    [dropSpecialCharacters]="true"
+    [validation]="true"
+    (input)="handleInput($event)"
+    (blur)="handleBlur()" />
+
+  @if (showError && errorMessage) {
+    <span class="sic-number__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-number__hint">{{ hint }}</span>
+  }
+</label>

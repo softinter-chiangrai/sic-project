@@ -1,0 +1,103 @@
+<header
+    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md">
+    <div class="flex items-center gap-4">
+        <div class="relative">
+            <div class="grid place-items-center">
+                <h1 class="text-2xl font-bold text-[var(--primary)]">SIC Tutorial</h1>
+            </div>
+        </div>
+
+        <div class="relative" (mouseenter)="openDropdown('cli')" (mouseleave)="closeMenu()">
+            <button
+                type="button"
+                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
+                >
+                <span>Cli</span>
+                <i class="bi text-xs transition-transform duration-200"
+                    [class.bi-chevron-down]="openMenu() !== 'cli'"
+                    [class.bi-chevron-up]="openMenu() === 'cli'"></i>
+            </button>
+
+            @if (openMenu() === 'cli') {
+                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
+                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
+                    @for (item of cliMenus; track item) {
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
+                            (click)="closeMenu()">
+                            <span>{{ item }}</span>
+                            <i class="bi bi-terminal text-xs text-[var(--text-muted)]"></i>
+                        </button>
+                    }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="relative" (mouseenter)="openDropdown('component')" (mouseleave)="closeMenu()">
+            <button
+                type="button"
+                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
+                >
+                <span>Component</span>
+                <i class="bi text-xs transition-transform duration-200"
+                    [class.bi-chevron-down]="openMenu() !== 'component'"
+                    [class.bi-chevron-up]="openMenu() === 'component'"></i>
+            </button>
+
+            @if (openMenu() === 'component') {
+                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
+                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
+                    @for (item of componentMenus; track item) {
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
+                            (click)="closeMenu()">
+                            <span>{{ item }}</span>
+                            <i class="bi bi-box text-xs text-[var(--text-muted)]"></i>
+                        </button>
+                    }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="relative" (mouseenter)="openDropdown('service')" (mouseleave)="closeMenu()">
+            <button
+                type="button"
+                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
+                >
+                <span>Service</span>
+                <i class="bi text-xs transition-transform duration-200"
+                    [class.bi-chevron-down]="openMenu() !== 'service'"
+                    [class.bi-chevron-up]="openMenu() === 'service'"></i>
+            </button>
+
+            @if (openMenu() === 'service') {
+                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
+                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
+                    @for (item of serviceMenus; track item) {
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
+                            (click)="closeMenu()">
+                            <span>{{ item }}</span>
+                            <i class="bi bi-gear text-xs text-[var(--text-muted)]"></i>
+                        </button>
+                    }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+
+        <div class="flex-initial w-9 h-9">
+            <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
+                class="h-9 w-9 object-contain cursor-pointer" />
+        </div>
+    </div>
+</header>
+<router-outlet></router-outlet>

@@ -1,0 +1,105 @@
+<div class="sic-combobox" [attr.data-disabled]="disabled ? 'true' : null" [attr.data-invalid]="showError ? 'true' : null" (focusout)="onFocusOut($event)">
+  @if (label) {
+    <span class="sic-combobox__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-combobox__required">*</span>
+      }
+    </span>
+  }
+
+  <div class="sic-combobox__control">
+    <div
+      #fieldContainer
+      class="sic-combobox__field"
+      [attr.data-invalid]="showError ? 'true' : null">
+      <input
+        #fieldInput
+        class="sic-combobox__field-input"
+        type="text"
+        [value]="inputText"
+        [placeholder]="placeholder"
+        [disabled]="disabled"
+        [readonly]="readonly"
+        (focus)="onFieldFocus()"
+        (blur)="onFieldBlur()"
+        (click)="onFieldClick()"
+        (input)="onFieldInput(fieldInput.value)"
+        (keydown)="handleFieldKeydown($event)" />
+
+      <span class="sic-combobox__field-actions">
+        @if (clearable && value !== null && value !== undefined && !readonly && !disabled) {
+          <span
+            class="sic-combobox__clear"
+            role="button"
+            tabindex="-1"
+            (mousedown)="preventMouseDown($event)"
+            (click)="clearSelection($event)">
+            <i class="bi bi-x-lg"></i>
+          </span>
+        }
+
+        <span
+          class="sic-combobox__toggle"
+          role="button"
+          tabindex="-1"
+          (mousedown)="preventMouseDown($event)"
+          (click)="toggleFromIcon($event)">
+          @if (opened) {
+            <i class="bi bi-chevron-up"></i>
+          } @else {
+            <i class="bi bi-chevron-down"></i>
+          }
+        </span>
+      </span>
+    </div>
+
+    @if (opened) {
+      <button
+        type="button"
+        class="sic-combobox__backdrop"
+        tabindex="-1"
+        aria-hidden="true"
+        (click)="onBackdropClick()">
+      </button>
+
+      <div
+        #dropdownPanel
+        class="sic-combobox__dropdown"
+        [ngStyle]="dropdownPanelStyle">
+        <div #optionsPanel class="sic-combobox__options" tabindex="-1" (scroll)="onOptionsScroll($event)">
+          @if (showLoadingState) {
+            <div class="sic-combobox__state">Loading...</div>
+          } @else if (showEmptyState) {
+            <div class="sic-combobox__state">{{ emptyText }}</div>
+          } @else {
+            @for (item of options; track trackOption($index, item); let index = $index) {
+              <button
+                type="button"
+                class="sic-combobox__option"
+                tabindex="-1"
+                [attr.data-selected]="resolveValue(item) === value ? 'true' : null"
+                [attr.data-active]="isActiveOption(index) ? 'true' : null"
+                (mousedown)="preventMouseDown($event)"
+                (mouseup)="selectOption(item)">
+                @if (hasProjectedTemplate) {
+                  <ng-container
+                    *ngTemplateOutlet="optionTemplate?.template ?? null; context: { $implicit: item, item: item }">
+                  </ng-container>
+                } @else {
+                  <span class="sic-combobox__option-label">{{ resolveLabel(item) }}</span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showError && errorMessage) {
+    <span class="sic-combobox__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-combobox__hint">{{ hint }}</span>
+  }
+</div>

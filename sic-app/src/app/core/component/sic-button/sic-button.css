@@ -1,0 +1,174 @@
+.sic-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  background: var(--crm-primary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--crm-primary) 18%, transparent);
+}
+
+.sic-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sic-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--crm-primary) 18%, transparent);
+}
+
+.sic-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--crm-primary) 22%, transparent),
+    0 10px 24px color-mix(in srgb, var(--crm-primary) 18%, transparent);
+}
+
+.sic-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.sic-button--primary {
+  background: var(--crm-primary);
+  color: #ffffff;
+}
+
+.sic-button--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crm-primary) 88%, black);
+}
+
+.sic-button--secondary {
+  background: var(--sidebar-hover);
+  border-color: var(--border);
+  color: var(--text-active);
+  box-shadow: none;
+}
+
+.sic-button--secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sidebar-hover) 82%, var(--text-active));
+}
+
+.sic-button--secondary:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.sic-button--success {
+  background: var(--crm-success);
+  color: #ffffff;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--crm-success) 18%, transparent);
+}
+
+.sic-button--success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crm-success) 88%, black);
+}
+
+.sic-button--success:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--crm-success) 22%, transparent),
+    0 10px 24px color-mix(in srgb, var(--crm-success) 18%, transparent);
+}
+
+.sic-button--danger {
+  background: var(--crm-danger);
+  color: #ffffff;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--crm-danger) 18%, transparent);
+}
+
+.sic-button--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crm-danger) 88%, black);
+}
+
+.sic-button--danger:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--crm-danger) 22%, transparent),
+    0 10px 24px color-mix(in srgb, var(--crm-danger) 18%, transparent);
+}
+
+.sic-button--ghost {
+  background: transparent;
+  color: var(--text-active);
+  box-shadow: none;
+}
+
+.sic-button--ghost:hover:not(:disabled) {
+  background: var(--sidebar-hover);
+}
+
+.sic-button--ghost:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.sic-button--outline {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--crm-primary);
+  box-shadow: none;
+}
+
+.sic-button--outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crm-primary) 8%, var(--bg));
+  border-color: color-mix(in srgb, var(--crm-primary) 35%, var(--border));
+}
+
+.sic-button--outline:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 16%, transparent);
+}
+
+.sic-button--sm {
+  min-height: 2.25rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.sic-button--md {
+  min-height: 2.75rem;
+}
+
+.sic-button--lg {
+  min-height: 3.1rem;
+  padding: 0.9rem 1.35rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+}
+
+.sic-button--full-width {
+  width: 100%;
+}
+
+.sic-button--icon-only {
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.sic-button--icon-only.sic-button--sm {
+  width: 2.25rem;
+}
+
+.sic-button--icon-only.sic-button--md {
+  width: 2.75rem;
+}
+
+.sic-button--icon-only.sic-button--lg {
+  width: 3.1rem;
+}

@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.sic-input-area__label {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sic-input-area__required {
+  color: var(--crm-danger);
+}
+
+.sic-input-area__field {
+  width: 100%;
+  min-height: 6rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: var(--bg);
+  color: var(--text-active);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.3;
+  resize: vertical;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.sic-input-area__field::placeholder {
+  color: var(--text-muted);
+}
+
+.sic-input-area__field:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--crm-primary) 22%, var(--border));
+}
+
+.sic-input-area__field:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--crm-primary) 40%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+
+.sic-input-area__field:read-only {
+  background: color-mix(in srgb, var(--sidebar) 24%, var(--bg));
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.sic-input-area__field:disabled {
+  background: color-mix(in srgb, var(--sidebar) 88%, var(--bg));
+  border-color: var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.sic-input-area__field--invalid {
+  border-color: color-mix(in srgb, var(--crm-danger) 46%, var(--border));
+}
+
+.sic-input-area__field--invalid:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-danger) 12%, transparent);
+}
+
+.sic-input-area--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sic-input-area__hint {
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.3;
+}
+
+.sic-input-area__error {
+  color: var(--crm-danger);
+  font-size: 0.77rem;
+  line-height: 1.3;
+}
+
+.sic-input-area--invalid {
+  border-color: color-mix(in srgb, var(--crm-danger) 46%, var(--border));
+}

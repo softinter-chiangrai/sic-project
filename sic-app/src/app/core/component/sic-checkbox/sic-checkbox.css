@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-checkbox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0;
+}
+
+.sic-checkbox__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sic-checkbox__required {
+  color: var(--crm-danger);
+  font-weight: 600;
+}
+
+.sic-checkbox__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sic-checkbox__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: white;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.sic-checkbox__checkmark {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.sic-checkbox__input:checked + .sic-checkbox__box {
+  border-color: var(--crm-primary);
+  background: var(--crm-primary);
+}
+
+.sic-checkbox__input:checked + .sic-checkbox__box .sic-checkbox__checkmark {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sic-checkbox__input:focus + .sic-checkbox__box {
+  border-color: var(--crm-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+
+.sic-checkbox__input:hover:not(:disabled) + .sic-checkbox__box {
+  border-color: color-mix(in srgb, var(--crm-primary) 60%, var(--border));
+}
+
+.sic-checkbox__input:disabled + .sic-checkbox__box {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--sidebar) 30%, var(--bg));
+  cursor: not-allowed;
+}
+
+.sic-checkbox__input:disabled:checked + .sic-checkbox__box {
+  border-color: color-mix(in srgb, var(--crm-primary) 50%, var(--border));
+  background: color-mix(in srgb, var(--crm-primary) 45%, var(--sidebar));
+}
+
+.sic-checkbox__input:disabled:checked + .sic-checkbox__box .sic-checkbox__checkmark {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sic-checkbox[data-disabled='true'] .sic-checkbox__label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sic-checkbox__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sic-checkbox__hint {
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.3;
+  margin-left: 2.45rem;
+}
+
+.sic-checkbox__error {
+  color: var(--crm-danger);
+  font-size: 0.77rem;
+  line-height: 1.3;
+  margin-left: 2.45rem;
+}
+
+.sic-checkbox__input[aria-invalid='true'] + .sic-checkbox__box {
+  border-color: var(--crm-danger);
+}
+
+.sic-checkbox__input[aria-invalid='true'] + .sic-checkbox__box:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-danger) 12%, transparent);
+}

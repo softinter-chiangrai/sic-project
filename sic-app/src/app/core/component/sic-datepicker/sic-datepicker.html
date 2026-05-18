@@ -1,0 +1,181 @@
+<div class="sic-datepicker" [attr.data-disabled]="disabled ? 'true' : null" [attr.data-invalid]="showError ? 'true' : null" (focusout)="onFocusOut($event)">
+  @if (label) {
+    <span class="sic-datepicker__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-datepicker__required">*</span>
+      }
+    </span>
+  }
+
+  <div class="sic-datepicker__control">
+    <div
+      #fieldContainer
+      class="sic-datepicker__field"
+      [attr.data-invalid]="showError ? 'true' : null">
+      <span
+        class="sic-datepicker__toggle"
+        role="button"
+        tabindex="-1"
+        (mousedown)="preventMouseDown($event)"
+        (click)="toggleDropdown($event)">
+        @if (opened) {
+          <i class="bi bi-calendar-event"></i>
+        } @else {
+          <i class="bi bi-calendar"></i>
+        }
+      </span>
+
+      <input
+        #fieldInput
+        class="sic-datepicker__field-input"
+        type="text"
+        [value]="inputText"
+        [placeholder]="placeholder"
+        [disabled]="disabled"
+        [readonly]="true"
+        (focus)="onFieldFocus()"
+        (blur)="onFieldBlur()"
+        (click)="onFieldClick()" />
+
+      <span class="sic-datepicker__field-actions">
+        @if (clearable && value !== null && value !== undefined && !readonly && !disabled) {
+          <span
+            class="sic-datepicker__clear"
+            role="button"
+            tabindex="-1"
+            (mousedown)="preventMouseDown($event)"
+            (click)="clearSelection($event)">
+            <i class="bi bi-x-lg"></i>
+          </span>
+        }
+      </span>
+    </div>
+
+    @if (opened) {
+      <button
+        type="button"
+        class="sic-datepicker__backdrop"
+        tabindex="-1"
+        aria-hidden="true"
+        (click)="onBackdropClick()">
+      </button>
+
+      <div
+        #calendarPanel
+        class="sic-datepicker__dropdown"
+        [ngStyle]="calendarPanelStyle">
+        <div class="sic-datepicker__calendar">
+          <div class="sic-datepicker__header">
+            <button
+              type="button"
+              class="sic-datepicker__nav-button"
+              tabindex="-1"
+              (mousedown)="preventMouseDown($event)"
+              (click)="previousMonth()">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <div class="sic-datepicker__title">
+              <button
+                type="button"
+                class="sic-datepicker__month-year-button"
+                tabindex="-1"
+                (mousedown)="preventMouseDown($event)"
+                (click)="toggleYearView()">
+                <span>{{ getMonthYearLabel() }}</span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="sic-datepicker__nav-button"
+              tabindex="-1"
+              (mousedown)="preventMouseDown($event)"
+              (click)="nextMonth()">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+
+          @if (yearViewOpen) {
+            <div class="sic-datepicker__year-panel">
+              <div class="sic-datepicker__year-panel-header">
+                <span>{{ getYearRangeLabel() }}</span>
+              </div>
+
+              <div class="sic-datepicker__year-grid">
+                @for (year of years; track $index) {
+                  <button
+                    type="button"
+                    class="sic-datepicker__year-cell"
+                    [attr.data-selected]="currentViewDate.year() === year ? 'true' : null"
+                    (mousedown)="preventMouseDown($event)"
+                    (click)="selectYear(year)">
+                    {{ getDisplayYear(year) }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          @if (monthViewOpen) {
+            <div class="sic-datepicker__month-panel">
+              <div class="sic-datepicker__month-panel-header">
+                <span>{{ getDisplayYear(currentViewDate.year()) }}</span>
+              </div>
+
+              <div class="sic-datepicker__month-grid">
+                @for (month of monthNames; track $index) {
+                  <button
+                    type="button"
+                    class="sic-datepicker__month-cell"
+                    [attr.data-selected]="currentViewDate.month() === $index ? 'true' : null"
+                    (mousedown)="preventMouseDown($event)"
+                    (click)="selectMonth($index)">
+                    {{ month }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          @if (!yearViewOpen && !monthViewOpen) {
+            <div class="sic-datepicker__weekdays">
+              @for (day of weekDays; track $index) {
+                <div class="sic-datepicker__weekday">{{ day }}</div>
+              }
+            </div>
+
+            <div class="sic-datepicker__days">
+            @for (date of calendarDays; track $index) {
+              @if (date) {
+                <button
+                  type="button"
+                  class="sic-datepicker__day"
+                  tabindex="-1"
+                  [attr.data-other-month]="!isCurrentMonth(date) ? 'true' : null"
+                  [attr.data-today]="isToday(date) ? 'true' : null"
+                  [attr.data-selected]="isSelected(date) ? 'true' : null"
+                  [attr.data-focused]="isFocused(date) ? 'true' : null"
+                  [disabled]="isDateDisabled(date)"
+                  (mousedown)="preventMouseDown($event)"
+                  (mouseenter)="onDayMouseEnter(date)"
+                  (click)="selectDate(date)">
+                  {{ date.date() }}
+                </button>
+              }
+            }
+          </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showError && errorMessage) {
+    <span class="sic-datepicker__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-datepicker__hint">{{ hint }}</span>
+  }
+</div>

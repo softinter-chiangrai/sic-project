@@ -1,0 +1,126 @@
+<div class="sic-input-upload" [class.sic-input-upload--disabled]="disabled || readonly">
+  @if (label) {
+    <div class="sic-input-upload__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-input-upload__required">*</span>
+      }
+    </div>
+  }
+
+  <div class="sic-input-upload__control">
+    <input
+      #fileInput
+      class="sic-input-upload__native-input"
+      type="file"
+      [accept]="resolvedAccept"
+      [multiple]="multiple"
+      [disabled]="disabled || readonly"
+      (change)="onFileSelection($event)" />
+
+    <div
+      class="sic-input-upload__field"
+      [class.sic-input-upload__field--invalid]="showError"
+      [class.sic-input-upload__field--readonly]="readonly"
+      [class.sic-input-upload__field--disabled]="disabled">
+      <div class="sic-input-upload__main">
+        <div class="sic-input-upload__stack" [class.sic-input-upload__stack--empty]="visibleItems.length === 0">
+          @if (visibleItems.length !== 0) {
+            @for (item of visibleItems; track trackItem($index, item)) {
+              <div
+                class="sic-input-upload__thumb"
+                [class.sic-input-upload__thumb--active]="activeMenuItem?.localId === item.localId"
+                [style.z-index]="30 - $index"
+                (click)="openItemMenu(item, $event)"
+                (keydown.enter)="openItemMenu(item, $event)">
+                @if (getPreviewUrl(item); as previewUrl) {
+                  @if (isImageItem(item)) {
+                    <img class="sic-input-upload__thumb-media" [src]="previewUrl" [alt]="item.fileName" loading="lazy" />
+                  } @else if (isVideoItem(item)) {
+                    <video class="sic-input-upload__thumb-media sic-input-upload__thumb-media--video" [src]="previewUrl" muted playsinline preload="metadata">
+                      <track [src]="emptyTrackSrc" kind="captions" srclang="en" label="Captions unavailable" default />
+                    </video>
+                  }
+                } @else {
+                  <span class="sic-input-upload__thumb-badge">{{ getFileBadgeLabel(item) }}</span>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="sic-input-upload__action"
+        [disabled]="disabled || readonly"
+        aria-label="Upload file"
+        title="Upload file"
+        (click)="openPicker()">
+        <i class="bi bi-upload" aria-hidden="true"></i>
+      </button>
+
+      @if (hasUploadingItem) {
+        <div class="sic-input-upload__progress">
+          <div class="sic-input-upload__progress-bar" [style.width.%]="maxProgress"></div>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (showError && errorMessage) {
+    <div class="sic-input-upload__error">{{ errorMessage }}</div>
+  } @else if (hint) {
+    <div class="sic-input-upload__hint">{{ hint }}</div>
+  }
+</div>
+
+@if (activeMenuItem) {
+  <div
+    class="sic-input-upload__item-menu"
+    role="menu"
+    [style.top.px]="menuPosition.top"
+    [style.left.px]="menuPosition.left"
+    (click)="$event.stopPropagation()"
+    (keydown)="$event.stopPropagation()">
+    <div class="sic-input-upload__item-menu-title">{{ activeMenuItem.fileName }}</div>
+    @if (isPreviewableItem(activeMenuItem)) {
+      <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="previewItemAction(activeMenuItem)">
+        <i class="bi bi-eye" aria-hidden="true"></i>
+        <span>Preview</span>
+      </button>
+    }
+    <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="downloadItem(activeMenuItem)">
+      <i class="bi bi-download" aria-hidden="true"></i>
+      <span>Download</span>
+    </button>
+    @if (!disabled && !readonly) {
+      <button type="button" class="sic-input-upload__item-action sic-input-upload__item-action--danger" role="menuitem" (click)="removeItem(activeMenuItem)">
+        <i class="bi bi-trash" aria-hidden="true"></i>
+        <span>Delete</span>
+      </button>
+    }
+  </div>
+}
+
+@if (previewItem) {
+  <div class="sic-input-upload__lightbox" aria-modal="true" (click)="closePreview()" (keydown.escape)="closePreview()">
+    <div class="sic-input-upload__lightbox-inner" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="sic-input-upload__lightbox-header">
+        <span class="sic-input-upload__lightbox-name">{{ previewItem.fileName }}</span>
+        <button type="button" class="sic-input-upload__lightbox-close" aria-label="Close preview" (click)="closePreview()">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
+      @if (getPreviewUrl(previewItem); as previewUrl) {
+        @if (isImageItem(previewItem)) {
+          <img class="sic-input-upload__lightbox-media" [src]="previewUrl" [alt]="previewItem.fileName" />
+        } @else if (isVideoItem(previewItem)) {
+          <video class="sic-input-upload__lightbox-media" [src]="previewUrl" controls autoplay muted playsinline>
+            <track [src]="emptyTrackSrc" kind="captions" srclang="en" label="Captions unavailable" default />
+          </video>
+        }
+      }
+    </div>
+  </div>
+}

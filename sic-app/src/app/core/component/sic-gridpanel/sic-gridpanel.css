@@ -1,0 +1,885 @@
+:host {
+  display: block;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.sic-gridpanel {
+  width: 100%;
+  --sic-gridpanel-cell-padding-block: 0.8rem;
+  --sic-gridpanel-cell-padding-inline: 0.9rem;
+  --sic-gridpanel-field-height: 2.9rem;
+  --sic-gridpanel-row-height: calc(var(--sic-gridpanel-field-height) + (var(--sic-gridpanel-cell-padding-block) * 2));
+}
+
+.sic-gridpanel__surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--bg) 92%, white);
+  box-shadow: 0 18px 32px -28px color-mix(in srgb, var(--text-active) 24%, transparent);
+}
+
+.sic-gridpanel--has-upload .sic-gridpanel__surface {
+  overflow: visible;
+}
+
+.sic-gridpanel__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sic-gridpanel__toolbar-start {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.sic-gridpanel__toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.45rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-active);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sic-gridpanel__toolbar-button--icon {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0;
+}
+
+.sic-gridpanel__toolbar-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sic-gridpanel__toolbar-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sic-gridpanel__toolbar-button--danger {
+  border-color: color-mix(in srgb, var(--crm-danger) 36%, var(--border));
+  color: var(--crm-danger);
+}
+
+.sic-gridpanel__toolbar-button--primary {
+  border-color: color-mix(in srgb, var(--crm-primary) 32%, var(--border));
+  color: var(--crm-primary);
+}
+
+.sic-gridpanel__toolbar-button--active {
+  border-color: color-mix(in srgb, var(--crm-info, var(--crm-primary)) 38%, var(--border));
+  background: color-mix(in srgb, var(--crm-info, var(--crm-primary)) 10%, var(--bg));
+  color: var(--crm-info, var(--crm-primary));
+}
+
+.sic-gridpanel__table {
+  overflow-x: auto;
+  overflow-y: clip;
+  padding-bottom: 1.45rem;
+  background: color-mix(in srgb, var(--sidebar) 20%, transparent);
+  scrollbar-color: color-mix(in srgb, var(--crm-primary) 38%, var(--border)) color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+  scrollbar-width: auto;
+}
+
+.sic-gridpanel--has-upload .sic-gridpanel__table {
+  overflow-y: visible;
+}
+
+.sic-gridpanel__table::-webkit-scrollbar {
+  height: 0.8rem;
+  background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-corner {
+  background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-button:horizontal {
+  width: 0.8rem;
+  background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-button:horizontal:single-button {
+  background-color: color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.45rem 0.45rem;
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-button:horizontal:single-button:decrement {
+  background-image: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--crm-primary) 48%, white) 50%), linear-gradient(225deg, transparent 50%, color-mix(in srgb, var(--crm-primary) 48%, white) 50%);
+  background-position: calc(50% - 0.08rem) 50%, calc(50% + 0.08rem) 50%;
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-button:horizontal:single-button:increment {
+  background-image: linear-gradient(315deg, transparent 50%, color-mix(in srgb, var(--crm-primary) 48%, white) 50%), linear-gradient(45deg, transparent 50%, color-mix(in srgb, var(--crm-primary) 48%, white) 50%);
+  background-position: calc(50% - 0.08rem) 50%, calc(50% + 0.08rem) 50%;
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-thumb {
+  border: 2px solid color-mix(in srgb, var(--sidebar) 72%, var(--bg));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-primary) 38%, var(--border));
+}
+
+.sic-gridpanel__table::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--crm-primary) 52%, var(--border));
+}
+
+.sic-gridpanel__header,
+.sic-gridpanel__row,
+.sic-gridpanel__footer {
+  display: grid;
+  min-width: 100%;
+  width: max-content;
+}
+
+.sic-gridpanel__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sidebar) 88%, var(--bg)), color-mix(in srgb, var(--bg) 92%, white));
+}
+
+.sic-gridpanel__header-cell,
+.sic-gridpanel__cell,
+.sic-gridpanel__footer-cell {
+  min-width: 0;
+  padding: var(--sic-gridpanel-cell-padding-block) var(--sic-gridpanel-cell-padding-inline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--sic-gridpanel-row-height);
+  box-sizing: border-box;
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sic-gridpanel__header-cell--selection,
+.sic-gridpanel__cell--selection,
+.sic-gridpanel__footer-cell--selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0.45rem;
+}
+
+.sic-gridpanel__reset-row-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid color-mix(in srgb, var(--crm-warning, #f4b400) 38%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-warning, #f4b400) 10%, var(--bg));
+  color: color-mix(in srgb, var(--crm-warning, #f4b400) 72%, var(--text-active));
+  cursor: pointer;
+}
+
+.sic-gridpanel__reset-row-button:hover {
+  background: color-mix(in srgb, var(--crm-warning, #f4b400) 16%, var(--bg));
+}
+
+.sic-gridpanel__header-cell {
+  text-align: center;
+}
+
+.sic-gridpanel__row {
+  align-items: stretch;
+  height: var(--sic-gridpanel-row-height);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.sic-gridpanel--has-upload .sic-gridpanel__row {
+  min-height: var(--sic-gridpanel-row-height);
+  height: auto;
+}
+
+.sic-gridpanel__row:nth-child(odd):not(.sic-gridpanel__row--new):not(.sic-gridpanel__row--updated):not(.sic-gridpanel__row--deleted):not(.sic-gridpanel__row--disabled) {
+  background: color-mix(in srgb, var(--sidebar) 18%, transparent);
+}
+
+.sic-gridpanel__row--new {
+  background: color-mix(in srgb, var(--crm-success, #2e9f6b) 14%, transparent);
+}
+
+.sic-gridpanel__row--updated {
+  background: color-mix(in srgb, #f4b400 18%, transparent);
+}
+
+.sic-gridpanel__row--deleted {
+  opacity: 0.6;
+  background: color-mix(in srgb, var(--crm-danger) 14%, transparent);
+}
+
+.sic-gridpanel__row--disabled sic-input,
+.sic-gridpanel__row--disabled sic-number,
+.sic-gridpanel__row--disabled sic-input-area,
+.sic-gridpanel__row--disabled sic-datepicker,
+.sic-gridpanel__row--disabled sic-timepicker,
+.sic-gridpanel__row--disabled sic-combobox,
+.sic-gridpanel__row--disabled sic-colorpicker,
+.sic-gridpanel__row--disabled sic-input-upload,
+.sic-gridpanel__row--disabled sic-checkbox,
+.sic-gridpanel__row--disabled sic-radio,
+.sic-gridpanel__row--deleted sic-input,
+.sic-gridpanel__row--deleted sic-number,
+.sic-gridpanel__row--deleted sic-input-area,
+.sic-gridpanel__row--deleted sic-datepicker,
+.sic-gridpanel__row--deleted sic-timepicker,
+.sic-gridpanel__row--deleted sic-combobox,
+.sic-gridpanel__row--deleted sic-colorpicker,
+.sic-gridpanel__row--deleted sic-input-upload,
+.sic-gridpanel__row--deleted sic-checkbox,
+.sic-gridpanel__row--deleted sic-radio {
+  width: 100%;
+}
+
+.sic-gridpanel__row--disabled sic-input ::ng-deep .sic-input__field,
+.sic-gridpanel__row--disabled sic-number ::ng-deep .sic-number__field,
+.sic-gridpanel__row--disabled sic-input-area ::ng-deep .sic-input-area__field,
+.sic-gridpanel__row--disabled sic-datepicker ::ng-deep .sic-datepicker__field,
+.sic-gridpanel__row--disabled sic-timepicker ::ng-deep .sic-timepicker__field,
+.sic-gridpanel__row--disabled sic-combobox ::ng-deep .sic-combobox__field,
+.sic-gridpanel__row--disabled sic-colorpicker ::ng-deep .sic-colorpicker__field,
+.sic-gridpanel__row--disabled sic-input-upload ::ng-deep .sic-input-upload__field,
+.sic-gridpanel__row--deleted sic-input ::ng-deep .sic-input__field,
+.sic-gridpanel__row--deleted sic-number ::ng-deep .sic-number__field,
+.sic-gridpanel__row--deleted sic-input-area ::ng-deep .sic-input-area__field,
+.sic-gridpanel__row--deleted sic-datepicker ::ng-deep .sic-datepicker__field,
+.sic-gridpanel__row--deleted sic-timepicker ::ng-deep .sic-timepicker__field,
+.sic-gridpanel__row--deleted sic-combobox ::ng-deep .sic-combobox__field,
+.sic-gridpanel__row--deleted sic-colorpicker ::ng-deep .sic-colorpicker__field,
+.sic-gridpanel__row--deleted sic-input-upload ::ng-deep .sic-input-upload__field {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-active);
+}
+
+.sic-gridpanel__row--disabled sic-input-area ::ng-deep .sic-input-area__field,
+.sic-gridpanel__row--deleted sic-input-area ::ng-deep .sic-input-area__field {
+  resize: none;
+}
+
+.sic-gridpanel__row--disabled sic-input ::ng-deep .sic-input__field:read-only,
+.sic-gridpanel__row--disabled sic-number ::ng-deep .sic-number__field:read-only,
+.sic-gridpanel__row--disabled sic-input-area ::ng-deep .sic-input-area__field:read-only,
+.sic-gridpanel__row--disabled sic-datepicker ::ng-deep .sic-datepicker__field-input,
+.sic-gridpanel__row--disabled sic-timepicker ::ng-deep .sic-timepicker__field-input,
+.sic-gridpanel__row--disabled sic-combobox ::ng-deep .sic-combobox__field-input,
+.sic-gridpanel__row--deleted sic-input ::ng-deep .sic-input__field:read-only,
+.sic-gridpanel__row--deleted sic-number ::ng-deep .sic-number__field:read-only,
+.sic-gridpanel__row--deleted sic-input-area ::ng-deep .sic-input-area__field:read-only,
+.sic-gridpanel__row--deleted sic-datepicker ::ng-deep .sic-datepicker__field-input,
+.sic-gridpanel__row--deleted sic-timepicker ::ng-deep .sic-timepicker__field-input,
+.sic-gridpanel__row--deleted sic-combobox ::ng-deep .sic-combobox__field-input {
+  color: var(--text-active);
+  background: transparent;
+}
+
+.sic-gridpanel__row--disabled sic-datepicker ::ng-deep .sic-datepicker__toggle,
+.sic-gridpanel__row--disabled sic-timepicker ::ng-deep .sic-timepicker__toggle,
+.sic-gridpanel__row--disabled sic-combobox ::ng-deep .sic-combobox__toggle,
+.sic-gridpanel__row--disabled sic-combobox ::ng-deep .sic-combobox__field-actions,
+.sic-gridpanel__row--disabled sic-datepicker ::ng-deep .sic-datepicker__field-actions,
+.sic-gridpanel__row--disabled sic-timepicker ::ng-deep .sic-timepicker__field-actions,
+.sic-gridpanel__row--deleted sic-datepicker ::ng-deep .sic-datepicker__toggle,
+.sic-gridpanel__row--deleted sic-timepicker ::ng-deep .sic-timepicker__toggle,
+.sic-gridpanel__row--deleted sic-combobox ::ng-deep .sic-combobox__toggle,
+.sic-gridpanel__row--deleted sic-combobox ::ng-deep .sic-combobox__field-actions,
+.sic-gridpanel__row--deleted sic-datepicker ::ng-deep .sic-datepicker__field-actions,
+.sic-gridpanel__row--deleted sic-timepicker ::ng-deep .sic-timepicker__field-actions {
+  color: var(--text-muted);
+}
+
+.sic-gridpanel__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.sic-gridpanel--has-upload .sic-gridpanel__cell {
+  min-height: var(--sic-gridpanel-row-height);
+  height: auto;
+  align-items: flex-start;
+}
+
+.sic-gridpanel--has-upload .sic-gridpanel__cell--selection,
+.sic-gridpanel--has-upload .sic-gridpanel__cell--checkbox,
+.sic-gridpanel--has-upload .sic-gridpanel__cell--radio {
+  align-items: center;
+}
+
+.sic-gridpanel__cell--number {
+  justify-content: flex-end;
+}
+
+.sic-gridpanel__cell--checkbox {
+  justify-content: center;
+}
+
+.sic-gridpanel__cell--radio {
+  justify-content: center;
+}
+
+.sic-gridpanel__cell--upload {
+  align-items: stretch;
+}
+
+.sic-gridpanel__cell--checkbox > sic-checkbox {
+  display: flex;
+  justify-content: center;
+  width: auto;
+}
+
+.sic-gridpanel__cell--radio > sic-radio {
+  display: flex;
+  justify-content: center;
+  width: auto;
+}
+
+.sic-gridpanel__cell--checkbox ::ng-deep .sic-checkbox {
+  width: auto;
+  padding: 0;
+}
+
+.sic-gridpanel__cell--radio ::ng-deep .sic-radio {
+  width: auto;
+  padding: 0;
+  align-items: center;
+}
+
+.sic-gridpanel__cell--radio ::ng-deep .sic-radio__group {
+  justify-content: center;
+}
+
+.sic-gridpanel__cell--checkbox ::ng-deep .sic-checkbox__label {
+  justify-content: center;
+}
+
+.sic-gridpanel__cell > sic-input-area {
+  width: 100%;
+}
+
+.sic-gridpanel__cell > sic-input,
+.sic-gridpanel__cell > sic-number,
+.sic-gridpanel__cell > sic-input-area,
+.sic-gridpanel__cell > sic-datepicker,
+.sic-gridpanel__cell > sic-timepicker,
+.sic-gridpanel__cell > sic-combobox,
+.sic-gridpanel__cell > sic-radio,
+.sic-gridpanel__cell > sic-checkbox,
+.sic-gridpanel__cell > sic-upload,
+.sic-gridpanel__cell > sic-input-upload {
+  width: 100%;
+}
+
+.sic-gridpanel__cell > sic-input ::ng-deep .sic-input,
+.sic-gridpanel__cell > sic-number ::ng-deep .sic-number,
+.sic-gridpanel__cell > sic-input-area ::ng-deep .sic-input-area,
+.sic-gridpanel__cell > sic-datepicker ::ng-deep .sic-datepicker,
+.sic-gridpanel__cell > sic-timepicker ::ng-deep .sic-timepicker,
+.sic-gridpanel__cell > sic-combobox ::ng-deep .sic-combobox,
+.sic-gridpanel__cell > sic-radio ::ng-deep .sic-radio,
+.sic-gridpanel__cell > sic-checkbox ::ng-deep .sic-checkbox,
+.sic-gridpanel__cell > sic-upload ::ng-deep .sic-upload,
+.sic-gridpanel__cell > sic-input-upload ::ng-deep .sic-input-upload {
+  position: relative;
+  gap: 0;
+}
+
+.sic-gridpanel__cell > sic-upload ::ng-deep .sic-upload {
+  padding-bottom: 0;
+}
+
+.sic-gridpanel__cell > sic-input-upload ::ng-deep .sic-input-upload {
+  padding-bottom: 0;
+}
+
+.sic-gridpanel__cell > sic-input ::ng-deep .sic-input__hint,
+.sic-gridpanel__cell > sic-input ::ng-deep .sic-input__error,
+.sic-gridpanel__cell > sic-number ::ng-deep .sic-number__hint,
+.sic-gridpanel__cell > sic-number ::ng-deep .sic-number__error,
+.sic-gridpanel__cell > sic-input-area ::ng-deep .sic-input-area__hint,
+.sic-gridpanel__cell > sic-input-area ::ng-deep .sic-input-area__error,
+.sic-gridpanel__cell > sic-datepicker ::ng-deep .sic-datepicker__hint,
+.sic-gridpanel__cell > sic-datepicker ::ng-deep .sic-datepicker__error,
+.sic-gridpanel__cell > sic-timepicker ::ng-deep .sic-timepicker__hint,
+.sic-gridpanel__cell > sic-timepicker ::ng-deep .sic-timepicker__error,
+.sic-gridpanel__cell > sic-combobox ::ng-deep .sic-combobox__hint,
+.sic-gridpanel__cell > sic-combobox ::ng-deep .sic-combobox__error,
+.sic-gridpanel__cell > sic-radio ::ng-deep .sic-radio__hint,
+.sic-gridpanel__cell > sic-radio ::ng-deep .sic-radio__error,
+.sic-gridpanel__cell > sic-checkbox ::ng-deep .sic-checkbox__hint,
+.sic-gridpanel__cell > sic-checkbox ::ng-deep .sic-checkbox__error {
+  position: absolute;
+  top: calc(100% + 0.18rem);
+  left: 0;
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.sic-gridpanel__cell > sic-input-area ::ng-deep .sic-input-area {
+  gap: 0;
+}
+
+.sic-gridpanel__cell > sic-input-area ::ng-deep .sic-input-area__field {
+  min-height: var(--sic-gridpanel-field-height);
+  height: var(--sic-gridpanel-field-height);
+  resize: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sic-gridpanel__display {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: var(--sic-gridpanel-field-height);
+  box-sizing: border-box;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--sidebar) 82%, var(--bg));
+  color: var(--text-active);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.sic-gridpanel__display--with-icon {
+  gap: 0;
+  padding-inline: 0.8rem;
+}
+
+.sic-gridpanel__display--number {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.sic-gridpanel__display--checkbox {
+  justify-content: center;
+  text-align: center;
+}
+
+.sic-gridpanel__display-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--text-muted);
+}
+
+.sic-gridpanel__display-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.sic-gridpanel__display-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.8rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sic-gridpanel__display--area {
+  display: -webkit-box;
+  height: var(--sic-gridpanel-field-height);
+  overflow: hidden;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.sic-gridpanel__row--disabled .sic-gridpanel__display,
+.sic-gridpanel__row--deleted .sic-gridpanel__display {
+  color: var(--text-muted);
+}
+
+.sic-gridpanel__row--disabled .sic-gridpanel__display {
+  color: var(--text-active);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.sic-gridpanel__cell--selection {
+  gap: 0;
+  align-items: center;
+}
+
+.sic-gridpanel__header-cell--selection > sic-checkbox,
+.sic-gridpanel__cell--selection > sic-checkbox {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.sic-gridpanel__header-cell--selection ::ng-deep .sic-checkbox,
+.sic-gridpanel__cell--selection ::ng-deep .sic-checkbox {
+  width: auto;
+  padding: 0;
+}
+
+.sic-gridpanel__header-cell--selection ::ng-deep .sic-checkbox__label,
+.sic-gridpanel__cell--selection ::ng-deep .sic-checkbox__label {
+  gap: 0;
+}
+
+.sic-gridpanel__row-state,
+.sic-gridpanel__summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sic-gridpanel__row-state--new,
+.sic-gridpanel__summary-badge--new {
+  background: color-mix(in srgb, var(--crm-primary) 14%, transparent);
+  color: var(--crm-primary);
+}
+
+.sic-gridpanel__row-state--updated,
+.sic-gridpanel__summary-badge--updated {
+  background: color-mix(in srgb, var(--crm-warning) 18%, transparent);
+  color: var(--crm-warning);
+}
+
+.sic-gridpanel__row-state--deleted,
+.sic-gridpanel__summary-badge--deleted {
+  background: color-mix(in srgb, var(--crm-danger) 14%, transparent);
+  color: var(--crm-danger);
+}
+
+.sic-gridpanel__sort {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+
+.sic-gridpanel__sort--enabled {
+  cursor: pointer;
+}
+
+.sic-gridpanel__sort-icons {
+  position: absolute;
+  right: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.sic-gridpanel__sort-icon--active {
+  color: var(--crm-primary);
+}
+
+.sic-gridpanel__field {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--bg);
+  color: var(--text-active);
+  font: inherit;
+}
+
+.sic-gridpanel__field--area {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.sic-gridpanel__checkbox,
+.sic-gridpanel__radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sic-gridpanel__radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sic-gridpanel__button,
+.sic-gridpanel__pager-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-active);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sic-gridpanel__pager-button:disabled,
+.sic-gridpanel__pager-page:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sic-gridpanel__footer {
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--sidebar) 26%, transparent);
+}
+
+.sic-gridpanel__footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--border);
+  /* background: color-mix(in srgb, var(--bg) 94%, white); */
+}
+
+.sic-gridpanel__summary,
+.sic-gridpanel__pager-state,
+.sic-gridpanel__state {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.sic-gridpanel__summary {
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sic-gridpanel__summary,
+.sic-gridpanel__pager {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.sic-gridpanel__pager {
+  justify-content: flex-end;
+}
+
+.sic-gridpanel__pager-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 96%, white);
+}
+
+.sic-gridpanel__pager-group--status {
+  padding-inline: 0.8rem;
+}
+
+.sic-gridpanel__pager-divider {
+  width: 1px;
+  height: 1rem;
+  background: var(--border);
+}
+
+.sic-gridpanel__pager-total {
+  color: var(--text-muted);
+}
+
+.sic-gridpanel__pager-pages,
+.sic-gridpanel__pager-group--nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sic-gridpanel__pager-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-active);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sic-gridpanel__pager-page--active {
+  border-color: color-mix(in srgb, var(--crm-primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--crm-primary) 12%, var(--bg));
+  color: var(--crm-primary);
+}
+
+.sic-gridpanel__pager-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.sic-gridpanel__state {
+  padding: 1.25rem 1rem;
+}
+
+.sic-gridpanel__state--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.sic-gridpanel__state-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--crm-primary) 24%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-primary) 10%, var(--bg));
+  color: color-mix(in srgb, var(--crm-primary) 72%, var(--text-active));
+}
+
+.sic-gridpanel__state-visual svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.sic-gridpanel__state-title {
+  color: var(--text-active);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.sic-gridpanel__state-subtitle {
+  max-width: 22rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.sic-gridpanel__state--error {
+  color: var(--crm-danger);
+}
+
+.sic-gridpanel__loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--bg) 42%, transparent);
+  backdrop-filter: blur(0.5px);
+}
+
+.sic-gridpanel__loading-spinner {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 2px solid color-mix(in srgb, var(--crm-primary) 24%, var(--border));
+  border-top-color: var(--crm-primary);
+  border-radius: 999px;
+  animation: sic-gridpanel-spin 0.8s linear infinite;
+}
+
+.sic-gridpanel__loading-text {
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+@keyframes sic-gridpanel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .sic-gridpanel__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sic-gridpanel__toolbar-actions {
+    width: 100%;
+  }
+
+  .sic-gridpanel__footer-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sic-gridpanel__pager {
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,52 @@
+<div
+  class="sic-radio"
+  [class.sic-radio--horizontal]="direction === 'horizontal'"
+  [class.sic-radio--vertical]="direction === 'vertical'"
+  [attr.data-disabled]="disabled ? 'true' : null">
+  @if (label) {
+    <span class="sic-radio__label">
+      {{ label }}
+      @if (required) {
+        <span class="sic-radio__required">*</span>
+      }
+    </span>
+  }
+
+  <div class="sic-radio__group" [class]="alignmentClass" [attr.role]="'radiogroup'" [attr.aria-invalid]="showError">
+    @if (loading) {
+      <div class="sic-radio__state">Loading...</div>
+    } @else if (showEmptyState) {
+      <div class="sic-radio__state">{{ emptyText }}</div>
+    } @else {
+      @for (option of resolvedOptions; track trackOption($index, option)) {
+        <label
+          class="sic-radio__option"
+          [attr.data-disabled]="isOptionDisabled(option) ? 'true' : null">
+          <input
+            type="radio"
+            class="sic-radio__input"
+            [name]="name"
+            [checked]="isChecked(option)"
+            [disabled]="isOptionDisabled(option)"
+            [value]="option.value"
+            [attr.aria-invalid]="showError"
+            [attr.aria-describedby]="showError ? 'error-message' : hint ? 'hint-message' : null"
+            (change)="selectOption(option)"
+            (blur)="onBlur()" />
+
+          <span class="sic-radio__control">
+            <span class="sic-radio__dot"></span>
+          </span>
+
+          <span class="sic-radio__text">{{ resolveOptionText(option) }}</span>
+        </label>
+      }
+    }
+  </div>
+
+  @if (showError && errorMessage) {
+    <div class="sic-radio__error" id="error-message">{{ errorMessage }}</div>
+  } @else if (hint) {
+    <div class="sic-radio__hint" id="hint-message">{{ hint }}</div>
+  }
+</div>
