@@ -1,0 +1,100 @@
+using AutoMapper;
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using sic_api.Data;
+using sic_api.Entities.Su;
+using sic_api.Mapping;
+using sic_api.Model;
+using sic_api.Model.Verify;
+using sic_api.Services.Interfaces;
+using System.Text.Json;
+using System.Web;
+
+namespace sic_api.Features.Verify;
+
+public static class GenerateVerifyToken
+{
+    public class Command : IRequest<Guid?>, IMapFrom<SuVerify>
+    {
+        public string VerifyType { get; set; } = default!;
+
+        public string Recipient { get; set; } = default!;
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<Command, SuVerify>()
+                .ForMember(destination => destination.RowVersion, options => options.Ignore())
+                .ForMember(destination => destination.ReferenceNumber, options => options.Ignore())
+                .ForMember(destination => destination.Token, options => options.Ignore())
+                .ForMember(destination => destination.MaxRetry, options => options.Ignore())
+                .ForMember(destination => destination.RetryCount, options => options.Ignore())
+                .ForMember(destination => destination.ExpireAt, options => options.Ignore());
+        }
+    }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.VerifyType).NotEmpty().MaximumLength(100);
+            RuleFor(x => x.Recipient).MaximumLength(320);
+        }
+    }
+
+    public sealed class Handler(IVerifyService verifyService, ICurrentUserService currentUserService, IMailService mailService) : IRequestHandler<Command, Guid?>
+    {
+        public async Task<Guid?> Handle(Command request, CancellationToken cancellationToken)
+        {
+            var referenceNumber = currentUserService.GetUserId() ?? "system";
+
+            var generateRequest = new GenerateVerifyTokenRequest
+            {
+                VerifyType = request.VerifyType,
+                ReferenceNumber = referenceNumber,
+                Recipient = request.Recipient
+            };
+
+            var response = await verifyService.GenerateTokenAsync(generateRequest);
+            
+            // If VerifyType is "Email", send verification email
+            if (request.VerifyType == "Email" && !string.IsNullOrEmpty(request.Recipient))
+            {
+                await SendVerificationEmailAsync(
+                    request.Recipient, 
+                    response.Token);
+            }
+
+            return response.Id;
+        }
+
+        private async Task<Guid> SendVerificationEmailAsync(string recipientEmail, string verifyToken)
+        {
+            try
+            {
+                var bodyData = new
+                {
+                    RecipientEmail = recipientEmail,
+                    VerifyToken = verifyToken,
+                    ExpirationMinutes = 30,
+                    VerificationLink = $"https://yourdomain.com/verify?token={HttpUtility.UrlEncode(verifyToken)}"
+                };
+
+                var bodyDataJson = JsonSerializer.Serialize(bodyData);
+                
+                var queueId = await mailService.AddToQueueAsync(
+                    templateCode: "VERIFY_EMAIL",
+                    recipientEmail: recipientEmail,
+                    recipientName: recipientEmail,
+                    bodyData: bodyDataJson);
+
+                return queueId;
+            }
+            catch (Exception)
+            {
+                // Log error but don't fail the token generation
+                return Guid.Empty;
+            }
+        }
+    }
+}
