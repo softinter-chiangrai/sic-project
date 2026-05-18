@@ -1,0 +1,47 @@
+services:
+  keycloak-db:
+    image: postgres:17
+    container_name: sic-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: administrator
+      POSTGRES_PASSWORD: Sic2026
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U administrator -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "54320:5432"
+    networks:
+      - sic-shared
+
+  sic-db-init:
+    image: postgres:17
+    container_name: one-sic-db-init
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: Sic2026
+    volumes:
+      - ./infra/postgres/init:/scripts:ro
+    command:
+      [
+        "sh",
+        "-c",
+        "psql -h keycloak-db -U administrator -d postgres -f /scripts/01-create-sic-db.sql"
+      ]
+    restart: "no"
+    networks:
+      - sic-shared
+
+volumes:
+  keycloak_db_data:
+
+networks:
+  sic-shared:
+    name: sic-shared

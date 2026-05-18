@@ -1,0 +1,33 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: one-keycloak
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/sic_auth
+      KC_DB_USERNAME: sic-auth
+      KC_DB_PASSWORD: SicAuth2026
+
+      KEYCLOAK_ADMIN: administrator
+      KEYCLOAK_ADMIN_PASSWORD: Sicr@2026
+
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: "edge"
+    volumes:
+      - ./infra/keycloak/realm-one-project.json:/opt/keycloak/data/import/realm-one-project.json:ro
+      - ./mint-keywind-theme-main/theme:/opt/keycloak/themes:ro
+      - keycloak_data:/opt/keycloak/data
+    command: ["start-dev","--http-port=8080","--import-realm","--spi-theme-cache-themes=false","--spi-theme-cache-templates=false"]
+    ports:
+      - "8080:8080"
+    networks:
+      - sic-shared
+
+volumes:
+  keycloak_data:
+
+networks:
+  sic-shared:
+    name: sic-shared

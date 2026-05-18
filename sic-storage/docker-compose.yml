@@ -1,0 +1,43 @@
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: sic-seaweedfs
+    command:
+      [
+        "server",
+        "-ip=seaweedfs",
+        "-ip.bind=0.0.0.0",
+        "-dir=/data",
+        "-volume.max=0",
+        "-s3",
+        "-s3.config=/etc/seaweedfs/s3.conf"
+      ]
+    ports:
+      - "9333:9333"
+      - "8081:8080"
+      - "8888:8333"
+    volumes:
+      - seaweedfs_data:/data
+      - ./infra/seaweedfs/s3.conf:/etc/seaweedfs/s3.conf:ro
+    restart: unless-stopped
+
+  seaweedfs-init:
+    image: minio/mc:latest
+    container_name: sic-seaweedfs-init
+    depends_on:
+      - seaweedfs
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://seaweedfs:8333 seaweedfs seaweedfs-secret; do
+        echo 'waiting for seaweedfs s3...';
+        sleep 2;
+      done;
+      mc mb --ignore-existing local/uploads;
+      mc mb --ignore-existing local/documents;
+      mc mb --ignore-existing local/public-files;
+      echo 'seaweedfs buckets initialized';
+      "
+    restart: "no"
+
+volumes:
+  seaweedfs_data:

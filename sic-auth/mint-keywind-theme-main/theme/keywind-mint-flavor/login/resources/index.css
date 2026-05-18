@@ -1,0 +1,43 @@
+/** Wave effect config */
+@property --animation-tick {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 10000;
+}
+
+@property --height {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: .7;
+}
+
+@keyframes move {
+  100% {
+    --animation-tick: 0;
+  }
+}
+
+div.wave-animation {
+  --amplitude: 35;
+  --animation-tick: 18000;
+  --gap: 120;
+  --height: 0.5;
+  --speed: 300;
+  --layer1color: #29bac20d;
+  --layer2color: #29bac20d;
+  --layer3color: #29bac20d;
+  position: absolute;
+  bottom: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  background: paint(waveDraw);
+  margin: auto;
+  cursor: pointer;
+  flex-shrink: 0;
+  animation: move var(--speed) infinite linear;
+  overflow: hidden;
+  transition: --height 8s;
+}
+
+/** common background */
