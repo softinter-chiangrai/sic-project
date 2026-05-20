@@ -1,0 +1,71 @@
+package spring.sic.mail.db_mail_queue;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "db_mail_queue")
+@Data
+public class DbMailQueueEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "template_id")
+    private UUID templateId;
+
+    @Column(name = "recipient_email", length = 255)
+    private String recipientEmail;
+
+    @Column(name = "recipient_name", length = 255)
+    private String recipientName;
+
+    @Column(columnDefinition = "TEXT")
+    private String bodyData;
+
+    @Column(name = "sent_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime sentAt;
+
+    @Column(name = "retry_count")
+    private Integer retryCount;
+
+    @Column(name = "error_message", length = 500)
+    private String errorMessage;
+
+    @Column(name = "scheduled_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime scheduledAt;
+
+    @Column(name = "created_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime createdDate;
+
+    @Column(name = "next_retry_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime nextRetryAt;
+
+    @Column(name = "user_config_id")
+    private UUID userConfigId;
+
+    @Column(name = "use_english")
+    private Boolean useEnglish;
+
+    // Audit fields
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
+
+    @Column(name = "updated_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime updatedDate;
+
+    @Column(name = "is_delete")
+    private Boolean isDelete;
+
+    @Column(name = "delete_by", length = 100)
+    private String deleteBy;
+
+    @Column(name = "delete_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime deleteDate;
+}

@@ -1,0 +1,12 @@
+cd C:\Users\lovew\Student\Project-Main\angular-intership\sic-project\sic-spring\sic\src\main\java\spring\sic
+
+set NAME=SuVerify
+
+type nul > %NAME%Controller.java
+type nul > %NAME%Service.java
+type nul > %NAME%Repository.java
+type nul > %NAME%Entity.java
+type nul > %NAME%Model.java
+
+SuUserEntity
+
