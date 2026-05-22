@@ -19,7 +19,6 @@ import { SicValidator } from '../../services/sic-validator';
 })
 export class SicInputPhone implements ControlValueAccessor {
   @Input() label = '';
-  @Input() required = false;
   @Input() hint?: string;
   @Input() error = '';
   @Input() errorMessages: Record<string, string> = {};
@@ -64,6 +63,16 @@ export class SicInputPhone implements ControlValueAccessor {
     }
 
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   writeValue(value: string | null): void {

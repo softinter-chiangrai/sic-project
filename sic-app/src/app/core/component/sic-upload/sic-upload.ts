@@ -110,7 +110,6 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
 export class SicUpload implements ControlValueAccessor, OnInit, OnDestroy {
   @Input() label?: string;
   @Input() hint?: string;
-  @Input() required = false;
   @Input() disabled = false;
   @Input() multiple = true;
   @Input() category: SicUploadCategory = 'all';
@@ -169,6 +168,16 @@ export class SicUpload implements ControlValueAccessor, OnInit, OnDestroy {
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get resolvedAccept(): string {

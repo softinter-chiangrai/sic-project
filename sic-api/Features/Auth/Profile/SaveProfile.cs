@@ -20,6 +20,9 @@ public static class SaveProfile
         public Guid? Id { get; set; }
 
         public string? TaxId { get; set; }
+        public string? BranchCode { get; set; }
+
+        public string? BusinessCode { get; set; }
 
         public Guid? TitleId { get; set; }
 
@@ -147,7 +150,7 @@ public static class SaveProfile
             request.UploadGroupId = fileStorageService.ResolveUploadGroupId(request.UploadGroupId, request.UploadGroupData);
 
             var entity = mapper.Map<SuProfile>(request);
-            entity.KeycloakUserId = currentUserService.GetUserId();
+            entity.UserId = currentUserService.GetUserId();
 
             var item = entity.State switch
             {

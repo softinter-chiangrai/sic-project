@@ -13,14 +13,14 @@ using sic_api.Model.Storage;
 namespace sic_api.Entities.Su;
 
 
-[Index(nameof(KeycloakUserId), IsUnique = true)]
+[Index(nameof(UserId), IsUnique = true)]
 [Table("su_profile")]
 public class SuProfile : BaseEntity
 {
     [Required]
     [MaxLength(100)]
-    [Column("keycloak_user_id")]
-    public string KeycloakUserId { get; set; } = default!;
+    [Column("user_id")]
+    public string UserId { get; set; } = default!;
 
     [MaxLength(30)]
     [Column("tax_id")]

@@ -15,7 +15,7 @@ export const profileGuard: CanActivateFn = async (_route, _state) => {
     }
 
     const profile:boolean = await firstValueFrom(
-        http.get<boolean>(`${environment.apiBaseUrl}/api/auth/is-profile-complete`)
+        http.get<boolean>(`${environment.apiBaseUrl}/api/profile/activation`)
     );
 
     if (!profile) {

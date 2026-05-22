@@ -207,7 +207,8 @@ public class ResumableUploadService(
         var statePath = GetStateFilePath(sessionId);
         if (!File.Exists(statePath))
         {
-            throw new FileNotFoundException("Upload session was not found.", statePath);
+            // Do not include the file path in the message — it would leak the server’s directory structure.
+            throw new InvalidOperationException("Upload session not found.");
         }
 
         await using var stream = new FileStream(statePath, FileMode.Open, FileAccess.Read, FileShare.Read);

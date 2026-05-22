@@ -75,7 +75,7 @@ public static class GetMe
             var sub = currentUserService.GetUserId();
 
             return await dbContext.SuProfiles
-                .Where(x => x.KeycloakUserId == sub)
+                .Where(x => x.UserId == sub)
                 .Select(x => new Response
                 {
                     Id = x.Id,

@@ -18,12 +18,12 @@ public static class GetSuUserBusinessLov
             return await dbContext.SuUserBusinesses
                 .AsNoTracking()
                 .Include(x => x.Business)
-                .OrderBy(x => x.KeycloakUserId)
+                .OrderBy(x => x.UserId)
                 .ThenBy(x => x.Business.Id)
                 .Select(x => new LovBase
                 {
                     Value = x.Id,
-                    Text = x.KeycloakUserId + " - " + x.Business.Id
+                    Text = x.UserId + " - " + x.Business.Id
                 })
                 .ToArrayAsync(cancellationToken);
         }

@@ -78,7 +78,6 @@ export class SicCombobox implements ControlValueAccessor, AfterContentInit, Afte
   @Input() valueField = 'value';
   @Input() textField = 'text';
   @Input() disabled = false;
-  @Input() required = false;
   @Input() readonly = false;
   @Input() clearable = true;
   @Input() hint?: string;
@@ -178,6 +177,16 @@ export class SicCombobox implements ControlValueAccessor, AfterContentInit, Afte
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get showLoadingState(): boolean {

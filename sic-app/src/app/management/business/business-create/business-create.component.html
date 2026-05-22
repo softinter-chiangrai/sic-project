@@ -17,7 +17,17 @@
         <sic-radio formControlName="personType" direction="horizontal" alignment="center" [apiUrl]="service.apiGetLovPersonType" ></sic-radio>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" formControlName="taxId"></sic-input>
+        <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
+      </div>
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-3">
+          <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0" formControlName="taxId"></sic-input>
+        </div>
+        @if (data1.formGroup.get('personType')?.value == 'CORPORATE') {
+          <div class="flex-1">
+            <sic-input label="สาขา" mask="00000"  formControlName="branchCode"></sic-input>
+          </div>
+        }
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle" [params]="{ personType: data1.formGroup.get('personType')?.value }">
@@ -35,7 +45,7 @@
             <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
           </div>
         }
-      </div>
+      </div>  
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-2">
           <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>

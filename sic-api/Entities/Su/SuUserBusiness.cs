@@ -4,14 +4,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace sic_api.Entities.Su;
 
-[Index(nameof(KeycloakUserId), nameof(BusinessId), IsUnique = true)]
+[Index(nameof(UserId), nameof(BusinessId), IsUnique = true)]
 [Table("su_user_business")]
 public class SuUserBusiness : BaseEntity
 {
     [Required]
     [MaxLength(100)]
-    [Column("keycloak_user_id")]
-    public string KeycloakUserId { get; set; } = default!;
+    [Column("user_id")]
+    public string UserId { get; set; } = default!;
 
     [Required]
     [ForeignKey(nameof(Business))]

@@ -9,8 +9,22 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
     {
         var user = httpContextAccessor.HttpContext?.User
                    ?? throw new UnauthorizedAccessException("No HttpContext user.");
-        return user.GetKeycloakUserId();
+        return user.GetUserId();
     }
+
+    public string GetSessionId()
+    {
+        var sessionId = httpContextAccessor.HttpContext?.User.GetSessionId()
+                        ?? throw new UnauthorizedAccessException("No HttpContext session.");
+        return sessionId;
+    }
+    public string GetIpAddress()
+    {
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString()
+                        ?? throw new UnauthorizedAccessException("No HttpContext IP address.");
+        return ipAddress;
+    }
+    
 
     public string? GetUsername()
     {

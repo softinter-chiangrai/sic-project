@@ -36,7 +36,6 @@ export class SicNumber implements ControlValueAccessor, OnInit {
   @Input() label?: string;
   @Input() placeholder = '';
   @Input() hint?: string;
-  @Input() required = false;
   @Input() readonly = false;
   @Input() disabled = false;
   @Input() decimal?: number;
@@ -89,6 +88,16 @@ export class SicNumber implements ControlValueAccessor, OnInit {
 
   get decimalPlaces(): number {
     return this.decimal ?? this.configService.config().decimal;
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get maskExpression(): string {

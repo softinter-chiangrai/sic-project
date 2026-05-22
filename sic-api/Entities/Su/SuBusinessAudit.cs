@@ -8,21 +8,30 @@ public class SuBusinessAudit : BaseEntity
 {
     [Required]
     [MaxLength(100)]
-    [Column("keycloak_user_id")]
-    public string KeycloakUserId { get; set; } = default!;
+    [Column("user_id")]
+    public string UserId { get; set; } = default!;
+
+    [MaxLength(100)]
+    [Column("session_id")]
+    public string SessionId { get; set; } = default!;
 
     [MaxLength(100)]
     [Column("username")]
     public string? Username { get; set; }
 
     [Required]
-    [MaxLength(50)]
+    [ForeignKey(nameof(Business))]
     [Column("business_id")]
     public Guid BusinessId { get; set; }
+    public SuBusiness Business { get; set; } = default!;
 
     [MaxLength(50)]
     [Column("client_ip")]
     public string? ClientIp { get; set; }
+
+    [Required]
+    [Column("is_active")]
+    public bool IsActive { get; set; } = false;
 
     [MaxLength(500)]
     [Column("remark")]

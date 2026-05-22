@@ -1015,6 +1015,17 @@ namespace sic_api.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("address_local");
 
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("branch_code");
+
+                    b.Property<string>("BusinessCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("business_code");
+
                     b.Property<Guid>("CountryId")
                         .HasColumnType("uuid")
                         .HasColumnName("country_id");
@@ -1172,7 +1183,6 @@ namespace sic_api.Migrations
                         .HasColumnName("id");
 
                     b.Property<Guid>("BusinessId")
-                        .HasMaxLength(50)
                         .HasColumnType("uuid")
                         .HasColumnName("business_id");
 
@@ -1200,15 +1210,13 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("delete_date");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
-
-                    b.Property<string>("KeycloakUserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
@@ -1221,6 +1229,12 @@ namespace sic_api.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("session_id");
+
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1231,12 +1245,20 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.Property<string>("Username")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
 
                     b.ToTable("su_business_audit");
                 });
@@ -1630,12 +1652,6 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
-                    b.Property<string>("KeycloakUserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
-
                     b.Property<string>("LastNameEn")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -1702,6 +1718,12 @@ namespace sic_api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("upload_group_id");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.Property<string>("ZipCode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
@@ -1713,14 +1735,14 @@ namespace sic_api.Migrations
 
                     b.HasIndex("DistrictId");
 
-                    b.HasIndex("KeycloakUserId")
-                        .IsUnique();
-
                     b.HasIndex("ProvinceId");
 
                     b.HasIndex("SubDistrictId");
 
                     b.HasIndex("TitleId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("su_profile");
                 });
@@ -2064,12 +2086,6 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
-                    b.Property<string>("KeycloakUserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
-
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -2086,11 +2102,17 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
 
-                    b.HasIndex("KeycloakUserId", "BusinessId")
+                    b.HasIndex("UserId", "BusinessId")
                         .IsUnique();
 
                     b.ToTable("su_user_business");
@@ -2422,6 +2444,17 @@ namespace sic_api.Migrations
                     b.Navigation("Title");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Su.SuBusinessAudit", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuBusiness", "Business")
+                        .WithMany("BusinessAudits")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuBusinessInvite", b =>
                 {
                     b.HasOne("sic_api.Entities.Su.SuBusinessRole", "SuBusinessRole")
@@ -2518,7 +2551,7 @@ namespace sic_api.Migrations
             modelBuilder.Entity("sic_api.Entities.Su.SuUserBusiness", b =>
                 {
                     b.HasOne("sic_api.Entities.Su.SuBusiness", "Business")
-                        .WithMany("UserCompanies")
+                        .WithMany("UserBusinesses")
                         .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -2583,9 +2616,11 @@ namespace sic_api.Migrations
 
             modelBuilder.Entity("sic_api.Entities.Su.SuBusiness", b =>
                 {
+                    b.Navigation("BusinessAudits");
+
                     b.Navigation("BusinessRoles");
 
-                    b.Navigation("UserCompanies");
+                    b.Navigation("UserBusinesses");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuBusinessRole", b =>

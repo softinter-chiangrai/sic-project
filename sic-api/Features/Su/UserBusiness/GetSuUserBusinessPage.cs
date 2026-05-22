@@ -15,7 +15,7 @@ public static class GetSuUserBusinessPage
     public sealed class Response
     {
         public Guid Id { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public string BusinessName { get; set; } = default!;
         public bool IsDefault { get; set; }
@@ -51,7 +51,7 @@ public static class GetSuUserBusinessPage
                 .AsQueryable();
 
             query = ApplyKeyword(query, keyword);
-            query = query.ApplySorting(request.Sorts, x => x.KeycloakUserId);
+            query = query.ApplySorting(request.Sorts, x => x.UserId);
 
             var totalElements = await query.LongCountAsync(cancellationToken);
             var data = await query
@@ -86,7 +86,7 @@ public static class GetSuUserBusinessPage
             var hasActiveKeyword = loweredKeyword is "active" or "inactive";
 
             return query.Where(x =>
-                EF.Functions.ILike(x.KeycloakUserId, $"%{keyword}%") ||
+                EF.Functions.ILike(x.UserId, $"%{keyword}%") ||
                 EF.Functions.ILike(
                     NameUtility.EfJoinName(x.Business.Title.PrefixNameEn, x.Business.FirstNameEn, x.Business.Title.SuffixNameEn),
                     $"%{keyword}%") ||

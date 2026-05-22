@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SicSidebar } from '../core/component/sic-sidebar/sic-sidebar';
+import { SicSidebar } from '../core/component/sic-sidebar/sic-sidebar.component';
 import { SicStepper, SicStepTemplate } from '../core/component/sic-stepper/sic-stepper';
 import { SicInput } from '../core/component/sic-input/sic-input';
 import { SicNumber } from '../core/component/sic-number/sic-number';

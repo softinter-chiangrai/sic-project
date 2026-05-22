@@ -15,6 +15,15 @@ public class SuBusiness : BaseEntity
     public string? TaxId { get; set; }
 
     [Required]
+    [MaxLength(30)]
+    [Column("business_code")]
+    public string BusinessCode { get; set; } = default!;
+
+    [MaxLength(30)]
+    [Column("branch_code")]
+    public string? BranchCode { get; set; }
+
+    [Required]
     [MaxLength(100)]
     [Column("person_type")]
     public string PersonType { get; set; } = default!;
@@ -107,6 +116,7 @@ public class SuBusiness : BaseEntity
     [Column("is_active")]
     public bool IsActive { get; set; } = false;
 
-    public ICollection<SuUserBusiness>? UserCompanies { get; set; }
+    public ICollection<SuUserBusiness>? UserBusinesses { get; set; }
     public ICollection<SuBusinessRole>? BusinessRoles { get; set; }
+    public ICollection<SuBusinessAudit>? BusinessAudits { get; set; }
 }

@@ -28,7 +28,7 @@ public class ProgramAccessService(
                 .Where(x =>
                     x.IsActive &&
                     x.UserBusiness.IsActive &&
-                    x.UserBusiness.KeycloakUserId == userId &&
+                    x.UserBusiness.UserId == userId &&
                     x.UserBusiness.Business.IsActive &&
                     x.BusinessRole.IsActive)
                 .SelectMany(x => x.BusinessRole.RolePrograms)

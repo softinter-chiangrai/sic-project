@@ -30,7 +30,6 @@ import { SicValidator } from '../../services/sic-validator';
 })
 export class SicCheckbox implements ControlValueAccessor, OnInit {
   @Input() label?: string;
-  @Input() required = false;
   @Input() disabled = false;
   @Input() readonly = false;
   @Input() checkedValue: any = true;
@@ -58,6 +57,7 @@ export class SicCheckbox implements ControlValueAccessor, OnInit {
 
   ngOnInit(): void {
     this.ngControl = this.injector.get(NgControl, null);
+
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
@@ -73,6 +73,16 @@ export class SicCheckbox implements ControlValueAccessor, OnInit {
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   writeValue(value: any): void {

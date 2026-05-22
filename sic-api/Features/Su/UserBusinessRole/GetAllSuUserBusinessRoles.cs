@@ -13,7 +13,7 @@ public static class GetAllSuUserBusinessRoles
     {
         public Guid Id { get; set; }
         public Guid UserBusinessId { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public Guid BusinessRoleId { get; set; }
         public string RoleCode { get; set; } = default!;
@@ -29,7 +29,7 @@ public static class GetAllSuUserBusinessRoles
         public MappingProfile()
         {
             CreateMap<SuUserBusinessRole, Response>()
-                .ForMember(destination => destination.KeycloakUserId, options => options.MapFrom(source => source.UserBusiness.KeycloakUserId))
+                .ForMember(destination => destination.UserId, options => options.MapFrom(source => source.UserBusiness.UserId))
                 .ForMember(destination => destination.BusinessId, options => options.MapFrom(source => source.UserBusiness.BusinessId))
                 .ForMember(destination => destination.RoleCode, options => options.MapFrom(source => source.BusinessRole.RoleCode))
                 .ForMember(destination => destination.RoleNameEn, options => options.MapFrom(source => source.BusinessRole.RoleNameEn))
@@ -46,7 +46,7 @@ public static class GetAllSuUserBusinessRoles
         public async Task<IReadOnlyList<Response>> Handle(Query request, CancellationToken cancellationToken)
         {
             return await BuildQuery(dbContext)
-                .OrderBy(x => x.UserBusiness.KeycloakUserId)
+                .OrderBy(x => x.UserBusiness.UserId)
                 .ThenBy(x => x.BusinessRole.RoleCode)
                 .ProjectTo<Response>(mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);

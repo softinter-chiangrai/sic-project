@@ -4,11 +4,17 @@ namespace sic_api.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static string GetKeycloakUserId(this ClaimsPrincipal user)
+    public static string GetUserId(this ClaimsPrincipal user)
     {
         return user.FindFirstValue("sub")
                ?? user.FindFirstValue(ClaimTypes.NameIdentifier)
                ?? throw new UnauthorizedAccessException("Missing 'sub' claim.");
+    }
+    public static string GetSessionId(this ClaimsPrincipal user)
+    {
+        return user.FindFirstValue(ClaimTypes.Sid) 
+               ?? user.FindFirstValue("sid") 
+               ?? throw new UnauthorizedAccessException("Missing 'sid' (Session ID) claim.");
     }
 
     public static string? GetPreferredUsername(this ClaimsPrincipal user)

@@ -12,7 +12,7 @@ public static class GetAllSuUserCompanies
     public sealed class Response
     {
         public Guid Id { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public string BusinessName { get; set; } = default!;
         public bool IsDefault { get; set; }
@@ -39,7 +39,7 @@ public static class GetAllSuUserCompanies
             return await dbContext.SuUserBusinesses
                 .AsNoTracking()
                 .Include(x => x.Business)
-                .OrderBy(x => x.KeycloakUserId)
+                .OrderBy(x => x.UserId)
                 .ThenBy(x => x.Business.Id)
                 .ProjectTo<Response>(mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);

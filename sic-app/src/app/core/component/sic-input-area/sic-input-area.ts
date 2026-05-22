@@ -33,7 +33,6 @@ export class SicInputArea implements ControlValueAccessor, OnInit {
   @Input() name?: string;
   @Input() placeholder = '';
   @Input() hint?: string;
-  @Input() required = false;
   @Input() readonly = false;
   @Input() disabled = false;
   @Input() rows = 4;
@@ -73,6 +72,16 @@ export class SicInputArea implements ControlValueAccessor, OnInit {
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   writeValue(value: string | null | undefined): void {

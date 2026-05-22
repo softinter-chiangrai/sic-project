@@ -13,7 +13,7 @@ public static class GetSuUserBusinessRoleById
     {
         public Guid Id { get; set; }
         public Guid UserBusinessId { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public Guid BusinessRoleId { get; set; }
         public string RoleCode { get; set; } = default!;
@@ -29,7 +29,7 @@ public static class GetSuUserBusinessRoleById
         public MappingProfile()
         {
             CreateMap<SuUserBusinessRole, Response>()
-                .ForMember(destination => destination.KeycloakUserId, options => options.MapFrom(source => source.UserBusiness.KeycloakUserId))
+                .ForMember(destination => destination.UserId, options => options.MapFrom(source => source.UserBusiness.UserId))
                 .ForMember(destination => destination.BusinessId, options => options.MapFrom(source => source.UserBusiness.BusinessId))
                 .ForMember(destination => destination.Id, options => options.MapFrom(source => source.UserBusiness.Business.Id))
                 .ForMember(destination => destination.RoleCode, options => options.MapFrom(source => source.BusinessRole.RoleCode))

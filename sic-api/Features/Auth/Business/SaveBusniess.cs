@@ -14,7 +14,7 @@ namespace sic_api.Features.Auth.Business;
 
 public static class SaveBusiness
 {
-    public class Command : BaseModelState, IRequest<Guid?>, IMapFrom<SuProfile>
+    public class Command : BaseModelState, IRequest<Guid?>, IMapFrom<SuBusiness>
     {
 
         public Guid? Id { get; set; }
@@ -22,6 +22,10 @@ public static class SaveBusiness
         public string? TaxId { get; set; }
 
         public string? PersonType { get; set; } = default!;
+
+        public string BusinessCode { get; set; } = default!;
+
+        public string? BranchCode { get; set; }
 
         public Guid? TitleId { get; set; }
 
@@ -121,7 +125,7 @@ public static class SaveBusiness
             if (command.State == EntityState.Modified)
             {
                 var hastEdit = await _dbContext.SuUserBusinesses.AsNoTracking()
-                    .Where(x => x.BusinessId == command.Id && x.KeycloakUserId == userId).AnyAsync(cancellationToken);
+                    .Where(x => x.BusinessId == command.Id && x.UserId == userId).AnyAsync(cancellationToken);
                 if (!hastEdit)
                 {
                     context.AddFailure(nameof(command.Id), "User does not have permission to edit this business.");
@@ -134,14 +138,15 @@ public static class SaveBusiness
         SicDbContext dbContext,
         IMapper mapper,
         IFileStorageService fileStorageService,
-        ICurrentUserService currentUserService) : IRequestHandler<Command, Guid?>
+        ICurrentUserService currentUserService,
+        IBusinessAccessService businessAccessService) : IRequestHandler<Command, Guid?>
     {
         public async Task<Guid?> Handle(Command request, CancellationToken cancellationToken)
         {
             request.UploadGroupData ??= [];
             request.UploadGroupId = fileStorageService.ResolveUploadGroupId(request.UploadGroupId, request.UploadGroupData);
 
-            SuBusiness item;
+            SuBusiness? item;
 
             if (request.State == EntityState.Added)
             {
@@ -153,7 +158,7 @@ public static class SaveBusiness
                 var userBusiness = new SuUserBusiness
                 {
                     Business = item,
-                    KeycloakUserId = currentUserService.GetUserId(),
+                    UserId = currentUserService.GetUserId(),
                     IsDefault = false,
                     IsActive = true
                 };
@@ -197,6 +202,14 @@ public static class SaveBusiness
 
             await fileStorageService.SyncUploadsAsync(item.UploadGroupId, request.UploadGroupData, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (request.State == EntityState.Added)
+            {
+                await businessAccessService.ChangeBusinessAsync(
+                item.Id,
+                cancellationToken);
+            }
+
             return item.Id;
         }
     }

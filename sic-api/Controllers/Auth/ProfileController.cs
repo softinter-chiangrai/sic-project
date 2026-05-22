@@ -9,6 +9,14 @@ namespace sic_api.Controllers.Auth;
 [Authorize]
 public class ProfileController : BaseController
 {
+    [HttpGet]
+    public async Task<IActionResult> Info([FromQuery] GetInfo.Query model, CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(model, cancellationToken));
+
+    [HttpGet("activation")]
+    public async Task<IActionResult> IsBusinessComplete([FromQuery] GetProfileActivation.Query model, CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(model, cancellationToken));
+
     [HttpGet("combobox-title")]
     public async Task<IActionResult> ComboboxTitle([FromQuery] GetComboboxTitle.Query model, CancellationToken cancellationToken) =>
         Ok(await Mediator.Send(model, cancellationToken));

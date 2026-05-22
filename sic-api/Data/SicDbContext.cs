@@ -8,7 +8,13 @@ namespace sic_api.Data;
 public partial class SicDbContext : DbContext
 {
     private readonly IHttpContextAccessor httpContextAccessor;
-    private Guid? CurrentBusinessId  => Guid.TryParse(httpContextAccessor.HttpContext?.Request.Headers["X-Business-Id"], out var businessId) ? businessId : (Guid?)null;
+
+    // Reads the server-resolved business id set by BusinessContextMiddleware.
+    // Never sourced from client-supplied headers — tamper-proof by design.
+    private Guid? CurrentBusinessId =>
+        httpContextAccessor.HttpContext?.Items[BusinessContextKeys.ActiveBusinessId] is Guid id
+            ? id
+            : (Guid?)null;
 
     public SicDbContext(
         DbContextOptions<SicDbContext> options,

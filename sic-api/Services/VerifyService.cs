@@ -110,8 +110,12 @@ public class VerifyService : IVerifyService
         // Increment retry count
         verify.RetryCount++;
 
-        // Check token
-        bool isValid = verify.Token == token;
+        // Constant-time comparison to prevent timing attacks.
+        // Plain string equality leaks information about how many characters match.
+        bool isValid = !string.IsNullOrEmpty(verify.Token) &&
+            CryptographicOperations.FixedTimeEquals(
+                System.Text.Encoding.UTF8.GetBytes(verify.Token),
+                System.Text.Encoding.UTF8.GetBytes(token ?? string.Empty));
 
         if (isValid)
         {
