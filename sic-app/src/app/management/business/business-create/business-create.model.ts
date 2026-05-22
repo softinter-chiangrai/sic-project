@@ -9,6 +9,8 @@ export interface BusinessFormData {
 export interface BusinessCreateModel extends SicBaseStateModel {
   id: string;
   taxId: string;
+  branchCode: string;
+  businessCode: string;
   personType: string;
   titleId: string;
   firstNameEn: string;

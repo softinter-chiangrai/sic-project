@@ -65,7 +65,6 @@ export class SicRadio implements ControlValueAccessor, OnInit, OnChanges, OnDest
   @Input() textField = 'text';
   @Input() direction: 'vertical' | 'horizontal' = 'vertical';
   @Input() alignment: 'left' | 'center' | 'right' = 'left';
-  @Input() required = false;
   @Input() disabled = false;
   @Input() readonly = false;
   @Input() hint?: string;
@@ -136,6 +135,16 @@ export class SicRadio implements ControlValueAccessor, OnInit, OnChanges, OnDest
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get showEmptyState(): boolean {

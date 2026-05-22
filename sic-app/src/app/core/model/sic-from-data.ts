@@ -71,6 +71,11 @@ export class SicFromData<TModel extends object & SicStateModel> {
     this.sourceFormGroup.markAllAsTouched();
   }
 
+  markAsPristine(): void {
+    this.sourceFormGroup.markAsPristine();
+    this.currentState = SicEntityState.Detached;
+  }
+
   destroy(): void {
     this.subscription.unsubscribe();
   }

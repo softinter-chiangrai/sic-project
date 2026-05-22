@@ -2,7 +2,7 @@
   @if (label) {
     <span class="sic-input-phone__label">
       {{ label }}
-      @if (required) {
+      @if (isRequired) {
         <span class="sic-input-phone__required">*</span>
       }
     </span>
@@ -16,7 +16,7 @@
       [value]="left"
       [placeholder]="placeholderLeft"
       [disabled]="disabled"
-      [required]="required"
+      [required]="isRequired"
       inputmode="text"
       pattern="\+?[0-9]{0,3}"
       autocomplete="off"
@@ -34,7 +34,7 @@
       [value]="right"
       [placeholder]="placeholderRight"
       [disabled]="disabled"
-      [required]="required"
+      [required]="isRequired"
       inputmode="numeric"
       pattern="[0-9]*"
       autocomplete="off"

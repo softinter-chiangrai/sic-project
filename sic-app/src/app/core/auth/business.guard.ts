@@ -14,8 +14,8 @@ export const businessGuard: CanActivateFn = async (_route, _state) => {
         return true;
     }
 
-    const businesses:boolean = await firstValueFrom(
-        http.get<boolean>(`${environment.apiBaseUrl}/api/auth/is-business-complete`)
+    const businesses: boolean = await firstValueFrom(
+        http.get<boolean>(`${environment.apiBaseUrl}/api/business/activation`),
     );
 
     if (!businesses) {

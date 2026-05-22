@@ -14,7 +14,7 @@ public static class SaveSuUserBusiness
     public class Command : BaseModelState, IRequest<Guid?>, IMapFrom<SuUserBusiness>
     {
         public Guid? Id { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public bool IsDefault { get; set; }
         public bool IsActive { get; set; } = true;
@@ -46,7 +46,7 @@ public static class SaveSuUserBusiness
                 .When(x => x.State == EntityState.Modified)
                 .WithMessage("RowVersion is required when state is Modified.");
 
-            RuleFor(x => x.KeycloakUserId).NotEmpty().MaximumLength(100);
+            RuleFor(x => x.UserId).NotEmpty().MaximumLength(100);
             RuleFor(x => x.BusinessId).NotEmpty();
         }
     }

@@ -42,7 +42,6 @@ export class SicColorpicker implements ControlValueAccessor, OnInit, AfterViewIn
   @Input() label?: string;
   @Input() placeholder = 'Select color';
   @Input() disabled = false;
-  @Input() required = false;
   @Input() readonly = false;
   @Input() hint?: string;
   @Input() errorMessages: Record<string, string> = {};
@@ -130,6 +129,16 @@ export class SicColorpicker implements ControlValueAccessor, OnInit, AfterViewIn
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get displayValue(): string {

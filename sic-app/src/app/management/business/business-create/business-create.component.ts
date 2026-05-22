@@ -86,6 +86,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
       this.service.save(data).subscribe({
       next: (response) => {
         this.dialog.success('Profile Saved', 'Your profile has been successfully saved.').then((confirmed) => {
+          this.formBusinessData.markAsPristine();
           this.router.navigate(['feature']);
         });
       },

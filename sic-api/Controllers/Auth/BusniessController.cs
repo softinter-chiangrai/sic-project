@@ -9,6 +9,29 @@ namespace sic_api.Controllers.Auth;
 [Authorize]
 public class BusinessController : BaseController
 {
+
+    [HttpGet]
+    public async Task<IActionResult> CurrentBusiness(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetBusinessInfo.Query(), cancellationToken));
+
+    [HttpGet("my-business")]
+    public async Task<IActionResult> MyBusiness(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetMyCompanies.Query(), cancellationToken));
+
+    [HttpPost("change-business")]
+    public async Task<IActionResult> ChangeBusiness(
+        [FromBody] ChangeBusiness.Command model,
+        CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(model, cancellationToken));
+
+    [HttpGet("business-access")]
+    public async Task<IActionResult> CurrentAccess(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetBusinessAccess.Query(), cancellationToken));
+
+    [HttpGet("activation")]
+    public async Task<IActionResult> Activation(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetBusinessActivation.Query(), cancellationToken));
+
     [HttpGet("lov-person-type")]
     public async Task<IActionResult> LovPersonType([FromQuery] GetLovPersonType.Query model, CancellationToken cancellationToken) =>
         Ok(await Mediator.Send(model, cancellationToken));

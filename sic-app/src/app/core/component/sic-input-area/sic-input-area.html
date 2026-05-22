@@ -2,7 +2,7 @@
   @if (label) {
     <span class="sic-input-area__label">
       {{ label }}
-      @if (required) {
+      @if (isRequired) {
         <span class="sic-input-area__required">*</span>
       }
     </span>
@@ -14,7 +14,7 @@
     [value]="value"
     [placeholder]="placeholder"
     [readOnly]="readonly"
-    [required]="required"
+    [required]="isRequired"
     [disabled]="disabled"
     [rows]="rows"
     [attr.minlength]="minLength"

@@ -36,6 +36,17 @@ public class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMi
                 code = "concurrency_conflict"
             });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Log at warning level — do not include exception message in the response
+            // to avoid leaking internal access-control details.
+            logger.LogWarning(ex, "Unauthorized access for {Path}", context.Request.Path);
+
+            await WriteJsonAsync(context, StatusCodes.Status403Forbidden, new
+            {
+                message = "Access denied."
+            });
+        }
         catch (InvalidOperationException ex)
         {
             logger.LogWarning(ex, "Invalid operation for {Path}", context.Request.Path);
@@ -43,6 +54,17 @@ public class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMi
             await WriteJsonAsync(context, StatusCodes.Status400BadRequest, new
             {
                 message = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            // Catch-all: log the full exception but return a generic message
+            // so internal details never reach the client.
+            logger.LogError(ex, "Unhandled exception for {Path}", context.Request.Path);
+
+            await WriteJsonAsync(context, StatusCodes.Status500InternalServerError, new
+            {
+                message = "An unexpected error occurred."
             });
         }
     }

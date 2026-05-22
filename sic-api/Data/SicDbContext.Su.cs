@@ -25,7 +25,7 @@ public partial class SicDbContext
     {
         modelBuilder.Entity<SuUserBusiness>()
             .HasOne(x => x.Business)
-            .WithMany(x => x.UserCompanies)
+            .WithMany(x => x.UserBusinesses)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SuBusinessRole>()

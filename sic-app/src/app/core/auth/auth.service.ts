@@ -10,7 +10,7 @@ export class AuthService {
   private initialized = false;
 
   constructor(
-    private oauth: OAuthService,
+    private readonly oauth: OAuthService,
     @Inject(PLATFORM_ID) platformId: object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);

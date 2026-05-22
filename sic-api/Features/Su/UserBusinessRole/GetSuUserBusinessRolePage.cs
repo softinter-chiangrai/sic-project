@@ -15,7 +15,7 @@ public static class GetSuUserBusinessRolePage
     {
         public Guid Id { get; set; }
         public Guid UserBusinessId { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public Guid BusinessRoleId { get; set; }
         public string RoleCode { get; set; } = default!;
@@ -31,7 +31,7 @@ public static class GetSuUserBusinessRolePage
         public MappingProfile()
         {
             CreateMap<SuUserBusinessRole, Response>()
-                .ForMember(destination => destination.KeycloakUserId, options => options.MapFrom(source => source.UserBusiness.KeycloakUserId))
+                .ForMember(destination => destination.UserId, options => options.MapFrom(source => source.UserBusiness.UserId))
                 .ForMember(destination => destination.BusinessId, options => options.MapFrom(source => source.UserBusiness.BusinessId))
                 .ForMember(destination => destination.RoleCode, options => options.MapFrom(source => source.BusinessRole.RoleCode))
                 .ForMember(destination => destination.RoleNameEn, options => options.MapFrom(source => source.BusinessRole.RoleNameEn))
@@ -54,7 +54,7 @@ public static class GetSuUserBusinessRolePage
 
             var query = GetAllSuUserBusinessRoles.BuildQuery(dbContext);
             query = ApplyKeyword(query, keyword);
-            query = query.ApplySorting(request.Sorts, x => x.UserBusiness.KeycloakUserId);
+            query = query.ApplySorting(request.Sorts, x => x.UserBusiness.UserId);
 
             var totalElements = await query.LongCountAsync(cancellationToken);
             var data = await query
@@ -89,7 +89,7 @@ public static class GetSuUserBusinessRolePage
             var hasActiveKeyword = loweredKeyword is "active" or "inactive";
 
             return query.Where(x =>
-                EF.Functions.ILike(x.UserBusiness.KeycloakUserId, $"%{keyword}%") ||
+                EF.Functions.ILike(x.UserBusiness.UserId, $"%{keyword}%") ||
                 EF.Functions.ILike(x.BusinessRole.RoleCode, $"%{keyword}%") ||
                 EF.Functions.ILike(x.BusinessRole.RoleNameEn, $"%{keyword}%") ||
                 EF.Functions.ILike(x.BusinessRole.RoleNameLocal, $"%{keyword}%") ||

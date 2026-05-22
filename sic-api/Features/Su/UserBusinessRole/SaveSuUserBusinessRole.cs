@@ -102,14 +102,14 @@ public static class SaveSuUserBusinessRole
             .Where(x => x.Id == userBusinessId)
             .Select(x => new
             {
-                x.KeycloakUserId,
+                x.UserId,
                 x.Business.Id
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (cacheInfo is not null)
         {
-            programAccessService.RemoveAccessCache(cacheInfo.KeycloakUserId, cacheInfo.Id);
+            programAccessService.RemoveAccessCache(cacheInfo.UserId, cacheInfo.Id);
         }
     }
 }

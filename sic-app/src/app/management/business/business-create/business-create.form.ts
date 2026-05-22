@@ -7,6 +7,8 @@ export class BusinessCreateForm {
     return fb.group<ToForm<BusinessCreateModel>>({
       id: fb.control(null, [Validators.maxLength(30)]),
       taxId: fb.control(null),
+      branchCode: fb.control(null,Validators.maxLength(5)),
+      businessCode: fb.control(null,Validators.maxLength(5)),
       personType: fb.control("INDIVIDUAL", [Validators.required]),
       titleId: fb.control(null, [Validators.required]),
       firstNameEn: fb.control(null, [Validators.required, Validators.maxLength(100)]),

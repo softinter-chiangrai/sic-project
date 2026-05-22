@@ -1,103 +1,1735 @@
-<header
-    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md">
-    <div class="flex items-center gap-4">
-        <div class="relative">
-            <div class="grid place-items-center">
-                <h1 class="text-2xl font-bold text-[var(--primary)]">SIC Tutorial</h1>
+<div class="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+
+  <!-- Sidebar -->
+  <aside
+    class="flex flex-col border-r border-[var(--border)] bg-[var(--surface)] transition-all duration-300 overflow-y-auto"
+    [class.w-60]="sidebarOpen()"
+    [class.w-14]="!sidebarOpen()">
+
+    <!-- Sidebar Header -->
+    <div class="flex items-center justify-between px-3 py-4 border-b border-[var(--border)] min-h-[57px]">
+      @if (sidebarOpen()) {
+        <span class="font-bold text-[var(--primary)] text-sm tracking-wide whitespace-nowrap">SIC Tutorial</span>
+      }
+      <button
+        type="button"
+        class="ml-auto p-1.5 rounded-md hover:bg-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+        (click)="toggleSidebar()"
+        [title]="sidebarOpen() ? 'Collapse' : 'Expand'">
+        <i class="bi" [class.bi-layout-sidebar]="sidebarOpen()" [class.bi-layout-sidebar-reverse]="!sidebarOpen()"></i>
+      </button>
+    </div>
+
+    <!-- Overview -->
+    <div class="px-2 pt-3">
+      <button
+        type="button"
+        (click)="navigate('overview')"
+        class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-sm transition-colors"
+        [class.bg-[var(--primary)]]="activeSection() === 'overview'"
+        [class.text-white]="activeSection() === 'overview'"
+        [class.text-[var(--text-muted)]]="activeSection() !== 'overview'"
+        [class.hover:bg-[var(--border)]]="activeSection() !== 'overview'">
+        <i class="bi bi-house text-base shrink-0"></i>
+        @if (sidebarOpen()) {
+          <span class="whitespace-nowrap">Overview</span>
+        }
+      </button>
+    </div>
+
+    <!-- Nav Groups -->
+    @for (group of navGroups; track group.label) {
+      <div class="px-2 pt-2">
+        <button
+          type="button"
+          class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-colors"
+          (click)="toggleGroup(group.label)">
+          <i class="bi shrink-0 text-base" [class]="group.icon"></i>
+          @if (sidebarOpen()) {
+            <span class="flex-1 text-left whitespace-nowrap">{{ group.label }}</span>
+            <i class="bi text-xs" [class.bi-chevron-down]="isGroupExpanded(group.label)" [class.bi-chevron-right]="!isGroupExpanded(group.label)"></i>
+          }
+        </button>
+
+        @if (isGroupExpanded(group.label) && sidebarOpen()) {
+          <div class="ml-3 mt-0.5 space-y-0.5 border-l border-[var(--border)] pl-3">
+            @for (item of group.items; track item.id) {
+              <button
+                type="button"
+                (click)="navigate(item.id)"
+                class="flex items-center w-full px-2.5 py-1.5 rounded-md text-sm transition-colors"
+                [class.text-[var(--primary)]]="activeSection() === item.id"
+                [class.font-medium]="activeSection() === item.id"
+                [class.bg-[var(--primary)]/10]="activeSection() === item.id"
+                [class.text-[var(--text-muted)]]="activeSection() !== item.id"
+                [class.hover:text-[var(--text)]]="activeSection() !== item.id"
+                [class.hover:bg-[var(--border)]]="activeSection() !== item.id">
+                <span class="whitespace-nowrap">{{ item.label }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <div class="mt-auto p-3 border-t border-[var(--border)]">
+      <button type="button" (click)="toggleTheme()" class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-colors">
+        <i class="bi bi-circle-half text-base shrink-0"></i>
+        @if (sidebarOpen()) { <span class="whitespace-nowrap">Toggle Theme</span> }
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto">
+    <div class="max-w-5xl mx-auto px-6 py-10">
+
+      <!-- ===== OVERVIEW ===== -->
+      @if (activeSection() === 'overview') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-4xl font-bold text-[var(--primary)] mb-2">SIC Project Tutorial</h1>
+            <p class="text-[var(--text-muted)] text-lg">คู่มือการพัฒนาสำหรับ sic-app (Angular) และ sic-api (ASP.NET Core)</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @for (group of navGroups; track group.label) {
+              <button type="button" class="border border-[var(--border)] rounded-xl p-5 bg-[var(--surface)] hover:border-[var(--primary)] transition-colors text-left w-full" (click)="navigate(group.items[0].id)">
+                <i class="bi text-2xl text-[var(--primary)] mb-3 block" [class]="group.icon"></i>
+                <h2 class="font-semibold text-lg mb-1">{{ group.label }}</h2>
+                <ul class="text-sm text-[var(--text-muted)] space-y-1">
+                  @for (item of group.items; track item.id) {
+                    <li class="flex items-center gap-1.5">
+                      <i class="bi bi-arrow-right-short"></i>
+                      <button type="button" class="hover:text-[var(--primary)] text-left" (click)="$event.stopPropagation(); navigate(item.id)">{{ item.label }}</button>
+                    </li>
+                  }
+                </ul>
+              </button>
+            }
+          </div>
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <h2 class="text-lg font-semibold mb-3">โครงสร้างโปรเจกต์</h2>
+            <pre class="text-sm text-[var(--text-muted)] leading-relaxed overflow-x-auto" ngNonBindable><code>sic-project/
+├── sic-app/           Angular SSR Frontend
+│   └── src/app/
+│       ├── core/      Shared components, services, guards
+│       ├── feature/   Demo feature (GridPanel etc.)
+│       ├── management/  Business pages
+│       └── tutorial/  This page
+├── sic-api/           ASP.NET Core Backend (CQRS / MediatR)
+│   ├── Controllers/   HTTP endpoints
+│   ├── Features/      Command / Query handlers
+│   ├── Entities/      EF Core entities
+│   ├── Data/          DbContext
+│   ├── Services/      Business services
+│   └── Utility/       Helper utilities
+├── sic-auth/          Keycloak Identity Provider
+├── sic-database/      PostgreSQL
+└── sic-storage/       MinIO Object Storage</code></pre>
+          </div>
+        </div>
+      }
+
+      <!-- ===== APP COMPONENTS ===== -->
+      @if (activeSection() === 'app-components') {
+        <div class="space-y-10">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Components</h1>
+            <p class="text-[var(--text-muted)]">ทุก component รองรับ <code class="code-inline">ReactiveFormsModule</code> และ <code class="code-inline">ControlValueAccessor</code></p>
+          </div>
+
+          <!-- sic-input -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-input-cursor-text text-[var(--primary)]"></i> sic-input</h2>
+            <p class="section-desc">Text input ทั่วไป รองรับ mask, prefix, suffix</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>label</code><span>string</span><span>-</span><span>ชื่อ label</span></div>
+              <div class="attr-row"><code>placeholder</code><span>string</span><span>''</span><span>placeholder text</span></div>
+              <div class="attr-row"><code>type</code><span>text|email|password|search|tel|url</span><span>'text'</span><span>ประเภท input</span></div>
+              <div class="attr-row"><code>hint</code><span>string</span><span>-</span><span>ข้อความใต้ช่อง</span></div>
+              <div class="attr-row"><code>readonly</code><span>boolean</span><span>false</span><span>ห้ามแก้ไข</span></div>
+              <div class="attr-row"><code>disabled</code><span>boolean</span><span>false</span><span>ปิดใช้งาน</span></div>
+              <div class="attr-row"><code>mask</code><span>string</span><span>-</span><span>ngx-mask pattern เช่น 000-000</span></div>
+              <div class="attr-row"><code>prefix</code><span>string</span><span>''</span><span>ข้อความนำหน้า</span></div>
+              <div class="attr-row"><code>suffix</code><span>string</span><span>''</span><span>ข้อความตามหลัง</span></div>
+              <div class="attr-row"><code>errorMessages</code><span>Record&lt;string,string&gt;</span><span>&#123;&#125;</span><span>ข้อความ error ตาม validator key</span></div>
+              <div class="attr-row"><code>autocomplete</code><span>string</span><span>-</span><span>HTML autocomplete attribute</span></div>
+              <div class="attr-row"><code>inputMode</code><span>text|email|numeric|decimal…</span><span>-</span><span>keyboard mode บนมือถือ</span></div>
             </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-input
+  label="Email"
+  type="email"
+  placeholder="user&#64;example.com"
+  [formControl]="emailControl"
+  [errorMessages]="&#123; required: 'กรุณากรอก email', email: 'รูปแบบ email ไม่ถูกต้อง' &#125;"&gt;
+&lt;/sic-input&gt;
+
+&lt;!-- พร้อม mask --&gt;
+&lt;sic-input
+  label="รหัสไปรษณีย์"
+  mask="00000"
+  [formControl]="zipControl"&gt;
+&lt;/sic-input&gt;</code></pre>
+          </section>
+
+          <!-- sic-number -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-123 text-[var(--primary)]"></i> sic-number</h2>
+            <p class="section-desc">Numeric input พร้อม format ทศนิยม และ thousand separator</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>label</code><span>string</span><span>-</span><span>ชื่อ label</span></div>
+              <div class="attr-row"><code>decimal</code><span>number</span><span>(จาก config)</span><span>จำนวนทศนิยม</span></div>
+              <div class="attr-row"><code>thousandSeparator</code><span>string</span><span>','</span><span>ตัวคั่นหลักพัน</span></div>
+              <div class="attr-row"><code>allowNegativeNumbers</code><span>boolean</span><span>false</span><span>อนุญาตตัวเลขติดลบ</span></div>
+              <div class="attr-row"><code>hint / errorMessages / readonly / disabled</code><span>-</span><span>-</span><span>เหมือน sic-input</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-number
+  label="ราคา"
+  [decimal]="2"
+  thousandSeparator=","
+  [formControl]="priceControl"
+  [errorMessages]="&#123; required: 'กรุณากรอกราคา', max: 'เกินจำนวนสูงสุด' &#125;"&gt;
+&lt;/sic-number&gt;</code></pre>
+          </section>
+
+          <!-- sic-input-area -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-textarea-resize text-[var(--primary)]"></i> sic-input-area</h2>
+            <p class="section-desc">Textarea multi-line input</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>rows</code><span>number</span><span>4</span><span>จำนวนบรรทัด</span></div>
+              <div class="attr-row"><code>minLength</code><span>number</span><span>-</span><span>ความยาวขั้นต่ำ</span></div>
+              <div class="attr-row"><code>maxLength</code><span>number</span><span>-</span><span>ความยาวสูงสุด</span></div>
+              <div class="attr-row"><code>label / hint / placeholder / readonly / disabled / errorMessages</code><span>-</span><span>-</span><span>เหมือน sic-input</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-input-area
+  label="หมายเหตุ"
+  placeholder="กรอกรายละเอียด..."
+  [rows]="6"
+  [maxLength]="500"
+  [formControl]="noteControl"
+  [errorMessages]="&#123; minlength: 'ต้องมีอย่างน้อย 10 ตัวอักษร' &#125;"&gt;
+&lt;/sic-input-area&gt;</code></pre>
+          </section>
+
+          <!-- sic-input-phone -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-telephone text-[var(--primary)]"></i> sic-input-phone</h2>
+            <p class="section-desc">Phone input แบบแยก country code - number ค่า formControl เป็น <code class="code-inline">"+66-0812345678"</code></p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>label</code><span>string</span><span>''</span><span>ชื่อ label</span></div>
+              <div class="attr-row"><code>placeholderLeft</code><span>string</span><span>'+00'</span><span>placeholder country code</span></div>
+              <div class="attr-row"><code>placeholderRight</code><span>string</span><span>'0000000000'</span><span>placeholder หมายเลข</span></div>
+              <div class="attr-row"><code>hint / error / errorMessages</code><span>-</span><span>-</span><span>ข้อความช่วยเหลือ/error</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-input-phone
+  label="เบอร์โทรศัพท์"
+  placeholderLeft="+66"
+  [formControl]="phoneControl"
+  [errorMessages]="&#123; required: 'กรุณากรอกเบอร์โทร' &#125;"&gt;
+&lt;/sic-input-phone&gt;
+&lt;!-- ค่าที่ได้: "+66-0812345678" --&gt;</code></pre>
+          </section>
+
+          <!-- sic-combobox -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-menu-button-wide text-[var(--primary)]"></i> sic-combobox</h2>
+            <p class="section-desc">Dropdown พร้อม search และ server-side paging</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>apiUrl</code><span>string</span><span>(required)</span><span>URL API สำหรับดึงข้อมูล</span></div>
+              <div class="attr-row"><code>params</code><span>Record&lt;string,any&gt;</span><span>&#123;&#125;</span><span>query params เพิ่มเติม</span></div>
+              <div class="attr-row"><code>paging</code><span>boolean</span><span>true</span><span>เปิด/ปิด paging</span></div>
+              <div class="attr-row"><code>pageSize</code><span>number</span><span>10</span><span>จำนวนต่อหน้า</span></div>
+              <div class="attr-row"><code>keywordParam</code><span>string</span><span>'keyword'</span><span>ชื่อ param ค้นหา</span></div>
+              <div class="attr-row"><code>valueField</code><span>string</span><span>'value'</span><span>field ที่เป็น value</span></div>
+              <div class="attr-row"><code>textField</code><span>string</span><span>'text'</span><span>field ที่แสดงผล</span></div>
+              <div class="attr-row"><code>clearable</code><span>boolean</span><span>true</span><span>มีปุ่ม clear</span></div>
+              <div class="attr-row"><code>readonly / disabled / hint / errorMessages</code><span>-</span><span>-</span><span>เหมือน sic-input</span></div>
+            </div>
+            <p class="text-sm text-[var(--text-muted)] mt-2">Events: <code class="code-inline">(selectionChanged)</code> — ส่ง object ทั้ง row เมื่อเลือก</p>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-combobox
+  label="ประเทศ"
+  [apiUrl]="apiComboboxCountry"
+  [params]="&#123; isActive: true &#125;"
+  valueField="id"
+  textField="messageEn"
+  [formControl]="countryControl"
+  (selectionChanged)="onCountryChange($event)"
+  [errorMessages]="&#123; required: 'กรุณาเลือกประเทศ' &#125;"&gt;
+&lt;/sic-combobox&gt;
+
+&lt;!-- Custom option template --&gt;
+&lt;sic-combobox [apiUrl]="api" valueField="id" textField="name" [formControl]="ctrl"&gt;
+  &lt;ng-template sicComboboxOption let-item&gt;
+    &lt;span class="font-bold"&gt;&#123;&#123; item.code &#125;&#125;&lt;/span&gt; — &#123;&#123; item.name &#125;&#125;
+  &lt;/ng-template&gt;
+&lt;/sic-combobox&gt;</code></pre>
+          </section>
+
+          <!-- sic-datepicker -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-calendar-date text-[var(--primary)]"></i> sic-datepicker</h2>
+            <p class="section-desc">Date picker รองรับ Buddhist era (พ.ศ.) และ format ที่กำหนดเอง ค่า formControl เป็น ISO string</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>dateFormat</code><span>string</span><span>-</span><span>Dayjs format เช่น 'D MMMM YYYY'</span></div>
+              <div class="attr-row"><code>minDate / maxDate</code><span>Date|string</span><span>-</span><span>วันที่ขั้นต่ำ/สูงสุด</span></div>
+              <div class="attr-row"><code>clearable</code><span>boolean</span><span>true</span><span>มีปุ่ม clear</span></div>
+              <div class="attr-row"><code>placeholder / hint / readonly / disabled / errorMessages</code><span>-</span><span>-</span><span>เหมือน sic-input</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-datepicker
+  label="วันที่เริ่มต้น"
+  placeholder="เลือกวันที่"
+  dateFormat="D MMMM YYYY"
+  [maxDate]="today"
+  [clearable]="true"
+  [formControl]="dateControl"&gt;
+&lt;/sic-datepicker&gt;</code></pre>
+          </section>
+
+          <!-- sic-timepicker -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-clock text-[var(--primary)]"></i> sic-timepicker</h2>
+            <p class="section-desc">Time picker แบบ HH:mm ค่า formControl เป็น string <code class="code-inline">"14:30"</code></p>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-timepicker
+  label="เวลาเริ่มต้น"
+  placeholder="เลือกเวลา"
+  [formControl]="timeControl"
+  [errorMessages]="&#123; required: 'กรุณาเลือกเวลา' &#125;"&gt;
+&lt;/sic-timepicker&gt;</code></pre>
+          </section>
+
+          <!-- sic-checkbox -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-check-square text-[var(--primary)]"></i> sic-checkbox</h2>
+            <p class="section-desc">Checkbox รองรับ custom checked/unchecked values</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>checkedValue</code><span>any</span><span>true</span><span>ค่าเมื่อ checked</span></div>
+              <div class="attr-row"><code>uncheckedValue</code><span>any</span><span>false</span><span>ค่าเมื่อ unchecked</span></div>
+              <div class="attr-row"><code>label / hint / readonly / disabled / errorMessages</code><span>-</span><span>-</span><span>เหมือน sic-input</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;!-- boolean --&gt;
+&lt;sic-checkbox label="ยอมรับเงื่อนไข" [formControl]="agreeControl"&gt;&lt;/sic-checkbox&gt;
+
+&lt;!-- custom values (1 / 0) --&gt;
+&lt;sic-checkbox
+  label="จดจำฉัน"
+  [checkedValue]="1"
+  [uncheckedValue]="0"
+  [formControl]="rememberControl"&gt;
+&lt;/sic-checkbox&gt;</code></pre>
+          </section>
+
+          <!-- sic-radio -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-ui-radios text-[var(--primary)]"></i> sic-radio</h2>
+            <p class="section-desc">Radio group รองรับ options array หรือ API URL</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>options</code><span>SicRadioOption[]</span><span>[]</span><span>ตัวเลือกแบบ static</span></div>
+              <div class="attr-row"><code>apiUrl</code><span>string</span><span>''</span><span>URL API ดึง options</span></div>
+              <div class="attr-row"><code>valueField / textField</code><span>string</span><span>'value'/'text'</span><span>field จาก API</span></div>
+              <div class="attr-row"><code>direction</code><span>vertical|horizontal</span><span>'vertical'</span><span>แนวแสดงผล</span></div>
+              <div class="attr-row"><code>alignment</code><span>left|center|right</span><span>'left'</span><span>การจัด</span></div>
+              <div class="attr-row"><code>emptyText</code><span>string</span><span>'No data found'</span><span>ข้อความเมื่อไม่มีข้อมูล</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;!-- Static options --&gt;
+&lt;sic-radio
+  label="เพศ"
+  direction="horizontal"
+  [options]="[
+    &#123; value: 'M', text: 'ชาย' &#125;,
+    &#123; value: 'F', text: 'หญิง' &#125;
+  ]"
+  [formControl]="genderControl"&gt;
+&lt;/sic-radio&gt;
+
+&lt;!-- From API --&gt;
+&lt;sic-radio
+  label="ยืนยัน"
+  [apiUrl]="apiLovYesNo"
+  valueField="code"
+  textField="messageEn"
+  [formControl]="confirmControl"&gt;
+&lt;/sic-radio&gt;</code></pre>
+          </section>
+
+          <!-- sic-colorpicker -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-palette text-[var(--primary)]"></i> sic-colorpicker</h2>
+            <p class="section-desc">Color picker พร้อม color wheel ค่าเป็น HEX string เช่น <code class="code-inline">"#FF6B6B"</code></p>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-colorpicker
+  label="สีประจำตัว"
+  placeholder="เลือกสี"
+  [formControl]="colorControl"
+  [errorMessages]="&#123; required: 'กรุณาเลือกสี' &#125;"&gt;
+&lt;/sic-colorpicker&gt;</code></pre>
+          </section>
+
+          <!-- sic-upload & sic-input-upload -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-cloud-upload text-[var(--primary)]"></i> sic-upload / sic-input-upload</h2>
+            <p class="section-desc"><code class="code-inline">sic-upload</code> — drag-drop area, <code class="code-inline">sic-input-upload</code> — thumbnail inline. ทั้งคู่ upload ผ่าน chunked upload ไปยัง sic-storage</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>multiple</code><span>boolean</span><span>true</span><span>อัปโหลดได้หลายไฟล์</span></div>
+              <div class="attr-row"><code>category</code><span>all|image|video|document</span><span>'all'</span><span>ประเภทไฟล์ที่รับ</span></div>
+              <div class="attr-row"><code>visibility</code><span>1|2|3|4</span><span>1</span><span>ระดับการมองเห็น</span></div>
+              <div class="attr-row"><code>uploadGroupId</code><span>string</span><span>null</span><span>UUID กลุ่มไฟล์</span></div>
+              <div class="attr-row"><code>accept</code><span>string</span><span>-</span><span>override MIME types ที่รับ</span></div>
+              <div class="attr-row"><code>businessId</code><span>string</span><span>-</span><span>business context</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-upload
+  label="เอกสารแนบ"
+  [multiple]="true"
+  category="document"
+  [visibility]="1"
+  [uploadGroupId]="uploadGroupIdControl.value"
+  [formControl]="attachmentsControl"
+  [errorMessages]="&#123; required: 'กรุณาอัปโหลดอย่างน้อย 1 ไฟล์' &#125;"&gt;
+&lt;/sic-upload&gt;
+
+&lt;!-- inline thumbnail style --&gt;
+&lt;sic-input-upload
+  label="รูปภาพ"
+  category="image"
+  [multiple]="false"
+  [formControl]="imageControl"&gt;
+&lt;/sic-input-upload&gt;</code></pre>
+          </section>
+
+          <!-- sic-button -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-hand-index text-[var(--primary)]"></i> sic-button</h2>
+            <p class="section-desc">Button component รองรับ variant, loading, icon</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>variant</code><span>primary|secondary|danger|ghost|outline</span><span>'primary'</span><span>รูปแบบสี</span></div>
+              <div class="attr-row"><code>size</code><span>sm|md|lg</span><span>'md'</span><span>ขนาด</span></div>
+              <div class="attr-row"><code>loading</code><span>boolean</span><span>false</span><span>แสดง spinner</span></div>
+              <div class="attr-row"><code>disabled</code><span>boolean</span><span>false</span><span>ปิดใช้งาน</span></div>
+              <div class="attr-row"><code>type</code><span>button|submit|reset</span><span>'button'</span><span>HTML button type</span></div>
+            </div>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-button variant="primary" type="submit" [loading]="saving"&gt;บันทึก&lt;/sic-button&gt;
+&lt;sic-button variant="ghost" (click)="onCancel()"&gt;ยกเลิก&lt;/sic-button&gt;
+&lt;sic-button variant="danger" size="sm" (click)="onDelete()"&gt;ลบ&lt;/sic-button&gt;</code></pre>
+          </section>
+
+          <!-- sic-stepper -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-list-ol text-[var(--primary)]"></i> sic-stepper</h2>
+            <p class="section-desc">Multi-step wizard</p>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Attribute</span><span>Type</span><span>Default</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>steps</code><span>SicStep[]</span><span>[]</span><span>รายการ step</span></div>
+              <div class="attr-row"><code>activeStep</code><span>number</span><span>0</span><span>step ปัจจุบัน (two-way)</span></div>
+            </div>
+            <p class="text-sm text-[var(--text-muted)] mt-2">Events: <code class="code-inline">(stepSkip)</code>, <code class="code-inline">(finish)</code>, <code class="code-inline">(activeStepChange)</code></p>
+            <pre class="code-block" ngNonBindable><code>steps = [
+  &#123; label: 'ข้อมูลทั่วไป', skippable: false &#125;,
+  &#123; label: 'ที่อยู่', skippable: true &#125;,
+  &#123; label: 'ยืนยัน', skippable: false &#125;,
+];
+currentStep = 0;
+
+&lt;sic-stepper
+  [steps]="steps"
+  [(activeStep)]="currentStep"
+  (stepSkip)="onSkip()"
+  (finish)="onFinish()"&gt;
+  &lt;ng-template sicStep&gt;
+    &lt;!-- Step 1 content --&gt;
+  &lt;/ng-template&gt;
+  &lt;ng-template sicStep&gt;
+    &lt;!-- Step 2 content --&gt;
+  &lt;/ng-template&gt;
+&lt;/sic-stepper&gt;</code></pre>
+          </section>
+
+          <!-- sic-dialog -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-window text-[var(--primary)]"></i> DialogService</h2>
+            <p class="section-desc">ใช้ผ่าน <code class="code-inline">DialogService</code> inject ไม่ใช่ component โดยตรง</p>
+            <pre class="code-block" ngNonBindable><code>readonly dialog = inject(DialogService);
+
+// Alert
+this.dialog.alert('หัวข้อ', 'ข้อความ');
+
+// Confirm
+this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบรายการนี้หรือไม่?').then(result =&gt; &#123;
+  if (result) this.delete();
+&#125;);
+
+// Error
+this.dialog.error('เกิดข้อผิดพลาด', error);</code></pre>
+          </section>
+
+          <!-- sic-tooltip -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-chat-right-text text-[var(--primary)]"></i> sic-tooltip</h2>
+            <p class="section-desc">Tooltip directive ใช้เป็น attribute บน element ใดก็ได้</p>
+            <pre class="code-block" ngNonBindable><code>&lt;span sicTooltip="ข้อมูลเพิ่มเติม" tooltipPosition="top"&gt;Hover me&lt;/span&gt;
+&lt;button sicTooltip="คลิกเพื่อลบ" tooltipPosition="bottom"&gt;ลบ&lt;/button&gt;</code></pre>
+          </section>
+
+          <!-- sic-sidebar -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-layout-sidebar text-[var(--primary)]"></i> sic-sidebar</h2>
+            <p class="section-desc">Layout wrapper พร้อม navigation sidebar ใช้ครอบ <code class="code-inline">&lt;router-outlet&gt;</code></p>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-sidebar&gt;
+  &lt;router-outlet&gt;&lt;/router-outlet&gt;
+&lt;/sic-sidebar&gt;</code></pre>
+          </section>
+
         </div>
+      }
 
-        <div class="relative" (mouseenter)="openDropdown('cli')" (mouseleave)="closeMenu()">
-            <button
-                type="button"
-                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
-                >
-                <span>Cli</span>
-                <i class="bi text-xs transition-transform duration-200"
-                    [class.bi-chevron-down]="openMenu() !== 'cli'"
-                    [class.bi-chevron-up]="openMenu() === 'cli'"></i>
-            </button>
+      <!-- ===== APP CLI ===== -->
+      @if (activeSection() === 'app-cli') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">CLI Commands</h1>
+            <p class="text-[var(--text-muted)]">คำสั่ง <code class="code-inline">ng generate</code> ตาม schematics ที่กำหนดใน <code class="code-inline">angular.json</code></p>
+          </div>
 
-            @if (openMenu() === 'cli') {
-                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
-                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
-                    @for (item of cliMenus; track item) {
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
-                            (click)="closeMenu()">
-                            <span>{{ item }}</span>
-                            <i class="bi bi-terminal text-xs text-[var(--text-muted)]"></i>
-                        </button>
-                    }
-                    </div>
-                </div>
-            }
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <h2 class="font-semibold mb-3">Schematics Configuration</h2>
+            <pre class="code-block" ngNonBindable><code>// angular.json → projects.sic-app.schematics
+"&#64;schematics/angular:component": &#123; "type": "component", "skipTests": true &#125;
+"&#64;schematics/angular:service":   &#123; "type": "service",   "skipTests": true &#125;
+"&#64;schematics/angular:resolver":  &#123; "typeSeparator": ".", "skipTests": true &#125;
+"&#64;schematics/angular:interface": &#123; "type": "model" &#125;
+"&#64;schematics/angular:class":     &#123; "skipTests": true &#125;</code></pre>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">Component</h2>
+            <pre class="code-block" ngNonBindable><code># สร้าง component ชื่อ example ใน management/example
+ng generate component management/example/example
+
+# ได้ไฟล์:
+# src/app/management/example/example.component.ts
+# src/app/management/example/example.component.html
+# src/app/management/example/example.component.css</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Service</h2>
+            <pre class="code-block" ngNonBindable><code>ng generate service management/example/example
+
+# ได้ไฟล์:
+# src/app/management/example/example.service.ts</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Resolver</h2>
+            <pre class="code-block" ngNonBindable><code>ng generate resolver management/example/example
+
+# ได้ไฟล์:
+# src/app/management/example/example.resolver.ts</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Interface (Model)</h2>
+            <pre class="code-block" ngNonBindable><code>ng generate interface management/example/example
+
+# ได้ไฟล์:
+# src/app/management/example/example.model.ts</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Class (Form)</h2>
+            <pre class="code-block" ngNonBindable><code>ng generate class management/example/example
+
+# ได้ไฟล์:
+# src/app/management/example/example.ts
+# (ใช้สร้าง form class เช่น ExampleForm)</code></pre>
+          </section>
+
+          <div class="rounded-xl border border-amber-400/30 bg-amber-400/5 p-5">
+            <h3 class="font-semibold text-amber-600 dark:text-amber-400 mb-2"><i class="bi bi-lightbulb me-2"></i>มาตรฐานการตั้งชื่อไฟล์</h3>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div><code class="code-inline">*.component.ts/.html/.css</code> — Component</div>
+              <div><code class="code-inline">*.service.ts</code> — Service</div>
+              <div><code class="code-inline">*.resolver.ts</code> — Resolver</div>
+              <div><code class="code-inline">*.model.ts</code> — Interface/Model</div>
+              <div><code class="code-inline">*.form.ts</code> — Form class (ng class)</div>
+              <div><code class="code-inline">*.routes.ts</code> — Routes</div>
+            </div>
+          </div>
         </div>
+      }
 
-        <div class="relative" (mouseenter)="openDropdown('component')" (mouseleave)="closeMenu()">
-            <button
-                type="button"
-                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
-                >
-                <span>Component</span>
-                <i class="bi text-xs transition-transform duration-200"
-                    [class.bi-chevron-down]="openMenu() !== 'component'"
-                    [class.bi-chevron-up]="openMenu() === 'component'"></i>
-            </button>
+      <!-- ===== APP PAGE & FORM ===== -->
+      @if (activeSection() === 'app-page-form') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Page & Form Pattern</h1>
+            <p class="text-[var(--text-muted)]">มาตรฐานการสร้างหน้าพร้อม FormGroup โดยใช้ Resolver-driven approach</p>
+          </div>
 
-            @if (openMenu() === 'component') {
-                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
-                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
-                    @for (item of componentMenus; track item) {
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
-                            (click)="closeMenu()">
-                            <span>{{ item }}</span>
-                            <i class="bi bi-box text-xs text-[var(--text-muted)]"></i>
-                        </button>
-                    }
-                    </div>
-                </div>
-            }
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p class="font-semibold mb-2 text-[var(--primary)]">ไฟล์ที่ต้องสร้าง</p>
+              <ul class="space-y-1 text-[var(--text-muted)]">
+                <li><code class="code-inline">*.model.ts</code> — Interface ของ model + FormData</li>
+                <li><code class="code-inline">*.form.ts</code> — Class สำหรับสร้าง FormGroup</li>
+                <li><code class="code-inline">*.resolver.ts</code> — Resolver โหลด form + data</li>
+                <li><code class="code-inline">*.service.ts</code> — HTTP calls</li>
+                <li><code class="code-inline">*.component.ts/.html/.css</code> — Component</li>
+              </ul>
+            </div>
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p class="font-semibold mb-2 text-[var(--primary)]">หลักการ</p>
+              <ul class="space-y-1 text-[var(--text-muted)]">
+                <li>ใช้ <code class="code-inline">SicFromData&lt;T&gt;</code> ครอบ FormGroup</li>
+                <li>สร้าง form ใน Resolver ก่อน component load</li>
+                <li>รับ form จาก <code class="code-inline">route.snapshot.data</code></li>
+                <li>ใช้ <code class="code-inline">formData.dirty</code> สำหรับ unsaved guard</li>
+              </ul>
+            </div>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">1. model.ts</h2>
+            <pre class="code-block" ngNonBindable><code>// example.model.ts
+import &#123; SicBaseStateModel &#125; from '../../../core/model/sic-base-model';
+import &#123; SicFromData &#125; from '../../../core/model/sic-from-data';
+
+// Form page data (ส่งผ่าน resolver)
+export interface ExampleFormData &#123;
+  example: SicFromData&lt;ExampleModel&gt;;
+&#125;
+
+// Data model (ตรงกับ API response)
+export interface ExampleModel extends SicBaseStateModel &#123;
+  id: string;
+  code: string;
+  nameEn: string;
+  nameLocal: string;
+  isActive: boolean;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">2. form.ts</h2>
+            <pre class="code-block" ngNonBindable><code>// example.form.ts
+import &#123; FormBuilder, FormGroup, Validators &#125; from '@angular/forms';
+import &#123; ToForm &#125; from '../../../core/types/form.type';
+import &#123; ExampleModel &#125; from './example.model';
+
+export class ExampleForm &#123;
+  static createForm(fb: FormBuilder): FormGroup&lt;ToForm&lt;ExampleModel&gt;&gt; &#123;
+    return fb.group&lt;ToForm&lt;ExampleModel&gt;&gt;(&#123;
+      id:        fb.control(null),
+      code:      fb.control(null, [Validators.required, Validators.maxLength(50)]),
+      nameEn:    fb.control(null, [Validators.required, Validators.maxLength(100)]),
+      nameLocal: fb.control(null, [Validators.required, Validators.maxLength(100)]),
+      isActive:  fb.control(null),
+      state:     fb.control(null),
+      rowVersion: fb.control(null),
+    &#125;);
+  &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">3. resolver.ts</h2>
+            <pre class="code-block" ngNonBindable><code>// example.resolver.ts
+import &#123; inject &#125; from '@angular/core';
+import &#123; FormBuilder &#125; from '@angular/forms';
+import &#123; ActivatedRouteSnapshot, ResolveFn, Router &#125; from '@angular/router';
+import &#123; catchError, EMPTY, map, tap &#125; from 'rxjs';
+import &#123; SicFromData &#125; from '../../../core/model/sic-from-data';
+import &#123; ExampleForm &#125; from './example.form';
+import &#123; ExampleService &#125; from './example.service';
+import &#123; ExampleFormData, ExampleModel &#125; from './example.model';
+
+// Create (ไม่โหลดข้อมูล)
+export const exampleCreateResolver: ResolveFn&lt;ExampleFormData&gt; = () =&gt; &#123;
+  const fb = inject(FormBuilder);
+  const form = ExampleForm.createForm(fb);
+  return &#123; example: new SicFromData&lt;ExampleModel&gt;(form) &#125;;
+&#125;;
+
+// Edit (โหลดข้อมูลแล้ว patchValue)
+export const exampleEditResolver: ResolveFn&lt;ExampleFormData&gt; = (route) =&gt; &#123;
+  const fb = inject(FormBuilder);
+  const service = inject(ExampleService);
+  const router = inject(Router);
+  const form = ExampleForm.createForm(fb);
+
+  return service.getById(route.params['id']).pipe(
+    tap((data: ExampleModel) =&gt; form.patchValue(data)),
+    map(() =&gt; (&#123; example: new SicFromData&lt;ExampleModel&gt;(form) &#125;)),
+    catchError(() =&gt; &#123; router.navigate(['/not-found']); return EMPTY; &#125;)
+  );
+&#125;;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">4. service.ts</h2>
+            <pre class="code-block" ngNonBindable><code>// example.service.ts
+import &#123; inject, Injectable &#125; from '@angular/core';
+import &#123; HttpClient &#125; from '@angular/common/http';
+import &#123; environment &#125; from '../../../../environments/environment';
+import &#123; ExampleModel &#125; from './example.model';
+import &#123; Observable &#125; from 'rxjs';
+
+&#64;Injectable(&#123; providedIn: 'root' &#125;)
+export class ExampleService &#123;
+  private readonly http = inject(HttpClient);
+  private readonly base = environment.apiBaseUrl + '/api/ex/examples';
+
+  getById(id: string): Observable&lt;ExampleModel&gt; &#123;
+    return this.http.get&lt;ExampleModel&gt;(`$&#123;this.base&#125;/$&#123;id&#125;`);
+  &#125;
+
+  save(model: ExampleModel): Observable&lt;string&gt; &#123;
+    return this.http.post&lt;string&gt;(`$&#123;this.base&#125;/save`, model);
+  &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">5. component.ts</h2>
+            <pre class="code-block" ngNonBindable><code>// example.component.ts
+&#64;Component(&#123; selector: 'app-example', standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, SicInput, SicButton, ...],
+  templateUrl: './example.component.html'
+&#125;)
+export class ExampleComponent implements OnInit, CanComponentDeactivate &#123;
+  readonly route   = inject(ActivatedRoute);
+  readonly router  = inject(Router);
+  readonly service = inject(ExampleService);
+  readonly dialog  = inject(DialogService);
+
+  formData!: SicFromData&lt;ExampleModel&gt;;
+
+  // ใช้สำหรับ CanDeactivateGuard
+  pageDirty = () =&gt; this.formData.dirty;
+
+  ngOnInit(): void &#123;
+    const data: ExampleFormData = this.route.snapshot.data['form'];
+    this.formData = data.example;
+  &#125;
+
+  onSubmit(): void &#123;
+    if (this.formData.invalid) &#123;
+      this.formData.formGroup.markAllAsTouched();
+      return;
+    &#125;
+    const model = this.formData.formGroup.getRawValue() as ExampleModel;
+    this.service.save(model).subscribe(&#123;
+      next: () =&gt; &#123; this.dialog.alert('สำเร็จ', 'บันทึกเรียบร้อย'); this.router.navigate(['..']); &#125;,
+      error: (err) =&gt; this.dialog.error('เกิดข้อผิดพลาด', err),
+    &#125;);
+  &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">6. Routes</h2>
+            <pre class="code-block" ngNonBindable><code>// app.routes.ts
+&#123;
+  path: 'example',
+  children: [
+    &#123;
+      path: 'create',
+      loadComponent: () =&gt; import('./example.component').then(m =&gt; m.ExampleComponent),
+      resolve: &#123; form: exampleCreateResolver &#125;,
+      canDeactivate: [canDeactivateGuard],
+    &#125;,
+    &#123;
+      path: ':id/edit',
+      loadComponent: () =&gt; import('./example.component').then(m =&gt; m.ExampleComponent),
+      resolve: &#123; form: exampleEditResolver &#125;,
+      canDeactivate: [canDeactivateGuard],
+    &#125;,
+  ]
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">7. Template</h2>
+            <pre class="code-block" ngNonBindable><code>&lt;!-- example.component.html --&gt;
+&lt;form [formGroup]="formData.formGroup" (ngSubmit)="onSubmit()"&gt;
+  &lt;sic-input
+    label="รหัส"
+    [formControl]="formData.formGroup.get('code')"
+    [errorMessages]="&#123; required: 'กรุณากรอกรหัส', maxlength: 'เกิน 50 ตัว' &#125;"&gt;
+  &lt;/sic-input&gt;
+
+  &lt;sic-input
+    label="ชื่อ (EN)"
+    [formControl]="formData.formGroup.get('nameEn')"
+    [errorMessages]="&#123; required: 'กรุณากรอกชื่อ' &#125;"&gt;
+  &lt;/sic-input&gt;
+
+  &lt;div class="flex gap-3 justify-end mt-6"&gt;
+    &lt;sic-button variant="ghost" type="button" (click)="router.navigate(['..'])"&gt;ยกเลิก&lt;/sic-button&gt;
+    &lt;sic-button variant="primary" type="submit"&gt;บันทึก&lt;/sic-button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+          </section>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <h3 class="font-semibold mb-3">SicFromData&lt;T&gt; API</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div><code class="code-inline">formData.formGroup</code> — FormGroup instance</div>
+              <div><code class="code-inline">formData.dirty</code> — มีการแก้ไขหรือยัง</div>
+              <div><code class="code-inline">formData.invalid</code> — form invalid</div>
+              <div><code class="code-inline">formData.state</code> — Added/Modified/Unchanged/Deleted</div>
+              <div><code class="code-inline">formData.isChanged</code> — state เป็น Modified/Added/Deleted</div>
+              <div><code class="code-inline">formData.isNotChanged</code> — state เป็น Unchanged/Detached</div>
+            </div>
+          </div>
         </div>
+      }
 
-        <div class="relative" (mouseenter)="openDropdown('service')" (mouseleave)="closeMenu()">
-            <button
-                type="button"
-                class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-4 py-2 text-sm font-medium text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
-                >
-                <span>Service</span>
-                <i class="bi text-xs transition-transform duration-200"
-                    [class.bi-chevron-down]="openMenu() !== 'service'"
-                    [class.bi-chevron-up]="openMenu() === 'service'"></i>
-            </button>
+      <!-- ===== APP BILINGUAL ===== -->
+      @if (activeSection() === 'app-bilingual') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Bilingual (2 ภาษา)</h1>
+            <p class="text-[var(--text-muted)]">รองรับ Thai (th) และ English (en) ผ่าน <code class="code-inline">&#64;ngx-translate/core</code> — ข้อความเก็บใน <strong>database</strong> ตาราง <code class="code-inline">su_message</code></p>
+          </div>
 
-            @if (openMenu() === 'service') {
-                <div class="absolute left-0 top-full z-30 min-w-52 pt-2">
-                    <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-xl">
-                    @for (item of serviceMenus; track item) {
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)]"
-                            (click)="closeMenu()">
-                            <span>{{ item }}</span>
-                            <i class="bi bi-gear text-xs text-[var(--text-muted)]"></i>
-                        </button>
-                    }
-                    </div>
-                </div>
-            }
+          <!-- Architecture overview -->
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <h2 class="font-semibold mb-4">ภาพรวมระบบ</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm text-center">
+              <div class="rounded-lg border border-[var(--border)] p-3">
+                <div class="text-2xl mb-1">🗃️</div>
+                <div class="font-semibold">su_message</div>
+                <div class="text-[var(--text-muted)] text-xs mt-1">PostgreSQL<br>module_code / program_code<br>message_code / message_en / message_local</div>
+              </div>
+              <div class="flex items-center justify-center text-[var(--text-muted)]">→</div>
+              <div class="rounded-lg border border-[var(--border)] p-3">
+                <div class="text-2xl mb-1">🔌</div>
+                <div class="font-semibold">MessageController</div>
+                <div class="text-[var(--text-muted)] text-xs mt-1">GET /api/i18n/<br>[module]/[program]/[lang]</div>
+              </div>
+              <div class="flex items-center justify-center text-[var(--text-muted)]">→</div>
+              <div class="rounded-lg border border-[var(--border)] p-3">
+                <div class="text-2xl mb-1">⚙️</div>
+                <div class="font-semibold">AppTranslateLoader</div>
+                <div class="text-[var(--text-muted)] text-xs mt-1">โหลด COMMON/ALL ก่อน<br>แล้ว merge module เฉพาะ</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- su_message table -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-table text-[var(--primary)]"></i> su_message — โครงสร้างตาราง</h2>
+            <div class="attr-table">
+              <div class="attr-row header" style="grid-template-columns: 9rem 6rem 1fr"><span>Column</span><span>Type</span><span>คำอธิบาย</span></div>
+              <div class="attr-row" style="grid-template-columns: 9rem 6rem 1fr"><code>module_code</code><span>varchar(10)</span><span>กลุ่มหลัก เช่น <code class="code-inline">COMMON</code>, <code class="code-inline">EX</code>, <code class="code-inline">SU</code></span></div>
+              <div class="attr-row" style="grid-template-columns: 9rem 6rem 1fr"><code>program_code</code><span>varchar(50)</span><span>กลุ่มย่อย เช่น <code class="code-inline">ALL</code>, <code class="code-inline">EXAMPLE</code>, <code class="code-inline">PROFILE</code></span></div>
+              <div class="attr-row" style="grid-template-columns: 9rem 6rem 1fr"><code>message_code</code><span>varchar(50)</span><span>key เช่น <code class="code-inline">SAVE</code>, <code class="code-inline">CANCEL</code>, <code class="code-inline">TITLE</code></span></div>
+              <div class="attr-row" style="grid-template-columns: 9rem 6rem 1fr"><code>message_en</code><span>varchar(255)</span><span>ข้อความภาษาอังกฤษ</span></div>
+              <div class="attr-row" style="grid-template-columns: 9rem 6rem 1fr"><code>message_local</code><span>varchar(255)</span><span>ข้อความภาษาท้องถิ่น (ไทย)</span></div>
+            </div>
+            <p class="text-sm text-[var(--text-muted)]">Unique index: <code class="code-inline">(module_code, program_code, message_code)</code></p>
+          </section>
+
+          <!-- API endpoint -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-cloud text-[var(--primary)]"></i> API Endpoint — MessageController.cs</h2>
+            <pre class="code-block" ngNonBindable><code>// GET /api/i18n/&#123;module_code&#125;/&#123;program_code&#125;/&#123;language_code?&#125;
+// [AllowAnonymous] — ไม่ต้อง login
+// Response: Dictionary&lt;string, Dictionary&lt;string, Dictionary&lt;string, string&gt;&gt;&gt;
+// ตัวอย่าง GET /api/i18n/COMMON/ALL/th
+
+// Response:
+&#123;
+  "COMMON": &#123;
+    "ALL": &#123;
+      "SAVE":   "บันทึก",
+      "CANCEL": "ยกเลิก",
+      "TITLE":  "รายการ"
+    &#125;
+  &#125;
+&#125;</code></pre>
+            <p class="text-sm text-[var(--text-muted)]">ngx-translate จะ flatten nested object เป็น dot-notation key เช่น <code class="code-inline">'COMMON.ALL.SAVE'</code></p>
+          </section>
+
+          <!-- app.config.ts -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-gear text-[var(--primary)]"></i> app.config.ts — การตั้งค่าระดับ App</h2>
+            <pre class="code-block" ngNonBindable><code>import &#123; provideAppInitializer, inject &#125; from '&#64;angular/core';
+import &#123; provideTranslateService, TranslateLoader &#125; from '&#64;ngx-translate/core';
+import &#123; LanguageService &#125; from './core/services/language-service';
+import &#123;
+  APP_TRANSLATE_MODULE_CODE,
+  APP_TRANSLATE_PROGRAM_CODE,
+  AppTranslateLoader
+&#125; from './core/services/app-translate-loader';
+
+export const appConfig: ApplicationConfig = &#123;
+  providers: [
+    // 1. เรียก initLanguage() ก่อน app start (อ่าน localStorage / browser lang)
+    provideAppInitializer(() =&gt; inject(LanguageService).initLanguage()),
+
+    // 2. กำหนด default module/program ให้ AppTranslateLoader
+    &#123; provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' &#125;,
+    &#123; provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' &#125;,
+
+    // 3. register loader
+    AppTranslateLoader,
+    provideTranslateService(&#123;
+      lang: 'th',
+      fallbackLang: 'en',
+      loader: &#123; provide: TranslateLoader, useExisting: AppTranslateLoader &#125;,
+    &#125;),
+  ]
+&#125;;</code></pre>
+          </section>
+
+          <!-- AppTranslateLoader -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-arrow-repeat text-[var(--primary)]"></i> AppTranslateLoader</h2>
+            <p class="section-desc">โหลด translation จาก API เสมอ — load <code class="code-inline">COMMON/ALL</code> ก่อน แล้ว deep merge กับ module เฉพาะหน้า</p>
+            <pre class="code-block" ngNonBindable><code>// app-translate-loader.ts (สรุปการทำงาน)
+getTranslation(lang: string): Observable&lt;TranslationObject&gt; &#123;
+  // โหลด COMMON/ALL เสมอ
+  const requests = [ this.loadModuleTranslations('COMMON', 'ALL', lang) ];
+
+  // ถ้า context ไม่ใช่ COMMON/ALL ให้โหลดเพิ่ม
+  if (this.moduleCode !== 'COMMON' || this.programCode !== 'ALL') &#123;
+    requests.push(this.loadModuleTranslations(this.moduleCode, this.programCode, lang));
+  &#125;
+
+  // merge ผล (module เฉพาะ override COMMON ได้)
+  return forkJoin(requests).pipe(map(results =&gt; deepMerge(...results)));
+&#125;
+
+// ปรับ context สำหรับหน้าเฉพาะ (เรียกใน resolver หรือ component)
+translateLoader.setContext('EX', 'EXAMPLE');   // โหลด EX/EXAMPLE เพิ่ม
+translateLoader.resetContext();                 // reset กลับ COMMON/ALL</code></pre>
+            <div class="rounded-lg border border-blue-400/30 bg-blue-400/5 p-3 text-sm">
+              <strong class="text-blue-600 dark:text-blue-400">การเรียก API:</strong>
+              <code class="code-inline">/api/i18n/[moduleCode]/[programCode]/[lang]</code>
+              เช่น <code class="code-inline">/api/i18n/COMMON/ALL/th</code>
+            </div>
+          </section>
+
+          <!-- LanguageService -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-translate text-[var(--primary)]"></i> LanguageService</h2>
+            <pre class="code-block" ngNonBindable><code>readonly langService = inject(LanguageService);
+
+// เปลี่ยนภาษา + บันทึก localStorage + อัพเดท &lt;html lang="..."&gt;
+langService.setLanguage('en');
+langService.setLanguage('th');
+
+// ภาษาปัจจุบัน
+const lang: AppLanguage = langService.getCurrentLanguage(); // 'th' | 'en'</code></pre>
+            <div class="attr-table">
+              <div class="attr-row header" style="grid-template-columns: 10rem 1fr"><span>Method</span><span>คำอธิบาย</span></div>
+              <div class="attr-row" style="grid-template-columns: 10rem 1fr"><code>initLanguage()</code><span>เรียกตอน app init — อ่านจาก localStorage ก่อน, fallback browser lang, fallback 'en'</span></div>
+              <div class="attr-row" style="grid-template-columns: 10rem 1fr"><code>setLanguage(lang)</code><span>เปลี่ยนภาษา + persist ใน localStorage + อัพเดท html[lang]</span></div>
+              <div class="attr-row" style="grid-template-columns: 10rem 1fr"><code>getCurrentLanguage()</code><span>คืนค่า 'th' หรือ 'en' จาก TranslateService</span></div>
+            </div>
+          </section>
+
+          <!-- ใช้ใน Template -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-code-slash text-[var(--primary)]"></i> ใช้งานใน Template</h2>
+            <p class="section-desc">ต้อง import <code class="code-inline">TranslateModule</code> ใน component</p>
+            <pre class="code-block" ngNonBindable><code>// component.ts
+imports: [TranslateModule, ...]
+
+// component.html
+&lt;!-- pipe translate --&gt;
+&lt;h1&gt;&#123;&#123; 'COMMON.ALL.TITLE' | translate &#125;&#125;&lt;/h1&gt;
+&lt;sic-input [label]="'COMMON.ALL.CODE' | translate"&gt;&lt;/sic-input&gt;
+&lt;sic-button&gt;&#123;&#123; 'COMMON.ALL.SAVE' | translate &#125;&#125;&lt;/sic-button&gt;
+
+&lt;!-- directive --&gt;
+&lt;span translate&gt;COMMON.ALL.CANCEL&lt;/span&gt;</code></pre>
+            <div class="rounded-lg border border-amber-400/30 bg-amber-400/5 p-3 text-sm text-amber-700 dark:text-amber-400">
+              <strong>Key format:</strong> <code class="code-inline">MODULE_CODE.PROGRAM_CODE.MESSAGE_CODE</code>
+              — ตรงกับ nested structure ของ API response
+            </div>
+          </section>
+
+          <!-- ใช้ใน Component TS -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-braces text-[var(--primary)]"></i> ใช้งานใน Component (TypeScript)</h2>
+            <pre class="code-block" ngNonBindable><code>import &#123; TranslateService &#125; from '&#64;ngx-translate/core';
+
+readonly translate = inject(TranslateService);
+
+// แปลทันที (synchronous — ต้องโหลดแล้ว)
+const msg = this.translate.instant('COMMON.ALL.SAVE');
+
+// แปล async
+this.translate.get('COMMON.ALL.TITLE').subscribe(text =&gt; console.log(text));</code></pre>
+          </section>
+
+          <!-- setContext ใน Resolver -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-plugin text-[var(--primary)]"></i> โหลด Translation เฉพาะหน้า (setContext)</h2>
+            <p class="section-desc">ถ้าหน้าต้องการข้อความ module อื่น ให้เรียก <code class="code-inline">setContext</code> ใน resolver ก่อน component โหลด</p>
+            <pre class="code-block" ngNonBindable><code>// example.resolver.ts
+import &#123; AppTranslateLoader &#125; from '../../../core/services/app-translate-loader';
+
+export const exampleResolver: ResolveFn&lt;ExampleFormData&gt; = () =&gt; &#123;
+  const translateLoader = inject(AppTranslateLoader);
+
+  // บอกให้ loader โหลด EX/EXAMPLE เพิ่มจาก COMMON/ALL
+  translateLoader.setContext('EX', 'EXAMPLE');
+
+  const fb = inject(FormBuilder);
+  const form = ExampleForm.createForm(fb);
+  return &#123; example: new SicFromData(form) &#125;;
+&#125;;
+
+// template ใช้ได้ทั้ง COMMON.ALL.* และ EX.EXAMPLE.*
+// &#123;&#123; 'EX.EXAMPLE.SPECIFIC_LABEL' | translate &#125;&#125;</code></pre>
+          </section>
+
+          <!-- เพิ่มข้อความใหม่ -->
+          <section class="component-section">
+            <h2 class="section-title"><i class="bi bi-plus-circle text-[var(--primary)]"></i> เพิ่มข้อความใหม่ใน Database</h2>
+            <p class="section-desc">เพิ่มผ่าน API หรือ insert SQL ตรงใน <code class="code-inline">su_message</code></p>
+            <pre class="code-block" ngNonBindable><code>-- SQL ตัวอย่าง
+INSERT INTO su_message (id, module_code, program_code, message_code, message_en, message_local)
+VALUES
+  (gen_random_uuid(), 'COMMON', 'ALL', 'SAVE',           'Save',        'บันทึก'),
+  (gen_random_uuid(), 'COMMON', 'ALL', 'CANCEL',         'Cancel',      'ยกเลิก'),
+  (gen_random_uuid(), 'COMMON', 'ALL', 'DELETE_CONFIRM', 'Confirm Delete', 'ยืนยันการลบ'),
+  (gen_random_uuid(), 'EX',     'EXAMPLE', 'TITLE',      'Example List', 'รายการตัวอย่าง'),
+  (gen_random_uuid(), 'EX',     'EXAMPLE', 'CODE_LABEL', 'Code',        'รหัส');</code></pre>
+          </section>
+
         </div>
+      }
+
+      <!-- ===== API ENTITY ===== -->
+      @if (activeSection() === 'api-entity') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Entity & DbContext</h1>
+            <p class="text-[var(--text-muted)]">Entity Framework Core — Code First approach</p>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">BaseEntity</h2>
+            <p class="section-desc">สำหรับ entity ทั่วไป (ไม่ผูกกับ business)</p>
+            <pre class="code-block" ngNonBindable><code>// Entities/BaseEntity.cs — มี fields:
+// Id (Guid, auto UUIDv7), CreatedBy, CreatedDate,
+// UpdatedBy, UpdatedDate, IsDelete, DeleteBy, DeleteDate,
+// RowVersion (optimistic concurrency), BusinessId? (optional)</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">BaseCompanyEntity / BaseBusinessEntity</h2>
+            <p class="section-desc">สำหรับ entity ที่ผูกกับ Business context — มี <code class="code-inline">BusinessId</code> field และ global query filter อัตโนมัติ</p>
+            <pre class="code-block" ngNonBindable><code>// ใช้ BaseBusinessEntity เมื่อข้อมูลต้องแยกตาม Business
+public class ExStockItem : BaseBusinessEntity &#123;
+  // ไม่ต้องเพิ่ม BusinessId เอง — มีใน base class แล้ว
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">สร้าง Entity ใหม่</h2>
+            <pre class="code-block" ngNonBindable><code>// Entities/Ex/ExExample.cs
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using sic_api.Entities;
+
+namespace sic_api.Entities.Ex;
+
+[Table("ex_example")]   // ชื่อ table ใน database
+public class ExExample : BaseEntity
+&#123;
+    [Required]
+    [MaxLength(50)]
+    [Column("example_code")]
+    public string ExampleCode &#123; get; set; &#125; = default!;
+
+    [Required]
+    [Column("message_en")]
+    public string MessageEn &#123; get; set; &#125; = default!;
+
+    [Required]
+    [Column("message_local")]
+    public string MessageLocal &#123; get; set; &#125; = default!;
+
+    [Column("start_date")]
+    public DateTime StartDate &#123; get; set; &#125;
+
+    [Column("is_active")]
+    public bool IsActive &#123; get; set; &#125; = true;
+
+    // FK relationship
+    [Column("category_id")]
+    public Guid? CategoryId &#123; get; set; &#125;
+    public ExCategory? Category &#123; get; set; &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">เพิ่ม DbSet ใน SicDbContext</h2>
+            <pre class="code-block" ngNonBindable><code>// Data/SicDbContext.Ex.cs  (partial class)
+using Microsoft.EntityFrameworkCore;
+using sic_api.Entities.Ex;
+
+namespace sic_api.Data;
+
+public partial class SicDbContext
+&#123;
+    // เพิ่ม DbSet
+    public DbSet&lt;ExExample&gt; ExExamples =&gt; Set&lt;ExExample&gt;();
+    public DbSet&lt;ExCategory&gt; ExCategories =&gt; Set&lt;ExCategory&gt;();
+
+    private static void ConfigureExModule(ModelBuilder modelBuilder)
+    &#123;
+        // เพิ่ม Fluent API config ที่ต้องการ
+        modelBuilder.Entity&lt;ExExample&gt;()
+            .HasIndex(x =&gt; x.ExampleCode)
+            .IsUnique();
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Migration</h2>
+            <pre class="code-block" ngNonBindable><code># สร้าง migration
+cd sic-api
+dotnet ef migrations add Add_ExExample --output-dir ../Migrations
+
+# Apply migration
+dotnet ef database update</code></pre>
+          </section>
+
+          <div class="rounded-xl border border-blue-400/30 bg-blue-400/5 p-5">
+            <h3 class="font-semibold text-blue-600 dark:text-blue-400 mb-2"><i class="bi bi-info-circle me-2"></i>Convention ชื่อ table / column</h3>
+            <ul class="text-sm space-y-1 text-[var(--text-muted)]">
+              <li>Table: <code class="code-inline">snake_case</code> prefix ด้วย module เช่น <code class="code-inline">ex_example</code>, <code class="code-inline">db_parameter</code></li>
+              <li>Column: <code class="code-inline">snake_case</code> เช่น <code class="code-inline">example_code</code>, <code class="code-inline">message_en</code></li>
+              <li>Modules: <strong>db</strong> = config/parameter, <strong>ex</strong> = example/transaction, <strong>su</strong> = super/admin</li>
+            </ul>
+          </div>
+        </div>
+      }
+
+      <!-- ===== API FEATURE ===== -->
+      @if (activeSection() === 'api-feature') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Feature & Controller</h1>
+            <p class="text-[var(--text-muted)]">CQRS pattern ด้วย MediatR + FluentValidation + AutoMapper</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p class="font-semibold mb-2">Controller</p>
+              <p class="text-[var(--text-muted)]">รับ HTTP request แล้วส่งต่อให้ Mediator เท่านั้น ไม่มี business logic</p>
+            </div>
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p class="font-semibold mb-2">Feature (Handler)</p>
+              <p class="text-[var(--text-muted)]">1 ไฟล์ต่อ 1 use case มี Query/Command + Validator + Handler</p>
+            </div>
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p class="font-semibold mb-2">Folder Structure</p>
+              <p class="text-[var(--text-muted)]">Features/[Module]/[Entity]/[UseCase].cs</p>
+            </div>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">Controller</h2>
+            <pre class="code-block" ngNonBindable><code>// Controllers/Ex/ExExampleController.cs
+[Route("api/ex/examples")]
+[Authorize]
+// [ProgramAuthorize("EX_EXAMPLE")]  // ใส่เมื่อต้องการ permission check
+public class ExExampleController : BaseController
+&#123;
+    [HttpGet]
+    public async Task&lt;IActionResult&gt; GetAll(
+        [FromQuery] GetAllExExamples.Query model, CancellationToken ct) =&gt;
+        Ok(await Mediator.Send(model, ct));
+
+    [HttpGet("paging")]
+    public async Task&lt;IActionResult&gt; Paging(
+        [FromQuery] GetExExamplePage.Query model, CancellationToken ct) =&gt;
+        Ok(await Mediator.Send(model, ct));
+
+    [HttpGet("lov")]
+    public async Task&lt;IActionResult&gt; Lov(
+        [FromQuery] GetExExampleLov.Query model, CancellationToken ct) =&gt;
+        Ok(await Mediator.Send(model, ct));
+
+    [HttpGet("&#123;id:guid&#125;")]
+    public async Task&lt;IActionResult&gt; GetById(
+        [FromRoute] GetExExampleById.Query model, CancellationToken ct)
+    &#123;
+        var item = await Mediator.Send(model, ct);
+        return item is null ? NotFound() : Ok(item);
+    &#125;
+
+    [HttpPost("save")]
+    public async Task&lt;IActionResult&gt; Save(
+        [FromBody] SaveExExample.Command model, CancellationToken ct)
+    &#123;
+        Guid? id = await Mediator.Send(model, ct);
+        return id is null ? NotFound()
+            : CreatedAtAction(nameof(GetById), new &#123; id &#125;, id);
+    &#125;
+
+    [HttpPost("grid-save")]
+    public async Task&lt;IActionResult&gt; GridSave(
+        [FromBody] GridSaveExExample.Command[] model, CancellationToken ct)
+    &#123;
+        var ids = await Mediator.Send(new GridSaveExExample.BatchCommand &#123; Items = model &#125;, ct);
+        return ids is null ? NotFound() : Ok(ids);
+    &#125;
+
+    [HttpDelete("&#123;id:guid&#125;")]
+    public async Task&lt;IActionResult&gt; Delete(
+        [FromRoute] DeleteExExample.Command model, CancellationToken ct)
+    &#123;
+        var deleted = (bool?)await Mediator.Send(model, ct);
+        return deleted == true ? NoContent() : NotFound();
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Feature: Query (GetById)</h2>
+            <pre class="code-block" ngNonBindable><code>// Features/Ex/Example/GetExExampleById.cs
+public static class GetExExampleById
+&#123;
+    public class Query : IRequest&lt;ExExample?&gt;
+    &#123;
+        public Guid Id &#123; get; set; &#125;
+    &#125;
+
+    public sealed class Handler(SicDbContext db) : IRequestHandler&lt;Query, ExExample?&gt;
+    &#123;
+        public async Task&lt;ExExample?&gt; Handle(Query request, CancellationToken ct)
+            =&gt; await db.ExExamples
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =&gt; x.Id == request.Id, ct);
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Feature: Query with Paging</h2>
+            <pre class="code-block" ngNonBindable><code>// Features/Ex/Example/GetExExamplePage.cs
+public static class GetExExamplePage
+&#123;
+    public class Query : Pageable, IRequest&lt;PaginationBase&lt;ExExample&gt;&gt;
+    &#123;
+        public string? Keyword &#123; get; set; &#125;
+    &#125;
+
+    public sealed class Handler(SicDbContext db) : IRequestHandler&lt;Query, PaginationBase&lt;ExExample&gt;&gt;
+    &#123;
+        public async Task&lt;PaginationBase&lt;ExExample&gt;&gt; Handle(Query req, CancellationToken ct)
+        &#123;
+            var page = req.PageNumber &lt;= 0 ? 1 : req.PageNumber;
+            var size = req.PageSize   &lt;= 0 ? 10 : req.PageSize;
+
+            IQueryable&lt;ExExample&gt; query = db.ExExamples.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(req.Keyword))
+                query = query.Where(x =&gt; x.MessageEn.Contains(req.Keyword));
+
+            // ApplySorting จาก Extensions
+            query = query.ApplySorting(req.Sorts, x =&gt; x.ExampleCode);
+
+            var total = await query.LongCountAsync(ct);
+            var data  = await query.Skip((page-1)*size).Take(size).ToArrayAsync(ct);
+
+            return new PaginationBase&lt;ExExample&gt;
+            &#123;
+                Data = data,
+                Pageable = new Pageable &#123; PageNumber=page, PageSize=size, TotalElements=total &#125;
+            &#125;;
+        &#125;
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Feature: Command with Validation (Save)</h2>
+            <pre class="code-block" ngNonBindable><code>// Features/Ex/Example/SaveExExample.cs
+public static class SaveExExample
+&#123;
+    // Command = DTO ที่รับจาก client
+    public class Command : BaseModelState, IRequest&lt;Guid?&gt;, IMapFrom&lt;ExExample&gt;
+    &#123;
+        public Guid? Id &#123; get; set; &#125;
+        public string ExampleCode &#123; get; set; &#125; = default!;
+        public string MessageEn   &#123; get; set; &#125; = default!;
+        public string MessageLocal &#123; get; set; &#125; = default!;
+        public DateTime StartDate &#123; get; set; &#125;
+        public DateTime EndDate   &#123; get; set; &#125;
+        public bool IsActive      &#123; get; set; &#125; = true;
+
+        // AutoMapper mapping override
+        public void Mapping(Profile profile)
+        &#123;
+            profile.CreateMap&lt;Command, ExExample&gt;()
+                .ForMember(d =&gt; d.RowVersion, o =&gt; o.Ignore());
+        &#125;
+    &#125;
+
+    // Validator — FluentValidation
+    public class Validator : AbstractValidator&lt;Command&gt;
+    &#123;
+        public Validator()
+        &#123;
+            RuleFor(x =&gt; x.State)
+                .Must(s =&gt; s is EntityState.Added or EntityState.Modified)
+                .WithMessage("State must be Added or Modified.");
+            RuleFor(x =&gt; x.Id).NotEmpty()
+                .When(x =&gt; x.State == EntityState.Modified)
+                .WithMessage("Id is required when Modified.");
+            RuleFor(x =&gt; x.RowVersion).NotNull()
+                .When(x =&gt; x.State == EntityState.Modified);
+            RuleFor(x =&gt; x.ExampleCode).NotEmpty().MaximumLength(50);
+            RuleFor(x =&gt; x.MessageEn).NotEmpty();
+            RuleFor(x =&gt; x.MessageLocal).NotEmpty();
+            RuleFor(x =&gt; x.StartDate).NotEmpty();
+        &#125;
+    &#125;
+
+    // Handler — business logic
+    public sealed class Handler(SicDbContext db, IMapper mapper) : IRequestHandler&lt;Command, Guid?&gt;
+    &#123;
+        public async Task&lt;Guid?&gt; Handle(Command request, CancellationToken ct)
+        &#123;
+            var entity = mapper.Map&lt;ExExample&gt;(request);
+
+            var item = entity.State switch
+            &#123;
+                EntityState.Added    =&gt; entity,
+                EntityState.Modified =&gt; await db.ExExamples
+                    .FirstOrDefaultAsync(x =&gt; x.Id == entity.Id, ct),
+                _                   =&gt; null
+            &#125;;
+
+            if (item is null) return null;
+
+            if (entity.State == EntityState.Modified)
+                mapper.Map(request, item);
+
+            if (entity.State == EntityState.Added)
+                db.ExExamples.Add(item);
+
+            await db.SaveChangesAsync(ct);
+            return item.Id;
+        &#125;
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Feature: LOV (List of Values)</h2>
+            <pre class="code-block" ngNonBindable><code>// ใช้สำหรับ sic-radio / dropdown ที่ไม่ paging
+public static class GetExExampleLov
+&#123;
+    public class Query : IRequest&lt;ExExample[]&gt;
+    &#123;
+        public bool? IsActive &#123; get; set; &#125;
+    &#125;
+
+    public sealed class Handler(SicDbContext db) : IRequestHandler&lt;Query, ExExample[]&gt;
+    &#123;
+        public async Task&lt;ExExample[]&gt; Handle(Query req, CancellationToken ct)
+            =&gt; await db.ExExamples
+                .AsNoTracking()
+                .Where(x =&gt; !req.IsActive.HasValue || x.IsActive == req.IsActive)
+                .OrderBy(x =&gt; x.ExampleCode)
+                .ToArrayAsync(ct);
+    &#125;
+&#125;</code></pre>
+          </section>
+        </div>
+      }
+
+      <!-- ===== API SERVICES ===== -->
+      @if (activeSection() === 'api-services') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Services</h1>
+            <p class="text-[var(--text-muted)]">Services ที่มีอยู่ใน sic-api</p>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">CurrentUserService</h2>
+            <p class="section-desc">ดึงข้อมูล user ปัจจุบันจาก JWT token</p>
+            <pre class="code-block" ngNonBindable><code>// inject ผ่าน ICurrentUserService
+public class Handler(ICurrentUserService currentUser, ...)
+&#123;
+    public async Task Handle(...)
+    &#123;
+        var userId    = currentUser.GetUserId();        // sub claim
+        var username  = currentUser.GetUsername();      // preferred_username
+        var sessionId = currentUser.GetSessionId();     // sid claim
+        var ipAddress = currentUser.GetIpAddress();     // remote IP
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">BusinessAccessService</h2>
+            <p class="section-desc">ตรวจสอบว่า user มีสิทธิ์เข้าถึง business หรือไม่</p>
+            <pre class="code-block" ngNonBindable><code>public class Handler(BusinessAccessService bizAccess, ...)
+&#123;
+    public async Task Handle(...)
+    &#123;
+        var hasAccess = await bizAccess.HasAccessAsync(businessId, userId, ct);
+        if (!hasAccess) throw new UnauthorizedAccessException();
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">MailService</h2>
+            <p class="section-desc">ส่ง email ผ่าน SMTP queue</p>
+            <pre class="code-block" ngNonBindable><code>public class Handler(MailService mail, ...)
+&#123;
+    public async Task Handle(...)
+    &#123;
+        await mail.SendAsync(
+            to: "user&#64;example.com",
+            templateCode: "VERIFY_EMAIL",
+            parameters: new Dictionary&lt;string, string&gt; &#123;
+                ["NAME"] = "John",
+                ["CODE"] = "123456"
+            &#125;,
+            cancellationToken: ct
+        );
+    &#125;
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">VerifyService</h2>
+            <p class="section-desc">สร้างและตรวจสอบ OTP / verification token</p>
+            <pre class="code-block" ngNonBindable><code>public class Handler(VerifyService verify, ...)
+&#123;
+    // สร้าง verification
+    var result = await verify.CreateAsync(
+        verifyType: "EMAIL_VERIFY",
+        recipient: email,
+        expirationMinutes: 10,
+        maxRetry: 3,
+        ct
+    );
+    // result.ReferenceNumber, result.Token
+
+    // ตรวจสอบ
+    var isValid = await verify.ValidateAsync(referenceNumber, token, ct);
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">FileStorageService / ResumableUploadService</h2>
+            <p class="section-desc">จัดการไฟล์บน MinIO (sic-storage)</p>
+            <pre class="code-block" ngNonBindable><code>// ดึง URL ไฟล์
+var url = await storage.GetUrlAsync(objectKey, ct);
+
+// ลบไฟล์
+await storage.DeleteAsync(objectKey, ct);
+
+// ย้ายไฟล์จาก temp ไปยัง permanent
+await storage.MoveFromTempAsync(uploadGroupId, businessId, ct);</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">ProgramAccessService / ProgramAuthorize</h2>
+            <p class="section-desc">ตรวจสอบสิทธิ์ระดับ program access</p>
+            <pre class="code-block" ngNonBindable><code>// ใส่บน Controller action
+[ProgramAuthorize("EX_EXAMPLE")]
+[HttpGet]
+public async Task&lt;IActionResult&gt; GetAll(...) =&gt; ...
+
+// หรือ inject ใน Handler
+public class Handler(ProgramAccessService progAccess, ...)
+&#123;
+    var canEdit = await progAccess.HasPermissionAsync("EX_EXAMPLE", "EDIT", ct);
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">RequestLanguageProvider</h2>
+            <p class="section-desc">ดึงภาษาจาก HTTP header <code class="code-inline">Accept-Language</code></p>
+            <pre class="code-block" ngNonBindable><code>public class Handler(RequestLanguageProvider langProvider, ...)
+&#123;
+    var lang = langProvider.GetLanguage(); // "th" หรือ "en"
+    var message = lang == "th" ? entity.MessageLocal : entity.MessageEn;
+&#125;</code></pre>
+          </section>
+        </div>
+      }
+
+      <!-- ===== API UTILITY ===== -->
+      @if (activeSection() === 'api-utility') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">Utility</h1>
+            <p class="text-[var(--text-muted)]">Helper utilities ใน <code class="code-inline">Utility/</code></p>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">NameUtility</h2>
+            <p class="section-desc">ต่อชื่อหลายส่วนเข้าด้วยกัน โดยข้ามค่า null/empty อัตโนมัติ</p>
+            <pre class="code-block" ngNonBindable><code>using sic_api.Utility;
+
+// JoinNames(string?[] names, string separator = " ")
+var fullName = NameUtility.JoinNames(new[] &#123; "John", null, "Doe" &#125;);
+// =&gt; "John Doe"
+
+var thaiName = NameUtility.JoinNames(
+    new[] &#123; person.TitleLocal, person.FirstNameLocal, person.LastNameLocal &#125;
+);
+// =&gt; "นาย สมชาย ใจดี"
+
+// JoinNames(string separator, params string?[] names)
+var dashed = NameUtility.JoinNames("-", "John", "", "Doe");
+// =&gt; "John-Doe"</code></pre>
+          </section>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <h3 class="font-semibold mb-3">Extensions ที่มี</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[var(--text-muted)]">
+              <div><code class="code-inline">query.ApplySorting(sorts, defaultSort)</code> — จัดเรียงจาก query param</div>
+              <div><code class="code-inline">user.GetUserId()</code> — ดึง sub claim</div>
+              <div><code class="code-inline">user.GetSessionId()</code> — ดึง sid claim</div>
+              <div><code class="code-inline">user.GetPreferredUsername()</code> — ดึง username</div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ===== GRIDPANEL ===== -->
+      @if (activeSection() === 'gridpanel') {
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold mb-1">sic-gridpanel</h1>
+            <p class="text-[var(--text-muted)]">Inline-editable data grid พร้อม server-side paging, sort, และ bulk save</p>
+          </div>
+
+          <section class="component-section">
+            <h2 class="section-title">SicGridPanelConfig — ทุก option</h2>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Option</span><span>Type</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>apiUrl</code><span>string</span><span>URL API สำหรับ paging (GET)</span></div>
+              <div class="attr-row"><code>apiSaveUrl</code><span>string</span><span>URL สำหรับ grid-save (POST array)</span></div>
+              <div class="attr-row"><code>params</code><span>Record&lt;string,any&gt;</span><span>query params เพิ่มเติม</span></div>
+              <div class="attr-row"><code>pageable</code><span>boolean</span><span>เปิด/ปิด paging</span></div>
+              <div class="attr-row"><code>pageSize</code><span>number</span><span>จำนวน row ต่อหน้า</span></div>
+              <div class="attr-row"><code>softDelete</code><span>boolean</span><span>ลบแบบ soft delete (mark state = Deleted)</span></div>
+              <div class="attr-row"><code>columns</code><span>SicGridColumnConfig[]</span><span>การกำหนดคอลัมน์ทั้งหมด</span></div>
+              <div class="attr-row"><code>rowActions</code><span>SicGridColumnAction[]</span><span>action buttons ต่อ row</span></div>
+              <div class="attr-row"><code>createRowValue</code><span>Record&lt;string,any&gt;</span><span>ค่า default สำหรับ row ใหม่</span></div>
+              <div class="attr-row"><code>mapSaveRow</code><span>(row, state) =&gt; any</span><span>transform row ก่อน save</span></div>
+              <div class="attr-row"><code>disableRow</code><span>(row) =&gt; boolean</span><span>disable row condition</span></div>
+            </div>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">SicGridColumnConfig — column options</h2>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Option</span><span>Type</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>name</code><span>string</span><span>field name ใน data object</span></div>
+              <div class="attr-row"><code>label</code><span>string</span><span>header text</span></div>
+              <div class="attr-row"><code>type</code><span>text|number|area|checkbox|date|time|combobox|radio|color|upload</span><span>ประเภท editor</span></div>
+              <div class="attr-row"><code>editable</code><span>boolean</span><span>แก้ไขได้</span></div>
+              <div class="attr-row"><code>sortable</code><span>boolean</span><span>sort ได้</span></div>
+              <div class="attr-row"><code>width</code><span>number</span><span>ความกว้าง (px)</span></div>
+              <div class="attr-row"><code>hidden</code><span>boolean</span><span>ซ่อนคอลัมน์</span></div>
+              <div class="attr-row"><code>validators</code><span>ValidatorFn[]</span><span>Angular validators</span></div>
+              <div class="attr-row"><code>errorMessages</code><span>Record&lt;string,string&gt;</span><span>ข้อความ error</span></div>
+              <div class="attr-row"><code>apiUrl</code><span>string</span><span>สำหรับ type=combobox/radio</span></div>
+              <div class="attr-row"><code>valueField / textField</code><span>string</span><span>สำหรับ type=combobox/radio</span></div>
+              <div class="attr-row"><code>options</code><span>SicGridOption[]</span><span>static options สำหรับ combobox/radio</span></div>
+              <div class="attr-row"><code>cellTemplate</code><span>string</span><span>ชื่อ template สำหรับ custom cell render</span></div>
+            </div>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Events</h2>
+            <div class="attr-table">
+              <div class="attr-row header"><span>Event</span><span>Payload</span><span>คำอธิบาย</span></div>
+              <div class="attr-row"><code>(rowsChange)</code><span>any[]</span><span>fired เมื่อ rows เปลี่ยน (add/edit/delete)</span></div>
+              <div class="attr-row"><code>(rowAction)</code><span>&#123;name, row&#125;</span><span>fired เมื่อกด action button</span></div>
+            </div>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">ตัวอย่าง Frontend (sic-app)</h2>
+            <pre class="code-block" ngNonBindable><code>// component.ts
+import &#123; SicGridPanel, SicGridPanelConfig, SicGridPanelTemplate &#125; from '...';
+
+readonly gridConfig: SicGridPanelConfig = &#123;
+  apiUrl:     environment.apiBaseUrl + '/api/ex/examples/paging',
+  apiSaveUrl: environment.apiBaseUrl + '/api/ex/examples/grid-save',
+  pageable: true,
+  pageSize: 10,
+  softDelete: true,
+  createRowValue: &#123; isActive: true &#125;,
+  mapSaveRow: (row, state) =&gt; (&#123;
+    id:           row['id']          ?? null,
+    exampleCode:  row['exampleCode'] ?? '',
+    messageEn:    row['messageEn']   ?? '',
+    messageLocal: row['messageLocal'] ?? '',
+    startDate:    row['startDate']   ?? '',
+    endDate:      row['endDate']     ?? '',
+    total:        row['total']       ?? 0,
+    isActive:     row['isActive']    ?? true,
+    rowVersion:   row['rowVersion']  ?? null,
+    state,
+  &#125;),
+  rowActions: [
+    &#123; name: 'view', label: 'ดู', variant: 'ghost' &#125;,
+    &#123; name: 'delete', label: 'ลบ', variant: 'danger' &#125;,
+  ],
+  columns: [
+    &#123;
+      label: 'รหัส', name: 'exampleCode', type: 'text',
+      editable: true, sortable: true, width: 120,
+      validators: [Validators.required, Validators.maxLength(50)],
+      errorMessages: &#123; required: 'กรุณากรอกรหัส', maxlength: 'เกิน 50 ตัว' &#125;,
+    &#125;,
+    &#123;
+      label: 'ข้อความ EN', name: 'messageEn', type: 'area',
+      editable: true, sortable: true, width: 240,
+      validators: [Validators.required],
+      errorMessages: &#123; required: 'กรุณากรอก' &#125;,
+    &#125;,
+    &#123;
+      label: 'วันที่เริ่ม', name: 'startDate', type: 'date',
+      editable: true, sortable: true, width: 150,
+    &#125;,
+    &#123;
+      label: 'ประเทศ', name: 'countryCode', type: 'combobox',
+      editable: true, width: 180,
+      apiUrl: environment.apiBaseUrl + '/api/business/combobox-country',
+      valueField: 'code', textField: 'messageEn',
+    &#125;,
+    &#123;
+      label: 'ใช้งาน', name: 'isActive', type: 'checkbox',
+      editable: true, width: 80,
+    &#125;,
+    &#123;
+      label: 'สถานะ', name: 'isActive', type: 'text',
+      cellTemplate: 'statusPill',  // ใช้ custom template
+      width: 100,
+    &#125;,
+  ],
+&#125;;
+
+onGridRowsChange(rows: any[]): void &#123;
+  console.log('rows changed:', rows);
+&#125;
+
+onGridAction(event: &#123; name: string; row: any &#125;): void &#123;
+  if (event.name === 'delete') this.handleDelete(event.row);
+  if (event.name === 'view') this.router.navigate([event.row.id]);
+&#125;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Template (HTML)</h2>
+            <pre class="code-block" ngNonBindable><code>&lt;sic-gridpanel
+  [config]="gridConfig"
+  (rowsChange)="onGridRowsChange($event)"
+  (rowAction)="onGridAction($event)"&gt;
+
+  &lt;!-- Custom cell template --&gt;
+  &lt;ng-template sicGridPanelTemplate="statusPill" let-row&gt;
+    &lt;span
+      class="px-2 py-0.5 rounded-full text-xs font-medium"
+      [class.bg-green-100]="row.isActive"
+      [class.text-green-700]="row.isActive"
+      [class.bg-red-100]="!row.isActive"
+      [class.text-red-700]="!row.isActive"&gt;
+      &#123;&#123; row.isActive ? 'ใช้งาน' : 'ปิดใช้งาน' &#125;&#125;
+    &lt;/span&gt;
+  &lt;/ng-template&gt;
+
+&lt;/sic-gridpanel&gt;</code></pre>
+          </section>
+
+          <section class="component-section">
+            <h2 class="section-title">Backend — grid-save endpoint</h2>
+            <pre class="code-block" ngNonBindable><code>// GridSaveExExample.cs
+public static class GridSaveExExample
+&#123;
+    public class Command : BaseModelState, IRequest&lt;Guid?&gt;, IMapFrom&lt;ExExample&gt;
+    &#123;
+        public Guid? Id          &#123; get; set; &#125;
+        public string ExampleCode &#123; get; set; &#125; = default!;
+        public string MessageEn   &#123; get; set; &#125; = default!;
+        // ... fields
+        public void Mapping(Profile p) =&gt;
+            p.CreateMap&lt;Command, ExExample&gt;().ForMember(d =&gt; d.RowVersion, o =&gt; o.Ignore());
+    &#125;
+
+    // BatchCommand รับ array
+    public class BatchCommand : IRequest&lt;List&lt;Guid?&gt;&gt;
+    &#123;
+        public Command[] Items &#123; get; set; &#125; = [];
+    &#125;
+
+    public class Validator : AbstractValidator&lt;Command&gt;
+    &#123;
+        public Validator()
+        &#123;
+            RuleFor(x =&gt; x.ExampleCode).NotEmpty().MaximumLength(50);
+            // ...
+        &#125;
+    &#125;
+
+    public sealed class Handler(SicDbContext db, IMapper mapper, IValidator&lt;Command&gt; validator)
+        : IRequestHandler&lt;BatchCommand, List&lt;Guid?&gt;&gt;
+    &#123;
+        public async Task&lt;List&lt;Guid?&gt;&gt; Handle(BatchCommand batch, CancellationToken ct)
+        &#123;
+            var results = new List&lt;Guid?&gt;();
+            foreach (var cmd in batch.Items)
+            &#123;
+                await validator.ValidateAndThrowAsync(cmd, ct);
+                var entity = mapper.Map&lt;ExExample&gt;(cmd);
+                var item = cmd.State switch
+                &#123;
+                    EntityState.Added    =&gt; entity,
+                    EntityState.Modified =&gt; await db.ExExamples
+                        .FirstOrDefaultAsync(x =&gt; x.Id == entity.Id, ct),
+                    EntityState.Deleted  =&gt; await db.ExExamples
+                        .FirstOrDefaultAsync(x =&gt; x.Id == entity.Id, ct),
+                    _                   =&gt; null
+                &#125;;
+                if (item is null) &#123; results.Add(null); continue; &#125;
+                if (cmd.State == EntityState.Modified) mapper.Map(cmd, item);
+                if (cmd.State == EntityState.Added)    db.ExExamples.Add(item);
+                if (cmd.State == EntityState.Deleted)  item.IsDelete = true;
+                results.Add(item.Id);
+            &#125;
+            await db.SaveChangesAsync(ct);
+            return results;
+        &#125;
+    &#125;
+&#125;</code></pre>
+          </section>
+        </div>
+      }
+
     </div>
+  </main>
+</div>
 
-    <div class="flex items-center gap-3">
-
-        <div class="flex-initial w-9 h-9">
-            <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
-                class="h-9 w-9 object-contain cursor-pointer" />
-        </div>
-    </div>
-</header>
-<router-outlet></router-outlet>

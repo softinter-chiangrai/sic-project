@@ -149,8 +149,25 @@ builder.Services.AddSingleton<IMessageI18nCache, MessageI18nCache>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// Expose Swagger only in development. In production it documents the entire
+// attack surface and should not be publicly accessible.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// Add security response headers on every response.
+// These harden the browser-side attack surface regardless of the CORS policy.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["X-Permitted-Cross-Domain-Policies"] = "none";
+    context.Response.Headers["Cache-Control"] = "no-store";
+    await next();
+});
 
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseHttpsRedirection();

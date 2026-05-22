@@ -13,7 +13,7 @@
         </sic-profile>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" formControlName="taxId"></sic-input>
+        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง"  mask="0-0000-00000-00-0" formControlName="taxId"></sic-input>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle" [params]="{ personType: 'INDIVIDUAL' }">

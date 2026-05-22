@@ -2,7 +2,7 @@ namespace sic_api.Model.Auth;
 
 public class ChangeBusinessResponse
 {
-    public string KeycloakUserId { get; set; } = default!;
+    public string UserId { get; set; } = default!;
     public string? Username { get; set; }
     public Guid BusinessId { get; set; } = default!;
     public string BusinessName { get; set; } = default!;

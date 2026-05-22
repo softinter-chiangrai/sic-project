@@ -12,7 +12,7 @@ public static class GetSuUserBusinessById
     public sealed class Response
     {
         public Guid Id { get; set; }
-        public string KeycloakUserId { get; set; } = default!;
+        public string UserId { get; set; } = default!;
         public Guid BusinessId { get; set; }
         public string BusinessName { get; set; } = default!;
         public bool IsDefault { get; set; }

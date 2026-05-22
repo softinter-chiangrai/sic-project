@@ -33,12 +33,25 @@ public static class PostSendVerify
         }
     }
 
+    private static readonly IReadOnlySet<string> AllowedVerifyTypes =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Email" };
+
     public class Validator : AbstractValidator<Command>
     {
         public Validator()
         {
-            RuleFor(x => x.VerifyType).NotEmpty().MaximumLength(100);
-            RuleFor(x => x.Recipient).MaximumLength(320);
+            RuleFor(x => x.VerifyType)
+                .NotEmpty()
+                .MaximumLength(100)
+                .Must(t => AllowedVerifyTypes.Contains(t ?? string.Empty))
+                .WithMessage($"VerifyType must be one of: {string.Join(", ", AllowedVerifyTypes)}.");
+
+            // Validate email format when the recipient is used as an email address
+            RuleFor(x => x.Recipient)
+                .NotEmpty()
+                .MaximumLength(320)
+                .EmailAddress()
+                .When(x => string.Equals(x.VerifyType, "Email", StringComparison.OrdinalIgnoreCase));
         }
     }
 

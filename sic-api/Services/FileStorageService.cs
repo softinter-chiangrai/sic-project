@@ -73,7 +73,7 @@ public class FileStorageService(
 
         var user = httpContext?.User
                    ?? throw new UnauthorizedAccessException("No HttpContext user.");
-        var uploaderUserId = user.GetKeycloakUserId();
+        var uploaderUserId = user.GetUserId();
         var uploaderUsername = user.GetPreferredUsername() ?? uploaderUserId;
         var bucketName = ResolveBucketName(category);
         var businessIdResolve = await ResolveBusinessIdAsync(visibility, cancellationToken);
@@ -224,7 +224,7 @@ public class FileStorageService(
 
         upload.IsActive = true;
         upload.TempExpiresAt = null;
-        upload.UpdatedBy = user.GetPreferredUsername() ?? user.GetKeycloakUserId();
+        upload.UpdatedBy = user.GetPreferredUsername() ?? user.GetUserId();
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -677,7 +677,7 @@ public class FileStorageService(
         {
             if (visibility == FileVisibility.BusinessOnly)
             {
-                throw new InvalidOperationException("BusinessOnly visibility requires X-Business-Id.");
+                throw new InvalidOperationException("BusinessOnly visibility requires an active business context. Ensure the user has a default business selected.");
             }
 
             return null;
@@ -709,7 +709,7 @@ public class FileStorageService(
             throw new UnauthorizedAccessException("Authentication is required to access this file.");
         }
 
-        var currentUserId = user.GetKeycloakUserId();
+        var currentUserId = user.GetUserId();
 
         if (visibility == FileVisibility.UploaderOnly)
         {
@@ -743,7 +743,7 @@ public class FileStorageService(
             return false;
         }
 
-        var currentUserId = user.GetKeycloakUserId();
+        var currentUserId = user.GetUserId();
         var currentUsername = user.GetPreferredUsername();
 
         return string.Equals(upload.CreatedBy, currentUserId, StringComparison.OrdinalIgnoreCase)
@@ -767,7 +767,7 @@ public class FileStorageService(
             throw new UnauthorizedAccessException("Temporary upload requires authentication.");
         }
 
-        var currentUserId = user.GetKeycloakUserId();
+        var currentUserId = user.GetUserId();
         if (!string.Equals(currentUserId, uploaderUserId, StringComparison.Ordinal))
         {
             throw new UnauthorizedAccessException("Temporary upload is available only to the uploader until activation.");

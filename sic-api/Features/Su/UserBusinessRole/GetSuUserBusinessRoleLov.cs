@@ -21,12 +21,12 @@ public static class GetSuUserBusinessRoleLov
             var useEnglish = requestLanguageProvider.UseEnglish();
 
             return await GetAllSuUserBusinessRoles.BuildQuery(dbContext)
-                .OrderBy(x => x.UserBusiness.KeycloakUserId)
+                .OrderBy(x => x.UserBusiness.UserId)
                 .ThenBy(x => x.BusinessRole.RoleCode)
                 .Select(x => new LovBase
                 {
                     Value = x.Id,
-                    Text = x.UserBusiness.KeycloakUserId + " - " + x.BusinessRole.RoleCode + " - " + (useEnglish ? x.BusinessRole.RoleNameEn : x.BusinessRole.RoleNameLocal)
+                    Text = x.UserBusiness.UserId + " - " + x.BusinessRole.RoleCode + " - " + (useEnglish ? x.BusinessRole.RoleNameEn : x.BusinessRole.RoleNameLocal)
                 })
                 .ToArrayAsync(cancellationToken);
         }

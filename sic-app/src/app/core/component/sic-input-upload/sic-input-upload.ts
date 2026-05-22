@@ -67,7 +67,6 @@ export class SicInputUpload implements ControlValueAccessor, OnInit, OnDestroy {
   @Input() label?: string;
   @Input() placeholder = 'Upload files';
   @Input() hint?: string;
-  @Input() required = false;
   @Input() readonly = false;
   @Input() disabled = false;
   @Input() multiple = true;
@@ -148,6 +147,16 @@ export class SicInputUpload implements ControlValueAccessor, OnInit, OnDestroy {
 
   get errorMessage(): string | null {
     return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
   }
 
   get resolvedAccept(): string {
