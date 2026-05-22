@@ -1,4 +1,4 @@
-package spring.sic.mail.db_mail_config;
+package spring.sic.profile.mail.db_mail_config;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,13 +1,18 @@
 package spring.sic.profile.address.db_district;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "db_district")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DbDistrictEntity {
 
     @Id

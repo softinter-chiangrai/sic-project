@@ -1,13 +1,18 @@
 package spring.sic.profile.su.su_profile;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "su_profile")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SuProfileEntity {
 
     @Id

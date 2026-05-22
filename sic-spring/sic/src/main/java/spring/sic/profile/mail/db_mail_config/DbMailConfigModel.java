@@ -1,80 +1,28 @@
-package spring.sic.mail.db_mail_config;
-
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package spring.sic.profile.mail.db_mail_config;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "db_mail_config")
-public class DbMailConfigEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class DbMailConfigModel {
     private UUID id;
-
-    @Column(name = "config_name", length = 50)
     private String configName;
-
-    @Column(name = "smtp_server", length = 255)
     private String smtpServer;
-
-    @Column(name = "smtp_port")
     private Integer smtpPort;
-
-    @Column(name = "ssl_type", length = 10)
     private String sslType;
-
-    @Column(name = "username", length = 100)
     private String username;
-
-    @Column(name = "password", length = 500)
     private String password;
-
-    @Column(name = "enable_ssl")
     private Boolean enableSsl;
-
-    @Column(name = "status")
     private Boolean status;
-
-    @Column(name = "sort_order")
     private Integer sortOrder;
-
-    @Column(name = "is_active")
     private Boolean isActive;
-
-    @Column(name = "max_retry")
     private Integer maxRetry;
-
-    @Column(name = "description", length = 500)
     private String description;
-
-    // Audit fields
-    @Column(name = "created_by", length = 100)
     private String createdBy;
-
-    @Column(name = "created_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime createdDate;
-
-    @Column(name = "updated_by", length = 100)
     private String updatedBy;
-
-    @Column(name = "updated_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime updatedDate;
-
-    @Column(name = "is_delete")
     private Boolean isDelete;
-
-    @Column(name = "delete_by", length = 100)
     private String deleteBy;
-
-    @Column(name = "delete_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime deleteDate;
 
     public UUID getId() {
@@ -239,7 +187,7 @@ public class DbMailConfigEntity {
 
     @Override
     public String toString() {
-        return "DbMailConfigEntity [id=" + id + ", configName=" + configName + ", smtpServer=" + smtpServer
+        return "DbMailConfigModel [id=" + id + ", configName=" + configName + ", smtpServer=" + smtpServer
                 + ", smtpPort=" + smtpPort + ", sslType=" + sslType + ", username=" + username + ", password="
                 + password + ", enableSsl=" + enableSsl + ", status=" + status + ", sortOrder=" + sortOrder
                 + ", isActive=" + isActive + ", maxRetry=" + maxRetry + ", description=" + description

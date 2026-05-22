@@ -1,4 +1,4 @@
-package spring.sic.mail.db_mail_config;
+package spring.sic.profile.mail.db_mail_config;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
+@Data 
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "db_mail_config")

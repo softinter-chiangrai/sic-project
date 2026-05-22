@@ -11,13 +11,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DbCountryService {
 
     private final DbCountryRepository repository;
 
-    public DbCountryService(DbCountryRepository repository) {
-        this.repository = repository;
-    }
     public List<DbCountryModel> getAll() {
         return repository.findAll().stream()
                 .map(this::toModel)

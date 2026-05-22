@@ -1,4 +1,4 @@
-package spring.sic.mail.db_mail_queue;
+package spring.sic.profile.mail.db_mail_queue;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,10 +9,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
+@Table(name = "db_mail_queue")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "db_mail_queue")
 public class DbMailQueueEntity {
 
     @Id

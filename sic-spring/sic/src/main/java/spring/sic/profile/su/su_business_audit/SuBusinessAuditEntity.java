@@ -1,13 +1,18 @@
 package spring.sic.profile.su.su_business_audit;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "su_business_audit")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SuBusinessAuditEntity {
 
     @Id

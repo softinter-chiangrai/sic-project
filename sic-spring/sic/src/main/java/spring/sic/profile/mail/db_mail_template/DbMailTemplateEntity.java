@@ -1,4 +1,4 @@
-package spring.sic.profile.su.su_user_business_role;
+package spring.sic.profile.mail.db_mail_template;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,28 +9,43 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "su_user_business_role")
+@Table(name = "db_mail_template")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SuUserBusinessRoleEntity {
+public class DbMailTemplateEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_business_id")
-    private UUID userBusinessId;
+    @Column(name = "template_code", length = 50)
+    private String templateCode;
 
-    @Column(name = "business_role_id")
-    private UUID businessRoleId;
+    @Column(name = "template_name", length = 255)
+    private String templateName;
 
-    @Column(name = "is_primary")
-    private Boolean isPrimary;
+    @Column(name = "subject_en", length = 255)
+    private String subjectEn;
+
+    @Column(name = "subject_local", length = 255)
+    private String subjectLocal;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentEn;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentLocal;
+
+    private Boolean status;
 
     @Column(name = "is_active")
     private Boolean isActive;
 
+    @Column(length = 3000)
+    private String variables;
+
+    // Audit fields
     @Column(name = "created_by", length = 100)
     private String createdBy;
 
