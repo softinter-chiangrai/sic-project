@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using sic_api.Data;
@@ -11,9 +12,11 @@ using sic_api.Data;
 namespace sic_api.Migrations
 {
     [DbContext(typeof(SicDbContext))]
-    partial class SicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522104548_AddSuChatLog")]
+    partial class AddSuChatLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

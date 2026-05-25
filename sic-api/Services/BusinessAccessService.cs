@@ -147,9 +147,9 @@ public class BusinessAccessService(
     public async Task<bool> GetBusinessActivationAsync(CancellationToken cancellationToken = default)
     {
         // If business is already active in this request, return it immediately.
-        var currentId = GetBusinessId();
-        if (currentId != Guid.Empty)
-            return false;
+        // var currentId = GetBusinessId();
+        // if (currentId != Guid.Empty)
+        //     return false;
 
         // Read session identifier and client IP from the HTTP context.
         var sessionId = currentUserService.GetSessionId();

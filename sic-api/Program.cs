@@ -11,6 +11,7 @@ using Sic.Api;
 using sic_api.Extensions;
 using sic_api.Filters;
 using sic_api.Middleware;
+using sic_api.Hubs;
 using sic_api.Services;
 using sic_api.Services.Interfaces;
 
@@ -83,7 +84,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(origins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials(); // required for SignalR WebSocket
     });
 });
 
@@ -96,6 +98,16 @@ builder.Services.AddKeycloakWebApiAuthentication(
 
         jwtBearerOptions.Events = new JwtBearerEvents
         {
+            // SignalR WebSocket connections cannot set HTTP headers,
+            // so the access token is sent as a query-string parameter.
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            },
             OnAuthenticationFailed = context =>
             {
                 var logger = context.HttpContext.RequestServices
@@ -146,6 +158,8 @@ builder.Services.AddSicDatabase(builder.Configuration);
 builder.Services.AddSicStorage(builder.Configuration);
 builder.Services.AddSicServices();
 builder.Services.AddSingleton<IMessageI18nCache, MessageI18nCache>();
+builder.Services.AddSingleton<ChatPresenceStore>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -179,6 +193,7 @@ app.UseAuthorization();
 app.UseMiddleware<BusinessContextMiddleware>();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
 {

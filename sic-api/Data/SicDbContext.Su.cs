@@ -20,6 +20,7 @@ public partial class SicDbContext
     public DbSet<SuUpload> SuUploads => Set<SuUpload>();
     public DbSet<SuProfile> SuProfiles => Set<SuProfile>();
     public DbSet<SuVerify> SuVerifies => Set<SuVerify>();
+    public DbSet<SuChatLog> SuChatLogs => Set<SuChatLog>();
 
     private static void ConfigureSuModule(ModelBuilder modelBuilder)
     {
@@ -48,5 +49,11 @@ public partial class SicDbContext
             .WithMany(x => x.UserTasks)
             .HasForeignKey(x => x.TaskId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<SuChatLog>()
+            .HasOne(x => x.Attachment)
+            .WithMany()
+            .HasForeignKey(x => x.AttachmentId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

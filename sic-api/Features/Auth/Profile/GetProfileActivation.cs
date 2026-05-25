@@ -19,7 +19,7 @@ public static class GetProfileActivation
     {
         public async Task<bool> Handle(Query request, CancellationToken cancellationToken)
         {
-            return await dbContext.SuUserBusinesses.Where(x => x.UserId == currentUserService.GetUserId()).AnyAsync(cancellationToken);
+            return await dbContext.SuProfiles.Where(x => x.UserId == currentUserService.GetUserId()).AnyAsync(cancellationToken);
         }
     }
 }

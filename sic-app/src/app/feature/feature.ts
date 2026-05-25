@@ -21,6 +21,7 @@ import { CommonModule } from '@angular/common';
 import type { SicCalendarTask } from '../core/component/sic-calendar/sic-calendar';
 import { SicTaskConfig, SicTaskPersistState, SicTask } from '../core/component/sic-task/sic-task';
 import { SicOrganizationalChartNode } from '../core/component/sic-organizational-chart/sic-organizational-chart.model';
+import { SicHeadchat } from "../core/component/sic-headchat/sic-headchat";
 
 type TaskPersistMeta = {
   taskId: string | null;
@@ -34,7 +35,7 @@ type TaskPersistMeta = {
   standalone: true,
   imports: [RouterOutlet, SicSidebar, SicStepper, SicStepTemplate, SicInput,
     SicNumber, SicCombobox, ReactiveFormsModule, SicDatepicker, SicTimepicker,
-    SicColorpicker, SicCheckbox, SicInputArea, SicRadio, SicButton, SicGridPanel, SicGridPanelTemplate, SicUpload, SicOrganizationalChart, CommonModule, SicTask],
+    SicColorpicker, SicCheckbox, SicInputArea, SicRadio, SicButton, SicGridPanel, SicGridPanelTemplate, SicUpload, SicOrganizationalChart, CommonModule, SicTask, SicHeadchat],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })
