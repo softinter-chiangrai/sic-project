@@ -65,5 +65,41 @@ public sealed class ChatPresenceStore
         }
     }
 
+    // ── Active call tracking ──────────────────────────────────────────────────
+
+    private readonly ConcurrentDictionary<string, (Guid LogId, DateTime StartedAt)> _activeCalls = new();
+
+    public void SetActiveCall(string userId1, string userId2, Guid logId, DateTime startedAt)
+        => _activeCalls[CallKey(userId1, userId2)] = (logId, startedAt);
+
+    public bool TryGetActiveCall(string userId1, string userId2, out Guid logId, out DateTime startedAt)
+    {
+        if (_activeCalls.TryGetValue(CallKey(userId1, userId2), out var info))
+        {
+            logId = info.LogId;
+            startedAt = info.StartedAt;
+            return true;
+        }
+        logId = Guid.Empty;
+        startedAt = default;
+        return false;
+    }
+
+    public bool TryRemoveActiveCall(string userId1, string userId2, out Guid logId, out DateTime startedAt)
+    {
+        if (_activeCalls.TryRemove(CallKey(userId1, userId2), out var info))
+        {
+            logId = info.LogId;
+            startedAt = info.StartedAt;
+            return true;
+        }
+        logId = Guid.Empty;
+        startedAt = default;
+        return false;
+    }
+
+    private static string CallKey(string a, string b)
+        => string.Compare(a, b, StringComparison.Ordinal) < 0 ? $"{a}|{b}" : $"{b}|{a}";
+
     private static string BuildKey(string userId, Guid businessId) => $"{userId}:{businessId}";
 }

@@ -49,10 +49,63 @@
         }
       </div>
       <div class="headchat-call-controls">
+        <!-- Screen share (video call only) -->
+        @if (currentCallType() === 'video' && callStatus() === 'connected') {
+          <button class="headchat-call-btn" [class.active]="isScreenSharing()"
+                  (click)="toggleScreenShare()"
+                  [title]="isScreenSharing() ? 'หยุดแชร์หน้าจอ' : 'แชร์หน้าจอ'">
+            <i class="bi bi-display"></i>
+          </button>
+        }
+        <!-- Mic mute / Camera off (during connected call) -->
+        @if (callStatus() === 'connected') {
+          <button class="headchat-call-btn" [class.active]="isMicMuted()"
+                  (click)="toggleMic()"
+                  [title]="isMicMuted() ? 'เปิดไมค์' : 'ปิดไมค์'">
+            <i class="bi" [class.bi-mic-mute-fill]="isMicMuted()" [class.bi-mic-fill]="!isMicMuted()"></i>
+          </button>
+          @if (currentCallType() === 'video') {
+            <button class="headchat-call-btn" [class.active]="isCameraOff()"
+                    (click)="toggleCamera()"
+                    [title]="isCameraOff() ? 'เปิดกล้อง' : 'ปิดกล้อง'">
+              <i class="bi" [class.bi-camera-video-off-fill]="isCameraOff()" [class.bi-camera-video-fill]="!isCameraOff()"></i>
+            </button>
+          }
+        }
+        <!-- Recording -->
+        @if (callStatus() === 'connected') {
+          @if (!isRecording()) {
+            <button class="headchat-call-btn" (click)="startRecording()" title="บันทึกการสนทนา">
+              <i class="bi bi-record-circle"></i>
+            </button>
+          } @else {
+            <span class="headchat-rec-dot" [class.paused]="isRecordingPaused()"></span>
+            @if (!isRecordingPaused()) {
+              <button class="headchat-call-btn" (click)="pauseRecording()" title="หยุดพักการบันทึก">
+                <i class="bi bi-pause-fill"></i>
+              </button>
+            } @else {
+              <button class="headchat-call-btn" (click)="resumeRecording()" title="บันทึกต่อ">
+                <i class="bi bi-play-fill"></i>
+              </button>
+            }
+            <button class="headchat-call-btn headchat-call-btn--danger" (click)="stopRecording()" title="หยุดบันทึกและบันทึกลงแชท">
+              <i class="bi bi-stop-fill"></i>
+            </button>
+          }
+        }
+        <!-- Hang up -->
         <button class="headchat-btn-hangup" (click)="endCall()" title="วางสาย">
           <i class="bi bi-telephone-x-fill"></i>
         </button>
       </div>
+      <!-- Peer recording alert -->
+      @if (peerIsRecording()) {
+        <div class="headchat-rec-alert">
+          <i class="bi bi-record-circle-fill"></i>
+          อีกฝ่ายกำลังบันทึกการสนทนา
+        </div>
+      }
     </div>
   }
 
@@ -63,6 +116,13 @@
       <!-- Window header -->
       <div class="headchat-win-header">
         <span class="headchat-status-dot" [class.online]="chat.isOnline"></span>
+        <div class="headchat-win-avatar">
+          @if (chat.peerAvatarUrl) {
+            <img [src]="chat.peerAvatarUrl" [alt]="chat.peerName" />
+          } @else {
+            {{ chat.peerName.charAt(0).toUpperCase() }}
+          }
+        </div>
         <span class="headchat-win-name" [title]="chat.peerName">{{ chat.peerName }}</span>
         <div class="headchat-win-actions">
           @if (chat.isOnline) {
@@ -92,8 +152,58 @@
                  [class.headchat-msg--received]="msg.senderId !== currentUserId()">
               @if (msg.isCancelled) {
                 <span class="headchat-msg-cancelled">ข้อความถูกยกเลิก</span>
+              } @else if (msg.messageType === 3) {
+                <!-- Call log -->
+                <div class="headchat-msg-call">
+                  <i class="bi"
+                     [class.bi-camera-video-fill]="msg.message === 'video'"
+                     [class.bi-telephone-fill]="msg.message !== 'video'"></i>
+                  <span>
+                    @if (msg.callAccepted == null) {
+                      กำลังโทร...
+                    } @else if (!msg.callAccepted) {
+                      สายไม่ได้รับ
+                    } @else {
+                      {{ msg.message === 'video' ? 'วิดีโอคอล' : 'โทรศัพท์' }} · {{ formatCallDuration(msg.callDurationSeconds ?? 0) }}
+                    }
+                  </span>
+                </div>
+              } @else if (msg.messageType === 2) {
+                <!-- File attachment: audio / video / document -->
+                @if (msg.attachmentContentType?.startsWith('audio/')) {
+                  <div class="headchat-msg-media-wrap">
+                    <audio controls [src]="msg.attachmentUrl" class="headchat-msg-audio" preload="metadata"></audio>
+                    <div class="headchat-msg-media-footer">
+                      <span class="headchat-msg-file-name">{{ msg.attachmentFileName || 'เสียงบันทึก' }}</span>
+                      <button class="headchat-msg-dl-btn" (click)="downloadFile(msg.attachmentUrl, msg.attachmentFileName)" title="ดาวน์โหลด">
+                        <i class="bi bi-download"></i>
+                      </button>
+                    </div>
+                  </div>
+                } @else if (msg.attachmentContentType?.startsWith('video/')) {
+                  <div class="headchat-msg-media-wrap">
+                    <video controls [src]="msg.attachmentUrl" class="headchat-msg-video" preload="metadata"></video>
+                    <div class="headchat-msg-media-footer">
+                      <span class="headchat-msg-file-name">{{ msg.attachmentFileName || 'วิดีโอบันทึก' }}</span>
+                      <button class="headchat-msg-dl-btn" (click)="downloadFile(msg.attachmentUrl, msg.attachmentFileName)" title="ดาวน์โหลด">
+                        <i class="bi bi-download"></i>
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="headchat-msg-file" (click)="downloadFile(msg.attachmentUrl, msg.attachmentFileName)" role="button" tabindex="0">
+                    <i class="bi bi-file-earmark-fill"></i>
+                    <div class="headchat-msg-file-info">
+                      <span class="headchat-msg-file-name">{{ msg.attachmentFileName || 'ไฟล์แนบ' }}</span>
+                      @if (msg.attachmentFileSize) {
+                        <span class="headchat-msg-file-size">{{ formatFileSize(msg.attachmentFileSize) }}</span>
+                      }
+                    </div>
+                    <i class="bi bi-download"></i>
+                  </div>
+                }
               } @else if (msg.messageType === 1) {
-                <img [src]="msg.message" class="headchat-msg-image" alt="รูปภาพ" loading="lazy" />
+                <img [src]="msg.attachmentUrl ?? msg.message" class="headchat-msg-image" alt="รูปภาพ" loading="lazy" />
               } @else {
                 <span class="headchat-msg-text">{{ msg.message }}</span>
               }
@@ -112,9 +222,13 @@
 
       <!-- Input area -->
       <div class="headchat-input-row">
-        <input type="file" accept="image/*" #imgInput (change)="uploadImage(chat, $event)" hidden />
-        <button class="headchat-input-btn" (click)="imgInput.click()" title="แนบรูปภาพ">
-          <i class="bi bi-image"></i>
+        <input type="file"
+               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf"
+               #fileInput
+               (change)="attachFile(chat, $event)"
+               hidden />
+        <button class="headchat-input-btn" (click)="fileInput.click()" title="แนบไฟล์">
+          <i class="bi bi-paperclip"></i>
         </button>
         <input
           class="headchat-input-text"
@@ -139,19 +253,44 @@
     <div class="headchat-panel">
       <div class="headchat-panel-header">
         <span><i class="bi bi-people-fill"></i> ผู้ใช้งาน</span>
-        <button class="headchat-panel-close" (click)="togglePanel()">
-          <i class="bi bi-x-lg"></i>
-        </button>
+        <div class="headchat-panel-header-actions">
+          <button class="headchat-create-group-btn" (click)="openCreateGroupDialog()" title="สร้างกลุ่มสนทนา">
+            <i class="bi bi-people-fill"></i>+ สร้างกลุ่ม
+          </button>
+          <button class="headchat-panel-close" (click)="togglePanel()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
+
+      <!-- Groups section -->
+      @if (groups().length > 0) {
+        <div class="headchat-group-section">
+          <div class="headchat-group-section-title"><i class="bi bi-people-fill"></i> กลุ่มสนทนา</div>
+          @for (group of groups(); track group.id) {
+            <button class="headchat-group-btn" (click)="openGroupChat(group)">
+              <div class="headchat-group-avatar">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <span class="headchat-group-name">{{ group.name }}</span>
+              <span class="headchat-group-count">{{ group.memberUserIds.length }} คน</span>
+            </button>
+          }
+        </div>
+      }
+
       <div class="headchat-panel-list">
         @if (members().length === 0) {
           <p class="headchat-panel-empty">ไม่มีผู้ใช้งานอื่น</p>
         }
         @for (member of members(); track member.userId) {
           <button class="headchat-member-btn" (click)="openChatWith(member)">
-            <span class="headchat-status-dot" [class.online]="member.isOnline"></span>
             <div class="headchat-member-avatar">
-              {{ member.displayName.charAt(0).toUpperCase() }}
+              @if (profileUrl(member.uploadGroupData)) {
+                <img [src]="profileUrl(member.uploadGroupData)" [alt]="member.displayName" />
+              } @else {
+                {{ member.displayName.charAt(0).toUpperCase() }}
+              }
             </div>
             <div class="headchat-member-info">
               <span class="headchat-member-name">{{ member.displayName }}</span>
@@ -161,6 +300,119 @@
             </div>
           </button>
         }
+      </div>
+    </div>
+  }
+
+  <!-- ── Create group dialog ───────────────────────────────────────────── -->
+  @if (showCreateGroup()) {
+    <div class="headchat-overlay" (click)="closeCreateGroupDialog()"></div>
+    <div class="headchat-create-group-dialog">
+      <div class="headchat-create-group-header">
+        <span>สร้างกลุ่มสนทนา</span>
+        <button class="headchat-panel-close" (click)="closeCreateGroupDialog()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="headchat-create-group-body">
+        <label class="headchat-create-group-label">ชื่อกลุ่ม</label>
+        <input class="headchat-create-group-input" type="text"
+               placeholder="ระบุชื่อกลุ่ม"
+               [(ngModel)]="newGroupName" />
+        <label class="headchat-create-group-label">เลือกสมาชิก</label>
+        <div class="headchat-create-group-members">
+          @for (member of members(); track member.userId) {
+            <label class="headchat-member-checkbox">
+              <input type="checkbox"
+                     [checked]="selectedGroupMembers().has(member.userId)"
+                     (change)="toggleGroupMember(member.userId)" />
+              <div class="headchat-member-avatar headchat-member-avatar--sm">
+                @if (profileUrl(member.uploadGroupData)) {
+                  <img [src]="profileUrl(member.uploadGroupData)" [alt]="member.displayName" />
+                } @else {
+                  {{ member.displayName.charAt(0).toUpperCase() }}
+                }
+              </div>
+              <span>{{ member.displayName }}</span>
+            </label>
+          }
+        </div>
+      </div>
+      <div class="headchat-create-group-footer">
+        <button class="headchat-btn-secondary" (click)="closeCreateGroupDialog()">ยกเลิก</button>
+        <button class="headchat-btn-primary"
+                [disabled]="!newGroupName.trim() || selectedGroupMembers().size === 0"
+                (click)="confirmCreateGroup()">สร้างกลุ่ม</button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Group chat windows ─────────────────────────────────────────────── -->
+  @for (chat of openGroupChats(); track chat.groupId; let i = $index) {
+    <div class="headchat-window headchat-window--group"
+         [style.right.px]="chatWindowRight(openChats().length + i)">
+
+      <!-- Window header -->
+      <div class="headchat-win-header headchat-win-header--group">
+        <div class="headchat-win-avatar headchat-win-avatar--group">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="headchat-win-name" [title]="chat.groupName">{{ chat.groupName }}</span>
+        <div class="headchat-win-actions">
+          <button class="headchat-win-btn" (click)="closeGroupChat(chat.groupId)" title="ปิด">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="headchat-win-body" #messageContainer>
+        @if (chat.isLoading) {
+          <div class="headchat-loading"><i class="bi bi-arrow-repeat"></i> กำลังโหลด...</div>
+        }
+        @for (msg of chat.messages; track msg.id) {
+          <div class="headchat-msg" [class.headchat-msg--mine]="msg.senderId === currentUserId()"
+               [class.headchat-msg--cancelled]="msg.isCancelled">
+            @if (msg.senderId !== currentUserId()) {
+              <span class="headchat-msg-sender">{{ msg.senderId }}</span>
+            }
+            @if (msg.isCancelled) {
+              <span class="headchat-msg-cancelled">ข้อความถูกลบ</span>
+            } @else if (msg.messageType === 1 && msg.attachmentUrl) {
+              <img class="headchat-msg-img" [src]="msg.attachmentUrl" alt="image" />
+            } @else if (msg.messageType === 2) {
+              <a class="headchat-msg-file" [href]="msg.attachmentUrl" target="_blank">
+                <i class="bi bi-paperclip"></i>
+                {{ msg.attachmentFileName ?? 'ไฟล์แนบ' }}
+              </a>
+            } @else {
+              <span class="headchat-msg-text">{{ msg.message }}</span>
+            }
+            <span class="headchat-msg-time">{{ msg.sentAt | date: 'HH:mm' }}</span>
+            @if (canCancelGroup(msg)) {
+              <button class="headchat-msg-cancel" (click)="cancelGroupMessage(msg)" title="ลบข้อความ">
+                <i class="bi bi-trash"></i>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Input -->
+      <div class="headchat-win-footer">
+        <label class="headchat-attach-btn" [for]="'grp-file-' + chat.groupId" title="แนบไฟล์">
+          <i class="bi bi-paperclip"></i>
+          <input [id]="'grp-file-' + chat.groupId" type="file" class="headchat-file-input"
+                 (change)="attachGroupFile(chat, $event)" />
+        </label>
+        <textarea class="headchat-win-input" rows="1"
+                  [(ngModel)]="chat.inputText"
+                  placeholder="พิมพ์ข้อความ..."
+                  (keydown.enter)="onGroupEnter($event, chat)"></textarea>
+        <button class="headchat-send-btn" (click)="sendGroupMessage(chat)"
+                [disabled]="!chat.inputText.trim()">
+          <i class="bi bi-send-fill"></i>
+        </button>
       </div>
     </div>
   }

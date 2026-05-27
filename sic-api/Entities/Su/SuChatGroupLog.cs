@@ -1,30 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+using sic_api.Entities;
 
 namespace sic_api.Entities.Su;
 
-public enum ChatMessageType
+[Table("su_chat_group_log")]
+public class SuChatGroupLog : BaseBusinessEntity
 {
-    Text = 0,
-    Image = 1,
-    File = 2,
-    Call = 3,
-}
+    [Required]
+    [Column("group_id")]
+    public Guid GroupId { get; set; }
 
-[Table("su_chat_log")]
-[Index(nameof(BusinessId), nameof(SenderId), nameof(ReceiverId))]
-public class SuChatLog : BaseBusinessEntity
-{
     [Required]
     [MaxLength(100)]
     [Column("sender_id")]
     public string SenderId { get; set; } = default!;
-
-    [Required]
-    [MaxLength(100)]
-    [Column("receiver_id")]
-    public string ReceiverId { get; set; } = default!;
 
     [Required]
     [MaxLength(4000)]
@@ -49,11 +39,6 @@ public class SuChatLog : BaseBusinessEntity
     [Column("cancelled_by")]
     public string? CancelledBy { get; set; }
 
-    [Column("call_accepted")]
-    public bool? CallAccepted { get; set; }
-
-    [Column("call_duration_seconds")]
-    public int? CallDurationSeconds { get; set; }
-
+    public SuChatGroup? Group { get; set; }
     public SuUpload? Attachment { get; set; }
 }

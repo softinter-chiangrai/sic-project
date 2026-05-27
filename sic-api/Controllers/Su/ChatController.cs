@@ -28,4 +28,25 @@ public class ChatController : BaseController
             Page = page,
             PageSize = pageSize,
         }, cancellationToken));
+
+    /// <summary>GET /api/su/chat/groups — groups the current user belongs to</summary>
+    [HttpGet("groups")]
+    public async Task<IActionResult> GetGroups(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetChatGroups.Query { User = User }, cancellationToken));
+
+    /// <summary>GET /api/su/chat/groups/{groupId}/history — paginated group message history</summary>
+    [HttpGet("groups/{groupId:guid}/history")]
+    public async Task<IActionResult> GetGroupHistory(
+        Guid groupId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default) =>
+        Ok(await Mediator.Send(new GetGroupChatHistory.Query
+        {
+            User = User,
+            GroupId = groupId,
+            Page = page,
+            PageSize = pageSize,
+        }, cancellationToken));
 }
+

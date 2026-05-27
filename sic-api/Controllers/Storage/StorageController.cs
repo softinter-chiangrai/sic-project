@@ -15,50 +15,50 @@ public class StorageController(
     [Authorize]
     [HttpPost("upload/image")]
     [RequestSizeLimit(200_000_000)]
-    public async Task<IActionResult> UploadImage([FromForm] StorageUploadRequest request, CancellationToken cancellationToken) =>
-        Ok(new
+    public async Task<IActionResult> UploadImage([FromForm] StorageUploadRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new UploadStorageFile.Command
         {
-            id = await Mediator.Send(new UploadStorageFile.Command
-            {
-                File = request.File,
-                Visibility = request.Visibility,
-                UploadGroupId = request.UploadGroupId,
-                Category = FileCategory.Image,
-                HttpContext = HttpContext
-            }, cancellationToken)
-        });
+            File = request.File,
+            Visibility = request.Visibility,
+            UploadGroupId = request.UploadGroupId,
+            Category = FileCategory.Image,
+            HttpContext = HttpContext
+        }, cancellationToken);
+        return Ok(new { id = result.Id, accessUrl = result.AccessUrl, fileName = result.FileName, fileSize = result.FileSize, contentType = result.ContentType });
+    }
 
     [Authorize]
     [HttpPost("upload/video")]
     [RequestSizeLimit(1_000_000_000)]
-    public async Task<IActionResult> UploadVideo([FromForm] StorageUploadRequest request, CancellationToken cancellationToken) =>
-        Ok(new
+    public async Task<IActionResult> UploadVideo([FromForm] StorageUploadRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new UploadStorageFile.Command
         {
-            id = await Mediator.Send(new UploadStorageFile.Command
-            {
-                File = request.File,
-                Visibility = request.Visibility,
-                UploadGroupId = request.UploadGroupId,
-                Category = FileCategory.Video,
-                HttpContext = HttpContext
-            }, cancellationToken)
-        });
+            File = request.File,
+            Visibility = request.Visibility,
+            UploadGroupId = request.UploadGroupId,
+            Category = FileCategory.Video,
+            HttpContext = HttpContext
+        }, cancellationToken);
+        return Ok(new { id = result.Id, accessUrl = result.AccessUrl, fileName = result.FileName, fileSize = result.FileSize, contentType = result.ContentType });
+    }
 
     [Authorize]
     [HttpPost("upload/document")]
     [RequestSizeLimit(200_000_000)]
-    public async Task<IActionResult> UploadDocument([FromForm] StorageUploadRequest request, CancellationToken cancellationToken) =>
-        Ok(new
+    public async Task<IActionResult> UploadDocument([FromForm] StorageUploadRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new UploadStorageFile.Command
         {
-            id = await Mediator.Send(new UploadStorageFile.Command
-            {
-                File = request.File,
-                Visibility = request.Visibility,
-                UploadGroupId = request.UploadGroupId,
-                Category = FileCategory.Document,
-                HttpContext = HttpContext
-            }, cancellationToken)
-        });
+            File = request.File,
+            Visibility = request.Visibility,
+            UploadGroupId = request.UploadGroupId,
+            Category = FileCategory.Document,
+            HttpContext = HttpContext
+        }, cancellationToken);
+        return Ok(new { id = result.Id, accessUrl = result.AccessUrl, fileName = result.FileName, fileSize = result.FileSize, contentType = result.ContentType });
+    }
 
     [Authorize]
     [HttpPost("upload/sessions")]

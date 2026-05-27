@@ -8,7 +8,7 @@ namespace sic_api.Features.Storage;
 
 public static class UploadStorageFile
 {
-    public class Command : IRequest<Guid>
+    public class Command : IRequest<StorageUploadResult>
     {
         public IFormFile File { get; set; } = default!;
         public FileVisibility Visibility { get; set; } = FileVisibility.UploaderOnly;
@@ -27,19 +27,17 @@ public static class UploadStorageFile
         }
     }
 
-    public sealed class Handler(IFileStorageService fileStorageService) : IRequestHandler<Command, Guid>
+    public sealed class Handler(IFileStorageService fileStorageService) : IRequestHandler<Command, StorageUploadResult>
     {
-        public async Task<Guid> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<StorageUploadResult> Handle(Command request, CancellationToken cancellationToken)
         {
-            var result = await fileStorageService.UploadAsync(
+            return await fileStorageService.UploadAsync(
                 request.File,
                 request.Category,
                 request.Visibility,
                 request.UploadGroupId,
                 request.HttpContext,
                 cancellationToken);
-
-            return result.Id;
         }
     }
 }

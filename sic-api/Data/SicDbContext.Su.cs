@@ -21,6 +21,9 @@ public partial class SicDbContext
     public DbSet<SuProfile> SuProfiles => Set<SuProfile>();
     public DbSet<SuVerify> SuVerifies => Set<SuVerify>();
     public DbSet<SuChatLog> SuChatLogs => Set<SuChatLog>();
+    public DbSet<SuChatGroup> SuChatGroups => Set<SuChatGroup>();
+    public DbSet<SuChatGroupMember> SuChatGroupMembers => Set<SuChatGroupMember>();
+    public DbSet<SuChatGroupLog> SuChatGroupLogs => Set<SuChatGroupLog>();
 
     private static void ConfigureSuModule(ModelBuilder modelBuilder)
     {
@@ -51,6 +54,24 @@ public partial class SicDbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SuChatLog>()
+            .HasOne(x => x.Attachment)
+            .WithMany()
+            .HasForeignKey(x => x.AttachmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SuChatGroup>()
+            .HasMany(x => x.Members)
+            .WithOne(x => x.Group)
+            .HasForeignKey(x => x.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SuChatGroup>()
+            .HasMany(x => x.Messages)
+            .WithOne(x => x.Group)
+            .HasForeignKey(x => x.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SuChatGroupLog>()
             .HasOne(x => x.Attachment)
             .WithMany()
             .HasForeignKey(x => x.AttachmentId)

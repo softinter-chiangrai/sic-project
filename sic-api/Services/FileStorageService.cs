@@ -39,7 +39,10 @@ public class FileStorageService(
         "video/quicktime",
         "video/webm",
         "video/x-msvideo",
-        "video/x-matroska"
+        "video/x-matroska",
+        "audio/webm",   // voice-only WebM recordings
+        "audio/ogg",    // voice-only OGG recordings
+        "audio/mp4",    // voice-only MP4/AAC
     ];
 
     private static readonly string[] DocumentContentTypes =
@@ -53,6 +56,15 @@ public class FileStorageService(
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "text/plain",
         "text/csv",
+        // Raw audio/video files (chat recordings stored without HLS transcoding)
+        "video/mp4",
+        "video/webm",
+        "video/mpeg",
+        "video/quicktime",
+        "audio/webm",
+        "audio/ogg",
+        "audio/mp4",
+        "audio/mpeg",
         .. ImageContentTypes
     ];
 
@@ -563,12 +575,19 @@ public class FileStorageService(
         IDictionary<string, string> metadata,
         CancellationToken cancellationToken)
     {
+        // AWS SDK's HttpHeaderParser rejects codec params (e.g. "video/webm;codecs=vp9,opus")
+        // because commas in unquoted parameter values are invalid per RFC 7231.
+        // Strip to bare MIME type for S3; the original is preserved in SuUploads.ContentType.
+        var s3ContentType = contentType.Contains(';')
+            ? contentType[..contentType.IndexOf(';')].Trim()
+            : contentType;
+
         var request = new PutObjectRequest
         {
             BucketName = bucketName,
             Key = objectKey,
             InputStream = inputStream,
-            ContentType = contentType
+            ContentType = s3ContentType
         };
 
         foreach (var item in metadata)
@@ -850,7 +869,10 @@ public class FileStorageService(
 
     private static void ValidateContentType(IFormFile file, FileCategory category)
     {
-        var contentType = file.ContentType?.Trim().ToLowerInvariant();
+        // Strip codec parameters (e.g. "video/webm;codecs=vp9,opus" → "video/webm")
+        var raw = file.ContentType?.Trim() ?? string.Empty;
+        var contentType = (raw.Contains(';') ? raw[..raw.IndexOf(';')] : raw).Trim().ToLowerInvariant();
+
         var allowedContentTypes = category switch
         {
             FileCategory.Image => ImageContentTypes,

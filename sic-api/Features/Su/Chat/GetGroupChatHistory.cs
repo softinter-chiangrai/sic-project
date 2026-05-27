@@ -7,13 +7,13 @@ using sic_api.Extensions;
 
 namespace sic_api.Features.Su.Chat;
 
-public static class GetChatHistory
+public static class GetGroupChatHistory
 {
     public sealed class Response
     {
         public Guid Id { get; set; }
+        public Guid GroupId { get; set; }
         public string SenderId { get; set; } = default!;
-        public string ReceiverId { get; set; } = default!;
         public string Message { get; set; } = string.Empty;
         public ChatMessageType MessageType { get; set; }
         public Guid? AttachmentId { get; set; }
@@ -21,8 +21,6 @@ public static class GetChatHistory
         public string? AttachmentFileName { get; set; }
         public long? AttachmentFileSize { get; set; }
         public string? AttachmentContentType { get; set; }
-        public bool? CallAccepted { get; set; }
-        public int? CallDurationSeconds { get; set; }
         public bool IsCancelled { get; set; }
         public DateTime SentAt { get; set; }
     }
@@ -30,7 +28,7 @@ public static class GetChatHistory
     public sealed class Query : IRequest<Response[]>
     {
         public ClaimsPrincipal User { get; set; } = default!;
-        public string PeerUserId { get; set; } = default!;
+        public Guid GroupId { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 50;
     }
@@ -43,20 +41,26 @@ public static class GetChatHistory
             var page = Math.Max(1, request.Page);
             var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
-            return await dbContext.SuChatLogs
+            // Verify caller is a group member
+            var isMember = await dbContext.SuChatGroupMembers
+                .AsNoTracking()
+                .AnyAsync(m => m.GroupId == request.GroupId && m.UserId == currentUserId, cancellationToken);
+
+            if (!isMember)
+                return [];
+
+            return await dbContext.SuChatGroupLogs
                 .AsNoTracking()
                 .Include(x => x.Attachment)
-                .Where(x =>
-                    (x.SenderId == currentUserId && x.ReceiverId == request.PeerUserId) ||
-                    (x.ReceiverId == currentUserId && x.SenderId == request.PeerUserId))
+                .Where(x => x.GroupId == request.GroupId)
                 .OrderByDescending(x => x.CreatedDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(x => new Response
                 {
                     Id = x.Id,
+                    GroupId = x.GroupId,
                     SenderId = x.SenderId,
-                    ReceiverId = x.ReceiverId,
                     Message = x.Message,
                     MessageType = x.MessageType,
                     AttachmentId = x.AttachmentId,
@@ -64,8 +68,6 @@ public static class GetChatHistory
                     AttachmentFileName = x.Attachment != null ? x.Attachment.FileName : null,
                     AttachmentFileSize = x.Attachment != null ? (long?)x.Attachment.FileSize : null,
                     AttachmentContentType = x.Attachment != null ? x.Attachment.ContentType : null,
-                    CallAccepted = x.CallAccepted,
-                    CallDurationSeconds = x.CallDurationSeconds,
                     IsCancelled = x.IsCancelled,
                     SentAt = x.CreatedDate,
                 })

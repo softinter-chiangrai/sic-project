@@ -29,6 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => inject(LanguageService).initLanguage()),
     { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
     { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
     AppTranslateLoader,
     provideTranslateService({
       lang: 'th',

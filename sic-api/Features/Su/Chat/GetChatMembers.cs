@@ -5,6 +5,8 @@ using sic_api.Data;
 using sic_api.Hubs;
 using System.Security.Claims;
 using sic_api.Extensions;
+using sic_api.Attributes;
+using sic_api.Model.Storage;
 
 namespace sic_api.Features.Su.Chat;
 
@@ -15,6 +17,11 @@ public static class GetChatMembers
         public string UserId { get; set; } = default!;
         public string DisplayName { get; set; } = default!;
         public bool IsOnline { get; set; }
+
+        [Storage("UploadGroupData")]
+        public Guid? UploadGroupId { get; set; } = null;
+
+        public List<StorageUploadReference> UploadGroupData { get; set; } = [];
     }
 
     public sealed class Query : IRequest<Response[]>
@@ -50,7 +57,7 @@ public static class GetChatMembers
             var profiles = await dbContext.SuProfiles
                 .AsNoTracking()
                 .Where(p => members.Contains(p.UserId))
-                .Select(p => new { p.UserId, p.FirstNameLocal, p.FirstNameEn, p.LastNameLocal, p.LastNameEn })
+                .Select(p => new { p.UserId, p.FirstNameLocal, p.FirstNameEn, p.LastNameLocal, p.LastNameEn, p.UploadGroupId })
                 .ToListAsync(cancellationToken);
 
             var profileMap = profiles.ToDictionary(p => p.UserId);
@@ -68,6 +75,7 @@ public static class GetChatMembers
                     UserId = userId,
                     DisplayName = displayName,
                     IsOnline = presenceStore.IsOnline(userId, businessId.Value),
+                    UploadGroupId = profile?.UploadGroupId
                 };
             }).ToArray();
         }

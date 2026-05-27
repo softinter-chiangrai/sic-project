@@ -207,6 +207,14 @@
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.headchat-member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .headchat-member-info {
@@ -263,6 +271,28 @@
   background: var(--sidebar);
   flex-shrink: 0;
   border-top: 3px solid var(--crm-primary);
+}
+
+.headchat-win-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--crm-primary) 15%, transparent);
+  color: var(--crm-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.headchat-win-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .headchat-win-name {
@@ -401,6 +431,80 @@
 }
 
 .headchat-msg-image:hover { opacity: 0.9; }
+
+/* ── File attachment message ──────────────────────────────────────────────── */
+
+.headchat-msg-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--crm-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--crm-primary) 30%, transparent);
+  text-decoration: none;
+  color: var(--text);
+  min-width: 160px;
+  max-width: 220px;
+  transition: background 0.15s;
+}
+
+.headchat-msg-file:hover {
+  background: color-mix(in srgb, var(--crm-primary) 18%, transparent);
+}
+
+.headchat-msg-file > .bi-file-earmark-fill {
+  font-size: 1.4rem;
+  color: var(--crm-primary);
+  flex-shrink: 0;
+}
+
+.headchat-msg-file > .bi-download {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.headchat-msg-file-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.headchat-msg-file-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-active);
+}
+
+.headchat-msg-file-size {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* ── Call log message ─────────────────────────────────────────────────────── */
+
+.headchat-msg-call {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.headchat-msg-call .bi {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
 
 .headchat-msg-time {
   font-size: 0.6rem;
@@ -670,7 +774,40 @@
   letter-spacing: 0.02em;
 }
 
-.headchat-call-controls { display: flex; gap: 1rem; }
+.headchat-call-controls { display: flex; align-items: center; gap: 0.875rem; }
+
+/* Generic call-overlay action button */
+.headchat-call-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.headchat-call-btn:hover { background: rgba(255, 255, 255, 0.26); transform: scale(1.08); }
+.headchat-call-btn.active { background: var(--crm-primary, #29C296); }
+.headchat-call-btn--danger { background: rgba(239, 68, 68, 0.55); }
+.headchat-call-btn--danger:hover { background: rgba(239, 68, 68, 0.85); }
+
+/* Recording indicator dot */
+@keyframes pulse-rec { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.35; transform:scale(0.8); } }
+.headchat-rec-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse-rec 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.headchat-rec-dot.paused { animation: none; opacity: 0.45; }
 
 .headchat-btn-hangup {
   width: 3.75rem;
@@ -691,4 +828,331 @@
 .headchat-btn-hangup:hover {
   transform: scale(1.12);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+}
+
+/* ── Audio / Video player in chat bubble ─────────────────────────────────── */
+
+.headchat-msg-media-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 220px;
+}
+
+.headchat-msg-audio {
+  width: 100%;
+  height: 36px;
+  accent-color: var(--crm-primary, #29C296);
+}
+
+.headchat-msg-video {
+  width: 100%;
+  max-height: 160px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.headchat-msg-media-wrap .headchat-msg-file-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headchat-msg-media-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.headchat-msg-media-footer .headchat-msg-file-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.headchat-msg-dl-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+.headchat-msg-dl-btn:hover {
+  color: var(--crm-primary, #29C296);
+}
+
+.headchat-msg-file {
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Recording alert banner (shown on peer's screen)
+   ───────────────────────────────────────────────────────────────────────── */
+.headchat-rec-alert {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  background: rgba(239, 68, 68, 0.88);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 20;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Panel header actions (create-group button + close button row)
+   ───────────────────────────────────────────────────────────────────────── */
+.headchat-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headchat-create-group-btn {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--crm-primary, #29C296);
+  border: 1px solid var(--crm-primary, #29C296);
+  border-radius: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.headchat-create-group-btn:hover {
+  background: var(--crm-primary, #29C296);
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Groups section in panel
+   ───────────────────────────────────────────────────────────────────────── */
+.headchat-group-section {
+  border-top: 1px solid var(--border, #e5e7eb);
+  padding: 0.25rem 0;
+}
+
+.headchat-group-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted, #9ca3af);
+  padding: 0.35rem 0.75rem 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.headchat-group-btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.15s;
+}
+.headchat-group-btn:hover { background: var(--border, #f3f4f6); }
+
+.headchat-group-avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--crm-primary, #29C296) 15%, var(--bg, #fff));
+  color: var(--crm-primary, #29C296);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.headchat-group-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headchat-group-count {
+  font-size: 0.72rem;
+  color: var(--text-muted, #9ca3af);
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Create-group dialog / overlay
+   ───────────────────────────────────────────────────────────────────────── */
+.headchat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1090;
+}
+
+.headchat-create-group-dialog {
+  position: fixed;
+  bottom: 5rem;
+  right: 5rem;
+  width: 20rem;
+  max-height: 28rem;
+  background: var(--bg, #fff);
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  z-index: 1091;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.headchat-create-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-active);
+}
+
+.headchat-create-group-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.headchat-create-group-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  margin-top: 0.25rem;
+}
+
+.headchat-create-group-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text-active);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.headchat-create-group-input:focus { border-color: var(--crm-primary, #29C296); }
+
+.headchat-create-group-members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.headchat-member-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text);
+  padding: 0.2rem 0.25rem;
+  border-radius: 0.3rem;
+  transition: background 0.12s;
+}
+.headchat-member-checkbox:hover { background: var(--border); }
+.headchat-member-checkbox input[type="checkbox"] { accent-color: var(--crm-primary, #29C296); }
+
+.headchat-member-avatar--sm {
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+  font-size: 0.7rem !important;
+}
+
+.headchat-create-group-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.headchat-btn-primary {
+  all: unset;
+  cursor: pointer;
+  background: var(--crm-primary, #29C296);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 0.4rem;
+  transition: opacity 0.15s;
+}
+.headchat-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.headchat-btn-primary:not(:disabled):hover { opacity: 0.9; }
+
+.headchat-btn-secondary {
+  all: unset;
+  cursor: pointer;
+  background: var(--border);
+  color: var(--text-active);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.4rem;
+  transition: opacity 0.15s;
+}
+.headchat-btn-secondary:hover { opacity: 0.8; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Group chat window accent
+   ───────────────────────────────────────────────────────────────────────── */
+.headchat-window--group {
+  border-top: 3px solid var(--crm-primary, #29C296);
+}
+
+.headchat-win-header--group {
+  background: color-mix(in srgb, var(--crm-primary, #29C296) 8%, var(--bg, #fff));
+}
+
+.headchat-win-avatar--group {
+  background: color-mix(in srgb, var(--crm-primary, #29C296) 18%, var(--bg, #fff));
+  color: var(--crm-primary, #29C296);
+  font-size: 0.9rem;
+}
+
+.headchat-msg-sender {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--crm-primary, #29C296);
+  display: block;
+  margin-bottom: 0.1rem;
 }
