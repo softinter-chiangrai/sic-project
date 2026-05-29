@@ -2,7 +2,7 @@ package com.softinter.sicapi.dto.response;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -16,5 +16,5 @@ public class ChatMessageResponse {
     private String messageType;
     private UUID attachmentId;
     private boolean isRead;
-    private LocalDateTime createdDate;
+    private Instant createdDate;
 }

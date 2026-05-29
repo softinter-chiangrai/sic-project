@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        ApiResponse<Map<String, String>> response = new ApiResponse<>(false, "Validation failed", errors, LocalDateTime.now());
+        ApiResponse<Map<String, String>> response = new ApiResponse<>(false, "Validation failed", errors, Instant.now());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

@@ -72,9 +72,9 @@ public class ProfileController {
     @GetMapping("/combobox-title")
     @Operation(summary = "Get title dropdown")
     public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxTitle() {
-        List<LovResponse> titles = titleRepository.findByIsActiveTrueOrderByTitleNameEn()
+        List<LovResponse> titles = titleRepository.findByIsActiveTrueOrderByPrefixNameEn()
                 .stream()
-                .map(t -> new LovResponse(t.getId(), t.getTitleNameEn()))
+                .map(t -> new LovResponse(t.getId(), t.getPrefixNameEn()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(titles));
     }
@@ -150,7 +150,8 @@ public class ProfileController {
             profile.setTitle(titleRepository.findById(request.getTitleId()).orElse(null));
         }
         profile.setPhoneNumber(request.getPhoneNumber());
-        profile.setAddress(request.getAddress());
+        profile.setAddressEn(request.getAddressEn()); 
+        profile.setAddressLocal(request.getAddressLocal());
         if (request.getCountryId() != null) {
             profile.setCountry(countryRepository.findById(request.getCountryId()).orElse(null));
         }
@@ -180,10 +181,11 @@ public class ProfileController {
         response.setLastNameLocal(profile.getLastNameLocal());
         if (profile.getTitle() != null) {
             response.setTitleId(profile.getTitle().getId());
-            response.setTitleName(profile.getTitle().getTitleNameEn());
+            response.setTitleName(profile.getTitle().getPrefixNameEn());
         }
         response.setPhoneNumber(profile.getPhoneNumber());
-        response.setAddress(profile.getAddress());
+        response.setAddressEn(profile.getAddressEn());
+        response.setAddressLocal(profile.getAddressLocal());
         if (profile.getCountry() != null) {
             response.setCountryId(profile.getCountry().getId());
             response.setCountryName(profile.getCountry().getCountryNameEn());

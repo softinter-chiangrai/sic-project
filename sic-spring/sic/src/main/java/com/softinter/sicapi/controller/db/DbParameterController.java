@@ -26,7 +26,7 @@ public class DbParameterController {
     public ResponseEntity<ApiResponse<List<LovResponse>>> getLov(@RequestParam String group) {
         List<LovResponse> lov = parameterRepository.findByParamGroupAndIsActiveTrueOrderBySortOrder(group)
                 .stream()
-                .map(p -> new LovResponse(p.getParamCode(), p.getParamValue()))
+                .map(p -> new LovResponse(p.getParameterCode(), p.getParameterCode()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }

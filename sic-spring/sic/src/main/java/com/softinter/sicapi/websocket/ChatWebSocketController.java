@@ -3,6 +3,7 @@ package com.softinter.sicapi.websocket;
 import com.softinter.sicapi.dto.request.ChatMessageRequest;
 import com.softinter.sicapi.dto.response.ChatMessageResponse;
 import com.softinter.sicapi.entity.su.SuChatLog;
+import com.softinter.sicapi.entity.enums.ChatMessageType; // นำเข้า Enum ตัวใหม่
 import com.softinter.sicapi.repository.su.SuChatLogRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
@@ -24,26 +25,35 @@ public class ChatWebSocketController {
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
 
+        // 1. สร้างวัตถุและแมปค่าเข้าสู่ Entity (SuChatLog)
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
-        chatLog.setMessageType(request.getMessageType());
-        chatLog.setIsRead(false);
-        chatLog.setIsActive(true);
-        chatLogRepository.save(chatLog);
+        
+        // แปลง String เป็น Enum แบบที่คุณต้องการ (พร้อมเช็คป้องกันกรณีหน้าบ้านส่ง null)
+        if (request.getMessageType() != null) {
+            ChatMessageType chatMessageTypeEnum = ChatMessageType.valueOf(request.getMessageType().toUpperCase());
+            chatLog.setMessageType(chatMessageTypeEnum);
+        }
 
+        // หมายเหตุ: เอา setSenderName, setIsRead, และ setIsActive ออกแล้วเพราะไม่มีใน Entity ตัวล่าสุดครับ
+
+        // บันทึกลงฐานข้อมูลเพื่อรับ ID และข้อมูลระบบมาใช้งานต่อ
+        chatLog = chatLogRepository.save(chatLog);
+
+        // 2. แมปค่าจาก Entity และตัวแปรระบบส่งกลับไปให้หน้าบ้านผ่าน Response DTO
         ChatMessageResponse response = new ChatMessageResponse();
         response.setId(chatLog.getId());
         response.setSenderId(currentUserId);
-        response.setSenderName(currentUsername);
+        response.setSenderName(currentUsername); // หน้าบ้านยังได้ชื่อผู้ส่งตามเดิมผ่าน DTO ตัวนี้ครับ
         response.setReceiverId(request.getReceiverId());
         response.setMessage(request.getMessage());
-        response.setMessageType(request.getMessageType());
+        response.setMessageType(request.getMessageType()); // ส่งรูปแบบ String คืนไปให้หน้าบ้านอ่านง่ายๆ
         response.setRead(false);
         response.setCreatedDate(chatLog.getCreatedDate());
 
+        // 3. ส่งข้อความออกผ่าน WebSocket คิวของ User ปลายทาง
         messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
     }
 }

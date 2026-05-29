@@ -1,5 +1,6 @@
 package com.softinter.sicapi.entity.su;
 
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import com.softinter.sicapi.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class SuBusinessAudit extends BaseEntity {
+public class SuBusinessAudit extends BaseBusinessEntity {
 
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;

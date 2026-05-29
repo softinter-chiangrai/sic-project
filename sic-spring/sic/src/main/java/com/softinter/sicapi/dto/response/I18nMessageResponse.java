@@ -1,11 +1,11 @@
 package com.softinter.sicapi.dto.response;
 
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.Map;
-
 @Data
+@Builder
 public class I18nMessageResponse {
-    private String module;
-    private Map<String, String> messages;
+    private String messageCode;
+    private String message;
 }

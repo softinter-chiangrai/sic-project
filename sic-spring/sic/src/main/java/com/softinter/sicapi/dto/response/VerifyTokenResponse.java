@@ -2,12 +2,12 @@ package com.softinter.sicapi.dto.response;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 public class VerifyTokenResponse {
     private boolean valid;
     private String email;
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
     private String message;
 }

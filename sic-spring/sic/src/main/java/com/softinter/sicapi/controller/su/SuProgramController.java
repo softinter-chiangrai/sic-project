@@ -84,7 +84,7 @@ public class SuProgramController {
     public ResponseEntity<ApiResponse<List<LovResponse>>> lov() {
         List<LovResponse> lov = programRepository.findAllActive()
                 .stream()
-                .map(p -> new LovResponse(p.getId(), p.getProgramNameEn()))
+                .map(p -> new LovResponse(p.getId(), p.getNameEn()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }
@@ -108,11 +108,11 @@ public class SuProgramController {
             program = new SuProgram();
         }
         program.setProgramCode(request.getProgramCode());
-        program.setProgramNameEn(request.getProgramNameEn());
-        program.setProgramNameLocal(request.getProgramNameLocal());
-        program.setProgramType(request.getProgramType());
-        program.setProgramPath(request.getProgramPath());
-        program.setProgramIcon(request.getProgramIcon());
+        program.setNameEn(request.getProgramNameEn());
+        program.setNameLocal(request.getProgramNameLocal());
+        program.setProgramCode(request.getProgramType());
+        program.setProgramCode(request.getProgramPath());
+        program.setIcon(request.getProgramIcon());
         program.setSortOrder(request.getSortOrder());
         program.setIsActive(request.isActive());
         programRepository.save(program);
@@ -138,11 +138,11 @@ public class SuProgramController {
             response.setParentProgramCode(program.getParentProgram().getProgramCode());
         }
         response.setProgramCode(program.getProgramCode());
-        response.setProgramNameEn(program.getProgramNameEn());
-        response.setProgramNameLocal(program.getProgramNameLocal());
-        response.setProgramType(program.getProgramType());
-        response.setProgramPath(program.getProgramPath());
-        response.setProgramIcon(program.getProgramIcon());
+        response.setProgramNameEn(program.getNameEn());
+        response.setProgramNameLocal(program.getNameLocal());
+        response.setProgramType(program.getProgramCode());
+        response.setProgramPath(program.getProgramCode());
+        response.setProgramIcon(program.getIcon());
         response.setSortOrder(program.getSortOrder());
         response.setActive(Boolean.TRUE.equals(program.getIsActive()));
         response.setRowVersion(program.getRowVersion());

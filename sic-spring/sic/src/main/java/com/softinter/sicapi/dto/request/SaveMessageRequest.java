@@ -1,18 +1,18 @@
 package com.softinter.sicapi.dto.request;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
 public class SaveMessageRequest {
-    private UUID id;
-    private String module;
-    private String messageKey;
+    private UUID id;              // ถ้ามี = Update, ไม่มี = Create
+    private String moduleCode;
+    private String programCode;
+    private String messageCode;
     private String messageEn;
     private String messageLocal;
-    private boolean isActive = true;
-    private BaseEntity.EntityState state = BaseEntity.EntityState.DETACHED;
-    private Long rowVersion;
+    private Boolean isActive;
+    private String createdBy;
+    private String updatedBy;
 }

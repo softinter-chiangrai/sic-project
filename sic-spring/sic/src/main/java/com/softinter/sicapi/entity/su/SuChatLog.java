@@ -1,12 +1,14 @@
 package com.softinter.sicapi.entity.su;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.enums.ChatMessageType;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -28,7 +30,7 @@ public class SuChatLog extends BaseBusinessEntity {
     @Column(name = "message", nullable = false, length = 4000)
     private String message = "";
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name = "message_type", nullable = false)
     private ChatMessageType messageType = ChatMessageType.TEXT;
 
@@ -39,7 +41,7 @@ public class SuChatLog extends BaseBusinessEntity {
     private Boolean isCancelled = false;
 
     @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
+    private Instant cancelledAt;
 
     @Column(name = "cancelled_by", length = 100)
     private String cancelledBy;
@@ -53,11 +55,4 @@ public class SuChatLog extends BaseBusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attachment_id")
     private SuUpload attachment;
-    
-    public enum ChatMessageType {
-    TEXT,    // 0
-    IMAGE,   // 1
-    FILE,    // 2
-    CALL     // 3
-}
 }

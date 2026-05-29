@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface DbMailQueueRepository extends JpaRepository<DbMailQueue, UUID> {
-    List<DbMailQueue> findByIsSentFalseAndIsActiveTrueAndRetryCountLessThanOrderByCreatedDateAsc(int maxRetries);
+   List<DbMailQueue> findByStatusAndRetryCountLessThanOrderByCreatedDateAsc(String status, Integer maxRetry);
 }

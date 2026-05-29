@@ -11,8 +11,10 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.softinter.sicapi.entity.enums.EntityState;
+
 import java.sql.Types;
-import java.time.LocalDateTime;
+import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และลบ Instant ออก
 import java.util.UUID;
 
 @Data
@@ -33,8 +35,8 @@ public abstract class BaseEntity {
     private String createdBy = "system";
 
     @CreatedDate
-    @Column(name = "created_date", nullable = false)
-    private LocalDateTime createdDate;
+    @Column(name = "created_date", nullable = false, updatable = false) // แนะนำเพิ่ม updatable = false ป้องกันการถูกเขียนทับ
+    private Instant createdDate; // เปลี่ยนเป็น Instant
 
     @LastModifiedBy
     @Column(name = "updated_by", nullable = false, length = 100)
@@ -42,7 +44,7 @@ public abstract class BaseEntity {
 
     @LastModifiedDate
     @Column(name = "updated_date", nullable = false)
-    private LocalDateTime updatedDate;
+    private Instant updatedDate; // เปลี่ยนเป็น Instant
 
     @Column(name = "is_delete", nullable = false)
     private Boolean isDelete = false;
@@ -51,18 +53,15 @@ public abstract class BaseEntity {
     private String deleteBy;
 
     @Column(name = "delete_date")
-    private LocalDateTime deleteDate;
+    private Instant deleteDate; // เปลี่ยนเป็น Instant
 
     @Version
     @Column(name = "row_version")
     private Long rowVersion;
-
+    
+    @Enumerated(EnumType.STRING)
     @Transient
     private EntityState state = EntityState.DETACHED;
-
-    public enum EntityState {
-        DETACHED, UNCHANGED, ADDED, MODIFIED, DELETED
-    }
 
     @PrePersist
     @PreUpdate

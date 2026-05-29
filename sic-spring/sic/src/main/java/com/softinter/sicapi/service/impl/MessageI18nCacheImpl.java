@@ -19,32 +19,33 @@ public class MessageI18nCacheImpl implements MessageI18nCache {
     private final CacheManager cacheManager;
 
     @Override
-    public Map<String, String> getMessages(String module) {
-        String cacheKey = "module:" + module;
-        var cache = cacheManager.getCache("i18nMessages");
-        if (cache != null) {
-            var wrapper = cache.get(cacheKey);
-            if (wrapper != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, String> cached = (Map<String, String>) wrapper.get();
-                if (cached != null) {
-                    return cached;
-                }
+public Map<String, String> getMessages(String module) {
+    String cacheKey = "module:" + module;
+    var cache = cacheManager.getCache("i18nMessages");
+    if (cache != null) {
+        var wrapper = cache.get(cacheKey);
+        if (wrapper != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> cached = (Map<String, String>) wrapper.get();
+            if (cached != null) {
+                return cached;
             }
         }
-
-        Map<String, String> messages = messageRepository.findByModuleAndIsActiveTrueOrderByMessageKey(module)
-                .stream()
-                .collect(Collectors.toMap(
-                        m -> m.getMessageKey(),
-                        m -> m.getMessageLocal() != null ? m.getMessageLocal() : m.getMessageEn()
-                ));
-
-        if (cache != null) {
-            cache.put(cacheKey, messages);
-        }
-        return messages;
     }
+
+    // 🌟 ปรับปรุงจุดนี้: เปลี่ยนชื่อเมธอด และฟิลด์ภายใน map (.getMessageCode())
+    Map<String, String> messages = messageRepository.findByModuleCodeAndIsDeleteFalseOrderByMessageCode(module)
+            .stream()
+            .collect(Collectors.toMap(
+                    m -> m.getMessageCode(), // แก้จาก getMessageKey -> getMessageCode
+                    m -> m.getMessageLocal() != null ? m.getMessageLocal() : m.getMessageEn()
+            ));
+
+    if (cache != null) {
+        cache.put(cacheKey, messages);
+    }
+    return messages;
+}
 
     @Override
     public void evictModule(String module) {

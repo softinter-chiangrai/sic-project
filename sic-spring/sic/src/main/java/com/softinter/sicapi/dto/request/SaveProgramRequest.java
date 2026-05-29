@@ -1,6 +1,8 @@
 package com.softinter.sicapi.dto.request;
 
 import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.enums.EntityState;
+
 import lombok.Data;
 
 import java.util.UUID;
@@ -17,6 +19,6 @@ public class SaveProgramRequest {
     private String programIcon;
     private Integer sortOrder;
     private boolean isActive = true;
-    private BaseEntity.EntityState state = BaseEntity.EntityState.DETACHED;
+    private EntityState state = EntityState.DETACHED;
     private Long rowVersion;
 }

@@ -19,4 +19,6 @@ public class SaveProfileRequest {
     private UUID districtId;
     private UUID subDistrictId;
     private String zipCode;
+    private String addressEn;
+    private String addressLocal;
 }

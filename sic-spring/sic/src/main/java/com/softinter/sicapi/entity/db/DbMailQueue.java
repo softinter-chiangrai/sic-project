@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -39,13 +39,13 @@ public class DbMailQueue extends BaseEntity {
     private String errorMessage;
 
     @Column(name = "scheduled_at")
-    private LocalDateTime scheduledAt;
+    private Instant scheduledAt;
 
     @Column(name = "sent_at")
-    private LocalDateTime sentAt;
+    private Instant sentAt;
 
     @Column(name = "next_retry_at")
-    private LocalDateTime nextRetryAt;
+    private Instant nextRetryAt;
 
     @Column(name = "used_config_id")
     private UUID usedConfigId;

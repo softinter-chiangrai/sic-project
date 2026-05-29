@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,10 +27,10 @@ public class ExExample extends BaseEntity {
     private String messageLocal;
 
     @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
+    private Instant startDate;
 
     @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
+    private Instant endDate;
 
     @Column(name = "start_time")
     private String startTime;
@@ -55,6 +55,12 @@ public class ExExample extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = false;
+
+    @Column(name = "description", length = 500)
+    private String description;
+
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 
     @Transient
     private List<StorageUploadReference> uploadGroupData;

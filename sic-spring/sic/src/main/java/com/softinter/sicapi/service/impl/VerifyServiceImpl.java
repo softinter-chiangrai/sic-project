@@ -1,4 +1,4 @@
-package com.softinter.sicapi.service.impl;
+/* package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.su.SuVerify;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Base64;
 
 @Service
@@ -29,7 +29,7 @@ public class VerifyServiceImpl implements VerifyService {
         SuVerify verify = new SuVerify();
         verify.setEmail(email);
         verify.setVerifyToken(token);
-        verify.setExpiresAt(LocalDateTime.now().plusHours(24));
+        verify.setExpiresAt(Instant.now().plusHours(24));
         verify.setIsVerified(false);
         verify.setIsActive(true);
         verifyRepository.save(verify);
@@ -62,7 +62,7 @@ public class VerifyServiceImpl implements VerifyService {
             return response;
         }
 
-        if (verify.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (verify.getExpiresAt().isBefore(Instant.now())) {
             response.setValid(false);
             response.setEmail(verify.getEmail());
             response.setMessage("Token expired");
@@ -70,7 +70,7 @@ public class VerifyServiceImpl implements VerifyService {
         }
 
         verify.setIsVerified(true);
-        verify.setVerifiedAt(LocalDateTime.now());
+        verify.setVerifiedAt(Instant.now());
         verifyRepository.save(verify);
 
         response.setValid(true);
@@ -79,3 +79,4 @@ public class VerifyServiceImpl implements VerifyService {
         return response;
     }
 }
+ */

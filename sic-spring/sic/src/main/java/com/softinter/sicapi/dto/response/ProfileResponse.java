@@ -27,4 +27,6 @@ public class ProfileResponse {
     private String subDistrictName;
     private String zipCode;
     private boolean isVerified;
+    private String addressEn;
+    private String addressLocal;
 }

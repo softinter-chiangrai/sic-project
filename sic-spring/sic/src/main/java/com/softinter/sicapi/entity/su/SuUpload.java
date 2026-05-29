@@ -1,12 +1,15 @@
 package com.softinter.sicapi.entity.su;
 
 import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.enums.FileCategory;
+import com.softinter.sicapi.entity.enums.FileVisibility;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -61,9 +64,21 @@ public class SuUpload extends BaseEntity {
     private UUID uploadGroupId;
 
     @Column(name = "temp_expires_at")
-    private LocalDateTime tempExpiresAt;
+    private Instant tempExpiresAt;
 
-    public enum FileVisibility {
-    PRIVATE, PUBLIC
-}
+    @Column(name = "file_path", length = 2000)
+    private String filePath;
+
+    @Column(name = "mime_type", nullable = false)
+    private String mimeType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "file_category", nullable = false)
+    private FileCategory fileCategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "file_visibility", nullable = false)
+    private FileVisibility fileVisibility;
+
+  
 }

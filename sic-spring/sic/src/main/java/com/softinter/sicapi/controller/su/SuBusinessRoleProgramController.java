@@ -84,7 +84,7 @@ public class SuBusinessRoleProgramController {
     public ResponseEntity<ApiResponse<List<LovResponse>>> lov(@RequestParam UUID businessRoleId) {
         List<LovResponse> lov = brpRepository.findActiveByBusinessRoleId(businessRoleId)
                 .stream()
-                .map(brp -> new LovResponse(brp.getProgram().getId(), brp.getProgram().getProgramNameEn()))
+                .map(brp -> new LovResponse(brp.getProgram().getId(), brp.getProgram().getNameEn()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }
@@ -125,8 +125,8 @@ public class SuBusinessRoleProgramController {
         if (brp.getProgram() != null) {
             response.setProgramId(brp.getProgram().getId());
             response.setProgramCode(brp.getProgram().getProgramCode());
-            response.setProgramNameEn(brp.getProgram().getProgramNameEn());
-            response.setProgramNameLocal(brp.getProgram().getProgramNameLocal());
+            response.setProgramNameEn(brp.getProgram().getNameEn());
+            response.setProgramNameLocal(brp.getProgram().getNameLocal());
         }
         response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
         response.setRowVersion(brp.getRowVersion());

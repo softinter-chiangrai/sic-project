@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,5 +23,5 @@ public interface BaseRepository<T extends BaseEntity, ID> extends JpaRepository<
 
     @Modifying
     @Query("UPDATE #{#entityName} e SET e.isDelete = true, e.deleteBy = :deletedBy, e.deleteDate = :deleteDate WHERE e.id = :id")
-    void softDelete(@Param("id") UUID id, @Param("deletedBy") String deletedBy, @Param("deleteDate") LocalDateTime deleteDate);
+    void softDelete(@Param("id") UUID id, @Param("deletedBy") String deletedBy, @Param("deleteDate") Instant deleteDate);
 }

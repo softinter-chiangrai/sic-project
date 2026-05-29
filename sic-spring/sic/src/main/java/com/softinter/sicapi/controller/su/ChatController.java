@@ -1,4 +1,4 @@
-package com.softinter.sicapi.controller.su;
+/* package com.softinter.sicapi.controller.su;
 
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
@@ -15,7 +15,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -105,7 +105,7 @@ public class ChatController {
                 SuChatGroupMember member = new SuChatGroupMember();
                 member.setGroup(group);
                 member.setUserId(memberId);
-                member.setJoinedAt(LocalDateTime.now());
+                member.setJoinedAt(Instant.now());
                 member.setIsActive(true);
                 chatGroupMemberRepository.save(member);
             }
@@ -222,3 +222,4 @@ public class ChatController {
         return response;
     }
 }
+ */

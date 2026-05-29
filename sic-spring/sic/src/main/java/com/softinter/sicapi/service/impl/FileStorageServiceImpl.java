@@ -2,6 +2,8 @@ package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.entity.enums.FileCategory;
+import com.softinter.sicapi.entity.enums.FileVisibility;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
@@ -15,7 +17,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -46,9 +48,10 @@ public class FileStorageServiceImpl implements FileStorageService {
             upload.setFileName(fileName);
             upload.setFilePath(key);
             upload.setFileSize(file.getSize());
+            
             upload.setMimeType(file.getContentType());
-            upload.setFileCategory(category);
-            upload.setFileVisibility(visibility);
+            upload.setFileCategory(FileCategory.valueOf(category.toUpperCase()));
+            upload.setFileVisibility(FileVisibility.valueOf(visibility.toUpperCase()));
             upload.setUploadGroupId(uploadGroupId);
             upload.setIsActive(true);
             uploadRepository.save(upload);

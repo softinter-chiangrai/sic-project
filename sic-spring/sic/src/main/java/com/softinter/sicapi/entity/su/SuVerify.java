@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "su_verify")
@@ -31,7 +31,7 @@ public class SuVerify extends BaseEntity {
     private Integer retryCount = 0;
 
     @Column(name = "expire_at", nullable = false)
-    private LocalDateTime expireAt;
+    private Instant expireAt;
 
     @Column(name = "recipient", nullable = false, length = 255)
     private String recipient;

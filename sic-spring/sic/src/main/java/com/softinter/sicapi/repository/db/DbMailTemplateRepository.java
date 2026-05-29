@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface DbMailTemplateRepository extends JpaRepository<DbMailTemplate, UUID> {
     Optional<DbMailTemplate> findByTemplateCodeAndIsActiveTrue(String templateCode);
+    Optional<DbMailTemplate> findFirstByIsActiveTrue();
 }

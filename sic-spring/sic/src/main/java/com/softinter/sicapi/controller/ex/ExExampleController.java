@@ -83,7 +83,7 @@ public class ExExampleController {
     public ResponseEntity<ApiResponse<List<LovResponse>>> lov() {
         List<LovResponse> lov = exampleRepository.findByIsActiveTrueOrderBySortOrder()
                 .stream()
-                .map(e -> new LovResponse(e.getId(), e.getExampleName()))
+                .map(e -> new LovResponse(e.getId(), e.getExampleCode()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }
@@ -107,7 +107,7 @@ public class ExExampleController {
             example = new ExExample();
         }
         example.setExampleCode(request.getExampleCode());
-        example.setExampleName(request.getExampleName());
+        example.setExampleCode(request.getExampleCode());
         example.setDescription(request.getDescription());
         example.setSortOrder(request.getSortOrder());
         example.setIsActive(request.getIsActive());

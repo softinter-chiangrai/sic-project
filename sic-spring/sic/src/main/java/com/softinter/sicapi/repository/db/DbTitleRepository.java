@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface DbTitleRepository extends JpaRepository<DbTitle, UUID> {
-    List<DbTitle> findByIsActiveTrueOrderByTitleNameEn();
+    List<DbTitle> findByIsActiveTrueOrderByPrefixNameEn();
 }

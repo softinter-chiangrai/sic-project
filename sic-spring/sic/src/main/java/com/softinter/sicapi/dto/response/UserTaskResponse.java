@@ -2,7 +2,7 @@ package com.softinter.sicapi.dto.response;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -14,8 +14,8 @@ public class UserTaskResponse {
     private String taskName;
     private UUID businessId;
     private String assignedBy;
-    private LocalDateTime assignedAt;
-    private LocalDateTime completedAt;
+    private Instant assignedAt;
+    private Instant completedAt;
     private boolean isCompleted;
     private boolean isActive;
 }

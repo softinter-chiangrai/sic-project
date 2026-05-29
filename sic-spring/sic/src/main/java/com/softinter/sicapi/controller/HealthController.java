@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @RestController
 public class HealthController {
@@ -15,7 +15,7 @@ public class HealthController {
         HealthResponse response = new HealthResponse();
         response.setService("sic-api");
         response.setStatus("ok");
-        response.setUtc(LocalDateTime.now());
+        response.setUtc(Instant.now());
         return ResponseEntity.ok(response);
     }
 }

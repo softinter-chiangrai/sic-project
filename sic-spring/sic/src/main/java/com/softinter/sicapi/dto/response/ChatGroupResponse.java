@@ -2,7 +2,7 @@ package com.softinter.sicapi.dto.response;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,5 +13,5 @@ public class ChatGroupResponse {
     private String groupDescription;
     private String createdByUserId;
     private List<ChatMemberResponse> members;
-    private LocalDateTime createdDate;
+    private Instant createdDate;
 }

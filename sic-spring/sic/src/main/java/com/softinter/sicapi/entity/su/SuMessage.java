@@ -30,4 +30,9 @@ public class SuMessage extends BaseEntity {
 
     @Column(name = "message_local", nullable = false, length = 255)
     private String messageLocal;
+
+    public void setIsActive(Boolean isActive) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setIsActive'");
+    }
 }
