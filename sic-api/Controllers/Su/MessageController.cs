@@ -38,7 +38,7 @@ public class MessageController : BaseController
         return deleted ? NoContent() : NotFound();
     }
 
-    [AllowAnonymous]
+    [AllowAnonymous]    
     [HttpGet("/api/i18n/{module_code}/{program_code}/{language_code?}")]
     public async Task<IActionResult> I18n(
         string module_code,

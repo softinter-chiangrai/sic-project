@@ -1,0 +1,18 @@
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class BusinessRoleProgramResponse {
+    private UUID id;
+    private UUID businessRoleId;
+    private String businessRoleCode;
+    private UUID programId;
+    private String programCode;
+    private String programNameEn;
+    private String programNameLocal;
+    private boolean isActive;
+    private Long rowVersion;
+}

@@ -1,0 +1,14 @@
+package com.softinter.sicapi.repository.ex;
+
+import com.softinter.sicapi.entity.ex.ExExample;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface ExExampleRepository extends JpaRepository<ExExample, UUID>, JpaSpecificationExecutor<ExExample> {
+    List<ExExample> findByIsActiveTrueOrderBySortOrder();
+}
