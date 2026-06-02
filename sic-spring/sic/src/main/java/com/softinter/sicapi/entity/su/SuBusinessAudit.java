@@ -23,10 +23,6 @@ public class SuBusinessAudit extends BaseBusinessEntity {
     @Column(name = "username", length = 100)
     private String username;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
-    private SuBusiness business;
-
     @Column(name = "client_ip", length = 50)
     private String clientIp;
 
@@ -35,4 +31,9 @@ public class SuBusinessAudit extends BaseBusinessEntity {
 
     @Column(name = "remark", length = 500)
     private String remark;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_id", insertable = false, updatable = false)
+    private SuBusiness business;
 }
+

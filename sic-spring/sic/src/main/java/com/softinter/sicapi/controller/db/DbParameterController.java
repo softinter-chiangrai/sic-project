@@ -24,7 +24,7 @@ public class DbParameterController {
     @GetMapping("/lov")
     @Operation(summary = "Get parameter LOV by group")
     public ResponseEntity<ApiResponse<List<LovResponse>>> getLov(@RequestParam String group) {
-        List<LovResponse> lov = parameterRepository.findByParamGroupAndIsActiveTrueOrderBySortOrder(group)
+        List<LovResponse> lov = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group)
                 .stream()
                 .map(p -> new LovResponse(p.getParameterCode(), p.getParameterCode()))
                 .collect(Collectors.toList());

@@ -1,4 +1,4 @@
-/* package com.softinter.sicapi.service.impl;
+package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.su.SuVerify;
@@ -27,17 +27,20 @@ public class VerifyServiceImpl implements VerifyService {
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
 
         SuVerify verify = new SuVerify();
-        verify.setEmail(email);
-        verify.setVerifyToken(token);
-        verify.setExpiresAt(Instant.now().plusHours(24));
+        verify.setEmail(email);  // ✅ มีแล้ว
+        verify.setToken(token);  // เปลี่ยนจาก setVerifyToken เป็น setToken
+        verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
         verify.setIsVerified(false);
-        verify.setIsActive(true);
+        verify.setRecipient(email);  // ใส่ recipient ด้วย
+        verify.setVerifyType("EMAIL_VERIFICATION");  // ใส่ verify type
+        verify.setReferenceNumber(email);  // ใส่ reference number
+        // verify.setIsActive(true); // ไม่มี field นี้ใน Entity
         verifyRepository.save(verify);
 
         VerifyTokenResponse response = new VerifyTokenResponse();
         response.setValid(false);
         response.setEmail(email);
-        response.setExpiresAt(verify.getExpiresAt());
+        response.setExpiresAt(verify.getExpireAt());  // เปลี่ยนจาก getExpiresAt เป็น getExpireAt
         response.setMessage("Verification token generated successfully");
         return response;
     }
@@ -45,7 +48,8 @@ public class VerifyServiceImpl implements VerifyService {
     @Override
     @Transactional
     public VerifyTokenResponse verifyToken(String token) {
-        SuVerify verify = verifyRepository.findByVerifyTokenAndIsActiveTrue(token)
+        // ต้องแก้ไขใน Repository ด้วย เปลี่ยนจาก findByVerifyTokenAndIsActiveTrue
+        SuVerify verify = verifyRepository.findByToken(token)  // ใช้ findByToken แทน
                 .orElse(null);
 
         VerifyTokenResponse response = new VerifyTokenResponse();
@@ -55,14 +59,14 @@ public class VerifyServiceImpl implements VerifyService {
             return response;
         }
 
-        if (verify.getIsVerified()) {
+        if (Boolean.TRUE.equals(verify.getIsVerified())) {
             response.setValid(false);
             response.setEmail(verify.getEmail());
             response.setMessage("Token already used");
             return response;
         }
 
-        if (verify.getExpiresAt().isBefore(Instant.now())) {
+        if (verify.getExpireAt().isBefore(Instant.now())) {  // เปลี่ยนจาก getExpiresAt เป็น getExpireAt
             response.setValid(false);
             response.setEmail(verify.getEmail());
             response.setMessage("Token expired");
@@ -79,4 +83,3 @@ public class VerifyServiceImpl implements VerifyService {
         return response;
     }
 }
- */

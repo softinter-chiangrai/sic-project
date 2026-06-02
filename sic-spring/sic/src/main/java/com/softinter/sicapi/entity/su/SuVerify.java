@@ -35,4 +35,14 @@ public class SuVerify extends BaseEntity {
 
     @Column(name = "recipient", nullable = false, length = 255)
     private String recipient;
+    
+    // เพิ่ม field ที่จำเป็น
+    @Column(name = "is_verified")
+    private Boolean isVerified = false;
+    
+    @Column(name = "verified_at")
+    private Instant verifiedAt;
+    
+    @Column(name = "email", length = 255)  // เพิ่ม field email
+    private String email;
 }

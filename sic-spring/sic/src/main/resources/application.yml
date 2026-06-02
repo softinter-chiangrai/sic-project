@@ -1,36 +1,67 @@
+server:
+  port: 5265
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:54320/sic_app
     username: sic-app
     password: SicApp2026
     driver-class-name: org.postgresql.Driver
+    devtools:
+      restart:
+        enabled: true
+        additional-paths: src/main/java, src/main/resources
 
   jpa:
     hibernate:
-      ddl-auto: update # ค่า options: none, validate, update, create, create-drop
-    show-sql: true # แสดง SQL ที่ถูกสร้าง (ควรปิดใน production)
+      ddl-auto: none
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true # จัดรูปแบบ SQL ให้อ่านง่าย (คู่กับ show-sql)
+        format_sql: false
         jdbc:
-          batch_size: 20 # ปรับ batch size ตามเหมาะสม
-    open-in-view: false # ปิด Open Session in View เพื่อประสิทธิภาพ
+          batch_size: 20
+    open-in-view: false
 
   web:
     cors:
       allowed-origins:
         - http://localhost:4200
 
-keycloak:
-  realm: sic-project
-  auth-server-url: http://localhost:8080/
-  ssl-required: none
-  resource: sic-app
-  verify-token-audience: false
-  credentials:
-    secret: ""
-  confidential-port: 0
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: phurinsukman1@gmail.com
+    password: phurin192547
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+app:
+  keycloak:
+    realm: sic-project
+    auth-server-url: http://localhost:8080
+    ssl-required: none
+    resource: sic-app
+    verify-token-audience: false
+    credentials:
+      secret: ""
+    confidential-port: 0
+
+  # แก้ไขส่วนนี้ - ย้ายออกมาจากใต้ keycloak
+  storage:
+    s3:
+      bucket: public-files
+      region: ap-southeast-1
+      access-key: seaweedfs
+      secret-key: seaweedfs-secret
 
 storage:
   service-url: http://localhost:8888
@@ -41,6 +72,10 @@ storage:
   document-bucket: documents
 
 logging:
+  pattern:
+    console: "%msg%n"
   level:
-    root: INFO
-    org.springframework.web: WARN
+    root: ERROR
+    com.softinter.sicapi: INFO
+
+spring.main.banner-mode: off

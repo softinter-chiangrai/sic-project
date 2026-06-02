@@ -52,5 +52,9 @@ public class DbMailQueue extends BaseEntity {
 
     @Column(name = "use_english")
     private Boolean useEnglish = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mail_config_id")
+    private DbMailConfig mailConfig;
 }
 

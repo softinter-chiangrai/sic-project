@@ -10,6 +10,10 @@ import java.util.UUID;
 
 @Repository
 public interface DbParameterRepository extends JpaRepository<DbParameter, UUID> {
-    List<DbParameter> findByParamGroupAndIsActiveTrueOrderBySortOrder(String paramGroup);
-    Optional<DbParameter> findByParamGroupAndParamCodeAndIsActiveTrue(String paramGroup, String paramCode);
+    
+    // เปลี่ยนจาก paramGroup เป็น moduleCode
+    List<DbParameter> findByModuleCodeAndIsActiveTrueOrderBySortOrder(String moduleCode);
+    
+    // เปลี่ยนจาก paramGroup และ paramCode เป็น moduleCode และ parameterCode
+    Optional<DbParameter> findByModuleCodeAndParameterCodeAndIsActiveTrue(String moduleCode, String parameterCode);
 }

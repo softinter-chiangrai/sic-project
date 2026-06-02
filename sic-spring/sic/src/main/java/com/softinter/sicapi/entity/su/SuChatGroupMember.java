@@ -24,4 +24,6 @@ public class SuChatGroupMember extends BaseBusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private SuChatGroup group;
+
+    
 }

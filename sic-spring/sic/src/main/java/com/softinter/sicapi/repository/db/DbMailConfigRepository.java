@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface DbMailConfigRepository extends JpaRepository<DbMailConfig, UUID> {
-    Optional<DbMailConfig> findByConfigKeyAndIsActiveTrue(String configKey);
+    Optional<DbMailConfig> findByConfigNameAndIsActiveTrue(String configName);
 }

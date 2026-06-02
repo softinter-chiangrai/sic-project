@@ -9,6 +9,9 @@ import java.util.UUID;
 
 @Repository
 public interface SuVerifyRepository extends JpaRepository<SuVerify, UUID> {
-    Optional<SuVerify> findByVerifyTokenAndIsActiveTrue(String verifyToken);
-    Optional<SuVerify> findByUserIdAndIsActiveTrue(String userId);
+    
+    Optional<SuVerify> findByToken(String token);  // เพิ่ม method นี้
+    
+    // หรือถ้าต้องการค้นหาทั้ง token และ isActive
+    Optional<SuVerify> findByTokenAndIsActiveTrue(String token);  // แต่ต้องมี field isActive
 }

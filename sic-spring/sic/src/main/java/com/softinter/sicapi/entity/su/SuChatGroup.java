@@ -19,9 +19,9 @@ public class SuChatGroup extends BaseBusinessEntity {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @OneToMany(mappedBy = "chatGroup", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<SuChatGroupMember> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "chatGroup", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<SuChatGroupLog> messages = new ArrayList<>();
 }

@@ -55,4 +55,10 @@ public class SuChatLog extends BaseBusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attachment_id")
     private SuUpload attachment;
+
+    @Column(name = "is_read")
+    private Boolean isRead;  
+    
+    @Column(name = "is_deleted")  
+    private Boolean isDeleted;  
 }

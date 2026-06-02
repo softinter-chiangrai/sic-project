@@ -73,4 +73,6 @@ public abstract class BaseEntity {
             this.isDelete = false;
         }
     }
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 }

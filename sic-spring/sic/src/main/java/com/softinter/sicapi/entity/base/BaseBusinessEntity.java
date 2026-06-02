@@ -75,4 +75,12 @@ public abstract class BaseBusinessEntity {
             this.isDelete = false;
         }
     }
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Column(name = "user_id", nullable = false, length = 100)  
+    private String userId;
+
+    
 }

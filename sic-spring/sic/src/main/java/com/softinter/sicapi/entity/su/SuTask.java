@@ -28,6 +28,9 @@ public class SuTask extends BaseBusinessEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = false;
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY)
     private List<SuUserTask> userTasks = new ArrayList<>();
 }
