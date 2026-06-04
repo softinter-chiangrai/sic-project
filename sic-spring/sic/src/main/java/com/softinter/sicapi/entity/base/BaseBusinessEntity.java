@@ -3,7 +3,6 @@ package com.softinter.sicapi.entity.base;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -12,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.softinter.sicapi.entity.enums.EntityState;
 
-import java.sql.Types;
 import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และเอา Instant ออก
 import java.util.UUID;
 
@@ -25,7 +23,6 @@ public abstract class BaseBusinessEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
-    @JdbcTypeCode(Types.VARCHAR)
     private UUID id;
 
     @CreatedBy
@@ -54,7 +51,6 @@ public abstract class BaseBusinessEntity {
     private Instant deleteDate; // เปลี่ยนเป็น Instant
 
     @Column(name = "business_id", nullable = false, length = 36)
-    @JdbcTypeCode(Types.VARCHAR)
     private UUID businessId;
 
     @Version

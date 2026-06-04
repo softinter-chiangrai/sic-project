@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -13,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.softinter.sicapi.entity.enums.EntityState;
 
-import java.sql.Types;
 import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และลบ Instant ออก
 import java.util.UUID;
 
@@ -27,7 +25,6 @@ public abstract class BaseEntity {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id", updatable = false, nullable = false)
-    @JdbcTypeCode(Types.VARCHAR)
     private UUID id;
 
     @CreatedBy

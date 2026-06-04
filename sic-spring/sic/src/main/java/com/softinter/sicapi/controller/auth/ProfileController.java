@@ -203,7 +203,6 @@ public class ProfileController {
             response.setSubDistrictName(profile.getSubDistrict().getSubDistrictNameEn());
         }
         response.setZipCode(profile.getZipCode());
-        response.setVerified(Boolean.TRUE.equals(profile.getIsVerified()));
         return response;
     }
 }

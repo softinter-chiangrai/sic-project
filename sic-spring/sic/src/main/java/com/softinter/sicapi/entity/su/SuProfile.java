@@ -104,7 +104,4 @@ public class SuProfile extends BaseEntity {
 
     @Column(name = "is_active")
     private Boolean isActive; 
-
-    @Column(name = "is_verified")
-    private Boolean isVerified;
 }
