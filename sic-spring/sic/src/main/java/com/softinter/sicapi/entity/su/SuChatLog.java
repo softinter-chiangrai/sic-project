@@ -27,6 +27,12 @@ public class SuChatLog extends BaseBusinessEntity {
     @Column(name = "receiver_id", nullable = false, length = 100)
     private String receiverId;
 
+    @Column(name = "sender_name", length = 100) 
+    private String senderName;
+
+    @Column(name = "receiver_name", length = 100)  
+    private String receiverName;
+
     @Column(name = "message", nullable = false, length = 4000)
     private String message = "";
 

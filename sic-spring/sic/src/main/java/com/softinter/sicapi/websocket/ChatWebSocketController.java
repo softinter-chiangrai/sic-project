@@ -32,10 +32,11 @@ public class ChatWebSocketController {
         chatLog.setMessage(request.getMessage());
         
         // แปลง String เป็น Enum แบบที่คุณต้องการ (พร้อมเช็คป้องกันกรณีหน้าบ้านส่ง null)
-        if (request.getMessageType() != null) {
-            ChatMessageType chatMessageTypeEnum = ChatMessageType.valueOf(request.getMessageType().toUpperCase());
-            chatLog.setMessageType(chatMessageTypeEnum);
-        }
+           chatLog.setMessageType(request.getMessageType() != null 
+        ? request.getMessageType() 
+        : ChatMessageType.TEXT);
+    
+        chatLog = chatLogRepository.save(chatLog);
 
         // หมายเหตุ: เอา setSenderName, setIsRead, และ setIsActive ออกแล้วเพราะไม่มีใน Entity ตัวล่าสุดครับ
 

@@ -1,4 +1,4 @@
-/* package com.softinter.sicapi.controller.su;
+package com.softinter.sicapi.controller.su;
 
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
@@ -34,6 +34,8 @@ public class ChatController {
     private final CurrentUserService currentUserService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    // ========== Private Chat ==========
+    
     @GetMapping("/history/{userId}")
     @Operation(summary = "Get chat history with user")
     public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> getChatHistory(@PathVariable String userId) {
@@ -53,12 +55,13 @@ public class ChatController {
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
+        chatLog.setSenderName(currentUsername);  // ✅ แก้ไข: ใช้ senderName
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
         chatLog.setIsRead(false);
         chatLog.setIsActive(true);
+        chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
 
         ChatMessageResponse response = toChatMessageResponse(chatLog);
@@ -66,6 +69,8 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    // ========== Chat Groups ==========
+    
     @GetMapping("/groups")
     @Operation(summary = "Get chat groups")
     public ResponseEntity<ApiResponse<List<ChatGroupResponse>>> getChatGroups() {
@@ -75,6 +80,26 @@ public class ChatController {
                 .map(this::toChatGroupResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(groups));
+    }
+
+    // ✅ เพิ่ม endpoint /members (ตามที่ Frontend เรียก)
+    @GetMapping("/members")
+    @Operation(summary = "Get all chat members from groups that current user belongs to")
+    public ResponseEntity<ApiResponse<List<ChatMemberResponse>>> getChatMembers() {
+        String currentUserId = currentUserService.getUserId();
+        
+        // หาทุกกลุ่มที่ผู้ใช้ปัจจุบันเป็นสมาชิก
+        List<SuChatGroup> userGroups = chatGroupRepository.findByMemberUserId(currentUserId);
+        
+        // ดึงสมาชิกทั้งหมดจากทุกกลุ่ม (ไม่ซ้ำ)
+        List<ChatMemberResponse> members = userGroups.stream()
+                .flatMap(group -> group.getMembers().stream())
+                .filter(member -> !member.getUserId().equals(currentUserId)) // ไม่รวมตัวเอง
+                .map(this::toMemberResponse)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(ApiResponse.success(members));
     }
 
     @GetMapping("/group/{groupId}/history")
@@ -92,19 +117,33 @@ public class ChatController {
     @Operation(summary = "Create chat group")
     public ResponseEntity<ApiResponse<ChatGroupResponse>> createGroup(@RequestBody CreateGroupRequest request) {
         String currentUserId = currentUserService.getUserId();
+        String currentUsername = currentUserService.getUsername();
 
         SuChatGroup group = new SuChatGroup();
         group.setGroupName(request.getGroupName());
         group.setGroupDescription(request.getGroupDescription());
-        group.setCreatedByUserId(currentUserId);
+        group.setCreatedBy(currentUserId);
+        group.setCreatedDate(Instant.now());
         group.setIsActive(true);
         chatGroupRepository.save(group);
 
+        // เพิ่มผู้สร้างเป็นสมาชิก
+        SuChatGroupMember creatorMember = new SuChatGroupMember();
+        creatorMember.setGroup(group);
+        creatorMember.setUserId(currentUserId);
+        creatorMember.setUserName(currentUsername);
+        creatorMember.setRole("ADMIN");
+        creatorMember.setJoinedAt(Instant.now());
+        creatorMember.setIsActive(true);
+        chatGroupMemberRepository.save(creatorMember);
+
+        // เพิ่มสมาชิกอื่นๆ
         if (request.getMemberUserIds() != null) {
             for (String memberId : request.getMemberUserIds()) {
                 SuChatGroupMember member = new SuChatGroupMember();
                 member.setGroup(group);
                 member.setUserId(memberId);
+                member.setRole("MEMBER");
                 member.setJoinedAt(Instant.now());
                 member.setIsActive(true);
                 chatGroupMemberRepository.save(member);
@@ -120,13 +159,16 @@ public class ChatController {
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
 
+        SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
         SuChatGroupLog log = new SuChatGroupLog();
-        log.setGroup(chatGroupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Group not found")));
+        log.setGroup(group);
         log.setSenderId(currentUserId);
-        log.setSenderName(currentUsername);
+        log.setSenderName(currentUsername);  // ✅ แก้ไข: ใช้ senderName
         log.setMessage(request.getMessage());
         log.setMessageType(request.getMessageType());
+        log.setCreatedDate(Instant.now());
         log.setIsActive(true);
         chatGroupLogRepository.save(log);
 
@@ -145,6 +187,8 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success(members));
     }
 
+    // ========== WebSocket ==========
+    
     @MessageMapping("/chat.send")
     public void sendWebSocketMessage(@Payload ChatMessageRequest request) {
         String currentUserId = currentUserService.getUserId();
@@ -152,18 +196,21 @@ public class ChatController {
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
+        chatLog.setSenderName(currentUsername);  // ✅ แก้ไข
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
         chatLog.setIsRead(false);
         chatLog.setIsActive(true);
+        chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
 
         ChatMessageResponse response = toChatMessageResponse(chatLog);
         messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
     }
 
+    // ========== Private Helper Methods ==========
+    
     private ChatMessageResponse toChatMessageResponse(SuChatLog log) {
         ChatMessageResponse response = new ChatMessageResponse();
         response.setId(log.getId());
@@ -184,7 +231,7 @@ public class ChatController {
         response.setId(group.getId());
         response.setGroupName(group.getGroupName());
         response.setGroupDescription(group.getGroupDescription());
-        response.setCreatedByUserId(group.getCreatedByUserId());
+        response.setCreatedByUserId(group.getCreatedBy());
         response.setCreatedDate(group.getCreatedDate());
         if (group.getMembers() != null) {
             response.setMembers(group.getMembers().stream()
@@ -222,4 +269,3 @@ public class ChatController {
         return response;
     }
 }
- */

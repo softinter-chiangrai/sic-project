@@ -18,7 +18,7 @@ import java.util.UUID;
 @EqualsAndHashCode(of = "id")
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseBusinessEntity {
+public abstract class BaseNoUserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -74,9 +74,6 @@ public abstract class BaseBusinessEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
-
-    @Column(name = "user_id", nullable = false, length = 100)  
-    private String userId;
 
     
 }

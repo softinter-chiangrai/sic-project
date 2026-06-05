@@ -32,4 +32,18 @@ public class SuTaskController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }
+
+    // ✅ เพิ่ม method นี้
+    @GetMapping("/search")
+    @Operation(summary = "Search tasks")
+    public ResponseEntity<ApiResponse<List<SuTask>>> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID taskId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        // TODO: implement search logic based on parameters
+        List<SuTask> tasks = taskRepository.findByIsActiveTrueOrderBySortOrder();
+        return ResponseEntity.ok(ApiResponse.success(tasks));
+    }
 }

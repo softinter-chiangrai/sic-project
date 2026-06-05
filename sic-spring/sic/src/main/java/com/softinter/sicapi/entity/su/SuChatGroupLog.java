@@ -1,6 +1,8 @@
 package com.softinter.sicapi.entity.su;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.enums.ChatMessageType;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,6 +23,9 @@ public class SuChatGroupLog extends BaseBusinessEntity {
 
     @Column(name = "sender_id", nullable = false, length = 100)
     private String senderId;
+
+    @Column(name = "sender_name", length = 100)  
+    private String senderName;
 
     @Column(name = "message", nullable = false, length = 4000)
     private String message = "";
@@ -49,7 +54,4 @@ public class SuChatGroupLog extends BaseBusinessEntity {
     @JoinColumn(name = "attachment_id")
     private SuUpload attachment;
 
-    public enum ChatMessageType {
-        TEXT, IMAGE, FILE, AUDIO, VIDEO, SYSTEM
-    }
 }

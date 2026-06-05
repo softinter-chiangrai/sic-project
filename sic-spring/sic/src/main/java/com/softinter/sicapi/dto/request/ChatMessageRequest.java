@@ -1,10 +1,18 @@
 package com.softinter.sicapi.dto.request;
 
+import com.softinter.sicapi.entity.enums.ChatMessageType;
+
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class ChatMessageRequest {
+    
     private String receiverId;
+
     private String message;
-    private String messageType = "text";
+    
+    @Builder.Default
+    private ChatMessageType messageType = ChatMessageType.TEXT;
 }

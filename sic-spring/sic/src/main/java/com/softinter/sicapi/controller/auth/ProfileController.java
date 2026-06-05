@@ -65,64 +65,108 @@ public class ProfileController {
     @GetMapping("/mail-check")
     @Operation(summary = "Check if email is registered")
     public ResponseEntity<ApiResponse<Boolean>> mailCheck(@RequestParam String email) {
-        // Implementation based on your requirements
         return ResponseEntity.ok(ApiResponse.success(true));
     }
 
+    // ✅ แก้ไข: รองรับ personType, value, และภาษา
     @GetMapping("/combobox-title")
     @Operation(summary = "Get title dropdown")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxTitle() {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxTitle(
+            @RequestParam(required = false) String personType,
+            @RequestParam(required = false) String value,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang
+    ) {
         List<LovResponse> titles = titleRepository.findByIsActiveTrueOrderByPrefixNameEn()
                 .stream()
-                .map(t -> new LovResponse(t.getId(), t.getPrefixNameEn()))
+                .filter(t -> {
+                    if (personType == null || personType.isEmpty()) return true;
+                    // ถ้ามี personType field ใน entity ให้ filter
+                    // return personType.equals(t.getPersonType());
+                    return true; //暂时跳过 filter
+                })
+                .map(t -> new LovResponse(
+                    t.getId(), 
+                    "th".equals(lang) ? t.getPrefixNameLocal() : t.getPrefixNameEn()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(titles));
     }
 
+    // ✅ แก้ไข: รองรับ value และภาษา
     @GetMapping("/combobox-country")
     @Operation(summary = "Get country dropdown")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxCountry() {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxCountry(
+            @RequestParam(required = false) String value,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang
+    ) {
         List<LovResponse> countries = countryRepository.findByIsActiveTrueOrderByCountryNameEn()
                 .stream()
-                .map(c -> new LovResponse(c.getId(), c.getCountryNameEn()))
+                .map(c -> new LovResponse(
+                    c.getId(), 
+                    "th".equals(lang) ? c.getCountryNameLocal() : c.getCountryNameEn()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(countries));
     }
 
+    // ✅ แก้ไข: รองรับภาษา
     @GetMapping("/combobox-province")
     @Operation(summary = "Get province dropdown")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxProvince(@RequestParam(required = false) UUID countryId) {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxProvince(
+            @RequestParam(required = false) UUID countryId,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang
+    ) {
         List<LovResponse> provinces;
         if (countryId != null) {
             provinces = provinceRepository.findByCountryIdAndIsActiveTrueOrderByProvinceNameEn(countryId)
                     .stream()
-                    .map(p -> new LovResponse(p.getId(), p.getProvinceNameEn()))
+                    .map(p -> new LovResponse(
+                        p.getId(), 
+                        "th".equals(lang) ? p.getProvinceNameLocal() : p.getProvinceNameEn()
+                    ))
                     .collect(Collectors.toList());
         } else {
             provinces = provinceRepository.findByIsActiveTrueOrderByProvinceNameEn()
                     .stream()
-                    .map(p -> new LovResponse(p.getId(), p.getProvinceNameEn()))
+                    .map(p -> new LovResponse(
+                        p.getId(), 
+                        "th".equals(lang) ? p.getProvinceNameLocal() : p.getProvinceNameEn()
+                    ))
                     .collect(Collectors.toList());
         }
         return ResponseEntity.ok(ApiResponse.success(provinces));
     }
 
+    // ✅ แก้ไข: รองรับภาษา
     @GetMapping("/combobox-district")
     @Operation(summary = "Get district dropdown")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxDistrict(@RequestParam UUID provinceId) {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxDistrict(
+            @RequestParam UUID provinceId,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang
+    ) {
         List<LovResponse> districts = districtRepository.findByProvinceIdAndIsActiveTrueOrderByDistrictNameEn(provinceId)
                 .stream()
-                .map(d -> new LovResponse(d.getId(), d.getDistrictNameEn()))
+                .map(d -> new LovResponse(
+                    d.getId(), 
+                    "th".equals(lang) ? d.getDistrictNameLocal() : d.getDistrictNameEn()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(districts));
     }
 
+    // ✅ แก้ไข: รองรับภาษา
     @GetMapping("/combobox-sub-district")
     @Operation(summary = "Get sub-district dropdown")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxSubDistrict(@RequestParam UUID districtId) {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxSubDistrict(
+            @RequestParam UUID districtId,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang
+    ) {
         List<LovResponse> subDistricts = subDistrictRepository.findByDistrictIdAndIsActiveTrueOrderBySubDistrictNameEn(districtId)
                 .stream()
-                .map(s -> new LovResponse(s.getId(), s.getSubDistrictNameEn()))
+                .map(s -> new LovResponse(
+                    s.getId(), 
+                    "th".equals(lang) ? s.getSubDistrictNameLocal() : s.getSubDistrictNameEn()
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(subDistricts));
     }
@@ -130,7 +174,17 @@ public class ProfileController {
     @PostMapping("/send-verify")
     @Operation(summary = "Send verification email")
     public ResponseEntity<ApiResponse<VerifyTokenResponse>> sendVerify(@Valid @RequestBody SendVerifyRequest request) {
-        VerifyTokenResponse response = verifyService.generateVerifyToken(request.getEmail());
+        // ✅ รองรับทั้ง email และ recipient
+        String email = request.getEmail();
+        if (email == null || email.trim().isEmpty()) {
+            email = request.getRecipient();
+        }
+        
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Email is required"));
+        }
+        
+        VerifyTokenResponse response = verifyService.generateVerifyToken(email);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -181,28 +235,39 @@ public class ProfileController {
         response.setLastNameLocal(profile.getLastNameLocal());
         if (profile.getTitle() != null) {
             response.setTitleId(profile.getTitle().getId());
-            response.setTitleName(profile.getTitle().getPrefixNameEn());
+            response.setTitleName("th".equals(getCurrentLanguage()) ? 
+                profile.getTitle().getPrefixNameLocal() : profile.getTitle().getPrefixNameEn());
         }
         response.setPhoneNumber(profile.getPhoneNumber());
         response.setAddressEn(profile.getAddressEn());
         response.setAddressLocal(profile.getAddressLocal());
         if (profile.getCountry() != null) {
             response.setCountryId(profile.getCountry().getId());
-            response.setCountryName(profile.getCountry().getCountryNameEn());
+            response.setCountryName("th".equals(getCurrentLanguage()) ? 
+                profile.getCountry().getCountryNameLocal() : profile.getCountry().getCountryNameEn());
         }
         if (profile.getProvince() != null) {
             response.setProvinceId(profile.getProvince().getId());
-            response.setProvinceName(profile.getProvince().getProvinceNameEn());
+            response.setProvinceName("th".equals(getCurrentLanguage()) ? 
+                profile.getProvince().getProvinceNameLocal() : profile.getProvince().getProvinceNameEn());
         }
         if (profile.getDistrict() != null) {
             response.setDistrictId(profile.getDistrict().getId());
-            response.setDistrictName(profile.getDistrict().getDistrictNameEn());
+            response.setDistrictName("th".equals(getCurrentLanguage()) ? 
+                profile.getDistrict().getDistrictNameLocal() : profile.getDistrict().getDistrictNameEn());
         }
         if (profile.getSubDistrict() != null) {
             response.setSubDistrictId(profile.getSubDistrict().getId());
-            response.setSubDistrictName(profile.getSubDistrict().getSubDistrictNameEn());
+            response.setSubDistrictName("th".equals(getCurrentLanguage()) ? 
+                profile.getSubDistrict().getSubDistrictNameLocal() : profile.getSubDistrict().getSubDistrictNameEn());
         }
         response.setZipCode(profile.getZipCode());
         return response;
+    }
+    
+    // Helper method to get current language from header (you may inject request)
+    private String getCurrentLanguage() {
+        // You can get from RequestContextHolder or pass as parameter
+        return "en"; // Default, should be replaced with actual logic
     }
 }

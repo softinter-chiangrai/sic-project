@@ -22,6 +22,12 @@ public class BusinessController {
 
     private final BusinessAccessService businessAccessService;
 
+    @GetMapping
+    @Operation(summary = "Get my businesses (default)")
+    public ResponseEntity<ApiResponse<List<BusinessDto>>> getBusinesses() {
+        return ResponseEntity.ok(ApiResponse.success(businessAccessService.getMyBusinesses()));
+    }
+
     @GetMapping("/my-businesses")
     @Operation(summary = "Get my businesses")
     public ResponseEntity<ApiResponse<List<BusinessDto>>> getMyBusinesses() {

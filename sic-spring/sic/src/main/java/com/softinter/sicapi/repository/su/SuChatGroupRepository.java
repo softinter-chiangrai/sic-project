@@ -12,6 +12,11 @@ import java.util.UUID;
 @Repository
 public interface SuChatGroupRepository extends JpaRepository<SuChatGroup, UUID> {
 
-    @Query("SELECT g FROM SuChatGroup g JOIN g.members m WHERE m.userId = :userId AND g.isActive = true AND m.isActive = true")
+    // ✅ เพิ่ม method นี้สำหรับค้นหากลุ่มที่ผู้ใช้เป็นสมาชิก
+    @Query("SELECT DISTINCT cg FROM SuChatGroup cg " +
+           "LEFT JOIN FETCH cg.members m " +
+           "WHERE m.userId = :userId " +
+           "AND cg.isActive = true " +
+           "AND m.isActive = true")
     List<SuChatGroup> findByMemberUserId(@Param("userId") String userId);
 }

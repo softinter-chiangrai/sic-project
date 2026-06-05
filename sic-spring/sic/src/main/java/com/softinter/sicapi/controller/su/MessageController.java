@@ -11,7 +11,9 @@ import com.softinter.sicapi.dto.response.I18nMessageResponse;
 import com.softinter.sicapi.entity.su.SuMessage;
 import com.softinter.sicapi.service.MessageService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -43,18 +45,24 @@ public class MessageController {
     }
 
     @GetMapping({
-        "/api/i18n/{module_code}/{program_code}",
-        "/api/i18n/{module_code}/{program_code}/{language_code}"
-    })
-    public ResponseEntity<List<I18nMessageResponse>> i18n(
-            @PathVariable("module_code") String moduleCode,
-            @PathVariable("program_code") String programCode,
-            @PathVariable(value = "language_code", required = false) String languageCode,
-            @RequestHeader(value = "x-language-code", required = false) String headerLangCode) {
-        
-        // ถ้า Path ไม่มี language_code ให้ใช้จาก Header x-language-code แทน
-        String finalLang = (languageCode != null) ? languageCode : headerLangCode;
-        
-        return ResponseEntity.ok(messageService.getI18nMessages(moduleCode, programCode, finalLang));
+    "/api/i18n/{module_code}/{program_code}",
+    "/api/i18n/{module_code}/{program_code}/{language_code}"
+})
+    public ResponseEntity<Map<String, String>> i18n(
+        @PathVariable("module_code") String moduleCode,
+        @PathVariable("program_code") String programCode,
+        @PathVariable(value = "language_code", required = false) String languageCode,
+        @RequestHeader(value = "x-language-code", required = false) String headerLangCode) {
+    
+    String finalLang = (languageCode != null) ? languageCode : headerLangCode;
+    
+    List<I18nMessageResponse> messages = messageService.getI18nMessages(moduleCode, programCode, finalLang);
+    
+    Map<String, String> translations = new HashMap<>();
+    for (I18nMessageResponse msg : messages) {
+        translations.put(msg.getMessageCode(), msg.getMessage());
     }
+    
+    return ResponseEntity.ok(translations);
+}
 }

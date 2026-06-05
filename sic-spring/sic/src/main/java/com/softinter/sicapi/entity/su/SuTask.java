@@ -1,6 +1,9 @@
 package com.softinter.sicapi.entity.su;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.base.BaseNoUserEntity;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +17,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class SuTask extends BaseBusinessEntity {
+public class SuTask extends BaseEntity{
 
     @Column(name = "task_code", nullable = false, length = 20)
     private String taskCode;

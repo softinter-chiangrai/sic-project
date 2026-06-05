@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/db/parameters")
+@RequestMapping("/api/db/parameter")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Parameter", description = "Parameter Management API")
@@ -23,10 +23,10 @@ public class DbParameterController {
 
     @GetMapping("/lov")
     @Operation(summary = "Get parameter LOV by group")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getLov(@RequestParam String group) {
+    public ResponseEntity<ApiResponse<List<LovResponse>>> getLov(@RequestParam(required = false, defaultValue = "COMMON") String group) {
         List<LovResponse> lov = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group)
                 .stream()
-                .map(p -> new LovResponse(p.getParameterCode(), p.getParameterCode()))
+                .map(p -> new LovResponse(p.getParameterCode(), p.getParameterNameEn()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(lov));
     }
