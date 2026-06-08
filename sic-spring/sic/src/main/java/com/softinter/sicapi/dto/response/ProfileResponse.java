@@ -7,6 +7,7 @@ import java.util.UUID;
 @Data
 public class ProfileResponse {
     private UUID id;
+    private String taxId;
     private String userId;
     private String email;
     private String firstNameEn;

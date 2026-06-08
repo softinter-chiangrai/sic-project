@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators'; // เพิ่ม import map
 import { EmailVerifyModel, ProfileModel } from './profile.model';
 import { environment } from '../../../environments/environment';
 
@@ -29,8 +30,10 @@ export class ProfileService {
     return this.http.get<boolean>(this.apiGetMailCheck, { params: { email } });
   }
 
+  // แก้ไข method นี้
   sendVerifyToken(email: string): Observable<EmailVerifyModel> {
-    return this.http.post<EmailVerifyModel>(this.apiPostSendVerify, { recipient : email, verifyType: 'Email' });
+    return this.http.post<{ data: EmailVerifyModel }>(this.apiPostSendVerify, { recipient : email, verifyType: 'Email' })
+      .pipe(map(response => response.data));
   }
   
   save(profile: ProfileModel): Observable<ProfileModel> {

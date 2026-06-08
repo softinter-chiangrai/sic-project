@@ -10,6 +10,7 @@ import com.softinter.sicapi.service.VerifyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,12 +37,13 @@ public class ProfileController {
     private final VerifyService verifyService;
 
     @GetMapping
+    @Transactional(readOnly = true)
     @Operation(summary = "Get user profile info")
-    public ResponseEntity<ApiResponse<ProfileResponse>> getInfo() {
+    public ResponseEntity<ProfileResponse> getInfo() {
         String userId = currentUserService.getUserId();
         SuProfile profile = profileRepository.findByUserIdAndIsActiveTrue(userId)
                 .orElse(new SuProfile());
-        return ResponseEntity.ok(ApiResponse.success(toResponse(profile)));
+        return ResponseEntity.ok(toResponse(profile));
     }
 
     @GetMapping("/activation")
@@ -57,8 +59,9 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     @Operation(summary = "Get my profile")
-    public ResponseEntity<ApiResponse<ProfileResponse>> getMe() {
+    public ResponseEntity<ProfileResponse> getMe() {
         return getInfo();
     }
 
@@ -68,7 +71,7 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success(true));
     }
 
-    // ✅ แก้ไข: รองรับ personType, value, และภาษา
+    
     @GetMapping("/combobox-title")
     @Operation(summary = "Get title dropdown")
     public ResponseEntity<ApiResponse<List<LovResponse>>> getComboboxTitle(
@@ -183,8 +186,9 @@ public class ProfileController {
     @Operation(summary = "Save user profile")
     public ResponseEntity<ApiResponse<UUID>> saveProfile(@Valid @RequestBody SaveProfileRequest request) {
         String userId = currentUserService.getUserId();
-        SuProfile profile = profileRepository.findByUserIdAndIsActiveTrue(userId)
-                .orElse(new SuProfile());
+        SuProfile profile = profileRepository.findByUserId(userId)
+        .orElse(new SuProfile());
+        profile.setIsActive(true);
         profile.setUserId(userId);
         profile.setEmail(request.getEmail());
         profile.setFirstNameEn(request.getFirstNameEn());
@@ -219,6 +223,7 @@ public class ProfileController {
         ProfileResponse response = new ProfileResponse();
         response.setId(profile.getId());
         response.setUserId(profile.getUserId());
+        response.setTaxId(profile.getTaxId());
         response.setEmail(profile.getEmail());
         response.setFirstNameEn(profile.getFirstNameEn());
         response.setLastNameEn(profile.getLastNameEn());
