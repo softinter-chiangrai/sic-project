@@ -7,13 +7,9 @@ import lombok.Data;
 @Data
 public class SendVerifyRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
-    private String email;
-
-    @NotBlank(message = "Email is required")
+    @NotBlank(message = "Recipient is required")
     @Email(message = "Invalid email format")
     private String recipient;  
     
-    private String verifyType;
+    private String verifyType;  
 }

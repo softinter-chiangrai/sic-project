@@ -3,8 +3,10 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.su.SuVerify;
 import com.softinter.sicapi.repository.su.SuVerifyRepository;
+import com.softinter.sicapi.service.MailService;  // ✅ เปลี่ยน
 import com.softinter.sicapi.service.VerifyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,47 +15,72 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VerifyServiceImpl implements VerifyService {
 
     private final SuVerifyRepository verifyRepository;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final MailService mailService;  
 
-    @Override
-    @Transactional
-    public VerifyTokenResponse generateVerifyToken(String email) {
-        // ✅ เพิ่ม log ตรงนี้
-        System.out.println("=== DEBUG: Email received = [" + email + "]");
+   @Override
+@Transactional
+public VerifyTokenResponse generateVerifyToken(String recipient) {
+    try {
+        log.info("📧 Starting verification for: {}", recipient);
         
-        if (email == null || email.trim().isEmpty()) {
-            System.err.println("=== ERROR: Email is null or empty!");
-            throw new IllegalArgumentException("Email cannot be null or empty");
+        if (recipient == null || recipient.trim().isEmpty()) {
+            throw new IllegalArgumentException("Recipient cannot be null or empty");
         }
         
+        // Generate token
         byte[] tokenBytes = new byte[32];
         secureRandom.nextBytes(tokenBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
-
+        
+        // Generate reference number
+        String referenceNumber = UUID.randomUUID().toString();
+        
+        // Save to database
         SuVerify verify = new SuVerify();
-        verify.setRecipient(email);
+        verify.setRecipient(recipient);
         verify.setToken(token);
+        verify.setReferenceNumber(referenceNumber);  // ✅ ต้องมี field นี้ใน Entity
         verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
         verify.setIsVerified(false);
         verify.setVerifyType("EMAIL_VERIFICATION");
-        verify.setReferenceNumber(UUID.randomUUID().toString());
         
         SuVerify saved = verifyRepository.save(verify);
-        System.out.println("=== DEBUG: Saved verify with id: " + saved.getId());
-        System.out.println("=== DEBUG: Saved recipient: " + saved.getRecipient());
-
+        log.debug("Saved verify with id: {}", saved.getId());
+        
+        // ✅ สร้าง response ให้ตรงกับ Frontend
         VerifyTokenResponse response = new VerifyTokenResponse();
         response.setValid(false);
-        response.setEmail(email);
+        response.setVerifyType("EMAIL_VERIFICATION");
+        response.setVerifyToken(token);              // ✅ ส่งเป็น verifyToken
+        response.setReferenceNumber(referenceNumber); // ✅ ส่ง referenceNumber
+        response.setRecipient(recipient);
+        response.setExpirationMinutes(1440);          // ✅ 24 ชั่วโมง = 1440 นาที
+        response.setMaxRetry(3);                      // ✅ ตั้งค่า max retry
         response.setExpiresAt(verify.getExpireAt());
         response.setMessage("Verification token generated successfully");
+        
+        // ✅ ส่งอีเมล
+        try {
+            mailService.sendTemplatedMail(recipient, "VERIFY_EMAIL", token, referenceNumber);
+            log.info("✅ Email sent to: {}", recipient);
+        } catch (Exception e) {
+            log.error("❌ Failed to send email: {}", recipient, e);
+        }
+        
         return response;
+        
+    } catch (Exception e) {
+        log.error("Failed to generate verification token", e);
+        throw new RuntimeException("An error occurred while generating verification token", e);
     }
+}
 
     @Override
     @Transactional
@@ -69,14 +96,14 @@ public class VerifyServiceImpl implements VerifyService {
 
         if (Boolean.TRUE.equals(verify.getIsVerified())) {
             response.setValid(false);
-            response.setEmail(verify.getRecipient());
+            response.setRecipient(verify.getRecipient());
             response.setMessage("Token already used");
             return response;
         }
 
         if (verify.getExpireAt().isBefore(Instant.now())) {
             response.setValid(false);
-            response.setEmail(verify.getRecipient());
+            response.setRecipient(verify.getRecipient());
             response.setMessage("Token expired");
             return response;
         }
@@ -86,7 +113,7 @@ public class VerifyServiceImpl implements VerifyService {
         verifyRepository.save(verify);
 
         response.setValid(true);
-        response.setEmail(verify.getRecipient());
+        response.setRecipient(verify.getRecipient());
         response.setMessage("Token verified successfully");
         return response;
     }

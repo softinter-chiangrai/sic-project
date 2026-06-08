@@ -32,8 +32,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: phurinsukman1@gmail.com
-    password: phurin192547
+    username: phurinsukman3@gmail.com
+    password: qeivnricakfexxzh
     properties:
       mail:
         smtp:
@@ -76,6 +76,8 @@ logging:
     console: "%msg%n"
   level:
     root: ERROR
-    com.softinter.sicapi: INFO
+    com.softinter.sicapi: DEBUG
+    org.springframework.mail: DEBUG 
+    com.softinter.sicapi.service.impl: DEBUG
 
 spring.main.banner-mode: off

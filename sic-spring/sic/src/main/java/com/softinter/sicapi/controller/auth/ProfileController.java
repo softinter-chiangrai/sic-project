@@ -174,17 +174,8 @@ public class ProfileController {
     @PostMapping("/send-verify")
     @Operation(summary = "Send verification email")
     public ResponseEntity<ApiResponse<VerifyTokenResponse>> sendVerify(@Valid @RequestBody SendVerifyRequest request) {
-        // ✅ รองรับทั้ง email และ recipient
-        String email = request.getEmail();
-        if (email == null || email.trim().isEmpty()) {
-            email = request.getRecipient();
-        }
         
-        if (email == null || email.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Email is required"));
-        }
-        
-        VerifyTokenResponse response = verifyService.generateVerifyToken(email);
+        VerifyTokenResponse response = verifyService.generateVerifyToken(request.getRecipient());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
