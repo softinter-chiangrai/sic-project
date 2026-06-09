@@ -62,7 +62,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     code: 'dashboard',
     label: 'Dashboard',
     icon: 'bi-house-door',
-    path: '/feature/dashboard',
+    path: '/dashboard',
   };
 
   readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
