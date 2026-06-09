@@ -11,8 +11,10 @@ public class ProfileResponse {
     private String userId;
     private String email;
     private String firstNameEn;
+    private String middleNameEn;   
     private String lastNameEn;
     private String firstNameLocal;
+    private String middleNameLocal; 
     private String lastNameLocal;
     private UUID titleId;
     private String titleName;

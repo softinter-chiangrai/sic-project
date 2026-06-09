@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LovResponse {
     private Object value;
-    private String label;
+    private String text;
 }

@@ -1,4 +1,4 @@
-package com.softinter.sicapi.controller.auth;
+package com.softinter.sicapi.controller.basic;
 
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
