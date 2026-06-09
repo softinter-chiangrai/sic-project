@@ -4,14 +4,14 @@ import { ReactiveFormsModule} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SicFromData } from '../../../core/model/sic-from-data';
 import { BusinessCreateModel, BusinessFormData } from './business-create.model';
-import { SicProfile } from "../../../core/component/sic-profile/sic-profile";
+import { SicProfileComponent } from "../../../core/component/sic-profile/sic-profile.component";
 import { BusinessCreateService } from './business-create.service';
-import { SicRadio } from "../../../core/component/sic-radio/sic-radio";
-import { SicCombobox } from "../../../core/component/sic-combobox/sic-combobox";
-import { SicButton } from "../../../core/component/sic-button/sic-button";
-import { SicInput } from "../../../core/component/sic-input/sic-input";
-import { SicInputArea } from "../../../core/component/sic-input-area/sic-input-area";
-import { SicInputPhone } from "../../../core/component/sic-input-phone/sic-input-phone";
+import { SicRadioComponent } from "../../../core/component/sic-radio/sic-radio.component";
+import { SicComboboxComponent } from "../../../core/component/sic-combobox/sic-combobox.component";
+import { SicButtonComponent } from "../../../core/component/sic-button/sic-button.component";
+import { SicInputComponent } from "../../../core/component/sic-input/sic-input.component";
+import { SicInputAreaComponent } from "../../../core/component/sic-input-area/sic-input-area.component";
+import { SicInputPhoneComponent } from "../../../core/component/sic-input-phone/sic-input-phone.component";
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../core/services/dialog.service';
 
@@ -21,13 +21,13 @@ import { DialogService } from '../../../core/services/dialog.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    SicProfile,
-    SicRadio,
-    SicCombobox,
-    SicButton,
-    SicInput,
-    SicInputArea,
-    SicInputPhone
+    SicProfileComponent,
+    SicRadioComponent,
+    SicComboboxComponent,
+    SicButtonComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+    SicInputPhoneComponent
 ],
   templateUrl: './business-create.component.html',
   styleUrl: './business-create.component.css'

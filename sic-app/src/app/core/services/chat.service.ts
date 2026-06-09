@@ -5,7 +5,7 @@ import { BehaviorSubject, firstValueFrom, Subject } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../../environments/environment';
-import { StorageUploadReference } from '../component/sic-upload/sic-upload';
+import { StorageUploadReference } from '../component/sic-upload/sic-upload.component';
 
 export type { StorageUploadReference };
 
@@ -50,6 +50,9 @@ export interface ChatGroupMessage {
   attachmentFileName?: string;
   attachmentFileSize?: number;
   attachmentContentType?: string;
+  callAccepted?: boolean | null;
+  callDurationSeconds?: number | null;
+  callParticipantUserIds?: string[] | null;
   sentAt: Date;
   isCancelled: boolean;
 }
@@ -59,6 +62,8 @@ export interface IncomingCallInfo {
   callerName: string;
   callType: 'audio' | 'video';
   sdpOffer: string;
+  groupId?: string;
+  groupName?: string;
 }
 
 export type CallStatus = 'idle' | 'calling' | 'incoming' | 'connected';
@@ -89,6 +94,7 @@ export class ChatService {
   readonly remoteStream$ = new BehaviorSubject<MediaStream | null>(null);
   private peerConnection?: RTCPeerConnection;
   private currentCallPeer?: string;
+  private currentGroupCallId?: string;
 
   // ── Recording ──
   private mediaRecorder?: MediaRecorder;
@@ -109,7 +115,9 @@ export class ChatService {
   // ── Group chat ──
   readonly groupMessageReceived$ = new Subject<ChatGroupMessage>();
   readonly groupMessageCancelled$ = new Subject<string>();
+  readonly groupCallLogUpdated$ = new Subject<ChatGroupMessage>();
   readonly groupCreated$ = new Subject<ChatGroup>();
+  readonly groupUpdated$ = new Subject<ChatGroup>();
 
   // ─────────────────────────────────────────────────────────────────────────
   // SignalR connection management
@@ -343,7 +351,13 @@ export class ChatService {
       const ext = mimeType.startsWith('video/') ? 'webm' : 'webm';
       const file = new File([blob], `recording_${Date.now()}.${ext}`, { type: mimeType });
       const result = await this.uploadChatFile(file);
-      if (result) this.sendFileMessage(receiverId, result.id);
+      if (!result) return;
+      // Route to group chat when this was a group call
+      if (this.currentGroupCallId) {
+        this.sendGroupFileMessage(this.currentGroupCallId, result.id);
+      } else {
+        this.sendFileMessage(receiverId, result.id);
+      }
     }, { once: true });
 
     this.mediaRecorder.stop();
@@ -441,6 +455,33 @@ export class ChatService {
     this.connection?.invoke('CreateGroup', name, memberUserIds).catch(console.error);
   }
 
+  /** Initiate a group call — hub broadcasts IncomingCall with group context to all online members */
+  async startGroupCallHub(groupId: string, callType: 'audio' | 'video'): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.currentCallPeer = groupId; // used as placeholder peer id for the session
+    this.currentGroupCallId = groupId;
+    this.callStatus$.next('calling');
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: callType === 'video',
+    });
+    this.localStream$.next(stream);
+
+    // Temporary peer connection just to generate an offer that members can use
+    this.peerConnection = this.buildPeerConnection(groupId);
+    stream.getTracks().forEach(t => this.peerConnection!.addTrack(t, stream));
+
+    const offer = await this.peerConnection.createOffer();
+    await this.peerConnection.setLocalDescription(offer);
+
+    this.connection?.invoke('StartGroupCall', groupId, callType, JSON.stringify(offer)).catch(console.error);
+  }
+
+  updateGroup(groupId: string, name: string, memberUserIds: string[]): void {
+    this.connection?.invoke('UpdateGroup', groupId, name, memberUserIds).catch(console.error);
+  }
+
   sendGroupTextMessage(groupId: string, text: string): void {
     this.connection?.invoke('SendGroupMessage', groupId, text, 0, null).catch(console.error);
   }
@@ -481,9 +522,9 @@ export class ChatService {
     this.connection?.invoke('StartCall', peerUserId, callType, JSON.stringify(offer)).catch(console.error);
   }
 
-  async answerCall(callerId: string, sdpOffer: string, callType: 'audio' | 'video', accept: boolean): Promise<void> {
+  async answerCall(callerId: string, sdpOffer: string, callType: 'audio' | 'video', accept: boolean, groupId?: string): Promise<void> {
     if (!accept) {
-      this.connection?.invoke('AnswerCall', callerId, '', false).catch(console.error);
+      this.connection?.invoke('AnswerCall', callerId, '', false, groupId ?? null).catch(console.error);
       this.callStatus$.next('idle');
       return;
     }
@@ -504,13 +545,20 @@ export class ChatService {
     const answer = await this.peerConnection.createAnswer();
     await this.peerConnection.setLocalDescription(answer);
 
-    this.connection?.invoke('AnswerCall', callerId, JSON.stringify(answer), true).catch(console.error);
+    this.connection?.invoke('AnswerCall', callerId, JSON.stringify(answer), true, groupId ?? null).catch(console.error);
   }
 
+  /** End a p2p call. For group call callers, use endGroupCall() instead. */
   endCall(): void {
     if (this.currentCallPeer) {
       this.connection?.invoke('EndCall', this.currentCallPeer).catch(console.error);
     }
+    this.cleanupCall();
+  }
+
+  /** End a group call (called by the initiator). Finalises the log and notifies all members. */
+  endGroupCall(groupId: string): void {
+    this.connection?.invoke('EndGroupCall', groupId).catch(console.error);
     this.cleanupCall();
   }
 
@@ -564,6 +612,7 @@ export class ChatService {
     this.remoteStream$.next(null);
     this.callStatus$.next('idle');
     this.currentCallPeer = undefined;
+    this.currentGroupCallId = undefined;
     this.isMicMuted$.next(false);
     this.isCameraOff$.next(false);
   }
@@ -589,9 +638,9 @@ export class ChatService {
       this.userStatusChanged$.next({ userId, isOnline });
     });
 
-    this.connection.on('IncomingCall', (callerId: string, callerName: string, callType: 'audio' | 'video', sdpOffer: string) => {
+    this.connection.on('IncomingCall', (callerId: string, callerName: string, callType: 'audio' | 'video', sdpOffer: string, groupId?: string, groupName?: string) => {
       this.callStatus$.next('incoming');
-      this.incomingCall$.next({ callerId, callerName, callType, sdpOffer });
+      this.incomingCall$.next({ callerId, callerName, callType, sdpOffer, groupId, groupName });
     });
 
     this.connection.on('CallAnswered', (sdpAnswer: string, accepted: boolean) => {
@@ -628,6 +677,14 @@ export class ChatService {
 
     this.connection.on('GroupCreated', (group: ChatGroup) => {
       this.groupCreated$.next(group);
+    });
+
+    this.connection.on('GroupUpdated', (group: ChatGroup) => {
+      this.groupUpdated$.next(group);
+    });
+
+    this.connection.on('GroupCallLogUpdated', (msg: ChatGroupMessage) => {
+      this.groupCallLogUpdated$.next(msg);
     });
 
     this.connection.on('ReceiveGroupMessage', (msg: ChatGroupMessage) => {

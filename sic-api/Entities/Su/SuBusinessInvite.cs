@@ -28,4 +28,11 @@ public class SuBusinessInvite : BaseEntity
     [Column("is_activated")]
     public bool IsActivated { get; set; } = false;
 
+    /// <summary>Token invite only — null = unlimited uses.</summary>
+    [Column("max_uses")]
+    public int? MaxUses { get; set; }
+
+    [Column("use_count")]
+    public int UseCount { get; set; } = 0;
 }
+

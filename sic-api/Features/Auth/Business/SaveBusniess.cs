@@ -183,6 +183,31 @@ public static class SaveBusiness
                     IsPrimary = true,
                     IsActive = true
                 });
+
+                SuProgram? program = await dbContext.SuPrograms.Where(x => x.ProgramCode == "BUDT1000" && x.IsActive).FirstOrDefaultAsync(cancellationToken);
+                if (program != null)
+                {
+
+                    var SuBusinessRoleProgram = new SuBusinessRoleProgram
+                    {
+                        BusinessRole = businessRole,
+                        Program = program,
+                        IsActive = true
+                    };
+                    dbContext.SuBusinessRolePrograms.Add(SuBusinessRoleProgram);
+
+                    List<SuProgram> childPrograms = await dbContext.SuPrograms.Where(x => x.ParentProgramId == program.Id && x.IsActive).ToListAsync(cancellationToken);
+                    foreach (var childProgram in childPrograms)
+                    {
+                        var SuBusinessRoleChildProgram = new SuBusinessRoleProgram
+                        {
+                            BusinessRole = businessRole,
+                            Program = childProgram,
+                            IsActive = true
+                        };
+                        dbContext.SuBusinessRolePrograms.Add(SuBusinessRoleChildProgram);
+                    }
+                }
             }
             else if (request.State == EntityState.Modified)
             {

@@ -1312,6 +1312,10 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_uses");
+
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("role_id");
@@ -1331,6 +1335,10 @@ namespace sic_api.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
+
+                    b.Property<int>("UseCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("use_count");
 
                     b.HasKey("Id");
 
@@ -1564,6 +1572,69 @@ namespace sic_api.Migrations
                     b.ToTable("su_chat_group");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupCallParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<Guid>("LogId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("log_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LogId");
+
+                    b.ToTable("su_chat_group_call_participant");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1579,6 +1650,14 @@ namespace sic_api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("uuid")
                         .HasColumnName("business_id");
+
+                    b.Property<bool?>("CallAccepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("call_accepted");
+
+                    b.Property<int?>("CallDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("call_duration_seconds");
 
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("timestamp with time zone")
@@ -2837,6 +2916,17 @@ namespace sic_api.Migrations
                     b.Navigation("Program");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupCallParticipant", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuChatGroupLog", "Log")
+                        .WithMany("CallParticipants")
+                        .HasForeignKey("LogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Log");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
                 {
                     b.HasOne("sic_api.Entities.Su.SuUpload", "Attachment")
@@ -3012,6 +3102,11 @@ namespace sic_api.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
+                {
+                    b.Navigation("CallParticipants");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuProgram", b =>

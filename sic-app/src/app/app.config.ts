@@ -7,12 +7,12 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { AuthService } from './core/auth/auth.service';
-import { LanguageService } from './core/services/language-service';
+import { LanguageService } from './core/services/language.service';
 import {
   APP_TRANSLATE_MODULE_CODE,
   APP_TRANSLATE_PROGRAM_CODE,
   AppTranslateLoader
-} from './core/services/app-translate-loader';
+} from './core/services/app-translate-loader.service';
 import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 

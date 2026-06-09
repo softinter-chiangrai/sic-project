@@ -39,6 +39,13 @@ public class SuChatGroupLog : BaseBusinessEntity
     [Column("cancelled_by")]
     public string? CancelledBy { get; set; }
 
+    [Column("call_accepted")]
+    public bool? CallAccepted { get; set; }
+
+    [Column("call_duration_seconds")]
+    public int? CallDurationSeconds { get; set; }
+
     public SuChatGroup? Group { get; set; }
     public SuUpload? Attachment { get; set; }
+    public ICollection<SuChatGroupCallParticipant> CallParticipants { get; set; } = [];
 }

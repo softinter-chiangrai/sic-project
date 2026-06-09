@@ -6,4 +6,5 @@ public interface ICurrentUserService
     string GetSessionId();
     string GetIpAddress();
     string? GetUsername();
+    Task<string?> GetEmailAsync();
 }

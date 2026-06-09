@@ -24,6 +24,7 @@ public partial class SicDbContext
     public DbSet<SuChatGroup> SuChatGroups => Set<SuChatGroup>();
     public DbSet<SuChatGroupMember> SuChatGroupMembers => Set<SuChatGroupMember>();
     public DbSet<SuChatGroupLog> SuChatGroupLogs => Set<SuChatGroupLog>();
+    public DbSet<SuChatGroupCallParticipant> SuChatGroupCallParticipants => Set<SuChatGroupCallParticipant>();
 
     private static void ConfigureSuModule(ModelBuilder modelBuilder)
     {
@@ -76,5 +77,11 @@ public partial class SicDbContext
             .WithMany()
             .HasForeignKey(x => x.AttachmentId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SuChatGroupLog>()
+            .HasMany(x => x.CallParticipants)
+            .WithOne(x => x.Log)
+            .HasForeignKey(x => x.LogId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

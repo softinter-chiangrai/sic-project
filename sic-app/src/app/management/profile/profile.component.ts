@@ -1,22 +1,22 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { SicProfile } from "../../core/component/sic-profile/sic-profile";
+import { SicProfileComponent } from "../../core/component/sic-profile/sic-profile.component";
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SicCombobox } from "../../core/component/sic-combobox/sic-combobox";
+import { SicComboboxComponent } from "../../core/component/sic-combobox/sic-combobox.component";
 import { ProfileService } from './profile.service';
-import { SicInput } from "../../core/component/sic-input/sic-input";
-import { SicInputPhone } from "../../core/component/sic-input-phone/sic-input-phone";
-import { SicButton } from "../../core/component/sic-button/sic-button";
+import { SicInputComponent } from "../../core/component/sic-input/sic-input.component";
+import { SicInputPhoneComponent } from "../../core/component/sic-input-phone/sic-input-phone.component";
+import { SicButtonComponent } from "../../core/component/sic-button/sic-button.component";
 import { SicFromData } from '../../core/model/sic-from-data';
 import { EmailVerifyModel, ProfileFormData, ProfileModel } from './profile.model';
 import { DialogService } from '../../core/services/dialog.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { SicInputArea } from "../../core/component/sic-input-area/sic-input-area";
+import { SicInputAreaComponent } from "../../core/component/sic-input-area/sic-input-area.component";
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, SicProfile, ReactiveFormsModule, SicCombobox, SicInput, SicInputPhone, SicButton, SicInputArea],
+  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicButtonComponent, SicInputAreaComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })

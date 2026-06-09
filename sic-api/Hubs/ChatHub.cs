@@ -205,13 +205,19 @@ public sealed class ChatHub(SicDbContext db, ChatPresenceStore presence) : Hub
             await Clients.Client(connId).SendAsync("IncomingCall", senderId, callerName, callType, sdpOffer);
     }
 
-    public async Task AnswerCall(string callerUserId, string sdpAnswer, bool accepted)
+    public async Task AnswerCall(string callerUserId, string sdpAnswer, bool accepted, Guid? groupId = null)
     {
         var answererId = CurrentUserId;
         var businessId = CurrentBusinessId();
 
-        // Update call log and notify both parties
-        if (presence.TryGetActiveCall(callerUserId, answererId, out var logId, out var startedAt))
+        // Track group call participant
+        if (groupId.HasValue && accepted)
+        {
+            presence.AddGroupCallParticipant(groupId.Value, answererId);
+        }
+
+        // Update p2p call log (only for non-group calls)
+        if (!groupId.HasValue && presence.TryGetActiveCall(callerUserId, answererId, out var logId, out var startedAt))
         {
             var log = await db.SuChatLogs.FindAsync(logId);
             if (log is not null)
@@ -249,6 +255,71 @@ public sealed class ChatHub(SicDbContext db, ChatPresenceStore presence) : Hub
 
         foreach (var connId in presence.GetConnectionIds(callerUserId, businessId))
             await Clients.Client(connId).SendAsync("CallAnswered", sdpAnswer, accepted);
+    }
+
+    /// <summary>
+    /// End a group call: finalize the call log, persist participants, and notify all members.
+    /// Called by the group call initiator when they hang up.
+    /// </summary>
+    public async Task EndGroupCall(Guid groupId)
+    {
+        var userId = CurrentUserId;
+        var businessId = CurrentBusinessId();
+
+        if (!presence.TryRemoveGroupActiveCall(groupId, out var logId, out var startedAt, out var participants))
+            return;
+
+        var duration = (int)(DateTime.UtcNow - startedAt).TotalSeconds;
+
+        var log = await db.SuChatGroupLogs.FindAsync(logId);
+        if (log is not null)
+        {
+            log.CallAccepted = participants.Count > 1;
+            log.CallDurationSeconds = duration;
+            log.UpdatedBy = userId;
+
+            foreach (var participantId in participants)
+            {
+                db.SuChatGroupCallParticipants.Add(new SuChatGroupCallParticipant
+                {
+                    LogId = logId,
+                    UserId = participantId,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                });
+            }
+
+            await db.SaveChangesAsync();
+
+            var updatedDto = new ChatGroupMessageDto
+            {
+                Id = log.Id,
+                GroupId = groupId,
+                SenderId = log.SenderId,
+                Message = log.Message,
+                MessageType = ChatMessageType.Call,
+                SentAt = log.CreatedDate,
+                CallAccepted = log.CallAccepted,
+                CallDurationSeconds = log.CallDurationSeconds,
+                CallParticipantUserIds = participants,
+            };
+
+            var memberIds = await db.SuChatGroupMembers
+                .Where(x => x.GroupId == groupId)
+                .Select(x => x.UserId)
+                .ToListAsync();
+
+            // Broadcast updated call entry and CallEnded to all group members
+            foreach (var memberId in memberIds)
+            {
+                foreach (var connId in presence.GetConnectionIds(memberId, businessId))
+                {
+                    await Clients.Client(connId).SendAsync("GroupCallLogUpdated", updatedDto);
+                    if (memberId != userId)
+                        await Clients.Client(connId).SendAsync("CallEnded");
+                }
+            }
+        }
     }
 
     public async Task SendIceCandidate(string peerUserId, string candidate)
@@ -298,6 +369,85 @@ public sealed class ChatHub(SicDbContext db, ChatPresenceStore presence) : Hub
     // ──────────────────────────────────────────────
     // Recording notification
     // ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Initiate a group call — saves call log to the group chat, broadcasts call entry
+    /// to all members, and sends IncomingCall signal to online members.
+    /// </summary>
+    public async Task StartGroupCall(Guid groupId, string callType, string sdpOffer)
+    {
+        var senderId = CurrentUserId;
+        var businessId = CurrentBusinessId();
+
+        // Verify caller is a member
+        var isMember = await db.SuChatGroupMembers
+            .AnyAsync(x => x.GroupId == groupId && x.UserId == senderId);
+        if (!isMember) return;
+
+        var group = await db.SuChatGroups
+            .Where(g => g.Id == groupId && g.BusinessId == businessId)
+            .Select(g => new { g.Name })
+            .FirstOrDefaultAsync();
+        if (group is null) return;
+
+        var callerProfile = await db.SuProfiles
+            .AsNoTracking()
+            .Where(p => p.UserId == senderId)
+            .Select(p => new { p.FirstNameLocal, p.FirstNameEn })
+            .FirstOrDefaultAsync();
+
+        var callerName = callerProfile?.FirstNameLocal
+            ?? callerProfile?.FirstNameEn
+            ?? senderId;
+
+        // Persist call log to group chat
+        var log = new SuChatGroupLog
+        {
+            GroupId = groupId,
+            SenderId = senderId,
+            Message = callType,
+            MessageType = ChatMessageType.Call,
+            BusinessId = businessId,
+            CreatedBy = senderId,
+            UpdatedBy = senderId,
+        };
+        db.SuChatGroupLogs.Add(log);
+        await db.SaveChangesAsync();
+
+        // Track the active group call (caller is first participant)
+        presence.SetGroupActiveCall(groupId, log.Id, DateTime.UtcNow, senderId);
+
+        var callDto = new ChatGroupMessageDto
+        {
+            Id = log.Id,
+            GroupId = groupId,
+            SenderId = senderId,
+            Message = callType,
+            MessageType = ChatMessageType.Call,
+            SentAt = log.CreatedDate,
+        };
+
+        var memberIds = await db.SuChatGroupMembers
+            .Where(x => x.GroupId == groupId)
+            .Select(x => x.UserId)
+            .ToListAsync();
+
+        // Broadcast call entry to ALL group members so it appears in group chat
+        foreach (var memberId in memberIds)
+        {
+            foreach (var connId in presence.GetConnectionIds(memberId, businessId))
+                await Clients.Client(connId).SendAsync("ReceiveGroupMessage", callDto);
+        }
+
+        // Send actual WebRTC invite to online members (excluding caller)
+        foreach (var memberId in memberIds.Where(m => m != senderId))
+        {
+            foreach (var connId in presence.GetConnectionIds(memberId, businessId))
+                await Clients.Client(connId).SendAsync(
+                    "IncomingCall", senderId, callerName, callType, sdpOffer,
+                    groupId.ToString(), group.Name);
+        }
+    }
 
     /// <summary>
     /// Notify the call peer that this client started or stopped recording.
@@ -452,6 +602,77 @@ public sealed class ChatHub(SicDbContext db, ChatPresenceStore presence) : Hub
         }
     }
 
+    /// <summary>Rename group or update its member list. Caller must be a current member.</summary>
+    public async Task UpdateGroup(Guid groupId, string name, List<string> memberUserIds)
+    {
+        var userId = CurrentUserId;
+        var businessId = CurrentBusinessId();
+
+        var isMember = await db.SuChatGroupMembers
+            .AnyAsync(x => x.GroupId == groupId && x.UserId == userId);
+        if (!isMember) return;
+
+        var group = await db.SuChatGroups
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == groupId && g.BusinessId == businessId);
+        if (group is null) return;
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            group.Name = name.Trim();
+            group.UpdatedBy = userId;
+        }
+
+        // Validate provided members belong to same business
+        var validMembers = await db.SuUserBusinesses
+            .Where(x => memberUserIds.Contains(x.UserId) && x.BusinessId == businessId && x.IsActive)
+            .Select(x => x.UserId)
+            .ToListAsync();
+
+        // Always keep the caller
+        if (!validMembers.Contains(userId)) validMembers.Add(userId);
+
+        var currentMemberIds = group.Members.Select(m => m.UserId).ToList();
+
+        // Add new members
+        foreach (var memberId in validMembers.Except(currentMemberIds))
+        {
+            db.SuChatGroupMembers.Add(new SuChatGroupMember
+            {
+                GroupId = groupId,
+                UserId = memberId,
+                BusinessId = businessId,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+            });
+        }
+
+        // Remove members not in new list (never remove caller)
+        var toRemove = group.Members
+            .Where(m => !validMembers.Contains(m.UserId) && m.UserId != userId)
+            .ToList();
+        db.SuChatGroupMembers.RemoveRange(toRemove);
+
+        await db.SaveChangesAsync();
+
+        var finalMemberIds = validMembers.Distinct().ToList();
+        // Notify all previously & currently involved members
+        var allAffected = currentMemberIds.Union(finalMemberIds).Distinct().ToList();
+
+        var groupDto = new ChatGroupDto
+        {
+            Id = group.Id,
+            Name = group.Name,
+            MemberUserIds = finalMemberIds,
+        };
+
+        foreach (var memberId in allAffected)
+        {
+            foreach (var connId in presence.GetConnectionIds(memberId, businessId))
+                await Clients.Client(connId).SendAsync("GroupUpdated", groupDto);
+        }
+    }
+
     /// <summary>Cancel a group message (within 2-minute window).</summary>
     public async Task CancelGroupMessage(Guid messageId)
     {
@@ -524,6 +745,9 @@ public sealed class ChatGroupMessageDto
     public string? AttachmentFileName { get; set; }
     public long? AttachmentFileSize { get; set; }
     public string? AttachmentContentType { get; set; }
+    public bool? CallAccepted { get; set; }
+    public int? CallDurationSeconds { get; set; }
+    public List<string>? CallParticipantUserIds { get; set; }
     public DateTime SentAt { get; set; }
     public bool IsCancelled { get; set; }
 }
