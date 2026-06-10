@@ -66,9 +66,6 @@ public class SuUpload extends BaseEntity {
     @Column(name = "temp_expires_at")
     private Instant tempExpiresAt;
 
-    @Column(name = "file_path", length = 2000)
-    private String filePath;
-
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
 

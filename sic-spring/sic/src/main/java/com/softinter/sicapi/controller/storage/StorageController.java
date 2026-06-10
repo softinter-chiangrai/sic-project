@@ -1,7 +1,10 @@
 package com.softinter.sicapi.controller.storage;
 
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.dto.request.UploadSessionRequest;
+import com.softinter.sicapi.dto.response.ApiResponse;
+import com.softinter.sicapi.dto.response.StorageDownloadResponse;
+import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.dto.response.UploadSessionResponse;
 import com.softinter.sicapi.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -61,5 +64,14 @@ public class StorageController {
     public ResponseEntity<ApiResponse<String>> getFileUrl(@PathVariable UUID fileId) {
         String url = fileStorageService.getFileUrl(fileId);
         return ResponseEntity.ok(ApiResponse.success(url));
+    }
+
+    // ========== NEW ENDPOINT ==========
+    @PostMapping("/upload/sessions")
+    @Operation(summary = "Create upload session")
+    public ResponseEntity<ApiResponse<UploadSessionResponse>> createUploadSession(
+            @RequestBody UploadSessionRequest request) {
+        UploadSessionResponse response = fileStorageService.createUploadSession(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
