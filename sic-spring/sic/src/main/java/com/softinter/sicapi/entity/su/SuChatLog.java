@@ -36,7 +36,7 @@ public class SuChatLog extends BaseBusinessEntity {
     @Column(name = "message", nullable = false, length = 4000)
     private String message = "";
 
-    @Enumerated(EnumType.STRING)
+   
     @Column(name = "message_type", nullable = false)
     private ChatMessageType messageType = ChatMessageType.TEXT;
 

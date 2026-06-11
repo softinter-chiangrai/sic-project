@@ -2,11 +2,17 @@ package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
+
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
 public class SaveProfileRequest {
     private String email;
+    private UUID avatarUploadId;
+    private UUID uploadGroupId;
+    private List<StorageUploadReference> uploadGroupData;
     private String firstNameEn;
     private String middleNameEn;
     private String lastNameEn;
@@ -23,4 +29,5 @@ public class SaveProfileRequest {
     private String zipCode;
     private String addressEn;
     private String addressLocal;
+    private Long rowVersion;
 }

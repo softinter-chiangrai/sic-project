@@ -1,27 +1,41 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.dto.request.SaveProfileRequest;
-import com.softinter.sicapi.dto.response.ProfileResponse;
-import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.repository.db.*;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.service.ProfileService;
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import com.softinter.sicapi.dto.request.SaveProfileRequest;
+import com.softinter.sicapi.dto.response.ProfileResponse;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.db.DbCountryRepository;
+import com.softinter.sicapi.repository.db.DbDistrictRepository;
+import com.softinter.sicapi.repository.db.DbProvinceRepository;
+import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
+import com.softinter.sicapi.repository.db.DbTitleRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.service.ProfileService;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 
     private final SuProfileRepository profileRepository;
+    private final SuUploadRepository uploadRepository;
     private final DbTitleRepository titleRepository;
     private final DbCountryRepository countryRepository;
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,9 +53,48 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public UUID saveProfile(String userId, SaveProfileRequest request) {
+    public ProfileResponse saveProfile(String userId, SaveProfileRequest request) {
+        log.info("===== uploadGroupData from frontend =====");
+        log.info("uploadGroupData size: {}", 
+            request.getUploadGroupData() == null ? 0 : request.getUploadGroupData().size());
+        
+        if (request.getUploadGroupData() != null) {
+            for (StorageUploadReference ref : request.getUploadGroupData()) {
+                log.info("Ref: id={}, uploadGroupId={}, state={}, isActive={}",
+                    ref.getId(), ref.getUploadGroupId(), ref.getState(), ref.getIsActive());
+            }
+        } else {
+            log.info("uploadGroupData is NULL");
+        }
+        log.info("========================================");
+
         SuProfile profile = profileRepository.findByUserId(userId)
                 .orElse(new SuProfile());
+
+        // กำหนด finalUploadGroupId โดยพยายาม resolve จากหลายแหล่ง
+        UUID finalUploadGroupId = request.getUploadGroupId();
+        if (finalUploadGroupId == null && request.getUploadGroupData() != null && !request.getUploadGroupData().isEmpty()) {
+            StorageUploadReference ref = request.getUploadGroupData().get(0);
+            // 1. ถ้า ref มี uploadGroupId อยู่แล้วให้ใช้เลย
+            if (ref.getUploadGroupId() != null) {
+                finalUploadGroupId = ref.getUploadGroupId();
+                log.info("Using uploadGroupId from reference: {}", finalUploadGroupId);
+            } 
+            // 2. ถ้าไม่มี ให้ใช้ ref.id ค้นหาจาก SuUpload
+            else if (ref.getId() != null) {
+                log.info("Ref uploadGroupId is null, trying to fetch from SuUpload by id: {}", ref.getId());
+                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
+                if (upload != null) {
+                    finalUploadGroupId = upload.getUploadGroupId();
+                    log.info("Resolved uploadGroupId from SuUpload: {}", finalUploadGroupId);
+                } else {
+                    log.warn("No SuUpload found with id: {}", ref.getId());
+                }
+            }
+        }
+
+        profile.setUploadGroupId(finalUploadGroupId);
+        log.info("Final uploadGroupId set to profile: {}", finalUploadGroupId);
 
         profile.setIsActive(true);
         profile.setUserId(userId);
@@ -78,7 +131,13 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setIsActive(true);
 
         profileRepository.save(profile);
-        return profile.getId();
+
+        if (finalUploadGroupId != null && request.getUploadGroupData() != null && !request.getUploadGroupData().isEmpty()) {
+            fileStorageService.syncUploads(finalUploadGroupId, request.getUploadGroupData());
+        }
+
+        // Return full response including avatar URL so frontend can update view immediately
+        return toResponse(profile);
     }
 
     private ProfileResponse toResponse(SuProfile profile) {
@@ -102,6 +161,11 @@ public class ProfileServiceImpl implements ProfileService {
         response.setPhoneNumber(profile.getPhoneNumber());
         response.setAddressEn(profile.getAddressEn());
         response.setAddressLocal(profile.getAddressLocal());
+
+        if (profile.getUploadGroupId() != null) {
+            String avatarUrl = fileStorageService.getFileUrlByUploadGroupId(profile.getUploadGroupId());
+            response.setAvatarUrl(avatarUrl);
+        }
 
         if (profile.getCountry() != null) {
             response.setCountryId(profile.getCountry().getId());

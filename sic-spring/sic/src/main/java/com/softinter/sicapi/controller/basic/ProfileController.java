@@ -36,14 +36,14 @@ public class ProfileController {
 
     @GetMapping("/activation")
     @Operation(summary = "Check profile activation status")
-    public ResponseEntity<ApiResponse<ProfileActivationResponse>> getActivation() {
+    public ResponseEntity<ProfileActivationResponse> getActivation() {
         String userId = currentUserService.getUserId();
         boolean exists = profileService.isProfileComplete(userId);
         ProfileActivationResponse response = new ProfileActivationResponse();
         response.setProfileComplete(exists);
         response.setBusinessActive(false);
         response.setMessage(exists ? "Profile is complete" : "Profile is incomplete");
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
@@ -54,23 +54,23 @@ public class ProfileController {
 
     @GetMapping("/mail-check")
     @Operation(summary = "Check if email is registered")
-    public ResponseEntity<ApiResponse<Boolean>> mailCheck(@RequestParam String email) {
+    public ResponseEntity<Boolean> mailCheck(@RequestParam String email) {
         // TODO: implement real check
-        return ResponseEntity.ok(ApiResponse.success(true));
+        return ResponseEntity.ok(true);
     }
 
     @PostMapping("/send-verify")
     @Operation(summary = "Send verification email")
-    public ResponseEntity<ApiResponse<VerifyTokenResponse>> sendVerify(@Valid @RequestBody SendVerifyRequest request) {
+    public ResponseEntity<VerifyTokenResponse> sendVerify(@Valid @RequestBody SendVerifyRequest request) {
         VerifyTokenResponse response = verifyService.generateVerifyToken(request.getRecipient());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save user profile")
-    public ResponseEntity<ApiResponse<UUID>> saveProfile(@Valid @RequestBody SaveProfileRequest request) {
+    public ResponseEntity<ProfileResponse> saveProfile(@Valid @RequestBody SaveProfileRequest request) {
         String userId = currentUserService.getUserId();
-        UUID profileId = profileService.saveProfile(userId, request);
-        return ResponseEntity.ok(ApiResponse.success(profileId));
+        ProfileResponse response = profileService.saveProfile(userId, request);
+        return ResponseEntity.ok(response);
     }
 }

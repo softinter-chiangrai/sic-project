@@ -1,11 +1,15 @@
 package com.softinter.sicapi.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import com.softinter.sicapi.dto.request.UploadSessionRequest;
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
 import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import org.springframework.web.multipart.MultipartFile;
-import java.util.UUID;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 public interface FileStorageService {
     // Single file upload
@@ -24,4 +28,11 @@ public interface FileStorageService {
     void cancelSession(UUID sessionId);
     void activateUpload(UUID uploadId);
     StorageDownloadResponse downloadByKey(String bucketName, String objectKey);
+    String getFileUrlByUploadGroupId(UUID uploadGroupId);
+    void activateUpload(UUID uploadId, String userId);
+    void cleanupExpiredTemporaryUploads();
+    UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences);
+
+    void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences);
+    
 }

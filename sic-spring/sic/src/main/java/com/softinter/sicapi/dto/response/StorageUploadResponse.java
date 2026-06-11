@@ -16,6 +16,6 @@ public class StorageUploadResponse {
     private String fileName;
     private String fileUrl;
     private long fileSize;
-    private String mimeType;
+    private String contentType;
     private UUID uploadGroupId;
 }

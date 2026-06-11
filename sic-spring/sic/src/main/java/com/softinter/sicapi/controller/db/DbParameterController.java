@@ -23,11 +23,11 @@ public class DbParameterController {
 
     @GetMapping("/lov")
     @Operation(summary = "Get parameter LOV by group")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getLov(@RequestParam(required = false, defaultValue = "COMMON") String group) {
+    public ResponseEntity<List<LovResponse>> getLov(@RequestParam(required = false, defaultValue = "COMMON") String group) {
         List<LovResponse> lov = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group)
                 .stream()
                 .map(p -> new LovResponse(p.getParameterCode(), p.getParameterNameEn()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 }

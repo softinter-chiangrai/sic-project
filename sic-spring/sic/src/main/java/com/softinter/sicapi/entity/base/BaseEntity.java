@@ -56,7 +56,7 @@ public abstract class BaseEntity {
     @Column(name = "row_version")
     private Long rowVersion;
     
-    @Enumerated(EnumType.STRING)
+    
     @Transient
     private EntityState state = EntityState.DETACHED;
 

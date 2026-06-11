@@ -18,8 +18,8 @@ public class VerifyController {
 
     @GetMapping("/token/{token}")
     @Operation(summary = "Verify token")
-    public ResponseEntity<ApiResponse<VerifyTokenResponse>> verifyToken(@PathVariable String token) {
+    public ResponseEntity<VerifyTokenResponse> verifyToken(@PathVariable String token) {
         VerifyTokenResponse response = verifyService.verifyToken(token);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 }

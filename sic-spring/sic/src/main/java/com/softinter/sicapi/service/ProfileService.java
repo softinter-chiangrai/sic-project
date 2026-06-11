@@ -11,5 +11,5 @@ public interface ProfileService {
 
     boolean isProfileComplete(String userId);
 
-    UUID saveProfile(String userId, SaveProfileRequest request);
+    ProfileResponse saveProfile(String userId, SaveProfileRequest request);
 }

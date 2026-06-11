@@ -1,7 +1,6 @@
 package com.softinter.sicapi.entity.enums;
 
 import lombok.Getter;
-import com.fasterxml.jackson.annotation.JsonCreator;
 
 @Getter
 public enum FileVisibility {
@@ -14,26 +13,5 @@ public enum FileVisibility {
 
     FileVisibility(int code) {
         this.code = code;
-    }
-
-    public static FileVisibility fromCode(int code) {
-        for (FileVisibility v : values()) {
-            if (v.code == code) return v;
-        }
-        return PUBLIC;
-    }
-
-    @JsonCreator
-    public static FileVisibility fromString(String value) {
-        try {
-            return FileVisibility.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            try {
-                int code = Integer.parseInt(value);
-                return fromCode(code);
-            } catch (NumberFormatException ex) {
-                return PUBLIC;
-            }
-        }
     }
 }

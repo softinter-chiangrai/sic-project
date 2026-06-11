@@ -42,9 +42,8 @@ public class SuUpload extends BaseEntity {
     private Long fileSize = 0L;
 
     @Column(name = "category", nullable = false, length = 50)
-    private String category;
+    private FileCategory category;
 
-    @Enumerated(EnumType.ORDINAL)
     @Column(name = "visibility", nullable = false)
     private FileVisibility visibility;
 
@@ -65,17 +64,4 @@ public class SuUpload extends BaseEntity {
 
     @Column(name = "temp_expires_at")
     private Instant tempExpiresAt;
-
-    @Column(name = "mime_type", nullable = false)
-    private String mimeType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "file_category", nullable = false)
-    private FileCategory fileCategory;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "file_visibility", nullable = false)
-    private FileVisibility fileVisibility;
-
-  
 }

@@ -24,33 +24,33 @@ public class BusinessController {
 
     @GetMapping
     @Operation(summary = "Get my businesses (default)")
-    public ResponseEntity<ApiResponse<List<BusinessDto>>> getBusinesses() {
-        return ResponseEntity.ok(ApiResponse.success(businessAccessService.getMyBusinesses()));
+    public ResponseEntity<List<BusinessDto>> getBusinesses() {
+        return ResponseEntity.ok(businessAccessService.getMyBusinesses());
     }
 
     @GetMapping("/my-businesses")
     @Operation(summary = "Get my businesses")
-    public ResponseEntity<ApiResponse<List<BusinessDto>>> getMyBusinesses() {
-        return ResponseEntity.ok(ApiResponse.success(businessAccessService.getMyBusinesses()));
+    public ResponseEntity<List<BusinessDto>> getMyBusinesses() {
+        return ResponseEntity.ok(businessAccessService.getMyBusinesses());
     }
 
     @GetMapping("/activation")
     @Operation(summary = "Get business activation status")
-    public ResponseEntity<ApiResponse<Boolean>> getBusinessActivation() {
-        return ResponseEntity.ok(ApiResponse.success(businessAccessService.getBusinessActivation()));
+    public ResponseEntity<Boolean> getBusinessActivation() {
+        return ResponseEntity.ok(businessAccessService.getBusinessActivation());
     }
 
     @PostMapping("/change")
     @Operation(summary = "Change active business")
-    public ResponseEntity<ApiResponse<ChangeBusinessResponse>> changeBusiness(
+    public ResponseEntity<ChangeBusinessResponse> changeBusiness(
             @RequestBody ChangeBusinessRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(
-                businessAccessService.changeBusiness(request.getBusinessId())));
+        return ResponseEntity.ok(
+                businessAccessService.changeBusiness(request.getBusinessId()));
     }
 
     @GetMapping("/{businessId}")
     @Operation(summary = "Get business info")
-    public ResponseEntity<ApiResponse<BusinessDto>> getBusinessInfo(@PathVariable UUID businessId) {
-        return ResponseEntity.ok(ApiResponse.success(businessAccessService.getBusiness(businessId)));
+    public ResponseEntity<BusinessDto> getBusinessInfo(@PathVariable UUID businessId) {
+        return ResponseEntity.ok(businessAccessService.getBusiness(businessId));
     }
 }

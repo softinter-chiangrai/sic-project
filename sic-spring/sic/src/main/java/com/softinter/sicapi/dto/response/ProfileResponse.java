@@ -9,6 +9,7 @@ public class ProfileResponse {
     private UUID id;
     private String taxId;
     private String userId;
+    private String avatarUrl;
     private String email;
     private String firstNameEn;
     private String middleNameEn;   

@@ -27,7 +27,7 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user info")
-    public ResponseEntity<ApiResponse<AuthMeResponse>> getMe() {
+    public ResponseEntity<AuthMeResponse> getMe() {
         AuthMeResponse response = new AuthMeResponse();
         response.setUserId(currentUserService.getUserId());
         response.setUsername(currentUserService.getUsername());
@@ -37,6 +37,6 @@ public class AuthController {
             response.setCurrentBusinessName(business.getName());
         }
         response.setRoles(Collections.emptyList());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 }

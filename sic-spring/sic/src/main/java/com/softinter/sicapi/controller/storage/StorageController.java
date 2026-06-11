@@ -42,7 +42,7 @@ public class StorageController {
                 "accessUrl", res.getFileUrl(),
                 "fileName", res.getFileName(),
                 "fileSize", res.getFileSize(),
-                "contentType", res.getMimeType()
+                "contentType", res.getContentType()
         ));
     }
 
@@ -56,7 +56,7 @@ public class StorageController {
                 "accessUrl", res.getFileUrl(),
                 "fileName", res.getFileName(),
                 "fileSize", res.getFileSize(),
-                "contentType", res.getMimeType()
+                "contentType", res.getContentType()
         ));
     }
 
@@ -70,7 +70,7 @@ public class StorageController {
                 "accessUrl", res.getFileUrl(),
                 "fileName", res.getFileName(),
                 "fileSize", res.getFileSize(),
-                "contentType", res.getMimeType()
+                "contentType", res.getContentType()
         ));
     }
 
