@@ -9,26 +9,33 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
 @Configuration
 public class S3Config {
 
-    @Value("${storage.service-url:http://localhost:8888}")
-    private String serviceUrl;
+    @Value("${app.storage.s3.endpoint:http://localhost:8888}")
+    private String endpoint;
 
-    @Value("${storage.access-key:seaweedfs}")
+    @Value("${app.storage.s3.access-key:seaweedfs}")
     private String accessKey;
 
-    @Value("${storage.secret-key:seaweedfs-secret}")
+    @Value("${app.storage.s3.secret-key:seaweedfs-secret}")
     private String secretKey;
+
+    @Value("${app.storage.s3.region:us-east-1}")
+    private String region;
 
     @Bean
     public S3Client s3Client() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
         return S3Client.builder()
-                .region(Region.US_EAST_1)
-                .endpointOverride(URI.create(serviceUrl))  // ชี้ไปที่ SeaweedFS
+                .region(Region.of(region))
+                .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)   // สำคัญที่สุด!
+                        .build())
                 .build();
     }
 }

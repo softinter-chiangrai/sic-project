@@ -7,10 +7,6 @@ spring:
     username: sic-app
     password: SicApp2026
     driver-class-name: org.postgresql.Driver
-    devtools:
-      restart:
-        enabled: true
-        additional-paths: src/main/java, src/main/resources
 
   jpa:
     hibernate:
@@ -55,21 +51,25 @@ app:
       secret: ""
     confidential-port: 0
 
-  # แก้ไขส่วนนี้ - ย้ายออกมาจากใต้ keycloak
+  # ✅ แก้ไขส่วน storage ให้ถูกต้อง
   storage:
     s3:
-      bucket: public-files
-      region: ap-southeast-1
+      bucket: public-files          # bucket หลัก (รูป/วิดีโอ)
+      document-bucket: documents    # bucket สำหรับเอกสาร (ตาม .NET)
+      region: us-east-1             # region ใดก็ได้สำหรับ local
       access-key: seaweedfs
       secret-key: seaweedfs-secret
+      endpoint: http://localhost:8888      # สำคัญที่สุด!
+      path-style-access-enabled: true      # จำเป็นสำหรับ S3-compatible
 
-storage:
-  service-url: http://localhost:8888
-  access-key: seaweedfs
-  secret-key: seaweedfs-secret
-  image-bucket: public-files
-  video-bucket: public-files
-  document-bucket: documents
+# ❌ ลบ section storage ซ้ำซ้อนนี้ทิ้ง (หรือ comment ไว้)
+# storage:
+#   service-url: http://localhost:8888
+#   access-key: seaweedfs
+#   secret-key: seaweedfs-secret
+#   image-bucket: public-files
+#   video-bucket: public-files
+#   document-bucket: documents
 
 logging:
   pattern:
@@ -77,7 +77,9 @@ logging:
   level:
     root: ERROR
     com.softinter.sicapi: DEBUG
-    org.springframework.mail: DEBUG 
+    org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: DEBUG
+    software.amazon.awssdk: DEBUG   # เพิ่มบรรทัดนี้
+    org.springframework.security: DEBUG   # เพิ่มบรรทัดนี้
 
 spring.main.banner-mode: off

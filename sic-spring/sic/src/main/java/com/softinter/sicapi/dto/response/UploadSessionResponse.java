@@ -12,4 +12,6 @@ public class UploadSessionResponse {
     private String uploadUrl;
     private Integer chunkSize;
     private Integer totalChunks;
+    private Integer nextChunkIndex;   
+    private Long uploadedBytes;  
 }
