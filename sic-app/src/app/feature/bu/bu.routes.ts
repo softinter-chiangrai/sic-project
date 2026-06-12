@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { burt01Resolver } from './rt/burt01/burt01.resolver';
 
 export const routes: Routes = [
     {
@@ -7,19 +8,24 @@ export const routes: Routes = [
         pathMatch: 'full'
     },
     {
-        path: 'budt01',
-        loadComponent: () => import('./budt01/budt01.component').then((m) => m.Budt01Component)
+        path: 'burt01',
+        loadComponent: () => import('./rt/burt01/burt01.component').then((m) => m.Burt01Component),
+        resolve: { form: burt01Resolver },
     },
     {
-        path: 'budt02',
-        loadComponent: () => import('./budt02/budt02.component').then((m) => m.Budt02Component)
+        path: 'burt02',
+        loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component)
     },
     {
-        path: 'budt03',
-        loadComponent: () => import('./budt03/budt03.component').then((m) => m.Budt03Component)
+        path: 'burt03',
+        loadComponent: () => import('./rt/burt03/burt03.component').then((m) => m.Burt03Component)
     },
     {
-        path: 'budt04',
-        loadComponent: () => import('./budt04/budt04.component').then((m) => m.Budt04Component)
+        path: 'burt04',
+        loadComponent: () => import('./rt/burt04/burt04.component').then((m) => m.Burt04Component)
+    },
+    {
+        path: 'burp01',
+        loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component)
     }
 ];

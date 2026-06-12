@@ -137,61 +137,88 @@
       </div>
 
       <nav class="flex-1 overflow-y-auto px-2 py-2.5">
-        @for (item of mainMenu(); track item.code) {
-        <button
-  class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
-  type="button" 
-  
-  [routerLink]="item.children?.length ? null : ('/feature/' + item.path)"
-  
-  routerLinkActive="text-[var(--text-active)] font-bold bg-[var(--sidebar-hover)] text-[1.1rem]"
-  [routerLinkActiveOptions]="{ exact: item.path === 'dashboard' || item.path === '/feature' }"
-  
-  [class.text-[var(--text-active)]]="item.children?.length && router.url.includes('/' + item.path + '/')"
-  [class.font-bold]="item.children?.length && router.url.includes('/' + item.path + '/')"
-  [class.bg-[var(--sidebar-hover)]]="item.children?.length && router.url.includes('/' + item.path + '/')"
-  [class.text-[1.1rem]]="item.children?.length && router.url.includes('/' + item.path + '/')"
-  
-  (click)="toggleMenu(item.code, !!item.children?.length)">
-  
-  <span class="flex min-w-0 items-center gap-3">
-    <i class="bi text-[0.95rem]" [class]="item.icon"></i>
-    <span>{{ item.label }}</span>
-  </span>
 
-  @if (item.badge || item.notification || item.children?.length) {
-  <span class="ml-auto flex items-center gap-2">
-    @if (item.badge) {
-    <span class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
-      {{ item.badge }}
-    </span>
-    }
-    @if (item.notification) {
-    <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
-    }
-    @if (item.children?.length) {
-    <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
-      [class.rotate-90]="isExpanded(item.code)"></i>
-    }
-  </span>
-  }
-</button>
+        <!--
+          ng-template recursive
+          context: { items: SidebarItem[], depth: number }
+          depth 0 = root → ใช้ style เดิมของ sidebar-menu-item
+          depth >= 1    → ใช้ style เดิมของ sidebar-submenu-item
+        -->
+        <ng-template #menuNode let-items="items" let-depth="depth">
+          @for (item of items; track item.code) {
 
-        @if (item.children?.length) {
-        <div class="sidebar-submenu" [class.open]="isExpanded(item.code)">
-          @for (child of item.children; track child.label) {
-          <button
-            class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
-            type="button"
-            [routerLink]="child.path"
-            routerLinkActive="text-[var(--text-active)] font-bold text-[1rem]"
-            >
-            {{ child.label }}
-          </button>
+            @if (depth === 0) {
+              <!-- ── Root level: ทุก class/attribute เหมือนเดิม 100% ── -->
+              <button
+                class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
+                type="button"
+                [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+                [class.text-[var(--text-active)]]="isItemActive(item)"
+                [class.font-bold]="isItemActive(item)"
+                [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
+                [class.text-[1.1rem]]="isItemActive(item)"
+                (click)="toggleMenu(item.code, !!item.children?.length)">
+                <span class="flex min-w-0 items-center gap-3">
+                  <i class="bi text-[0.95rem]" [class]="item.icon"></i>
+                  <span>{{ item.label }}</span>
+                </span>
+                @if (item.badge || item.notification || item.children?.length) {
+                  <span class="ml-auto flex items-center gap-2">
+                    @if (item.badge) {
+                      <span class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
+                        {{ item.badge }}
+                      </span>
+                    }
+                    @if (item.notification) {
+                      <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
+                    }
+                    @if (item.children?.length) {
+                      <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
+                        [class.rotate-90]="isExpanded(item.code)"></i>
+                    }
+                  </span>
+                }
+              </button>
+
+            } @else {
+              <!-- ── Sub level (depth >= 1): ทุก class/attribute เหมือนเดิม 100% ── -->
+              <button
+                class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
+                type="button"
+                [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+                [class.text-[var(--text-active)]]="isItemActive(item)"
+                [class.font-bold]="isItemActive(item)"
+                [class.text-[1rem]]="isItemActive(item)"
+                [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
+                (click)="toggleMenu(item.code, !!item.children?.length)">
+                <span class="flex min-w-0 items-center justify-between">
+                  <span>{{ item.label }}</span>
+                  @if (item.children?.length) {
+                    <i class="bi bi-chevron-right text-[0.75rem] transition-transform duration-200 ml-auto"
+                      [class.rotate-90]="isExpanded(item.code)"></i>
+                  }
+                </span>
+              </button>
+            }
+
+            <!-- ── Children: กาง/หุบ เหมือนเดิม แต่ recursive ── -->
+            @if (item.children?.length) {
+              <div class="sidebar-submenu" [class.open]="isExpanded(item.code)"
+                [style.padding-left]="depth >= 1 ? '0.95rem' : null">
+                <div class="sidebar-submenu-content">
+                  <ng-container *ngTemplateOutlet="menuNode; context: { items: item.children, depth: depth + 1 }">
+                  </ng-container>
+                </div>
+              </div>
+            }
+
           }
-        </div>
-        }
-        }
+        </ng-template>
+
+        <!-- Bootstrap ที่ depth 0 -->
+        <ng-container *ngTemplateOutlet="menuNode; context: { items: mainMenu(), depth: 0 }">
+        </ng-container>
+
       </nav>
 
       <div class="border-t border-[var(--border)] bg-[var(--sidebar)] px-3 py-3">
@@ -210,8 +237,37 @@
 
     <main role="presentation" class="h-screen min-h-screen overflow-auto bg-[var(--bg)] p-4 pt-[4.7rem] md:p-6"
       (click)="closeMobileSidebar()">
-    
-    <ng-content></ng-content>
+      <nav aria-label="Breadcrumb"
+        class="mb-5 flex flex-wrap items-center gap-2 text-[0.95rem] md:mb-6">
+        @for (crumb of breadcrumbs(); track $index) {
+          @if ($index > 0) {
+            <i class="bi bi-chevron-right text-[0.72rem] text-[var(--text-muted)]"></i>
+          }
+
+          @if (crumb.url && !crumb.isCurrent) {
+            <a [routerLink]="crumb.url"
+              class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
+              [class.text-[var(--crm-primary)]]="$index === 0"
+              [class.text-[var(--text-muted)]]="$index !== 0">
+              @if (crumb.icon) {
+                <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
+              }
+              <span>{{ crumb.label }}</span>
+            </a>
+          } @else {
+            <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
+              [class.text-[var(--text-active)]]="crumb.isCurrent"
+              [class.text-[var(--text-muted)]]="!crumb.isCurrent">
+              @if (crumb.icon) {
+                <i class="bi text-[0.95rem]" [class]="crumb.icon"
+                  [class.text-[var(--crm-primary)]]="$index === 0"></i>
+              }
+              <span>{{ crumb.label }}</span>
+            </span>
+          }
+        }
+      </nav>
+      <ng-content></ng-content>
     </main>
   </div>
 </div>

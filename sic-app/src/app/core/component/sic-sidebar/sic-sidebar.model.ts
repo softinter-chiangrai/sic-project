@@ -8,18 +8,28 @@ export interface MenuItemModel {
   children: MenuItemModel[];
 }
 
-export interface ProfileInfoModel{
+export interface ProfileInfoModel {
   id: string;
   name: string;
   uploadGroupId: string;
   uploadGroupData: StorageUploadReference[];
 }
 
-export interface BusinessInfoModel{
+export interface BusinessInfoModel {
   id: string;
   code: string;
   name: string;
   isDefault: boolean;
   uploadGroupId: string;
   uploadGroupData: StorageUploadReference[];
+}
+
+export interface SidebarItem {
+  code: string;
+  label: string;
+  icon?: string;
+  path?: string;
+  badge?: string;
+  notification?: boolean;
+  children?: SidebarItem[];
 }

@@ -14,10 +14,9 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, firstValueFrom, takeUntil } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
-import { ChatService, ChatMember, ChatMessage, ChatGroup, ChatGroupMessage, IncomingCallInfo, StorageUploadReference } from '../../services/chat.service';
+import { CallStatus, ChatService, ChatMember, ChatMessage, ChatGroup, ChatGroupMessage, IncomingCallInfo, StorageUploadReference } from '../../services/chat.service';
 
 // ── Directive: bind MediaStream to <video>.srcObject ──────────────────────
 @Directive({ selector: '[sicStream]', standalone: true })
@@ -85,18 +84,18 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   readonly selectedEditMembers = signal<Set<string>>(new Set());
 
   // ── Call state from service ──
-  readonly callStatus = toSignal(this.chatSvc.callStatus$, { initialValue: 'idle' as const });
-  readonly localStream = toSignal(this.chatSvc.localStream$, { initialValue: null });
-  readonly remoteStream = toSignal(this.chatSvc.remoteStream$, { initialValue: null });
+  readonly callStatus = signal<CallStatus>(this.chatSvc.callStatus$.getValue());
+  readonly localStream = signal<MediaStream | null>(this.chatSvc.localStream$.getValue());
+  readonly remoteStream = signal<MediaStream | null>(this.chatSvc.remoteStream$.getValue());
 
   // ── Recording / screen-share state ──
-  readonly isRecording = toSignal(this.chatSvc.isRecording$, { initialValue: false });
-  readonly isRecordingPaused = toSignal(this.chatSvc.isRecordingPaused$, { initialValue: false });
-  readonly isScreenSharing = toSignal(this.chatSvc.isScreenSharing$, { initialValue: false });
+  readonly isRecording = signal(this.chatSvc.isRecording$.getValue());
+  readonly isRecordingPaused = signal(this.chatSvc.isRecordingPaused$.getValue());
+  readonly isScreenSharing = signal(this.chatSvc.isScreenSharing$.getValue());
 
   // ── Mic / Camera state ──
-  readonly isMicMuted = toSignal(this.chatSvc.isMicMuted$, { initialValue: false });
-  readonly isCameraOff = toSignal(this.chatSvc.isCameraOff$, { initialValue: false });
+  readonly isMicMuted = signal(this.chatSvc.isMicMuted$.getValue());
+  readonly isCameraOff = signal(this.chatSvc.isCameraOff$.getValue());
 
   // ── Peer recording alert ──
   readonly peerIsRecording = signal(false);
@@ -129,6 +128,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     this.chatSvc.connect();
     this.loadMembers();
     this.loadGroups();
+    this.subscribeToServiceState();
     this.subscribeToEvents();
   }
 
@@ -550,6 +550,40 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────────────────────────────────
   // Event subscriptions
   // ─────────────────────────────────────────────────────────────────────────
+
+  private subscribeToServiceState(): void {
+    this.chatSvc.callStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => this.callStatus.set(status));
+
+    this.chatSvc.localStream$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(stream => this.localStream.set(stream));
+
+    this.chatSvc.remoteStream$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(stream => this.remoteStream.set(stream));
+
+    this.chatSvc.isRecording$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isRecording => this.isRecording.set(isRecording));
+
+    this.chatSvc.isRecordingPaused$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isPaused => this.isRecordingPaused.set(isPaused));
+
+    this.chatSvc.isScreenSharing$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isSharing => this.isScreenSharing.set(isSharing));
+
+    this.chatSvc.isMicMuted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isMuted => this.isMicMuted.set(isMuted));
+
+    this.chatSvc.isCameraOff$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isOff => this.isCameraOff.set(isOff));
+  }
 
   private subscribeToEvents(): void {
     this.chatSvc.messageReceived$
