@@ -62,6 +62,9 @@ export class SicFromData<TModel extends object & SicStateModel> {
       state: this.currentState,
     } as TModel;
   }
+    patchValue(value: Partial<TModel>, options?: { onlySelf?: boolean; emitEvent?: boolean }): void {
+    this.sourceFormGroup.patchValue(value, options);
+  }
 
   delete(): void {
     this.writeState(SicEntityState.Deleted);

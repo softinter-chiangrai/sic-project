@@ -54,13 +54,13 @@ app:
   # ✅ แก้ไขส่วน storage ให้ถูกต้อง
   storage:
     s3:
-      bucket: public-files          # bucket หลัก (รูป/วิดีโอ)
-      document-bucket: documents    # bucket สำหรับเอกสาร (ตาม .NET)
-      region: us-east-1             # region ใดก็ได้สำหรับ local
+      bucket: public-files # bucket หลัก (รูป/วิดีโอ)
+      document-bucket: documents # bucket สำหรับเอกสาร (ตาม .NET)
+      region: us-east-1 # region ใดก็ได้สำหรับ local
       access-key: seaweedfs
       secret-key: seaweedfs-secret
-      endpoint: http://localhost:8888      # สำคัญที่สุด!
-      path-style-access-enabled: true      # จำเป็นสำหรับ S3-compatible
+      endpoint: http://localhost:8888 # สำคัญที่สุด!
+      path-style-access-enabled: true # จำเป็นสำหรับ S3-compatible
 
 # ❌ ลบ section storage ซ้ำซ้อนนี้ทิ้ง (หรือ comment ไว้)
 # storage:
@@ -79,7 +79,10 @@ logging:
     com.softinter.sicapi: DEBUG
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: DEBUG
-    software.amazon.awssdk: DEBUG   # เพิ่มบรรทัดนี้
-    org.springframework.security: DEBUG   # เพิ่มบรรทัดนี้
+    software.amazon.awssdk: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG # <-- เปลี่ยนเป็นแบบนี้
+    org.springframework.web.servlet.mvc.method.annotation: DEBUG
+    com.fasterxml.jackson: DEBUG
 
 spring.main.banner-mode: off

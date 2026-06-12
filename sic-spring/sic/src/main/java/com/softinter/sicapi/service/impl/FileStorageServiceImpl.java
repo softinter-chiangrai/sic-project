@@ -184,105 +184,162 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId) {
-        return completeUploadSession(sessionId, null);
+@Transactional
+public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
+    SuUpload sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+            .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
+
+    if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
+        throw new RuntimeException("Upload session has expired");
     }
 
-    @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
-        SuUpload sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
+    String tempKeyPrefix = sessionRecord.getObjectKey(); // เช่น "temp/sessions/{sessionId}/"
+    String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
 
-        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
-            throw new RuntimeException("Upload session has expired");
-        }
+    long fileSize = sessionRecord.getFileSize();
+    int chunkSize = DEFAULT_CHUNK_SIZE;
+    int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
 
-        String tempKeyPrefix = sessionRecord.getObjectKey();
+    // กรณีไฟล์เล็กกว่า 1 chunk ใช้ copy ธรรมดา (เร็ว)
+    if (totalChunks == 1) {
         String sourceKey = tempKeyPrefix + "chunk_0";
-        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
-
         try {
-            HeadObjectRequest headRequest = HeadObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(sourceKey)
-                    .build();
-            s3Client.headObject(headRequest);
-        } catch (S3Exception e) {
-            log.error("Source chunk does not exist: {}", sourceKey);
-            throw new RuntimeException("Upload incomplete: missing chunk", e);
-        }
-
-        try {
-            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+            // ตรวจสอบว่า chunk มีอยู่จริง
+            s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+            // คัดลอก
+            s3Client.copyObject(CopyObjectRequest.builder()
                     .copySource(bucketName + "/" + sourceKey)
                     .destinationBucket(bucketName)
                     .destinationKey(finalKey)
-                    .build();
-            s3Client.copyObject(copyRequest);
-            s3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(sourceKey)
                     .build());
-        } catch (Exception e) {
-            log.error("Failed to finalize file from {} to {}", sourceKey, finalKey, e);
-            throw new RuntimeException("Failed to complete upload session", e);
+            // ลบ chunk
+            s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+        } catch (S3Exception e) {
+            log.error("Source chunk missing: {}", sourceKey);
+            throw new RuntimeException("Upload incomplete: missing chunk", e);
         }
-
-        sessionRecord.setObjectKey(finalKey);
-        sessionRecord.setIsActive(true);
-        sessionRecord.setTempExpiresAt(null);
-        sessionRecord.setUpdatedBy(currentUserService.getUsername());
-
-        String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
-        String accessUrl;
-        if (request != null) {
-            String scheme = request.getScheme();
-            String serverName = request.getServerName();
-            int serverPort = request.getServerPort();
-            String contextPath = request.getContextPath();
-            String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
-            accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
-        } else {
-            accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
-        }
-        sessionRecord.setStorageUrl(storageUrl);
-        sessionRecord.setAccessUrl(accessUrl);
-        uploadRepository.save(sessionRecord);
-
-        StorageUploadResponse response = new StorageUploadResponse();
-        response.setId(sessionRecord.getId());
-        response.setFileName(sessionRecord.getFileName());
-        response.setFileUrl(storageUrl);
-        response.setFileSize(sessionRecord.getFileSize());
-        response.setContentType(sessionRecord.getContentType());
-        response.setUploadGroupId(sessionId);
-        return response;
-    }
-
-    @Override
-    public void cancelSession(UUID sessionId) {
-        SuUpload session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-        String prefix = session.getObjectKey();
+    } else {
+        // ใช้ multipart upload รวมหลาย chunk
         try {
-            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+            // 1. สร้าง multipart upload
+            CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
                     .bucket(bucketName)
-                    .prefix(prefix)
+                    .key(finalKey)
+                    .contentType(sessionRecord.getContentType())
                     .build();
-            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-            for (S3Object s3Obj : listResponse.contents()) {
-                s3Client.deleteObject(DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(s3Obj.key())
+            CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
+            String uploadId = createResponse.uploadId();
+
+            List<CompletedPart> completedParts = new java.util.ArrayList<>();
+
+            // 2. อัปโหลดแต่ละ chunk เป็น part (ใช้ copy ข้าม bucket)
+            for (int i = 0; i < totalChunks; i++) {
+                String chunkKey = tempKeyPrefix + "chunk_" + i;
+                // ตรวจสอบว่า chunk มีอยู่จริง
+                try {
+                    s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
+                } catch (S3Exception e) {
+                    throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
+                }
+
+                // คำนวณช่วง byte ที่จะ copy (ทั้ง chunk)
+                // ใช้ copy จาก source ไปยัง destination part
+                UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
+                        .copySource(bucketName + "/" + chunkKey)
+                        .destinationBucket(bucketName)
+                        .destinationKey(finalKey)
+                        .uploadId(uploadId)
+                        .partNumber(i + 1)  // part number เริ่มต้นที่ 1
+                        .build();
+
+                UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
+                completedParts.add(CompletedPart.builder()
+                        .partNumber(i + 1)
+                        .eTag(copyResponse.copyPartResult().eTag())
                         .build());
             }
-        } catch (Exception e) {
-            log.warn("Failed to delete temp objects for session {}", sessionId, e);
+
+            // 3. จบ multipart upload
+            CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
+                    .bucket(bucketName)
+                    .key(finalKey)
+                    .uploadId(uploadId)
+                    .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                    .build();
+            s3Client.completeMultipartUpload(completeRequest);
+
+            // 4. ลบ chunk ชั่วคราวทั้งหมด
+            deleteTempChunks(tempKeyPrefix);
+
+        } catch (S3Exception e) {
+            log.error("Multipart upload failed for session {}", sessionId, e);
+            throw new RuntimeException("Failed to complete upload session: " + e.getMessage(), e);
         }
-        uploadRepository.delete(session);
     }
+
+    // อัปเดตข้อมูล session ใน database
+    sessionRecord.setObjectKey(finalKey);
+    sessionRecord.setIsActive(true);
+    sessionRecord.setTempExpiresAt(null);
+    sessionRecord.setUpdatedBy(currentUserService.getUsername());
+
+    String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
+    String accessUrl;
+    if (request != null) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
+        String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
+    } else {
+        accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
+    }
+    sessionRecord.setStorageUrl(storageUrl);
+    sessionRecord.setAccessUrl(accessUrl);
+    uploadRepository.save(sessionRecord);
+
+    StorageUploadResponse response = new StorageUploadResponse();
+    response.setId(sessionRecord.getId());
+    response.setFileName(sessionRecord.getFileName());
+    response.setFileUrl(storageUrl);
+    response.setFileSize(sessionRecord.getFileSize());
+    response.setContentType(sessionRecord.getContentType());
+    response.setUploadGroupId(sessionId);
+    return response;
+}
+@Override
+@Transactional
+public StorageUploadResponse completeUploadSession(UUID sessionId) {
+    return completeUploadSession(sessionId, null);
+}
+
+    @Override
+public void cancelSession(UUID sessionId) {
+    SuUpload session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+    String prefix = session.getObjectKey();
+    deleteTempChunks(prefix);  // เรียกใช้ helper
+    uploadRepository.delete(session);
+}
+    
+    private void deleteTempChunks(String prefix) {
+    try {
+        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(prefix)
+                .build();
+        ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+        for (S3Object s3Obj : listResponse.contents()) {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Obj.key())
+                    .build());
+        }
+    } catch (S3Exception e) {
+        log.warn("Failed to delete temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
+    }
+}
 
     // ==================== Activate Upload ====================
     @Override
@@ -371,13 +428,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-    // ==================== getFileUrlByUploadGroupId ====================
     @Override
     public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
         if (uploadGroupId == null) return null;
         return uploadRepository
                 .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
-                .map(SuUpload::getAccessUrl)
+                .map(upload -> {
+                    // Prefer the public storage URL; fallback to the internal access URL if not set.
+                    String url = upload.getStorageUrl();
+                    return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
+                })
                 .orElse(null);
     }
 
