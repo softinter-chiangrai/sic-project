@@ -183,6 +183,8 @@ public static class SaveBusiness
                     IsPrimary = true,
                     IsActive = true
                 });
+
+                await SetMenuBuModule(null,businessRole, cancellationToken);
             }
             else if (request.State == EntityState.Modified)
             {
@@ -211,6 +213,22 @@ public static class SaveBusiness
             }
 
             return item.Id;
+        }
+
+        public async Task SetMenuBuModule(Guid? id,SuBusinessRole businessRole, CancellationToken cancellationToken)
+        {
+            List<SuProgram> childPrograms = await dbContext.SuPrograms.Where(x => x.ParentProgramId == id && x.ProgramCode.StartsWith("BU") && x.IsActive).ToListAsync(cancellationToken);
+            foreach (var childProgram in childPrograms)
+            {
+                var SuBusinessRoleChildProgram = new SuBusinessRoleProgram
+                {
+                    BusinessRole = businessRole,
+                    Program = childProgram,
+                    IsActive = true
+                };
+                dbContext.SuBusinessRolePrograms.Add(SuBusinessRoleChildProgram);
+                await SetMenuBuModule(childProgram.Id,businessRole, cancellationToken);
+            }
         }
     }
 }

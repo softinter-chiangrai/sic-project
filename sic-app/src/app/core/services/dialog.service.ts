@@ -1,5 +1,5 @@
 import { ApplicationRef, ComponentRef, createComponent, DOCUMENT, EnvironmentInjector, inject, Injectable, signal, Type } from '@angular/core';
-import { SicDialog } from '../component/sic-dialog/sic-dialog';
+import { SicDialogComponent } from '../component/sic-dialog/sic-dialog.component';
 
 export type DialogType = 'info' | 'success' | 'warn' | 'confirm' | 'error';
 
@@ -23,7 +23,7 @@ export class DialogService {
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly document = inject(DOCUMENT);
   private readonly dialogState = signal<DialogState | null>(null);
-  private componentRef?: ComponentRef<SicDialog>;
+  private componentRef?: ComponentRef<SicDialogComponent>;
   private resolver?: (result: boolean) => void;
 
   readonly state = this.dialogState.asReadonly();
@@ -90,7 +90,7 @@ export class DialogService {
     const hostElement = this.document.createElement('div');
     this.document.body.appendChild(hostElement);
 
-    this.componentRef = createComponent(SicDialog, {
+    this.componentRef = createComponent(SicDialogComponent, {
       environmentInjector: this.environmentInjector,
       hostElement,
     });

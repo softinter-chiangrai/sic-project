@@ -5,6 +5,8 @@ import { profileGuard } from './core/auth/profile.guard';
 import { profileResolver } from './management/profile/profile.resolver';
 import { businessGuard } from './core/auth/business.guard';
 import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
+import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
+import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
 import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
 
 export const routes: Routes = [
@@ -14,32 +16,53 @@ export const routes: Routes = [
   },
   {
     path: '',
-    loadComponent: () => import('./main/index/index').then((m) => m.Index),
+    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
     children: [
       {
         path: '',
-        loadComponent: () => import('./main/index/home/home').then((m) => m.Home),
+        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
       },
       {
         path: 'product',
-        loadComponent: () => import('./main/index/product/product').then((m) => m.Product),
+        loadComponent: () => import('./main/index/product/product.component').then((m) => m.Product),
       },
       {
         path: 'blog',
-        loadComponent: () => import('./main/index/blog/blog').then((m) => m.Blog),
+        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
       },
       {
         path: 'contact',
-        loadComponent: () => import('./main/index/contact/contact').then((m) => m.Contact),
+        loadComponent: () => import('./main/index/contact/contact.component').then((m) => m.Contact),
       },
     ],
   },
   {
     path: 'feature',
-    // canActivate: [authGuard],
     canActivate: [authGuard,profileGuard, businessGuard],
-    loadComponent: () => import('./feature/feature').then((m) => m.Feature),
-    children: [],
+    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent)
+      },
+      {
+        path: 'bu',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes)
+      },
+      {
+        path: 'db',
+        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes)
+      },
+      {
+        path: 'su',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes)
+      }
+    ],
   },
   {
     path: 'management',
@@ -68,6 +91,14 @@ export const routes: Routes = [
           {
             path: 'join',
             loadComponent: () => import('./management/business/business-join/business-join.component').then((m) => m.BusinessJoinComponent),
+            resolve: { form: businessJoinResolver },
+            canDeactivate: [CanDeactivateGuard]
+          },
+          {
+            path: 'invite',
+            loadComponent: () => import('./management/business/business-invite/business-invite.component').then((m) => m.BusinessInviteComponent),
+            resolve: { form: businessInviteResolver },
+            canDeactivate: [CanDeactivateGuard]
           }
         ],
       }
@@ -75,6 +106,6 @@ export const routes: Routes = [
   },
   {
     path: 'tutorial',
-    loadComponent: () => import('./tutorial/tutorial').then((m) => m.Tutorial),
+    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
   },
 ];

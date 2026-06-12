@@ -102,4 +102,38 @@ public sealed class ChatPresenceStore
         => string.Compare(a, b, StringComparison.Ordinal) < 0 ? $"{a}|{b}" : $"{b}|{a}";
 
     private static string BuildKey(string userId, Guid businessId) => $"{userId}:{businessId}";
+
+    // ── Active group call tracking ────────────────────────────────────────────
+
+    private readonly ConcurrentDictionary<Guid, (Guid LogId, DateTime StartedAt, List<string> Participants)> _activeGroupCalls = new();
+
+    public void SetGroupActiveCall(Guid groupId, Guid logId, DateTime startedAt, string initiatorId)
+        => _activeGroupCalls[groupId] = (logId, startedAt, [initiatorId]);
+
+    public void AddGroupCallParticipant(Guid groupId, string userId)
+    {
+        if (_activeGroupCalls.TryGetValue(groupId, out var info))
+        {
+            lock (_lock)
+            {
+                if (!info.Participants.Contains(userId))
+                    info.Participants.Add(userId);
+            }
+        }
+    }
+
+    public bool TryRemoveGroupActiveCall(Guid groupId, out Guid logId, out DateTime startedAt, out List<string> participants)
+    {
+        if (_activeGroupCalls.TryRemove(groupId, out var info))
+        {
+            logId = info.LogId;
+            startedAt = info.StartedAt;
+            participants = info.Participants;
+            return true;
+        }
+        logId = Guid.Empty;
+        startedAt = default;
+        participants = [];
+        return false;
+    }
 }

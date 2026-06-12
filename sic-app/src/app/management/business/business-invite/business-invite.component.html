@@ -1,0 +1,110 @@
+<div class="grid grid-cols-6 gap-4">
+
+  <!-- Title -->
+  <div class="col-span-6 text-center">
+    <h2 class="text-4xl font-semibold">เชิญสมาชิก</h2>
+  </div>
+
+  <!-- Tab toggle -->
+  <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-center">
+    <div class="flex border border-[var(--border)] rounded-lg overflow-hidden w-fit">
+      <button type="button"
+        class="px-5 py-2 text-sm font-medium transition-colors"
+        [class.bg-blue-600]="activeTab() === 'email'"
+        [class.text-white]="activeTab() === 'email'"
+        [class.text-[var(--text-muted)]]="activeTab() !== 'email'"
+        (click)="setTab('email')">Email Invite</button>
+      <button type="button"
+        class="px-5 py-2 text-sm font-medium transition-colors"
+        [class.bg-blue-600]="activeTab() === 'token'"
+        [class.text-white]="activeTab() === 'token'"
+        [class.text-[var(--text-muted)]]="activeTab() !== 'token'"
+        (click)="setTab('token')">Token Invite</button>
+    </div>
+  </div>
+
+  <!-- Email form -->
+  @if (activeTab() === 'email') {
+    <form [formGroup]="emailForm" (ngSubmit)="submitEmail()"
+      class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
+      <sic-combobox
+        label="ตำแหน่ง (Role)"
+        formControlName="roleId"
+        [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
+        [paging]="false">
+      </sic-combobox>
+      <sic-input label="อีเมลที่รับเชิญ" formControlName="inviteEmail"></sic-input>
+      <div class="flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">ย้อนกลับ</sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary" [disabled]="loading()">สร้าง Email Invite</sic-button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <!-- Token form -->
+  @if (activeTab() === 'token') {
+    <form [formGroup]="tokenForm" (ngSubmit)="submitToken()"
+      class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
+      <sic-combobox
+        label="ตำแหน่ง (Role)"
+        formControlName="roleId"
+        [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
+        [paging]="false">
+      </sic-combobox>
+      <sic-number
+        label="จำนวนครั้งสูงสุด"
+        formControlName="maxUses"
+        hint="ว่าง = ไม่จำกัด"
+        placeholder="เช่น 10">
+      </sic-number>
+      <div class="flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">ย้อนกลับ</sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary" [disabled]="loading()">สร้าง Token Invite</sic-button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <!-- Invite list -->
+  <div class="col-span-6">
+    <h2 class="text-2xl font-semibold mb-3">รายการ Invite</h2>
+    <sic-gridpanel
+      [config]="inviteGridConfig"
+      (rowAction)="onGridAction($event)">
+      <ng-template sicGridPanelTemplate="inviteContact" let-row>
+        @if (row.inviteType === 'email') {
+          <span class="sic-gridpanel__display">{{ row.inviteEmail }}</span>
+        } @else {
+          <span class="sic-gridpanel__display font-mono text-sm truncate">{{ row.inviteToken }}</span>
+        }
+      </ng-template>
+      <ng-template sicGridPanelTemplate="inviteStatus" let-row>
+        @if (row.inviteType === 'email') {
+          <span class="sic-gridpanel__display" [class.text-green-600]="row.isActivated">
+            {{ row.isActivated ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้' }}
+          </span>
+        } @else {
+          <span class="sic-gridpanel__display text-[var(--text-muted)]">{{ row.useCount }} / {{ row.maxUses ?? '∞' }}</span>
+        }
+      </ng-template>
+      <ng-template sicGridPanelTemplate="inviteActions" let-row>
+        <div class="flex gap-2">
+          @if (row.inviteType === 'token') {
+            <button type="button" class="text-xs text-blue-500 hover:text-blue-700"
+              (click)="onGridAction({ action: 'copy', row: row })">คัดลอก</button>
+          }
+          <button type="button" class="text-xs text-red-500 hover:text-red-700"
+            (click)="onGridAction({ action: 'revoke', row: row })">ลบ</button>
+        </div>
+      </ng-template>
+    </sic-gridpanel>
+  </div>
+
+</div>

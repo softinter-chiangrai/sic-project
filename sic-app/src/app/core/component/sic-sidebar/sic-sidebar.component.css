@@ -279,14 +279,19 @@
 }
 
 .sidebar-submenu {
-  max-height: 0;
-  overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
   padding-left: 0.95rem;
-  transition: max-height 0.2s ease;
+  transition: grid-template-rows 0.2s ease;
 }
 
 .sidebar-submenu.open {
-  max-height: 14rem;
+  grid-template-rows: 1fr;
+}
+
+.sidebar-submenu-content {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sidebar-submenu-item {

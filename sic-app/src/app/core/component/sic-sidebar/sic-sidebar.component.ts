@@ -1,103 +1,72 @@
-import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 import { AuthService } from '../../auth/auth.service';
-import { TooltipDirective } from '../../directive/tooltip/tootop';
-import { AppLanguage, LanguageService } from '../../services/language-service';
+import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
+import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogService } from '../../services/dialog.service';
 import { SicSidebarService } from './sic-sidebar.service';
-import { BusinessInfoModel, ProfileInfoModel } from './sic-sidebar.model';
+import { BusinessInfoModel, MenuItemModel, ProfileInfoModel, SidebarItem } from './sic-sidebar.model';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
 
-type SidebarSubItem = {
+interface BreadcrumbItem {
   label: string;
-  active?: boolean;
-};
-
-type SidebarItem = {
-  label: string;
-  icon: string;
-  active?: boolean;
-  badge?: string;
-  notification?: boolean;
-  children?: SidebarSubItem[];
-};
+  url: string | null;
+  icon?: string;
+  isCurrent?: boolean;
+}
 
 @Component({
   selector: 'sic-sidebar',
   standalone: true,
-  imports: [TooltipDirective, TranslateModule],
+  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
   host: {
     ngSkipHydration: 'true',
   },
 })
-export class SicSidebar implements OnInit, OnDestroy {
+export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly authService = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly languageService = inject(LanguageService);
   private readonly dialog = inject(DialogService);
   private readonly service = inject(SicSidebarService);
+  public readonly router = inject(Router);
+
   private clockTimer?: ReturnType<typeof setInterval>;
+  private routerSubscription?: Subscription;
 
   readonly isMobileSidebarOpen = signal(false);
-  readonly expandedMenus = signal<string[]>(['Müşteriler']);
+  readonly expandedMenus = signal<string[]>(
+    JSON.parse(localStorage.getItem('expandedMenus') || '[]'),
+  );
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
   readonly datetime = signal('--/--/---- --:--:--');
+  readonly breadcrumbs = signal<BreadcrumbItem[]>([
+    { label: 'Home', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
+  ]);
 
-  readonly quickActions = [
-    { icon: 'bi-person-plus', label: 'Müşteri' },
-    { icon: 'bi-telephone-plus', label: 'Görüşme' },
-    { icon: 'bi-calendar-event', label: 'Toplantı' },
-    { icon: 'bi-clipboard-check', label: 'Görev' },
-  ];
+  // signal เก็บ URL ปัจจุบัน — อัปเดตทุกครั้งที่ route เปลี่ยน
+  // template อ่าน signal นี้โดยตรง → Angular re-render อัตโนมัติ
+  readonly currentUrl = signal('');
 
-  readonly mainMenu: SidebarItem[] = [
-    { label: 'Dashboard', icon: 'bi-house-door', active: true },
-    {
-      label: 'Müşteriler',
-      icon: 'bi-people',
-      badge: '428',
-      children: [
-        { label: 'Tüm Müşteriler' },
-        { label: 'Yeni Müşteriler' },
-        { label: 'Aktif Müşteriler', active: true },
-        { label: 'Pasif Müşteriler' },
-      ],
-    },
-    {
-      label: 'Fırsatlar',
-      icon: 'bi-briefcase',
-      badge: '16',
-      children: [
-        { label: 'Tüm Fırsatlar' },
-        { label: 'Kazanılan' },
-        { label: 'Kaybedilen' },
-      ],
-    },
-    { label: 'İletişim', icon: 'bi-envelope', notification: true },
-    { label: 'Takvim', icon: 'bi-calendar3' },
-    { label: 'Görevler', icon: 'bi-check2-square' },
-    { label: 'Dokümanlar', icon: 'bi-file-earmark-text' },
-  ];
+  private readonly DASHBOARD_ITEM: SidebarItem = {
+    code: 'dashboard',
+    label: 'Dashboard',
+    icon: 'bi-house-door',
+    path: 'dashboard',
+  };
 
-  readonly reportMenu: SidebarItem[] = [
-    { label: 'Satış', icon: 'bi-bar-chart-line' },
-    { label: 'Performans', icon: 'bi-graph-up-arrow' },
-  ];
+  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
 
-  readonly settingsMenu: SidebarItem[] = [
-    { label: 'Profil', icon: 'bi-person' },
-    { label: 'Ayarlar', icon: 'bi-gear' },
-  ];
-
-
-  profile:ProfileInfoModel = {} as ProfileInfoModel;
-  business:BusinessInfoModel = {} as BusinessInfoModel;
+  profile: ProfileInfoModel = {} as ProfileInfoModel;
+  business: BusinessInfoModel = {} as BusinessInfoModel;
 
   get profileImageSrc(): string {
     return this.profile?.uploadGroupData?.[0]?.accessUrl || 'images/profile.png';
@@ -107,12 +76,26 @@ export class SicSidebar implements OnInit, OnDestroy {
     return this.business?.uploadGroupData?.[0]?.accessUrl || 'images/business_logo.png';
   }
 
-  ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
+  constructor() {
+    effect(() => {
+      localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+    });
+  }
 
+  ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.currentUrl.set(this.router.url);
     this.loadInfomations();
+
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const url = (event as NavigationEnd).urlAfterRedirects;
+        this.currentUrl.set(url);
+        this.autoExpand();
+        this.updateBreadcrumbs();
+      });
 
     setTimeout(() => {
       this.updateClock();
@@ -121,60 +104,169 @@ export class SicSidebar implements OnInit, OnDestroy {
   }
 
   loadInfomations(): void {
-    this.service.getProfile().subscribe((profile) => {
-      this.profile = profile;
-    });
+    this.service.getProfile().subscribe((profile) => (this.profile = profile));
+    this.service.getBusiness().subscribe((business) => (this.business = business));
 
-    this.service.getBusiness().subscribe((business) => {
-      this.business = business;
+    this.service.getMenu().subscribe((menu) => {
+      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
+      this.autoExpand();
+      this.updateBreadcrumbs();
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.clockTimer) {
-      clearInterval(this.clockTimer);
+  // ────────────────────────────────────────────────────────────────
+  // Helpers
+  // ────────────────────────────────────────────────────────────────
+
+  private mapMenuItem(item: MenuItemModel): SidebarItem {
+    return {
+      code: item.code,
+      label: item.name,
+      icon: item.icon ?? 'bi-circle',
+      path: item.path ?? undefined,
+      children: item.children?.length
+        ? item.children.map((c) => this.mapMenuItem(c))
+        : undefined,
+    };
+  }
+
+  /**
+   * กาง ancestor ของ node ที่ path ตรงกับ URL ปัจจุบัน
+   */
+  private autoExpand(): void {
+    const url = this.currentUrl();
+    const toAdd: string[] = [];
+    this.collectAncestorsToExpand(this.mainMenu(), url, toAdd);
+    const current = this.expandedMenus();
+    const newOnes = toAdd.filter((code) => !current.includes(code));
+    if (newOnes.length > 0) {
+      this.expandedMenus.update((curr) => [...curr, ...newOnes]);
     }
   }
 
-  toggleMenu(label: string, hasChildren: boolean): void {
-    if (!hasChildren) {
-      return;
+  private collectAncestorsToExpand(items: SidebarItem[], url: string, out: string[]): boolean {
+    for (const item of items) {
+      if (item.children?.length) {
+        const childMatch = this.collectAncestorsToExpand(item.children, url, out);
+        if (childMatch && !out.includes(item.code)) {
+          out.push(item.code);
+        }
+      } else if (item.path && this.isPathActive(item.path, url)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private updateBreadcrumbs(): void {
+    const home: BreadcrumbItem = {
+      label: 'Home',
+      url: '/feature/dashboard',
+      icon: 'bi-house-door',
+    };
+    const activeTrail = this.findActiveTrail(this.mainMenu(), this.currentUrl()) ?? [];
+    const trailWithoutDashboard = activeTrail.filter((item) => item.code !== this.DASHBOARD_ITEM.code);
+    const breadcrumbItems: BreadcrumbItem[] = [home];
+
+    for (const item of trailWithoutDashboard) {
+      breadcrumbItems.push({
+        label: item.label,
+        url: item.children?.length ? null : this.getItemLink(item.path),
+        icon: item.icon,
+      });
     }
 
-    this.expandedMenus.update((current) =>
-      current.includes(label)
-        ? current.filter((item) => item !== label)
-        : [...current, label],
+    this.breadcrumbs.set(
+      breadcrumbItems.map((item, index) => ({
+        ...item,
+        isCurrent: index === breadcrumbItems.length - 1,
+        url: index === breadcrumbItems.length - 1 ? null : item.url,
+      })),
     );
   }
 
-  isExpanded(label: string): boolean {
-    return this.expandedMenus().includes(label);
+  private findActiveTrail(items: SidebarItem[], url: string, trail: SidebarItem[] = []): SidebarItem[] | null {
+    for (const item of items) {
+      const nextTrail = [...trail, item];
+      if (item.path && this.isPathActive(item.path, url)) {
+        return nextTrail;
+      }
+      if (item.children?.length) {
+        const childTrail = this.findActiveTrail(item.children, url, nextTrail);
+        if (childTrail) return childTrail;
+      }
+    }
+    return null;
   }
 
-  openMobileSidebar(): void {
-    this.isMobileSidebarOpen.set(true);
+  // ────────────────────────────────────────────────────────────────
+  // Template-facing pure functions (อ่าน currentUrl() signal)
+  // ────────────────────────────────────────────────────────────────
+
+  /**
+   * ใช้ใน template แทน routerLinkActive สำหรับ leaf node
+   * (path ของ child คือ "bu/budt01" → full URL คือ /feature/bu/budt01)
+   */
+  isLeafActive(path: string | undefined): boolean {
+    if (!path) return false;
+    return this.isPathActive(path, this.currentUrl());
   }
 
-  closeMobileSidebar(): void {
-    this.isMobileSidebarOpen.set(false);
+  isItemActive(item: SidebarItem): boolean {
+    return item.children?.length ? this.isParentActive(item) : this.isLeafActive(item.path);
   }
 
-  toggleTheme(): void {
-    this.themeService.toggleDark();
+  /**
+   * ใช้ใน template สำหรับ root/parent node ที่มี children
+   * คืน true เมื่อ URL ปัจจุบันอยู่ใน subtree ของ node นี้
+   */
+  isParentActive(item: SidebarItem): boolean {
+    if (!item.children?.length) return false;
+    return this.subtreeHasActivePath(item.children, this.currentUrl());
   }
+
+  private isPathActive(path: string, url: string): boolean {
+    // รองรับทั้ง path แบบ "bu/budt01" (child) และ "/dashboard" (absolute)
+    const full = path.startsWith('/') ? path : `/feature/${path}`;
+    return url === full || url.startsWith(full + '/') || url.startsWith(full + '?');
+  }
+
+  private subtreeHasActivePath(items: SidebarItem[], url: string): boolean {
+    return items.some(
+      (item) =>
+        (item.path ? this.isPathActive(item.path, url) : false) ||
+        (item.children?.length ? this.subtreeHasActivePath(item.children, url) : false),
+    );
+  }
+
+  getItemLink(path: string | undefined): string | null {
+    if (!path) return null;
+    return path.startsWith('/') ? path : `/feature/${path}`;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+
+  toggleMenu(code: string, hasChildren: boolean): void {
+    if (!hasChildren) return;
+    this.expandedMenus.update((curr) =>
+      curr.includes(code) ? curr.filter((c) => c !== code) : [...curr, code],
+    );
+  }
+
+  isExpanded(code: string): boolean {
+    return this.expandedMenus().includes(code);
+  }
+
+  openMobileSidebar(): void { this.isMobileSidebarOpen.set(true); }
+  closeMobileSidebar(): void { this.isMobileSidebarOpen.set(false); }
+  toggleTheme(): void { this.themeService.toggleDark(); }
 
   toggleLanguage(): void {
-    const nextLanguage: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';
-    this.languageService.setLanguage(nextLanguage);
-    this.currentLanguage.set(nextLanguage);
-    DateTimeUtil.setEra(nextLanguage);
-
+    const next: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';
+    this.languageService.setLanguage(next);
+    this.currentLanguage.set(next);
+    DateTimeUtil.setEra(next);
     this.loadInfomations();
-
-    if (isPlatformBrowser(this.platformId)) {
-      this.updateClock();
-    }
   }
 
   logout(): void {
@@ -187,6 +279,11 @@ export class SicSidebar implements OnInit, OnDestroy {
   }
 
   private updateClock(): void {
-    this.datetime.set(DateTimeUtil.formatDateTime(DateTimeUtil.now(),'DD/MM/YYYY HH:mm:ss'));
+    this.datetime.set(DateTimeUtil.formatDateTime(DateTimeUtil.now(), 'DD/MM/YYYY HH:mm:ss'));
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockTimer) clearInterval(this.clockTimer);
+    if (this.routerSubscription) this.routerSubscription.unsubscribe();
   }
 }

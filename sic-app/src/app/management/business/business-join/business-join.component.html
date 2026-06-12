@@ -1,1 +1,27 @@
-<p>business-join works!</p>
+<form [formGroup]="tokenForm" (ngSubmit)="submit()">
+  <div class="grid grid-cols-6 gap-4">
+
+    <!-- Title -->
+    <div class="col-span-6 text-center">
+      <h2 class="text-4xl font-semibold">เข้าร่วมธุรกิจ</h2>
+    </div>
+
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <p class="text-sm text-[var(--text-muted)]">กรอก Token ที่ได้รับจากผู้ดูแลระบบ หรือ Token จาก Email ที่ส่งมาให้คุณ</p>
+    </div>
+
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input label="Token" formControlName="token" placeholder="วางหรือพิมพ์ Token ที่นี่"></sic-input>
+    </div>
+
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+      <div class="flex-1">
+        <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">ย้อนกลับ</sic-button>
+      </div>
+      <div class="flex-1">
+        <sic-button [fullWidth]="true" [type]="'submit'" variant="primary" [disabled]="loading()">เข้าร่วม</sic-button>
+      </div>
+    </div>
+
+  </div>
+</form>

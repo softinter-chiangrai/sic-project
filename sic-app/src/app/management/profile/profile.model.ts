@@ -1,4 +1,4 @@
-import { StorageUploadReference } from '../../core/component/sic-upload/sic-upload';
+import { StorageUploadReference } from '../../core/component/sic-upload/sic-upload.component';
 import { SicBaseStateModel } from '../../core/model/sic-base-model';
 import { SicFromData } from '../../core/model/sic-from-data';
 

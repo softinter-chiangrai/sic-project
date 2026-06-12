@@ -1,17 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLinkWithHref } from '@angular/router';
-import { SicContainer } from "../core/component/sic-container/sic-container";
+import { RouterOutlet } from '@angular/router';
+import { SicContainerComponent } from "../core/component/sic-container/sic-container.component";
 import { ThemeService } from '../core/services/theme.service';
-import { AppLanguage, LanguageService } from '../core/services/language-service';
-import { TooltipDirective } from '../core/directive/tooltip/tootop';
-import { SicButton } from '../core/component/sic-button/sic-button';
+import { AppLanguage, LanguageService } from '../core/services/language.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogService } from '../core/services/dialog.service';
 import { AuthService } from '../core/auth/auth.service';
 
 @Component({
   selector: 'app-management',
-  imports: [RouterOutlet, TooltipDirective, SicButton, TranslateModule, SicContainer, RouterLinkWithHref],
+  imports: [RouterOutlet, TranslateModule, SicContainerComponent],
   templateUrl: './management.component.html',
   styleUrl: './management.component.css',
 })

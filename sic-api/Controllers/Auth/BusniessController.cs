@@ -60,4 +60,31 @@ public class BusinessController : BaseController
     public async Task<IActionResult> Save([FromBody] SaveBusiness.Command model, CancellationToken cancellationToken) =>
         Ok(await Mediator.Send(model, cancellationToken));
 
+
+    [HttpGet("invite")]
+    public async Task<IActionResult> GetInvites(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetInvites.Query(), cancellationToken));
+
+    [HttpPost("invite")]
+    public async Task<IActionResult> CreateInvite([FromBody] CreateInvite.Command model, CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(model, cancellationToken));
+
+    [HttpDelete("invite/{id:guid}")]
+    public async Task<IActionResult> DeleteInvite(Guid id, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new DeleteInvite.Command { InviteId = id }, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("join")]
+    public async Task<IActionResult> JoinBusiness([FromBody] JoinBusiness.Command model, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(model, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("combobox-role")]
+    public async Task<IActionResult> ComboboxRole(CancellationToken cancellationToken) =>
+        Ok(await Mediator.Send(new GetRolesForBusiness.Query(), cancellationToken));
+
 }
