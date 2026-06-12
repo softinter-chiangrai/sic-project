@@ -55,12 +55,17 @@ public class FileStorageServiceImpl implements FileStorageService {
             String fileName = file.getOriginalFilename();
             String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
 
-            s3Client.putObject(PutObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(key)
-                            .contentType(file.getContentType())
-                            .build(),
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            try {
+                s3Client.putObject(PutObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(key)
+                                .contentType(file.getContentType())
+                                .build(),
+                        RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            } catch (S3Exception e) {
+                log.error("S3 upload failed for file {}", fileName, e);
+                throw new RuntimeException("Failed to upload file to S3: " + e.awsErrorDetails().errorMessage(), e);
+            }
 
             FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
             FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
@@ -86,7 +91,12 @@ public class FileStorageServiceImpl implements FileStorageService {
             upload.setStorageUrl(storageUrl);
             upload.setAccessUrl(accessUrl);
 
-            uploadRepository.save(upload);
+            try {
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to save upload record for file {}", fileName, e);
+                throw new RuntimeException("Failed to save upload metadata", e);
+            }
 
             StorageUploadResponse response = new StorageUploadResponse();
             response.setId(upload.getId());
@@ -97,52 +107,63 @@ public class FileStorageServiceImpl implements FileStorageService {
             response.setUploadGroupId(uploadGroupId);
             return response;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file", e);
+            log.error("IO error reading file", e);
+            throw new RuntimeException("Failed to read file content", e);
         }
     }
 
     // ==================== Resumable upload session ====================
     @Override
     public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
-        UUID sessionId = UUID.randomUUID();
-        String fileName = request.getFileName();
-        long fileSize = request.getFileSize();
-        String contentType = request.getContentType();
+        try {
+            UUID sessionId = UUID.randomUUID();
+            String fileName = request.getFileName();
+            long fileSize = request.getFileSize();
+            String contentType = request.getContentType();
 
-        FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
-        FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
+            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
+            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
 
-        int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
-        String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
-        String username = currentUserService.getUsername();
+            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
+            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
+            String username = currentUserService.getUsername();
 
-        SuUpload sessionRecord = new SuUpload();
-        sessionRecord.setUploadGroupId(sessionId);
-        sessionRecord.setFileName(fileName);
-        sessionRecord.setFileSize(fileSize);
-        sessionRecord.setContentType(contentType);
-        sessionRecord.setObjectKey(tempKeyPrefix);
-        sessionRecord.setBucketName(bucketName);
-        sessionRecord.setCategory(categoryEnum);
-        sessionRecord.setVisibility(visibilityEnum);
-        sessionRecord.setIsActive(false);
-        sessionRecord.setIsStreaming(false);
-        sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
-        sessionRecord.setStorageUrl("");
-        sessionRecord.setAccessUrl("");
-        sessionRecord.setCreatedBy(username);
-        sessionRecord.setUpdatedBy(username);
+            SuUpload sessionRecord = new SuUpload();
+            sessionRecord.setUploadGroupId(sessionId);
+            sessionRecord.setFileName(fileName);
+            sessionRecord.setFileSize(fileSize);
+            sessionRecord.setContentType(contentType);
+            sessionRecord.setObjectKey(tempKeyPrefix);
+            sessionRecord.setBucketName(bucketName);
+            sessionRecord.setCategory(categoryEnum);
+            sessionRecord.setVisibility(visibilityEnum);
+            sessionRecord.setIsActive(false);
+            sessionRecord.setIsStreaming(false);
+            sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
+            sessionRecord.setStorageUrl("");
+            sessionRecord.setAccessUrl("");
+            sessionRecord.setCreatedBy(username);
+            sessionRecord.setUpdatedBy(username);
 
-        uploadRepository.save(sessionRecord);
+            try {
+                uploadRepository.save(sessionRecord);
+            } catch (Exception e) {
+                log.error("Failed to create upload session for file {}", fileName, e);
+                throw new RuntimeException("Failed to create upload session", e);
+            }
 
-        return UploadSessionResponse.builder()
-                .sessionId(sessionId.toString())
-                .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                .chunkSize(DEFAULT_CHUNK_SIZE)
-                .totalChunks(totalChunks)
-                .nextChunkIndex(0)
-                .uploadedBytes(0L)
-                .build();
+            return UploadSessionResponse.builder()
+                    .sessionId(sessionId.toString())
+                    .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
+                    .chunkSize(DEFAULT_CHUNK_SIZE)
+                    .totalChunks(totalChunks)
+                    .nextChunkIndex(0)
+                    .uploadedBytes(0L)
+                    .build();
+        } catch (Exception e) {
+            log.error("Unexpected error creating upload session", e);
+            throw new RuntimeException("Failed to create upload session", e);
+        }
     }
 
     @Override
@@ -159,13 +180,25 @@ public class FileStorageServiceImpl implements FileStorageService {
             s3Client.putObject(putRequest,
                     RequestBody.fromInputStream(chunk.getInputStream(), chunk.getSize()));
             log.info("Chunk {} uploaded successfully", chunkIndex);
+        } catch (IOException e) {
+            log.error("IO error reading chunk data", e);
+            throw new RuntimeException("Failed to read chunk data", e);
+        } catch (S3Exception e) {
+            log.error("S3 upload failed for chunk {}", chunkIndex, e);
+            throw new RuntimeException("Failed to upload chunk to S3: " + e.awsErrorDetails().errorMessage(), e);
         } catch (Exception e) {
-            log.error("Failed to upload chunk", e);
+            log.error("Unexpected error uploading chunk", e);
             throw new RuntimeException("Failed to upload chunk", e);
         }
 
-        SuUpload session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found or database error", e);
+        }
 
         long fileSize = session.getFileSize();
         int chunkSize = DEFAULT_CHUNK_SIZE;
@@ -184,169 +217,197 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-@Transactional
-public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
-    SuUpload sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-            .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
-
-    if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
-        throw new RuntimeException("Upload session has expired");
-    }
-
-    String tempKeyPrefix = sessionRecord.getObjectKey(); // เช่น "temp/sessions/{sessionId}/"
-    String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
-
-    long fileSize = sessionRecord.getFileSize();
-    int chunkSize = DEFAULT_CHUNK_SIZE;
-    int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
-
-    // กรณีไฟล์เล็กกว่า 1 chunk ใช้ copy ธรรมดา (เร็ว)
-    if (totalChunks == 1) {
-        String sourceKey = tempKeyPrefix + "chunk_0";
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
+        SuUpload sessionRecord;
         try {
-            // ตรวจสอบว่า chunk มีอยู่จริง
-            s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-            // คัดลอก
-            s3Client.copyObject(CopyObjectRequest.builder()
-                    .copySource(bucketName + "/" + sourceKey)
-                    .destinationBucket(bucketName)
-                    .destinationKey(finalKey)
-                    .build());
-            // ลบ chunk
-            s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-        } catch (S3Exception e) {
-            log.error("Source chunk missing: {}", sourceKey);
-            throw new RuntimeException("Upload incomplete: missing chunk", e);
+            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found", e);
         }
-    } else {
-        // ใช้ multipart upload รวมหลาย chunk
-        try {
-            // 1. สร้าง multipart upload
-            CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
-                    .bucket(bucketName)
-                    .key(finalKey)
-                    .contentType(sessionRecord.getContentType())
-                    .build();
-            CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
-            String uploadId = createResponse.uploadId();
 
-            List<CompletedPart> completedParts = new java.util.ArrayList<>();
+        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
+            throw new RuntimeException("Upload session has expired");
+        }
 
-            // 2. อัปโหลดแต่ละ chunk เป็น part (ใช้ copy ข้าม bucket)
-            for (int i = 0; i < totalChunks; i++) {
-                String chunkKey = tempKeyPrefix + "chunk_" + i;
-                // ตรวจสอบว่า chunk มีอยู่จริง
-                try {
-                    s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
-                } catch (S3Exception e) {
-                    throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
-                }
+        String tempKeyPrefix = sessionRecord.getObjectKey();
+        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
 
-                // คำนวณช่วง byte ที่จะ copy (ทั้ง chunk)
-                // ใช้ copy จาก source ไปยัง destination part
-                UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
-                        .copySource(bucketName + "/" + chunkKey)
+        long fileSize = sessionRecord.getFileSize();
+        int chunkSize = DEFAULT_CHUNK_SIZE;
+        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
+
+        if (totalChunks == 1) {
+            String sourceKey = tempKeyPrefix + "chunk_0";
+            try {
+                s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+                s3Client.copyObject(CopyObjectRequest.builder()
+                        .copySource(bucketName + "/" + sourceKey)
                         .destinationBucket(bucketName)
                         .destinationKey(finalKey)
-                        .uploadId(uploadId)
-                        .partNumber(i + 1)  // part number เริ่มต้นที่ 1
-                        .build();
-
-                UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
-                completedParts.add(CompletedPart.builder()
-                        .partNumber(i + 1)
-                        .eTag(copyResponse.copyPartResult().eTag())
                         .build());
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+            } catch (S3Exception e) {
+                log.error("Source chunk missing: {}", sourceKey, e);
+                throw new RuntimeException("Upload incomplete: missing chunk", e);
+            } catch (Exception e) {
+                log.error("Unexpected error completing single‑chunk upload", e);
+                throw new RuntimeException("Failed to complete upload session", e);
             }
+        } else {
+            try {
+                CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .contentType(sessionRecord.getContentType())
+                        .build();
+                CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
+                String uploadId = createResponse.uploadId();
 
-            // 3. จบ multipart upload
-            CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
-                    .bucket(bucketName)
-                    .key(finalKey)
-                    .uploadId(uploadId)
-                    .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
-                    .build();
-            s3Client.completeMultipartUpload(completeRequest);
+                List<CompletedPart> completedParts = new java.util.ArrayList<>();
 
-            // 4. ลบ chunk ชั่วคราวทั้งหมด
-            deleteTempChunks(tempKeyPrefix);
+                for (int i = 0; i < totalChunks; i++) {
+                    String chunkKey = tempKeyPrefix + "chunk_" + i;
+                    try {
+                        s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
+                    } catch (S3Exception e) {
+                        throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
+                    }
 
-        } catch (S3Exception e) {
-            log.error("Multipart upload failed for session {}", sessionId, e);
-            throw new RuntimeException("Failed to complete upload session: " + e.getMessage(), e);
+                    UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
+                            .copySource(bucketName + "/" + chunkKey)
+                            .destinationBucket(bucketName)
+                            .destinationKey(finalKey)
+                            .uploadId(uploadId)
+                            .partNumber(i + 1)
+                            .build();
+
+                    UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
+                    completedParts.add(CompletedPart.builder()
+                            .partNumber(i + 1)
+                            .eTag(copyResponse.copyPartResult().eTag())
+                            .build());
+                }
+
+                CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .uploadId(uploadId)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                        .build();
+                s3Client.completeMultipartUpload(completeRequest);
+
+                deleteTempChunks(tempKeyPrefix);
+
+            } catch (S3Exception e) {
+                log.error("Multipart upload failed for session {}", sessionId, e);
+                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
+            } catch (Exception e) {
+                log.error("Unexpected error during multipart upload completion", e);
+                throw new RuntimeException("Failed to complete upload session", e);
+            }
         }
+
+        try {
+            sessionRecord.setObjectKey(finalKey);
+            sessionRecord.setIsActive(true);
+            sessionRecord.setTempExpiresAt(null);
+            sessionRecord.setUpdatedBy(currentUserService.getUsername());
+
+            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
+            String accessUrl;
+            if (request != null) {
+                String scheme = request.getScheme();
+                String serverName = request.getServerName();
+                int serverPort = request.getServerPort();
+                String contextPath = request.getContextPath();
+                String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+                accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
+            } else {
+                accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
+            }
+            sessionRecord.setStorageUrl(storageUrl);
+            sessionRecord.setAccessUrl(accessUrl);
+            uploadRepository.save(sessionRecord);
+        } catch (Exception e) {
+            log.error("Failed to update database record for session {}", sessionId, e);
+            throw new RuntimeException("Failed to save upload metadata", e);
+        }
+
+        StorageUploadResponse response = new StorageUploadResponse();
+        response.setId(sessionRecord.getId());
+        response.setFileName(sessionRecord.getFileName());
+        response.setFileUrl(sessionRecord.getStorageUrl());
+        response.setFileSize(sessionRecord.getFileSize());
+        response.setContentType(sessionRecord.getContentType());
+        response.setUploadGroupId(sessionId);
+        return response;
     }
-
-    // อัปเดตข้อมูล session ใน database
-    sessionRecord.setObjectKey(finalKey);
-    sessionRecord.setIsActive(true);
-    sessionRecord.setTempExpiresAt(null);
-    sessionRecord.setUpdatedBy(currentUserService.getUsername());
-
-    String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
-    String accessUrl;
-    if (request != null) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
-        String contextPath = request.getContextPath();
-        String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
-        accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
-    } else {
-        accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
-    }
-    sessionRecord.setStorageUrl(storageUrl);
-    sessionRecord.setAccessUrl(accessUrl);
-    uploadRepository.save(sessionRecord);
-
-    StorageUploadResponse response = new StorageUploadResponse();
-    response.setId(sessionRecord.getId());
-    response.setFileName(sessionRecord.getFileName());
-    response.setFileUrl(storageUrl);
-    response.setFileSize(sessionRecord.getFileSize());
-    response.setContentType(sessionRecord.getContentType());
-    response.setUploadGroupId(sessionId);
-    return response;
-}
-@Override
-@Transactional
-public StorageUploadResponse completeUploadSession(UUID sessionId) {
-    return completeUploadSession(sessionId, null);
-}
 
     @Override
-public void cancelSession(UUID sessionId) {
-    SuUpload session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-            .orElseThrow(() -> new RuntimeException("Session not found"));
-    String prefix = session.getObjectKey();
-    deleteTempChunks(prefix);  // เรียกใช้ helper
-    uploadRepository.delete(session);
-}
-    
-    private void deleteTempChunks(String prefix) {
-    try {
-        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .prefix(prefix)
-                .build();
-        ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-        for (S3Object s3Obj : listResponse.contents()) {
-            s3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(s3Obj.key())
-                    .build());
-        }
-    } catch (S3Exception e) {
-        log.warn("Failed to delete temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId) {
+        return completeUploadSession(sessionId, null);
     }
-}
+
+    @Override
+    public void cancelSession(UUID sessionId) {
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Session not found for cancellation: {}", sessionId, e);
+            throw new RuntimeException("Session not found", e);
+        }
+        String prefix = session.getObjectKey();
+        deleteTempChunks(prefix);
+        try {
+            uploadRepository.delete(session);
+        } catch (Exception e) {
+            log.error("Failed to delete session record for {}", sessionId, e);
+            throw new RuntimeException("Failed to cancel session", e);
+        }
+    }
+
+    private void deleteTempChunks(String prefix) {
+        try {
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    .build();
+            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+            for (S3Object s3Obj : listResponse.contents()) {
+                try {
+                    s3Client.deleteObject(DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Obj.key())
+                            .build());
+                } catch (S3Exception e) {
+                    log.warn("Failed to delete temp object {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                }
+            }
+        } catch (S3Exception e) {
+            log.warn("Failed to list temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting temp chunks with prefix {}", prefix, e);
+        }
+    }
 
     // ==================== Activate Upload ====================
     @Override
     @Transactional
     public void activateUpload(UUID uploadId, String userId) {
-        SuUpload upload = uploadRepository.findById(uploadId)
-                .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId)
+                    .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
+        } catch (Exception e) {
+            log.error("Failed to find upload for activation: {}", uploadId, e);
+            throw new RuntimeException("Upload not found", e);
+        }
 
         if (upload.getIsActive()) {
             log.debug("Upload {} is already active", uploadId);
@@ -362,11 +423,16 @@ public void cancelSession(UUID sessionId) {
             throw new SecurityException("Only the uploader can activate this upload");
         }
 
-        upload.setIsActive(true);
-        upload.setTempExpiresAt(null);
-        upload.setUpdatedBy(currentUsername);
-        uploadRepository.save(upload);
-        log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
+        try {
+            upload.setIsActive(true);
+            upload.setTempExpiresAt(null);
+            upload.setUpdatedBy(currentUsername);
+            uploadRepository.save(upload);
+            log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
+        } catch (Exception e) {
+            log.error("Failed to save activated upload {}", uploadId, e);
+            throw new RuntimeException("Failed to activate upload", e);
+        }
     }
 
     @Override
@@ -379,7 +445,13 @@ public void cancelSession(UUID sessionId) {
     @Transactional
     public void cleanupExpiredTemporaryUploads() {
         Instant now = Instant.now();
-        List<SuUpload> expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+        List<SuUpload> expired;
+        try {
+            expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+        } catch (Exception e) {
+            log.error("Failed to query expired temporary uploads", e);
+            return;
+        }
 
         if (expired.isEmpty()) {
             log.debug("No expired temporary uploads to clean up");
@@ -410,10 +482,16 @@ public void cancelSession(UUID sessionId) {
                         .build();
                 ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
                 for (S3Object s3Obj : listResponse.contents()) {
-                    s3Client.deleteObject(DeleteObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Obj.key())
-                            .build());
+                    try {
+                        s3Client.deleteObject(DeleteObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(s3Obj.key())
+                                .build());
+                    } catch (S3Exception e) {
+                        if (e.statusCode() != 404) {
+                            log.warn("Failed to delete file {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                        }
+                    }
                 }
             } else {
                 s3Client.deleteObject(DeleteObjectRequest.builder()
@@ -425,23 +503,29 @@ public void cancelSession(UUID sessionId) {
             if (e.statusCode() != 404) {
                 log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
             }
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
         }
     }
 
     @Override
     public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
         if (uploadGroupId == null) return null;
-        return uploadRepository
-                .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
-                .map(upload -> {
-                    // Prefer the public storage URL; fallback to the internal access URL if not set.
-                    String url = upload.getStorageUrl();
-                    return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
-                })
-                .orElse(null);
+        try {
+            return uploadRepository
+                    .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
+                    .map(upload -> {
+                        String url = upload.getStorageUrl();
+                        return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to get file URL for group {}", uploadGroupId, e);
+            return null;
+        }
     }
 
-    // ==================== Sync uploads methods (implement like C#) ====================
+    // ==================== Sync uploads methods ====================
     @Override
     public UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences) {
         if (uploadReferences == null || uploadReferences.isEmpty()) {
@@ -453,7 +537,7 @@ public void cancelSession(UUID sessionId) {
             return null;
         }
         if (currentUploadGroupId == null || currentUploadGroupId.equals(new UUID(0, 0))) {
-            return UUID.randomUUID();   // หรือจะใช้ UUID.nameUUIDFromBytes ก็ได้
+            return UUID.randomUUID();
         }
         return currentUploadGroupId;
     }
@@ -465,16 +549,18 @@ public void cancelSession(UUID sessionId) {
             return;
         }
 
-        // 1. Delete uploads with state DELETED
         List<UUID> deletedIds = uploadReferences.stream()
                 .filter(ref -> ref.getState() == EntityState.DELETED)
                 .map(StorageUploadReference::getId)
                 .collect(Collectors.toList());
         for (UUID id : deletedIds) {
-            deleteUpload(id);
+            try {
+                deleteUpload(id);
+            } catch (Exception e) {
+                log.error("Failed to delete upload {} during sync", id, e);
+            }
         }
 
-        // 2. Get active uploads (not deleted)
         List<UUID> activeIds = uploadReferences.stream()
                 .filter(ref -> ref.getState() != EntityState.DELETED)
                 .map(StorageUploadReference::getId)
@@ -483,7 +569,14 @@ public void cancelSession(UUID sessionId) {
             return;
         }
 
-        List<SuUpload> uploads = uploadRepository.findAllById(activeIds);
+        List<SuUpload> uploads;
+        try {
+            uploads = uploadRepository.findAllById(activeIds);
+        } catch (Exception e) {
+            log.error("Failed to find uploads by IDs", e);
+            throw new RuntimeException("Failed to sync uploads", e);
+        }
+
         Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
                 .filter(ref -> ref.getState() != EntityState.DELETED)
                 .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
@@ -493,30 +586,49 @@ public void cancelSession(UUID sessionId) {
             if (ref == null) {
                 continue;
             }
-
-            upload.setUploadGroupId(uploadGroupId);
-            if (ref.getIsActive() != null) {
-                upload.setIsActive(ref.getIsActive());
-                if (Boolean.TRUE.equals(ref.getIsActive())) {
-                    upload.setTempExpiresAt(null);
+            try {
+                upload.setUploadGroupId(uploadGroupId);
+                if (ref.getIsActive() != null) {
+                    upload.setIsActive(ref.getIsActive());
+                    if (Boolean.TRUE.equals(ref.getIsActive())) {
+                        upload.setTempExpiresAt(null);
+                    }
                 }
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to update upload {} during sync", upload.getId(), e);
             }
-            uploadRepository.save(upload);
         }
     }
 
     private void deleteUpload(UUID uploadId) {
-        SuUpload upload = uploadRepository.findById(uploadId).orElse(null);
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId).orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to find upload {} for deletion", uploadId, e);
+            return;
+        }
         if (upload == null) return;
         deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        uploadRepository.delete(upload);
+        try {
+            uploadRepository.delete(upload);
+        } catch (Exception e) {
+            log.error("Failed to delete upload record {}", uploadId, e);
+        }
     }
 
     // ==================== Other existing methods ====================
     @Override
     public StorageDownloadResponse downloadFile(UUID fileId) {
-        SuUpload upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {}", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
         try {
             var s3Object = s3Client.getObject(GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -528,25 +640,51 @@ public void cancelSession(UUID sessionId) {
             response.setContentType(upload.getContentType());
             response.setFileSize(upload.getFileSize());
             return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for file {}", fileId, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
         } catch (Exception e) {
+            log.error("Unexpected error downloading file {}", fileId, e);
             throw new RuntimeException("Failed to download file", e);
         }
     }
 
     @Override
     public void deleteFile(UUID fileId) {
-        SuUpload upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for deletion", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
         deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        upload.setIsActive(false);
-        uploadRepository.save(upload);
+        try {
+            upload.setIsActive(false);
+            uploadRepository.save(upload);
+        } catch (Exception e) {
+            log.error("Failed to update file record after deletion {}", fileId, e);
+            throw new RuntimeException("Failed to delete file", e);
+        }
     }
 
     @Override
     public String getFileUrl(UUID fileId) {
-        SuUpload upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
-        return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for URL", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
+        } catch (S3Exception e) {
+            log.error("Failed to generate URL for file {}", fileId, e);
+            throw new RuntimeException("Failed to generate file URL", e);
+        }
     }
 
     @Override
@@ -554,17 +692,31 @@ public void cancelSession(UUID sessionId) {
         if (!this.bucketName.equals(bucketName)) {
             throw new RuntimeException("Bucket not accessible");
         }
-        SuUpload upload = uploadRepository.findByObjectKey(objectKey)
-                .orElseThrow(() -> new RuntimeException("File not found"));
-        var s3Object = s3Client.getObject(GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(objectKey)
-                .build());
-        StorageDownloadResponse response = new StorageDownloadResponse();
-        response.setInputStream(s3Object);
-        response.setFileName(upload.getFileName());
-        response.setContentType(upload.getContentType());
-        response.setFileSize(upload.getFileSize());
-        return response;
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByObjectKey(objectKey)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file by key {}", objectKey, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            var s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .build());
+            StorageDownloadResponse response = new StorageDownloadResponse();
+            response.setInputStream(s3Object);
+            response.setFileName(upload.getFileName());
+            response.setContentType(upload.getContentType());
+            response.setFileSize(upload.getFileSize());
+            return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error downloading file by key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file", e);
+        }
     }
 }
