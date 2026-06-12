@@ -39,7 +39,7 @@ export const routes: Routes = [
   {
     path: 'feature',
     canActivate: [authGuard,profileGuard, businessGuard],
-    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
+    loadComponent: () => import('./feature-backup/feature').then((m) => m.Feature),
     children: [
       {
         path: '',
