@@ -3,7 +3,7 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.su.SuVerify;
 import com.softinter.sicapi.repository.su.SuVerifyRepository;
-import com.softinter.sicapi.service.MailService;  // ✅ เปลี่ยน
+import com.softinter.sicapi.service.MailService;
 import com.softinter.sicapi.service.VerifyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,65 +22,63 @@ public class VerifyServiceImpl implements VerifyService {
 
     private final SuVerifyRepository verifyRepository;
     private final SecureRandom secureRandom = new SecureRandom();
-    private final MailService mailService;  
+    private final MailService mailService;
 
-   @Override
-@Transactional
-public VerifyTokenResponse generateVerifyToken(String recipient) {
-    try {
-        log.info("📧 Starting verification for: {}", recipient);
-        
-        if (recipient == null || recipient.trim().isEmpty()) {
-            throw new IllegalArgumentException("Recipient cannot be null or empty");
-        }
-        
-        // Generate token
-        byte[] tokenBytes = new byte[32];
-        secureRandom.nextBytes(tokenBytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
-        
-        // Generate reference number
-        String referenceNumber = UUID.randomUUID().toString();
-        
-        // Save to database
-        SuVerify verify = new SuVerify();
-        verify.setRecipient(recipient);
-        verify.setToken(token);
-        verify.setReferenceNumber(referenceNumber);  // ✅ ต้องมี field นี้ใน Entity
-        verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
-        verify.setIsVerified(false);
-        verify.setVerifyType("EMAIL_VERIFICATION");
-        
-        SuVerify saved = verifyRepository.save(verify);
-        log.debug("Saved verify with id: {}", saved.getId());
-        
-        // ✅ สร้าง response ให้ตรงกับ Frontend
-        VerifyTokenResponse response = new VerifyTokenResponse();
-        response.setValid(false);
-        response.setVerifyType("EMAIL_VERIFICATION");
-        response.setVerifyToken(token);              // ✅ ส่งเป็น verifyToken
-        response.setReferenceNumber(referenceNumber); // ✅ ส่ง referenceNumber
-        response.setRecipient(recipient);
-        response.setExpirationMinutes(1440);          // ✅ 24 ชั่วโมง = 1440 นาที
-        response.setMaxRetry(3);                      // ✅ ตั้งค่า max retry
-        response.setExpiresAt(verify.getExpireAt());
-        response.setMessage("Verification token generated successfully");
-        
-        // ✅ ส่งอีเมล
+    @Override
+    @Transactional
+    public VerifyTokenResponse generateVerifyToken(String recipient) {
         try {
-            mailService.sendTemplatedMail(recipient, "VERIFY_EMAIL", token, referenceNumber);
-            log.info("✅ Email sent to: {}", recipient);
+            log.info("📧 Starting verification for: {}", recipient);
+            
+            if (recipient == null || recipient.trim().isEmpty()) {
+                throw new IllegalArgumentException("Recipient cannot be null or empty");
+            }
+            
+            // Generate token
+            byte[] tokenBytes = new byte[32];
+            secureRandom.nextBytes(tokenBytes);
+            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+            
+            // Generate reference number
+            String referenceNumber = UUID.randomUUID().toString();
+            
+            // Save to database
+            SuVerify verify = new SuVerify();
+            verify.setRecipient(recipient);
+            verify.setToken(token);
+            verify.setReferenceNumber(referenceNumber);
+            verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
+            verify.setVerifyType("Email");
+            
+            SuVerify saved = verifyRepository.save(verify);
+            log.debug("Saved verify with id: {}", saved.getId());
+            
+            // สร้าง response
+            VerifyTokenResponse response = new VerifyTokenResponse();
+            response.setValid(false);
+            response.setVerifyType("Email");
+            response.setReferenceNumber(referenceNumber);
+            response.setRecipient(recipient);
+            response.setExpirationMinutes(1440);
+            response.setMaxRetry(5);
+            response.setExpiresAt(verify.getExpireAt());
+            response.setMessage("Verification token generated successfully");
+            
+            // ส่งอีเมล
+            try {
+                mailService.sendTemplatedMail(recipient, "VERIFY_EMAIL", token, referenceNumber);
+                log.info("✅ Email sent to: {}", recipient);
+            } catch (Exception e) {
+                log.error("❌ Failed to send email: {}", recipient, e);
+            }
+            
+            return response;
+            
         } catch (Exception e) {
-            log.error("❌ Failed to send email: {}", recipient, e);
+            log.error("Failed to generate verification token", e);
+            throw new RuntimeException("An error occurred while generating verification token", e);
         }
-        
-        return response;
-        
-    } catch (Exception e) {
-        log.error("Failed to generate verification token", e);
-        throw new RuntimeException("An error occurred while generating verification token", e);
     }
-}
 
     @Override
     @Transactional
@@ -94,12 +92,7 @@ public VerifyTokenResponse generateVerifyToken(String recipient) {
             return response;
         }
 
-        if (Boolean.TRUE.equals(verify.getIsVerified())) {
-            response.setValid(false);
-            response.setRecipient(verify.getRecipient());
-            response.setMessage("Token already used");
-            return response;
-        }
+     
 
         if (verify.getExpireAt().isBefore(Instant.now())) {
             response.setValid(false);
@@ -108,9 +101,12 @@ public VerifyTokenResponse generateVerifyToken(String recipient) {
             return response;
         }
 
-        verify.setIsVerified(true);
-        verify.setVerifiedAt(Instant.now());
+        // ✅ soft delete แทนการ set isVerified
+        verify.setIsDelete(true);
+        verify.setDeleteBy("system");  
+        verify.setDeleteDate(Instant.now());  
         verifyRepository.save(verify);
+        
 
         response.setValid(true);
         response.setRecipient(verify.getRecipient());

@@ -22,15 +22,6 @@ public class SuChatGroupMember extends BaseBusinessEntity {
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;
 
-        @Column(name = "user_name", length = 100)
-    private String userName;
-
-    @Column(name = "role", length = 50)
-    private String role;
-
-    @Column(name = "joined_at")
-    private Instant joinedAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private SuChatGroup group;

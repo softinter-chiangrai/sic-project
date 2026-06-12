@@ -13,5 +13,5 @@ public class UserBusinessResponse {
     private String businessName;
     private boolean isActive;
     private boolean isDefault;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

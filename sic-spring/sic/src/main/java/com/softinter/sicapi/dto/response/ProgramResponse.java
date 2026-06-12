@@ -17,5 +17,5 @@ public class ProgramResponse {
     private String programIcon;
     private Integer sortOrder;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

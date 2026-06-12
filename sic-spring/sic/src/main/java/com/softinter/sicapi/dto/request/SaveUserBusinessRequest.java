@@ -11,5 +11,5 @@ public class SaveUserBusinessRequest {
     private UUID businessId;
     private boolean isActive = true;
     private boolean isDefault = false;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

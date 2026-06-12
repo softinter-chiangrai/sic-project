@@ -13,12 +13,14 @@ import java.util.UUID;
 @Repository
 public interface SuChatLogRepository extends JpaRepository<SuChatLog, UUID> {
 
+   
     @Query("SELECT c FROM SuChatLog c WHERE " +
            "((c.senderId = :userId1 AND c.receiverId = :userId2) OR (c.senderId = :userId2 AND c.receiverId = :userId1)) " +
-           "AND c.isDelete = false AND c.isActive = true ORDER BY c.createdDate")
+           "AND c.isDelete = false ORDER BY c.createdDate")
     List<SuChatLog> findChatHistory(@Param("userId1") String userId1, @Param("userId2") String userId2);
 
-    @Query("SELECT c FROM SuChatLog c WHERE c.receiverId = :userId AND c.isRead = false AND c.isDelete = false AND c.isActive = true")
+   
+    @Query("SELECT c FROM SuChatLog c WHERE c.receiverId = :userId AND c.isRead = false AND c.isDelete = false")
     List<SuChatLog> findUnreadMessages(@Param("userId") String userId);
 
     @Modifying

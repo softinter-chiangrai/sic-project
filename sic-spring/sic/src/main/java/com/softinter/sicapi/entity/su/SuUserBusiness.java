@@ -1,5 +1,6 @@
 package com.softinter.sicapi.entity.su;
 
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import com.softinter.sicapi.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,16 +19,13 @@ import java.util.UUID;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class SuUserBusiness extends BaseEntity {
+public class SuUserBusiness extends BaseBusinessEntity {
 
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;
 
-    @Column(name = "business_id", insertable = false, updatable = false)
-    private UUID businessId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
+    @JoinColumn(name = "business_id", insertable = false, updatable = false)
     private SuBusiness business;
 
     @Column(name = "is_default", nullable = false)

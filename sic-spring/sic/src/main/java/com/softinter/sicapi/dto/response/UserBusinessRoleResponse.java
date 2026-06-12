@@ -14,5 +14,5 @@ public class UserBusinessRoleResponse {
     private String businessRoleCode;
     private String businessRoleName;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

@@ -51,11 +51,10 @@ public abstract class BaseEntity {
 
     @Column(name = "delete_date")
     private Instant deleteDate; // เปลี่ยนเป็น Instant
-
-    @Version
-    @Column(name = "row_version")
-    private Long rowVersion;
     
+    @Version
+    @Column(name = "xmin", insertable = false, updatable = false)
+    private Integer  rowVersion;
     
     @Transient
     private EntityState state = EntityState.DETACHED;
@@ -70,6 +69,5 @@ public abstract class BaseEntity {
             this.isDelete = false;
         }
     }
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    
 }

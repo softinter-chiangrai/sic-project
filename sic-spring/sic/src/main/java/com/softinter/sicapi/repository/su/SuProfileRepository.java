@@ -9,7 +9,11 @@ import java.util.UUID;
 
 @Repository
 public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
-    Optional<SuProfile> findByUserIdAndIsActiveTrue(String userId);
-    Optional<SuProfile> findByUserId(String userId);  // ✅ เพิ่มบรรทัดนี้
+
+    Optional<SuProfile> findByUserId(String userId); 
+    
     boolean existsByUserId(String userId);
+
+    // หรือถ้าต้องการ check isDelete
+    Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
 }

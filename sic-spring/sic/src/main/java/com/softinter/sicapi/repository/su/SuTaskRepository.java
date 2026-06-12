@@ -9,5 +9,21 @@ import java.util.UUID;
 
 @Repository
 public interface SuTaskRepository extends JpaRepository<SuTask, UUID> {
-    List<SuTask> findByIsActiveTrueOrderBySortOrder();
+    // ค้นหา task ที่ active (is_active = true)
+    List<SuTask> findByIsActiveTrue();
+    
+    // ค้นหา task ที่ active และไม่ถูกลบ
+    List<SuTask> findByIsActiveTrueAndIsDeleteFalse();
+    
+    // ค้นหา task ตาม business_id (ถ้ามี business_id ใน entity)
+    List<SuTask> findByBusinessIdAndIsActiveTrue(UUID businessId);
+    
+    // ค้นหา task ตาม task_code
+    List<SuTask> findByTaskCode(String taskCode);
+    
+    // ค้นหา task ที่ active เรียงตาม created_date (ใช้แทน sort_order)
+    List<SuTask> findByIsActiveTrueOrderByCreatedDateAsc();
+    
+    // ค้นหา task ที่ active เรียงตาม task_code
+    List<SuTask> findByIsActiveTrueOrderByTaskCodeAsc();
 }

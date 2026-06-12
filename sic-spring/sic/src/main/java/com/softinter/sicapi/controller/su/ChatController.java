@@ -60,7 +60,7 @@ public class ChatController {
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
         chatLog.setIsRead(false);
-        chatLog.setIsActive(true);
+      
         chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
 
@@ -106,7 +106,7 @@ public class ChatController {
     @Operation(summary = "Get group chat history")
     public ResponseEntity<ApiResponse<List<ChatGroupMessageResponse>>> getGroupChatHistory(@PathVariable UUID groupId) {
         List<ChatGroupMessageResponse> messages = chatGroupLogRepository
-                .findByGroupIdAndIsActiveTrueOrderByCreatedDateAsc(groupId)
+                .findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(groupId)
                 .stream()
                 .map(this::toGroupMessageResponse)
                 .collect(Collectors.toList());
@@ -120,21 +120,16 @@ public class ChatController {
         String currentUsername = currentUserService.getUsername();
 
         SuChatGroup group = new SuChatGroup();
-        group.setGroupName(request.getGroupName());
-        group.setGroupDescription(request.getGroupDescription());
+        group.setName(request.getName());
         group.setCreatedBy(currentUserId);
         group.setCreatedDate(Instant.now());
-        group.setIsActive(true);
+
         chatGroupRepository.save(group);
 
         // เพิ่มผู้สร้างเป็นสมาชิก
         SuChatGroupMember creatorMember = new SuChatGroupMember();
         creatorMember.setGroup(group);
         creatorMember.setUserId(currentUserId);
-        creatorMember.setUserName(currentUsername);
-        creatorMember.setRole("ADMIN");
-        creatorMember.setJoinedAt(Instant.now());
-        creatorMember.setIsActive(true);
         chatGroupMemberRepository.save(creatorMember);
 
         // เพิ่มสมาชิกอื่นๆ
@@ -143,9 +138,6 @@ public class ChatController {
                 SuChatGroupMember member = new SuChatGroupMember();
                 member.setGroup(group);
                 member.setUserId(memberId);
-                member.setRole("MEMBER");
-                member.setJoinedAt(Instant.now());
-                member.setIsActive(true);
                 chatGroupMemberRepository.save(member);
             }
         }
@@ -169,7 +161,6 @@ public class ChatController {
         log.setMessage(request.getMessage());
         log.setMessageType(request.getMessageType());
         log.setCreatedDate(Instant.now());
-        log.setIsActive(true);
         chatGroupLogRepository.save(log);
 
         ChatGroupMessageResponse response = toGroupMessageResponse(log);
@@ -180,7 +171,7 @@ public class ChatController {
     @GetMapping("/group/{groupId}/members")
     @Operation(summary = "Get group members")
     public ResponseEntity<ApiResponse<List<ChatMemberResponse>>> getGroupMembers(@PathVariable UUID groupId) {
-        List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsActiveTrue(groupId)
+        List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId)
                 .stream()
                 .map(this::toMemberResponse)
                 .collect(Collectors.toList());
@@ -201,7 +192,6 @@ public class ChatController {
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
         chatLog.setIsRead(false);
-        chatLog.setIsActive(true);
         chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
 
@@ -229,8 +219,7 @@ public class ChatController {
     private ChatGroupResponse toChatGroupResponse(SuChatGroup group) {
         ChatGroupResponse response = new ChatGroupResponse();
         response.setId(group.getId());
-        response.setGroupName(group.getGroupName());
-        response.setGroupDescription(group.getGroupDescription());
+        response.setName(group.getName());
         response.setCreatedByUserId(group.getCreatedBy());
         response.setCreatedDate(group.getCreatedDate());
         if (group.getMembers() != null) {
@@ -248,9 +237,6 @@ public class ChatController {
             response.setGroupId(member.getGroup().getId());
         }
         response.setUserId(member.getUserId());
-        response.setUserName(member.getUserName());
-        response.setRole(member.getRole());
-        response.setJoinedAt(member.getJoinedAt());
         return response;
     }
 

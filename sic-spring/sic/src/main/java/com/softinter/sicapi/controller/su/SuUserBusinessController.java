@@ -85,13 +85,14 @@ public class SuUserBusinessController {
 
     @GetMapping("/lov")
     @Operation(summary = "Get user business LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> lov(@RequestParam String userId) {
-        List<LovResponse> lov = userBusinessRepository.findActiveByUserId(userId)
+    public ResponseEntity<List<LovResponse>> lov(@RequestParam String userId) {
+        // ถ้ามี relation กับ business ใช้แบบนี้
+        List<LovResponse> lov = userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
                 .stream()
-                .map(ub -> new LovResponse(ub.getBusiness().getId(), ub.getBusiness().getBusinessCode()))
+                .map(ub -> new LovResponse(ub.getId(), ub.getUserId())) // หรือใช้ field ที่มี
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
-    }
+        return ResponseEntity.ok(lov);
+}
 
     @PostMapping("/save")
     @Operation(summary = "Save user business")

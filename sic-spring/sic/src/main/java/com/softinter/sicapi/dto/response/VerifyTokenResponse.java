@@ -6,8 +6,7 @@ import java.time.Instant;
 
 @Data
 public class VerifyTokenResponse {
-    private String verifyType;        
-    private String verifyToken;       
+    private String verifyType;             
     private String referenceNumber;   
     private Integer expirationMinutes; 
     private Integer maxRetry;          

@@ -102,6 +102,4 @@ public class SuProfile extends BaseEntity {
     @Column(name = "upload_group_id")
     private UUID uploadGroupId;
 
-    @Column(name = "is_active")
-    private Boolean isActive; 
 }

@@ -7,5 +7,5 @@ import java.util.UUID;
 @Data
 public class DeleteRequest {
     private UUID id;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

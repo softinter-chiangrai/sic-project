@@ -26,7 +26,7 @@ public class SuTaskController {
     @GetMapping("/lov")
     @Operation(summary = "Get task LOV")
     public ResponseEntity<ApiResponse<List<LovResponse>>> getLov() {
-        List<LovResponse> lov = taskRepository.findByIsActiveTrueOrderBySortOrder()
+        List<LovResponse> lov = taskRepository.findByIsActiveTrue()
                 .stream()
                 .map(t -> new LovResponse(t.getId(), t.getTaskNameEn()))
                 .collect(Collectors.toList());
@@ -43,7 +43,7 @@ public class SuTaskController {
             @RequestParam(required = false) String endDate
     ) {
         // TODO: implement search logic based on parameters
-        List<SuTask> tasks = taskRepository.findByIsActiveTrueOrderBySortOrder();
+        List<SuTask> tasks = taskRepository.findByIsActiveTrue();
         return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 }

@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface SuChatGroupMemberRepository extends JpaRepository<SuChatGroupMember, UUID> {
-    List<SuChatGroupMember> findByGroupIdAndIsActiveTrue(UUID groupId);
+    List<SuChatGroupMember> findByGroupIdAndIsDeleteFalse(UUID groupId);
 }

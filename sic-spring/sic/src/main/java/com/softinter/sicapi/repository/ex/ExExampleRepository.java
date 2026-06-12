@@ -10,5 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface ExExampleRepository extends JpaRepository<ExExample, UUID>, JpaSpecificationExecutor<ExExample> {
-    List<ExExample> findByIsActiveTrueOrderBySortOrder();
+    List<ExExample> findByIsDeleteFalse();
 }

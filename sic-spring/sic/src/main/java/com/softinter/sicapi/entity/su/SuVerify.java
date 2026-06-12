@@ -36,9 +36,4 @@ public class SuVerify extends BaseEntity {
     @Column(name = "recipient", nullable = false, length = 255)
     private String recipient;
     
-    @Column(name = "is_verified")
-    private Boolean isVerified = false;
-    
-    @Column(name = "verified_at")
-    private Instant verifiedAt;
 }

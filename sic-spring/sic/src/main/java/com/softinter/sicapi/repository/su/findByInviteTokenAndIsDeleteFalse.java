@@ -8,6 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface SuBusinessInviteRepository extends JpaRepository<SuBusinessInvite, UUID> {
-    Optional<SuBusinessInvite> findByInviteTokenAndIsActiveTrue(String inviteToken);
+public interface findByInviteTokenAndIsDeleteFalse extends JpaRepository<SuBusinessInvite, UUID> {
+    Optional<SuBusinessInvite> findByInviteTokenAndIsDeleteFalse(String inviteToken);
 }

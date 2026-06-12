@@ -20,5 +20,5 @@ public class SaveProgramRequest {
     private Integer sortOrder;
     private boolean isActive = true;
     private EntityState state = EntityState.DETACHED;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

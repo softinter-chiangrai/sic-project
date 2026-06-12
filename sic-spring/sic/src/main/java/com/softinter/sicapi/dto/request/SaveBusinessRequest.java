@@ -31,5 +31,5 @@ public class SaveBusinessRequest {
     private String fax;
     private UUID uploadGroupId;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

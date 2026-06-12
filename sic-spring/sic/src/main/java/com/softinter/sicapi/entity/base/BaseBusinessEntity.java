@@ -54,8 +54,8 @@ public abstract class BaseBusinessEntity {
     private UUID businessId;
 
     @Version
-    @Column(name = "row_version")
-    private Long rowVersion;
+    @Column(name = "xmin", insertable = false, updatable = false)
+    private Integer  rowVersion;
 
     
     @Transient
@@ -71,12 +71,4 @@ public abstract class BaseBusinessEntity {
             this.isDelete = false;
         }
     }
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
-
-    @Column(name = "user_id", nullable = false, length = 100)  
-    private String userId;
-
-    
 }

@@ -17,5 +17,5 @@ public class BusinessRoleResponse {
     private String roleLevel;
     private Integer sortOrder;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

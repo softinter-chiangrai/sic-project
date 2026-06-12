@@ -29,5 +29,5 @@ public class SaveProfileRequest {
     private String zipCode;
     private String addressEn;
     private String addressLocal;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

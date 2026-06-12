@@ -40,7 +40,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional(readOnly = true)
     public ProfileResponse getProfileByUserId(String userId) {
-        SuProfile profile = profileRepository.findByUserIdAndIsActiveTrue(userId)
+        SuProfile profile = profileRepository.findByUserIdAndIsDeleteFalse(userId)
                 .orElse(new SuProfile());
         return toResponse(profile);
     }
@@ -96,7 +96,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setUploadGroupId(finalUploadGroupId);
         log.info("Final uploadGroupId set to profile: {}", finalUploadGroupId);
 
-        profile.setIsActive(true);
+      
         profile.setUserId(userId);
         profile.setEmail(request.getEmail());
         profile.setFirstNameEn(request.getFirstNameEn());
@@ -128,7 +128,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         profile.setZipCode(request.getZipCode());
-        profile.setIsActive(true);
+       
 
         profileRepository.save(profile);
 

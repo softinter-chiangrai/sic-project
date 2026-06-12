@@ -14,5 +14,5 @@ public class BusinessRoleProgramResponse {
     private String programNameEn;
     private String programNameLocal;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

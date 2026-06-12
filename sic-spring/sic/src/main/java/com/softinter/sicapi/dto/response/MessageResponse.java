@@ -12,5 +12,5 @@ public class MessageResponse {
     private String messageEn;
     private String messageLocal;
     private boolean isActive;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

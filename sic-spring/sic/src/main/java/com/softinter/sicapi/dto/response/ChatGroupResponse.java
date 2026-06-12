@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 public class ChatGroupResponse {
     private UUID id;
-    private String groupName;
+    private String Name;
     private String groupDescription;
     private String createdByUserId;
     private List<ChatMemberResponse> members;

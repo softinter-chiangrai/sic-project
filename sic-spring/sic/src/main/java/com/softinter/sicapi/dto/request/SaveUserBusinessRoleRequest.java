@@ -10,5 +10,5 @@ public class SaveUserBusinessRoleRequest {
     private UUID userBusinessId;
     private UUID businessRoleId;
     private boolean isActive = true;
-    private Long rowVersion;
+    private Integer rowVersion;
 }

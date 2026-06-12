@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class CreateGroupRequest {
-    private String groupName;
+    private String Name;
     private String groupDescription;
     private List<String> memberUserIds;
 }

@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface SuChatGroupLogRepository extends JpaRepository<SuChatGroupLog, UUID> {
-    List<SuChatGroupLog> findByGroupIdAndIsActiveTrueOrderByCreatedDateAsc(UUID groupId);
+    List<SuChatGroupLog> findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(UUID groupId);
 }
