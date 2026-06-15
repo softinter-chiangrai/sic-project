@@ -33,7 +33,7 @@ public class SuBusinessRoleController {
 
     @GetMapping
     @Operation(summary = "Get all business roles")
-    public ResponseEntity<ApiResponse<List<BusinessRoleResponse>>> getAll(
+    public ResponseEntity<List<BusinessRoleResponse>> getAll(
             @RequestParam(required = false) UUID businessId) {
         List<SuBusinessRole> roles;
         if (businessId != null) {
@@ -44,12 +44,12 @@ public class SuBusinessRoleController {
         List<BusinessRoleResponse> response = roles.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/paging")
     @Operation(summary = "Get business roles with pagination")
-    public ResponseEntity<ApiResponse<PaginationResponse<BusinessRoleResponse>>> paging(
+    public ResponseEntity<PaginationResponse<BusinessRoleResponse>> paging(
             @Valid @ModelAttribute BusinessRolePageRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
@@ -87,30 +87,30 @@ public class SuBusinessRoleController {
         pageableDto.calculateTotalPages();
         response.setPageable(pageableDto);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/lov")
     @Operation(summary = "Get business role LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> lov(@RequestParam UUID businessId) {
+    public ResponseEntity<List<LovResponse>> lov(@RequestParam UUID businessId) {
         List<LovResponse> lov = businessRoleRepository.findActiveByBusinessId(businessId)
                 .stream()
                 .map(r -> new LovResponse(r.getId(), r.getRoleNameEn()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get business role by ID")
-    public ResponseEntity<ApiResponse<BusinessRoleResponse>> getById(@PathVariable UUID id) {
+    public ResponseEntity<BusinessRoleResponse> getById(@PathVariable UUID id) {
         SuBusinessRole role = businessRoleRepository.findByIdWithParent(id)
                 .orElseThrow(() -> new RuntimeException("Business role not found"));
-        return ResponseEntity.ok(ApiResponse.success(toResponse(role)));
+        return ResponseEntity.ok(toResponse(role));
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save business role")
-    public ResponseEntity<ApiResponse<UUID>> save(@Valid @RequestBody SaveBusinessRoleRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest request) {
         SuBusinessRole role;
         if (request.getId() != null) {
             role = businessRoleRepository.findById(request.getId())
@@ -130,19 +130,19 @@ public class SuBusinessRoleController {
         businessRoleRepository.save(role);
 
         programAccessService.removeAllAccessCache();
-        return ResponseEntity.ok(ApiResponse.success(role.getId()));
+        return ResponseEntity.ok(role.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete business role")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuBusinessRole role = businessRoleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Business role not found"));
         role.setIsDelete(true);
         role.setIsActive(false);
         businessRoleRepository.save(role);
         programAccessService.removeAllAccessCache();
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     private BusinessRoleResponse toResponse(SuBusinessRole role) {

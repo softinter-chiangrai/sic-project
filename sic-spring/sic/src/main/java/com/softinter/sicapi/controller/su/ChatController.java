@@ -38,86 +38,81 @@ public class ChatController {
     
     @GetMapping("/history/{userId}")
     @Operation(summary = "Get chat history with user")
-    public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> getChatHistory(@PathVariable String userId) {
+    public ResponseEntity<List<ChatMessageResponse>> getChatHistory(@PathVariable String userId) {
         String currentUserId = currentUserService.getUserId();
         List<ChatMessageResponse> messages = chatLogRepository.findChatHistory(currentUserId, userId)
                 .stream()
                 .map(this::toChatMessageResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(messages));
+        return ResponseEntity.ok(messages);
     }
 
     @PostMapping("/send")
     @Operation(summary = "Send chat message")
-    public ResponseEntity<ApiResponse<ChatMessageResponse>> sendMessage(@RequestBody ChatMessageRequest request) {
+    public ResponseEntity<ChatMessageResponse> sendMessage(@RequestBody ChatMessageRequest request) {
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);  // ✅ แก้ไข: ใช้ senderName
+        chatLog.setSenderName(currentUsername);
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
         chatLog.setIsRead(false);
-      
         chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
 
         ChatMessageResponse response = toChatMessageResponse(chatLog);
         messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     // ========== Chat Groups ==========
     
     @GetMapping("/groups")
     @Operation(summary = "Get chat groups")
-    public ResponseEntity<ApiResponse<List<ChatGroupResponse>>> getChatGroups() {
+    public ResponseEntity<List<ChatGroupResponse>> getChatGroups() {
         String currentUserId = currentUserService.getUserId();
         List<ChatGroupResponse> groups = chatGroupRepository.findByMemberUserId(currentUserId)
                 .stream()
                 .map(this::toChatGroupResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(groups));
+        return ResponseEntity.ok(groups);
     }
 
-    // ✅ เพิ่ม endpoint /members (ตามที่ Frontend เรียก)
     @GetMapping("/members")
     @Operation(summary = "Get all chat members from groups that current user belongs to")
-    public ResponseEntity<ApiResponse<List<ChatMemberResponse>>> getChatMembers() {
+    public ResponseEntity<List<ChatMemberResponse>> getChatMembers() {
         String currentUserId = currentUserService.getUserId();
         
-        // หาทุกกลุ่มที่ผู้ใช้ปัจจุบันเป็นสมาชิก
         List<SuChatGroup> userGroups = chatGroupRepository.findByMemberUserId(currentUserId);
         
-        // ดึงสมาชิกทั้งหมดจากทุกกลุ่ม (ไม่ซ้ำ)
         List<ChatMemberResponse> members = userGroups.stream()
                 .flatMap(group -> group.getMembers().stream())
-                .filter(member -> !member.getUserId().equals(currentUserId)) // ไม่รวมตัวเอง
+                .filter(member -> !member.getUserId().equals(currentUserId))
                 .map(this::toMemberResponse)
                 .distinct()
                 .collect(Collectors.toList());
         
-        return ResponseEntity.ok(ApiResponse.success(members));
+        return ResponseEntity.ok(members);
     }
 
     @GetMapping("/group/{groupId}/history")
     @Operation(summary = "Get group chat history")
-    public ResponseEntity<ApiResponse<List<ChatGroupMessageResponse>>> getGroupChatHistory(@PathVariable UUID groupId) {
+    public ResponseEntity<List<ChatGroupMessageResponse>> getGroupChatHistory(@PathVariable UUID groupId) {
         List<ChatGroupMessageResponse> messages = chatGroupLogRepository
                 .findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(groupId)
                 .stream()
                 .map(this::toGroupMessageResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(messages));
+        return ResponseEntity.ok(messages);
     }
 
     @PostMapping("/group/create")
     @Operation(summary = "Create chat group")
-    public ResponseEntity<ApiResponse<ChatGroupResponse>> createGroup(@RequestBody CreateGroupRequest request) {
+    public ResponseEntity<ChatGroupResponse> createGroup(@RequestBody CreateGroupRequest request) {
         String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
 
         SuChatGroup group = new SuChatGroup();
         group.setName(request.getName());
@@ -126,13 +121,11 @@ public class ChatController {
 
         chatGroupRepository.save(group);
 
-        // เพิ่มผู้สร้างเป็นสมาชิก
         SuChatGroupMember creatorMember = new SuChatGroupMember();
         creatorMember.setGroup(group);
         creatorMember.setUserId(currentUserId);
         chatGroupMemberRepository.save(creatorMember);
 
-        // เพิ่มสมาชิกอื่นๆ
         if (request.getMemberUserIds() != null) {
             for (String memberId : request.getMemberUserIds()) {
                 SuChatGroupMember member = new SuChatGroupMember();
@@ -142,12 +135,12 @@ public class ChatController {
             }
         }
 
-        return ResponseEntity.ok(ApiResponse.success(toChatGroupResponse(group)));
+        return ResponseEntity.ok(toChatGroupResponse(group));
     }
 
     @PostMapping("/group/send")
     @Operation(summary = "Send group message")
-    public ResponseEntity<ApiResponse<ChatGroupMessageResponse>> sendGroupMessage(@RequestBody GroupMessageRequest request) {
+    public ResponseEntity<ChatGroupMessageResponse> sendGroupMessage(@RequestBody GroupMessageRequest request) {
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
 
@@ -157,7 +150,7 @@ public class ChatController {
         SuChatGroupLog log = new SuChatGroupLog();
         log.setGroup(group);
         log.setSenderId(currentUserId);
-        log.setSenderName(currentUsername);  // ✅ แก้ไข: ใช้ senderName
+        log.setSenderName(currentUsername);
         log.setMessage(request.getMessage());
         log.setMessageType(request.getMessageType());
         log.setCreatedDate(Instant.now());
@@ -165,17 +158,17 @@ public class ChatController {
 
         ChatGroupMessageResponse response = toGroupMessageResponse(log);
         messagingTemplate.convertAndSend("/topic/group/" + request.getGroupId(), response);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/group/{groupId}/members")
     @Operation(summary = "Get group members")
-    public ResponseEntity<ApiResponse<List<ChatMemberResponse>>> getGroupMembers(@PathVariable UUID groupId) {
+    public ResponseEntity<List<ChatMemberResponse>> getGroupMembers(@PathVariable UUID groupId) {
         List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId)
                 .stream()
                 .map(this::toMemberResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(members));
+        return ResponseEntity.ok(members);
     }
 
     // ========== WebSocket ==========
@@ -187,7 +180,7 @@ public class ChatController {
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);  // ✅ แก้ไข
+        chatLog.setSenderName(currentUsername);
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());

@@ -31,17 +31,17 @@ public class SuProgramController {
 
     @GetMapping
     @Operation(summary = "Get all programs")
-    public ResponseEntity<ApiResponse<List<ProgramResponse>>> getAll() {
+    public ResponseEntity<List<ProgramResponse>> getAll() {
         List<ProgramResponse> programs = programRepository.findAllActive()
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(programs));
+        return ResponseEntity.ok(programs);
     }
 
     @GetMapping("/paging")
     @Operation(summary = "Get programs with pagination")
-    public ResponseEntity<ApiResponse<PaginationResponse<ProgramResponse>>> paging(
+    public ResponseEntity<PaginationResponse<ProgramResponse>> paging(
             @Valid @ModelAttribute ProgramPageRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
@@ -55,8 +55,8 @@ public class SuProgramController {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("programCode")), keyword),
-                        cb.like(cb.lower(root.get("programNameEn")), keyword),
-                        cb.like(cb.lower(root.get("programNameLocal")), keyword)
+                        cb.like(cb.lower(root.get("nameEn")), keyword),
+                        cb.like(cb.lower(root.get("nameLocal")), keyword)
                 ));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -76,30 +76,30 @@ public class SuProgramController {
         pageableDto.calculateTotalPages();
         response.setPageable(pageableDto);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/lov")
     @Operation(summary = "Get program LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> lov() {
+    public ResponseEntity<List<LovResponse>> lov() {
         List<LovResponse> lov = programRepository.findAllActive()
                 .stream()
                 .map(p -> new LovResponse(p.getId(), p.getNameEn()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get program by ID")
-    public ResponseEntity<ApiResponse<ProgramResponse>> getById(@PathVariable UUID id) {
+    public ResponseEntity<ProgramResponse> getById(@PathVariable UUID id) {
         SuProgram program = programRepository.findByIdWithParent(id)
                 .orElseThrow(() -> new RuntimeException("Program not found"));
-        return ResponseEntity.ok(ApiResponse.success(toResponse(program)));
+        return ResponseEntity.ok(toResponse(program));
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save program")
-    public ResponseEntity<ApiResponse<UUID>> save(@Valid @RequestBody SaveProgramRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveProgramRequest request) {
         SuProgram program;
         if (request.getId() != null) {
             program = programRepository.findById(request.getId())
@@ -107,27 +107,27 @@ public class SuProgramController {
         } else {
             program = new SuProgram();
         }
+        // แก้ไขการ set ให้ถูกต้องตามฟิลด์ใน SaveProgramRequest
         program.setProgramCode(request.getProgramCode());
         program.setNameEn(request.getProgramNameEn());
         program.setNameLocal(request.getProgramNameLocal());
-        program.setProgramCode(request.getProgramType());
-        program.setProgramCode(request.getProgramPath());
         program.setIcon(request.getProgramIcon());
         program.setSortOrder(request.getSortOrder());
         program.setIsActive(request.isActive());
+        // หมายเหตุ: หาก entity ไม่มีฟิลด์ programType/programPath ให้ปรับตามความเหมาะสม
         programRepository.save(program);
-        return ResponseEntity.ok(ApiResponse.success(program.getId()));
+        return ResponseEntity.ok(program.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete program")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuProgram program = programRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Program not found"));
         program.setIsDelete(true);
         program.setIsActive(false);
         programRepository.save(program);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     private ProgramResponse toResponse(SuProgram program) {
@@ -140,8 +140,6 @@ public class SuProgramController {
         response.setProgramCode(program.getProgramCode());
         response.setProgramNameEn(program.getNameEn());
         response.setProgramNameLocal(program.getNameLocal());
-        response.setProgramType(program.getProgramCode());
-        response.setProgramPath(program.getProgramCode());
         response.setProgramIcon(program.getIcon());
         response.setSortOrder(program.getSortOrder());
         response.setActive(Boolean.TRUE.equals(program.getIsActive()));

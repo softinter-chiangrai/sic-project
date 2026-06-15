@@ -25,25 +25,25 @@ public class SuTaskController {
 
     @GetMapping("/lov")
     @Operation(summary = "Get task LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> getLov() {
+    public ResponseEntity<List<LovResponse>> getLov() {
         List<LovResponse> lov = taskRepository.findByIsActiveTrue()
                 .stream()
                 .map(t -> new LovResponse(t.getId(), t.getTaskNameEn()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 
-    // ✅ เพิ่ม method นี้
     @GetMapping("/search")
     @Operation(summary = "Search tasks")
-    public ResponseEntity<ApiResponse<List<SuTask>>> search(
+    public ResponseEntity<List<SuTask>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) UUID taskId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate
     ) {
         // TODO: implement search logic based on parameters
+        // ปัจจุบันคืนค่าทั้งหมด (ยังไม่ implement filter)
         List<SuTask> tasks = taskRepository.findByIsActiveTrue();
-        return ResponseEntity.ok(ApiResponse.success(tasks));
+        return ResponseEntity.ok(tasks);
     }
 }

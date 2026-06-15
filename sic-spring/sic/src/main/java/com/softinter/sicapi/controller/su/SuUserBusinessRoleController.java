@@ -31,18 +31,19 @@ public class SuUserBusinessRoleController {
 
     @GetMapping
     @Operation(summary = "Get all user business roles")
-    public ResponseEntity<ApiResponse<List<UserBusinessRoleResponse>>> getAll(
+    public ResponseEntity<List<UserBusinessRoleResponse>> getAll(
             @RequestParam(required = false) UUID userBusinessId) {
         List<SuUserBusinessRole> list = userBusinessRoleRepository.findAll();
+        // TODO: กรองตาม userBusinessId ถ้ามี
         List<UserBusinessRoleResponse> response = list.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/paging")
     @Operation(summary = "Get user business roles with pagination")
-    public ResponseEntity<ApiResponse<PaginationResponse<UserBusinessRoleResponse>>> paging(
+    public ResponseEntity<PaginationResponse<UserBusinessRoleResponse>> paging(
             @Valid @ModelAttribute UserBusinessRolePageRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNumber() - 1, request.getPageSize());
 
@@ -69,23 +70,23 @@ public class SuUserBusinessRoleController {
         pageableDto.calculateTotalPages();
         response.setPageable(pageableDto);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/lov")
     @Operation(summary = "Get user business role LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> lov() {
+    public ResponseEntity<List<LovResponse>> lov() {
         List<LovResponse> lov = userBusinessRoleRepository.findAll()
                 .stream()
                 .map(ubr -> new LovResponse(ubr.getId(),
                         ubr.getBusinessRole() != null ? ubr.getBusinessRole().getRoleCode() : ""))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save user business role")
-    public ResponseEntity<ApiResponse<UUID>> save(@Valid @RequestBody SaveUserBusinessRoleRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveUserBusinessRoleRequest request) {
         SuUserBusinessRole ubr;
         if (request.getId() != null) {
             ubr = userBusinessRoleRepository.findById(request.getId())
@@ -94,19 +95,20 @@ public class SuUserBusinessRoleController {
             ubr = new SuUserBusinessRole();
         }
         ubr.setIsActive(request.isActive());
+        // TODO: ต้อง set userBusiness และ businessRole ด้วย (ยังไม่เห็นใน request body)
         userBusinessRoleRepository.save(ubr);
-        return ResponseEntity.ok(ApiResponse.success(ubr.getId()));
+        return ResponseEntity.ok(ubr.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user business role")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuUserBusinessRole ubr = userBusinessRoleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User business role not found"));
         ubr.setIsDelete(true);
         ubr.setIsActive(false);
         userBusinessRoleRepository.save(ubr);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     private UserBusinessRoleResponse toResponse(SuUserBusinessRole ubr) {

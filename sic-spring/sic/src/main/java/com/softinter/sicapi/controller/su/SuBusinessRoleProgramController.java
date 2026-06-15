@@ -31,7 +31,7 @@ public class SuBusinessRoleProgramController {
 
     @GetMapping
     @Operation(summary = "Get all business role programs")
-    public ResponseEntity<ApiResponse<List<BusinessRoleProgramResponse>>> getAll(
+    public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
             @RequestParam(required = false) UUID businessRoleId) {
         List<SuBusinessRoleProgram> list;
         if (businessRoleId != null) {
@@ -42,12 +42,12 @@ public class SuBusinessRoleProgramController {
         List<BusinessRoleProgramResponse> response = list.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/paging")
     @Operation(summary = "Get business role programs with pagination")
-    public ResponseEntity<ApiResponse<PaginationResponse<BusinessRoleProgramResponse>>> paging(
+    public ResponseEntity<PaginationResponse<BusinessRoleProgramResponse>> paging(
             @Valid @ModelAttribute BusinessRoleProgramPageRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
@@ -76,22 +76,22 @@ public class SuBusinessRoleProgramController {
         pageableDto.calculateTotalPages();
         response.setPageable(pageableDto);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/lov")
     @Operation(summary = "Get business role program LOV")
-    public ResponseEntity<ApiResponse<List<LovResponse>>> lov(@RequestParam UUID businessRoleId) {
+    public ResponseEntity<List<LovResponse>> lov(@RequestParam UUID businessRoleId) {
         List<LovResponse> lov = brpRepository.findActiveByBusinessRoleId(businessRoleId)
                 .stream()
                 .map(brp -> new LovResponse(brp.getProgram().getId(), brp.getProgram().getNameEn()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(lov));
+        return ResponseEntity.ok(lov);
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save business role program")
-    public ResponseEntity<ApiResponse<UUID>> save(@Valid @RequestBody SaveBusinessRoleProgramRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleProgramRequest request) {
         SuBusinessRoleProgram brp;
         if (request.getId() != null) {
             brp = brpRepository.findById(request.getId())
@@ -101,18 +101,18 @@ public class SuBusinessRoleProgramController {
         }
         brp.setIsActive(request.isActive());
         brpRepository.save(brp);
-        return ResponseEntity.ok(ApiResponse.success(brp.getId()));
+        return ResponseEntity.ok(brp.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete business role program")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuBusinessRoleProgram brp = brpRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Business role program not found"));
         brp.setIsDelete(true);
         brp.setIsActive(false);
         brpRepository.save(brp);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     private BusinessRoleProgramResponse toResponse(SuBusinessRoleProgram brp) {

@@ -31,7 +31,7 @@ public class SuUserBusinessController {
 
     @GetMapping
     @Operation(summary = "Get all user businesses")
-    public ResponseEntity<ApiResponse<List<UserBusinessResponse>>> getAll(
+    public ResponseEntity<List<UserBusinessResponse>> getAll(
             @RequestParam(required = false) String userId) {
         List<SuUserBusiness> list;
         if (userId != null) {
@@ -42,12 +42,12 @@ public class SuUserBusinessController {
         List<UserBusinessResponse> response = list.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/paging")
     @Operation(summary = "Get user businesses with pagination")
-    public ResponseEntity<ApiResponse<PaginationResponse<UserBusinessResponse>>> paging(
+    public ResponseEntity<PaginationResponse<UserBusinessResponse>> paging(
             @Valid @ModelAttribute UserBusinessPageRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNumber() - 1, request.getPageSize());
 
@@ -80,23 +80,22 @@ public class SuUserBusinessController {
         pageableDto.calculateTotalPages();
         response.setPageable(pageableDto);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/lov")
     @Operation(summary = "Get user business LOV")
     public ResponseEntity<List<LovResponse>> lov(@RequestParam String userId) {
-        // ถ้ามี relation กับ business ใช้แบบนี้
         List<LovResponse> lov = userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
                 .stream()
-                .map(ub -> new LovResponse(ub.getId(), ub.getUserId())) // หรือใช้ field ที่มี
+                .map(ub -> new LovResponse(ub.getId(), ub.getUserId()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lov);
-}
+    }
 
     @PostMapping("/save")
     @Operation(summary = "Save user business")
-    public ResponseEntity<ApiResponse<UUID>> save(@Valid @RequestBody SaveUserBusinessRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveUserBusinessRequest request) {
         SuUserBusiness ub;
         if (request.getId() != null) {
             ub = userBusinessRepository.findById(request.getId())
@@ -107,19 +106,20 @@ public class SuUserBusinessController {
         ub.setUserId(request.getUserId());
         ub.setIsActive(request.isActive());
         ub.setIsDefault(request.isDefault());
+        // หมายเหตุ: ยังไม่ได้ set businessId หรือ relation ถ้ามี ควรเพิ่ม
         userBusinessRepository.save(ub);
-        return ResponseEntity.ok(ApiResponse.success(ub.getId()));
+        return ResponseEntity.ok(ub.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user business")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuUserBusiness ub = userBusinessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User business not found"));
         ub.setIsDelete(true);
         ub.setIsActive(false);
         userBusinessRepository.save(ub);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     private UserBusinessResponse toResponse(SuUserBusiness ub) {
