@@ -14,14 +14,17 @@ import { SicButtonComponent } from '../../../../core/component/sic-button/sic-bu
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { Burt01Service } from './burt01.service';
 import { SicRadioComponent } from "../../../../core/component/sic-radio/sic-radio.component";
+import { SicCardComponent } from "../../../../core/component/sic-card/sic-card.component";
+import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
+import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
 
 @Component({
   selector: 'app-burt01',
-  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicButtonComponent, SicInputAreaComponent, SicRadioComponent],
+  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicButtonComponent, SicInputAreaComponent, SicRadioComponent, SicCardComponent],
   templateUrl: './burt01.component.html',
   styleUrl: './burt01.component.css',
 })
-export class Burt01Component implements OnInit {
+export class Burt01Component extends BaseActionComponent implements OnInit, ISidebarAction {
 
   readonly route = inject(ActivatedRoute);
   readonly dialog = inject(DialogService);
@@ -80,5 +83,26 @@ export class Burt01Component implements OnInit {
         this.dialog.error('Save Failed', error);
       }
     });
+  }
+
+  onAdd(): void {
+    console.log('add');
+  }
+  
+  onBack(): void {
+    console.log('back');
+  }
+  
+  onPrint(): void {
+    console.log('print');
+  }
+  
+  onSave(): void {
+    console.log('save');
+    
+  }
+
+  onSearch(): void {
+    console.log('search');
   }
 }

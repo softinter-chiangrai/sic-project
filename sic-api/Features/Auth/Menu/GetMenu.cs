@@ -18,6 +18,18 @@ public static class GetMenu
         public string? Icon { get; set; } = default;
         public string? Path { get; set; } = default;
         public string? Code { get; set; } = default;
+
+        public bool IsBack { get; set; } = false;
+
+        public bool IsSearch { get; set; } = false;
+
+        public bool IsAdd { get; set; } = false;
+
+        public bool IsSave { get; set; } = false;
+
+        public bool IsRemove { get; set; } = false;
+
+    public bool IsPrint { get; set; } = false;
         public List<Response> Children { get; set; } = new List<Response>();
     }
 
@@ -31,6 +43,7 @@ public static class GetMenu
             var useEnglish = requestLanguageProvider.UseEnglish();
 
             var allPrograms = await dbContext.SuPrograms.AsNoTracking()
+                .Include( j => j.SuBusinessRolePrograms)
                 .Where(
                     r => r.SuBusinessRolePrograms!.Any(x => x.BusinessRole.BusinessId == businessId)
                     && r.SuBusinessRolePrograms!.Any(x => x.BusinessRole.UserBusinessRoles.Any(ubr => ubr.UserBusiness.UserId == userId))
@@ -49,6 +62,12 @@ public static class GetMenu
                     Path = r.RoutePath,
                     Code = r.ProgramCode,
                     r.SortOrder,
+                    IsBack = r.IsBack && r.SuBusinessRolePrograms!.Any(x => x.IsBack),
+                    IsSearch = r.IsSearch && r.SuBusinessRolePrograms!.Any(x => x.IsSearch),
+                    IsAdd = r.IsAdd && r.SuBusinessRolePrograms!.Any(x => x.IsAdd),
+                    IsSave = r.IsSave && r.SuBusinessRolePrograms!.Any(x => x.IsSave),
+                    IsRemove = r.IsRemove && r.SuBusinessRolePrograms!.Any(x => x.IsRemove),
+                    IsPrint = r.IsPrint && r.SuBusinessRolePrograms!.Any(x => x.IsPrint)
                 })
                 .ToListAsync(cancellationToken);
 
@@ -63,6 +82,12 @@ public static class GetMenu
                     Icon = item.Icon,
                     Path = item.Path,
                     Code = item.Code,
+                    IsBack = item.IsBack,
+                    IsSearch = item.IsSearch,
+                    IsAdd = item.IsAdd,
+                    IsSave = item.IsSave,
+                    IsRemove = item.IsRemove,
+                    IsPrint = item.IsPrint,
                     Children = lookup[id]
                         .OrderBy(p => p.SortOrder).ThenBy(p=>p.ProgramCode)
                         .Select(p => BuildNode(p.Id))

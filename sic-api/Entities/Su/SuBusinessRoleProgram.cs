@@ -23,5 +23,23 @@ public class SuBusinessRoleProgram : BaseEntity
     [Column("is_active")]
     public bool IsActive { get; set; } = false;
 
+    [Column("is_back")]
+    public bool IsBack { get; set; } = false;
+
+    [Column("is_search")]
+    public bool IsSearch { get; set; } = false;
+
+    [Column("is_add")]
+    public bool IsAdd { get; set; } = false;
+
+    [Column("is_save")]
+    public bool IsSave { get; set; } = false;
+
+    [Column("is_remove")]
+    public bool IsRemove { get; set; } = false;
+
+    [Column("is_print")]
+    public bool IsPrint { get; set; } = false;
+
     
 }

@@ -5,6 +5,11 @@ export interface MenuItemModel {
   icon?: string;
   path?: string;
   code: string;
+  isBack:boolean;
+  isSearch:boolean;
+  isAdd:boolean;
+  isSave:boolean;
+  isPrint:boolean;
   children: MenuItemModel[];
 }
 
