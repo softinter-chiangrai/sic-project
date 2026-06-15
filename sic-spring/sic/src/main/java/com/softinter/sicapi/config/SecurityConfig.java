@@ -3,6 +3,7 @@ package com.softinter.sicapi.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -11,8 +12,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +25,13 @@ public class SecurityConfig {
 
     @Value("${app.keycloak.realm}")
     private String realm;
+
+    @Bean
+    public FilterRegistrationBean<BusinessContextFilter> businessContextFilterRegistration(BusinessContextFilter filter) {
+        FilterRegistrationBean<BusinessContextFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, BusinessContextFilter businessContextFilter) throws Exception {
@@ -46,7 +54,7 @@ public class SecurityConfig {
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.decoder(jwtDecoder()))
             )
-            .addFilterAfter(businessContextFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterAfter(businessContextFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

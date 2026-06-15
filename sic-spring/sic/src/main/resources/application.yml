@@ -79,10 +79,6 @@ logging:
     com.softinter.sicapi: DEBUG
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: DEBUG
-    software.amazon.awssdk: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.web: DEBUG # <-- เปลี่ยนเป็นแบบนี้
-    org.springframework.web.servlet.mvc.method.annotation: DEBUG
-    com.fasterxml.jackson: DEBUG
 
 spring.main.banner-mode: off

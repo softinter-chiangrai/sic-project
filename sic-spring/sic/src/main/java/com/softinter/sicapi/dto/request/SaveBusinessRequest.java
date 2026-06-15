@@ -29,6 +29,7 @@ public class SaveBusinessRequest {
     private String email;
     private String phoneNumber;
     private String fax;
+    private Integer state;
     private UUID uploadGroupId;
     private boolean isActive;
     private Integer rowVersion;

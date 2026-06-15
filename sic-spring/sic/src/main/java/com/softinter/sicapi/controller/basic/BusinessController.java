@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.basic;
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.service.BusinessAccessService;
+import com.softinter.sicapi.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,16 +22,21 @@ import java.util.UUID;
 public class BusinessController {
 
     private final BusinessAccessService businessAccessService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    @Operation(summary = "Get my businesses (default)")
-    public ResponseEntity<List<BusinessDto>> getBusinesses() {
-        return ResponseEntity.ok(businessAccessService.getMyBusinesses());
+    @Operation(summary = "Get current active business info")
+    public ResponseEntity<BusinessDto> getCurrentBusiness() {
+        UUID activeId = businessAccessService.getBusinessId();
+        if (activeId == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(businessAccessService.getBusiness(activeId));
     }
 
-    @GetMapping("/my-businesses")
-    @Operation(summary = "Get my businesses")
-    public ResponseEntity<List<BusinessDto>> getMyBusinesses() {
+    @GetMapping("/my-business")
+    @Operation(summary = "Get my business list")
+    public ResponseEntity<List<BusinessDto>> getMyBusiness() {
         return ResponseEntity.ok(businessAccessService.getMyBusinesses());
     }
 
@@ -40,12 +46,31 @@ public class BusinessController {
         return ResponseEntity.ok(businessAccessService.getBusinessActivation());
     }
 
-    @PostMapping("/change")
+    @PostMapping("/change-business")
     @Operation(summary = "Change active business")
     public ResponseEntity<ChangeBusinessResponse> changeBusiness(
             @RequestBody ChangeBusinessRequest request) {
         return ResponseEntity.ok(
                 businessAccessService.changeBusiness(request.getBusinessId()));
+    }
+
+    @GetMapping("/business-access")
+    @Operation(summary = "Get current business access details")
+    public ResponseEntity<BusinessAccessResponse> getBusinessAccess() {
+        UUID businessId = businessAccessService.getBusinessId();
+        boolean canAccess = businessAccessService.canAccessBusiness(businessId);
+        BusinessAccessResponse response = new BusinessAccessResponse();
+        response.setBusinessId(businessId);
+        response.setCanAccess(canAccess);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/save")
+    @Operation(summary = "Save business info")
+    public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
+        String userId = currentUserService.getUserId();
+        UUID id = businessAccessService.saveBusiness(request, userId);
+        return ResponseEntity.ok(id);
     }
 
     @GetMapping("/{businessId}")

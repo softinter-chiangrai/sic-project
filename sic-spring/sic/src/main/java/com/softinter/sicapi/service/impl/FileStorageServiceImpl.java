@@ -442,36 +442,38 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     // ==================== Cleanup Expired Temporary Uploads ====================
     @Override
-    @Transactional
-    public void cleanupExpiredTemporaryUploads() {
-        Instant now = Instant.now();
-        List<SuUpload> expired;
+@Transactional
+public void cleanupExpiredTemporaryUploads() {
+    Instant now = Instant.now();
+    List<SuUpload> expired;
+    try {
+        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+    } catch (Exception e) {
+        log.error("Failed to query expired temporary uploads", e);
+        return;
+    }
+
+    if (expired.isEmpty()) {
+        log.debug("No expired temporary uploads to clean up");
+        return;
+    }
+
+    log.info("Found {} expired temporary uploads to clean up", expired.size());
+    for (SuUpload upload : expired) {
         try {
-            expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
-        } catch (Exception e) {
-            log.error("Failed to query expired temporary uploads", e);
-            return;
-        }
-
-        if (expired.isEmpty()) {
-            log.debug("No expired temporary uploads to clean up");
-            return;
-        }
-
-        log.info("Found {} expired temporary uploads to clean up", expired.size());
-        for (SuUpload upload : expired) {
-            try {
-                deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-                upload.setIsDelete(true);
-                upload.setDeleteBy("system-cleanup");
-                upload.setDeleteDate(Instant.now());
-                uploadRepository.save(upload);
+            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+            int updated = uploadRepository.softDeleteExpiredUpload(
+                upload.getId(), "system-cleanup", Instant.now(), now);
+            if (updated == 0) {
+                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
+            } else {
                 log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
-            } catch (Exception e) {
-                log.error("Failed to delete expired upload: id={}", upload.getId(), e);
             }
+        } catch (Exception e) {
+            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
         }
     }
+}
 
     private void deletePhysicalFile(String bucketName, String objectKey) {
         try {

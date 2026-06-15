@@ -32,4 +32,7 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
     int updateDefaultBusiness(@Param("userId") String userId, @Param("businessId") UUID businessId);
 
     List<SuUserBusiness> findByUserIdAndIsActiveTrue(String userId);
+
+    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true")
+    long countByUserId(@Param("userId") String userId);
 }

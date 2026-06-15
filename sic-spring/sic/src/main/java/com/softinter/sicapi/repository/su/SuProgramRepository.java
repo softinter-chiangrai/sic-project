@@ -22,4 +22,24 @@ public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, Jpa
 
     @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
     List<SuProgram> findAllActiveForPage();
+
+    @Query("SELECT DISTINCT p FROM SuProgram p " +
+           "JOIN p.suBusinessRolePrograms brp " +
+           "JOIN brp.businessRole br " +
+           "JOIN br.userBusinessRoles ubr " +
+           "JOIN ubr.userBusiness ub " +
+           "WHERE ub.businessId = :businessId " +
+           "AND ub.userId = :userId " +
+           "AND ub.isActive = true " +
+           "AND br.isActive = true " +
+           "AND brp.isActive = true " +
+           "AND ubr.isActive = true " +
+           "AND p.isActive = true " +
+           "ORDER BY p.sortOrder ASC, p.programCode ASC")
+    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
+                                           @Param("userId") String userId);
+
+    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
+    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
+
 }

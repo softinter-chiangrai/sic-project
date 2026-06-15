@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping({"/api/profile", "/api/business"})
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Combobox", description = "Combobox Data API (Titles, Countries, Provinces, Districts, SubDistricts)")
