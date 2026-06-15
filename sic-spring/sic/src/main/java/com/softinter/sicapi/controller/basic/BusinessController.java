@@ -11,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/business")
@@ -77,5 +79,16 @@ public class BusinessController {
     @Operation(summary = "Get business info")
     public ResponseEntity<BusinessDto> getBusinessInfo(@PathVariable UUID businessId) {
         return ResponseEntity.ok(businessAccessService.getBusiness(businessId));
+    }
+
+    @GetMapping("/lov-person-type")
+    @Operation(summary = "Get person type LOV (Individual/Corporate)")
+    public ResponseEntity<List<LovResponse>> getLovPersonType() {
+        // Hardcoded response (ไม่ต้องแก้ database หรือ frontend)
+        List<LovResponse> list = Arrays.asList(
+            new LovResponse("INDIVIDUAL", "Individual"),
+            new LovResponse("CORPORATE", "Corporate")
+        );
+        return ResponseEntity.ok(list);
     }
 }
