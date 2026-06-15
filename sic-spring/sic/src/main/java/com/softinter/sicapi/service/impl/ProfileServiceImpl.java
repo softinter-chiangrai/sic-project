@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.SaveProfileRequest;
 import com.softinter.sicapi.dto.response.ProfileResponse;
+import com.softinter.sicapi.dto.response.VerifyTokenResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.entity.su.SuUpload;
@@ -19,6 +22,7 @@ import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.service.ProfileService;
+import com.softinter.sicapi.service.VerifyService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
     private final FileStorageService fileStorageService;
+    private final VerifyService verifyService;   // เพิ่ม service สำหรับตรวจสอบ email
 
     @Override
     @Transactional(readOnly = true)
@@ -53,50 +58,62 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public ProfileResponse saveProfile(String userId, SaveProfileRequest request) {
-        log.info("===== uploadGroupData from frontend =====");
-        log.info("uploadGroupData size: {}", 
-            request.getUploadGroupData() == null ? 0 : request.getUploadGroupData().size());
-        
-        if (request.getUploadGroupData() != null) {
-            for (StorageUploadReference ref : request.getUploadGroupData()) {
-                log.info("Ref: id={}, uploadGroupId={}, state={}, isActive={}",
-                    ref.getId(), ref.getUploadGroupId(), ref.getState(), ref.getIsActive());
+    public UUID saveProfile(String userId, SaveProfileRequest request) {
+        // 1. ตรวจสอบ State (Required)
+        if (request.getState() == null) {
+            throw new IllegalArgumentException("State must be ADDED or MODIFIED");
+        }
+
+        // 2. ตรวจสอบ Id และ RowVersion กรณี MODIFIED
+        if (request.getState() == EntityState.MODIFIED) {
+            if (request.getId() == null) {
+                throw new IllegalArgumentException("Id is required when state is MODIFIED");
             }
+            if (request.getRowVersion() == null) {
+                throw new IllegalArgumentException("RowVersion is required when state is MODIFIED");
+            }
+        }
+
+        // 3. โหลดหรือสร้าง Entity
+        SuProfile profile;
+        if (request.getState() == EntityState.MODIFIED) {
+            profile = profileRepository.findById(request.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
+            // ตั้งค่า RowVersion ให้ Hibernate ใช้ตรวจสอบ Optimistic Locking
+            profile.setRowVersion(request.getRowVersion());
         } else {
-            log.info("uploadGroupData is NULL");
+            profile = new SuProfile();
         }
-        log.info("========================================");
 
-        SuProfile profile = profileRepository.findByUserId(userId)
-                .orElse(new SuProfile());
-
-        // กำหนด finalUploadGroupId โดยพยายาม resolve จากหลายแหล่ง
-        UUID finalUploadGroupId = request.getUploadGroupId();
-        if (finalUploadGroupId == null && request.getUploadGroupData() != null && !request.getUploadGroupData().isEmpty()) {
-            StorageUploadReference ref = request.getUploadGroupData().get(0);
-            // 1. ถ้า ref มี uploadGroupId อยู่แล้วให้ใช้เลย
-            if (ref.getUploadGroupId() != null) {
-                finalUploadGroupId = ref.getUploadGroupId();
-                log.info("Using uploadGroupId from reference: {}", finalUploadGroupId);
-            } 
-            // 2. ถ้าไม่มี ให้ใช้ ref.id ค้นหาจาก SuUpload
-            else if (ref.getId() != null) {
-                log.info("Ref uploadGroupId is null, trying to fetch from SuUpload by id: {}", ref.getId());
-                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
-                if (upload != null) {
-                    finalUploadGroupId = upload.getUploadGroupId();
-                    log.info("Resolved uploadGroupId from SuUpload: {}", finalUploadGroupId);
-                } else {
-                    log.warn("No SuUpload found with id: {}", ref.getId());
-                }
+        // 4. ตรวจสอบ Email Verification (เหมือน .NET)
+        boolean isEmailChanged = false;
+        if (request.getState() == EntityState.ADDED) {
+            isEmailChanged = true;
+        } else if (request.getState() == EntityState.MODIFIED) {
+            String oldEmail = profile.getEmail();
+            if (oldEmail != null && !oldEmail.equalsIgnoreCase(request.getEmail())) {
+                isEmailChanged = true;
             }
         }
 
-        profile.setUploadGroupId(finalUploadGroupId);
-        log.info("Final uploadGroupId set to profile: {}", finalUploadGroupId);
+       if (isEmailChanged) {
+    if (request.getReferenceNumber() == null || request.getReferenceNumber().isBlank() ||
+        request.getVerifyToken() == null || request.getVerifyToken().isBlank()) {
+        throw new IllegalArgumentException("ReferenceNumber and VerifyToken are required for email verification.");
+    }
+    // ✅ แก้ไขการเรียกและตรวจสอบผลลัพธ์
+    VerifyTokenResponse verifyResponse = verifyService.verifyToken("Email", request.getReferenceNumber(), request.getVerifyToken());
+    if (verifyResponse == null || !verifyResponse.getValid()) {
+        throw new IllegalArgumentException("Email verification failed. Invalid token or reference number.");
+    }
+}
 
-      
+        // 5. จัดการ UploadGroupId (resolve เหมือน .NET)
+        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
+        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
+        profile.setUploadGroupId(finalUploadGroupId);
+
+        // 6. Mapping ข้อมูล
         profile.setUserId(userId);
         profile.setEmail(request.getEmail());
         profile.setFirstNameEn(request.getFirstNameEn());
@@ -105,39 +122,71 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setFirstNameLocal(request.getFirstNameLocal());
         profile.setMiddleNameLocal(request.getMiddleNameLocal());
         profile.setLastNameLocal(request.getLastNameLocal());
-
-        if (request.getTitleId() != null) {
-            profile.setTitle(titleRepository.findById(request.getTitleId()).orElse(null));
-        }
-
         profile.setPhoneNumber(request.getPhoneNumber());
         profile.setAddressEn(request.getAddressEn());
         profile.setAddressLocal(request.getAddressLocal());
+        profile.setZipCode(request.getZipCode());
 
+        if (request.getTitleId() != null) {
+            profile.setTitle(titleRepository.findById(request.getTitleId()).orElse(null));
+        } else {
+            profile.setTitle(null);
+        }
         if (request.getCountryId() != null) {
             profile.setCountry(countryRepository.findById(request.getCountryId()).orElse(null));
+        } else {
+            profile.setCountry(null);
         }
         if (request.getProvinceId() != null) {
             profile.setProvince(provinceRepository.findById(request.getProvinceId()).orElse(null));
+        } else {
+            profile.setProvince(null);
         }
         if (request.getDistrictId() != null) {
             profile.setDistrict(districtRepository.findById(request.getDistrictId()).orElse(null));
+        } else {
+            profile.setDistrict(null);
         }
         if (request.getSubDistrictId() != null) {
             profile.setSubDistrict(subDistrictRepository.findById(request.getSubDistrictId()).orElse(null));
+        } else {
+            profile.setSubDistrict(null);
         }
 
-        profile.setZipCode(request.getZipCode());
-       
+        // 7. บันทึก (Hibernate จะตรวจสอบ @Version อัตโนมัติ)
+        profile = profileRepository.save(profile);
 
-        profileRepository.save(profile);
-
-        if (finalUploadGroupId != null && request.getUploadGroupData() != null && !request.getUploadGroupData().isEmpty()) {
-            fileStorageService.syncUploads(finalUploadGroupId, request.getUploadGroupData());
+        // 8. Sync Uploads
+        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
         }
 
-        // Return full response including avatar URL so frontend can update view immediately
-        return toResponse(profile);
+        // 9. คืนค่า UUID เท่านั้น (ตาม .NET)
+        return profile.getId();
+    }
+
+    /**
+     * Helper method: Resolve uploadGroupId คล้ายกับ .NET ResolveUploadGroupId
+     */
+    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
+        if (existingGroupId != null) {
+            return existingGroupId;
+        }
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        for (StorageUploadReference ref : references) {
+            if (ref.getUploadGroupId() != null) {
+                return ref.getUploadGroupId();
+            }
+            if (ref.getId() != null) {
+                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
+                if (upload != null && upload.getUploadGroupId() != null) {
+                    return upload.getUploadGroupId();
+                }
+            }
+        }
+        return null;
     }
 
     private ProfileResponse toResponse(SuProfile profile) {

@@ -5,6 +5,7 @@ import lombok.Data;
 import java.util.List;
 import java.util.UUID;
 
+import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
@@ -30,4 +31,8 @@ public class SaveProfileRequest {
     private String addressEn;
     private String addressLocal;
     private Integer rowVersion;
+    private EntityState state;          
+    private UUID id;                     
+    private String referenceNumber;     
+    private String verifyToken;          
 }

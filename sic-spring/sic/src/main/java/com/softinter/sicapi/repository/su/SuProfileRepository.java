@@ -16,4 +16,6 @@ public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
 
     // หรือถ้าต้องการ check isDelete
     Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
+
+    boolean existsByEmailIgnoreCase(String email);
 }

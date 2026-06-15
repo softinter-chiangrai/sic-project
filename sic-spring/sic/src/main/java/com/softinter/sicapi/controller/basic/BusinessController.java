@@ -68,12 +68,11 @@ public class BusinessController {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save business info")
     public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID id = businessAccessService.saveBusiness(request, userId);
-        return ResponseEntity.ok(id);
-    }
+    String userId = currentUserService.getUserId();
+    UUID id = businessAccessService.saveBusiness(request, userId);
+    return ResponseEntity.ok(id);
+}
 
     @GetMapping("/{businessId}")
     @Operation(summary = "Get business info")

@@ -30,4 +30,6 @@ public interface SuVerifyRepository extends JpaRepository<SuVerify, UUID> {
     
     // 5. ค้นหา token ที่ยังไม่ถูกลบ
     Optional<SuVerify> findByTokenAndIsDeleteFalse(String token);
+
+   Optional<SuVerify> findByVerifyTypeAndReferenceNumberAndToken(String verifyType, String referenceNumber, String token);
 }

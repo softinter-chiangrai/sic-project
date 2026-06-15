@@ -2,7 +2,11 @@ package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
+
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
 public class SaveBusinessRequest {
@@ -29,8 +33,9 @@ public class SaveBusinessRequest {
     private String email;
     private String phoneNumber;
     private String fax;
-    private Integer state;
+    private EntityState state; 
     private UUID uploadGroupId;
     private boolean isActive;
     private Integer rowVersion;
+    private List<StorageUploadReference> uploadGroupData;
 }
