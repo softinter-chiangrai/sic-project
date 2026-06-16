@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -9,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.SaveBusinessRequest;
-import com.softinter.sicapi.dto.response.BusinessDto;
+import com.softinter.sicapi.dto.response.BusinessResponseDto;
 import com.softinter.sicapi.dto.response.ChangeBusinessResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
@@ -72,17 +73,17 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     }
 
     @Override
-    public List<BusinessDto> getMyBusinesses() {
+    public List<BusinessResponseDto> getMyBusinesses() {
         String userId = currentUserService.getUserId();
         boolean useEnglish = requestLanguageProvider.useEnglish();
 
         return userBusinessRepository.findActiveByUserId(userId).stream()
                 .map(ub -> {
                     SuBusiness business = ub.getBusiness();
-                    BusinessDto dto = new BusinessDto();
+                    BusinessResponseDto dto = new BusinessResponseDto();
                     dto.setId(business.getId());
                     dto.setCode(business.getBusinessCode());
-                    dto.setDefault(ub.getIsDefault());
+                    dto.setIsDefault(ub.getIsDefault());
 
                     String name;
                     if (useEnglish) {
@@ -197,11 +198,11 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
 
     @Override
     @Transactional(readOnly = true)
-    public BusinessDto getBusiness(UUID businessId) {
+    public BusinessResponseDto getBusiness(UUID businessId) {
         boolean useEnglish = requestLanguageProvider.useEnglish();
          return businessRepository.findByIdWithTitle(businessId)
                 .map(business -> {
-                    BusinessDto dto = new BusinessDto();
+                    BusinessResponseDto dto = new BusinessResponseDto();
                     dto.setId(business.getId());
                     dto.setCode(business.getBusinessCode());
                     dto.setUploadGroupId(business.getUploadGroupId());
@@ -225,6 +226,8 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
                         });
                     }
                     dto.setName(name);
+                    dto.setIsDefault(false);                          // ตั้งค่า false (ตาม .NET)
+                    dto.setUploadGroupData(new ArrayList<>());
                     return dto;
                 })
                 .orElse(null);
@@ -239,7 +242,7 @@ public UUID saveBusiness(SaveBusinessRequest request, String userId) {
     }
 
     // 2. ตรวจสอบ Id และ RowVersion กรณี MODIFIED
-    if (request.getState() == EntityState.MODIFIED) {
+    if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
         if (request.getId() == null) {
             throw new IllegalArgumentException("Id is required when state is MODIFIED");
         }
@@ -251,7 +254,7 @@ public UUID saveBusiness(SaveBusinessRequest request, String userId) {
     SuBusiness business;
 
     // 3. กรณี ADDED
-    if (request.getState() == EntityState.ADDED) {
+    if (request.getState() == EntityState.ADDED.getEntityStateCode()) {
         business = new SuBusiness();
         business.setIsActive(true);
         business.setIsDelete(false);
@@ -310,7 +313,7 @@ public UUID saveBusiness(SaveBusinessRequest request, String userId) {
     }
 
     // 7. กรณี MODIFIED
-    else if (request.getState() == EntityState.MODIFIED) {
+    else if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
         // ตรวจสอบสิทธิ์การแก้ไข (เหมือน .NET Validator)
         boolean hasEditPermission = userBusinessRepository.existsByUserIdAndBusinessId(userId, request.getId());
         if (!hasEditPermission) {

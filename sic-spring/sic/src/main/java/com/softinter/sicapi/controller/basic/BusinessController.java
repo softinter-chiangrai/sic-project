@@ -28,7 +28,7 @@ public class BusinessController {
 
     @GetMapping
     @Operation(summary = "Get current active business info")
-    public ResponseEntity<BusinessDto> getCurrentBusiness() {
+    public ResponseEntity<BusinessResponseDto> getCurrentBusiness() {
         UUID activeId = businessAccessService.getBusinessId();
         if (activeId == null) {
             return ResponseEntity.notFound().build();
@@ -38,7 +38,7 @@ public class BusinessController {
 
     @GetMapping("/my-business")
     @Operation(summary = "Get my business list")
-    public ResponseEntity<List<BusinessDto>> getMyBusiness() {
+    public ResponseEntity<List<BusinessResponseDto>> getMyBusiness() {
         return ResponseEntity.ok(businessAccessService.getMyBusinesses());
     }
 
@@ -76,7 +76,7 @@ public class BusinessController {
 
     @GetMapping("/{businessId}")
     @Operation(summary = "Get business info")
-    public ResponseEntity<BusinessDto> getBusinessInfo(@PathVariable UUID businessId) {
+    public ResponseEntity<BusinessResponseDto> getBusinessInfo(@PathVariable UUID businessId) {
         return ResponseEntity.ok(businessAccessService.getBusiness(businessId));
     }
 

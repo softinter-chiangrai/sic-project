@@ -18,6 +18,6 @@ public class SaveBusinessRoleRequest {
     private String roleLevel;
     private Integer sortOrder;
     private boolean isActive = true;
-    private EntityState state = EntityState.DETACHED;
+    private Integer state;
     private Integer rowVersion;
 }

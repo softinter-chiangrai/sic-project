@@ -49,7 +49,8 @@ public class SecurityConfig {
                     "/hubs/chat/**", 
                     "/ws/**", 
                     "/health",
-                    "/api/storage/avatar/**"
+                    "/api/storage/avatar/**",
+                    "/api/storage/files/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

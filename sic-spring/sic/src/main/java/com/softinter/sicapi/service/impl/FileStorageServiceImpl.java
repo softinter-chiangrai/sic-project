@@ -534,7 +534,7 @@ public void cleanupExpiredTemporaryUploads() {
             return null;
         }
         boolean hasActiveUploads = uploadReferences.stream()
-                .anyMatch(ref -> ref.getState() != EntityState.DELETED);
+                .anyMatch(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode());
         if (!hasActiveUploads) {
             return null;
         }
@@ -552,7 +552,7 @@ public void cleanupExpiredTemporaryUploads() {
         }
 
         List<UUID> deletedIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() == EntityState.DELETED)
+                .filter(ref -> ref.getState() == EntityState.DELETED.getEntityStateCode())
                 .map(StorageUploadReference::getId)
                 .collect(Collectors.toList());
         for (UUID id : deletedIds) {
@@ -564,7 +564,7 @@ public void cleanupExpiredTemporaryUploads() {
         }
 
         List<UUID> activeIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED)
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
                 .map(StorageUploadReference::getId)
                 .collect(Collectors.toList());
         if (activeIds.isEmpty()) {
@@ -580,7 +580,7 @@ public void cleanupExpiredTemporaryUploads() {
         }
 
         Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED)
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
                 .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
 
         for (SuUpload upload : uploads) {

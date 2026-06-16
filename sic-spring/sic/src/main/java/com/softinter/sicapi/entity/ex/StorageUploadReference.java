@@ -15,5 +15,7 @@ public class StorageUploadReference {
     private Long fileSize;
     private String accessUrl;
     private Boolean isActive;
-    private EntityState state; 
+    private Boolean isStreaming = false;   
+    private String visibility;             
+    private Integer state;
 }

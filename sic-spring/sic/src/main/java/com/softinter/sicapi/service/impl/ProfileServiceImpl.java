@@ -11,6 +11,7 @@ import com.softinter.sicapi.dto.request.SaveProfileRequest;
 import com.softinter.sicapi.dto.response.ProfileResponse;
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.FileVisibility;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.entity.su.SuUpload;
@@ -66,7 +67,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         // 2. ตรวจสอบ Id และ RowVersion กรณี MODIFIED
-        if (request.getState() == EntityState.MODIFIED) {
+        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
             if (request.getId() == null) {
                 throw new IllegalArgumentException("Id is required when state is MODIFIED");
             }
@@ -77,7 +78,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         // 3. โหลดหรือสร้าง Entity
         SuProfile profile;
-        if (request.getState() == EntityState.MODIFIED) {
+        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
             profile = profileRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
             // ตั้งค่า RowVersion ให้ Hibernate ใช้ตรวจสอบ Optimistic Locking
@@ -88,9 +89,9 @@ public class ProfileServiceImpl implements ProfileService {
 
         // 4. ตรวจสอบ Email Verification (เหมือน .NET)
         boolean isEmailChanged = false;
-        if (request.getState() == EntityState.ADDED) {
+        if (request.getState() == EntityState.ADDED.getEntityStateCode()) {
             isEmailChanged = true;
-        } else if (request.getState() == EntityState.MODIFIED) {
+        } else if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
             String oldEmail = profile.getEmail();
             if (oldEmail != null && !oldEmail.equalsIgnoreCase(request.getEmail())) {
                 isEmailChanged = true;
@@ -191,18 +192,17 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
    private ProfileResponse toResponse(SuProfile profile) {
-    if (profile == null || profile.getId() == null) {
-        return null;
-    }
+    if (profile == null || profile.getId() == null) return null;
 
     ProfileResponse response = new ProfileResponse();
     
-    // 1. ข้อมูลหลัก
+    // ✅ ข้อมูลหลัก
     response.setId(profile.getId());
+    response.setName(buildFullName(profile));
     response.setTaxId(profile.getTaxId());
     response.setTitleId(profile.getTitleId());
     
-    // 2. ชื่อ
+    // ✅ ชื่อ
     response.setFirstNameEn(profile.getFirstNameEn());
     response.setMiddleNameEn(profile.getMiddleNameEn());
     response.setLastNameEn(profile.getLastNameEn());
@@ -210,62 +210,98 @@ public class ProfileServiceImpl implements ProfileService {
     response.setMiddleNameLocal(profile.getMiddleNameLocal());
     response.setLastNameLocal(profile.getLastNameLocal());
     
-    // 3. ที่อยู่
+    // ✅ ที่อยู่
     response.setSupportLocalAddress(profile.getSupportLocalAddress());
     response.setAddressEn(profile.getAddressEn());
     response.setAddressLocal(profile.getAddressLocal());
     
-    // 4. รหัสสถานที่
+    // ✅ รหัสสถานที่
     response.setCountryId(profile.getCountryId());
     response.setProvinceId(profile.getProvinceId());
     response.setDistrictId(profile.getDistrictId());
     response.setSubDistrictId(profile.getSubDistrictId());
     response.setZipCode(profile.getZipCode());
     
-    // 5. การติดต่อ
+    // ✅ การติดต่อ
     response.setEmail(profile.getEmail());
     response.setPhoneNumber(profile.getPhoneNumber());
     
-    // 6. ข้อมูลไฟล์ (เติม uploadGroupData)
+    // ✅ rowVersion และ state (ใช้สำหรับ Optimistic Locking)
+    response.setRowVersion(profile.getRowVersion());
+    response.setState(profile.getState() != null 
+        ? profile.getState().getEntityStateCode() 
+        : EntityState.DETACHED.getEntityStateCode());
+    
+    // ✅ uploadGroupId และ uploadGroupData
     UUID uploadGroupId = profile.getUploadGroupId();
     response.setUploadGroupId(uploadGroupId);
-    
+
     List<StorageUploadReference> uploadData = new ArrayList<>();
     if (uploadGroupId != null) {
-        // ดึงไฟล์ active ล่าสุดของกลุ่มนี้
-        uploadRepository
-            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
-            .ifPresent(upload -> {
-                StorageUploadReference ref = new StorageUploadReference();
-                ref.setId(upload.getId());
-                ref.setUploadGroupId(uploadGroupId);
-                ref.setFileName(upload.getFileName());
-                ref.setContentType(upload.getContentType());
-                ref.setFileSize(upload.getFileSize());
-                
-                // ใช้ accessUrl ที่มี หรือสร้างใหม่ผ่าน Spring API
-                String accessUrl = "http://localhost:5265/api/storage/avatar/" + uploadGroupId;
-                ref.setAccessUrl(accessUrl);
-                ref.setIsActive(true);
-                ref.setState(EntityState.MODIFIED); // หรือ "Added"
-                
-                uploadData.add(ref);
-            });
+        List<SuUpload> uploads = uploadRepository
+            .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+
+        for (SuUpload upload : uploads) {
+            StorageUploadReference ref = new StorageUploadReference();
+            ref.setId(upload.getId());
+            ref.setUploadGroupId(uploadGroupId);
+            ref.setFileName(upload.getFileName());
+            ref.setContentType(upload.getContentType());
+            ref.setFileSize(upload.getFileSize());
+
+            String baseUrl = "http://localhost:5265";
+            ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+
+            ref.setState(EntityState.DETACHED.getEntityStateCode());
+            ref.setIsActive(upload.getIsActive());
+            ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+            ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+
+            uploadData.add(ref);
+        }
     }
-    response.setUploadGroupData(uploadData); // ✅ ส่งเป็น List ที่มีข้อมูล (หรือ [] ถ้าไม่มี)
-    
-    // 7. avatarUrl (เผื่อ Frontend ใช้ หรือไม่ใช้ก็ได้)
-    if (uploadGroupId != null) {
-        String avatarUrl = "http://localhost:5265/api/storage/avatar/" + uploadGroupId;
-        response.setAvatarUrl(avatarUrl);
-    } else {
-        response.setAvatarUrl(null); // หรือ "/assets/default-avatar.png"
-    }
-    
-    // 8. RowVersion
-    response.setRowVersion(profile.getRowVersion());
+    response.setUploadGroupData(uploadData);
 
     return response;
+}
+
+private String buildFullName(SuProfile profile) {
+    StringBuilder name = new StringBuilder();
+    if (profile.getTitle() != null) {
+        String titleName = "th".equals(getCurrentLanguage())
+            ? profile.getTitle().getPrefixNameLocal()
+            : profile.getTitle().getPrefixNameEn();
+        if (titleName != null && !titleName.isBlank()) {
+            name.append(titleName).append(" ");
+        }
+    }
+    String firstName = "th".equals(getCurrentLanguage())
+        ? profile.getFirstNameLocal() : profile.getFirstNameEn();
+    if (firstName != null && !firstName.isBlank()) {
+        name.append(firstName).append(" ");
+    }
+    String middleName = "th".equals(getCurrentLanguage())
+        ? profile.getMiddleNameLocal() : profile.getMiddleNameEn();
+    if (middleName != null && !middleName.isBlank()) {
+        name.append(middleName).append(" ");
+    }
+    String lastName = "th".equals(getCurrentLanguage())
+        ? profile.getLastNameLocal() : profile.getLastNameEn();
+    if (lastName != null && !lastName.isBlank()) {
+        name.append(lastName);
+    }
+    return name.toString().trim();
+}
+
+private String mapVisibilityToString(FileVisibility visibility) {
+    if (visibility == null) return "Public";
+    switch (visibility) {
+        case UPLOADER_ONLY: return "UploaderOnly";
+        case BUSINESS_ONLY: return "BusinessOnly";
+        case ANYONE_WITH_LINK: return "AnyoneWithLink";
+        case PUBLIC: return "Public";
+        default: return "Public";
+    }
 }
 
     private String getCurrentLanguage() {

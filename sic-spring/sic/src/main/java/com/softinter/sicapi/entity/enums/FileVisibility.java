@@ -9,9 +9,9 @@ public enum FileVisibility {
     ANYONE_WITH_LINK(3),
     PUBLIC(4);
 
-    private final int code;
+    private final int fileVisibilityCode;
 
-    FileVisibility(int code) {
-        this.code = code;
+    FileVisibility(int fileVisibilityCode) {
+        this.fileVisibilityCode = fileVisibilityCode;
     }
 }

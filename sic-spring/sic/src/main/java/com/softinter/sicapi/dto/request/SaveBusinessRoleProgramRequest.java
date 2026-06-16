@@ -13,6 +13,6 @@ public class SaveBusinessRoleProgramRequest {
     private UUID businessRoleId;
     private UUID programId;
     private boolean isActive = true;
-    private EntityState state = EntityState.DETACHED;
+    Integer state;
     private Integer rowVersion;
 }

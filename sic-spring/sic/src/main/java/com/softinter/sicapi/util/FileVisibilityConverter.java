@@ -9,7 +9,7 @@ public class FileVisibilityConverter implements AttributeConverter<FileVisibilit
 
     @Override
     public Integer convertToDatabaseColumn(FileVisibility attribute) {
-        return attribute == null ? null : attribute.getCode();
+        return attribute == null ? null : attribute.getFileVisibilityCode();
     }
 
     @Override
@@ -21,9 +21,9 @@ public class FileVisibilityConverter implements AttributeConverter<FileVisibilit
     // Helper methods สำหรับ business logic และ JSON deserializer
     public static FileVisibility fromCode(int code) {
         for (FileVisibility v : FileVisibility.values()) {
-            if (v.getCode() == code) return v;
+            if (v.getFileVisibilityCode() == code) return v;
         }
-        return FileVisibility.PUBLIC; // fallback
+        return FileVisibility.PUBLIC; // fallback   
     }
 
     public static FileVisibility fromString(String value) {

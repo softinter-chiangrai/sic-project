@@ -31,7 +31,7 @@ public class SaveProfileRequest {
     private String addressEn;
     private String addressLocal;
     private Integer rowVersion;
-    private EntityState state;          
+    private Integer state;;          
     private UUID id;                     
     private String referenceNumber;     
     private String verifyToken;          

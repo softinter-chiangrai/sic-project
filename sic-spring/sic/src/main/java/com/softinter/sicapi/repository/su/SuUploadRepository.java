@@ -19,6 +19,9 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
     Optional<SuUpload> findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(UUID uploadGroupId);
     List<SuUpload> findAllByIsActiveFalseAndTempExpiresAtBefore(Instant now);
 
+    @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = true ORDER BY u.createdDate DESC")
+    List<SuUpload> findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(@Param("groupId") UUID uploadGroupId);
+
     @Modifying
     @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
            "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
