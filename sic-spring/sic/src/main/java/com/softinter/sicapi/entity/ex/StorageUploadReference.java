@@ -10,7 +10,10 @@ import lombok.Data;
 public class StorageUploadReference {
     private UUID id;
     private UUID uploadGroupId;
-    private EntityState state;
+    private String fileName;
+    private String contentType;
+    private Long fileSize;
+    private String accessUrl;
     private Boolean isActive;
-   
+    private EntityState state; 
 }

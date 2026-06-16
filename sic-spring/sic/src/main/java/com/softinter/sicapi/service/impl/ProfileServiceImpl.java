@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
     private final FileStorageService fileStorageService;
-    private final VerifyService verifyService;   // เพิ่ม service สำหรับตรวจสอบ email
+    private final VerifyService verifyService;
 
     @Override
     @Transactional(readOnly = true)
@@ -189,53 +190,83 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
-    private ProfileResponse toResponse(SuProfile profile) {
-        ProfileResponse response = new ProfileResponse();
-        response.setId(profile.getId());
-        response.setUserId(profile.getUserId());
-        response.setTaxId(profile.getTaxId());
-        response.setEmail(profile.getEmail());
-        response.setFirstNameEn(profile.getFirstNameEn());
-        response.setMiddleNameEn(profile.getMiddleNameEn());
-        response.setLastNameEn(profile.getLastNameEn());
-        response.setFirstNameLocal(profile.getFirstNameLocal());
-        response.setMiddleNameLocal(profile.getMiddleNameLocal());
-        response.setLastNameLocal(profile.getLastNameLocal());
-
-        if (profile.getTitle() != null) {
-            response.setTitleId(profile.getTitle().getId());
-            response.setTitleName(getLocalizedTitle(profile));
-        }
-
-        response.setPhoneNumber(profile.getPhoneNumber());
-        response.setAddressEn(profile.getAddressEn());
-        response.setAddressLocal(profile.getAddressLocal());
-
-        if (profile.getUploadGroupId() != null) {
-            String avatarUrl = fileStorageService.getFileUrlByUploadGroupId(profile.getUploadGroupId());
-            response.setAvatarUrl(avatarUrl);
-        }
-
-        if (profile.getCountry() != null) {
-            response.setCountryId(profile.getCountry().getId());
-            response.setCountryName(getLocalizedCountry(profile));
-        }
-        if (profile.getProvince() != null) {
-            response.setProvinceId(profile.getProvince().getId());
-            response.setProvinceName(getLocalizedProvince(profile));
-        }
-        if (profile.getDistrict() != null) {
-            response.setDistrictId(profile.getDistrict().getId());
-            response.setDistrictName(getLocalizedDistrict(profile));
-        }
-        if (profile.getSubDistrict() != null) {
-            response.setSubDistrictId(profile.getSubDistrict().getId());
-            response.setSubDistrictName(getLocalizedSubDistrict(profile));
-        }
-
-        response.setZipCode(profile.getZipCode());
-        return response;
+   private ProfileResponse toResponse(SuProfile profile) {
+    if (profile == null || profile.getId() == null) {
+        return null;
     }
+
+    ProfileResponse response = new ProfileResponse();
+    
+    // 1. ข้อมูลหลัก
+    response.setId(profile.getId());
+    response.setTaxId(profile.getTaxId());
+    response.setTitleId(profile.getTitleId());
+    
+    // 2. ชื่อ
+    response.setFirstNameEn(profile.getFirstNameEn());
+    response.setMiddleNameEn(profile.getMiddleNameEn());
+    response.setLastNameEn(profile.getLastNameEn());
+    response.setFirstNameLocal(profile.getFirstNameLocal());
+    response.setMiddleNameLocal(profile.getMiddleNameLocal());
+    response.setLastNameLocal(profile.getLastNameLocal());
+    
+    // 3. ที่อยู่
+    response.setSupportLocalAddress(profile.getSupportLocalAddress());
+    response.setAddressEn(profile.getAddressEn());
+    response.setAddressLocal(profile.getAddressLocal());
+    
+    // 4. รหัสสถานที่
+    response.setCountryId(profile.getCountryId());
+    response.setProvinceId(profile.getProvinceId());
+    response.setDistrictId(profile.getDistrictId());
+    response.setSubDistrictId(profile.getSubDistrictId());
+    response.setZipCode(profile.getZipCode());
+    
+    // 5. การติดต่อ
+    response.setEmail(profile.getEmail());
+    response.setPhoneNumber(profile.getPhoneNumber());
+    
+    // 6. ข้อมูลไฟล์ (เติม uploadGroupData)
+    UUID uploadGroupId = profile.getUploadGroupId();
+    response.setUploadGroupId(uploadGroupId);
+    
+    List<StorageUploadReference> uploadData = new ArrayList<>();
+    if (uploadGroupId != null) {
+        // ดึงไฟล์ active ล่าสุดของกลุ่มนี้
+        uploadRepository
+            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
+            .ifPresent(upload -> {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(uploadGroupId);
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+                
+                // ใช้ accessUrl ที่มี หรือสร้างใหม่ผ่าน Spring API
+                String accessUrl = "http://localhost:5265/api/storage/avatar/" + uploadGroupId;
+                ref.setAccessUrl(accessUrl);
+                ref.setIsActive(true);
+                ref.setState(EntityState.MODIFIED); // หรือ "Added"
+                
+                uploadData.add(ref);
+            });
+    }
+    response.setUploadGroupData(uploadData); // ✅ ส่งเป็น List ที่มีข้อมูล (หรือ [] ถ้าไม่มี)
+    
+    // 7. avatarUrl (เผื่อ Frontend ใช้ หรือไม่ใช้ก็ได้)
+    if (uploadGroupId != null) {
+        String avatarUrl = "http://localhost:5265/api/storage/avatar/" + uploadGroupId;
+        response.setAvatarUrl(avatarUrl);
+    } else {
+        response.setAvatarUrl(null); // หรือ "/assets/default-avatar.png"
+    }
+    
+    // 8. RowVersion
+    response.setRowVersion(profile.getRowVersion());
+
+    return response;
+}
 
     private String getCurrentLanguage() {
         // TODO: ดึงจาก RequestContextHolder หรือ header

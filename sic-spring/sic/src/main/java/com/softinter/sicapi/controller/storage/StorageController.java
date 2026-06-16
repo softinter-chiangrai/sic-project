@@ -1,10 +1,13 @@
 package com.softinter.sicapi.controller.storage;
 
+import com.nimbusds.jose.util.Resource;
 import com.softinter.sicapi.dto.request.CompleteUploadSessionRequest;
 import com.softinter.sicapi.dto.request.UploadSessionRequest;
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
 import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,6 +33,7 @@ import java.util.UUID;
 public class StorageController {
 
     private final FileStorageService fileStorageService;
+    private final SuUploadRepository uploadRepository;
 
     // ========== Single file upload ==========
     @PostMapping("/upload/image")
@@ -174,5 +178,19 @@ public class StorageController {
     public ResponseEntity<String> getFileUrl(@PathVariable UUID fileId) {
         String url = fileStorageService.getFileUrl(fileId);
         return ResponseEntity.ok(url);
+    }
+
+   @GetMapping("/avatar/{groupId}")
+    public ResponseEntity<InputStreamResource> getAvatar(@PathVariable UUID groupId) {
+        SuUpload upload = uploadRepository
+            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
+            .orElseThrow(() -> new RuntimeException("Avatar not found"));
+
+        StorageDownloadResponse download = fileStorageService.downloadFile(upload.getId());
+        InputStreamResource resource = new InputStreamResource(download.getInputStream());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(download.getContentType()))
+                .contentLength(download.getFileSize())
+                .body(resource);
     }
 }

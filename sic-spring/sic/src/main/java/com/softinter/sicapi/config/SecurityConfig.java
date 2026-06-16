@@ -48,7 +48,9 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/hubs/chat/**", 
                     "/ws/**", 
-                    "/health").permitAll()
+                    "/health",
+                    "/api/storage/avatar/**"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

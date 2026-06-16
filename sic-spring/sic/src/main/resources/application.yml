@@ -62,15 +62,6 @@ app:
       endpoint: http://localhost:8888 # สำคัญที่สุด!
       path-style-access-enabled: true # จำเป็นสำหรับ S3-compatible
 
-# ❌ ลบ section storage ซ้ำซ้อนนี้ทิ้ง (หรือ comment ไว้)
-# storage:
-#   service-url: http://localhost:8888
-#   access-key: seaweedfs
-#   secret-key: seaweedfs-secret
-#   image-bucket: public-files
-#   video-bucket: public-files
-#   document-bucket: documents
-
 logging:
   pattern:
     console: "%msg%n"
