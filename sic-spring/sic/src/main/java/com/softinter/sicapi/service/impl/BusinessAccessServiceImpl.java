@@ -431,7 +431,7 @@ private void updateBusinessFromRequest(SuBusiness business, SaveBusinessRequest 
         return userBusinessRepository.canAccessBusiness(userId, businessId);
     }
     @Override
-public BusinessResponse getBusinessInfo(UUID businessId) {
+    public BusinessResponse getBusinessInfo(UUID businessId) {
     SuBusiness business = businessRepository.findByIdWithTitle(businessId).orElse(null);
     if (business == null) return null;
 

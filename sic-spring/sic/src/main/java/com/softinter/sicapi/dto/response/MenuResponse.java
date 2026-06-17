@@ -16,4 +16,7 @@ public class MenuResponse {
     private String path;
     private String code;
     private List<MenuResponse> children = new ArrayList<>();
+
+    private Integer state;
+    private Integer rowVersion;
 }
