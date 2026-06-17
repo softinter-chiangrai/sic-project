@@ -34,4 +34,5 @@ public class ProfileResponse {
     private List<StorageUploadReference> uploadGroupData = new ArrayList<>();
     private Integer rowVersion;
     private Integer state;
+    
 }

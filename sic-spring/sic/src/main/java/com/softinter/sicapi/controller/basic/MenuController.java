@@ -2,6 +2,8 @@ package com.softinter.sicapi.controller.basic;
 
 import com.softinter.sicapi.dto.response.MenuResponse;
 import com.softinter.sicapi.service.MenuService;
+import com.softinter.sicapi.util.LanguageUtils;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,9 +27,8 @@ public class MenuController {
 
     @GetMapping
     @Operation(summary = "Get user menu based on business and permissions")
-    public ResponseEntity<List<MenuResponse>> getMenu(
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "th") String language) {
-        boolean useEnglish = "en".equalsIgnoreCase(language);
+    public ResponseEntity<List<MenuResponse>> getMenu() {
+         boolean useEnglish = LanguageUtils.useEnglish(); 
         List<MenuResponse> menu = menuService.getMenu(useEnglish);
         return ResponseEntity.ok(menu);
     }

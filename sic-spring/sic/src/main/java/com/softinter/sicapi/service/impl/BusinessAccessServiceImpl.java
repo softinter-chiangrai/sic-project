@@ -38,8 +38,8 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.util.LanguageUtils;
 import com.softinter.sicapi.service.NameUtilityService;
-import com.softinter.sicapi.service.RequestLanguageProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,6 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
     private final CurrentUserService currentUserService;
-    private final RequestLanguageProvider requestLanguageProvider;
     private final NameUtilityService nameUtilityService;
     private final FileStorageService fileStorageService;   
     private final SuUploadRepository uploadRepository;
@@ -75,7 +74,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     @Override
     public List<BusinessResponseDto> getMyBusinesses() {
         String userId = currentUserService.getUserId();
-        boolean useEnglish = requestLanguageProvider.useEnglish();
+        boolean useEnglish = LanguageUtils.useEnglish();
 
         return userBusinessRepository.findActiveByUserId(userId).stream()
                 .map(ub -> {
@@ -137,7 +136,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         businessAuditRepository.save(audit);
 
         SuBusiness business = userBusiness.getBusiness();
-        boolean useEnglish = requestLanguageProvider.useEnglish();
+        boolean useEnglish = LanguageUtils.useEnglish();
         String businessName;
         if (useEnglish) {
             businessName = nameUtilityService.joinNames(new String[]{
@@ -199,7 +198,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     @Override
     @Transactional(readOnly = true)
     public BusinessResponseDto getBusiness(UUID businessId) {
-        boolean useEnglish = requestLanguageProvider.useEnglish();
+        boolean useEnglish = LanguageUtils.useEnglish();
          return businessRepository.findByIdWithTitle(businessId)
                 .map(business -> {
                     BusinessResponseDto dto = new BusinessResponseDto();

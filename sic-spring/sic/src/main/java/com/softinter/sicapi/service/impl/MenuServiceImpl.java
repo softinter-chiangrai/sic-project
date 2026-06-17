@@ -6,7 +6,6 @@ import com.softinter.sicapi.repository.su.SuProgramRepository;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MenuService;
-import com.softinter.sicapi.service.RequestLanguageProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ public class MenuServiceImpl implements MenuService {
     private final SuProgramRepository programRepository;
     private final BusinessAccessService businessAccessService;
     private final CurrentUserService currentUserService;
-    private final RequestLanguageProvider requestLanguageProvider;
 
     @Override
     @Transactional(readOnly = true)
