@@ -1,14 +1,25 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.db.DbCountry;
 import com.softinter.sicapi.entity.db.DbDistrict;
+import com.softinter.sicapi.entity.db.DbParameter;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
 import com.softinter.sicapi.entity.db.DbTitle;
 import com.softinter.sicapi.repository.db.DbCountryRepository;
 import com.softinter.sicapi.repository.db.DbDistrictRepository;
+import com.softinter.sicapi.repository.db.DbParameterRepository;
 import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
 import com.softinter.sicapi.repository.db.DbTitleRepository;
@@ -16,13 +27,6 @@ import com.softinter.sicapi.service.ComboboxService;
 import com.softinter.sicapi.util.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class ComboboxServiceImpl implements ComboboxService {
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
+    private final DbParameterRepository dbParameterRepository; 
 
     // Helper localization
     private String getLocalTitleName(DbTitle t, String lang) {
@@ -179,5 +184,126 @@ public class ComboboxServiceImpl implements ComboboxService {
         return subDistrictRepository.findById(id)
                 .map(s -> new LovResponse(s.getId(), getLocalSubDistrictName(s, lang)))
                 .orElse(null);
+    }
+    // ✅ ====== NEW: List methods (สำหรับ Budt01Controller) ======
+    // ================================================================
+
+    @Override
+    public List<LovResponse> getPersonTypeLov(String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbParameter> params = dbParameterRepository
+                .findByModuleCodeAndParameterCodeAndIsActiveTrueOrderBySortOrder("DB", "PERSON_TYPE");
+
+        return params.stream()
+                .map(p -> new LovResponse(
+                        p.getParameterValue(),
+                        useEnglish ? p.getParameterNameEn() : p.getParameterNameLocal()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LovResponse> getTitleList(String personType, String value, String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbTitle> titles = titleRepository.findByPersonTypeAndIsActiveTrue(personType);
+
+        // Filter by UUID value
+        if (value != null && !value.isBlank()) {
+            UUID uuid = UUID.fromString(value);
+            titles = titles.stream()
+                    .filter(t -> t.getId().equals(uuid))
+                    .collect(Collectors.toList());
+        }
+
+        return titles.stream()
+                .map(t -> new LovResponse(
+                        t.getId().toString(),
+                        useEnglish ? t.getPrefixNameEn() : t.getPrefixNameLocal()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LovResponse> getCountryList(String value, String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbCountry> countries = countryRepository.findByIsActiveTrueOrderByName(useEnglish);
+
+        // Filter by UUID value
+        if (value != null && !value.isBlank()) {
+            UUID uuid = UUID.fromString(value);
+            countries = countries.stream()
+                    .filter(c -> c.getId().equals(uuid))
+                    .collect(Collectors.toList());
+        }
+
+        return countries.stream()
+                .map(c -> new LovResponse(
+                        c.getId().toString(),
+                        useEnglish ? c.getCountryNameEn() : c.getCountryNameLocal()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LovResponse> getProvinceList(UUID countryId, String value, String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbProvince> provinces = provinceRepository.findByCountryIdAndIsActiveTrueOrderByName(countryId, useEnglish);
+
+        // Filter by UUID value
+        if (value != null && !value.isBlank()) {
+            UUID uuid = UUID.fromString(value);
+            provinces = provinces.stream()
+                    .filter(p -> p.getId().equals(uuid))
+                    .collect(Collectors.toList());
+        }
+
+        return provinces.stream()
+                .map(p -> new LovResponse(
+                        p.getId().toString(),
+                        useEnglish ? p.getProvinceNameEn() : p.getProvinceNameLocal()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LovResponse> getDistrictList(UUID provinceId, String value, String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbDistrict> districts = districtRepository.findByProvinceIdAndIsActiveTrueOrderByName(provinceId, useEnglish);
+
+        // Filter by UUID value
+        if (value != null && !value.isBlank()) {
+            UUID uuid = UUID.fromString(value);
+            districts = districts.stream()
+                    .filter(d -> d.getId().equals(uuid))
+                    .collect(Collectors.toList());
+        }
+
+        return districts.stream()
+                .map(d -> new LovResponse(
+                        d.getId().toString(),
+                        useEnglish ? d.getDistrictNameEn() : d.getDistrictNameLocal()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LovResponse> getSubDistrictList(UUID districtId, String value, String lang) {
+        boolean useEnglish = "en".equalsIgnoreCase(lang);
+        List<DbSubDistrict> subDistricts = subDistrictRepository.findByDistrictIdAndIsActiveTrueOrderByName(districtId, useEnglish);
+
+        // Filter by UUID value
+        if (value != null && !value.isBlank()) {
+            UUID uuid = UUID.fromString(value);
+            subDistricts = subDistricts.stream()
+                    .filter(s -> s.getId().equals(uuid))
+                    .collect(Collectors.toList());
+        }
+
+        return subDistricts.stream()
+                .map(s -> new LovResponse(
+                        s.getId().toString(),
+                        useEnglish ? s.getSubDistrictNameEn() : s.getSubDistrictNameLocal()
+                ))
+                .collect(Collectors.toList());
     }
 }

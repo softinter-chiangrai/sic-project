@@ -66,7 +66,6 @@ public class ProfileController {
     @GetMapping("/mail-check")
     @Operation(summary = "Check if email is registered")
     public ResponseEntity<Boolean> mailCheck(@RequestParam String email) {
-        // ✅ ตรวจสอบจริงว่ามีอีเมลนี้ในระบบหรือไม่ (เหมือน .NET)
         boolean exists = profileRepository.existsByEmailIgnoreCase(email);
         return ResponseEntity.ok(exists);
     }

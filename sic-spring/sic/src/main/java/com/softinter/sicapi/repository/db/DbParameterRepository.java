@@ -9,10 +9,20 @@ import java.util.UUID;
 
 public interface DbParameterRepository extends JpaRepository<DbParameter, UUID> {
     
-    // ✅ ใช้ moduleCode ตาม Entity
+    // ✅ ตาม moduleCode เท่านั้น
     List<DbParameter> findByModuleCodeAndIsActiveTrueOrderBySortOrder(String moduleCode);
-    
-    // หรือใช้ @Query ก็ได้
+
+    // ✅ ตาม moduleCode + parameterCode (ใช้สำหรับ PERSON_TYPE)
+    @Query("SELECT p FROM DbParameter p " +
+           "WHERE p.moduleCode = :moduleCode " +
+           "AND p.parameterCode = :parameterCode " +
+           "AND p.isActive = true " +
+           "ORDER BY p.sortOrder ASC")
+    List<DbParameter> findByModuleCodeAndParameterCodeAndIsActiveTrueOrderBySortOrder(
+            @Param("moduleCode") String moduleCode,
+            @Param("parameterCode") String parameterCode);
+
+    // (Optional) ตาม moduleCode ด้วย @Query
     @Query("SELECT p FROM DbParameter p " +
            "WHERE p.moduleCode = :moduleCode " +
            "AND p.isActive = true " +

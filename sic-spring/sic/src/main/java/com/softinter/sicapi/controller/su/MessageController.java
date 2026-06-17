@@ -48,21 +48,22 @@ public class MessageController {
     "/api/i18n/{module_code}/{program_code}",
     "/api/i18n/{module_code}/{program_code}/{language_code}"
 })
-    public ResponseEntity<Map<String, String>> i18n(
+public ResponseEntity<Map<String, String>> i18n(
         @PathVariable("module_code") String moduleCode,
         @PathVariable("program_code") String programCode,
         @PathVariable(value = "language_code", required = false) String languageCode,
         @RequestHeader(value = "x-language-code", required = false) String headerLangCode) {
-    
+
     String finalLang = (languageCode != null) ? languageCode : headerLangCode;
-    
+
     List<I18nMessageResponse> messages = messageService.getI18nMessages(moduleCode, programCode, finalLang);
-    
+
     Map<String, String> translations = new HashMap<>();
     for (I18nMessageResponse msg : messages) {
-        translations.put(msg.getMessageCode(), msg.getMessage());
+        String key = moduleCode + "." + programCode + "." + msg.getMessageCode();
+        translations.put(key, msg.getMessage());
     }
-    
+
     return ResponseEntity.ok(translations);
 }
 }

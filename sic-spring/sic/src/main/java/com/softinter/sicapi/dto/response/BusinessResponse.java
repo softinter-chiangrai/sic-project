@@ -1,7 +1,10 @@
 package com.softinter.sicapi.dto.response;
 
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -12,7 +15,6 @@ public class BusinessResponse {
     private String branchCode;
     private String personType;
     private UUID titleId;
-    private String titleName;
     private String firstNameEn;
     private String middleNameEn;
     private String lastNameEn;
@@ -20,21 +22,17 @@ public class BusinessResponse {
     private String middleNameLocal;
     private String lastNameLocal;
     private UUID countryId;
-    private String countryName;
-    private boolean supportLocalAddress;
+    private Boolean supportLocalAddress;
     private String addressEn;
     private String addressLocal;
     private UUID provinceId;
-    private String provinceName;
     private UUID districtId;
-    private String districtName;
     private UUID subDistrictId;
-    private String subDistrictName;
     private String zipCode;
     private String email;
     private String phoneNumber;
-    private String fax;
     private UUID uploadGroupId;
-    private boolean isActive;
+    private List<StorageUploadReference> uploadGroupData = new ArrayList<>();
+    private Integer state;
     private Integer rowVersion;
 }

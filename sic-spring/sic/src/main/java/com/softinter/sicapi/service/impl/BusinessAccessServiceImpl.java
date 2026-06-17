@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.SaveBusinessRequest;
+import com.softinter.sicapi.dto.response.BusinessResponse;
 import com.softinter.sicapi.dto.response.BusinessResponseDto;
 import com.softinter.sicapi.dto.response.ChangeBusinessResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
@@ -429,4 +430,40 @@ private void updateBusinessFromRequest(SuBusiness business, SaveBusinessRequest 
         String userId = currentUserService.getUserId();
         return userBusinessRepository.canAccessBusiness(userId, businessId);
     }
+    @Override
+public BusinessResponse getBusinessInfo(UUID businessId) {
+    SuBusiness business = businessRepository.findByIdWithTitle(businessId).orElse(null);
+    if (business == null) return null;
+
+    BusinessResponse dto = new BusinessResponse();
+
+    dto.setId(business.getId());
+    dto.setTaxId(business.getTaxId());
+    dto.setBusinessCode(business.getBusinessCode());
+    dto.setBranchCode(business.getBranchCode());
+    dto.setPersonType(business.getPersonType());
+    dto.setTitleId(business.getTitle() != null ? business.getTitle().getId() : null);
+    dto.setFirstNameEn(business.getFirstNameEn());
+    dto.setMiddleNameEn(business.getMiddleNameEn());
+    dto.setLastNameEn(business.getLastNameEn());
+    dto.setFirstNameLocal(business.getFirstNameLocal());
+    dto.setMiddleNameLocal(business.getMiddleNameLocal());
+    dto.setLastNameLocal(business.getLastNameLocal());
+    dto.setCountryId(business.getCountry() != null ? business.getCountry().getId() : null);
+    dto.setSupportLocalAddress(business.getSupportLocalAddress());
+    dto.setAddressEn(business.getAddressEn());
+    dto.setAddressLocal(business.getAddressLocal());
+    dto.setProvinceId(business.getProvince() != null ? business.getProvince().getId() : null);
+    dto.setDistrictId(business.getDistrict() != null ? business.getDistrict().getId() : null);
+    dto.setSubDistrictId(business.getSubDistrict() != null ? business.getSubDistrict().getId() : null);
+    dto.setZipCode(business.getZipCode());
+    dto.setEmail(business.getEmail());
+    dto.setPhoneNumber(business.getPhoneNumber());
+    dto.setUploadGroupId(business.getUploadGroupId());
+    dto.setUploadGroupData(new ArrayList<>());
+    dto.setState(0); // Detached
+    dto.setRowVersion(business.getRowVersion());
+
+    return dto;
+}
 }
