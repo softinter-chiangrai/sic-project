@@ -28,7 +28,7 @@ public class MenuController {
     @GetMapping
     @Operation(summary = "Get user menu based on business and permissions")
     public ResponseEntity<List<MenuResponse>> getMenu() {
-         boolean useEnglish = LanguageUtils.useEnglish(); 
+        boolean useEnglish = LanguageUtils.useEnglish(); 
         List<MenuResponse> menu = menuService.getMenu(useEnglish);
         return ResponseEntity.ok(menu);
     }

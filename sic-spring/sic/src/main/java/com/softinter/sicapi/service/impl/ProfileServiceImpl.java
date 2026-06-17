@@ -25,6 +25,7 @@ import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.service.ProfileService;
 import com.softinter.sicapi.service.VerifyService;
+import com.softinter.sicapi.util.LanguageUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -198,7 +199,8 @@ public class ProfileServiceImpl implements ProfileService {
     
     // ✅ ข้อมูลหลัก
     response.setId(profile.getId());
-    response.setName(buildFullName(profile));
+    boolean useEnglish = LanguageUtils.useEnglish();
+    response.setName(buildFullName(profile, useEnglish));
     response.setTaxId(profile.getTaxId());
     response.setTitleId(profile.getTitleId());
     
@@ -265,31 +267,43 @@ public class ProfileServiceImpl implements ProfileService {
     return response;
 }
 
-private String buildFullName(SuProfile profile) {
+private String buildFullName(SuProfile profile, boolean useEnglish) {
     StringBuilder name = new StringBuilder();
+
+    // Title
     if (profile.getTitle() != null) {
-        String titleName = "th".equals(getCurrentLanguage())
-            ? profile.getTitle().getPrefixNameLocal()
-            : profile.getTitle().getPrefixNameEn();
+        String titleName = useEnglish
+            ? profile.getTitle().getPrefixNameEn()
+            : profile.getTitle().getPrefixNameLocal();
         if (titleName != null && !titleName.isBlank()) {
             name.append(titleName).append(" ");
         }
     }
-    String firstName = "th".equals(getCurrentLanguage())
-        ? profile.getFirstNameLocal() : profile.getFirstNameEn();
+
+    // First Name
+    String firstName = useEnglish
+        ? profile.getFirstNameEn()
+        : profile.getFirstNameLocal();
     if (firstName != null && !firstName.isBlank()) {
         name.append(firstName).append(" ");
     }
-    String middleName = "th".equals(getCurrentLanguage())
-        ? profile.getMiddleNameLocal() : profile.getMiddleNameEn();
+
+    // Middle Name
+    String middleName = useEnglish
+        ? profile.getMiddleNameEn()
+        : profile.getMiddleNameLocal();
     if (middleName != null && !middleName.isBlank()) {
         name.append(middleName).append(" ");
     }
-    String lastName = "th".equals(getCurrentLanguage())
-        ? profile.getLastNameLocal() : profile.getLastNameEn();
+
+    // Last Name
+    String lastName = useEnglish
+        ? profile.getLastNameEn()
+        : profile.getLastNameLocal();
     if (lastName != null && !lastName.isBlank()) {
         name.append(lastName);
     }
+
     return name.toString().trim();
 }
 
