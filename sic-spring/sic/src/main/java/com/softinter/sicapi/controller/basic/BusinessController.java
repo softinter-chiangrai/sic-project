@@ -3,7 +3,9 @@ package com.softinter.sicapi.controller.basic;
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.service.BusinessAccessService;
+import com.softinter.sicapi.service.ComboboxService;        // ✅ เพิ่ม
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.util.LanguageUtils;             // ✅ เพิ่ม
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/business")
@@ -25,6 +26,7 @@ public class BusinessController {
 
     private final BusinessAccessService businessAccessService;
     private final CurrentUserService currentUserService;
+    private final ComboboxService comboboxService;   // ✅ เพิ่ม
 
     @GetMapping
     @Operation(summary = "Get current active business info")
@@ -69,10 +71,10 @@ public class BusinessController {
 
     @PostMapping("/save")
     public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
-    String userId = currentUserService.getUserId();
-    UUID id = businessAccessService.saveBusiness(request, userId);
-    return ResponseEntity.ok(id);
-}
+        String userId = currentUserService.getUserId();
+        UUID id = businessAccessService.saveBusiness(request, userId);
+        return ResponseEntity.ok(id);
+    }
 
     @GetMapping("/{businessId}")
     @Operation(summary = "Get business info")
@@ -83,11 +85,8 @@ public class BusinessController {
     @GetMapping("/lov-person-type")
     @Operation(summary = "Get person type LOV (Individual/Corporate)")
     public ResponseEntity<List<LovResponse>> getLovPersonType() {
-        // Hardcoded response (ไม่ต้องแก้ database หรือ frontend)
-        List<LovResponse> list = Arrays.asList(
-            new LovResponse("INDIVIDUAL", "Individual"),
-            new LovResponse("CORPORATE", "Corporate")
-        );
-        return ResponseEntity.ok(list);
+        // ✅ ดึงจาก Database แทน Hardcode
+        String lang = LanguageUtils.getLanguage();
+        return ResponseEntity.ok(comboboxService.getPersonTypeLov(lang));
     }
 }
