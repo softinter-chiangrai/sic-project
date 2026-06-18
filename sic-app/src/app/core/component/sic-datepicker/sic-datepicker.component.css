@@ -37,7 +37,7 @@
   padding: 0rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
-  background: var(--bg);
+  background: transparent;
   color: var(--text-active);
   font-family: var(--font-sans);
   font-size: 0.95rem;

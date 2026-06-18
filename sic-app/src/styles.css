@@ -224,16 +224,16 @@
   --crm-danger: #ef4444;
   --crm-warning: #f59e0b;
 
-  --light-bg: #ffffff;
-  --light-sidebar: #fafafa;
+  --light-bg: #fafafa;
+  --light-sidebar: #ffffff;
   --light-sidebar-hover: #f3f4f6;
   --light-text: #4b5563;
   --light-text-muted: #9ca3af;
   --light-text-active: #111827;
   --light-border: #d8d8da;
 
-  --dark-bg: #111827;
-  --dark-sidebar: #0f172a;
+  --dark-bg:#0f172a; ;
+  --dark-sidebar: #111827
   --dark-sidebar-hover: #1e293b;
   --dark-text: #e5e7eb;
   --dark-text-muted: #94a3b8;

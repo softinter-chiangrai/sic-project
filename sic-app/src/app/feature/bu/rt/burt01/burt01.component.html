@@ -1,110 +1,97 @@
 @if (formData; as data) {
-<form [formGroup]="data.formGroup" (ngSubmit)="submit()">
-  <div class="flex flex-col md:flex-row gap-4">
-    <!-- div ซ้าย: desktop อยู่ซ้าย, mobile อยู่ล่าง -->
-    <div class="order-2 md:order-1 md:w-1/2">
-      <div class="grid gap-4">
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-          <sic-radio formControlName="personType" direction="horizontal" alignment="center"
-            [apiUrl]="service.apiGetLovPersonType"></sic-radio>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-          <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-          <div class="flex-3">
-            <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0"
-              formControlName="taxId"></sic-input>
-          </div>
-          @if (data.formGroup.get('personType')?.value == 'CORPORATE') {
-          <div class="flex-1">
-            <sic-input label="สาขา" mask="00000" formControlName="branchCode"></sic-input>
-          </div>
-          }
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle"
-            [params]="{ personType: data.formGroup.get('personType')?.value }">
-          </sic-combobox>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-          <div class="flex-2">
-            <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
-          </div>
-          @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
-          <div class="flex-1">
-            <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
-          </div>
-          <div class="flex-2">
-            <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
-          </div>
-          }
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-          <div class="flex-2">
-            <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
-          </div>
-          @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
-          <div class="flex-1">
-            <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
-          </div>
-          <div class="flex-2">
-            <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
-          </div>
-          }
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry"
-            (selectionChanged)="onCountryChange($event)">
-          </sic-combobox>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
-        </div>
-        @if(data.formGroup.get('supportLocalAddress')?.value) {
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince"
-            [params]="{ countryId: data.formGroup.get('countryId')?.value }"
-            (selectionChanged)="onProvinceChange($event)">
-          </sic-combobox>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict"
-            [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
-            (selectionChanged)="onDistrictChange($event)">
-          </sic-combobox>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict"
-            [params]="{ districtId: data.formGroup.get('districtId')?.value }"
-            (selectionChanged)="onSubDistrictChange($event)">
-          </sic-combobox>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
-        </div>
-        }
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input label="อีเมล" formControlName="email"></sic-input>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
-        </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-          <div class="flex-1">
-            <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">สร้าง</sic-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- div ขวา: desktop อยู่ขวา, mobile อยู่บน -->
-    <div class="order-1 md:order-2 md:w-1/2">
+<form formsearch [formGroup]="data.formGroup">
+  <div class="grid grid-cols-6 gap-4">
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
       <sic-profile [size]="150" [visibility]="4" formControlName="uploadGroupData" src="images/business_logo.png">
       </sic-profile>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <sic-radio formControlName="personType" direction="horizontal" alignment="center"
+        [apiUrl]="service.apiGetLovPersonType"></sic-radio>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-3">
+        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0"
+          formControlName="taxId"></sic-input>
+      </div>
+      @if (data.formGroup.get('personType')?.value == 'CORPORATE') {
+      <div class="flex-1">
+        <sic-input label="สาขา" mask="00000" formControlName="branchCode"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle"
+        [params]="{ personType: data.formGroup.get('personType')?.value }">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-2">
+        <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
+      </div>
+      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+      <div class="flex-1">
+        <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
+      </div>
+      <div class="flex-2">
+        <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-2">
+        <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
+      </div>
+      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+      <div class="flex-1">
+        <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
+      </div>
+      <div class="flex-2">
+        <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry"
+        (selectionChanged)="onCountryChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
+    </div>
+    @if(data.formGroup.get('supportLocalAddress')?.value) {
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince"
+        [params]="{ countryId: data.formGroup.get('countryId')?.value }" (selectionChanged)="onProvinceChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict"
+        [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
+        (selectionChanged)="onDistrictChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict"
+        [params]="{ districtId: data.formGroup.get('districtId')?.value }"
+        (selectionChanged)="onSubDistrictChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+    </div>
+    }
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input label="อีเมล" formControlName="email"></sic-input>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
     </div>
   </div>
 </form>

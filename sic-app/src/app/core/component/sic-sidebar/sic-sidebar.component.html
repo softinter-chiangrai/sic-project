@@ -6,6 +6,7 @@
     aria-label="Close mobile sidebar overlay"></button>
 
   <header
+    cl
     class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md md:hidden">
     <div class="flex items-center gap-4">
       <div class="relative">
@@ -147,70 +148,65 @@
         <ng-template #menuNode let-items="items" let-depth="depth">
           @for (item of items; track item.code) {
 
-            @if (depth === 0) {
-              <!-- ── Root level: ทุก class/attribute เหมือนเดิม 100% ── -->
-              <button
-                class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
-                type="button"
-                [routerLink]="item.children?.length ? null : getItemLink(item.path)"
-                [class.text-[var(--text-active)]]="isItemActive(item)"
-                [class.font-bold]="isItemActive(item)"
-                [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
-                [class.text-[1.1rem]]="isItemActive(item)"
-                (click)="toggleMenu(item.code, !!item.children?.length)">
-                <span class="flex min-w-0 items-center gap-3">
-                  <i class="bi text-[0.95rem]" [class]="item.icon"></i>
-                  <span>{{ item.label }}</span>
-                </span>
-                @if (item.badge || item.notification || item.children?.length) {
-                  <span class="ml-auto flex items-center gap-2">
-                    @if (item.badge) {
-                      <span class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
-                        {{ item.badge }}
-                      </span>
-                    }
-                    @if (item.notification) {
-                      <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
-                    }
-                    @if (item.children?.length) {
-                      <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
-                        [class.rotate-90]="isExpanded(item.code)"></i>
-                    }
-                  </span>
-                }
-              </button>
-
-            } @else {
-              <!-- ── Sub level (depth >= 1): ทุก class/attribute เหมือนเดิม 100% ── -->
-              <button
-                class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
-                type="button"
-                [routerLink]="item.children?.length ? null : getItemLink(item.path)"
-                [class.text-[var(--text-active)]]="isItemActive(item)"
-                [class.font-bold]="isItemActive(item)"
-                [class.text-[1rem]]="isItemActive(item)"
-                [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
-                (click)="toggleMenu(item.code, !!item.children?.length)">
-                <span class="flex min-w-0 items-center justify-between">
-                  <span>{{ item.label }}</span>
-                  @if (item.children?.length) {
-                    <i class="bi bi-chevron-right text-[0.75rem] transition-transform duration-200 ml-auto"
-                      [class.rotate-90]="isExpanded(item.code)"></i>
-                  }
-                </span>
-              </button>
+          @if (depth === 0) {
+          <!-- ── Root level: ทุก class/attribute เหมือนเดิม 100% ── -->
+          <button
+            class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
+            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
+            [class.bg-[var(--sidebar-hover)]]="isItemActive(item)" [class.text-[1.1rem]]="isItemActive(item)"
+            (click)="toggleMenu(item.code, !!item.children?.length)">
+            <span class="flex min-w-0 items-center gap-3">
+              <i class="bi text-[0.95rem]" [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </span>
+            @if (item.badge || item.notification || item.children?.length) {
+            <span class="ml-auto flex items-center gap-2">
+              @if (item.badge) {
+              <span
+                class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
+                {{ item.badge }}
+              </span>
+              }
+              @if (item.notification) {
+              <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
+              }
+              @if (item.children?.length) {
+              <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
+                [class.rotate-90]="isExpanded(item.code)"></i>
+              }
+            </span>
             }
+          </button>
 
-            <!-- ── Children: กาง/หุบ เหมือนเดิม แต่ recursive ── -->
-            @if (item.children?.length) {
-              <div class="sidebar-submenu" [class.open]="isExpanded(item.code)"
-                [style.padding-left]="depth >= 1 ? '0.95rem' : null">
-                <div class="sidebar-submenu-content">
-                  <ng-container *ngTemplateOutlet="menuNode; context: { items: item.children, depth: depth + 1 }">
-                  </ng-container>
-                </div>
-              </div>
-            }
+          } @else {
+          <!-- ── Sub level (depth >= 1): ทุก class/attribute เหมือนเดิม 100% ── -->
+          <button
+            class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
+            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
+            [class.text-[1rem]]="isItemActive(item)" [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
+            (click)="toggleMenu(item.code, !!item.children?.length)">
+            <span class="flex min-w-0 items-center justify-between">
+              <span>{{ item.label }}</span>
+              @if (item.children?.length) {
+              <i class="bi bi-chevron-right text-[0.75rem] transition-transform duration-200 ml-auto"
+                [class.rotate-90]="isExpanded(item.code)"></i>
+              }
+            </span>
+          </button>
+          }
+
+          <!-- ── Children: กาง/หุบ เหมือนเดิม แต่ recursive ── -->
+          @if (item.children?.length) {
+          <div class="sidebar-submenu" [class.open]="isExpanded(item.code)"
+            [style.padding-left]="depth >= 1 ? '0.95rem' : null">
+            <div class="sidebar-submenu-content">
+              <ng-container *ngTemplateOutlet="menuNode; context: { items: item.children, depth: depth + 1 }">
+              </ng-container>
+            </div>
+          </div>
+          }
 
           }
         </ng-template>
@@ -235,39 +231,83 @@
       </div>
     </aside>
 
-    <main role="presentation" class="h-screen min-h-screen overflow-auto bg-[var(--bg)] p-4 pt-[4.7rem] md:p-6"
+    <main role="presentation" class="h-screen min-h-screen flex flex-col overflow-hidden bg-[var(--bg)]"
       (click)="closeMobileSidebar()">
-      <nav aria-label="Breadcrumb"
-        class="mb-5 flex flex-wrap items-center gap-2 text-[0.95rem] md:mb-6">
-        @for (crumb of breadcrumbs(); track $index) {
+
+      <div class="p-4 md:p-6 pb-0 md:pb-0 mb-5 md:mb-6 flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-[0.95rem]">
+          @for (crumb of breadcrumbs(); track $index) {
           @if ($index > 0) {
-            <i class="bi bi-chevron-right text-[0.72rem] text-[var(--text-muted)]"></i>
+          <i class="bi bi-chevron-right text-[0.72rem] text-[var(--text-muted)]"></i>
           }
 
           @if (crumb.url && !crumb.isCurrent) {
-            <a [routerLink]="crumb.url"
-              class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
-              [class.text-[var(--crm-primary)]]="$index === 0"
-              [class.text-[var(--text-muted)]]="$index !== 0">
-              @if (crumb.icon) {
-                <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
-              }
-              <span>{{ crumb.label }}</span>
-            </a>
+          <a [routerLink]="crumb.url"
+            class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
+            [class.text-[var(--crm-primary)]]="$index === 0" [class.text-[var(--text-muted)]]="$index !== 0">
+            @if (crumb.icon) {
+            <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
+            }
+            <span>{{ crumb.label }}</span>
+          </a>
           } @else {
-            <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
-              [class.text-[var(--text-active)]]="crumb.isCurrent"
-              [class.text-[var(--text-muted)]]="!crumb.isCurrent">
-              @if (crumb.icon) {
-                <i class="bi text-[0.95rem]" [class]="crumb.icon"
-                  [class.text-[var(--crm-primary)]]="$index === 0"></i>
-              }
-              <span>{{ crumb.label }}</span>
-            </span>
+          <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
+            [class.text-[var(--text-active)]]="crumb.isCurrent" [class.text-[var(--text-muted)]]="!crumb.isCurrent">
+            @if (crumb.icon) {
+            <i class="bi text-[0.95rem]" [class]="crumb.icon" [class.text-[var(--crm-primary)]]="$index === 0"></i>
+            }
+            <span>{{ crumb.label }}</span>
+          </span>
           }
-        }
-      </nav>
-      <ng-content></ng-content>
+          }
+        </nav>
+
+        <div class="flex items-center gap-2 text-[var(--text-muted)]">
+          @if (isBack) {
+            <button type="button" tooltip="ย้อนกลับ" (click)="onActionClick('back')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Back">
+              <i class="bi bi-arrow-left-circle text-xl"></i>
+            </button>
+          }
+          @if (isSearch) {
+            <button type="button" tooltip="ค้นหา" (click)="onActionClick('search')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Search">
+              <i class="bi bi-search text-lg"></i>
+            </button>
+          }
+          @if (isAdd) {
+            <button type="button" tooltip="เพิ่ม" (click)="onActionClick('add')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Search">
+              <i class="bi bi-plus-circle-fill"></i>
+            </button>
+          }
+          @if (isSave) {
+            <button type="button" tooltip="บันทึก" (click)="onActionClick('save')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Save">
+              <i class="bi bi-floppy2 text-lg"></i>
+            </button>
+          }
+          @if (isPrint) {
+            <button type="button" tooltip="พิมพ์" (click)="onActionClick('print')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Print">
+              <i class="bi bi-printer text-lg"></i>
+            </button>
+          }
+        </div>
+
+      </div>
+
+      <div class="flex-1 overflow-auto min-h-0 w-full px-4 pt-0.5 md:px-6 pb-4 md:pb-6">
+        <sic-card>
+          <ng-content></ng-content>
+        </sic-card>
+      </div>
     </main>
   </div>
 </div>
