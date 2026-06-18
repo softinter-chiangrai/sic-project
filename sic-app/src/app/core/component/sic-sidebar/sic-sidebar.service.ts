@@ -1,10 +1,10 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { BusinessInfoModel, MenuActionFlags, MenuItemModel, ProfileInfoModel } from './sic-sidebar.model';
 
-export type SidebarAction = 'back' | 'search' | 'add' | 'save' | 'print' | null;
+export type SidebarAction = 'back' | 'search' | 'add' | 'save' | 'print'  | null;
 
 @Injectable({
   providedIn: 'root',

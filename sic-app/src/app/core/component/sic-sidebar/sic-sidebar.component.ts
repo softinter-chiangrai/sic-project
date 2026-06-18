@@ -12,6 +12,7 @@ import { BusinessInfoModel, MenuItemModel, MenuActionFlags, ProfileInfoModel, Si
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { SicCardComponent } from "../sic-card/sic-card.component";
+import { FormsModule } from "@angular/forms";
 
 interface BreadcrumbItem {
   label: string;
@@ -23,7 +24,7 @@ interface BreadcrumbItem {
 @Component({
   selector: 'sic-sidebar',
   standalone: true,
-  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet, SicCardComponent],
+  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet, SicCardComponent, FormsModule],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
   host: {

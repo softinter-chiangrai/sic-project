@@ -20,7 +20,7 @@ import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base
 
 @Component({
   selector: 'app-burt01',
-  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicButtonComponent, SicInputAreaComponent, SicRadioComponent, SicCardComponent],
+  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent],
   templateUrl: './burt01.component.html',
   styleUrl: './burt01.component.css',
 })
