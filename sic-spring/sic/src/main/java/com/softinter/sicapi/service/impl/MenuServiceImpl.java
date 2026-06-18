@@ -1,21 +1,17 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.dto.response.MenuProgramResponse;
 import com.softinter.sicapi.dto.response.MenuResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.repository.su.SuProgramRepository;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MenuService;
-import com.softinter.sicapi.util.LanguageUtils;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,30 +35,31 @@ public class MenuServiceImpl implements MenuService {
             return Collections.emptyList();
         }
 
-        List<SuProgram> programs = programRepository.findAccessiblePrograms(businessId, userId);
+        List<MenuProgramResponse> programs = programRepository.findAccessibleProgramsWithPermission(businessId, userId);
 
         if (programs.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Map<UUID, List<SuProgram>> childrenMap = new HashMap<>();
-        for (SuProgram p : programs) {
+        // Build tree
+        Map<UUID, List<MenuProgramResponse>> childrenMap = new HashMap<>();
+        for (MenuProgramResponse p : programs) {
             UUID parentId = p.getParentProgramId();
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(p);
         }
 
-        List<SuProgram> roots = new ArrayList<>(childrenMap.getOrDefault(null, Collections.emptyList()));
-        roots.sort(Comparator.comparing(SuProgram::getSortOrder, Comparator.nullsLast(Integer::compareTo))
-                .thenComparing(SuProgram::getProgramCode));
+        List<MenuProgramResponse> roots = new ArrayList<>(childrenMap.getOrDefault(null, Collections.emptyList()));
+        roots.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(MenuProgramResponse::getProgramCode));
 
         List<MenuResponse> menuList = new ArrayList<>();
-        for (SuProgram root : roots) {
+        for (MenuProgramResponse root : roots) {
             menuList.add(buildNode(root, childrenMap, useEnglish));
         }
         return menuList;
     }
 
-    private MenuResponse buildNode(SuProgram program, Map<UUID, List<SuProgram>> childrenMap, boolean useEnglish) {
+    private MenuResponse buildNode(MenuProgramResponse program, Map<UUID, List<MenuProgramResponse>> childrenMap, boolean useEnglish) {
         MenuResponse node = new MenuResponse();
 
         // ข้อมูลหลัก
@@ -71,24 +68,24 @@ public class MenuServiceImpl implements MenuService {
         node.setPath(program.getRoutePath());
         node.setCode(program.getProgramCode());
 
-        // ✅ เพิ่ม state และ rowVersion
-        if (program.getState() != null) {
-            // ใช้ getEntityStateCode() ถ้ามี หรือ ordinal()
-            // สมมติว่า EntityState มี getEntityStateCode()
-            node.setState(EntityState.DETACHED.getEntityStateCode());
-        } else {
-            node.setState(0); // Default = DETACHED
-        }
-
-        // ✅ rowVersion (ดึงจาก BaseEntity)
+        // state และ rowVersion
+        node.setState(program.getState() != null ? program.getState() : 0);
         node.setRowVersion(program.getRowVersion());
 
-        // Children
-        List<SuProgram> children = new ArrayList<>(childrenMap.getOrDefault(program.getId(), Collections.emptyList()));
-        children.sort(Comparator.comparing(SuProgram::getSortOrder, Comparator.nullsLast(Integer::compareTo))
-                .thenComparing(SuProgram::getProgramCode));
+        // ✅ permission fields (ใช้ setter ที่ Lombok สร้างให้)
+        node.setAdd(program.isAdd());
+        node.setBack(program.isBack());
+        node.setPrint(program.isPrint());
+        node.setRemove(program.isRemove());
+        node.setSave(program.isSave());
+        node.setSearch(program.isSearch());
 
-        for (SuProgram child : children) {
+        // Children
+        List<MenuProgramResponse> children = new ArrayList<>(childrenMap.getOrDefault(program.getId(), Collections.emptyList()));
+        children.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(MenuProgramResponse::getProgramCode));
+
+        for (MenuProgramResponse child : children) {
             node.getChildren().add(buildNode(child, childrenMap, useEnglish));
         }
 
