@@ -47,15 +47,15 @@ public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, Jpa
     @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
        "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
        "0, " +  // state = 0 (Detached)
-       "brp.isAdd, brp.isBack, brp.isPrint, brp.isRemove, brp.isSave, brp.isSearch) " +
+       "p.isAdd, p.isBack, p.isPrint, p.isRemove, p.isSave, p.isSearch) " +  // ✅ ใช้ permission จาก p (default)
        "FROM SuProgram p " +
        "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
        "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
        "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
        "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
-       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +  
+       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
        "AND p.isActive = true AND p.isDelete = false " +
        "AND brp.isActive = true " +
        "ORDER BY p.sortOrder ASC")
-       List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
+List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
 }

@@ -53,4 +53,22 @@ public class SuProgram extends BaseEntity {
 
     @OneToMany(mappedBy = "program", fetch = FetchType.LAZY)
     private List<SuBusinessRoleProgram> suBusinessRolePrograms = new ArrayList<>();
+
+     @Column(name = "is_add")
+    private boolean isAdd;
+
+    @Column(name = "is_back")
+    private boolean isBack;
+
+    @Column(name = "is_print")
+    private boolean isPrint;
+
+    @Column(name = "is_remove")
+    private boolean isRemove;
+
+    @Column(name = "is_save")
+    private boolean isSave;
+
+    @Column(name = "is_search")
+    private boolean isSearch;
 }

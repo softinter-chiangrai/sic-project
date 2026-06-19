@@ -65,6 +65,10 @@ export const routes: Routes = [
         path: 'su',
         loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
       },
+      {
+    path: 'customer',
+    loadComponent: () => import('./feature/pm/rt/pmrt01/pmrt01.component').then(m => m.Pmrt01Component),
+    }
     ],
   },
   {
@@ -125,4 +129,5 @@ export const routes: Routes = [
     path: 'tutorial',
     loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
   },
+  
 ];
