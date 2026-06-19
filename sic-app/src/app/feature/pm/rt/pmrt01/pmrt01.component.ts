@@ -215,16 +215,17 @@ export class Pmrt01Component implements OnInit {
   }
 
   goToAdd() {
-    this.router.navigate(['/customer/new']);
-  }
+  this.router.navigate(['/feature/pm/customer/new']);
+}
 
-  goToEdit(id: string) {
-    this.router.navigate(['/customer', id]);
-  }
+goToEdit(id: string) {
+  this.router.navigate(['/feature/pm/customer', id, 'edit']);
+}
 
-  goToView(id: string) {
-    this.router.navigate(['/customer', id, 'view']);
-  }
+// ✅ แก้ไข goToView (ถ้ามี)
+goToView(id: string) {
+  this.router.navigate(['/feature/pm/customer', id, 'view']);
+}
 
   toggleActive(customer: Customer) {
     const updated = { ...customer, isActive: !customer.isActive };

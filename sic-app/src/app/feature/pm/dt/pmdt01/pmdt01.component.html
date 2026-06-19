@@ -1,0 +1,250 @@
+@if (formCustomerData; as data) {
+  <form [formGroup]="data.formGroup" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มข้อมูลลูกค้า' }}
+        </h2>
+      </div>
+
+      <!-- รูปโปรไฟล์ -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-profile
+          [size]="150"
+          [visibility]="4"
+          formControlName="uploadGroupData"
+          src="images/profile.png"
+        >
+        </sic-profile>
+        <p class="text-center text-xs text-[var(--text-muted)] mt-2">คลิกเพื่ออัปโหลดรูปโปรไฟล์</p>
+      </div>
+
+      <!-- ประเภทลูกค้า (Radio) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <sic-radio
+          formControlName="personType"
+          direction="horizontal"
+          alignment="center"
+          [apiUrl]="service.apiGetLovPersonType"
+        ></sic-radio>
+      </div>
+
+      <!-- รหัส/อักษรย่อ -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <sic-input
+          label="รหัส/อักษรย่อ"
+          formControlName="businessCode"
+          [required]="true"
+        ></sic-input>
+      </div>
+
+      <!-- Tax ID + สาขา -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-3">
+          <sic-input
+            label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง"
+            [mask]="'0-0000-00000-00-0'"
+            formControlName="taxId"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value == 'CORPORATE') {
+          <div class="flex-1">
+            <sic-input label="สาขา" [mask]="'00000'" formControlName="branchCode"></sic-input>
+          </div>
+        }
+      </div>
+
+      <!-- คำนำหน้า -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="คำนำหน้า"
+          formControlName="titleId"
+          [apiUrl]="service.apiGetComboboxTitle"
+          [params]="{ personType: data.formGroup.get('personType')?.value }"
+        >
+        </sic-combobox>
+      </div>
+
+      <!-- ชื่อ (อังกฤษ) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-2">
+          <sic-input
+            label="ชื่อ (อังกฤษ)"
+            formControlName="firstNameEn"
+            [required]="true"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+          <div class="flex-1">
+            <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
+          </div>
+          <div class="flex-2">
+            <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
+          </div>
+        }
+      </div>
+
+      <!-- ชื่อ (ท้องถิ่น) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-2">
+          <sic-input
+            label="ชื่อ (ท้องถิ่น)"
+            formControlName="firstNameLocal"
+            [required]="true"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+          <div class="flex-1">
+            <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
+          </div>
+          <div class="flex-2">
+            <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
+          </div>
+        }
+      </div>
+
+      <!-- ประเทศ -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="ประเทศ"
+          formControlName="countryId"
+          [apiUrl]="service.apiGetComboboxCountry"
+          (selectionChanged)="onCountryChange($event)"
+        >
+        </sic-combobox>
+      </div>
+
+      <!-- ที่อยู่ (อังกฤษ) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="ที่อยู่ (อังกฤษ)"
+          formControlName="addressEn"
+          [rows]="2"
+        ></sic-input-area>
+      </div>
+
+      <!-- ที่อยู่ (ท้องถิ่น) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="ที่อยู่ (ท้องถิ่น)"
+          formControlName="addressLocal"
+          [rows]="2"
+        ></sic-input-area>
+      </div>
+
+      <!-- Support Local Address (checkbox) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="supportLocalAddress"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]"
+            >ใช้ที่อยู่ท้องถิ่น (แสดงข้อมูลจังหวัด/อำเภอ/ตำบล)</span
+          >
+        </label>
+      </div>
+
+      <!-- จังหวัด / อำเภอ / ตำบล / รหัสไปรษณีย์ (conditional) -->
+      @if (data.formGroup.get('supportLocalAddress')?.value) {
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="จังหวัด"
+            formControlName="provinceId"
+            [apiUrl]="service.apiGetComboboxProvince"
+            [params]="{ countryId: data.formGroup.get('countryId')?.value }"
+            (selectionChanged)="onProvinceChange($event)"
+          >
+          </sic-combobox>
+        </div>
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="อำเภอ"
+            formControlName="districtId"
+            [apiUrl]="service.apiGetComboboxDistrict"
+            [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
+            (selectionChanged)="onDistrictChange($event)"
+          >
+          </sic-combobox>
+        </div>
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="ตำบล"
+            formControlName="subDistrictId"
+            [apiUrl]="service.apiGetComboboxSubDistrict"
+            [params]="{ districtId: data.formGroup.get('districtId')?.value }"
+            (selectionChanged)="onSubDistrictChange($event)"
+          >
+          </sic-combobox>
+        </div>
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+        </div>
+      }
+
+      <!-- อีเมล -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="อีเมล" formControlName="email"></sic-input>
+      </div>
+
+      <!-- เบอร์โทรศัพท์ -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+      </div>
+
+      <!-- ปุ่ม Action -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+    </div>
+  </form>
+}

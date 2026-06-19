@@ -1,0 +1,269 @@
+<div class="space-y-5 p-0.5">
+
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-briefcase-fill text-[var(--crm-primary)]"></i>
+        รายการโครงการ
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่มโครงการ
+    </button>
+  </div>
+
+  <!-- ===== FILTERS ===== -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <!-- Search -->
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อโครงการ, ลูกค้า..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Filter: Status -->
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      @for (status of statusOptions; track status) {
+        <option [value]="status">{{ status }}</option>
+      }
+    </select>
+
+    <!-- Filter: Priority -->
+    <select
+      (change)="onPriorityChange($event)"
+      [value]="filterPriority()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">⚡ ทุกระดับความสำคัญ</option>
+      @for (priority of priorityOptions; track priority) {
+        <option [value]="priority">{{ priority }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== TABLE ===== -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th
+              (click)="onSortChange('projectCode')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
+            >
+              รหัสโครงการ
+              @if (sortBy() === 'projectCode') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('projectName')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
+            >
+              ชื่อโครงการ
+              @if (sortBy() === 'projectName') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('customerName')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
+            >
+              ลูกค้า
+              @if (sortBy() === 'customerName') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('status')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
+            >
+              สถานะ
+              @if (sortBy() === 'status') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
+            >
+              Manday
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px] hidden md:table-cell"
+            >
+              ระยะเวลา
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
+            >
+              ความสำคัญ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (project of paginatedProjects(); track project.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ project.projectCode }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="font-medium text-[var(--text-active)]">{{ project.projectName }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text)]">{{ project.customerName }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(project.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ project.status }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-col gap-0.5">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-[var(--text-muted)]">{{ project.usedManday }}/{{ project.budgetManday }}</span>
+                    <span class="font-medium text-[var(--text-active)]">{{ getProgress(project.usedManday, project.budgetManday) }}%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all"
+                      [style.width.%]="getProgress(project.usedManday, project.budgetManday)"
+                      [style.background]="getProgress(project.usedManday, project.budgetManday) > 80 ? 'var(--crm-danger)' : getProgress(project.usedManday, project.budgetManday) > 50 ? 'var(--crm-warning)' : 'var(--crm-success)'"
+                    ></div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
+                {{ formatDate(project.startDate) }} - {{ formatDate(project.plannedEndDate) }}
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getPriorityClass(project.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ project.priority }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    (click)="goToView(project.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดูข้อมูล"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button
+                    (click)="goToEdit(project.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลโครงการ</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มโครงการใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    เพิ่มโครงการ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ===== PAGINATION ===== -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
+      </div>
+
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="page === currentPage()
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
+            "
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
