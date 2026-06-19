@@ -4,8 +4,10 @@ ng g c feature/pm/rt/PMRT02 --standalone --skip-tests
 
 ng g c feature/pm/dt/pmdt01 --standalone --skip-tests
 
-ng g c feature/pm/dt/pmdt03
+ng g c feature/pm/dt/pmdt05
 
-ng g c feature/pm/rt/pmrt03
+ng g c feature/pm/rt/pmrt05
+
+http://localhost:4200/feature/pm/phase
 
 Starting SicApiApplication

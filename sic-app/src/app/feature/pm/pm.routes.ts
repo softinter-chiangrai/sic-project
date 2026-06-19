@@ -42,4 +42,35 @@ export const PM_ROUTES: Routes = [
     path: 'project/:id/edit',
     loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
   },
+
+  // ===== phase =====
+  {
+    path: 'phase',
+    loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
+  },
+  {
+    path: 'phase/new',
+    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
+  },
+  {
+    path: 'phase/:id/edit',
+    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
+  },
+
+   {
+    path: 'requirement',
+    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then((m) => m.Pmrt05Component),
+  },
+  {
+    path: 'requirement/new',
+    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+  },
+  {
+    path: 'requirement/:id/edit',
+    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+  },
+  {
+    path: 'requirement/:id/approval',
+    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component), // หรือหน้า approval แยก
+  },
 ];

@@ -1,0 +1,189 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div
+      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Phase...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Phase' : 'เพิ่มข้อมูล Phase' }}
+        </h2>
+      </div>
+
+      <!-- Phase Code -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="รหัส Phase"
+          formControlName="phaseCode"
+          [required]="true"
+          placeholder="PH-001"
+        ></sic-input>
+        @if (form.get('phaseCode')?.touched && form.get('phaseCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Phase</p>
+        }
+      </div>
+
+      <!-- Phase Name -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ชื่อ Phase"
+          formControlName="phaseName"
+          [required]="true"
+          placeholder="Requirement & Analysis"
+        ></sic-input>
+        @if (form.get('phaseName')?.touched && form.get('phaseName')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Phase</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Owner -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ผู้รับผิดชอบหลัก"
+          formControlName="owner"
+          placeholder="สมหญิง รักเรียน"
+        ></sic-input>
+      </div>
+
+      <!-- Start Date - End Date -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุด"
+            type="text"
+            formControlName="endDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+          }
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Dependency -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="Dependency (Phase ที่ต้องรอ)"
+          formControlName="dependency"
+          placeholder="PH-001"
+        ></sic-input>
+      </div>
+
+      <!-- Progress -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ความคืบหน้า (%)"
+          type="text"
+          formControlName="progress"
+          placeholder="0"
+        ></sic-input>
+        <p class="text-xs text-[var(--text-muted)] mt-1">0-100</p>
+      </div>
+
+      <!-- Description -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [rows]="3"
+          placeholder="รายละเอียดของ Phase นี้"
+        ></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Phase</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+    </div>
+  </form>
+}
