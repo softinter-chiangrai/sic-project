@@ -138,4 +138,12 @@ export const PM_ROUTES: Routes = [
     path: 'discussion',
     loadComponent: () => import('./dt/pmdt14/pmdt14.component').then((m) => m.Pmdt14Component),
   },
+  {
+    path: 'gantt',
+    loadComponent: () => import('./rt/pmrt14/pmrt14.component').then((m) => m.Pmrt14Component),
+  },
+  {
+    path: 'gantt/:id/update',
+    loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
+  },
 ];

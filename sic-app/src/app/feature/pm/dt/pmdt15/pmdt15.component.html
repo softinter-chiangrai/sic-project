@@ -1,0 +1,173 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          ✏️ อัปเดตกำหนดการงาน
+        </h2>
+        <p class="text-lg text-[var(--text-muted)] mt-1">{{ taskCode }}: {{ taskName }}</p>
+      </div>
+
+      <!-- Task Info -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="รหัสงาน"
+            formControlName="taskCode"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+        <div class="flex-2">
+          <sic-input
+            label="ชื่องาน"
+            formControlName="taskName"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="โครงการ"
+            formControlName="projectName"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="ผู้รับผิดชอบ"
+            formControlName="assignedTo"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Start & End Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม (แผน)"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุด (แผน)"
+            type="text"
+            formControlName="endDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+          }
+        </div>
+      </div>
+
+      <!-- Actual Dates -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่มจริง"
+            type="text"
+            formControlName="actualStart"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุดจริง"
+            type="text"
+            formControlName="actualEnd"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+          สถานะ <span class="text-red-500">*</span>
+        </label>
+        <select
+          formControlName="status"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+        >
+          @for (status of statusOptions; track status) {
+            <option [value]="status">{{ getStatusText(status) }}</option>
+          }
+        </select>
+        @if (form.get('status')?.touched && form.get('status')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
+        }
+      </div>
+
+      <!-- Dependency -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="Dependency (งานที่ต้องรอ)"
+          formControlName="dependency"
+          placeholder="TASK-001"
+          (change)="onDependencyChange($event)"
+        ></sic-input>
+        @if (form.get('dependencyName')?.value) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">📌 {{ form.get('dependencyName')?.value }}</p>
+        }
+      </div>
+
+      <!-- Comment -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="หมายเหตุ"
+          formControlName="comment"
+          [rows]="2"
+          placeholder="เพิ่มความคิดเห็นหรือรายละเอียดเพิ่มเติม..."
+        ></sic-input-area>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            บันทึกกำหนดการ
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}
