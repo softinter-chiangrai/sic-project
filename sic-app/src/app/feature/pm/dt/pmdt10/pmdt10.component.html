@@ -1,0 +1,235 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Specification...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Specification' : 'เพิ่มข้อมูล Specification' }}
+        </h2>
+      </div>
+
+      <!-- Spec Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Specification"
+          formControlName="specCode"
+          [required]="true"
+          placeholder="SPEC-001"
+        ></sic-input>
+        @if (form.get('specCode')?.touched && form.get('specCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Specification</p>
+        }
+      </div>
+
+      <!-- Spec Type -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภท Specification"
+          formControlName="specType"
+          [apiUrl]="service.apiGetLovSpecType"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('specType')?.touched && form.get('specType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <!-- Screen Name -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อหน้าจอ / Feature"
+          formControlName="screenName"
+          [required]="true"
+          placeholder="Customer Management"
+        ></sic-input>
+        @if (form.get('screenName')?.touched && form.get('screenName')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อหน้าจอ</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [required]="true"
+          [rows]="2"
+          placeholder="อธิบาย Feature หรือ Specification นี้"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุคำอธิบาย</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Related Requirements (ใช้ combobox multi-select) -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="Requirement ที่เกี่ยวข้อง"
+          formControlName="requirementIds"
+          [apiUrl]="service.apiGetComboboxRequirement"
+          [params]="{ projectId: form.get('projectId')?.value }"
+          multiple="true"
+        ></sic-combobox>
+        <p class="text-xs text-[var(--text-muted)] mt-1">เลือก Requirement ที่เกี่ยวข้อง (กด Ctrl เพื่อเลือกหลายรายการ)</p>
+      </div>
+
+      <!-- ER Tables -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ER Tables ที่เกี่ยวข้อง</label>
+        <select
+          formControlName="erTables"
+          multiple
+          (change)="onErTableChange($event)"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        >
+          @for (table of erTableOptions; track table) {
+            <option [value]="table">{{ table }}</option>
+          }
+        </select>
+        <p class="text-xs text-[var(--text-muted)] mt-1">กด Ctrl เพื่อเลือกหลายรายการ</p>
+      </div>
+
+      <!-- UI Actions -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">UI Actions</label>
+        <div class="flex flex-wrap gap-3">
+          @for (action of uiActionOptions; track action) {
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                [value]="action"
+                (change)="onUiActionChange($event)"
+                [checked]="isUiActionChecked(action)"
+                class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+              />
+              {{ action }}
+            </label>
+          }
+        </div>
+        <input type="hidden" formControlName="uiActions" />
+      </div>
+
+      <!-- Validation Rules -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="Validation Rules"
+          formControlName="validationRules"
+          [rows]="2"
+          placeholder="เช่น Tax ID ต้อง 13 หลัก, อีเมลต้องถูกต้อง"
+        ></sic-input-area>
+      </div>
+
+      <!-- Permission -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="สิทธิ์การใช้งาน"
+          formControlName="permission"
+          placeholder="Admin, Sales"
+        ></sic-input>
+      </div>
+
+      <!-- Estimated Manday -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="Estimated Manday (วัน)"
+          type="text"
+          formControlName="estimatedManday"
+          [required]="true"
+          placeholder="3"
+        ></sic-input>
+        @if (form.get('estimatedManday')?.touched && form.get('estimatedManday')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday</p>
+        }
+      </div>
+
+      <!-- Dependency -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="Dependency (สิ่งที่ต้องมีก่อน)"
+          formControlName="dependency"
+          placeholder="ต้องมี Table customers ก่อน"
+        ></sic-input>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Version -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เวอร์ชัน"
+          formControlName="version"
+          placeholder="v1.0"
+        ></sic-input>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Specification</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

@@ -1,0 +1,274 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div
+      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Design Review...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Design Review' : 'สร้าง Design Review' }}
+        </h2>
+      </div>
+
+      <!-- Review Code -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="รหัส Design Review"
+          formControlName="reviewCode"
+          [required]="true"
+          placeholder="DR-001"
+        ></sic-input>
+        @if (form.get('reviewCode')?.touched && form.get('reviewCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Design Review</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ชื่อเรื่อง"
+          formControlName="title"
+          [required]="true"
+          placeholder="Review ER Diagram - Customer Table"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อเรื่อง</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [required]="true"
+          [rows]="2"
+          placeholder="อธิบายรายละเอียดของงานที่ต้องการตรวจสอบ"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุคำอธิบาย</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Reviewable Type -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="ประเภทงานที่ตรวจสอบ"
+          formControlName="reviewableType"
+          [apiUrl]="service.apiGetLovReviewableType"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('reviewableType')?.touched && form.get('reviewableType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <!-- Reviewable Item -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="รายการที่ตรวจสอบ"
+          formControlName="reviewableId"
+          [apiUrl]="service.apiGetComboboxReviewable"
+          [params]="{
+            projectId: form.get('projectId')?.value,
+            type: form.get('reviewableType')?.value,
+          }"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('reviewableId')?.touched && form.get('reviewableId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกรายการที่ตรวจสอบ</p>
+        }
+      </div>
+
+      <!-- Reviewer & Assigned To -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-1">
+          <sic-input
+            label="ผู้ตรวจสอบ"
+            formControlName="reviewer"
+            placeholder="วิชัย พัฒนาชัย"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="ผู้รับผิดชอบแก้ไข"
+            formControlName="assignedTo"
+            placeholder="สมหญิง รักเรียน"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Severity & Status -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-1">
+          <sic-combobox
+            label="ระดับความรุนแรง"
+            formControlName="severity"
+            [apiUrl]="service.apiGetLovSeverity"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="สถานะ"
+            formControlName="status"
+            [apiUrl]="service.apiGetLovStatus"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+      </div>
+
+      <!-- Due Date -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="กำหนดส่ง"
+          type="text"
+          formControlName="dueDate"
+          [required]="true"
+          placeholder="DD/MM/YYYY"
+        ></sic-input>
+        @if (form.get('dueDate')?.touched && form.get('dueDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุกำหนดส่ง</p>
+        }
+      </div>
+
+      <!-- Comments (แสดงเฉพาะในโหมดแก้ไข) -->
+      @if (isEdit && form.get('comments')?.value?.length > 0) {
+        <div class="col-span-6">
+          <h3 class="text-lg font-semibold text-[var(--text-active)] mb-2">💬 ความเห็น</h3>
+          <div class="space-y-2">
+            @for (comment of form.get('comments')?.value; track comment.id) {
+              <div
+                class="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)]"
+              >
+                <div
+                  class="w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0"
+                >
+                  <span class="text-xs font-semibold text-[var(--crm-primary)]">
+                    {{ comment.author?.charAt(0) || '?' }}
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-medium text-[var(--text-active)]">{{
+                      comment.author
+                    }}</span>
+                    <span
+                      class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    >
+                      {{ comment.type }}
+                    </span>
+                    <span class="text-xs text-[var(--text-muted)]">{{ comment.createdAt }}</span>
+                  </div>
+                  <p class="text-sm text-[var(--text)] mt-0.5">{{ comment.text }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Add Comment (เฉพาะโหมดแก้ไข) -->
+      @if (isEdit) {
+        <div class="col-span-6">
+          <h4 class="text-sm font-medium text-[var(--text-active)] mb-2">➕ เพิ่มความเห็น</h4>
+          <div class="grid grid-cols-6 gap-4">
+            <div class="col-span-4">
+              <sic-input-area
+                label="ข้อความ"
+                [rows]="2"
+                placeholder="เพิ่มความคิดเห็น..."
+              ></sic-input-area>
+            </div>
+            <div class="col-span-2">
+              <!-- ✅ เปลี่ยนจาก sic-combobox เป็น select -->
+              <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท</label>
+              <select
+                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+              >
+                @for (type of commentTypeOptions; track type) {
+                  <option [value]="type">{{ type }}</option>
+                }
+              </select>
+              <sic-button [fullWidth]="true" [type]="'button'" variant="primary" class="mt-3">
+                <i class="bi bi-plus-lg"></i>
+                เพิ่ม
+              </sic-button>
+            </div>
+          </div>
+        </div>
+      }
+      <!-- Active Status -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Design Review</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+    </div>
+  </form>
+}

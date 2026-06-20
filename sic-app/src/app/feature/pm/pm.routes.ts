@@ -73,4 +73,69 @@ export const PM_ROUTES: Routes = [
     path: 'requirement/:id/approval',
     loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component), // หรือหน้า approval แยก
   },
+
+   {
+    path: 'change-request',
+    loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
+  },
+  {
+    path: 'change-request/new',
+    loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
+  },
+  {
+    path: 'change-request/:id/edit',
+    loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
+  },
+  {
+    path: 'specification',
+    loadComponent: () => import('./rt/pmrt10/pmrt10.component').then((m) => m.Pmrt10Component),
+  },
+  {
+    path: 'specification/new',
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
+  },
+  {
+    path: 'specification/:id/edit',
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
+  },
+  {
+    path: 'design-review',
+    loadComponent: () => import('./rt/pmrt11/pmrt11.component').then((m) => m.Pmrt11Component),
+  },
+  {
+    path: 'design-review/new',
+    loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
+  },
+  {
+    path: 'design-review/:id/edit',
+    loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
+  },
+  // ===== Task =====
+  {
+    path: 'task',
+    loadComponent: () => import('./rt/pmrt12/pmrt12.component').then((m) => m.Pmrt12Component),
+  },
+  {
+    path: 'task/new',
+    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
+  },
+  {
+    path: 'task/:id/edit',
+    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
+  },
+  {
+    path: 'my-tasks',
+    loadComponent: () => import('./rt/pmrt13/pmrt13.component').then((m) => m.Pmrt13Component),
+  },
+   {
+    path: 'my-tasks/:id/update',
+    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
+  },
+  
+
+  // ===== Discussion =====
+  {
+    path: 'discussion',
+    loadComponent: () => import('./dt/pmdt14/pmdt14.component').then((m) => m.Pmdt14Component),
+  },
 ];
