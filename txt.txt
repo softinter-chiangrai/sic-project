@@ -4,9 +4,9 @@ ng g c feature/pm/rt/PMRT02 --standalone --skip-tests
 
 ng g c feature/pm/dt/pmdt01 --standalone --skip-tests
 
-ng g c feature/pm/dt/pmdt15
+ng g c feature/pm/dt/pmdt26
 
-ng g c feature/pm/rt/pmrt14
+ng g c feature/pm/rt/pmrt26
 
 http://localhost:4200/feature/pm/phase
 

@@ -1,0 +1,172 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          🧪 บันทึกผลการทดสอบ
+        </h2>
+        <p class="text-lg text-[var(--text-muted)] mt-1">{{ testCode }}: {{ testCase }}</p>
+      </div>
+
+      <!-- Test Info -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="Module"
+            formControlName="module"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="Scenario"
+            formControlName="scenario"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ขั้นตอนการทดสอบ</label>
+        <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+          @for (step of form.get('steps')?.value || []; track $index) {
+            <div class="flex items-center gap-2 text-sm text-[var(--text)] py-1">
+              <span class="w-6 h-6 rounded-full bg-[var(--crm-primary)]/10 flex items-center justify-center text-xs font-semibold text-[var(--crm-primary)] flex-shrink-0">
+                {{ $index + 1 }}
+              </span>
+              <span>{{ step }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Expected Result -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="ผลที่คาดหวัง"
+          formControlName="expectedResult"
+          [rows]="1"
+          [disabled]="true"
+        ></sic-input-area>
+      </div>
+
+      <!-- Actual Result -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="ผลลัพธ์ที่ได้จริง <span class='text-red-500'>*</span>"
+          formControlName="actualResult"
+          [rows]="2"
+          [required]="true"
+          placeholder="กรอกผลลัพธ์ที่ได้จากการทดสอบ..."
+        ></sic-input-area>
+        @if (form.get('actualResult')?.touched && form.get('actualResult')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุผลลัพธ์ที่ได้จริง</p>
+        }
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+          สถานะการทดสอบ <span class="text-red-500">*</span>
+        </label>
+        <select
+          formControlName="status"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+        >
+          @for (status of statusOptions; track status) {
+            <option [value]="status">{{ getStatusText(status) }}</option>
+          }
+        </select>
+        @if (form.get('status')?.touched && form.get('status')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
+        }
+      </div>
+
+      <!-- Bug (แสดงเมื่อ Fail และมี Bug) -->
+      @if (form.get('status')?.value === 'Fail' && form.get('bugCode')?.value) {
+        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+          <div class="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <i class="bi bi-bug text-red-500 text-lg"></i>
+            <div>
+              <span class="text-sm font-medium text-red-700 dark:text-red-300">Bug ที่เกี่ยวข้อง:</span>
+              <span class="text-sm text-red-600 dark:text-red-400 ml-1">{{ form.get('bugCode')?.value }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Tester & Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="ผู้ทดสอบ"
+            formControlName="tester"
+            [disabled]="true"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่ทดสอบ"
+            type="text"
+            formControlName="testDate"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Comment -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="หมายเหตุ / Comment"
+          formControlName="comment"
+          [rows]="2"
+          placeholder="เพิ่มรายละเอียดเพิ่มเติมเกี่ยวกับการทดสอบ..."
+        ></sic-input-area>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+            [disabled]="isSubmitting"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+            [disabled]="isSubmitting"
+          >
+            @if (isSubmitting) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSubmitting ? 'กำลังบันทึก...' : 'บันทึกผลการทดสอบ' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

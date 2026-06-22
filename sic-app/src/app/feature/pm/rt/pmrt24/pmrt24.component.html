@@ -1,0 +1,313 @@
+<div class="space-y-6 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-grid-1x2-fill text-[var(--crm-primary)]"></i>
+        แดชบอร์ดผู้ดูแลระบบ (Admin)
+      </h1>
+      <p class="text-sm text-[var(--text-muted)] mt-0.5">
+        ภาพรวมข้อมูลทั้งหมดของระบบ — อัปเดตล่าสุด: {{ lastUpdated() | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button
+        (click)="updateLastUpdated()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+      >
+        <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoading()"></i>
+        รีเฟรช
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STATS (8 การ์ด) ===== -->
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+    @for (stat of stats(); track stat.label) {
+      <div
+        class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5"
+        (click)="stat.route ? navigateTo(stat.route) : null"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-[var(--text-muted)]">{{ stat.label }}</p>
+            <p class="text-2xl font-bold text-[var(--text-active)] mt-1">{{ stat.value }}</p>
+          </div>
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center"
+            [style.background]="stat.color + '20'"
+          >
+            <i class="bi text-lg" [class]="stat.icon" [style.color]="stat.color"></i>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ===== THREE COLUMN LAYOUT ===== -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- ===== LEFT COLUMN (2/3) ===== -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- ===== Project Health ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-heart-pulse text-[var(--crm-danger)]"></i>
+            สุขภาพโครงการ (Project Health Score)
+          </h3>
+          <span
+            [class]="
+              getStatusClass(projectHealth().status) + ' px-3 py-1 rounded-full text-sm font-medium'
+            "
+          >
+            {{ projectHealth().status }} ({{ projectHealth().score }}%)
+          </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col items-center justify-center p-4 bg-[var(--bg)] rounded-lg">
+            <!-- Project Health Score Circle -->
+            <div class="relative w-24 h-24">
+              <svg class="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="var(--border)"
+                  stroke-width="3"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  [style.stroke]="getHealthStatusColor(projectHealth().status)"
+                  stroke-width="3"
+                  stroke-dasharray="100"
+                  [attr.stroke-dashoffset]="100 - projectHealth().score"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span
+                class="absolute inset-0 flex items-center justify-center text-xl font-bold text-[var(--text-active)]"
+              >
+                {{ projectHealth().score }}%
+              </span>
+            </div>
+            <p class="text-sm text-[var(--text-muted)] mt-2">คะแนนรวม</p>
+          </div>
+          <div class="md:col-span-2">
+            <div class="space-y-2">
+              @for (factor of projectHealth().factors; track factor.name) {
+                <div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-[var(--text-muted)]">{{ factor.name }}</span>
+                    <span class="text-[var(--text-active)] font-medium"
+                      >{{ factor.value }}/{{ factor.weight }}</span
+                    >
+                  </div>
+                  <div class="w-full h-1.5 bg-[var(--bg)] rounded-full overflow-hidden mt-0.5">
+                    <div
+                      class="h-full rounded-full transition-all"
+                      [style.width.%]="(factor.value / factor.weight) * 100"
+                      [style.background]="
+                        factor.value / factor.weight > 0.8
+                          ? 'var(--crm-danger)'
+                          : factor.value / factor.weight > 0.5
+                            ? 'var(--crm-warning)'
+                            : 'var(--crm-success)'
+                      "
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Pending Approvals ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-clock-history text-[var(--crm-warning)]"></i>
+            รอการอนุมัติ
+            <span class="text-xs font-normal text-[var(--text-muted)] ml-2"
+              >({{ pendingApprovals().length }} รายการ)</span
+            >
+          </h3>
+          <button
+            (click)="navigateTo('/feature/pm/approval')"
+            class="text-sm text-[var(--crm-primary)] hover:underline"
+          >
+            ดูทั้งหมด →
+          </button>
+        </div>
+        <div class="space-y-2">
+          @for (approval of pendingApprovals(); track approval.id) {
+            <div
+              class="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--sidebar-hover)] cursor-pointer transition-colors"
+              (click)="goToApproval(approval.id)"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg bg-[var(--crm-warning)]/10 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="bi bi-file-text text-[var(--crm-warning)] text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[var(--text-active)]">{{ approval.title }}</p>
+                  <p class="text-xs text-[var(--text-muted)]">
+                    {{ approval.type }}: {{ approval.code }}
+                  </p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-[var(--text-muted)]">ครบกำหนด</span>
+                <p class="text-xs font-medium text-[var(--crm-danger)]">
+                  {{ formatDate(approval.dueDate) }}
+                </p>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-[var(--text-muted)] text-center py-4">ไม่มีรายการรออนุมัติ</p>
+          }
+        </div>
+      </div>
+
+      <!-- ===== Deadlines ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-calendar-event text-[var(--crm-danger)]"></i>
+            กำหนดส่งที่ใกล้ถึง
+            <span class="text-xs font-normal text-[var(--text-muted)] ml-2"
+              >({{ deadlines().length }} รายการ)</span
+            >
+          </h3>
+          <button
+            (click)="navigateTo('/feature/pm/task')"
+            class="text-sm text-[var(--crm-primary)] hover:underline"
+          >
+            ดูทั้งหมด →
+          </button>
+        </div>
+        <div class="space-y-2">
+          @for (deadline of deadlines(); track deadline.id) {
+            <div
+              class="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--sidebar-hover)] cursor-pointer transition-colors"
+              (click)="goToTask(deadline.id)"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg bg-[var(--crm-danger)]/10 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="bi bi-clock text-[var(--crm-danger)] text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[var(--text-active)]">{{ deadline.task }}</p>
+                  <p class="text-xs text-[var(--text-muted)]">{{ deadline.project }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-[var(--text-muted)]">เหลือ</span>
+                <p [class]="getDaysClass(deadline.daysLeft) + ' text-sm font-medium'">
+                  {{ deadline.daysLeft > 0 ? deadline.daysLeft + ' วัน' : 'วันนี้' }}
+                </p>
+                <span
+                  [class]="
+                    getDeadlineStatusClass(deadline.status) +
+                    ' inline-block px-2 py-0.5 rounded text-[0.55rem] font-medium mt-0.5'
+                  "
+                >
+                  {{ deadline.status }}
+                </span>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-[var(--text-muted)] text-center py-4">ไม่มีงานที่ใกล้ครบกำหนด</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT COLUMN (1/3) ===== -->
+    <div class="lg:col-span-1 space-y-6">
+      <!-- ===== Recent Activities ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2 mb-4">
+          <i class="bi bi-activity text-[var(--crm-primary)]"></i>
+          กิจกรรมล่าสุด
+        </h3>
+        <div class="space-y-3">
+          @for (activity of activities(); track activity.id) {
+            <div
+              class="flex items-start gap-3 cursor-pointer hover:bg-[var(--sidebar-hover)] p-2 rounded-lg transition-colors"
+              (click)="activity.route ? navigateTo(activity.route) : null"
+            >
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                [style.background]="activity.color + '20'"
+              >
+                <i class="bi text-sm" [class]="activity.icon" [style.color]="activity.color"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-[var(--text-active)]">{{ activity.title }}</p>
+                <p class="text-xs text-[var(--text-muted)]">
+                  {{ activity.user }} • {{ activity.time }}
+                </p>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-[var(--text-muted)] text-center py-4">ไม่มีกิจกรรมล่าสุด</p>
+          }
+        </div>
+      </div>
+
+      <!-- ===== System Status ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2 mb-4">
+          <i class="bi bi-hdd-stack text-[var(--crm-primary)]"></i>
+          สถานะระบบ
+        </h3>
+        <div class="space-y-2">
+          @for (status of systemStatus(); track status.label) {
+            <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--bg)]">
+              <span class="text-sm text-[var(--text-muted)]">{{ status.label }}</span>
+              <div class="flex items-center gap-2">
+                <span
+                  [class]="
+                    getSystemStatusClass(status.status) + ' inline-block w-2 h-2 rounded-full'
+                  "
+                ></span>
+                <span class="text-sm text-[var(--text-active)]">{{ status.value }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ===== Quick Actions ===== -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+        <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2 mb-4">
+          <i class="bi bi-lightning-fill text-[var(--crm-warning)]"></i>
+          ดำเนินการด่วน
+        </h3>
+        <div class="grid grid-cols-2 gap-2">
+          @for (action of quickActions; track action.label) {
+            <button
+              (click)="navigateTo(action.route)"
+              [class]="
+                getQuickActionColorClass(action.color) +
+                ' flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md'
+              "
+            >
+              <i class="bi text-base" [class]="action.icon"></i>
+              <span class="text-xs">{{ action.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

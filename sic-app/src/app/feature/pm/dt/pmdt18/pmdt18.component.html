@@ -1,0 +1,241 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Delivery...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลส่งมอบ' : 'สร้างเอกสารส่งมอบ' }}
+        </h2>
+      </div>
+
+      <!-- Delivery Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Delivery"
+          formControlName="deliveryCode"
+          [required]="true"
+          placeholder="DEL-001"
+        ></sic-input>
+        @if (form.get('deliveryCode')?.touched && form.get('deliveryCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Delivery</p>
+        }
+      </div>
+
+      <!-- Project & Customer -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="โครงการ"
+            formControlName="projectId"
+            [apiUrl]="service.apiGetComboboxProject"
+            [required]="true"
+          ></sic-combobox>
+          @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="ลูกค้า"
+            formControlName="customerId"
+            [apiUrl]="service.apiGetComboboxCustomer"
+            [required]="true"
+          ></sic-combobox>
+          @if (form.get('customerId')?.touched && form.get('customerId')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกลูกค้า</p>
+          }
+        </div>
+      </div>
+
+      <!-- Delivery Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="วันที่ส่งมอบ"
+          type="text"
+          formControlName="deliveryDate"
+          [required]="true"
+          placeholder="DD/MM/YYYY"
+        ></sic-input>
+        @if (form.get('deliveryDate')?.touched && form.get('deliveryDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่ส่งมอบ</p>
+        }
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- ===== CHECKLIST ===== -->
+      <div class="col-span-6">
+        <h3 class="text-lg font-semibold text-[var(--text-active)] mb-3">📋 Delivery Checklist</h3>
+        <p class="text-sm text-[var(--text-muted)] mb-3">ทุกข้อต้องผ่านก่อนส่งมอบ</p>
+      </div>
+
+      <!-- Checklist Items -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1 space-y-3">
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="requirementConfirmed"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Requirement ผ่านการ Confirm</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="specificationConfirmed"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Specification ผ่านการ Confirm</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="tasksCompleted"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Development Task เสร็จครบ</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="testCasesPassed"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Test Case สำคัญผ่านหมด</span>
+          </label>
+        </div>
+        <div class="flex-1 space-y-3">
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="criticalBugsClosed"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Bug Critical / High ถูกปิดหมด</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="userManualReady"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">User Manual พร้อม</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="releaseNoteReady"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">Release Note พร้อม</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              formControlName="pmApproved"
+              (change)="onChecklistChange()"
+              class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+            />
+            <span class="text-[var(--text-active)]">PM อนุมัติส่งมอบ</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Checklist Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <div class="p-4 rounded-lg border" [class.border-emerald-500]="form.get('checklistPassed')?.value" [class.border-red-500]="!form.get('checklistPassed')?.value">
+          <div class="flex items-center gap-2">
+            <i class="bi text-lg" [class.bi-check-circle-fill]="form.get('checklistPassed')?.value" [class.bi-x-circle-fill]="!form.get('checklistPassed')?.value" [class.text-emerald-500]="form.get('checklistPassed')?.value" [class.text-red-500]="!form.get('checklistPassed')?.value"></i>
+            <span class="font-medium text-[var(--text-active)]">
+              {{ form.get('checklistPassed')?.value ? '✅ Checklist ผ่านทุกข้อ พร้อมส่งมอบ' : '❌ Checklist ยังไม่ครบ กรุณาตรวจสอบ' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachment -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ไฟล์แนบ (ชื่อไฟล์)"
+          formControlName="attachment"
+          placeholder="Delivery_CRM_v1.0.pdf"
+        ></sic-input>
+        <p class="text-xs text-[var(--text-muted)] mt-1">อัปโหลดเอกสารส่งมอบ (PDF, DOCX, ZIP)</p>
+      </div>
+
+      <!-- Notes -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="หมายเหตุ"
+          formControlName="notes"
+          [rows]="2"
+          placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับการส่งมอบ"
+        ></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Delivery</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

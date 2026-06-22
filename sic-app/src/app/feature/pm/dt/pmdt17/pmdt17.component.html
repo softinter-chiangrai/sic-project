@@ -1,0 +1,223 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Bug...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Bug' : 'แจ้ง Bug ใหม่' }}
+        </h2>
+      </div>
+
+      <!-- Bug Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Bug"
+          formControlName="bugCode"
+          [required]="true"
+          placeholder="BUG-001"
+        ></sic-input>
+        @if (form.get('bugCode')?.touched && form.get('bugCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Bug</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อเรื่อง"
+          formControlName="title"
+          [required]="true"
+          placeholder="ระบบไม่แจ้ง Error เมื่อ Tax ID ซ้ำ"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อเรื่อง</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="รายละเอียด"
+          formControlName="description"
+          [required]="true"
+          [rows]="3"
+          placeholder="อธิบายปัญหาโดยละเอียด พร้อมขั้นตอนการเกิด"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Related Test Case, Task, Spec -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="Test Case ที่เกี่ยวข้อง"
+            formControlName="relatedTestCase"
+            [apiUrl]="service.apiGetComboboxTestCase"
+            [params]="{ projectId: form.get('projectId')?.value }"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="Task ที่เกี่ยวข้อง"
+            formControlName="relatedTask"
+            [apiUrl]="service.apiGetComboboxTask"
+            [params]="{ projectId: form.get('projectId')?.value }"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="Spec ที่เกี่ยวข้อง"
+            formControlName="relatedSpec"
+            [apiUrl]="service.apiGetComboboxSpec"
+            [params]="{ projectId: form.get('projectId')?.value }"
+          ></sic-combobox>
+        </div>
+      </div>
+
+      <!-- Found By & Assigned To -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="ผู้พบ"
+            formControlName="foundBy"
+            placeholder="สมชาย ใจดี"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="ผู้รับผิดชอบแก้ไข"
+            formControlName="assignedTo"
+            placeholder="สมหญิง รักเรียน"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Found Date, Fix Due Date, Fixed Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่พบ"
+            type="text"
+            formControlName="foundDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY HH:MM"
+          ></sic-input>
+          @if (form.get('foundDate')?.touched && form.get('foundDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่พบ</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="กำหนดแก้ไข"
+            type="text"
+            formControlName="fixDueDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('fixDueDate')?.touched && form.get('fixDueDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุกำหนดแก้ไข</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่แก้ไขจริง"
+            type="text"
+            formControlName="fixedDate"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Severity, Priority, Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="ระดับความรุนแรง"
+            formControlName="severity"
+            [apiUrl]="service.apiGetLovSeverity"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="ลำดับความสำคัญ"
+            formControlName="priority"
+            [apiUrl]="service.apiGetLovPriority"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="สถานะ"
+            formControlName="status"
+            [apiUrl]="service.apiGetLovStatus"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Bug</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'แจ้ง Bug' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

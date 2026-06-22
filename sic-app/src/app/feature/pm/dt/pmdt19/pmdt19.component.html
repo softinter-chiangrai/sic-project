@@ -1,0 +1,205 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลคู่มือ...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลคู่มือ' : 'สร้างคู่มือใหม่' }}
+        </h2>
+      </div>
+
+      <!-- Manual Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัสคู่มือ"
+          formControlName="manualCode"
+          [required]="true"
+          placeholder="UM-001"
+        ></sic-input>
+        @if (form.get('manualCode')?.touched && form.get('manualCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัสคู่มือ</p>
+        }
+      </div>
+
+      <!-- Manual Type -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภทคู่มือ"
+          formControlName="manualType"
+          [apiUrl]="service.apiGetLovManualType"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('manualType')?.touched && form.get('manualType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อคู่มือ"
+          formControlName="title"
+          [required]="true"
+          placeholder="คู่มือการใช้งานระบบ CRM"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อคู่มือ</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [rows]="2"
+          placeholder="คำอธิบายสั้นๆ เกี่ยวกับคู่มือนี้"
+        ></sic-input-area>
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Related Spec -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="Specification ที่เกี่ยวข้อง"
+          formControlName="relatedSpec"
+          [apiUrl]="service.apiGetComboboxSpec"
+          [params]="{ projectId: form.get('projectId')?.value }"
+        ></sic-combobox>
+        <p class="text-xs text-[var(--text-muted)] mt-1">เลือก Specification ที่เกี่ยวข้องกับคู่มือนี้</p>
+      </div>
+
+      <!-- Author -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ผู้เขียน"
+          formControlName="author"
+          placeholder="สมหญิง รักเรียน"
+        ></sic-input>
+      </div>
+
+      <!-- Content -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="เนื้อหา"
+          formControlName="content"
+          [required]="true"
+          [rows]="6"
+          placeholder="เขียนเนื้อหาคู่มือที่นี่..."
+        ></sic-input-area>
+        @if (form.get('content')?.touched && form.get('content')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเนื้อหา</p>
+        }
+      </div>
+
+      <!-- File Attachments -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ไฟล์แนบ</label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
+          >
+            <i class="bi bi-upload"></i>
+            อัปโหลดไฟล์
+          </button>
+          <span class="text-sm text-[var(--text-muted)]">(PDF, DOC, DOCX, JPG, PNG)</span>
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (file of form.get('fileAttachments')?.value || []; track file) {
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-[var(--bg)] border border-[var(--border)] text-xs text-[var(--text)]">
+              <i class="bi bi-file-earmark"></i>
+              {{ file }}
+              <button
+                type="button"
+                class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
+                (click)="removeFile($index)"
+              >
+                <i class="bi bi-x"></i>
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Version -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เวอร์ชัน"
+          formControlName="version"
+          placeholder="v1.0"
+        ></sic-input>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งานคู่มือ</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

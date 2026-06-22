@@ -1,0 +1,188 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลการต่ออายุ...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลการต่ออายุ' : 'ต่ออายุสัญญา MA' }}
+        </h2>
+        @if (originalContractNo) {
+          <p class="text-lg text-[var(--text-muted)] mt-1">สัญญาเดิม: {{ originalContractNo }}</p>
+        }
+      </div>
+
+      <!-- Original Contract -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สัญญาเดิม"
+          formControlName="originalContractId"
+          [apiUrl]="service.apiGetComboboxContract"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('originalContractId')?.touched && form.get('originalContractId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสัญญาเดิม</p>
+        }
+      </div>
+
+      <!-- New Contract No -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เลขสัญญาใหม่"
+          formControlName="newContractNo"
+          [required]="true"
+          placeholder="CT-006"
+        ></sic-input>
+        @if (form.get('newContractNo')?.touched && form.get('newContractNo')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขสัญญาใหม่</p>
+        }
+      </div>
+
+      <!-- Customer -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลูกค้า"
+          formControlName="customerId"
+          [apiUrl]="service.apiGetComboboxCustomer"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('customerId')?.touched && form.get('customerId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกลูกค้า</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [params]="{ customerId: form.get('customerId')?.value }"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Start Date & End Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุด"
+            type="text"
+            formControlName="endDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+          }
+        </div>
+      </div>
+
+      <!-- Contract Value -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="มูลค่าสัญญา (บาท)"
+          type="text"
+          formControlName="contractValue"
+          [required]="true"
+          placeholder="0"
+        ></sic-input>
+        @if (form.get('contractValue')?.touched && form.get('contractValue')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุมูลค่าสัญญา</p>
+        }
+      </div>
+
+      <!-- Renewal Type & Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="ประเภทการต่ออายุ"
+            formControlName="renewalType"
+            [apiUrl]="service.apiGetLovRenewalType"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="สถานะ"
+            formControlName="renewalStatus"
+            [apiUrl]="service.apiGetLovRenewalStatus"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="หมายเหตุ"
+          formControlName="notes"
+          [rows]="2"
+          placeholder="เพิ่มหมายเหตุเกี่ยวกับการต่ออายุ"
+        ></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'ต่ออายุ' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

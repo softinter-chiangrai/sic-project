@@ -1,0 +1,138 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+<!-- ===== DETAIL ===== -->
+@if (!isLoading && approvalData) {
+  <div class="space-y-6">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          ดำเนินการอนุมัติ
+        </h1>
+        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getStatusClass(approvalData.status)">
+          {{ getStatusText(approvalData.status) }}
+        </span>
+      </div>
+      <button
+        (click)="onBack()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+      >
+        <i class="bi bi-arrow-left"></i>
+        กลับ
+      </button>
+    </div>
+
+    <!-- Approval Info -->
+    <div class="bg-[var(--bg)] rounded-xl border border-[var(--border)] p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ประเภทเอกสาร</p>
+          <p class="text-sm font-medium text-[var(--text-active)]">{{ approvalData.documentType }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">รหัสเอกสาร</p>
+          <p class="text-sm font-medium text-[var(--text-active)] font-mono">{{ approvalData.documentCode }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ชื่อเรื่อง</p>
+          <p class="text-sm font-medium text-[var(--text-active)]">{{ approvalData.title }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">โครงการ</p>
+          <p class="text-sm text-[var(--text)]">{{ approvalData.projectName }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ผู้ขอ</p>
+          <p class="text-sm text-[var(--text-active)]">{{ approvalData.requester }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่ขอ</p>
+          <p class="text-sm text-[var(--text-muted)]">{{ formatDate(approvalData.requestedDate) }}</p>
+        </div>
+        <div class="md:col-span-2">
+          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คำอธิบาย</p>
+          <p class="text-sm text-[var(--text)]">{{ approvalData.description || '-' }}</p>
+        </div>
+        @if (approvalData.attachments && approvalData.attachments.length > 0) {
+          <div class="md:col-span-2">
+            <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ไฟล์แนบ</p>
+            <div class="flex flex-wrap gap-2 mt-1">
+              @for (file of approvalData.attachments; track file) {
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-[var(--bg)] border border-[var(--border)] text-xs text-[var(--text)]">
+                  <i class="bi bi-file-earmark"></i>
+                  {{ file }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Comment Form -->
+    <form [formGroup]="form">
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4">
+        <sic-input-area
+          label="ความคิดเห็น / หมายเหตุ"
+          formControlName="comment"
+          [rows]="3"
+          placeholder="ระบุเหตุผลในการอนุมัติ ปฏิเสธ หรือขอแก้ไข..."
+        ></sic-input-area>
+      </div>
+    </form>
+
+    <!-- Action Buttons -->
+    @if (approvalData.status === 'Pending') {
+      <div class="flex flex-wrap gap-3">
+        <button
+          (click)="approve()"
+          [disabled]="isSubmitting"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="bi bi-check2"></i>
+          อนุมัติ
+        </button>
+        <button
+          (click)="requestRevision()"
+          [disabled]="isSubmitting"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="bi bi-pencil"></i>
+          ขอแก้ไข
+        </button>
+        <button
+          (click)="reject()"
+          [disabled]="isSubmitting"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="bi bi-x-lg"></i>
+          ปฏิเสธ
+        </button>
+        <button
+          (click)="onBack()"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-arrow-left"></i>
+          กลับ
+        </button>
+      </div>
+    } @else {
+      <div class="flex flex-wrap gap-3">
+        <button
+          (click)="onBack()"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-arrow-left"></i>
+          กลับ
+        </button>
+      </div>
+    }
+  </div>
+}

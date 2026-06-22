@@ -1,0 +1,174 @@
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Payment...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลการชำระเงิน' : 'บันทึกการชำระเงิน' }}
+        </h2>
+      </div>
+
+      <!-- Payment No -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เลขที่การชำระเงิน"
+          formControlName="paymentNo"
+          [required]="true"
+          placeholder="PAY-001"
+        ></sic-input>
+        @if (form.get('paymentNo')?.touched && form.get('paymentNo')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขที่</p>
+        }
+      </div>
+
+      <!-- Invoice -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ใบแจ้งหนี้"
+          formControlName="invoiceId"
+          [apiUrl]="service.apiGetComboboxInvoice"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('invoiceId')?.touched && form.get('invoiceId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือก Invoice</p>
+        }
+      </div>
+
+      <!-- Amount -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="จำนวนเงิน (บาท)"
+          type="text"
+          formControlName="amount"
+          [required]="true"
+          placeholder="0.00"
+        ></sic-input>
+        @if (form.get('amount')?.touched && form.get('amount')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุจำนวนเงิน</p>
+        }
+      </div>
+
+      <!-- Payment Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="วันที่ชำระเงิน"
+          type="text"
+          formControlName="paymentDate"
+          [required]="true"
+          placeholder="DD/MM/YYYY"
+        ></sic-input>
+        @if (form.get('paymentDate')?.touched && form.get('paymentDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่ชำระ</p>
+        }
+      </div>
+
+      <!-- Payment Method -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="วิธีการชำระเงิน"
+          formControlName="paymentMethod"
+          [apiUrl]="service.apiGetLovPaymentMethod"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Reference No -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เลขอ้างอิง"
+          formControlName="referenceNo"
+          placeholder="เลขที่โอน / เลขเช็ค / เลขอ้างอิง"
+        ></sic-input>
+      </div>
+
+      <!-- Receipt File -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ไฟล์ใบเสร็จ</label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
+          >
+            <i class="bi bi-upload"></i>
+            อัปโหลดไฟล์
+          </button>
+          <span class="text-sm text-[var(--text-muted)]">(PDF, JPG, PNG)</span>
+          @if (form.get('receiptFile')?.value) {
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-[var(--bg)] border border-[var(--border)] text-xs text-[var(--text)]">
+              <i class="bi bi-file-earmark"></i>
+              {{ form.get('receiptFile')?.value }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovPaymentStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Notes -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="หมายเหตุ"
+          formControlName="notes"
+          [rows]="2"
+          placeholder="รายละเอียดเพิ่มเติม"
+        ></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Payment</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'บันทึกการชำระเงิน' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}
