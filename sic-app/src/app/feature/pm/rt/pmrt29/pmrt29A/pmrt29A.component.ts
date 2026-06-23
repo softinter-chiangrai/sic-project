@@ -1,120 +1,47 @@
+// src/app/rt/pmrt29/pmrt29A/pmrt29A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
+import { finalize } from 'rxjs/operators';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { Pmrt29Service, type User } from '../pmrt29.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
-// ===== Model =====
-interface UserOption {
-  id: string;
-  name: string;
-  email: string;
-}
 
-interface TeamMemberFormData {
-  id?: string;
-  userId: string;
-  userName?: string;
-  userEmail?: string;
-  isActive: boolean;
-  isDefault: boolean;
-  roleIds: string[];
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class pmrt29AService {
-  private mockUsers: UserOption[] = [
-    { id: 'user-001', name: 'สมชาย ใจดี', email: 'somchai@example.com' },
-    { id: 'user-002', name: 'สมหญิง รักเรียน', email: 'somying@example.com' },
-    { id: 'user-003', name: 'วิชัย พัฒนาชัย', email: 'vichai@example.com' },
-    { id: 'user-004', name: 'มานี มีทรัพย์', email: 'manee@example.com' },
-    { id: 'user-005', name: 'สมศักดิ์ รุ่งเรือง', email: 'somsak@example.com' },
-  ];
-
-  private mockRoles = [
-    { id: 'role-001', name: 'Administrator', code: 'ADMIN' },
-    { id: 'role-002', name: 'Project Manager', code: 'PM' },
-    { id: 'role-003', name: 'Developer', code: 'DEV' },
-    { id: 'role-004', name: 'QA Tester', code: 'QA' },
-  ];
-
-  apiGetComboboxUser = '/api/team/combobox-user';
-  apiGetComboboxRole = '/api/team/combobox-role';
-
-  getAvailableUsers(): Observable<UserOption[]> {
-    return of(this.mockUsers).pipe(delay(300));
-  }
-
-  getRoles(): Observable<any[]> {
-    return of(this.mockRoles).pipe(delay(200));
-  }
-
-  addMember(data: TeamMemberFormData): Observable<string> {
-    console.log('📝 Adding team member:', data);
-    return of('เพิ่มสมาชิกสำเร็จ').pipe(delay(500));
-  }
-
-  getMember(id: string): Observable<TeamMemberFormData> {
-    // Mock: ดึงข้อมูลสมาชิก (สำหรับแก้ไข)
-    return of({
-      id: id,
-      userId: 'user-002',
-      userName: 'สมหญิง รักเรียน',
-      userEmail: 'somying@example.com',
-      isActive: true,
-      isDefault: false,
-      roleIds: ['role-003'],
-    }).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmrt29A',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SicButtonComponent, SicComboboxComponent, SicInputComponent],
   templateUrl: './pmrt29A.component.html',
-  styles: [],
 })
 export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(pmrt29AService);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private pmrt29Service = inject(Pmrt29Service); // ✅ ใช้ service เดียว
+  private dialog = inject(DialogService);
+  private fb = inject(FormBuilder);
 
   form!: FormGroup;
   isEdit = false;
   memberId: string | null = null;
   isLoading = false;
   isSaving = false;
+  businessId = this.pmrt29Service.getBusinessId() || '';
 
-  // ===== Data =====
-  availableUsers = signal<UserOption[]>([]);
-  roles = signal<any[]>([]);
+  users = signal<User[]>([]);
+  roleOptions = ['MEMBER', 'LEADER', 'COORDINATOR'];
 
   pageDirty = () => this.form?.dirty ?? false;
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.initForm();
-    this.loadData();
+    this.loadUsers();
 
-    this.route.params.subscribe((params) => {
+    this.route.params.subscribe(params => {
       const id = params['id'];
       if (id) {
         this.isEdit = true;
@@ -124,110 +51,90 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  initForm(): void {
+  initForm() {
     this.form = this.fb.group({
-      id: [null],
-      userId: [null, [Validators.required]],
-      userName: [null],
-      userEmail: [null],
-      roleIds: [[], [Validators.required]],
-      isActive: [true],
-      isDefault: [false],
-    });
-
-    // เมื่อเลือก user ให้ auto-fill ชื่อและอีเมล
-    this.form.get('userId')?.valueChanges.subscribe((userId) => {
-      const user = this.availableUsers().find((u) => u.id === userId);
-      if (user) {
-        this.form.patchValue({
-          userName: user.name,
-          userEmail: user.email,
-        });
-      }
+      userId: [null, Validators.required],
+      roleInTeam: ['MEMBER', Validators.required],
+      isActive: [true]
     });
   }
 
-  loadData() {
-    this.isLoading = true;
-    this.service.getAvailableUsers().subscribe({
-      next: (users) => {
-        this.availableUsers.set(users);
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลผู้ใช้ไม่สำเร็จ:', err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลผู้ใช้');
-      },
-    });
-
-    // โหลด roles สำหรับแสดงใน checkbox
-    this.service.getRoles().subscribe({
-      next: (roles) => {
-        this.roles.set(roles);
-      },
-      error: (err) => {
-        console.error('❌ โหลด roles ไม่สำเร็จ:', err);
-      },
+  loadUsers() {
+    this.pmrt29Service.getAvailableUsers().subscribe({
+      next: (users) => this.users.set(users),
+      error: (err) => console.error('Load users error', err)
     });
   }
 
   loadMember(id: string) {
     this.isLoading = true;
-    this.service.getMember(id).subscribe({
-      next: (data) => {
-        this.form.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลสมาชิกสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
-        this.router.navigate(['/feature/pm/team']);
-      },
-    });
+    this.pmrt29Service.getMemberById(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (member) => {
+          this.form.patchValue({
+            userId: member.userId,
+            roleInTeam: member.roleInTeam,
+            isActive: member.isActive
+          });
+          this.form.get('userId')?.disable();
+        },
+        error: (err) => {
+          console.error('Load member error', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
+          this.router.navigate(['/feature/pm/pmrt29']);
+        }
+      });
   }
 
-  toggleRole(roleId: string) {
-    const current = this.form.get('roleIds')?.value || [];
-    if (current.includes(roleId)) {
-      this.form.patchValue({ roleIds: current.filter((id: string) => id !== roleId) });
+  onBack() {
+    if (this.form.dirty) {
+      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then(ok => {
+        if (ok) this.router.navigate(['/feature/pm/pmrt29']);
+      });
     } else {
-      this.form.patchValue({ roleIds: [...current, roleId] });
+      this.router.navigate(['/feature/pm/pmrt29']);
     }
-  }
-
-  isRoleChecked(roleId: string): boolean {
-    return (this.form.get('roleIds')?.value || []).includes(roleId);
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/team']);
   }
 
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกข้อมูลให้ครบ');
       return;
     }
 
     this.isSaving = true;
-    const data = this.form.value;
-    this.service.addMember(data).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.dialog.success('บันทึกสำเร็จ', 'เพิ่มสมาชิกในทีมเรียบร้อย').then(() => {
-          this.router.navigate(['/feature/pm/team']);
+    const raw = this.form.getRawValue();
+
+    if (this.isEdit && this.memberId) {
+      this.pmrt29Service.updateMember(this.memberId, raw.roleInTeam, raw.isActive)
+        .pipe(finalize(() => this.isSaving = false))
+        .subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย').then(() => this.router.navigate(['/feature/pm/pmrt29']));
+          },
+          error: (err) => {
+            this.dialog.error('ผิดพลาด', 'ไม่สามารถบันทึกได้');
+            console.error('Update error', err);
+          }
         });
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
-    });
+    } else {
+      this.pmrt29Service.addMember(this.businessId, raw.userId, raw.roleInTeam)
+        .pipe(finalize(() => this.isSaving = false))
+        .subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'เพิ่มสมาชิกเรียบร้อย').then(() => this.router.navigate(['/feature/pm/pmrt29']));
+          },
+          error: (err) => {
+            this.dialog.error('ผิดพลาด', 'ไม่สามารถเพิ่มสมาชิกได้');
+            console.error('Add error', err);
+          }
+        });
+    }
+  }
+
+  getUserDisplay(user: User) {
+    return user ? `${user.name} (${user.email})` : '';
   }
 }
-
-export default Pmrt29AComponent;

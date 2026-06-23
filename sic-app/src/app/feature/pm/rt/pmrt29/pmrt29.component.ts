@@ -1,175 +1,188 @@
+// src/app/feature/pm/rt/pmrt29/pmrt29.component.ts
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+import { Pmrt29Service, type TeamMember } from './pmrt29.service';
 
-// ===== Interfaces =====
-interface TeamMember {
-  id: string;
-  userId: string;
+
+interface MemberWithUI extends TeamMember {
   userName: string;
   userEmail: string;
-  roles: string[];
   roleNames: string[];
-  isActive: boolean;
-  isDefault: boolean;
-  joinedAt: string;
+  isDefault: boolean;   // ✅ เพิ่ม property นี้
 }
-
-// ===== Mock Data =====
-const MOCK_MEMBERS: TeamMember[] = [
-  {
-    id: 'ub-001',
-    userId: 'user-001',
-    userName: 'สมชาย ใจดี',
-    userEmail: 'somchai@example.com',
-    roles: ['role-001', 'role-002'],
-    roleNames: ['Administrator', 'Project Manager'],
-    isActive: true,
-    isDefault: true,
-    joinedAt: '2024-01-15 09:00:00',
-  },
-  {
-    id: 'ub-002',
-    userId: 'user-002',
-    userName: 'สมหญิง รักเรียน',
-    userEmail: 'somying@example.com',
-    roles: ['role-003'],
-    roleNames: ['Developer'],
-    isActive: true,
-    isDefault: false,
-    joinedAt: '2024-01-20 10:30:00',
-  },
-  {
-    id: 'ub-003',
-    userId: 'user-003',
-    userName: 'วิชัย พัฒนาชัย',
-    userEmail: 'vichai@example.com',
-    roles: ['role-003', 'role-004'],
-    roleNames: ['Developer', 'QA Tester'],
-    isActive: false,
-    isDefault: false,
-    joinedAt: '2024-02-01 14:00:00',
-  },
-];
 
 @Component({
   selector: 'app-pmrt29',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './pmrt29.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt29Component implements OnInit {
   private router = inject(Router);
+  private pmrt29Service = inject(Pmrt29Service);
+
+  businessId = this.pmrt29Service.getBusinessId() || '';
 
   // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected filterRole = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('userName');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
+  isLoading = signal(false);
+  members = signal<MemberWithUI[]>([]);
+  totalItems = signal(0);
 
-  // ===== Data =====
-  protected members = signal<TeamMember[]>(MOCK_MEMBERS);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  filterRole = signal('all');
+  sortBy = signal('userName');
+  sortDir = signal<'asc' | 'desc'>('asc');
 
-  // ===== Available Roles for Filter =====
-  protected roleOptions = ['Administrator', 'Project Manager', 'Developer', 'QA Tester'];
+  // ✅ roleOptions สำหรับ filter (อาจจะดึงจาก API ในอนาคต)
+  protected roleOptions: string[] = ['Administrator', 'Project Manager', 'Developer', 'QA Tester'];
 
   // ===== Computed =====
-  protected filteredMembers = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const role = this.filterRole();
-
-    let result = this.members();
-
+  filteredMembers = computed(() => {
+    let list = this.members();
+    const term = this.searchTerm().toLowerCase();
     if (term) {
-      result = result.filter(
-        (m) =>
-          m.userName.toLowerCase().includes(term) ||
-          m.userEmail.toLowerCase().includes(term) ||
-          m.roleNames.some((r) => r.toLowerCase().includes(term)),
+      list = list.filter(m =>
+        m.userName.toLowerCase().includes(term) ||
+        m.userEmail.toLowerCase().includes(term)
       );
     }
+    const status = this.filterStatus();
+    if (status === 'active') list = list.filter(m => m.isActive);
+    if (status === 'inactive') list = list.filter(m => !m.isActive);
 
-    if (status === 'active') {
-      result = result.filter((m) => m.isActive);
-    } else if (status === 'inactive') {
-      result = result.filter((m) => !m.isActive);
-    }
-
-    if (role !== 'all') {
-      result = result.filter((m) => m.roleNames.includes(role));
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof TeamMember] ?? '';
-      const bVal = b[sortField as keyof TeamMember] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
+    // ✅ Sorting ปลอดภัย
+    const by = this.sortBy();
+    const dir = this.sortDir();
+    list.sort((a, b) => {
+      const va = String(a[by as keyof MemberWithUI] ?? '');
+      const vb = String(b[by as keyof MemberWithUI] ?? '');
+      return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
     });
-
-    return result;
+    return list;
   });
 
-  protected paginatedMembers = computed(() => {
-    const all = this.filteredMembers();
+  // ✅ Pagination computed properties
+  paginatedMembers = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
+    return this.filteredMembers().slice(start, start + this.pageSize());
   });
 
-  protected totalItems = computed(() => this.filteredMembers().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  hasPrevious = computed(() => this.currentPage() > 1);
+  hasNext = computed(() => this.currentPage() < this.totalPages());
 
-  protected pageNumbers = computed(() => {
+  pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
-  protected Math = Math;
+  Math = Math;
 
-  // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    if (this.businessId) this.loadMembers();
+  }
+
+  loadMembers() {
+    this.isLoading.set(true);
+    this.pmrt29Service.getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (page) => {
+          const mapped = page.content.map(m => ({
+            ...m,
+            userName: m.userName || m.userId,
+            userEmail: m.userEmail || '',
+            roleNames: [m.roleInTeam],
+            isDefault: false // ✅ กำหนดค่าเริ่มต้น (อาจมาจากข้อมูลจริงในอนาคต)
+          }));
+          this.members.set(mapped);
+          this.totalItems.set(page.totalElements);
+        },
+        error: (err) => console.error('Load members error', err)
+      });
   }
 
   // ===== Actions =====
+  goToAdd() {
+    this.router.navigate(['/feature/pm/pmrt29/add']);
+  }
+
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/pmrt29', id, 'edit']);
+  }
+
+  // ✅ เพิ่ม method สำหรับจัดการบทบาทและสิทธิ์
+  goToManageRoles(userId: string) {
+    // TODO: ไปหน้ากำหนดบทบาท (อาจจะไป pmrt28 หรืออื่นๆ)
+    console.log('Manage roles for user', userId);
+    // this.router.navigate(['/feature/pm/pmrt28', userId, 'assign']);
+  }
+
+  goToManagePermissions(userId: string) {
+    // TODO: ไปหน้ากำหนดสิทธิ์ (อาจจะไป pmrt27)
+    console.log('Manage permissions for user', userId);
+    // this.router.navigate(['/feature/pm/pmrt27', userId]);
+  }
+
+  toggleActive(member: MemberWithUI) {
+    const updated = { ...member, isActive: !member.isActive };
+    this.pmrt29Service.updateMember(member.id, member.roleInTeam, updated.isActive).subscribe({
+      next: () => this.members.update(list => list.map(m => m.id === member.id ? updated : m)),
+      error: (err) => console.error('Toggle error', err)
+    });
+  }
+
+  removeMember(id: string) {
+    if (confirm('ต้องการลบสมาชิก?')) {
+      this.pmrt29Service.deleteMember(id).subscribe({
+        next: () => {
+          this.members.update(list => list.filter(m => m.id !== id));
+          this.totalItems.update(v => v - 1);
+        },
+        error: (err) => console.error('Delete error', err)
+      });
+    }
+  }
+
+  // ===== UI Helpers =====
+  getStatusClass(active: boolean) {
+    return active
+      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+  }
+
+  getStatusText(active: boolean) {
+    return active ? 'ใช้งาน' : 'ไม่ใช้งาน';
+  }
+
+  // ===== Filters & Pagination =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  clearSearch() {
+    this.searchTerm.set('');
     this.currentPage.set(1);
   }
 
-  onRoleChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterRole.set(select.value);
-    this.currentPage.set(1);
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadMembers();
   }
 
   onSortChange(field: string) {
@@ -181,68 +194,17 @@ export class Pmrt29Component implements OnInit {
     }
   }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadMembers();
   }
 
-  goToAdd() {
-    this.router.navigate(['/feature/pm/pmrt29/add']);
-  }
-
-  goToEdit(memberId: string) {
-    this.router.navigate(['/feature/pm/pmrt29', memberId, 'edit']);
-  }
-
-  goToManageRoles(userId: string) {
-    this.router.navigate(['/feature/pm/role-assign', userId]);
-  }
-
-  goToManagePermissions(userId: string) {
-    this.router.navigate(['/feature/pm/permission', userId]);
-  }
-
-  toggleActive(member: TeamMember) {
-    const updated = { ...member, isActive: !member.isActive };
-    this.members.update((list) => list.map((m) => (m.id === member.id ? updated : m)));
-  }
-
-  removeMember(id: string) {
-    if (confirm('คุณต้องการลบสมาชิกรายนี้ออกจากทีมใช่หรือไม่?')) {
-      this.members.update((list) => list.filter((m) => m.id !== id));
-    }
-  }
-
-  // ===== Utility =====
-  getStatusClass(isActive: boolean): string {
-    return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
-  }
-
-  getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-
-  formatDate(dateStr: string): string {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
+  onRoleChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterRole.set(select.value);
+    this.currentPage.set(1);
+    this.loadMembers();
   }
 }
-
-export default Pmrt29Component;

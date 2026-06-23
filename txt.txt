@@ -20,3 +20,9 @@ https://icons.getbootstrap.com/
 
 
 this.router.navigate(['/feature/pm/pmrt27', roleId]);
+
+mvnw.cmd flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:54320/sic_app -Dflyway.user=sic-app -Dflyway.password=SicApp2026
+
+aaf5910e-abab-44ce-8826-847d3195e868 usertest1
+
+http://localhost:8080/realms/sic-project/protocol/openid-connect/auth?response_type=code&client_id=sic-app&state=TFhQWmdQTVdqd3pzNTJxUDAzU01wNDBTWEpOaGFUMi45Z1Z0R0poWFJGZ0pI%3B%252Ffeature%252Fdashboard&redirect_uri=http%3A%2F%2Flocalhost%3A4200%2Fauth%2Fcallback&scope=openid%20profile%20email%20offline_access&code_challenge=p_7WS8M9R7oRLdhth4Dbcn91h8XS90meRVDyjLexGrc&code_challenge_method=S256&nonce=TFhQWmdQTVdqd3pzNTJxUDAzU01wNDBTWEpOaGFUMi45Z1Z0R0poWFJGZ0pI

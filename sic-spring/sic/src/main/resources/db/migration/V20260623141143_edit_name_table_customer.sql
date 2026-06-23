@@ -1,0 +1,1 @@
+ALTER TABLE customer RENAME TO su_customer;

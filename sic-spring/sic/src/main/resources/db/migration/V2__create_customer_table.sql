@@ -29,8 +29,7 @@ CREATE TABLE IF NOT EXISTS customer (
     updated_date TIMESTAMP NOT NULL DEFAULT NOW(),
     is_delete BOOLEAN DEFAULT false,
     delete_by VARCHAR(100),
-    delete_date TIMESTAMP,
-    xmin INTEGER DEFAULT 0
+    delete_date TIMESTAMP
 );
 
 -- ✅ สร้าง Unique constraint

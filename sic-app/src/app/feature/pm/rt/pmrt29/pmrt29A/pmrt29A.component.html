@@ -1,4 +1,4 @@
-<!-- ===== LOADING ===== -->
+<!-- src/app/rt/pmrt29/pmrt29A/pmrt29A.component.html -->
 @if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -6,130 +6,59 @@
   </div>
 }
 
-<!-- ===== FORM ===== -->
 @if (!isLoading) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-2xl mx-auto p-4 space-y-6">
+    <h2 class="text-3xl font-semibold text-center">{{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในทีม' }}</h2>
 
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในทีม' }}
-        </h2>
-      </div>
+    @if (!isEdit) {
+      <sic-combobox
+      label="เลือกผู้ใช้"
+      formControlName="userId"
+      apiUrl="/api/users/available"
+      valueField="id"
+      textField="name"
+      [required]="true"
+      placeholder="ค้นหาชื่อหรืออีเมล..."
+    ></sic-combobox>
+      @if (form.get('userId')?.touched && form.get('userId')?.invalid) {
+        <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกผู้ใช้</p>
+      }
+    } @else {
+      <sic-input label="รหัสผู้ใช้" formControlName="userId" [disabled]="true"></sic-input>
+    }
 
-      <!-- Select User -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="เลือกผู้ใช้"
-          formControlName="userId"
-          [apiUrl]="service.apiGetComboboxUser"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('userId')?.touched && form.get('userId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกผู้ใช้</p>
+    <div>
+      <label class="block text-sm font-medium text-[var(--text-active)] mb-2">บทบาทในทีม <span class="text-red-500">*</span></label>
+      <select
+        formControlName="roleInTeam"
+        class="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 transition-all"
+      >
+        @for (role of roleOptions; track role) {
+          <option [value]="role">{{ role }}</option>
         }
-      </div>
+      </select>
+      @if (form.get('roleInTeam')?.touched && form.get('roleInTeam')?.invalid) {
+        <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกบทบาท</p>
+      }
+    </div>
 
-      <!-- User Info (Auto-fill) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-input
-            label="ชื่อ-นามสกุล"
-            formControlName="userName"
-            [disabled]="true"
-          ></sic-input>
-        </div>
-        <div class="flex-1">
-          <sic-input
-            label="อีเมล"
-            formControlName="userEmail"
-            [disabled]="true"
-          ></sic-input>
-        </div>
-      </div>
+    <label class="flex items-center gap-2 cursor-pointer text-sm">
+      <input type="checkbox" formControlName="isActive" class="w-4 h-4 rounded" />
+      <span class="text-[var(--text-active)]">เปิดใช้งานสมาชิก</span>
+    </label>
 
-      <!-- Roles Selection -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-2">
-          บทบาทที่ต้องการให้ <span class="text-red-500">*</span>
-        </label>
-        <div class="bg-[var(--bg)] rounded-lg p-4 border border-[var(--border)]">
-          <div class="flex flex-wrap gap-4">
-            @for (role of roles(); track role.id) {
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  [checked]="isRoleChecked(role.id)"
-                  (change)="toggleRole(role.id)"
-                  class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-                />
-                <span class="text-[var(--text-active)]">{{ role.name }}</span>
-                <span class="text-xs text-[var(--text-muted)]">({{ role.code }})</span>
-              </label>
-            }
-          </div>
-          @if (form.get('roleIds')?.touched && form.get('roleIds')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-2">กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท</p>
-          }
-        </div>
-      </div>
-
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งานสมาชิก</span>
-        </label>
-      </div>
-
-      <!-- Default Member -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isDefault"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">ตั้งเป็นสมาชิกหลัก (Default)</span>
-        </label>
-        <p class="text-xs text-[var(--text-muted)] mt-1">สมาชิกหลักจะถูกเลือกเป็นค่าเริ่มต้นเมื่อเข้าสู่ระบบ</p>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'button'"
-            variant="secondary"
-            (click)="onBack()"
-          >
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'submit'"
-            variant="primary"
-            [disabled]="isSaving"
-          >
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-floppy"></i>
-            }
-            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'เพิ่มสมาชิก') }}
-          </sic-button>
-        </div>
-      </div>
-
+    <div class="flex gap-4 pt-4">
+      <button type="button" class="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+      </button>
+      <button type="submit" class="flex-1 px-4 py-2 rounded-lg text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all" [disabled]="isSaving">
+        @if (isSaving) {
+          <i class="bi bi-arrow-repeat animate-spin"></i>
+        } @else {
+          <i class="bi bi-floppy"></i>
+        }
+        {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'เพิ่มสมาชิก') }}
+      </button>
     </div>
   </form>
 }
