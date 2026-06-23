@@ -1,0 +1,270 @@
+<div class="space-y-5 p-0.5">
+
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
+        จัดการทีม
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่มสมาชิก
+    </button>
+  </div>
+
+  <!-- ===== FILTERS ===== -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <!-- Search -->
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหาชื่อ, อีเมล, บทบาท..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Filter: Status -->
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">🌐 ทั้งหมด</option>
+      <option value="active">✅ ใช้งาน</option>
+      <option value="inactive">⛔ ไม่ใช้งาน</option>
+    </select>
+
+    <!-- Filter: Role -->
+    <select
+      (change)="onRoleChange($event)"
+      [value]="filterRole()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📋 ทุกบทบาท</option>
+      @for (role of roleOptions; track role) {
+        <option [value]="role">{{ role }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== TABLE ===== -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th
+              (click)="onSortChange('userName')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
+            >
+              ชื่อ-นามสกุล
+              @if (sortBy() === 'userName') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('userEmail')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[200px] hidden md:table-cell"
+            >
+              อีเมล
+              @if (sortBy() === 'userEmail') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[150px]"
+            >
+              บทบาท
+            </th>
+            <th
+              (click)="onSortChange('isActive')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px]"
+            >
+              สถานะ
+              @if (sortBy() === 'isActive') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[280px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (member of paginatedMembers(); track member.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+                    <span class="text-xs font-semibold text-[var(--crm-primary)]">
+                      {{ member.userName.charAt(0) }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="font-medium text-[var(--text-active)]">{{ member.userName }}</span>
+                    @if (member.isDefault) {
+                      <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium">(หลัก)</span>
+                    }
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <span class="text-[var(--text-muted)]">{{ member.userEmail }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-1">
+                  @for (roleName of member.roleNames; track roleName) {
+                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                      {{ roleName }}
+                    </span>
+                  }
+                  @if (member.roleNames.length === 0) {
+                    <span class="text-xs text-[var(--text-muted)]">ไม่มีบทบาท</span>
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(member.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(member.isActive) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <!-- Manage Roles -->
+                  <button
+                    (click)="goToManageRoles(member.userId)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                    title="จัดการบทบาท"
+                  >
+                    <i class="bi bi-person-gear"></i>
+                  </button>
+                  <!-- Manage Permissions -->
+                  <button
+                    (click)="goToManagePermissions(member.userId)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all"
+                    title="จัดการสิทธิ์"
+                  >
+                    <i class="bi bi-lock"></i>
+                  </button>
+                  <!-- Toggle Active -->
+                  <button
+                    (click)="toggleActive(member)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                    [class.text-emerald-500]="member.isActive"
+                    [class.text-gray-400]="!member.isActive"
+                    [class.hover:bg-emerald-50]="member.isActive"
+                    [class.hover:bg-gray-100]="!member.isActive"
+                    [class.dark:hover:bg-emerald-500/10]="member.isActive"
+                    [class.dark:hover:bg-gray-700]="!member.isActive"
+                    [title]="member.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
+                  >
+                    <i class="bi" [class.bi-check-circle-fill]="member.isActive" [class.bi-x-circle]="!member.isActive"></i>
+                  </button>
+                  <!-- Remove -->
+                  <button
+                    (click)="removeMember(member.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบออกจากทีม"
+                  >
+                    <i class="bi bi-person-dash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบสมาชิกในทีม</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มสมาชิกใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    เพิ่มสมาชิก
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ===== PAGINATION ===== -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
+      </div>
+
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="page === currentPage()
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
+            "
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+  
+
+</div>

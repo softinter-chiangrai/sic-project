@@ -193,6 +193,7 @@ Renew / Extend MA
 4. Phase & Milestone Management
 5. Requirement Management
 6. Requirement Change Control
+7. usecase management
 7. DFD Designer / Data Flow Management
 8. ER Diagram Designer
 9. Database Script Generator
@@ -212,6 +213,9 @@ Renew / Extend MA
 23. Dashboard & Report
 24. Document Version Control
 25. Audit Log
+26. role Management
+28. Permission Management
+29. team Management
 ```
 
 ---

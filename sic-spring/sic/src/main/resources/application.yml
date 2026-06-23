@@ -3,14 +3,24 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54320/sic_app
-    username: sic-app
+    url: jdbc:postgresql://localhost:54320/sic_app      # ✅ ใช้ชื่อ DB ที่คุณมีอยู่
+    username: sic-app                                   # ✅ ใช้ user ที่คุณมี
     password: SicApp2026
     driver-class-name: org.postgresql.Driver
 
+  # ===== ✅ เพิ่ม Flyway Configuration =====
+  flyway:
+    enabled: true
+    baseline-on-migrate: true          # ✅ บอก Flyway ว่า DB มี Schema อยู่แล้ว
+    baseline-version: '1'              # ✅ กำหนด Baseline Version
+    validate-on-migrate: false         # ✅ ข้ามการ Validate (เพราะ schema มาจาก .NET)
+    locations: classpath:db/migration  # ✅ โฟลเดอร์ที่เก็บไฟล์ SQL
+    schemas: public                    # ✅ Schema ที่ใช้
+    table: flyway_schema_history       # ✅ ชื่อตาราง History (ค่าเริ่มต้น)
+
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: none                   # ✅ ถูกต้องแล้ว (ไม่ให้ Hibernate แก้ไข Schema)
     show-sql: false
     properties:
       hibernate:
@@ -51,16 +61,15 @@ app:
       secret: ""
     confidential-port: 0
 
-  # ✅ แก้ไขส่วน storage ให้ถูกต้อง
   storage:
     s3:
-      bucket: public-files # bucket หลัก (รูป/วิดีโอ)
-      document-bucket: documents # bucket สำหรับเอกสาร (ตาม .NET)
-      region: us-east-1 # region ใดก็ได้สำหรับ local
+      bucket: public-files
+      document-bucket: documents
+      region: us-east-1
       access-key: seaweedfs
       secret-key: seaweedfs-secret
-      endpoint: http://localhost:8888 # สำคัญที่สุด!
-      path-style-access-enabled: true # จำเป็นสำหรับ S3-compatible
+      endpoint: http://localhost:8888
+      path-style-access-enabled: true
 
 logging:
   pattern:
@@ -71,5 +80,6 @@ logging:
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: DEBUG
     org.springframework.security: DEBUG
+    org.flywaydb: DEBUG                    # ✅ เพิ่ม log เพื่อดูการทำงานของ Flyway
 
 spring.main.banner-mode: off

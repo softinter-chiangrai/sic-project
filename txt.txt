@@ -4,12 +4,19 @@ ng g c feature/pm/rt/PMRT02 --standalone --skip-tests
 
 ng g c feature/pm/dt/pmdt01 --standalone --skip-tests
 
-ng g c feature/pm/dt/pmdt26
+ng g c feature/pm/dt/pmdt29
 
-ng g c feature/pm/rt/pmrt26
+ng g c feature/pm/rt/pmrt29
 
 http://localhost:4200/feature/pm/phase
 
 Starting SicApiApplication
 
 ต่อไปขอ Requirement ขอทั้ง rt dt เลย
+
+Role-Based Access Control (RBAC) 
+
+https://icons.getbootstrap.com/
+
+
+this.router.navigate(['/feature/pm/pmrt27', roleId]);

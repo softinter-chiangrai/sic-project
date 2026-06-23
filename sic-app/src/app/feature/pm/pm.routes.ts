@@ -282,7 +282,7 @@ export const PM_ROUTES: Routes = [
     path: 'renewal/:id/view',
     loadComponent: () => import('./dt/pmdt22/pmdt22.component').then((m) => m.Pmdt22Component),
   },
-   // ===== Approval Center =====
+  // ===== Approval Center =====
   {
     path: 'approval',
     loadComponent: () => import('./rt/pmrt23/pmrt23.component').then((m) => m.Pmrt23Component),
@@ -297,7 +297,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./rt/pmrt24/pmrt24.component').then((m) => m.Pmrt24Component),
   },
 
-   // ===== Document Version Control =====
+  // ===== Document Version Control =====
   {
     path: 'version',
     loadComponent: () => import('./rt/pmrt25/pmrt25.component').then((m) => m.Pmrt25Component),
@@ -322,5 +322,52 @@ export const PM_ROUTES: Routes = [
     path: 'audit',
     loadComponent: () => import('./rt/pmrt26/pmrt26.component').then((m) => m.Pmrt26Component),
   },
-   
+
+  // ===== Permission Management =====
+  {
+    path: 'pmrt27', // ✅ เปลี่ยนจาก 'role-permission'
+    loadComponent: () => import('./rt/pmrt27/pmrt27.component').then((m) => m.Pmrt27Component),
+  },
+  {
+    path: 'pmrt27/:id',
+    loadComponent: () =>
+      import('./rt/pmrt27/pmrt27A/pmrt27A.component').then((m) => m.Pmrt27AComponent),
+  },
+
+  // ===== Role Management =====
+  {
+    path: 'pmrt28', // หน้า List (Role Management)
+    loadComponent: () => import('./rt/pmrt28/pmrt28.component').then((m) => m.Pmrt28Component),
+  },
+  {
+    path: 'pmrt28/add', // หน้าเพิ่มบทบาทใหม่
+    loadComponent: () =>
+      import('./rt/pmrt28/pmrt28A/pmrt28A.component').then((m) => m.Pmrt28AComponent),
+  },
+  {
+    path: 'pmrt28/:id/edit', // หน้าแก้ไขบทบาท
+    loadComponent: () =>
+      import('./rt/pmrt28/pmrt28A/pmrt28A.component').then((m) => m.Pmrt28AComponent),
+  },
+  {
+    path: 'pmrt28/:id/assign', // หน้ากำหนดบทบาทให้ผู้ใช้
+    loadComponent: () =>
+      import('./rt/pmrt28/pmrt28B/pmrt28B.component').then((m) => m.Pmrt28BComponent),
+  },
+
+  // ===== Team Management =====
+  {
+    path: 'pmrt29',
+    loadComponent: () => import('./rt/pmrt29/pmrt29.component').then((m) => m.Pmrt29Component),
+  },
+  {
+    path: 'pmrt29/add',
+    loadComponent: () =>
+      import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
+  },
+  {
+    path: 'pmrt29/:id/edit',
+    loadComponent: () =>
+      import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
+  },
 ];
