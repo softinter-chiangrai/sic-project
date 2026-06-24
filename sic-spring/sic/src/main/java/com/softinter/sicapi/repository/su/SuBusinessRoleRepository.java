@@ -28,4 +28,5 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
     Optional<SuBusinessRole> findByIdAndBusinessId(UUID id, UUID businessId);
     List<SuBusinessRole> findByBusinessIdAndIsActiveTrue(UUID businessId);
 
+  
 }

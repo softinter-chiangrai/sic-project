@@ -17,15 +17,11 @@ import com.softinter.sicapi.dto.response.JoinBusinessResponse;
 import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.entity.su.SuBusinessInvite;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
-import com.softinter.sicapi.entity.su.SuTeam;
-import com.softinter.sicapi.entity.su.SuTeamMember;
 import com.softinter.sicapi.entity.su.SuUserBusiness;
 import com.softinter.sicapi.entity.su.SuUserBusinessRole;
 import com.softinter.sicapi.repository.su.SuBusinessInviteRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
-import com.softinter.sicapi.repository.su.SuTeamMemberRepository;
-import com.softinter.sicapi.repository.su.SuTeamRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessInviteService;
@@ -39,13 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BusinessInviteServiceImpl implements BusinessInviteService {
 
-    // ✅ Inject repositories ที่จำเป็นทั้งหมด
     private final SuBusinessInviteRepository businessInviteRepository;
     private final SuBusinessRoleRepository businessRoleRepository;
     private final SuUserBusinessRepository userBusinessRepository;
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
-    private final SuTeamRepository teamRepository;
-    private final SuTeamMemberRepository teamMemberRepository;
     private final SuBusinessRepository businessRepository;
     private final CurrentUserService currentUserService;
 
@@ -90,7 +83,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         invite.setInviteEmail(request.getInviteEmail());
         invite.setInviteToken(token);
         invite.setIsActivated(false);
-        invite.setMaxUses(request.getMaxUses()); // ต้องมี field นี้ใน Entity
+        invite.setMaxUses(request.getMaxUses());
         invite.setUseCount(0);
         invite.setCreatedBy(userId);
         invite.setCreatedDate(Instant.now());
@@ -135,21 +128,16 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         String userId = currentUserService.getUserId();
         String userEmail = currentUserService.getEmail();
 
-        // 1. Find invite by token
         SuBusinessInvite invite = businessInviteRepository.findByInviteTokenAndIsDeleteFalse(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invite not found or has been revoked."));
 
         SuBusinessRole role = invite.getSuBusinessRole();
         UUID businessId = role.getBusinessId();
 
-        // 2. Validate invite based on type
         if ("email".equalsIgnoreCase(invite.getInviteType())) {
             if (Boolean.TRUE.equals(invite.getIsActivated())) {
                 throw new IllegalStateException("This email invite has already been used.");
             }
-            // if (invite.getInviteEmail() == null || !invite.getInviteEmail().equalsIgnoreCase(userEmail)) {
-            //     throw new IllegalArgumentException("This invite is not valid for your account.");
-            // }
         } else if ("token".equalsIgnoreCase(invite.getInviteType())) {
             if (invite.getMaxUses() != null && invite.getUseCount() >= invite.getMaxUses()) {
                 throw new IllegalStateException("This invite has reached its usage limit.");
@@ -158,7 +146,6 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             throw new IllegalArgumentException("Invalid invite type.");
         }
 
-        // 3. Create or reactivate user business membership
         SuUserBusiness userBusiness = userBusinessRepository.findByUserIdAndBusinessId(userId, businessId)
                 .orElse(null);
 
@@ -179,13 +166,12 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             userBusiness = userBusinessRepository.save(userBusiness);
         }
 
-        // 4. Assign role if not already assigned
         UUID userBusinessId = userBusiness.getId();
         boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(userBusinessId, role.getId());
         if (!hasRole) {
             SuUserBusinessRole userRole = new SuUserBusinessRole();
-            userRole.setUserBusiness(userBusiness);      
-            userRole.setBusinessRole(role);         
+            userRole.setUserBusiness(userBusiness);
+            userRole.setBusinessRole(role);
             userRole.setIsPrimary(true);
             userRole.setIsActive(true);
             userRole.setCreatedBy(userId);
@@ -193,10 +179,8 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             userBusinessRoleRepository.save(userRole);
         }
 
-        // 5. Add user to default team (if team exists)
-        addUserToDefaultTeam(businessId, userId);
+        // ✅ ไม่มี addUserToDefaultTeam()
 
-        // 6. Update invite usage
         if ("email".equalsIgnoreCase(invite.getInviteType())) {
             invite.setIsActivated(true);
         }
@@ -205,7 +189,6 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         invite.setUpdatedDate(Instant.now());
         businessInviteRepository.save(invite);
 
-        // 7. Build response
         String businessName = businessRepository.findById(businessId)
                 .map(SuBusiness::getBusinessCode)
                 .orElse("Unknown Business");
@@ -217,35 +200,6 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
                 .build();
     }
 
-    // ===== Helper method =====
-    private void addUserToDefaultTeam(UUID businessId, String userId) {
-    // Find first active team of this business
-    SuTeam team = teamRepository.findByBusinessIdAndIsActiveTrue(businessId)
-            .stream()
-            .findFirst()
-            .orElse(null);
-
-    if (team != null) {
-        boolean alreadyMember = teamMemberRepository.existsByTeamIdAndUserId(team.getId(), userId);
-        if (!alreadyMember) {
-            SuTeamMember member = new SuTeamMember();
-            // ✅ ใช้ setTeam() แทน setTeamId()
-            member.setTeam(team);                    // <--- สำคัญ!
-            member.setUserId(userId);
-            member.setRoleInTeam("MEMBER");
-            member.setIsActive(true);
-            member.setJoinedDate(Instant.now());
-            member.setCreatedBy(userId);
-            member.setCreatedDate(Instant.now());
-            teamMemberRepository.save(member);
-            log.info("Added user {} to team {}", userId, team.getId());
-        }
-    } else {
-        log.warn("No active team found for business {}", businessId);
-    }
-}
-
-    // ===== toResponse helper =====
     private InviteResponse toResponse(SuBusinessInvite invite) {
         InviteResponse response = new InviteResponse();
         response.setId(invite.getId());

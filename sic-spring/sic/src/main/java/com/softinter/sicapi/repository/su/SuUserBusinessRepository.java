@@ -1,7 +1,11 @@
 package com.softinter.sicapi.repository.su;
 
-import com.softinter.sicapi.entity.su.SuBusinessInvite;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;   // ✅ ใช้ Spring Pageable
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,12 +13,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
 
 @Repository
 public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, UUID>, JpaSpecificationExecutor<SuUserBusiness> {
+
+    // ✅ ใช้ org.springframework.data.domain.Pageable
+    Page<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId, Pageable pageable);
+
+    List<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId);
 
     @Query("SELECT ub FROM SuUserBusiness ub JOIN FETCH ub.business b JOIN FETCH b.title WHERE ub.userId = :userId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false ORDER BY ub.isDefault DESC, b.id")
     List<SuUserBusiness> findActiveByUserId(@Param("userId") String userId);
@@ -38,17 +45,4 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
     long countByUserId(@Param("userId") String userId);
 
     boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
-
-     // ดึง invites ของ business พร้อม role (JOIN FETCH)
-    @Query("SELECT i FROM SuBusinessInvite i JOIN FETCH i.suBusinessRole WHERE i.suBusinessRole.businessId = :businessId AND i.isDelete = false")
-    List<SuBusinessInvite> findByBusinessIdWithRole(@Param("businessId") UUID businessId);
-
-    
-
-     
-
-    
-
-   
 }
-

@@ -12,15 +12,15 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SuTeamResponse {
+public class SuUserBusinessMemberResponse {
     private UUID id;
     private UUID businessId;
-    private String teamCode;
-    private String teamNameEn;
-    private String teamNameLocal;
-    private String description;
-    private String leaderId;
+    private String userId;
+    private String userName;
+    private String userEmail;
+    private String roleCode;
+    private String roleName;
     private Boolean isActive;
+    private Boolean isDefault;
     private Instant createdDate;
-    private Instant updatedDate;
 }

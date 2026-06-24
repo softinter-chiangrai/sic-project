@@ -1,4 +1,3 @@
-// src/app/rt/pmrt29/pmrt29A/pmrt29A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,7 +10,6 @@ import { Pmrt29Service, type User } from '../pmrt29.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
-
 @Component({
   selector: 'app-pmrt29A',
   standalone: true,
@@ -21,7 +19,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private pmrt29Service = inject(Pmrt29Service); // ✅ ใช้ service เดียว
+  private pmrt29Service = inject(Pmrt29Service);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
 
@@ -33,7 +31,6 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   businessId = this.pmrt29Service.getBusinessId() || '';
 
   users = signal<User[]>([]);
-  roleOptions = ['MEMBER', 'LEADER', 'COORDINATOR'];
 
   pageDirty = () => this.form?.dirty ?? false;
 
@@ -54,7 +51,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   initForm() {
     this.form = this.fb.group({
       userId: [null, Validators.required],
-      roleInTeam: ['MEMBER', Validators.required],
+      roleId: [null, Validators.required],
       isActive: [true]
     });
   }
@@ -74,7 +71,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
         next: (member) => {
           this.form.patchValue({
             userId: member.userId,
-            roleInTeam: member.roleInTeam,
+            roleId: member.roleCode,
             isActive: member.isActive
           });
           this.form.get('userId')?.disable();
@@ -108,7 +105,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
     const raw = this.form.getRawValue();
 
     if (this.isEdit && this.memberId) {
-      this.pmrt29Service.updateMember(this.memberId, raw.roleInTeam, raw.isActive)
+      this.pmrt29Service.updateMember(this.memberId, raw.roleId, raw.isActive)
         .pipe(finalize(() => this.isSaving = false))
         .subscribe({
           next: () => {
@@ -120,7 +117,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
           }
         });
     } else {
-      this.pmrt29Service.addMember(this.businessId, raw.userId, raw.roleInTeam)
+      this.pmrt29Service.addMember(this.businessId, raw.userId, raw.roleId)
         .pipe(finalize(() => this.isSaving = false))
         .subscribe({
           next: () => {

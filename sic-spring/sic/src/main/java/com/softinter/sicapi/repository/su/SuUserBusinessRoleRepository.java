@@ -1,14 +1,17 @@
 package com.softinter.sicapi.repository.su;
 
-import com.softinter.sicapi.entity.su.SuUserBusinessRole;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import com.softinter.sicapi.entity.su.SuUserBusinessRole;
 
 @Repository
 public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusinessRole, UUID>, JpaSpecificationExecutor<SuUserBusinessRole> {
@@ -28,4 +31,11 @@ public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusine
     List<String> findAccessibleProgramCodes(@Param("userId") String userId, @Param("businessId") UUID businessId);
 
     boolean existsByUserBusinessIdAndBusinessRoleId(UUID userBusinessId, UUID businessRoleId);
+
+    @Query("SELECT r FROM SuUserBusinessRole r WHERE r.userBusinessId = :userBusinessId AND r.isActive = true")
+    Optional<SuUserBusinessRole> findFirstByUserBusinessIdAndIsActiveTrue(@Param("userBusinessId") UUID userBusinessId);
+
+    @Modifying
+    @Query("DELETE FROM SuUserBusinessRole r WHERE r.userBusinessId = :userBusinessId")
+    void deleteByUserBusinessId(@Param("userBusinessId") UUID userBusinessId);
 }

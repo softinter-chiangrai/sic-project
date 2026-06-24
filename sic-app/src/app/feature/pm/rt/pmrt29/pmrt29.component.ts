@@ -4,7 +4,6 @@ import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { Pmrt29Service, type TeamMember } from './pmrt29.service';
 
-
 interface MemberWithUI extends TeamMember {
   userName: string;
   userEmail: string;
@@ -22,10 +21,8 @@ export class Pmrt29Component implements OnInit {
   private router = inject(Router);
   private pmrt29Service = inject(Pmrt29Service);
 
-  // เก็บ businessId (จะถูกโหลดจาก service หรือ API)
   businessId = '';
 
-  // State
   isLoading = signal(false);
   members = signal<MemberWithUI[]>([]);
   totalItems = signal(0);
@@ -40,20 +37,18 @@ export class Pmrt29Component implements OnInit {
 
   protected roleOptions: string[] = ['Administrator', 'Project Manager', 'Developer', 'QA Tester'];
 
-  // Computed
   filteredMembers = computed(() => {
     let list = this.members();
     const term = this.searchTerm().toLowerCase();
     if (term) {
-      list = list.filter(m =>
-        m.userName.toLowerCase().includes(term) ||
-        m.userEmail.toLowerCase().includes(term)
+      list = list.filter(
+        (m) => m.userName.toLowerCase().includes(term) || m.userEmail.toLowerCase().includes(term),
       );
     }
     const status = this.filterStatus();
-    if (status === 'active') list = list.filter(m => m.isActive);
-    if (status === 'inactive') list = list.filter(m => !m.isActive);
-    // sorting
+    if (status === 'active') list = list.filter((m) => m.isActive);
+    if (status === 'inactive') list = list.filter((m) => !m.isActive);
+
     const by = this.sortBy();
     const dir = this.sortDir();
     list.sort((a, b) => {
@@ -91,9 +86,7 @@ export class Pmrt29Component implements OnInit {
     this.loadBusinessId();
   }
 
-  // ===== โหลด businessId และ members =====
   loadBusinessId() {
-    // 1. ลองจาก service/localStorage
     let id = this.pmrt29Service.getBusinessId();
     if (id) {
       this.businessId = id;
@@ -101,25 +94,20 @@ export class Pmrt29Component implements OnInit {
       return;
     }
 
-    // 2. ถ้าไม่มี -> เรียก API /api/business/my-business
     this.pmrt29Service.getMyBusinesses().subscribe({
       next: (businesses) => {
         if (businesses && businesses.length > 0) {
-          // เลือก default หรืออันแรก
-          const defaultBiz = businesses.find(b => b.isDefault) || businesses[0];
+          const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
           this.businessId = defaultBiz.id;
           this.pmrt29Service.setBusinessId(this.businessId);
           this.loadMembers();
         } else {
-          // ไม่มี business ให้ไปสร้าง/เข้าร่วม
           this.router.navigate(['/management/business']);
         }
       },
-      error: (err) => {
-        console.error('Error loading businesses:', err);
-        // ถ้ามี error ให้ไปหน้า business
+      error: () => {
         this.router.navigate(['/management/business']);
-      }
+      },
     });
   }
 
@@ -129,29 +117,29 @@ export class Pmrt29Component implements OnInit {
       return;
     }
     this.isLoading.set(true);
-    this.pmrt29Service.getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
+    this.pmrt29Service
+      .getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (page) => {
-          const mapped = page.content.map(m => ({
+          const mapped = page.content.map((m) => ({
             ...m,
             userName: m.userName || m.userId,
             userEmail: m.userEmail || '',
-            roleNames: [m.roleInTeam],
-            isDefault: false
+            roleNames: m.roleName ? [m.roleName] : [],
+            isDefault: m.isDefault || false,
           }));
           this.members.set(mapped);
           this.totalItems.set(page.totalElements);
         },
         error: (err) => {
           console.error('Load members error', err);
-        }
+        },
       });
   }
 
-  // ===== Actions =====
   goToAdd() {
-    this.router.navigate(['/feature/pm/pmrt29/add']);
+    this.router.navigate(['/management/business/invite']);
   }
 
   goToEdit(id: string) {
@@ -160,19 +148,18 @@ export class Pmrt29Component implements OnInit {
 
   goToManageRoles(userId: string) {
     console.log('Manage roles for user', userId);
-    // TODO: redirect
   }
 
   goToManagePermissions(userId: string) {
     console.log('Manage permissions for user', userId);
-    // TODO: redirect
   }
 
   toggleActive(member: MemberWithUI) {
     const updated = { ...member, isActive: !member.isActive };
-    this.pmrt29Service.updateMember(member.id, member.roleInTeam, updated.isActive).subscribe({
-      next: () => this.members.update(list => list.map(m => m.id === member.id ? updated : m)),
-      error: (err) => console.error('Toggle error', err)
+    this.pmrt29Service.updateMember(member.id, member.roleCode, updated.isActive).subscribe({
+      next: () =>
+        this.members.update((list) => list.map((m) => (m.id === member.id ? updated : m))),
+      error: (err) => console.error('Toggle error', err),
     });
   }
 
@@ -180,15 +167,14 @@ export class Pmrt29Component implements OnInit {
     if (confirm('ต้องการลบสมาชิก?')) {
       this.pmrt29Service.deleteMember(id).subscribe({
         next: () => {
-          this.members.update(list => list.filter(m => m.id !== id));
-          this.totalItems.update(v => v - 1);
+          this.members.update((list) => list.filter((m) => m.id !== id));
+          this.totalItems.update((v) => v - 1);
         },
-        error: (err) => console.error('Delete error', err)
+        error: (err) => console.error('Delete error', err),
       });
     }
   }
 
-  // ===== UI Helpers =====
   getStatusClass(active: boolean) {
     return active
       ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
@@ -199,7 +185,6 @@ export class Pmrt29Component implements OnInit {
     return active ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 
-  // ===== Filters & Pagination =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
