@@ -30,4 +30,6 @@ public interface SuTeamMemberRepository extends JpaRepository<SuTeamMember, UUID
     @Modifying
     @Query("UPDATE SuTeamMember m SET m.isActive = false WHERE m.teamId = :teamId AND m.userId = :userId")
     void deactivateMember(@Param("teamId") UUID teamId, @Param("userId") String userId);
+
+  
 }

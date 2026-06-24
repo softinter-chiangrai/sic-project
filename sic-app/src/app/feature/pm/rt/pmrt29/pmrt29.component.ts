@@ -1,4 +1,3 @@
-// src/app/feature/pm/rt/pmrt29/pmrt29.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
@@ -10,7 +9,7 @@ interface MemberWithUI extends TeamMember {
   userName: string;
   userEmail: string;
   roleNames: string[];
-  isDefault: boolean;   // ✅ เพิ่ม property นี้
+  isDefault: boolean;
 }
 
 @Component({
@@ -23,9 +22,10 @@ export class Pmrt29Component implements OnInit {
   private router = inject(Router);
   private pmrt29Service = inject(Pmrt29Service);
 
-  businessId = this.pmrt29Service.getBusinessId() || '';
+  // เก็บ businessId (จะถูกโหลดจาก service หรือ API)
+  businessId = '';
 
-  // ===== State =====
+  // State
   isLoading = signal(false);
   members = signal<MemberWithUI[]>([]);
   totalItems = signal(0);
@@ -38,10 +38,9 @@ export class Pmrt29Component implements OnInit {
   sortBy = signal('userName');
   sortDir = signal<'asc' | 'desc'>('asc');
 
-  // ✅ roleOptions สำหรับ filter (อาจจะดึงจาก API ในอนาคต)
   protected roleOptions: string[] = ['Administrator', 'Project Manager', 'Developer', 'QA Tester'];
 
-  // ===== Computed =====
+  // Computed
   filteredMembers = computed(() => {
     let list = this.members();
     const term = this.searchTerm().toLowerCase();
@@ -54,8 +53,7 @@ export class Pmrt29Component implements OnInit {
     const status = this.filterStatus();
     if (status === 'active') list = list.filter(m => m.isActive);
     if (status === 'inactive') list = list.filter(m => !m.isActive);
-
-    // ✅ Sorting ปลอดภัย
+    // sorting
     const by = this.sortBy();
     const dir = this.sortDir();
     list.sort((a, b) => {
@@ -66,7 +64,6 @@ export class Pmrt29Component implements OnInit {
     return list;
   });
 
-  // ✅ Pagination computed properties
   paginatedMembers = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
     return this.filteredMembers().slice(start, start + this.pageSize());
@@ -91,10 +88,46 @@ export class Pmrt29Component implements OnInit {
   Math = Math;
 
   ngOnInit() {
-    if (this.businessId) this.loadMembers();
+    this.loadBusinessId();
+  }
+
+  // ===== โหลด businessId และ members =====
+  loadBusinessId() {
+    // 1. ลองจาก service/localStorage
+    let id = this.pmrt29Service.getBusinessId();
+    if (id) {
+      this.businessId = id;
+      this.loadMembers();
+      return;
+    }
+
+    // 2. ถ้าไม่มี -> เรียก API /api/business/my-business
+    this.pmrt29Service.getMyBusinesses().subscribe({
+      next: (businesses) => {
+        if (businesses && businesses.length > 0) {
+          // เลือก default หรืออันแรก
+          const defaultBiz = businesses.find(b => b.isDefault) || businesses[0];
+          this.businessId = defaultBiz.id;
+          this.pmrt29Service.setBusinessId(this.businessId);
+          this.loadMembers();
+        } else {
+          // ไม่มี business ให้ไปสร้าง/เข้าร่วม
+          this.router.navigate(['/management/business']);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading businesses:', err);
+        // ถ้ามี error ให้ไปหน้า business
+        this.router.navigate(['/management/business']);
+      }
+    });
   }
 
   loadMembers() {
+    if (!this.businessId) {
+      console.warn('No businessId, cannot load members');
+      return;
+    }
     this.isLoading.set(true);
     this.pmrt29Service.getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -105,12 +138,14 @@ export class Pmrt29Component implements OnInit {
             userName: m.userName || m.userId,
             userEmail: m.userEmail || '',
             roleNames: [m.roleInTeam],
-            isDefault: false // ✅ กำหนดค่าเริ่มต้น (อาจมาจากข้อมูลจริงในอนาคต)
+            isDefault: false
           }));
           this.members.set(mapped);
           this.totalItems.set(page.totalElements);
         },
-        error: (err) => console.error('Load members error', err)
+        error: (err) => {
+          console.error('Load members error', err);
+        }
       });
   }
 
@@ -123,17 +158,14 @@ export class Pmrt29Component implements OnInit {
     this.router.navigate(['/feature/pm/pmrt29', id, 'edit']);
   }
 
-  // ✅ เพิ่ม method สำหรับจัดการบทบาทและสิทธิ์
   goToManageRoles(userId: string) {
-    // TODO: ไปหน้ากำหนดบทบาท (อาจจะไป pmrt28 หรืออื่นๆ)
     console.log('Manage roles for user', userId);
-    // this.router.navigate(['/feature/pm/pmrt28', userId, 'assign']);
+    // TODO: redirect
   }
 
   goToManagePermissions(userId: string) {
-    // TODO: ไปหน้ากำหนดสิทธิ์ (อาจจะไป pmrt27)
     console.log('Manage permissions for user', userId);
-    // this.router.navigate(['/feature/pm/pmrt27', userId]);
+    // TODO: redirect
   }
 
   toggleActive(member: MemberWithUI) {

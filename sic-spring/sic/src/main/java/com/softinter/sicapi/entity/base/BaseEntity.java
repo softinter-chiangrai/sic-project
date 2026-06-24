@@ -53,7 +53,7 @@ public abstract class BaseEntity {
     private Instant deleteDate; // เปลี่ยนเป็น Instant
     
     @Version
-    @Column(name = "xmin", insertable = false, updatable = false)
+    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
     private Integer  rowVersion;
     
     @Transient

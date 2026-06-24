@@ -26,4 +26,6 @@ public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusine
            "AND ubr.userBusiness.business.id = :businessId AND ubr.userBusiness.business.isActive = true " +
            "AND ubr.businessRole.isActive = true AND rp.isActive = true AND p.isActive = true")
     List<String> findAccessibleProgramCodes(@Param("userId") String userId, @Param("businessId") UUID businessId);
+
+    boolean existsByUserBusinessIdAndBusinessRoleId(UUID userBusinessId, UUID businessRoleId);
 }

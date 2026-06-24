@@ -19,4 +19,7 @@ public interface SuTeamRepository extends JpaRepository<SuTeam, UUID> {
     List<SuTeam> findByBusinessIdAndIsActiveTrue(UUID businessId);
 
     Optional<SuTeam> findByBusinessIdAndTeamCode(UUID businessId, String teamCode);
+
+    
+
 }

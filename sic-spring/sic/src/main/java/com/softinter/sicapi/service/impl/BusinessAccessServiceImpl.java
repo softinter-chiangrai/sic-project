@@ -167,34 +167,48 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     }
 
     @Override
-    @Transactional
-    public boolean getBusinessActivation() {
-        String userId = currentUserService.getUserId();
-        String sessionId = currentUserService.getSessionId();
-        String clientIp = currentUserService.getIpAddress();
+@Transactional
+public boolean getBusinessActivation() {
+    String userId = currentUserService.getUserId();
+    String sessionId = currentUserService.getSessionId();
+    String clientIp = currentUserService.getIpAddress();
 
-        List<UUID> userBusinessIds = userBusinessRepository.findBusinessIdsByUserId(userId);
-        if (userBusinessIds.isEmpty()) {
-            return false;
-        }
+    log.info("=== getBusinessActivation START ===");
+    log.info("userId: {}, sessionId: {}, clientIp: {}", userId, sessionId, clientIp);
 
-        // ✅ แก้ไข: ส่ง userBusinessIds เข้าไป
-        List<UUID> recentBySession = businessAuditRepository.findRecentBusinessIdBySession(sessionId, userId, clientIp, userBusinessIds);
-        UUID businessToActivate = recentBySession.isEmpty() ? null : recentBySession.get(0);
+    List<UUID> userBusinessIds = userBusinessRepository.findBusinessIdsByUserId(userId);
+    log.info("userBusinessIds: {}", userBusinessIds);
 
-        if (businessToActivate == null) {
-            // ✅ แก้ไข: ส่ง userBusinessIds เข้าไป
-            List<UUID> recentByUser = businessAuditRepository.findRecentBusinessIdByUser(userId, userBusinessIds);
-            businessToActivate = recentByUser.isEmpty() ? null : recentByUser.get(0);
-        }
-
-        if (businessToActivate == null) {
-            businessToActivate = userBusinessIds.get(0);
-        }
-
-        changeBusiness(businessToActivate);
-        return true;
+    if (userBusinessIds.isEmpty()) {
+        log.warn("No business found for user: {}", userId);
+        return false;
     }
+
+    List<UUID> recentBySession = businessAuditRepository.findRecentBusinessIdBySession(
+        sessionId, userId, clientIp, userBusinessIds
+    );
+    log.info("recentBySession: {}", recentBySession);
+
+    UUID businessToActivate = recentBySession.isEmpty() ? null : recentBySession.get(0);
+
+    if (businessToActivate == null) {
+        List<UUID> recentByUser = businessAuditRepository.findRecentBusinessIdByUser(
+            userId, userBusinessIds
+        );
+        log.info("recentByUser: {}", recentByUser);
+        businessToActivate = recentByUser.isEmpty() ? null : recentByUser.get(0);
+    }
+
+    if (businessToActivate == null) {
+        businessToActivate = userBusinessIds.get(0);
+        log.info("Using fallback business: {}", businessToActivate);
+    }
+
+    log.info("Activating business: {}", businessToActivate);
+    changeBusiness(businessToActivate);
+    log.info("=== getBusinessActivation END ===");
+    return true;
+}
 
     @Override
     @Transactional(readOnly = true)

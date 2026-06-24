@@ -30,4 +30,12 @@ public class SuBusinessInvite extends BaseEntity {
 
     @Column(name = "is_activated", nullable = false)
     private Boolean isActivated = false;
+
+    // ✅ เพิ่ม field นี้ (มีในฐานข้อมูลแล้ว)
+    @Column(name = "max_uses")
+    private Integer maxUses;
+
+    // ✅ เพิ่ม field นี้ (มีในฐานข้อมูลแล้ว)
+    @Column(name = "use_count")
+    private Integer useCount = 0;
 }

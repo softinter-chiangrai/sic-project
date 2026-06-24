@@ -63,4 +63,23 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         }
         return "system";
     }
+
+    // ✅ เพิ่ม method นี้
+    @Override
+    public String getEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            String email = jwt.getClaim("email");
+            if (email != null && !email.isBlank()) {
+                return email;
+            }
+            // fallback: use subject if it looks like email
+            String subject = jwt.getSubject();
+            if (subject != null && subject.contains("@")) {
+                return subject;
+            }
+            return "unknown";
+        }
+        return "unknown";
+    }
 }

@@ -1,9 +1,9 @@
-// src/app/core/services/pmrt29.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
-// ===== Interfaces =====
+
 export interface TeamMember {
   id: string;
   teamId: string;
@@ -33,11 +33,10 @@ export interface User {
   providedIn: 'root'
 })
 export class Pmrt29Service {
-  // ===== API Endpoints =====
-  private teamApiUrl = '/api/su-team';
-  private userApiUrl = '/api/users';
+  private teamApiUrl = environment.apiBaseUrl + '/api/su-team';
+  private businessApiUrl = environment.apiBaseUrl + '/api/business';
+  private userApiUrl = environment.apiBaseUrl + '/api/users';
 
-  // ===== Business ID (เก็บใน localStorage) =====
   private storageKey = 'businessId';
   private currentBusinessId: string | null = null;
 
@@ -45,9 +44,7 @@ export class Pmrt29Service {
     this.currentBusinessId = localStorage.getItem(this.storageKey);
   }
 
-  // ============================================================
-  //  1. BUSINESS ID MANAGEMENT
-  // ============================================================
+  // ===== Business ID =====
   setBusinessId(id: string): void {
     this.currentBusinessId = id;
     localStorage.setItem(this.storageKey, id);
@@ -57,11 +54,7 @@ export class Pmrt29Service {
     return this.currentBusinessId;
   }
 
-  // ============================================================
-  //  2. TEAM MEMBER API (เรียก Backend จริง)
-  // ============================================================
-
-  /** GET /api/su-team/members?businessId=xxx&page=0&size=10 */
+  // ===== Team Members API =====
   getMembers(businessId: string, page: number, size: number): Observable<Page<TeamMember>> {
     const params = new HttpParams()
       .set('businessId', businessId)
@@ -70,7 +63,6 @@ export class Pmrt29Service {
     return this.http.get<Page<TeamMember>>(`${this.teamApiUrl}/members`, { params });
   }
 
-  /** POST /api/su-team/members?businessId=xxx&userId=yyy&roleInTeam=zzz */
   addMember(businessId: string, userId: string, roleInTeam: string = 'MEMBER'): Observable<TeamMember> {
     const params = new HttpParams()
       .set('businessId', businessId)
@@ -79,12 +71,10 @@ export class Pmrt29Service {
     return this.http.post<TeamMember>(`${this.teamApiUrl}/members`, null, { params });
   }
 
-  /** GET /api/su-team/members/{memberId} */
   getMemberById(memberId: string): Observable<TeamMember> {
     return this.http.get<TeamMember>(`${this.teamApiUrl}/members/${memberId}`);
   }
 
-  /** PUT /api/su-team/members/{memberId}?roleInTeam=zzz&isActive=true */
   updateMember(memberId: string, roleInTeam: string, isActive: boolean): Observable<TeamMember> {
     const params = new HttpParams()
       .set('roleInTeam', roleInTeam)
@@ -92,16 +82,20 @@ export class Pmrt29Service {
     return this.http.put<TeamMember>(`${this.teamApiUrl}/members/${memberId}`, null, { params });
   }
 
-  /** DELETE /api/su-team/members/{memberId} */
   deleteMember(memberId: string): Observable<void> {
     return this.http.delete<void>(`${this.teamApiUrl}/members/${memberId}`);
   }
 
-  // ============================================================
-  //  3. USER API (ดึงรายชื่อผู้ใช้ทั้งหมด)
-  // ============================================================
+  // ===== Business Info (เพื่อดึง businessId ถ้ายังไม่มี) =====
+  getMyBusinesses(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.businessApiUrl}/my-business`);
+  }
 
-  /** GET /api/users/available */
+  getBusinessActivation(): Observable<boolean> {
+    return this.http.get<boolean>(`${this.businessApiUrl}/activation`);
+  }
+
+  // ===== Users (สำหรับ combobox) =====
   getAvailableUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.userApiUrl}/available`);
   }

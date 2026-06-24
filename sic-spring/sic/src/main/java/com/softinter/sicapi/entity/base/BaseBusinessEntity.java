@@ -1,8 +1,8 @@
 package com.softinter.sicapi.entity.base;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และเอา Instant ออก
+import java.util.UUID;
+
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -11,8 +11,18 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.softinter.sicapi.entity.enums.EntityState;
 
-import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และเอา Instant ออก
-import java.util.UUID;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -54,7 +64,7 @@ public abstract class BaseBusinessEntity {
     private UUID businessId;
 
     @Version
-    @Column(name = "xmin", insertable = false, updatable = false)
+    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
     private Integer  rowVersion;
 
     

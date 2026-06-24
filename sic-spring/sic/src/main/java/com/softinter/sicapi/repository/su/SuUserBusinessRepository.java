@@ -1,5 +1,6 @@
 package com.softinter.sicapi.repository.su;
 
+import com.softinter.sicapi.entity.su.SuBusinessInvite;
 import com.softinter.sicapi.entity.su.SuUserBusiness;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -37,5 +38,17 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
     long countByUserId(@Param("userId") String userId);
 
     boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
+
+     // ดึง invites ของ business พร้อม role (JOIN FETCH)
+    @Query("SELECT i FROM SuBusinessInvite i JOIN FETCH i.suBusinessRole WHERE i.suBusinessRole.businessId = :businessId AND i.isDelete = false")
+    List<SuBusinessInvite> findByBusinessIdWithRole(@Param("businessId") UUID businessId);
+
+    
+
+     
+
+    
+
+   
 }
 
