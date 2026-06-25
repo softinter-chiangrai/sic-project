@@ -8,7 +8,7 @@
         ลำดับชั้นบทบาท
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ flatRoles.length }} บทบาท
+        {{ flatRoles().length }} บทบาท
       </span>
     </div>
     <button
@@ -22,32 +22,12 @@
   <!-- ===== ORGANIZATIONAL CHART ===== -->
   <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
     <sic-organizational-chart
-      [root]="treeData"
+      [root]="treeData()"
       (nodeAdded)="onNodeAdded($event)"
       (nodeRemoved)="onNodeRemoved($event)"
       (nodeUpdated)="onNodeUpdated($event)"
       (dataChanged)="onDataChanged($event)"
-      (nodeClick)="onNodeClick($event)"
     >
     </sic-organizational-chart>
-  </div>
-
-  <!-- ===== LEGEND สี ===== -->
-  <div class="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
-    <span class="font-medium text-[var(--text-active)]">📌 คำอธิบายสี:</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#FF6B6B]"></span> Administrator</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#4ECDC4]"></span> Project Manager</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#45B7D1]"></span> Developer</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#FFA07A]"></span> QA Tester</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#98D8C8]"></span> Business Analyst</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#F7DC6F]"></span> System Analyst</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#BB8FCE]"></span> Finance</span>
-    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-[#85C1E9]"></span> Customer</span>
-  </div>
-
-  <!-- ===== คำแนะนำการใช้งาน ===== -->
-  <div class="text-sm text-[var(--text-muted)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
-    <i class="bi bi-info-circle text-[var(--crm-primary)] mr-2"></i>
-    <span>คลิกที่วงกลมเพื่อแก้ไขบทบาท หรือกำหนดผู้ใช้  •  กด <span class="font-semibold">+</span> เพื่อเพิ่มบทบาทลูก  •  กด <span class="font-semibold">✕</span> เพื่อลบบทบาท</span>
   </div>
 </div>
