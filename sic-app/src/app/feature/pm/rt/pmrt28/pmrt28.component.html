@@ -8,7 +8,7 @@
         ลำดับชั้นบทบาท
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ flatRoles().length }} บทบาท
+        {{ flatRoles.length }} บทบาท
       </span>
     </div>
     <button
@@ -21,13 +21,14 @@
 
   <!-- ===== ORGANIZATIONAL CHART ===== -->
   <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+    <!-- ✅ ใช้ <sic-organizational-chart> แบบเดียวกับโค้ดนี้ -->
     <sic-organizational-chart
-      [root]="treeData()"
+      [root]="treeData"
       (nodeAdded)="onNodeAdded($event)"
       (nodeRemoved)="onNodeRemoved($event)"
       (nodeUpdated)="onNodeUpdated($event)"
       (dataChanged)="onDataChanged($event)"
-    >
+      (nodeClick)="onNodeClick($event)">
     </sic-organizational-chart>
   </div>
-</div>
+

@@ -1,16 +1,16 @@
 // pmrt28.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { SicOrganizationalChartComponent } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.component';
-import type { SicOrganizationalChartNode } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.model';
-
-
+import { SicOrganizationalChartNode } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.model';
+import { DialogService } from '../../../../core/services/dialog.service';
 interface Role {
   id: string;
   code: string;
   name: string;
   description: string;
+  parentRoleId?: string;
   userNames: string[];
   isActive: boolean;
 }
@@ -20,93 +20,199 @@ interface Role {
   standalone: true,
   imports: [CommonModule, RouterModule, SicOrganizationalChartComponent],
   templateUrl: './pmrt28.component.html',
+  styleUrl: './pmrt28.component.css',
 })
 export class Pmrt28Component implements OnInit {
   private router = inject(Router);
+  private dialog = inject(DialogService);
 
-  // ข้อมูลบทบาท (signal)
-  roles = signal<Role[]>([
-    { id: 'role-001', code: 'ADMIN', name: 'Administrator', description: 'ผู้ดูแลระบบสูงสุด', userNames: ['สมชาย ใจดี', 'นารี วัฒนา'], isActive: true },
-    { id: 'role-002', code: 'PM', name: 'Project Manager', description: 'ผู้จัดการโครงการ', userNames: ['สมชาย ใจดี', 'ประวิทย์ สุขสันต์'], isActive: true },
-    { id: 'role-003', code: 'DEV', name: 'Developer', description: 'นักพัฒนา', userNames: ['สมหญิง รักเรียน', 'ประวิทย์ สุขสันต์', 'จันทร์จิรา ใจดี'], isActive: true },
-    { id: 'role-004', code: 'QA', name: 'QA Tester', description: 'ผู้ทดสอบ', userNames: ['วิชัย มากมี'], isActive: false },
-    { id: 'role-005', code: 'BA', name: 'Business Analyst', description: 'นักวิเคราะห์ธุรกิจ', userNames: ['นารี วัฒนา'], isActive: true },
-    { id: 'role-006', code: 'SA', name: 'System Analyst', description: 'นักวิเคราะห์ระบบ', userNames: ['ประวิทย์ สุขสันต์'], isActive: true },
-    { id: 'role-007', code: 'FIN', name: 'Finance', description: 'การเงิน', userNames: [], isActive: true },
-    { id: 'role-008', code: 'CUSTOMER', name: 'Customer', description: 'ลูกค้า', userNames: ['จันทร์จิรา ใจดี'], isActive: true },
-  ]);
+  // ===== ข้อมูลบทบาทแบบ Flat =====
+  // TODO: โหลดจาก API จริง
+  public flatRoles: Role[] = [
+    {
+      id: 'role-001',
+      code: 'ADMIN',
+      name: 'Administrator',
+      description: 'ผู้ดูแลระบบสูงสุด',
+      parentRoleId: undefined,
+      userNames: ['สมชาย ใจดี', 'นารี วัฒนา'],
+      isActive: true,
+    },
+    {
+      id: 'role-002',
+      code: 'PM',
+      name: 'Project Manager',
+      description: 'ผู้จัดการโครงการ',
+      parentRoleId: 'role-001',
+      userNames: ['สมชาย ใจดี', 'ประวิทย์ สุขสันต์'],
+      isActive: true,
+    },
+    {
+      id: 'role-003',
+      code: 'DEV',
+      name: 'Developer',
+      description: 'นักพัฒนา',
+      parentRoleId: 'role-002',
+      userNames: ['สมหญิง รักเรียน', 'ประวิทย์ สุขสันต์', 'จันทร์จิรา ใจดี'],
+      isActive: true,
+    },
+    {
+      id: 'role-004',
+      code: 'QA',
+      name: 'QA Tester',
+      description: 'ผู้ทดสอบ',
+      parentRoleId: 'role-002',
+      userNames: ['วิชัย มากมี'],
+      isActive: false,
+    },
+    {
+      id: 'role-005',
+      code: 'BA',
+      name: 'Business Analyst',
+      description: 'นักวิเคราะห์ธุรกิจ',
+      parentRoleId: 'role-002',
+      userNames: ['นารี วัฒนา'],
+      isActive: true,
+    },
+    {
+      id: 'role-006',
+      code: 'SA',
+      name: 'System Analyst',
+      description: 'นักวิเคราะห์ระบบ',
+      parentRoleId: 'role-002',
+      userNames: ['ประวิทย์ สุขสันต์'],
+      isActive: true,
+    },
+    {
+      id: 'role-007',
+      code: 'FIN',
+      name: 'Finance',
+      description: 'การเงิน',
+      parentRoleId: 'role-001',
+      userNames: [],
+      isActive: true,
+    },
+    {
+      id: 'role-008',
+      code: 'CUSTOMER',
+      name: 'Customer',
+      description: 'ลูกค้า',
+      parentRoleId: 'role-001',
+      userNames: ['จันทร์จิรา ใจดี'],
+      isActive: true,
+    },
+  ];
 
-  // จำนวนบทบาททั้งหมด (computed)
-  flatRoles = computed(() => this.roles());
+  // ===== สร้าง Tree Data =====
+  get treeData(): SicOrganizationalChartNode {
+    const map = new Map<string, SicOrganizationalChartNode>();
+    const roots: SicOrganizationalChartNode[] = [];
 
-  // แปลง roles ให้เป็นโครงสร้างต้นไม้สำหรับ sic-organizational-chart
-  treeData = computed<SicOrganizationalChartNode>(() => this.buildTree(this.roles()));
-
-  ngOnInit(): void {}
-
-  // สร้างโครงสร้างต้นไม้ โดยมี root node และ children เป็นทุกบทบาท
-  private buildTree(roles: Role[]): SicOrganizationalChartNode {
-    const root: SicOrganizationalChartNode = {
-      id: 'root',
-      nameEn: 'Organization',
-      nameLocal: 'องค์กร',
-      color: '#4A90E2',
-      children: roles.map(role => ({
+    this.flatRoles.forEach((role) => {
+      const node: SicOrganizationalChartNode = {
         id: role.id,
-        nameEn: role.code,
+        nameEn: role.name,
         nameLocal: role.name,
-        color: this.getColorForRole(role.id),
-        children: [],  // ไม่มี hierarchy เพิ่มเติม
-        // editable: true // ถ้าต้องการให้แก้ไขได้
-      }))
-    };
-    return root;
+        color: this.getColorForRole(role.code),
+        editable: true,
+        children: [],
+      };
+      map.set(role.id, node);
+    });
+
+    this.flatRoles.forEach((role) => {
+      const node = map.get(role.id)!;
+      if (role.parentRoleId && map.has(role.parentRoleId)) {
+        const parent = map.get(role.parentRoleId)!;
+        parent.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    if (roots.length === 1) {
+      return roots[0];
+    } else {
+      return {
+        id: 'root',
+        nameEn: 'บทบาททั้งหมด',
+        nameLocal: 'บทบาททั้งหมด',
+        color: '#4ECDC4',
+        editable: false,
+        children: roots,
+      };
+    }
   }
 
-  // กำหนดสีตาม id (เพื่อให้สีคงที่)
-  private getColorForRole(id: string): string {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#E67E22', '#2ECC71', '#9B59B6'];
-    const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-    return colors[hash % colors.length];
+  private getColorForRole(code: string): string {
+    const colors: Record<string, string> = {
+      ADMIN: '#FF6B6B',
+      PM: '#4ECDC4',
+      DEV: '#45B7D1',
+      QA: '#FFA07A',
+      BA: '#98D8C8',
+      SA: '#F7DC6F',
+      FIN: '#BB8FCE',
+      CUSTOMER: '#85C1E9',
+    };
+    return colors[code] || '#95A5A6';
   }
 
   // ===== Event Handlers =====
-  onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }) {
-    console.log('✅ Node added:', event);
-    // TODO: สร้าง Role ใหม่และเพิ่มใน roles signal
-    // ตัวอย่าง: this.roles.update(prev => [...prev, newRole]);
-    // จากนั้น system จะ rebuild tree โดยอัตโนมัติ
+  onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }): void {
+    console.log('➕ Node added:', event);
+    this.dialog.success('เพิ่มบทบาท', `เพิ่มบทบาท "${event.node.nameEn}" เรียบร้อย`).then(() => {
+      // TODO: เรียก API สร้างบทบาทใหม่
+      // แล้ว reload ข้อมูล
+    });
   }
 
-  onNodeRemoved(event: { parentId: string; nodeId: string }) {
-    console.log('🗑️ Node removed:', event);
-    // TODO: ลบ Role ที่มี id ตรงกับ event.nodeId
-    // this.roles.update(prev => prev.filter(r => r.id !== event.nodeId));
+  onNodeRemoved(event: { parentId: string; nodeId: string }): void {
+    console.log('❌ Node removed:', event);
+    this.dialog
+      .confirm('ยืนยันการลบ', `คุณต้องการลบบทบาทนี้ใช่หรือไม่?`)
+      .then((confirmed: boolean) => {
+        if (confirmed) {
+          // TODO: เรียก API ลบบทบาท
+          this.dialog.warn('ลบบทบาท', `ลบบทบาท ID: ${event.nodeId} เรียบร้อย`);
+          // reload tree
+        }
+      });
   }
 
-  onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }) {
+  onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }): void {
     console.log('✏️ Node updated:', event);
-    // TODO: อัปเดต Role ที่มี id ตรงกับ event.nodeId
-    // this.roles.update(prev => prev.map(r => r.id === event.nodeId ? { ...r, code: event.node.nameEn, name: event.node.nameLocal } : r));
+    // TODO: เรียก API อัปเดตบทบาท
+    this.dialog.success('อัปเดตบทบาท', `อัปเดตบทบาท "${event.node.nameEn}" เรียบร้อย`);
+    // reload tree
   }
 
-  onDataChanged(event: SicOrganizationalChartNode) {
-    console.log('📊 Data changed:', event);
-    // TODO: เมื่อ tree เปลี่ยนแปลงทั้งหมด อาจต้อง sync กลับไปที่ roles
-    // เนื่องจาก treeData เป็น computed จาก roles การเปลี่ยนแปลง tree โดยตรงจะไม่สะท้อนกลับ
-    // ควรให้ onNodeAdded/Updated/Removed จัดการ update roles แทน
+  onDataChanged(root: SicOrganizationalChartNode): void {
+    console.log('🔄 Data changed:', root);
+    // ใช้เมื่อต้องการบันทึกทั้ง Tree
   }
 
-  // ===== Navigation =====
-  goToAddRole() {
+  // ===== ปุ่มเพิ่มบทบาท =====
+  goToAddRole(): void {
     this.router.navigate(['/feature/pm/pmrt28/add']);
   }
 
-  goToEditRole(roleId: string) {
-    this.router.navigate(['/feature/pm/pmrt28', roleId, 'edit']);
+  // ===== เมื่อคลิกที่ Node =====
+  onNodeClick(event: any): void {
+    const node = event as SicOrganizationalChartNode;
+    this.dialog
+      .confirm('จัดการบทบาท', `คุณต้องการแก้ไขข้อมูลบทบาท "${node.nameEn}" หรือกำหนดผู้ใช้?`)
+      .then((result: boolean) => {
+        if (result) {
+          this.router.navigate(['/feature/pm/pmrt28', node.id, 'edit']);
+        } else {
+          this.router.navigate(['/feature/pm/pmrt28', node.id, 'assign']);
+        }
+      });
   }
 
-  goToAssignRole(roleId: string) {
-    this.router.navigate(['/feature/pm/pmrt28', roleId, 'assign']);
+  ngOnInit(): void {
+    // TODO: โหลดข้อมูลจริงจาก API
+    console.log('Pmrt28Component initialized');
   }
 }
