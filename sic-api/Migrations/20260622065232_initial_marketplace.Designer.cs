@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using sic_api.Data;
@@ -11,9 +12,11 @@ using sic_api.Data;
 namespace sic_api.Migrations
 {
     [DbContext(typeof(SicDbContext))]
-    partial class SicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622065232_initial_marketplace")]
+    partial class initial_marketplace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1069,9 +1072,11 @@ namespace sic_api.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.HasIndex("TableName");
+                    b.HasIndex("TableName")
+                        .IsUnique();
 
-                    b.HasIndex("BusinessId", "EntityId");
+                    b.HasIndex("BusinessId", "EntityId")
+                        .IsUnique();
 
                     b.ToTable("MP_BUSINESS_ENTITY_TABLE");
                 });
@@ -1145,7 +1150,8 @@ namespace sic_api.Migrations
 
                     b.HasIndex("MarketplaceId");
 
-                    b.HasIndex("BusinessId", "MarketplaceId");
+                    b.HasIndex("BusinessId", "MarketplaceId")
+                        .IsUnique();
 
                     b.ToTable("MP_BUSINESS_MARKETPLACE");
                 });
@@ -1431,11 +1437,6 @@ namespace sic_api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("field");
-
-                    b.Property<string>("Format")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("format");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")

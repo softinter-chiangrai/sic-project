@@ -61,6 +61,10 @@ export const routes: Routes = [
       {
         path: 'su',
         loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes)
+      },
+      {
+        path: 'mp',
+        loadChildren: () => import('./feature/mp/mp.routes').then((m) => m.routes)
       }
     ],
   },

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using sic_api.Data;
@@ -11,9 +12,11 @@ using sic_api.Data;
 namespace sic_api.Migrations
 {
     [DbContext(typeof(SicDbContext))]
-    partial class SicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622104752_update_mp_business_xxx_index_key")]
+    partial class update_mp_business_xxx_index_key
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1431,11 +1434,6 @@ namespace sic_api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("field");
-
-                    b.Property<string>("Format")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("format");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")
