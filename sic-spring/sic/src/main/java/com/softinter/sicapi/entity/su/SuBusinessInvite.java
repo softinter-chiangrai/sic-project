@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -30,6 +31,9 @@ public class SuBusinessInvite extends BaseEntity {
 
     @Column(name = "is_activated", nullable = false)
     private Boolean isActivated = false;
+
+    @Column(name = "expire_at")
+    private Instant expireAt;
 
     // ✅ เพิ่ม field นี้ (มีในฐานข้อมูลแล้ว)
     @Column(name = "max_uses")

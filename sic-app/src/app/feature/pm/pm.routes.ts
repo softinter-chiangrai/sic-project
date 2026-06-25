@@ -360,14 +360,19 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt29',
     loadComponent: () => import('./rt/pmrt29/pmrt29.component').then((m) => m.Pmrt29Component),
   },
+  // pm.routes.ts
   {
     path: 'pmrt29/add',
     loadComponent: () =>
-      import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
+      import('../../management/business/business-invite/business-invite.component').then(
+        (m) => m.BusinessInviteComponent,
+      ),
   },
   {
     path: 'pmrt29/:id/edit',
     loadComponent: () =>
       import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
   },
+
+  
 ];

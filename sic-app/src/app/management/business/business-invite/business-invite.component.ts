@@ -130,6 +130,7 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
     if (event.action === 'copy') {
       const token = row['inviteToken'] as string;
       if (token) navigator.clipboard.writeText(token);
+      await this.dialog.info('คัดลอกสำเร็จ', 'Token ถูกคัดลอกไปยังคลิปบอร์ดแล้ว');
     }
   }
 

@@ -63,13 +63,6 @@ public class ProfileController {
         return getInfo();
     }
 
-    @GetMapping("/mail-check")
-    @Operation(summary = "Check if email is registered")
-    public ResponseEntity<Boolean> mailCheck(@RequestParam String email) {
-        boolean exists = profileRepository.existsByEmailIgnoreCase(email);
-        return ResponseEntity.ok(exists);
-    }
-
     @PostMapping("/send-verify")
     @Operation(summary = "Send verification email")
     public ResponseEntity<VerifyTokenResponse> sendVerify(@Valid @RequestBody SendVerifyRequest request) {
@@ -82,5 +75,29 @@ public class ProfileController {
         String userId = currentUserService.getUserId();
         UUID profileId = profileService.saveProfile(userId, request);
         return ResponseEntity.ok(profileId);
+    }
+
+    // ✅ แก้ไข: คืนค่า true ถ้าว่าง, false ถ้ามีอยู่แล้ว
+    @GetMapping("/mail-check")
+    @Operation(summary = "Check if email is available (not registered)")
+    public ResponseEntity<Boolean> mailCheck(@RequestParam String email) {
+        boolean exists = profileRepository.existsByEmailIgnoreCase(email);
+        return ResponseEntity.ok(!exists);  // ✅ true = available, false = duplicate
+    }
+
+    // ✅ เพิ่ม endpoint ตรวจสอบเบอร์โทร
+    @GetMapping("/phone-check")
+    @Operation(summary = "Check if phone number is available")
+    public ResponseEntity<Boolean> phoneCheck(@RequestParam String phone) {
+        boolean exists = profileRepository.existsByPhoneNumber(phone);
+        return ResponseEntity.ok(!exists);
+    }
+
+    // ✅ เพิ่ม endpoint ตรวจสอบ Tax ID
+    @GetMapping("/tax-check")
+    @Operation(summary = "Check if tax ID is available")
+    public ResponseEntity<Boolean> taxCheck(@RequestParam String taxId) {
+        boolean exists = profileRepository.existsByTaxId(taxId);
+        return ResponseEntity.ok(!exists);
     }
 }

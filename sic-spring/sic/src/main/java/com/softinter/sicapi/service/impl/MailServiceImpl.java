@@ -76,21 +76,21 @@ public class MailServiceImpl implements MailService {
         mailQueueRepository.save(queue);
     }
 
-    @Override
+   @Override
 public void sendTemplatedMail(String to, String templateCode, Object... templateParams) {
     mailTemplateRepository.findByTemplateCodeAndIsActiveTrue(templateCode)
             .ifPresent(template -> {
                 String subject = template.getSubjectEn();
                 String body = template.getContentEn();
-                
+
                 Map<String, String> variables = new HashMap<>();
                 variables.put("Recipient", to);
                 variables.put("ExpirationMinutes", "1440");
-                
-                // ✅ ดึง token และ referenceNumber
+
                 String token = null;
                 String referenceNumber = null;
-                
+                String customLink = null;
+
                 if (templateParams != null && templateParams.length > 0) {
                     if (templateParams[0] != null) {
                         token = String.valueOf(templateParams[0]);
@@ -101,12 +101,25 @@ public void sendTemplatedMail(String to, String templateCode, Object... template
                         referenceNumber = String.valueOf(templateParams[1]);
                         variables.put("ReferenceNumber", referenceNumber);
                     }
-                    
-                    // สร้าง verification link
-                    String verificationLink = "http://localhost:5265/api/profile/verify?token=" + token;
-                    variables.put("VerificationLink", verificationLink);
+                    if (templateParams.length > 2 && templateParams[2] != null) {
+                        customLink = String.valueOf(templateParams[2]);
+                    }
                 }
-                
+
+                // ✅ Filter ตาม templateCode
+                String verificationLink;
+                if (customLink != null && !customLink.isBlank()) {
+                    // ใช้ customLink ที่ส่งมา (ถ้ามี)
+                    verificationLink = customLink;
+                } else if ("BUSINESS_INVITE".equals(templateCode)) {
+                    // BUSINESS_INVITE → ไปหน้า Frontend
+                    verificationLink = "http://localhost:4200/management/business/join?token=" + (token != null ? token : "");
+                } else {
+                    // Template อื่นๆ (VERIFY_EMAIL, RESET_PASSWORD, ฯลฯ) → ใช้ Backend API ที่ถูกต้อง
+                    verificationLink = "http://localhost:5265/api/public/verify/token/" + (token != null ? token : "");
+                }
+                variables.put("VerificationLink", verificationLink);
+
                 // แทนที่ตัวแปร
                 for (Map.Entry<String, String> entry : variables.entrySet()) {
                     String placeholder = "{" + entry.getKey() + "}";
@@ -117,10 +130,11 @@ public void sendTemplatedMail(String to, String templateCode, Object... template
                         subject = subject.replace(placeholder, entry.getValue());
                     }
                 }
-                
+
                 sendMail(to, subject, body, template.getIsHtml());
             });
 }
+
 
     @Scheduled(fixedDelay = 30000)
     @Transactional

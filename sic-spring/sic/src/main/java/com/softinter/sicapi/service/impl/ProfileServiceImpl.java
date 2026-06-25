@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.softinter.sicapi.dto.request.SaveProfileRequest;
 import com.softinter.sicapi.dto.response.ProfileResponse;
@@ -26,6 +27,7 @@ import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.service.ProfileService;
 import com.softinter.sicapi.service.VerifyService;
 import com.softinter.sicapi.util.LanguageUtils;
+import com.softinter.sicapi.util.UniquenessValidator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,13 +84,41 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
             profile = profileRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
-            // ตั้งค่า RowVersion ให้ Hibernate ใช้ตรวจสอบ Optimistic Locking
             profile.setRowVersion(request.getRowVersion());
         } else {
             profile = new SuProfile();
         }
 
-        // 4. ตรวจสอบ Email Verification (เหมือน .NET)
+        // ============================================================
+        // 4. ✅ ตรวจสอบความซ้ำของ Email, Phone, Tax ID (ใช้ UniquenessValidator)
+        // ============================================================
+        UniquenessValidator.validate(
+            request.getEmail(),
+            profile.getEmail(),
+            profileRepository::findByEmailIgnoreCase,
+            profile.getId(),
+            "Email"
+        );
+
+        UniquenessValidator.validate(
+            request.getPhoneNumber(),
+            profile.getPhoneNumber(),
+            profileRepository::findByPhoneNumber,
+            profile.getId(),
+            "Phone number"
+        );
+
+        UniquenessValidator.validate(
+            request.getTaxId(),
+            profile.getTaxId(),
+            profileRepository::findByTaxId,
+            profile.getId(),
+            "Tax ID"
+        );
+
+        // ============================================================
+        // 5. ตรวจสอบ Email Verification (เฉพาะเมื่ออีเมลเปลี่ยน)
+        // ============================================================
         boolean isEmailChanged = false;
         if (request.getState() == EntityState.ADDED.getEntityStateCode()) {
             isEmailChanged = true;
@@ -99,24 +129,38 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-       if (isEmailChanged) {
-    if (request.getReferenceNumber() == null || request.getReferenceNumber().isBlank() ||
-        request.getVerifyToken() == null || request.getVerifyToken().isBlank()) {
-        throw new IllegalArgumentException("ReferenceNumber and VerifyToken are required for email verification.");
-    }
-    // ✅ แก้ไขการเรียกและตรวจสอบผลลัพธ์
-    VerifyTokenResponse verifyResponse = verifyService.verifyToken("Email", request.getReferenceNumber(), request.getVerifyToken());
-    if (verifyResponse == null || !verifyResponse.getValid()) {
-        throw new IllegalArgumentException("Email verification failed. Invalid token or reference number.");
-    }
-}
+        if (isEmailChanged) {
+            if (!StringUtils.hasText(request.getReferenceNumber())) {
+                throw new IllegalArgumentException("Reference number is missing.");
+            }
+            if (!StringUtils.hasText(request.getVerifyToken())) {
+                throw new IllegalArgumentException("Verification token is missing.");
+            }
 
-        // 5. จัดการ UploadGroupId (resolve เหมือน .NET)
+            VerifyTokenResponse verifyResponse = verifyService.verifyToken(
+                "Email",
+                request.getReferenceNumber(),
+                request.getVerifyToken()
+            );
+
+            if (verifyResponse == null || !verifyResponse.getValid()) {
+                String errorMsg = (verifyResponse != null && StringUtils.hasText(verifyResponse.getMessage()))
+                                    ? verifyResponse.getMessage()
+                                    : "Email verification failed.";
+                throw new IllegalArgumentException(errorMsg);
+            }
+        }
+
+        // ============================================================
+        // 6. จัดการ UploadGroupId
+        // ============================================================
         List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
         UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
         profile.setUploadGroupId(finalUploadGroupId);
 
-        // 6. Mapping ข้อมูล
+        // ============================================================
+        // 7. Mapping ข้อมูล
+        // ============================================================
         profile.setUserId(userId);
         profile.setEmail(request.getEmail());
         profile.setFirstNameEn(request.getFirstNameEn());
@@ -126,6 +170,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setMiddleNameLocal(request.getMiddleNameLocal());
         profile.setLastNameLocal(request.getLastNameLocal());
         profile.setPhoneNumber(request.getPhoneNumber());
+        profile.setTaxId(request.getTaxId());  // ✅ ตั้งค่า Tax ID
         profile.setAddressEn(request.getAddressEn());
         profile.setAddressLocal(request.getAddressLocal());
         profile.setZipCode(request.getZipCode());
@@ -156,21 +201,17 @@ public class ProfileServiceImpl implements ProfileService {
             profile.setSubDistrict(null);
         }
 
-        // 7. บันทึก (Hibernate จะตรวจสอบ @Version อัตโนมัติ)
+        // 8. บันทึก
         profile = profileRepository.save(profile);
 
-        // 8. Sync Uploads
+        // 9. Sync Uploads
         if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
             fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
         }
 
-        // 9. คืนค่า UUID เท่านั้น (ตาม .NET)
         return profile.getId();
     }
 
-    /**
-     * Helper method: Resolve uploadGroupId คล้ายกับ .NET ResolveUploadGroupId
-     */
     private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
         if (existingGroupId != null) {
             return existingGroupId;
@@ -192,134 +233,121 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
-   private ProfileResponse toResponse(SuProfile profile) {
-    if (profile == null || profile.getId() == null) return null;
+    private ProfileResponse toResponse(SuProfile profile) {
+        if (profile == null || profile.getId() == null) return null;
 
-    ProfileResponse response = new ProfileResponse();
-    
-    // ✅ ข้อมูลหลัก
-    response.setId(profile.getId());
-    boolean useEnglish = LanguageUtils.useEnglish();
-    response.setName(buildFullName(profile, useEnglish));
-    response.setTaxId(profile.getTaxId());
-    response.setTitleId(profile.getTitleId());
-    
-    // ✅ ชื่อ
-    response.setFirstNameEn(profile.getFirstNameEn());
-    response.setMiddleNameEn(profile.getMiddleNameEn());
-    response.setLastNameEn(profile.getLastNameEn());
-    response.setFirstNameLocal(profile.getFirstNameLocal());
-    response.setMiddleNameLocal(profile.getMiddleNameLocal());
-    response.setLastNameLocal(profile.getLastNameLocal());
-    
-    // ✅ ที่อยู่
-    response.setSupportLocalAddress(profile.getSupportLocalAddress());
-    response.setAddressEn(profile.getAddressEn());
-    response.setAddressLocal(profile.getAddressLocal());
-    
-    // ✅ รหัสสถานที่
-    response.setCountryId(profile.getCountryId());
-    response.setProvinceId(profile.getProvinceId());
-    response.setDistrictId(profile.getDistrictId());
-    response.setSubDistrictId(profile.getSubDistrictId());
-    response.setZipCode(profile.getZipCode());
-    
-    // ✅ การติดต่อ
-    response.setEmail(profile.getEmail());
-    response.setPhoneNumber(profile.getPhoneNumber());
-    
-    // ✅ rowVersion และ state (ใช้สำหรับ Optimistic Locking)
-    response.setRowVersion(profile.getRowVersion());
-    response.setState(profile.getState() != null 
-        ? profile.getState().getEntityStateCode() 
-        : EntityState.DETACHED.getEntityStateCode());
-    
-    // ✅ uploadGroupId และ uploadGroupData
-    UUID uploadGroupId = profile.getUploadGroupId();
-    response.setUploadGroupId(uploadGroupId);
+        ProfileResponse response = new ProfileResponse();
+        response.setId(profile.getId());
+        boolean useEnglish = LanguageUtils.useEnglish();
+        response.setName(buildFullName(profile, useEnglish));
+        response.setTaxId(profile.getTaxId());
+        response.setTitleId(profile.getTitleId());
 
-    List<StorageUploadReference> uploadData = new ArrayList<>();
-    if (uploadGroupId != null) {
-        List<SuUpload> uploads = uploadRepository
-            .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+        response.setFirstNameEn(profile.getFirstNameEn());
+        response.setMiddleNameEn(profile.getMiddleNameEn());
+        response.setLastNameEn(profile.getLastNameEn());
+        response.setFirstNameLocal(profile.getFirstNameLocal());
+        response.setMiddleNameLocal(profile.getMiddleNameLocal());
+        response.setLastNameLocal(profile.getLastNameLocal());
 
-        for (SuUpload upload : uploads) {
-            StorageUploadReference ref = new StorageUploadReference();
-            ref.setId(upload.getId());
-            ref.setUploadGroupId(uploadGroupId);
-            ref.setFileName(upload.getFileName());
-            ref.setContentType(upload.getContentType());
-            ref.setFileSize(upload.getFileSize());
+        response.setSupportLocalAddress(profile.getSupportLocalAddress());
+        response.setAddressEn(profile.getAddressEn());
+        response.setAddressLocal(profile.getAddressLocal());
 
-            String baseUrl = "http://localhost:5265";
-            ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+        response.setCountryId(profile.getCountryId());
+        response.setProvinceId(profile.getProvinceId());
+        response.setDistrictId(profile.getDistrictId());
+        response.setSubDistrictId(profile.getSubDistrictId());
+        response.setZipCode(profile.getZipCode());
 
-            ref.setState(EntityState.DETACHED.getEntityStateCode());
-            ref.setIsActive(upload.getIsActive());
-            ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
-            ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+        response.setEmail(profile.getEmail());
+        response.setPhoneNumber(profile.getPhoneNumber());
 
-            uploadData.add(ref);
+        response.setRowVersion(profile.getRowVersion());
+        response.setState(profile.getState() != null
+                ? profile.getState().getEntityStateCode()
+                : EntityState.DETACHED.getEntityStateCode());
+
+        UUID uploadGroupId = profile.getUploadGroupId();
+        response.setUploadGroupId(uploadGroupId);
+
+        List<StorageUploadReference> uploadData = new ArrayList<>();
+        if (uploadGroupId != null) {
+            List<SuUpload> uploads = uploadRepository
+                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+
+            for (SuUpload upload : uploads) {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(uploadGroupId);
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+
+                String baseUrl = "http://localhost:5265";
+                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+
+                ref.setState(EntityState.DETACHED.getEntityStateCode());
+                ref.setIsActive(upload.getIsActive());
+                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+
+                uploadData.add(ref);
+            }
+        }
+        response.setUploadGroupData(uploadData);
+
+        return response;
+    }
+
+    private String buildFullName(SuProfile profile, boolean useEnglish) {
+        StringBuilder name = new StringBuilder();
+
+        if (profile.getTitle() != null) {
+            String titleName = useEnglish
+                    ? profile.getTitle().getPrefixNameEn()
+                    : profile.getTitle().getPrefixNameLocal();
+            if (titleName != null && !titleName.isBlank()) {
+                name.append(titleName).append(" ");
+            }
+        }
+
+        String firstName = useEnglish
+                ? profile.getFirstNameEn()
+                : profile.getFirstNameLocal();
+        if (firstName != null && !firstName.isBlank()) {
+            name.append(firstName).append(" ");
+        }
+
+        String middleName = useEnglish
+                ? profile.getMiddleNameEn()
+                : profile.getMiddleNameLocal();
+        if (middleName != null && !middleName.isBlank()) {
+            name.append(middleName).append(" ");
+        }
+
+        String lastName = useEnglish
+                ? profile.getLastNameEn()
+                : profile.getLastNameLocal();
+        if (lastName != null && !lastName.isBlank()) {
+            name.append(lastName);
+        }
+
+        return name.toString().trim();
+    }
+
+    private String mapVisibilityToString(FileVisibility visibility) {
+        if (visibility == null) return "Public";
+        switch (visibility) {
+            case UPLOADER_ONLY: return "UploaderOnly";
+            case BUSINESS_ONLY: return "BusinessOnly";
+            case ANYONE_WITH_LINK: return "AnyoneWithLink";
+            case PUBLIC: return "Public";
+            default: return "Public";
         }
     }
-    response.setUploadGroupData(uploadData);
-
-    return response;
-}
-
-private String buildFullName(SuProfile profile, boolean useEnglish) {
-    StringBuilder name = new StringBuilder();
-
-    // Title
-    if (profile.getTitle() != null) {
-        String titleName = useEnglish
-            ? profile.getTitle().getPrefixNameEn()
-            : profile.getTitle().getPrefixNameLocal();
-        if (titleName != null && !titleName.isBlank()) {
-            name.append(titleName).append(" ");
-        }
-    }
-
-    // First Name
-    String firstName = useEnglish
-        ? profile.getFirstNameEn()
-        : profile.getFirstNameLocal();
-    if (firstName != null && !firstName.isBlank()) {
-        name.append(firstName).append(" ");
-    }
-
-    // Middle Name
-    String middleName = useEnglish
-        ? profile.getMiddleNameEn()
-        : profile.getMiddleNameLocal();
-    if (middleName != null && !middleName.isBlank()) {
-        name.append(middleName).append(" ");
-    }
-
-    // Last Name
-    String lastName = useEnglish
-        ? profile.getLastNameEn()
-        : profile.getLastNameLocal();
-    if (lastName != null && !lastName.isBlank()) {
-        name.append(lastName);
-    }
-
-    return name.toString().trim();
-}
-
-private String mapVisibilityToString(FileVisibility visibility) {
-    if (visibility == null) return "Public";
-    switch (visibility) {
-        case UPLOADER_ONLY: return "UploaderOnly";
-        case BUSINESS_ONLY: return "BusinessOnly";
-        case ANYONE_WITH_LINK: return "AnyoneWithLink";
-        case PUBLIC: return "Public";
-        default: return "Public";
-    }
-}
 
     private String getCurrentLanguage() {
-        // TODO: ดึงจาก RequestContextHolder หรือ header
         return "en";
     }
 

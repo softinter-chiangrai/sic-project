@@ -1,80 +1,199 @@
+<!-- profile.component.html -->
 @if (showProfile() && formProfileData; as data1) {
   <form [formGroup]="data1.formGroup" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold">ข้อมูลส่วนตัว</h2>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-profile
-          [size]="150"
-          [visibility]="4"
-          formControlName="uploadGroupData"
+
+      <!-- Profile Picture -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-profile [size]="150" [visibility]="4" formControlName="uploadGroupData"></sic-profile>
+      </div>
+
+      <!-- Tax ID -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <sic-input
+          label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง"
+          mask="0-0000-00000-00-0"
+          formControlName="taxId"
+          [errorMessages]="{
+            required: 'กรุณากรอกเลขประจำตัวผู้เสียภาษี',
+            duplicate: 'เลขประจำตัวผู้เสียภาษีนี้ถูกใช้งานแล้ว',
+          }"
         >
-        </sic-profile>
+        </sic-input>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง"  mask="0-0000-00000-00-0" formControlName="taxId"></sic-input>
-      </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle" [params]="{ personType: 'INDIVIDUAL' }">
+
+      <!-- Title -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="คำนำหน้า"
+          formControlName="titleId"
+          [apiUrl]="service.apiGetComboboxTitle"
+          [params]="{ personType: 'INDIVIDUAL' }"
+        >
         </sic-combobox>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+
+      <!-- Name (English) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
         <div class="flex-2">
-          <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
+          <sic-input
+            label="ชื่อ (อังกฤษ)"
+            formControlName="firstNameEn"
+            [errorMessages]="{ required: 'กรุณากรอกชื่อ' }"
+          ></sic-input>
         </div>
         <div class="flex-1">
           <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
         </div>
         <div class="flex-2">
-          <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
+          <sic-input
+            label="นามสกุล"
+            formControlName="lastNameEn"
+            [errorMessages]="{ required: 'กรุณากรอกนามสกุล' }"
+          ></sic-input>
         </div>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+
+      <!-- Name (Local) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
         <div class="flex-2">
-          <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
+          <sic-input
+            label="ชื่อ (ท้องถิ่น)"
+            formControlName="firstNameLocal"
+            [errorMessages]="{ required: 'กรุณากรอกชื่อ' }"
+          ></sic-input>
         </div>
         <div class="flex-1">
           <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
         </div>
         <div class="flex-2">
-          <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
+          <sic-input
+            label="นามสกุล"
+            formControlName="lastNameLocal"
+            [errorMessages]="{ required: 'กรุณากรอกนามสกุล' }"
+          ></sic-input>
         </div>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry" (selectionChanged)="onCountryChange($event)">
+
+      <!-- Country -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="ประเทศ"
+          formControlName="countryId"
+          [apiUrl]="service.apiGetComboboxCountry"
+          (selectionChanged)="onCountryChange($event)"
+          [errorMessages]="{ required: 'กรุณาเลือกประเทศ' }"
+        >
         </sic-combobox>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+
+      <!-- Address -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
       </div>
-      @if(data1.formGroup.get('supportLocalAddress')?.value) {
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince" [params]="{ countryId: data1.formGroup.get('countryId')?.value }" (selectionChanged)="onProvinceChange($event)">
+
+      <!-- Local Address -->
+      @if (data1.formGroup.get('supportLocalAddress')?.value) {
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="จังหวัด"
+            formControlName="provinceId"
+            [apiUrl]="service.apiGetComboboxProvince"
+            [params]="{ countryId: data1.formGroup.get('countryId')?.value }"
+            (selectionChanged)="onProvinceChange($event)"
+          >
           </sic-combobox>
         </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict" [params]="{ provinceId: data1.formGroup.get('provinceId')?.value }" (selectionChanged)="onDistrictChange($event)">
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="อำเภอ"
+            formControlName="districtId"
+            [apiUrl]="service.apiGetComboboxDistrict"
+            [params]="{ provinceId: data1.formGroup.get('provinceId')?.value }"
+            (selectionChanged)="onDistrictChange($event)"
+          >
           </sic-combobox>
         </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict" [params]="{ districtId: data1.formGroup.get('districtId')?.value }" (selectionChanged)="onSubDistrictChange($event)">
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
+          <sic-combobox
+            label="ตำบล"
+            formControlName="subDistrictId"
+            [apiUrl]="service.apiGetComboboxSubDistrict"
+            [params]="{ districtId: data1.formGroup.get('districtId')?.value }"
+            (selectionChanged)="onSubDistrictChange($event)"
+          >
           </sic-combobox>
         </div>
-        <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <div
+          class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        >
           <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
         </div>
       }
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input label="อีเมล" formControlName="email" (change)="onEmailChange($event)"></sic-input>
+
+      <!-- Email (ไม่มี event) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="อีเมล"
+          formControlName="email"
+          [errorMessages]="{
+            required: 'กรุณากรอกอีเมล',
+            email: 'กรุณากรอกอีเมลให้ถูกต้อง',
+            duplicate: 'อีเมลนี้ถูกใช้งานแล้ว',
+          }"
+        >
+        </sic-input>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+
+      <!-- Phone Number -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-phone
+          label="เบอร์โทรศัพท์"
+          formControlName="phoneNumber"
+          [errorMessages]="{
+            required: 'กรุณากรอกเบอร์โทรศัพท์',
+            duplicate: 'เบอร์โทรนี้ถูกใช้งานแล้ว',
+          }"
+        >
+        </sic-input-phone>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+
+      <!-- Submit -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
         <div class="flex-1">
           <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">บันทึก</sic-button>
         </div>
@@ -83,6 +202,7 @@
   </form>
 }
 
+<!-- Verify Email -->
 @if (!showProfile() && formVerifyData; as data2) {
   <form [formGroup]="data2.formGroup" (ngSubmit)="verify()">
     <div class="grid grid-cols-6 gap-4">
@@ -91,25 +211,40 @@
       </div>
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold">
-          {{formVerifyData.formGroup.get('email')?.value}}
+          {{ formVerifyData.formGroup.get('recipient')?.value }}
         </h2>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <div class="flex gap-4">
           <div class="flex-1">
-            <sic-input formControlName="verifyToken"></sic-input>
+            <sic-input
+              label="รหัสยืนยัน"
+              formControlName="verifyToken"
+              placeholder="กรอกรหัสยืนยัน"
+              [errorMessages]="{
+                required: 'กรุณากรอกรหัสยืนยัน',
+              }"
+            ></sic-input>
           </div>
           <div class="w-50">
-            <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="resend()">ส่งรหัสยืนยันใหม่</sic-button>
+            <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="resend()">
+              ส่งรหัสยืนยันใหม่
+            </sic-button>
           </div>
         </div>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
         <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="back()">ย้อนกลับ</sic-button>
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="back()">
+            ย้อนกลับ
+          </sic-button>
         </div>
         <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">ยืนยัน</sic-button>
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary"> ยืนยัน </sic-button>
         </div>
       </div>
     </div>

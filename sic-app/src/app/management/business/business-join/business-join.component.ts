@@ -1,3 +1,5 @@
+// business-join.component.ts
+
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -29,6 +31,7 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
   readonly router = inject(Router);
 
   loading = signal(false);
+  isAutoSubmit = signal(false);
 
   tokenForm!: FormGroup<ToForm<JoinModel>>;
 
@@ -37,10 +40,34 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
   ngOnInit(): void {
     const data: BusinessJoinFormData = this.route.snapshot.data['form'];
     this.tokenForm = data.joinForm;
+
+    // ✅ อ่าน Token จาก Query Parameter (?token=xxx)
+    const tokenFromQuery = this.route.snapshot.queryParams['token'];
+    
+    // ✅ หรืออ่านจาก Path Parameter (/join/xxx)
+    const tokenFromPath = this.route.snapshot.params['token'];
+
+    const token = tokenFromQuery || tokenFromPath;
+
+    if (token) {
+      // ✅ เติม Token ลงในฟอร์มอัตโนมัติ
+      this.tokenForm.patchValue({ token: token });
+      
+      // ✅ (Optional) Submit อัตโนมัติหลังจาก 500ms
+      this.isAutoSubmit.set(true);
+      setTimeout(() => {
+        if (this.tokenForm.valid) {
+          this.submit();
+        }
+      }, 500);
+    }
   }
 
   submit(): void {
-    if (this.tokenForm.invalid) { this.tokenForm.markAllAsTouched(); return; }
+    if (this.tokenForm.invalid) {
+      this.tokenForm.markAllAsTouched();
+      return;
+    }
     this.loading.set(true);
     this.service.join(this.tokenForm.value.token!).subscribe({
       next: async () => {
@@ -60,4 +87,3 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
     this.router.navigate(['/management/business']);
   }
 }
-

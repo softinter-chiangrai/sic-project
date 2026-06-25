@@ -1,40 +1,63 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { EmailVerifyModel, ProfileModel } from './profile.model';
 import { environment } from '../../../environments/environment';
+import { EmailVerifyModel, ProfileModel } from './profile.model';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class ProfileService {
-
   private readonly http = inject(HttpClient);
 
-  apiProfile = environment.apiBaseUrl + '/api/profile';
+  private readonly apiBaseUrl = environment.apiBaseUrl;
+  private readonly apiProfile = `${this.apiBaseUrl}/api/profile`;
 
-  apiGetComboboxTitle = this.apiProfile + '/combobox-title';
-  apiGetComboboxCountry = this.apiProfile + '/combobox-country';
-  apiGetComboboxProvince = this.apiProfile + '/combobox-province';
-  apiGetComboboxDistrict = this.apiProfile + '/combobox-district';
-  apiGetComboboxSubDistrict = this.apiProfile + '/combobox-sub-district';
-  apiGetMe = this.apiProfile + '/me';
-  apiGetMailCheck = this.apiProfile + '/mail-check';
-  apiPostSendVerify = this.apiProfile + '/send-verify';
-  apiSaveProfile = this.apiProfile + '/save';
+  // ✅ Combobox APIs
+  readonly apiGetComboboxTitle = `${this.apiProfile}/combobox-title`;
+  readonly apiGetComboboxCountry = `${this.apiProfile}/combobox-country`;
+  readonly apiGetComboboxProvince = `${this.apiProfile}/combobox-province`;
+  readonly apiGetComboboxDistrict = `${this.apiProfile}/combobox-district`;
+  readonly apiGetComboboxSubDistrict = `${this.apiProfile}/combobox-sub-district`;
 
+  // ✅ Profile APIs
+  readonly apiGetMe = `${this.apiProfile}/me`;
+  readonly apiGetMailCheck = `${this.apiProfile}/mail-check`;
+  readonly apiPostSendVerify = `${this.apiProfile}/send-verify`;
+  readonly apiSaveProfile = `${this.apiProfile}/save`;
+
+  // ✅ New Check APIs (ต้องมี Backend endpoint)
+  readonly apiGetPhoneCheck = `${this.apiProfile}/phone-check`;
+  readonly apiGetTaxCheck = `${this.apiProfile}/tax-check`;
+
+  // ===== GET Profile =====
   getProfile(): Observable<ProfileModel> {
     return this.http.get<ProfileModel>(this.apiGetMe);
   }
-  
+
+  // ===== Check Email Duplicate =====
   checkEmail(email: string): Observable<boolean> {
     return this.http.get<boolean>(this.apiGetMailCheck, { params: { email } });
   }
 
-  sendVerifyToken(email: string): Observable<EmailVerifyModel> {
-    return this.http.post<EmailVerifyModel>(this.apiPostSendVerify, { recipient : email, verifyType: 'Email' });
+  // ===== Check Phone Duplicate =====
+  checkPhone(phone: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiGetPhoneCheck, { params: { phone } });
   }
-  
+
+  // ===== Check Tax ID Duplicate =====
+  checkTaxId(taxId: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiGetTaxCheck, { params: { taxId } });
+  }
+
+  // ===== Send Verification Email =====
+  sendVerifyToken(email: string): Observable<EmailVerifyModel> {
+    return this.http.post<EmailVerifyModel>(this.apiPostSendVerify, {
+      recipient: email,
+      verifyType: 'Email',
+    });
+  }
+
+  // ===== Save Profile =====
   save(profile: ProfileModel): Observable<ProfileModel> {
     return this.http.post<ProfileModel>(this.apiSaveProfile, profile);
   }
-  
 }

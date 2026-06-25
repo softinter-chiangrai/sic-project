@@ -34,5 +34,6 @@ public class SaveProfileRequest {
     private Integer state;;          
     private UUID id;                     
     private String referenceNumber;     
-    private String verifyToken;          
+    private String verifyToken;    
+    private String taxId;     
 }

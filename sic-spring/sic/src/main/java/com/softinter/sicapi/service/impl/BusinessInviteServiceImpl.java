@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +27,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.MailService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
     private final SuBusinessRepository businessRepository;
     private final CurrentUserService currentUserService;
+    private final MailService mailService;  // ✅ inject MailService
 
     @Override
     @Transactional(readOnly = true)
@@ -65,18 +68,22 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
 
+        // ตรวจสอบว่า user เป็นสมาชิกของธุรกิจนี้หรือไม่
         boolean isMember = userBusinessRepository.existsByUserIdAndBusinessId(userId, businessId);
         if (!isMember) {
             throw new SecurityException("You are not a member of the active business.");
         }
 
+        // ตรวจสอบ role
         SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(request.getRoleId(), businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found in this business."));
 
+        // สร้าง Token
         byte[] randomBytes = new byte[24];
         new java.security.SecureRandom().nextBytes(randomBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
 
+        // สร้าง Invite
         SuBusinessInvite invite = new SuBusinessInvite();
         invite.setSuBusinessRole(role);
         invite.setInviteType(request.getInviteType());
@@ -88,7 +95,21 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         invite.setCreatedBy(userId);
         invite.setCreatedDate(Instant.now());
 
+        // ✅ กำหนดวันหมดอายุ (7 วัน)
+        invite.setExpireAt(Instant.now().plus(7, ChronoUnit.DAYS));
+
         businessInviteRepository.save(invite);
+
+        // ✅ ถ้าเป็น Email Invite -> ส่งอีเมล
+        if ("email".equalsIgnoreCase(request.getInviteType()) && request.getInviteEmail() != null) {
+            mailService.sendTemplatedMail(
+                request.getInviteEmail(),
+                "BUSINESS_INVITE",     
+                token                 
+            );
+            log.info("✅ Invite email sent to: {}", request.getInviteEmail());
+        }
+
         return invite.getId();
     }
 
@@ -128,24 +149,36 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         String userId = currentUserService.getUserId();
         String userEmail = currentUserService.getEmail();
 
+        // 1. ค้นหา Invite
         SuBusinessInvite invite = businessInviteRepository.findByInviteTokenAndIsDeleteFalse(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invite not found or has been revoked."));
+
+        // 2. ตรวจสอบวันหมดอายุ
+        if (invite.getExpireAt() != null && invite.getExpireAt().isBefore(Instant.now())) {
+            throw new IllegalStateException("This invite has expired.");
+        }
 
         SuBusinessRole role = invite.getSuBusinessRole();
         UUID businessId = role.getBusinessId();
 
+        // 3. ตรวจสอบ Email (เฉพาะ type email)
         if ("email".equalsIgnoreCase(invite.getInviteType())) {
+            if (invite.getInviteEmail() == null || !invite.getInviteEmail().equalsIgnoreCase(userEmail)) {
+                throw new IllegalArgumentException("This invite is not intended for you.");
+            }
             if (Boolean.TRUE.equals(invite.getIsActivated())) {
                 throw new IllegalStateException("This email invite has already been used.");
             }
-        } else if ("token".equalsIgnoreCase(invite.getInviteType())) {
+        }
+
+        // 4. ตรวจสอบ maxUses (เฉพาะ type token)
+        if ("token".equalsIgnoreCase(invite.getInviteType())) {
             if (invite.getMaxUses() != null && invite.getUseCount() >= invite.getMaxUses()) {
                 throw new IllegalStateException("This invite has reached its usage limit.");
             }
-        } else {
-            throw new IllegalArgumentException("Invalid invite type.");
         }
 
+        // 5. เพิ่มหรือเปิดใช้งาน UserBusiness
         SuUserBusiness userBusiness = userBusinessRepository.findByUserIdAndBusinessId(userId, businessId)
                 .orElse(null);
 
@@ -166,8 +199,10 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             userBusiness = userBusinessRepository.save(userBusiness);
         }
 
+        // 6. กำหนด Role (ถ้ายังไม่มี)
         UUID userBusinessId = userBusiness.getId();
-        boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(userBusinessId, role.getId());
+        boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
+                userBusinessId, role.getId());
         if (!hasRole) {
             SuUserBusinessRole userRole = new SuUserBusinessRole();
             userRole.setUserBusiness(userBusiness);
@@ -179,8 +214,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             userBusinessRoleRepository.save(userRole);
         }
 
-        // ✅ ไม่มี addUserToDefaultTeam()
-
+        // 7. อัปเดต Invite
         if ("email".equalsIgnoreCase(invite.getInviteType())) {
             invite.setIsActivated(true);
         }
@@ -189,6 +223,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         invite.setUpdatedDate(Instant.now());
         businessInviteRepository.save(invite);
 
+        // 8. ดึงชื่อธุรกิจเพื่อตอบกลับ
         String businessName = businessRepository.findById(businessId)
                 .map(SuBusiness::getBusinessCode)
                 .orElse("Unknown Business");
@@ -199,6 +234,8 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
                 .message("Joined business successfully.")
                 .build();
     }
+
+    // ===== Helper =====
 
     private InviteResponse toResponse(SuBusinessInvite invite) {
         InviteResponse response = new InviteResponse();
@@ -212,6 +249,8 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             response.setRoleName(invite.getSuBusinessRole().getRoleNameLocal());
         }
         response.setIsActivated(invite.getIsActivated());
+        response.setMaxUses(invite.getMaxUses());
+        response.setUseCount(invite.getUseCount());
         response.setCreatedDate(invite.getCreatedDate());
         return response;
     }

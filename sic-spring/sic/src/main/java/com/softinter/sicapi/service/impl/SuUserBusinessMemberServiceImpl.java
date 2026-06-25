@@ -10,13 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.entity.su.SuUserBusiness;
 import com.softinter.sicapi.entity.su.SuUserBusinessRole;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.LanguageUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,7 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
     private final SuBusinessRoleRepository businessRoleRepository;
     private final CurrentUserService currentUserService;
+     private final SuProfileRepository profileRepository; 
 
     @Override
     @Transactional(readOnly = true)
@@ -131,26 +135,49 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     }
 
     private SuUserBusinessMemberResponse toResponse(SuUserBusiness ub) {
-        String roleCode = null;
-        String roleName = null;
-        SuUserBusinessRole userRole = userBusinessRoleRepository.findFirstByUserBusinessIdAndIsActiveTrue(ub.getId())
-                .orElse(null);
-        if (userRole != null && userRole.getBusinessRole() != null) {
-            roleCode = userRole.getBusinessRole().getRoleCode();
-            roleName = userRole.getBusinessRole().getRoleNameLocal();
+    // ✅ ดึง Profile จาก userId
+    SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+    
+    // ✅ สร้างชื่อจาก first_name + last_name (ตามภาษาที่ใช้)
+    String fullName = "";
+    if (profile != null) {
+        boolean useEnglish = LanguageUtils.useEnglish();
+        if (useEnglish) {
+            fullName = (profile.getFirstNameEn() != null ? profile.getFirstNameEn() : "") + " " +
+                       (profile.getLastNameEn() != null ? profile.getLastNameEn() : "");
+        } else {
+            fullName = (profile.getFirstNameLocal() != null ? profile.getFirstNameLocal() : "") + " " +
+                       (profile.getLastNameLocal() != null ? profile.getLastNameLocal() : "");
         }
-
-        return SuUserBusinessMemberResponse.builder()
-                .id(ub.getId())
-                .businessId(ub.getBusinessId())
-                .userId(ub.getUserId())
-                .userName(ub.getUserId())
-                .userEmail("")
-                .roleCode(roleCode)
-                .roleName(roleName)
-                .isActive(ub.getIsActive())
-                .isDefault(ub.getIsDefault())
-                .createdDate(ub.getCreatedDate())
-                .build();
+        fullName = fullName.trim();
     }
+    
+    // ✅ กรณีไม่มี Profile ให้ใช้ userId แทน
+    String displayName = fullName.isEmpty() ? ub.getUserId() : fullName;
+    String email = profile != null ? profile.getEmail() : "";
+
+    // ดึง Role (ใช้โค้ดเดิม)
+    String roleCode = null;
+    String roleName = null;
+    SuUserBusinessRole userRole = userBusinessRoleRepository
+            .findFirstByUserBusinessIdAndIsActiveTrue(ub.getId())
+            .orElse(null);
+    if (userRole != null && userRole.getBusinessRole() != null) {
+        roleCode = userRole.getBusinessRole().getRoleCode();
+        roleName = userRole.getBusinessRole().getRoleNameLocal();
+    }
+
+    return SuUserBusinessMemberResponse.builder()
+            .id(ub.getId())
+            .businessId(ub.getBusinessId())
+            .userId(ub.getUserId())
+            .userName(displayName)   // ✅ เปลี่ยนเป็นชื่อจริง
+            .userEmail(email)        // ✅ อีเมลจาก Profile
+            .roleCode(roleCode)
+            .roleName(roleName)
+            .isActive(ub.getIsActive())
+            .isDefault(ub.getIsDefault())
+            .createdDate(ub.getCreatedDate())
+            .build();
+}
 }
