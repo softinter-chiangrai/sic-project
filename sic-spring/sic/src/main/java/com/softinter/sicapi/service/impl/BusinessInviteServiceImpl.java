@@ -28,6 +28,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MailService;
+import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -136,10 +137,15 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     @Override
     public List<ComboboxResponse> getComboboxRoles() {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        // ✅ ไม่ต้องมี boolean useEnglish แล้ว
 
         return businessRoleRepository.findByBusinessIdAndIsActiveTrue(businessId)
                 .stream()
-                .map(role -> new ComboboxResponse(role.getId().toString(), role.getRoleNameLocal()))
+                .map(role -> {
+                    // ✅ ใช้ LocalizationHelper
+                    String roleName = LocalizationHelper.getRoleName(role);
+                    return new ComboboxResponse(role.getId().toString(), roleName);
+                })
                 .collect(Collectors.toList());
     }
 

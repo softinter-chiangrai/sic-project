@@ -6,6 +6,7 @@ import com.softinter.sicapi.repository.su.SuProgramRepository;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MenuService;
+import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MenuResponse> getMenu(boolean useEnglish) {
+    public List<MenuResponse> getMenu() {
         UUID businessId = businessAccessService.getBusinessId();
         String userId = currentUserService.getUserId();
 
@@ -54,25 +55,25 @@ public class MenuServiceImpl implements MenuService {
 
         List<MenuResponse> menuList = new ArrayList<>();
         for (MenuProgramResponse root : roots) {
-            menuList.add(buildNode(root, childrenMap, useEnglish));
+            menuList.add(buildNode(root, childrenMap));
         }
         return menuList;
     }
 
-    private MenuResponse buildNode(MenuProgramResponse program, Map<UUID, List<MenuProgramResponse>> childrenMap, boolean useEnglish) {
+    private MenuResponse buildNode(MenuProgramResponse program, Map<UUID, List<MenuProgramResponse>> childrenMap) {
         MenuResponse node = new MenuResponse();
 
-        // ข้อมูลหลัก
-        node.setName(useEnglish ? program.getNameEn() : program.getNameLocal());
+        // ✅ ใช้ LocalizationHelper.getMenuProgramName()
+        String programName = LocalizationHelper.getMenuProgramName(program);
+        node.setName(programName != null ? programName : program.getNameEn());
+
         node.setIcon(program.getIcon());
         node.setPath(program.getRoutePath());
         node.setCode(program.getProgramCode());
 
-        // state และ rowVersion
         node.setState(program.getState() != null ? program.getState() : 0);
         node.setRowVersion(program.getRowVersion());
 
-        // ✅ permission fields (ใช้ setter ที่ Lombok สร้างให้)
         node.setAdd(program.isAdd());
         node.setBack(program.isBack());
         node.setPrint(program.isPrint());
@@ -86,7 +87,7 @@ public class MenuServiceImpl implements MenuService {
                 .thenComparing(MenuProgramResponse::getProgramCode));
 
         for (MenuProgramResponse child : children) {
-            node.getChildren().add(buildNode(child, childrenMap, useEnglish));
+            node.getChildren().add(buildNode(child, childrenMap));
         }
 
         return node;

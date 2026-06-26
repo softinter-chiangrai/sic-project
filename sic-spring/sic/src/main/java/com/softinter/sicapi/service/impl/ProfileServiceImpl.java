@@ -26,7 +26,7 @@ import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.service.ProfileService;
 import com.softinter.sicapi.service.VerifyService;
-import com.softinter.sicapi.util.LanguageUtils;
+import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.UniquenessValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -170,7 +170,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setMiddleNameLocal(request.getMiddleNameLocal());
         profile.setLastNameLocal(request.getLastNameLocal());
         profile.setPhoneNumber(request.getPhoneNumber());
-        profile.setTaxId(request.getTaxId());  // ✅ ตั้งค่า Tax ID
+        profile.setTaxId(request.getTaxId());
         profile.setAddressEn(request.getAddressEn());
         profile.setAddressLocal(request.getAddressLocal());
         profile.setZipCode(request.getZipCode());
@@ -233,13 +233,18 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
+    // ============================================================
+    // toResponse - ใช้ LocalizationHelper แทนการเขียน if/else
+    // ============================================================
     private ProfileResponse toResponse(SuProfile profile) {
         if (profile == null || profile.getId() == null) return null;
 
         ProfileResponse response = new ProfileResponse();
         response.setId(profile.getId());
-        boolean useEnglish = LanguageUtils.useEnglish();
-        response.setName(buildFullName(profile, useEnglish));
+
+        // ✅ ใช้ LocalizationHelper.getFullName(profile) แทน buildFullName
+        response.setName(LocalizationHelper.getFullName(profile));
+
         response.setTaxId(profile.getTaxId());
         response.setTitleId(profile.getTitleId());
 
@@ -284,6 +289,7 @@ public class ProfileServiceImpl implements ProfileService {
                 ref.setContentType(upload.getContentType());
                 ref.setFileSize(upload.getFileSize());
 
+                // TODO: ทำให้ baseUrl configurable
                 String baseUrl = "http://localhost:5265";
                 ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
 
@@ -300,42 +306,6 @@ public class ProfileServiceImpl implements ProfileService {
         return response;
     }
 
-    private String buildFullName(SuProfile profile, boolean useEnglish) {
-        StringBuilder name = new StringBuilder();
-
-        if (profile.getTitle() != null) {
-            String titleName = useEnglish
-                    ? profile.getTitle().getPrefixNameEn()
-                    : profile.getTitle().getPrefixNameLocal();
-            if (titleName != null && !titleName.isBlank()) {
-                name.append(titleName).append(" ");
-            }
-        }
-
-        String firstName = useEnglish
-                ? profile.getFirstNameEn()
-                : profile.getFirstNameLocal();
-        if (firstName != null && !firstName.isBlank()) {
-            name.append(firstName).append(" ");
-        }
-
-        String middleName = useEnglish
-                ? profile.getMiddleNameEn()
-                : profile.getMiddleNameLocal();
-        if (middleName != null && !middleName.isBlank()) {
-            name.append(middleName).append(" ");
-        }
-
-        String lastName = useEnglish
-                ? profile.getLastNameEn()
-                : profile.getLastNameLocal();
-        if (lastName != null && !lastName.isBlank()) {
-            name.append(lastName);
-        }
-
-        return name.toString().trim();
-    }
-
     private String mapVisibilityToString(FileVisibility visibility) {
         if (visibility == null) return "Public";
         switch (visibility) {
@@ -345,34 +315,5 @@ public class ProfileServiceImpl implements ProfileService {
             case PUBLIC: return "Public";
             default: return "Public";
         }
-    }
-
-    private String getCurrentLanguage() {
-        return "en";
-    }
-
-    private String getLocalizedTitle(SuProfile profile) {
-        return "th".equals(getCurrentLanguage()) ?
-                profile.getTitle().getPrefixNameLocal() : profile.getTitle().getPrefixNameEn();
-    }
-
-    private String getLocalizedCountry(SuProfile profile) {
-        return "th".equals(getCurrentLanguage()) ?
-                profile.getCountry().getCountryNameLocal() : profile.getCountry().getCountryNameEn();
-    }
-
-    private String getLocalizedProvince(SuProfile profile) {
-        return "th".equals(getCurrentLanguage()) ?
-                profile.getProvince().getProvinceNameLocal() : profile.getProvince().getProvinceNameEn();
-    }
-
-    private String getLocalizedDistrict(SuProfile profile) {
-        return "th".equals(getCurrentLanguage()) ?
-                profile.getDistrict().getDistrictNameLocal() : profile.getDistrict().getDistrictNameEn();
-    }
-
-    private String getLocalizedSubDistrict(SuProfile profile) {
-        return "th".equals(getCurrentLanguage()) ?
-                profile.getSubDistrict().getSubDistrictNameLocal() : profile.getSubDistrict().getSubDistrictNameEn();
     }
 }

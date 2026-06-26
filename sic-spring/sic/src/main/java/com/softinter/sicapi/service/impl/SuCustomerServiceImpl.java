@@ -20,6 +20,7 @@ import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
 import com.softinter.sicapi.repository.su.SuCustomerRepository;
 import com.softinter.sicapi.service.SuCustomerService;
+import com.softinter.sicapi.util.LocalizationHelper;  // ✅ import
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +36,6 @@ public class SuCustomerServiceImpl implements SuCustomerService {
     @Override
     @Transactional
     public SuCustomerResponse create(UUID businessId, SuCustomerRequest request) {
-        // ✅ ใช้ RuntimeException (GlobalExceptionHandler จัดการให้)
         if (suCustomerRepository.findByBusinessIdAndCustomerCode(businessId, request.getCustomerCode()).isPresent()) {
             throw new RuntimeException("รหัสลูกค้า '" + request.getCustomerCode() + "' ถูกใช้แล้ว");
         }
@@ -151,6 +151,9 @@ public class SuCustomerServiceImpl implements SuCustomerService {
         }
     }
 
+    // ============================================================
+    // ✅ toResponse - ใช้ LocalizationHelper แทนการ hardcode Local
+    // ============================================================
     private SuCustomerResponse toResponse(SuCustomer customer) {
         return SuCustomerResponse.builder()
                 .id(customer.getId())
@@ -166,11 +169,20 @@ public class SuCustomerServiceImpl implements SuCustomerService {
                 .addressEn(customer.getAddressEn())
                 .addressLocal(customer.getAddressLocal())
                 .provinceId(customer.getProvince() != null ? customer.getProvince().getId() : null)
-                .provinceName(customer.getProvince() != null ? customer.getProvince().getProvinceNameLocal() : null)
+                // ✅ ใช้ LocalizationHelper.getProvinceName() แทนการ hardcode Local
+                .provinceName(customer.getProvince() != null 
+                        ? LocalizationHelper.getProvinceName(customer.getProvince()) 
+                        : null)
                 .districtId(customer.getDistrict() != null ? customer.getDistrict().getId() : null)
-                .districtName(customer.getDistrict() != null ? customer.getDistrict().getDistrictNameLocal() : null)
+                // ✅ ใช้ LocalizationHelper.getDistrictName()
+                .districtName(customer.getDistrict() != null 
+                        ? LocalizationHelper.getDistrictName(customer.getDistrict()) 
+                        : null)
                 .subDistrictId(customer.getSubDistrict() != null ? customer.getSubDistrict().getId() : null)
-                .subDistrictName(customer.getSubDistrict() != null ? customer.getSubDistrict().getSubDistrictNameLocal() : null)
+                // ✅ ใช้ LocalizationHelper.getSubDistrictName()
+                .subDistrictName(customer.getSubDistrict() != null 
+                        ? LocalizationHelper.getSubDistrictName(customer.getSubDistrict()) 
+                        : null)
                 .zipCode(customer.getZipCode())
                 .customerType(customer.getCustomerType())
                 .isActive(customer.getIsActive())

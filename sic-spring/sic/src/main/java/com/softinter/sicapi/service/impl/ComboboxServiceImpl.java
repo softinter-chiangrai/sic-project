@@ -24,6 +24,7 @@ import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
 import com.softinter.sicapi.repository.db.DbTitleRepository;
 import com.softinter.sicapi.service.ComboboxService;
+import com.softinter.sicapi.util.LocalizationHelper;   // ✅ import
 import com.softinter.sicapi.util.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -37,36 +38,21 @@ public class ComboboxServiceImpl implements ComboboxService {
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
-    private final DbParameterRepository dbParameterRepository; 
+    private final DbParameterRepository dbParameterRepository;
 
-    // Helper localization
-    private String getLocalTitleName(DbTitle t, String lang) {
-        return "th".equals(lang) ? t.getPrefixNameLocal() : t.getPrefixNameEn();
-    }
-
-    private String getLocalCountryName(DbCountry c, String lang) {
-        return "th".equals(lang) ? c.getCountryNameLocal() : c.getCountryNameEn();
-    }
-
-    private String getLocalProvinceName(DbProvince p, String lang) {
-        return "th".equals(lang) ? p.getProvinceNameLocal() : p.getProvinceNameEn();
-    }
-
-    private String getLocalDistrictName(DbDistrict d, String lang) {
-        return "th".equals(lang) ? d.getDistrictNameLocal() : d.getDistrictNameEn();
-    }
-
-    private String getLocalSubDistrictName(DbSubDistrict s, String lang) {
-        return "th".equals(lang) ? s.getSubDistrictNameLocal() : s.getSubDistrictNameEn();
-    }
+    // ============================================================
+    // 1. Pagination Methods
+    // ============================================================
 
     @Override
     public PaginationResponse<LovResponse> getTitles(String personType, String keyword, int page, int size, String lang) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DbTitle> titlePage;
+
         if (keyword != null && !keyword.isEmpty()) {
             if (personType != null && !personType.isEmpty()) {
-                titlePage = titleRepository.findByIsActiveTrueAndPersonTypeAndPrefixNameEnContainingIgnoreCase(personType, keyword, pageable);
+                titlePage = titleRepository.findByIsActiveTrueAndPersonTypeAndPrefixNameEnContainingIgnoreCase(
+                        personType, keyword, pageable);
             } else {
                 titlePage = titleRepository.findByIsActiveTrueAndPrefixNameEnContainingIgnoreCase(keyword, pageable);
             }
@@ -77,9 +63,11 @@ public class ComboboxServiceImpl implements ComboboxService {
                 titlePage = titleRepository.findByIsActiveTrue(pageable);
             }
         }
+
         var data = titlePage.getContent().stream()
-                .map(t -> new LovResponse(t.getId(), getLocalTitleName(t, lang)))
+                .map(t -> new LovResponse(t.getId(), LocalizationHelper.getTitleName(t))) // ✅ ใช้ Helper
                 .collect(Collectors.toList());
+
         return PaginationUtil.of(data, page, size, titlePage.getTotalElements());
     }
 
@@ -87,14 +75,17 @@ public class ComboboxServiceImpl implements ComboboxService {
     public PaginationResponse<LovResponse> getCountries(String keyword, int page, int size, String lang) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DbCountry> countryPage;
+
         if (keyword != null && !keyword.isEmpty()) {
             countryPage = countryRepository.findByIsActiveTrueAndCountryNameEnContainingIgnoreCase(keyword, pageable);
         } else {
             countryPage = countryRepository.findByIsActiveTrue(pageable);
         }
+
         var data = countryPage.getContent().stream()
-                .map(c -> new LovResponse(c.getId(), getLocalCountryName(c, lang)))
+                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c))) // ✅
                 .collect(Collectors.toList());
+
         return PaginationUtil.of(data, page, size, countryPage.getTotalElements());
     }
 
@@ -102,9 +93,11 @@ public class ComboboxServiceImpl implements ComboboxService {
     public PaginationResponse<LovResponse> getProvinces(UUID countryId, String keyword, int page, int size, String lang) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DbProvince> provincePage;
+
         if (keyword != null && !keyword.isEmpty()) {
             if (countryId != null) {
-                provincePage = provinceRepository.findByCountryIdAndIsActiveTrueAndProvinceNameEnContainingIgnoreCase(countryId, keyword, pageable);
+                provincePage = provinceRepository.findByCountryIdAndIsActiveTrueAndProvinceNameEnContainingIgnoreCase(
+                        countryId, keyword, pageable);
             } else {
                 provincePage = provinceRepository.findByIsActiveTrueAndProvinceNameEnContainingIgnoreCase(keyword, pageable);
             }
@@ -115,9 +108,11 @@ public class ComboboxServiceImpl implements ComboboxService {
                 provincePage = provinceRepository.findByIsActiveTrue(pageable);
             }
         }
+
         var data = provincePage.getContent().stream()
-                .map(p -> new LovResponse(p.getId(), getLocalProvinceName(p, lang)))
+                .map(p -> new LovResponse(p.getId(), LocalizationHelper.getProvinceName(p))) // ✅
                 .collect(Collectors.toList());
+
         return PaginationUtil.of(data, page, size, provincePage.getTotalElements());
     }
 
@@ -125,14 +120,18 @@ public class ComboboxServiceImpl implements ComboboxService {
     public PaginationResponse<LovResponse> getDistricts(UUID provinceId, String keyword, int page, int size, String lang) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DbDistrict> districtPage;
+
         if (keyword != null && !keyword.isEmpty()) {
-            districtPage = districtRepository.findByProvinceIdAndIsActiveTrueAndDistrictNameEnContainingIgnoreCase(provinceId, keyword, pageable);
+            districtPage = districtRepository.findByProvinceIdAndIsActiveTrueAndDistrictNameEnContainingIgnoreCase(
+                    provinceId, keyword, pageable);
         } else {
             districtPage = districtRepository.findByProvinceIdAndIsActiveTrue(provinceId, pageable);
         }
+
         var data = districtPage.getContent().stream()
-                .map(d -> new LovResponse(d.getId(), getLocalDistrictName(d, lang)))
+                .map(d -> new LovResponse(d.getId(), LocalizationHelper.getDistrictName(d))) // ✅
                 .collect(Collectors.toList());
+
         return PaginationUtil.of(data, page, size, districtPage.getTotalElements());
     }
 
@@ -140,74 +139,81 @@ public class ComboboxServiceImpl implements ComboboxService {
     public PaginationResponse<LovResponse> getSubDistricts(UUID districtId, String keyword, int page, int size, String lang) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DbSubDistrict> subDistrictPage;
+
         if (keyword != null && !keyword.isEmpty()) {
-            subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(districtId, keyword, pageable);
+            subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(
+                    districtId, keyword, pageable);
         } else {
             subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrue(districtId, pageable);
         }
+
         var data = subDistrictPage.getContent().stream()
-                .map(s -> new LovResponse(s.getId(), getLocalSubDistrictName(s, lang)))
+                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s))) // ✅
                 .collect(Collectors.toList());
+
         return PaginationUtil.of(data, page, size, subDistrictPage.getTotalElements());
     }
+
+    // ============================================================
+    // 2. Get By ID
+    // ============================================================
 
     @Override
     public LovResponse getTitleById(UUID id, String lang) {
         return titleRepository.findById(id)
-                .map(t -> new LovResponse(t.getId(), getLocalTitleName(t, lang)))
+                .map(t -> new LovResponse(t.getId(), LocalizationHelper.getTitleName(t)))
                 .orElse(null);
     }
 
     @Override
     public LovResponse getCountryById(UUID id, String lang) {
         return countryRepository.findById(id)
-                .map(c -> new LovResponse(c.getId(), getLocalCountryName(c, lang)))
+                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c)))
                 .orElse(null);
     }
 
     @Override
     public LovResponse getProvinceById(UUID id, String lang) {
         return provinceRepository.findById(id)
-                .map(p -> new LovResponse(p.getId(), getLocalProvinceName(p, lang)))
+                .map(p -> new LovResponse(p.getId(), LocalizationHelper.getProvinceName(p)))
                 .orElse(null);
     }
 
     @Override
     public LovResponse getDistrictById(UUID id, String lang) {
         return districtRepository.findById(id)
-                .map(d -> new LovResponse(d.getId(), getLocalDistrictName(d, lang)))
+                .map(d -> new LovResponse(d.getId(), LocalizationHelper.getDistrictName(d)))
                 .orElse(null);
     }
 
     @Override
     public LovResponse getSubDistrictById(UUID id, String lang) {
         return subDistrictRepository.findById(id)
-                .map(s -> new LovResponse(s.getId(), getLocalSubDistrictName(s, lang)))
+                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s)))
                 .orElse(null);
     }
-    // ✅ ====== NEW: List methods (สำหรับ Budt01Controller) ======
-    // ================================================================
+
+    // ============================================================
+    // 3. List Methods (สำหรับ Budt01Controller)
+    // ============================================================
 
     @Override
     public List<LovResponse> getPersonTypeLov(String lang) {
-        boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbParameter> params = dbParameterRepository
                 .findByModuleCodeAndParameterCodeAndIsActiveTrueOrderBySortOrder("DB", "PERSON_TYPE");
 
         return params.stream()
                 .map(p -> new LovResponse(
                         p.getParameterValue(),
-                        useEnglish ? p.getParameterNameEn() : p.getParameterNameLocal()
+                        LocalizationHelper.getParameterName(p) // ✅ ใช้ Helper
                 ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<LovResponse> getTitleList(String personType, String value, String lang) {
-        boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbTitle> titles = titleRepository.findByPersonTypeAndIsActiveTrue(personType);
 
-        // Filter by UUID value
         if (value != null && !value.isBlank()) {
             UUID uuid = UUID.fromString(value);
             titles = titles.stream()
@@ -218,7 +224,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         return titles.stream()
                 .map(t -> new LovResponse(
                         t.getId().toString(),
-                        useEnglish ? t.getPrefixNameEn() : t.getPrefixNameLocal()
+                        LocalizationHelper.getTitleName(t) // ✅
                 ))
                 .collect(Collectors.toList());
     }
@@ -228,7 +234,6 @@ public class ComboboxServiceImpl implements ComboboxService {
         boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbCountry> countries = countryRepository.findByIsActiveTrueOrderByName(useEnglish);
 
-        // Filter by UUID value
         if (value != null && !value.isBlank()) {
             UUID uuid = UUID.fromString(value);
             countries = countries.stream()
@@ -239,7 +244,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         return countries.stream()
                 .map(c -> new LovResponse(
                         c.getId().toString(),
-                        useEnglish ? c.getCountryNameEn() : c.getCountryNameLocal()
+                        LocalizationHelper.getCountryName(c) // ✅
                 ))
                 .collect(Collectors.toList());
     }
@@ -249,7 +254,6 @@ public class ComboboxServiceImpl implements ComboboxService {
         boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbProvince> provinces = provinceRepository.findByCountryIdAndIsActiveTrueOrderByName(countryId, useEnglish);
 
-        // Filter by UUID value
         if (value != null && !value.isBlank()) {
             UUID uuid = UUID.fromString(value);
             provinces = provinces.stream()
@@ -260,7 +264,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         return provinces.stream()
                 .map(p -> new LovResponse(
                         p.getId().toString(),
-                        useEnglish ? p.getProvinceNameEn() : p.getProvinceNameLocal()
+                        LocalizationHelper.getProvinceName(p) // ✅
                 ))
                 .collect(Collectors.toList());
     }
@@ -270,7 +274,6 @@ public class ComboboxServiceImpl implements ComboboxService {
         boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbDistrict> districts = districtRepository.findByProvinceIdAndIsActiveTrueOrderByName(provinceId, useEnglish);
 
-        // Filter by UUID value
         if (value != null && !value.isBlank()) {
             UUID uuid = UUID.fromString(value);
             districts = districts.stream()
@@ -281,7 +284,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         return districts.stream()
                 .map(d -> new LovResponse(
                         d.getId().toString(),
-                        useEnglish ? d.getDistrictNameEn() : d.getDistrictNameLocal()
+                        LocalizationHelper.getDistrictName(d) // ✅
                 ))
                 .collect(Collectors.toList());
     }
@@ -291,7 +294,6 @@ public class ComboboxServiceImpl implements ComboboxService {
         boolean useEnglish = "en".equalsIgnoreCase(lang);
         List<DbSubDistrict> subDistricts = subDistrictRepository.findByDistrictIdAndIsActiveTrueOrderByName(districtId, useEnglish);
 
-        // Filter by UUID value
         if (value != null && !value.isBlank()) {
             UUID uuid = UUID.fromString(value);
             subDistricts = subDistricts.stream()
@@ -302,7 +304,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         return subDistricts.stream()
                 .map(s -> new LovResponse(
                         s.getId().toString(),
-                        useEnglish ? s.getSubDistrictNameEn() : s.getSubDistrictNameLocal()
+                        LocalizationHelper.getSubDistrictName(s) 
                 ))
                 .collect(Collectors.toList());
     }

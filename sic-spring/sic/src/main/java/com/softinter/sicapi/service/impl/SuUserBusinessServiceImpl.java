@@ -20,6 +20,7 @@ import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.SuBusinessService;
 import com.softinter.sicapi.service.SuUserBusinessService;
+import com.softinter.sicapi.util.LocalizationHelper; // ✅ import
 
 import lombok.RequiredArgsConstructor;
 
@@ -106,10 +107,20 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
                 .distinct()
                 .map(userId -> {
                     SuProfile profile = profileRepository.findByUserId(userId).orElse(null);
+                    String displayName = userId;
+                    String email = "";
+                    if (profile != null) {
+                        // ✅ ใช้ LocalizationHelper.getFullName(profile)
+                        String fullName = LocalizationHelper.getFullName(profile);
+                        if (fullName != null && !fullName.isBlank()) {
+                            displayName = fullName;
+                        }
+                        email = profile.getEmail() != null ? profile.getEmail() : "";
+                    }
                     return UserResponse.builder()
                             .id(userId)
-                            .name(profile != null ? profile.getFirstNameEn() + " " + profile.getLastNameEn() : userId)
-                            .email(profile != null ? profile.getEmail() : "")
+                            .name(displayName)
+                            .email(email)
                             .build();
                 })
                 .collect(Collectors.toList());

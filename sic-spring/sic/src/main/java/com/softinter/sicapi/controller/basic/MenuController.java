@@ -28,8 +28,8 @@ public class MenuController {
     @GetMapping
     @Operation(summary = "Get user menu based on business and permissions")
     public ResponseEntity<List<MenuResponse>> getMenu() {
-        boolean useEnglish = LanguageUtils.useEnglish(); 
-        List<MenuResponse> menu = menuService.getMenu(useEnglish);
+        // ✅ ไม่ต้องใช้ LanguageUtils อีกต่อไป
+        List<MenuResponse> menu = menuService.getMenu();
         return ResponseEntity.ok(menu);
     }
 }
