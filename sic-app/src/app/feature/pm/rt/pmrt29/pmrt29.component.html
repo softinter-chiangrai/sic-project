@@ -1,6 +1,8 @@
+<!-- src/app/feature/pm/rt/pmrt29/pmrt29.component.html -->
+
 <div class="space-y-5 p-0.5">
 
-  <!-- ===== HEADER ===== -->
+  <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
@@ -20,7 +22,7 @@
     </button>
   </div>
 
-  <!-- ===== FILTERS ===== -->
+  <!-- FILTERS -->
   <div class="flex flex-wrap gap-3 items-center">
     <!-- Search -->
     <div class="relative flex-1 min-w-[200px]">
@@ -28,7 +30,7 @@
       <input
         type="text"
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาชื่อ, อีเมล, บทบาท..."
+        placeholder="ค้นหาชื่อ, อีเมล..."
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -55,18 +57,18 @@
 
     <!-- Filter: Role -->
     <select
-      (change)="onRoleChange($event)"
+      (change)="onRoleFilterChange($event)"
       [value]="filterRole()"
       class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
     >
       <option value="all">📋 ทุกบทบาท</option>
-      @for (role of roleOptions; track role) {
+      @for (role of roleOptions(); track role) {
         <option [value]="role">{{ role }}</option>
       }
     </select>
   </div>
 
-  <!-- ===== LOADING ===== -->
+  <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -74,7 +76,7 @@
     </div>
   }
 
-  <!-- ===== TABLE ===== -->
+  <!-- TABLE -->
   @if (!isLoading()) {
     <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
       <table class="w-full text-sm">
@@ -138,6 +140,7 @@
               <td class="px-4 py-3 hidden md:table-cell">
                 <span class="text-[var(--text-muted)]">{{ member.userEmail }}</span>
               </td>
+              <!-- ✅ แสดงหลายบทบาทเป็น badges -->
               <td class="px-4 py-3">
                 <div class="flex flex-wrap gap-1">
                   @for (roleName of member.roleNames; track roleName) {
@@ -145,7 +148,7 @@
                       {{ roleName }}
                     </span>
                   }
-                  @if (member.roleNames.length === 0) {
+                  @if (!member.roleNames || member.roleNames.length === 0) {
                     <span class="text-xs text-[var(--text-muted)]">ไม่มีบทบาท</span>
                   }
                 </div>
@@ -157,21 +160,13 @@
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center gap-1">
-                  <!-- Manage Roles -->
+                  <!-- แก้ไขบทบาท -->
                   <button
-                    (click)="goToManageRoles(member.userId)"
+                    (click)="goToEdit(member.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
                     title="จัดการบทบาท"
                   >
                     <i class="bi bi-person-gear"></i>
-                  </button>
-                  <!-- Manage Permissions -->
-                  <button
-                    (click)="goToManagePermissions(member.userId)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all"
-                    title="จัดการสิทธิ์"
-                  >
-                    <i class="bi bi-lock"></i>
                   </button>
                   <!-- Toggle Active -->
                   <button
@@ -221,7 +216,7 @@
     </div>
   }
 
-  <!-- ===== PAGINATION ===== -->
+  <!-- PAGINATION -->
   @if (totalItems() > 0) {
     <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
       <div class="text-sm text-[var(--text-muted)]">
@@ -265,6 +260,5 @@
       </div>
     </div>
   }
-  
 
 </div>

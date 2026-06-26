@@ -1,7 +1,19 @@
 package com.softinter.sicapi.controller.basic;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.ComboboxService;
 import com.softinter.sicapi.util.PaginationUtil;
 
@@ -9,10 +21,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping({"/api/profile", "/api/business"})
@@ -22,6 +30,7 @@ import java.util.UUID;
 public class ComboboxController {
 
     private final ComboboxService comboboxService;
+    private final BusinessInviteService businessInviteService;
 
     @GetMapping("/combobox-title")
     @Operation(summary = "Get titles (prefix names) with pagination")
@@ -121,4 +130,12 @@ public class ComboboxController {
 
         return ResponseEntity.ok(comboboxService.getSubDistricts(districtId, keyword, zeroBasedPage, pageSize, lang));
     }
+
+     // ✅ เพิ่ม method นี้
+    @GetMapping("/combobox-role")
+    @Operation(summary = "Get business roles for combobox (ใช้ในหน้า pmrt29A)")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
+        return ResponseEntity.ok(businessInviteService.getComboboxRoles());
+    }
+    
 }

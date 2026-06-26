@@ -1,5 +1,6 @@
 package com.softinter.sicapi.controller.su;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -52,18 +53,22 @@ public class SuUserBusinessMemberController {
     }
 
     @PutMapping("/{userBusinessId}")
-    @Operation(summary = "แก้ไขข้อมูลสมาชิก")
-    public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
-            @PathVariable UUID userBusinessId,
-            @RequestParam(required = false) UUID roleId,
-            @RequestParam(required = false) Boolean isActive) {
-        return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleId, isActive));
-    }
+public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
+        @PathVariable UUID userBusinessId,
+        @RequestParam(required = false) List<UUID> roleIds,  // ✅ เปลี่ยนเป็น List
+        @RequestParam(required = false) Boolean isActive) {
+    return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
+}
 
     @DeleteMapping("/{userBusinessId}")
     @Operation(summary = "ลบสมาชิกออกจากธุรกิจ (soft delete)")
     public ResponseEntity<Void> removeMember(@PathVariable UUID userBusinessId) {
         memberService.removeMember(userBusinessId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
+        return ResponseEntity.ok(memberService.getMemberById(id));
     }
 }

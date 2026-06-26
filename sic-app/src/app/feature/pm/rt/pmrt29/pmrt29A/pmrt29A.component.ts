@@ -1,44 +1,66 @@
+// src/app/feature/pm/rt/pmrt29/pmrt29A/pmrt29A.component.ts
+
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { finalize } from 'rxjs';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { Pmrt29Service, type User } from '../pmrt29.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { ComboboxRole, Pmrt29Service } from '../pmrt29.service';
 
 @Component({
   selector: 'app-pmrt29A',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, SicButtonComponent, SicComboboxComponent, SicInputComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicInputComponent,
+    SicComboboxComponent,
+  ],
   templateUrl: './pmrt29A.component.html',
 })
 export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private pmrt29Service = inject(Pmrt29Service);
+  private service = inject(Pmrt29Service);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
 
-  form!: FormGroup;
+  @ViewChild('roleCombobox') roleCombobox!: SicComboboxComponent; // ✅ อ้างอิงถึง Combobox
+
   isEdit = false;
   memberId: string | null = null;
-  isLoading = false;
-  isSaving = false;
-  businessId = this.pmrt29Service.getBusinessId() || '';
+  isLoading = signal(false);
+  isSaving = signal(false);
+  businessId = this.service.getBusinessId() || '';
+  allRoles = signal<ComboboxRole[]>([]);
 
-  users = signal<User[]>([]);
+  form: FormGroup = this.fb.group({
+    id: [null],
+    userId: [{ value: null, disabled: true }],
+    userName: [{ value: '', disabled: true }],
+    userEmail: [{ value: '', disabled: true }],
+    roleIds: [[], Validators.required],
+    isActive: [true],
+  });
 
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit() {
-    this.initForm();
-    this.loadUsers();
+    if (!this.businessId) {
+      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.router.navigate(['/feature/pm/pmrt29']);
+      return;
+    }
+    this.loadRoles();
 
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
         this.isEdit = true;
@@ -48,45 +70,74 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  initForm() {
-    this.form = this.fb.group({
-      userId: [null, Validators.required],
-      roleId: [null, Validators.required],
-      isActive: [true]
-    });
-  }
-
-  loadUsers() {
-    this.pmrt29Service.getAvailableUsers().subscribe({
-      next: (users) => this.users.set(users),
-      error: (err) => console.error('Load users error', err)
+  loadRoles() {
+    this.service.getComboboxRoles().subscribe({
+      next: (roles) => {
+        this.allRoles.set(roles);
+      },
+      error: (err) => console.error('Load roles error', err),
     });
   }
 
   loadMember(id: string) {
-    this.isLoading = true;
-    this.pmrt29Service.getMemberById(id)
-      .pipe(finalize(() => this.isLoading = false))
+    this.isLoading.set(true);
+    this.service
+      .getMemberById(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (member) => {
           this.form.patchValue({
+            id: member.id,
             userId: member.userId,
-            roleId: member.roleCode,
-            isActive: member.isActive
+            userName: member.userName,
+            userEmail: member.userEmail,
+            roleIds: member.roleIds || [],
+            isActive: member.isActive,
           });
-          this.form.get('userId')?.disable();
         },
         error: (err) => {
           console.error('Load member error', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
           this.router.navigate(['/feature/pm/pmrt29']);
-        }
+        },
       });
+  }
+
+  // ✅ เมื่อเลือกบทบาทจาก Combobox
+  onRoleSelect(item: ComboboxRole | null) {
+    if (!item) return;
+
+    const roleId = item.value;
+    if (!roleId) return;
+
+    const current = this.form.get('roleIds')?.value || [];
+    if (current.includes(roleId)) {
+      this.dialog.warn('ซ้ำ', 'บทบาทนี้ถูกเลือกแล้ว');
+      // ✅ เคลียร์ Combobox
+      this.roleCombobox.clearSelection();
+      return;
+    }
+
+    // ✅ เพิ่มบทบาททันที
+    const newList = [...current, roleId];
+    this.form.patchValue({ roleIds: newList });
+    this.form.markAsDirty();
+
+    // ✅ เคลียร์ Combobox เพื่อให้เลือกใหม่ได้
+    this.roleCombobox.clearSelection();
+  }
+
+  // ✅ ลบบทบาทออกจาก list
+  removeRole(roleId: string) {
+    const current = this.form.get('roleIds')?.value || [];
+    const newList = current.filter((id: string) => id !== roleId);
+    this.form.patchValue({ roleIds: newList });
+    this.form.markAsDirty();
   }
 
   onBack() {
     if (this.form.dirty) {
-      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then(ok => {
+      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then((ok) => {
         if (ok) this.router.navigate(['/feature/pm/pmrt29']);
       });
     } else {
@@ -97,41 +148,30 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกข้อมูลให้ครบ');
+      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท');
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
     const raw = this.form.getRawValue();
 
-    if (this.isEdit && this.memberId) {
-      this.pmrt29Service.updateMember(this.memberId, raw.roleId, raw.isActive)
-        .pipe(finalize(() => this.isSaving = false))
-        .subscribe({
-          next: () => {
-            this.dialog.success('สำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย').then(() => this.router.navigate(['/feature/pm/pmrt29']));
-          },
-          error: (err) => {
-            this.dialog.error('ผิดพลาด', 'ไม่สามารถบันทึกได้');
-            console.error('Update error', err);
-          }
-        });
-    } else {
-      this.pmrt29Service.addMember(this.businessId, raw.userId, raw.roleId)
-        .pipe(finalize(() => this.isSaving = false))
-        .subscribe({
-          next: () => {
-            this.dialog.success('สำเร็จ', 'เพิ่มสมาชิกเรียบร้อย').then(() => this.router.navigate(['/feature/pm/pmrt29']));
-          },
-          error: (err) => {
-            this.dialog.error('ผิดพลาด', 'ไม่สามารถเพิ่มสมาชิกได้');
-            console.error('Add error', err);
-          }
-        });
-    }
+    this.service
+      .updateMember(raw.id, raw.roleIds, raw.isActive)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
+          this.router.navigate(['/feature/pm/pmrt29']);
+        },
+        error: (err) => {
+          this.dialog.error('ผิดพลาด', err.message || 'ไม่สามารถบันทึกได้');
+          console.error('Update error', err);
+        },
+      });
   }
 
-  getUserDisplay(user: User) {
-    return user ? `${user.name} (${user.email})` : '';
+  getRoleName(roleId: string): string {
+    const role = this.allRoles().find((r) => r.value === roleId);
+    return role ? role.text : roleId;
   }
 }

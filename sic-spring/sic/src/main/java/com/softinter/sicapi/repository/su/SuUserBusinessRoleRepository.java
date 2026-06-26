@@ -38,4 +38,11 @@ public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusine
     @Modifying
     @Query("DELETE FROM SuUserBusinessRole r WHERE r.userBusinessId = :userBusinessId")
     void deleteByUserBusinessId(@Param("userBusinessId") UUID userBusinessId);
+
+    @Query("SELECT ubr FROM SuUserBusinessRole ubr " +
+       "LEFT JOIN FETCH ubr.businessRole " +
+       "WHERE ubr.userBusiness.id = :userBusinessId " +
+       "AND ubr.isActive = true " +
+       "AND ubr.isDelete = false")
+List<SuUserBusinessRole> findByUserBusinessIdAndIsActiveTrue(@Param("userBusinessId") UUID userBusinessId);
 }

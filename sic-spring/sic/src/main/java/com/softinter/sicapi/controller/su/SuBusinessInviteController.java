@@ -54,13 +54,6 @@ public class SuBusinessInviteController {
         return ResponseEntity.noContent().build();
     }
 
-    // GET /api/business/combobox-role
-    @GetMapping("/combobox-role")
-    @Operation(summary = "Get roles for combobox")
-    public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
-        return ResponseEntity.ok(businessInviteService.getComboboxRoles());
-    }
-
     @PostMapping("/join")
     @Operation(summary = "Join business using invite token")
     public ResponseEntity<JoinBusinessResponse> joinBusiness(@Valid @RequestBody JoinBusinessRequest request) {

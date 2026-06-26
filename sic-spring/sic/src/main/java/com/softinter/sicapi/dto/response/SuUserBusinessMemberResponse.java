@@ -1,12 +1,13 @@
 package com.softinter.sicapi.dto.response;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -18,9 +19,10 @@ public class SuUserBusinessMemberResponse {
     private String userId;
     private String userName;
     private String userEmail;
-    private String roleCode;
-    private String roleName;
+    private List<String> roleIds;      
+    private List<String> roleNames;
     private Boolean isActive;
     private Boolean isDefault;
     private Instant createdDate;
+    private UUID roleId;
 }

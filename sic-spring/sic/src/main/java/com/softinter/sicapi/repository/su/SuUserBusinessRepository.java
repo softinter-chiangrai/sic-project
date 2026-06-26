@@ -47,17 +47,4 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
 
     boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
 
-    // SuUserBusinessRepository.java
-@Query("SELECT new com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse(" +
-       "ub.id, ub.businessId, ub.userId, " +
-       "CONCAT(COALESCE(p.firstNameEn, ''), ' ', COALESCE(p.lastNameEn, '')), " +
-       "p.email, " +
-       "br.roleCode, br.roleNameLocal, " +
-       "ub.isActive, ub.isDefault, ub.createdDate) " +
-       "FROM SuUserBusiness ub " +
-       "LEFT JOIN SuProfile p ON p.userId = ub.userId " +
-       "LEFT JOIN SuUserBusinessRole ubr ON ubr.userBusiness.id = ub.id " +
-       "LEFT JOIN SuBusinessRole br ON br.id = ubr.businessRole.id " +
-       "WHERE ub.businessId = :businessId AND ub.isActive = true AND ub.isDelete = false")
-Page<SuUserBusinessMemberResponse> findMembersWithProfile(@Param("businessId") UUID businessId, Pageable pageable);
 }

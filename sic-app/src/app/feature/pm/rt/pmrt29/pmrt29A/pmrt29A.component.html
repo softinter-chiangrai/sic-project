@@ -1,65 +1,99 @@
-@if (isLoading) {
+<!-- src/app/feature/pm/rt/pmrt29/pmrt29A/pmrt29A.component.html -->
+
+@if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
   </div>
 }
 
-@if (!isLoading) {
+@if (!isLoading()) {
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-2xl mx-auto p-4 space-y-6">
-    <h2 class="text-3xl font-semibold text-center">{{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในธุรกิจ' }}</h2>
 
-    @if (!isEdit) {
+    <h2 class="text-3xl font-semibold text-center text-[var(--text-active)]">
+      {{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในธุรกิจ' }}
+    </h2>
+
+    <!-- User Info (readonly) -->
+    <sic-input
+      label="ชื่อผู้ใช้"
+      formControlName="userName"
+      [disabled]="true"
+    ></sic-input>
+
+    <sic-input
+      label="อีเมล"
+      formControlName="userEmail"
+      [disabled]="true"
+    ></sic-input>
+
+    <!-- ✅ เลือกบทบาท -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+        บทบาทในธุรกิจ <span class="text-[var(--crm-danger)]">*</span>
+      </label>
+
+      <!-- ✅ ใช้ #roleCombobox และ (selectionChanged) -->
       <sic-combobox
-        label="เลือกผู้ใช้"
-        formControlName="userId"
-        apiUrl="/api/users/available"
-        valueField="id"
-        textField="name"
-        [required]="true"
-        placeholder="ค้นหาชื่อหรืออีเมล..."
-      >
-        <ng-template sicComboboxOption let-user>
-          {{ user.name }} ({{ user.email }})
-        </ng-template>
-      </sic-combobox>
-      @if (form.get('userId')?.touched && form.get('userId')?.invalid) {
-        <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกผู้ใช้</p>
+        #roleCombobox
+        label=""
+        [apiUrl]="'http://localhost:5265/api/business/combobox-role'"
+        valueField="value"
+        textField="text"
+        placeholder="พิมพ์หรือเลือกบทบาท..."
+        [clearable]="true"
+        (selectionChanged)="onRoleSelect($event)"
+      ></sic-combobox>
+
+      <!-- ✅ แสดงรายการบทบาทที่เลือกแล้ว -->
+      <div class="mt-3 flex flex-wrap gap-2">
+        @for (roleId of form.get('roleIds')?.value || []; track roleId) {
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+            {{ getRoleName(roleId) }}
+            <button
+              type="button"
+              (click)="removeRole(roleId)"
+              class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors"
+              title="ลบบทบาทนี้"
+            >
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </span>
+        }
+        @if ((form.get('roleIds')?.value || []).length === 0) {
+          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีบทบาทที่เลือก</span>
+        }
+      </div>
+
+      @if (form.get('roleIds')?.touched && form.get('roleIds')?.invalid) {
+        <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท</p>
       }
-    } @else {
-      <sic-input label="รหัสผู้ใช้" formControlName="userId" [disabled]="true"></sic-input>
-    }
+    </div>
 
-    <sic-combobox
-      label="บทบาทในธุรกิจ"
-      formControlName="roleId"
-      apiUrl="/api/business/combobox-role"
-      valueField="value"
-      textField="text"
-      [required]="true"
-      placeholder="เลือกบทบาท"
-    ></sic-combobox>
-    @if (form.get('roleId')?.touched && form.get('roleId')?.invalid) {
-      <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกบทบาท</p>
-    }
-
+    <!-- Active Status -->
     <label class="flex items-center gap-2 cursor-pointer text-sm">
-      <input type="checkbox" formControlName="isActive" class="w-4 h-4 rounded" />
+      <input
+        type="checkbox"
+        formControlName="isActive"
+        class="w-4 h-4 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20"
+      />
       <span class="text-[var(--text-active)]">เปิดใช้งานสมาชิก</span>
     </label>
 
+    <!-- Buttons -->
     <div class="flex gap-4 pt-4">
-      <button type="button" class="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all" (click)="onBack()">
+      <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> ย้อนกลับ
-      </button>
-      <button type="submit" class="flex-1 px-4 py-2 rounded-lg text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all" [disabled]="isSaving">
-        @if (isSaving) {
+      </sic-button>
+      <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving()">
+        @if (isSaving()) {
           <i class="bi bi-arrow-repeat animate-spin"></i>
         } @else {
           <i class="bi bi-floppy"></i>
         }
-        {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'เพิ่มสมาชิก') }}
-      </button>
+        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+      </sic-button>
     </div>
+
   </form>
 }

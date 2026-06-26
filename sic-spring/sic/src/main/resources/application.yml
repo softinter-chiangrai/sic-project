@@ -78,8 +78,8 @@ logging:
     root: ERROR
     com.softinter.sicapi: DEBUG
     org.springframework.mail: DEBUG
-    com.softinter.sicapi.service.impl: DEBUG
+    com.softinter.sicapi.service.impl: ERROR
     org.springframework.security: DEBUG
-    org.flywaydb: DEBUG # ✅ เพิ่ม log เพื่อดูการทำงานของ Flyway
+    org.flywaydb: DEBUG #
 
 spring.main.banner-mode: off

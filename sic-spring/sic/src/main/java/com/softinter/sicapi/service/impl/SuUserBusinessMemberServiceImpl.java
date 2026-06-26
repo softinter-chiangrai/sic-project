@@ -1,6 +1,8 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -36,12 +38,14 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
      private final SuProfileRepository profileRepository; 
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<SuUserBusinessMemberResponse> getMembers(UUID businessId, Pageable pageable) {
-        return userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable)
-                .map(this::toResponse);
-    }
-
+@Transactional(readOnly = true)
+public Page<SuUserBusinessMemberResponse> getMembers(UUID businessId, Pageable pageable) {
+    // ✅ ดึง Entity จาก Repository
+    Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
+    
+    // ✅ แปลงเป็น DTO
+    return entityPage.map(this::toResponse);
+}
     @Override
     @Transactional
     public SuUserBusinessMemberResponse addMember(UUID businessId, String userId, UUID roleId) {
@@ -87,23 +91,26 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     }
 
     @Override
-    @Transactional
-    public SuUserBusinessMemberResponse updateMember(UUID userBusinessId, UUID roleId, Boolean isActive) {
-        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+@Transactional
+public SuUserBusinessMemberResponse updateMember(UUID userBusinessId, List<UUID> roleIds, Boolean isActive) {
+    SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
+            .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
-        if (isActive != null) {
-            userBusiness.setIsActive(isActive);
-            userBusiness.setUpdatedBy(currentUserService.getUserId());
-            userBusiness.setUpdatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        }
+    if (isActive != null) {
+        userBusiness.setIsActive(isActive);
+        userBusiness.setUpdatedBy(currentUserService.getUserId());
+        userBusiness.setUpdatedDate(Instant.now());
+        userBusiness = userBusinessRepository.save(userBusiness);
+    }
 
-        if (roleId != null) {
+    if (roleIds != null && !roleIds.isEmpty()) {
+        // ลบบทบาทเก่าทั้งหมด
+        userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
+
+        // เพิ่มบทบาทใหม่ทั้งหมด
+        for (UUID roleId : roleIds) {
             SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, userBusiness.getBusinessId())
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found in this business."));
-
-            userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found in this business: " + roleId));
 
             SuUserBusinessRole userRole = new SuUserBusinessRole();
             userRole.setUserBusiness(userBusiness);
@@ -114,9 +121,10 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
             userRole.setCreatedDate(Instant.now());
             userBusinessRoleRepository.save(userRole);
         }
-
-        return toResponse(userBusiness);
     }
+
+    return toResponse(userBusiness);
+}
 
     @Override
     @Transactional
@@ -135,49 +143,67 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     }
 
     private SuUserBusinessMemberResponse toResponse(SuUserBusiness ub) {
-    // ✅ ดึง Profile จาก userId
+    // 1. ดึง Profile
     SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
     
-    // ✅ สร้างชื่อจาก first_name + last_name (ตามภาษาที่ใช้)
-    String fullName = "";
+    String displayName = ub.getUserId();
+    String email = "";
     if (profile != null) {
-        boolean useEnglish = LanguageUtils.useEnglish();
-        if (useEnglish) {
-            fullName = (profile.getFirstNameEn() != null ? profile.getFirstNameEn() : "") + " " +
-                       (profile.getLastNameEn() != null ? profile.getLastNameEn() : "");
-        } else {
-            fullName = (profile.getFirstNameLocal() != null ? profile.getFirstNameLocal() : "") + " " +
-                       (profile.getLastNameLocal() != null ? profile.getLastNameLocal() : "");
+        try {
+            boolean useEnglish = LanguageUtils.useEnglish();
+            if (useEnglish) {
+                displayName = (profile.getFirstNameEn() != null ? profile.getFirstNameEn() : "")
+                            + " " + (profile.getLastNameEn() != null ? profile.getLastNameEn() : "");
+            } else {
+                displayName = (profile.getFirstNameLocal() != null ? profile.getFirstNameLocal() : "")
+                            + " " + (profile.getLastNameLocal() != null ? profile.getLastNameLocal() : "");
+            }
+            displayName = displayName.trim();
+            if (displayName.isEmpty()) displayName = ub.getUserId();
+            email = profile.getEmail() != null ? profile.getEmail() : "";
+        } catch (Exception e) {
+            displayName = (profile.getFirstNameLocal() != null ? profile.getFirstNameLocal() : "")
+                        + " " + (profile.getLastNameLocal() != null ? profile.getLastNameLocal() : "");
+            displayName = displayName.trim();
+            if (displayName.isEmpty()) displayName = ub.getUserId();
+            email = profile.getEmail() != null ? profile.getEmail() : "";
         }
-        fullName = fullName.trim();
     }
-    
-    // ✅ กรณีไม่มี Profile ให้ใช้ userId แทน
-    String displayName = fullName.isEmpty() ? ub.getUserId() : fullName;
-    String email = profile != null ? profile.getEmail() : "";
 
-    // ดึง Role (ใช้โค้ดเดิม)
-    String roleCode = null;
-    String roleName = null;
-    SuUserBusinessRole userRole = userBusinessRoleRepository
-            .findFirstByUserBusinessIdAndIsActiveTrue(ub.getId())
-            .orElse(null);
-    if (userRole != null && userRole.getBusinessRole() != null) {
-        roleCode = userRole.getBusinessRole().getRoleCode();
-        roleName = userRole.getBusinessRole().getRoleNameLocal();
+    // 2. ✅ ดึงหลายบทบาท (แทนที่จะดึงแค่ตัวแรก)
+    List<String> roleIds = new ArrayList<>();
+    List<String> roleNames = new ArrayList<>();
+    
+    List<SuUserBusinessRole> userRoles = userBusinessRoleRepository
+            .findByUserBusinessIdAndIsActiveTrue(ub.getId());
+    
+    if (userRoles != null && !userRoles.isEmpty()) {
+        for (SuUserBusinessRole userRole : userRoles) {
+            if (userRole.getBusinessRole() != null) {
+                roleIds.add(userRole.getBusinessRole().getId().toString());
+                roleNames.add(userRole.getBusinessRole().getRoleNameLocal());
+            }
+        }
     }
 
     return SuUserBusinessMemberResponse.builder()
             .id(ub.getId())
             .businessId(ub.getBusinessId())
             .userId(ub.getUserId())
-            .userName(displayName)   // ✅ เปลี่ยนเป็นชื่อจริง
-            .userEmail(email)        // ✅ อีเมลจาก Profile
-            .roleCode(roleCode)
-            .roleName(roleName)
+            .userName(displayName)
+            .userEmail(email)
+            .roleIds(roleIds)      // ✅ ส่ง List
+            .roleNames(roleNames)  // ✅ ส่ง List
             .isActive(ub.getIsActive())
             .isDefault(ub.getIsDefault())
             .createdDate(ub.getCreatedDate())
             .build();
+}
+@Override
+@Transactional(readOnly = true)
+public SuUserBusinessMemberResponse getMemberById(UUID userBusinessId) {
+    SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
+            .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + userBusinessId));
+    return toResponse(userBusiness);
 }
 }

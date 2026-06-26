@@ -349,11 +349,6 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt28/pmrt28A/pmrt28A.component').then((m) => m.Pmrt28AComponent),
   },
-  {
-    path: 'pmrt28/:id/assign', // หน้ากำหนดบทบาทให้ผู้ใช้
-    loadComponent: () =>
-      import('./rt/pmrt28/pmrt28B/pmrt28B.component').then((m) => m.Pmrt28BComponent),
-  },
 
   // ===== Team Management =====
   {
@@ -361,18 +356,20 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./rt/pmrt29/pmrt29.component').then((m) => m.Pmrt29Component),
   },
   // pm.routes.ts
+   {
+  path: 'management/business/invite',
+  loadComponent: () =>
+    import('../../management/business/business-invite/business-invite.component')
+      .then(m => m.BusinessInviteComponent),
+},
   {
     path: 'pmrt29/add',
-    loadComponent: () =>
-      import('../../management/business/business-invite/business-invite.component').then(
-        (m) => m.BusinessInviteComponent,
-      ),
+    redirectTo: '/management/business/invite',
+    pathMatch: 'full',
   },
   {
     path: 'pmrt29/:id/edit',
     loadComponent: () =>
       import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
   },
-
-  
 ];

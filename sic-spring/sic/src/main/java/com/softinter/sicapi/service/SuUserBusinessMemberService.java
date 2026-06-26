@@ -1,10 +1,12 @@
 package com.softinter.sicapi.service;
 
-import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.UUID;
+import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
 
 public interface SuUserBusinessMemberService {
 
@@ -12,9 +14,14 @@ public interface SuUserBusinessMemberService {
 
     SuUserBusinessMemberResponse addMember(UUID businessId, String userId, UUID roleId);
 
-    SuUserBusinessMemberResponse updateMember(UUID userBusinessId, UUID roleId, Boolean isActive);
+    // SuUserBusinessMemberService.java
+    SuUserBusinessMemberResponse updateMember(UUID userBusinessId, List<UUID> roleIds, Boolean isActive);
 
     void removeMember(UUID userBusinessId);
+
+    SuUserBusinessMemberResponse getMemberById(UUID userBusinessId);
+
+    
 } 
 
 
