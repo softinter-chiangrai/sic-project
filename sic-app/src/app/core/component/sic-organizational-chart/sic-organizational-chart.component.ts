@@ -1,32 +1,33 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
-  ChangeDetectorRef,
+  Input as AngularInput,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
   Inject,
-  Input as AngularInput,
   Input,
   NgZone,
   OnChanges,
   OnDestroy,
+  OnInit,
   Output,
   PLATFORM_ID,
   SimpleChanges,
-  OnInit,
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
 import { DialogService } from '../../services/dialog.service';
-import { FormsModule } from '@angular/forms';
 import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { SicInputComponent } from '../sic-input/sic-input.component';
 import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.component';
+import { SicInputComponent } from '../sic-input/sic-input.component';
+import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
 
 type NodeEditPayload = {
+  roleCode: string; // ✅ เพิ่มบรรทัดนี้
   nameEn: string;
   nameLocal: string;
   color: string;
@@ -35,7 +36,13 @@ type NodeEditPayload = {
 @Component({
   selector: 'sic-organizational-chart-edit-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent, SicInputComponent, SicColorpickerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SicButtonComponent,
+    SicInputComponent,
+    SicColorpickerComponent,
+  ],
   template: `
     <div
       class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"
@@ -46,6 +53,13 @@ type NodeEditPayload = {
       </div>
 
       <div class="space-y-3 px-5 py-4">
+        <sic-input
+          label="role_code"
+          [required]="true"
+          [(ngModel)]="roleCode"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ADMIN, PM, DEV"
+        ></sic-input>
         <sic-input
           label="name_en"
           [required]="true"
@@ -70,7 +84,9 @@ type NodeEditPayload = {
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
         <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">Save</sic-button>
+        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()"
+          >Save</sic-button
+        >
       </div>
     </div>
   `,
@@ -79,6 +95,7 @@ export class SicOrganizationalChartEditDialog implements OnInit {
   @AngularInput({ required: true }) node!: SicOrganizationalChartNode;
   @AngularInput({ required: true }) onSave!: (payload: NodeEditPayload) => void;
 
+  roleCode = '';
   nameEn = '';
   nameLocal = '';
   color = '';
@@ -86,13 +103,19 @@ export class SicOrganizationalChartEditDialog implements OnInit {
   constructor(private readonly dialogService: DialogService) {}
 
   ngOnInit(): void {
+    this.roleCode = this.node.roleCode || '';
     this.nameEn = this.node.nameEn;
     this.nameLocal = this.node.nameLocal;
     this.color = this.node.color;
   }
 
   get canSave(): boolean {
-    return this.nameEn.trim().length > 0 && this.nameLocal.trim().length > 0 && this.color.trim().length > 0;
+    return (
+      this.roleCode.trim().length > 0 &&
+      this.nameEn.trim().length > 0 &&
+      this.nameLocal.trim().length > 0 &&
+      this.color.trim().length > 0
+    );
   }
 
   save(): void {
@@ -101,6 +124,7 @@ export class SicOrganizationalChartEditDialog implements OnInit {
     }
 
     this.onSave({
+      roleCode: this.roleCode.trim().toUpperCase(),
       nameEn: this.nameEn.trim(),
       nameLocal: this.nameLocal.trim(),
       color: this.color.trim(),
@@ -283,10 +307,14 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
 
   private layoutHorizontalConnectors(): void {
     const host = this.hostElementRef.nativeElement;
-    const childrenContainers = host.querySelectorAll<HTMLElement>('.sic-organizational-chart__children');
+    const childrenContainers = host.querySelectorAll<HTMLElement>(
+      '.sic-organizational-chart__children',
+    );
 
     childrenContainers.forEach((childrenContainer) => {
-      const horizontalConnector = childrenContainer.querySelector<HTMLElement>(':scope > .sic-organizational-chart__connector-horizontal');
+      const horizontalConnector = childrenContainer.querySelector<HTMLElement>(
+        ':scope > .sic-organizational-chart__connector-horizontal',
+      );
       if (!horizontalConnector) {
         return;
       }
@@ -300,7 +328,9 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
         return;
       }
 
-      const lineSizeRaw = getComputedStyle(host).getPropertyValue('--sic-organizational-line-size').trim();
+      const lineSizeRaw = getComputedStyle(host)
+        .getPropertyValue('--sic-organizational-line-size')
+        .trim();
       const lineSize = Number.parseFloat(lineSizeRaw) || 2;
 
       const containerRect = childrenContainer.getBoundingClientRect();
@@ -331,4 +361,11 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
   }
 
   trackById = (_index: number, node: SicOrganizationalChartNode): string => node.id;
+
+  @Output() nodeClick = new EventEmitter<SicOrganizationalChartNode>();
+
+  // ✅ เพิ่ม method
+  onNodeClick(node: SicOrganizationalChartNode): void {
+    this.nodeClick.emit(node);
+  }
 }

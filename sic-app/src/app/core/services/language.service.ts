@@ -1,18 +1,15 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 export type AppLanguage = 'th' | 'en';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class LanguageService {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly translate = inject(TranslateService);
-
   private readonly storageKey = 'app-lang';
 
   constructor() {
@@ -23,7 +20,6 @@ export class LanguageService {
 
   initLanguage(): void {
     const lang = this.resolveInitialLanguage();
-
     this.translate.use(lang);
     this.updateHtmlLang(lang);
   }
@@ -35,33 +31,25 @@ export class LanguageService {
 
     this.translate.use(lang);
     this.updateHtmlLang(lang);
+
+    // ✅ reload หน้าปัจจุบัน
+    if (isPlatformBrowser(this.platformId)) {
+      window.location.reload();
+    }
   }
 
   getCurrentLanguage(): AppLanguage {
     const current = this.translate.getCurrentLang();
-
-    if (current === 'th' || current === 'en') {
-      return current;
-    }
-    return 'en';
+    return (current === 'th' || current === 'en') ? current : 'en';
   }
 
   private resolveInitialLanguage(): AppLanguage {
     if (isPlatformBrowser(this.platformId)) {
       const saved = localStorage.getItem(this.storageKey);
-
-      if (saved === 'th' || saved === 'en') {
-        return saved;
-      }
-
-      const browserLang =
-        navigator.language ||
-        (Array.isArray(navigator.languages) ? navigator.languages[0] : '') ||
-        '';
-
+      if (saved === 'th' || saved === 'en') return saved;
+      const browserLang = navigator.language || '';
       return browserLang.toLowerCase().startsWith('th') ? 'th' : 'en';
     }
-
     return 'en';
   }
 

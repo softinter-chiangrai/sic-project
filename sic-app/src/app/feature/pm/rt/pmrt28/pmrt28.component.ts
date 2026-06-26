@@ -1,19 +1,16 @@
-// pmrt28.component.ts
+// src/app/feature/pm/rt/pmrt28/pmrt28.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { SicOrganizationalChartComponent } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.component';
+import { finalize } from 'rxjs';
+
+import {
+  SicOrganizationalChartComponent,
+  SicOrganizationalChartEditDialog,
+} from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.component';
 import { SicOrganizationalChartNode } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.model';
 import { DialogService } from '../../../../core/services/dialog.service';
-interface Role {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  parentRoleId?: string;
-  userNames: string[];
-  isActive: boolean;
-}
+import { Pmrt28Service, Role } from './pmrt28.service';
 
 @Component({
   selector: 'app-pmrt28',
@@ -25,102 +22,37 @@ interface Role {
 export class Pmrt28Component implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
+  private service = inject(Pmrt28Service);
 
-  // ===== ข้อมูลบทบาทแบบ Flat =====
-  // TODO: โหลดจาก API จริง
-  public flatRoles: Role[] = [
-    {
-      id: 'role-001',
-      code: 'ADMIN',
-      name: 'Administrator',
-      description: 'ผู้ดูแลระบบสูงสุด',
-      parentRoleId: undefined,
-      userNames: ['สมชาย ใจดี', 'นารี วัฒนา'],
-      isActive: true,
-    },
-    {
-      id: 'role-002',
-      code: 'PM',
-      name: 'Project Manager',
-      description: 'ผู้จัดการโครงการ',
-      parentRoleId: 'role-001',
-      userNames: ['สมชาย ใจดี', 'ประวิทย์ สุขสันต์'],
-      isActive: true,
-    },
-    {
-      id: 'role-003',
-      code: 'DEV',
-      name: 'Developer',
-      description: 'นักพัฒนา',
-      parentRoleId: 'role-002',
-      userNames: ['สมหญิง รักเรียน', 'ประวิทย์ สุขสันต์', 'จันทร์จิรา ใจดี'],
-      isActive: true,
-    },
-    {
-      id: 'role-004',
-      code: 'QA',
-      name: 'QA Tester',
-      description: 'ผู้ทดสอบ',
-      parentRoleId: 'role-002',
-      userNames: ['วิชัย มากมี'],
-      isActive: false,
-    },
-    {
-      id: 'role-005',
-      code: 'BA',
-      name: 'Business Analyst',
-      description: 'นักวิเคราะห์ธุรกิจ',
-      parentRoleId: 'role-002',
-      userNames: ['นารี วัฒนา'],
-      isActive: true,
-    },
-    {
-      id: 'role-006',
-      code: 'SA',
-      name: 'System Analyst',
-      description: 'นักวิเคราะห์ระบบ',
-      parentRoleId: 'role-002',
-      userNames: ['ประวิทย์ สุขสันต์'],
-      isActive: true,
-    },
-    {
-      id: 'role-007',
-      code: 'FIN',
-      name: 'Finance',
-      description: 'การเงิน',
-      parentRoleId: 'role-001',
-      userNames: [],
-      isActive: true,
-    },
-    {
-      id: 'role-008',
-      code: 'CUSTOMER',
-      name: 'Customer',
-      description: 'ลูกค้า',
-      parentRoleId: 'role-001',
-      userNames: ['จันทร์จิรา ใจดี'],
-      isActive: true,
-    },
-  ];
+  isLoading = signal(false);
+  isSaving = signal(false);
+  roles = signal<Role[]>([]);
+  businessId = signal<string>('');
 
-  // ===== สร้าง Tree Data =====
-  get treeData(): SicOrganizationalChartNode {
+  treeData = computed(() => {
+    const roles = this.roles();
+    if (!roles || roles.length === 0) return null;
+
     const map = new Map<string, SicOrganizationalChartNode>();
     const roots: SicOrganizationalChartNode[] = [];
 
-    this.flatRoles.forEach((role) => {
+    roles.forEach((role) => {
       const node: SicOrganizationalChartNode = {
         id: role.id,
-        nameEn: role.name,
-        nameLocal: role.name,
-        color: this.getColorForRole(role.code),
+        roleCode: role.roleCode,
+        nameEn: role.roleNameEn,
+        nameLocal: role.roleNameLocal,
+        color: this.getColorForRole(role.roleCode),
         editable: true,
         children: [],
+        _roleCode: role.roleCode,
+        _sortOrder: role.sortOrder,
+        _roleLevel: role.roleLevel,
       };
       map.set(role.id, node);
     });
 
-    this.flatRoles.forEach((role) => {
+    roles.forEach((role) => {
       const node = map.get(role.id)!;
       if (role.parentRoleId && map.has(role.parentRoleId)) {
         const parent = map.get(role.parentRoleId)!;
@@ -130,18 +62,260 @@ export class Pmrt28Component implements OnInit {
       }
     });
 
-    if (roots.length === 1) {
-      return roots[0];
-    } else {
-      return {
-        id: 'root',
-        nameEn: 'บทบาททั้งหมด',
-        nameLocal: 'บทบาททั้งหมด',
-        color: '#4ECDC4',
-        editable: false,
-        children: roots,
-      };
+    const sortChildren = (node: SicOrganizationalChartNode) => {
+      node.children.sort((a, b) => {
+        const roleA = roles.find((r) => r.id === a.id);
+        const roleB = roles.find((r) => r.id === b.id);
+        return (roleA?.sortOrder || 0) - (roleB?.sortOrder || 0);
+      });
+      node.children.forEach((child) => sortChildren(child));
+    };
+    roots.forEach((root) => sortChildren(root));
+
+    if (roots.length === 1) return roots[0];
+
+    return {
+      id: 'root',
+      roleCode: '',
+      nameEn: '',
+      nameLocal: '',
+      color: 'transparent',
+      editable: false,
+      children: roots,
+    };
+  });
+
+  flatRoles = computed(() => this.roles());
+  hasData = computed(() => this.roles().length > 0);
+
+  ngOnInit(): void {
+    this.loadBusinessId();
+  }
+
+  loadBusinessId() {
+    const stored = localStorage.getItem('businessId');
+    if (stored) {
+      this.businessId.set(stored);
+      this.loadRoles();
+      return;
     }
+
+    this.service.getMyBusinesses().subscribe({
+      next: (businesses) => {
+        if (businesses && businesses.length > 0) {
+          const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
+          this.businessId.set(defaultBiz.id);
+          localStorage.setItem('businessId', defaultBiz.id);
+          this.loadRoles();
+        } else {
+          this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+          this.router.navigate(['/management/business']);
+        }
+      },
+      error: () => {
+        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลธุรกิจได้');
+        this.router.navigate(['/management/business']);
+      },
+    });
+  }
+
+  loadRoles() {
+    const bizId = this.businessId();
+    if (!bizId) return;
+
+    this.isLoading.set(true);
+    this.service
+      .getRoles(bizId)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.roles.set(data);
+        },
+        error: (err) => {
+          console.error('Load roles error', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการบทบาทได้');
+        },
+      });
+  }
+
+  openAddRootRoleDialog(): void {
+    const draftNode: SicOrganizationalChartNode = {
+      id: this.generateId(),
+      roleCode: '',
+      nameEn: '',
+      nameLocal: '',
+      color: this.getRandomColor(),
+      children: [],
+      editable: true,
+    };
+
+    this.dialog.open({
+      type: 'confirm',
+      component: SicOrganizationalChartEditDialog,
+      componentInputs: {
+        node: draftNode,
+        onSave: (payload: { roleCode: string; nameEn: string; nameLocal: string; color: string }) => {
+          this.createRole({
+            roleCode: payload.roleCode,
+            nameEn: payload.nameEn,
+            nameLocal: payload.nameLocal,
+            parentId: null,
+          });
+        },
+      },
+    });
+  }
+
+  private createRole(data: { roleCode: string; nameEn: string; nameLocal: string; parentId: string | null }) {
+    const role: Role = {
+      id: '',
+      roleCode: data.roleCode.toUpperCase(),
+      roleNameEn: data.nameEn,
+      roleNameLocal: data.nameLocal,
+      roleLevel: this.calculateRoleLevel(data.parentId),
+      sortOrder: this.calculateSortOrder(data.parentId),
+      isActive: true,
+      businessId: this.businessId(),
+      parentRoleId: data.parentId || undefined,
+      rowVersion: undefined,
+    };
+
+    this.isSaving.set(true);
+    this.service
+      .saveRole(role)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('เพิ่มบทบาทสำเร็จ', `เพิ่มบทบาท "${data.nameEn}" เรียบร้อย`);
+          this.loadRoles();
+        },
+        error: (err) => {
+          console.error('Create role error', err);
+          let errorMessage = 'เกิดข้อผิดพลาด';
+          if (err.error?.message) errorMessage = err.error.message;
+          else if (err.message) errorMessage = err.message;
+          this.dialog.error('เพิ่มบทบาทไม่สำเร็จ', errorMessage);
+        },
+      });
+  }
+
+  onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }): void {
+    const newNode = event.node;
+    const actualParentId = event.parentId === 'root' ? null : event.parentId;
+
+    this.createRole({
+      roleCode: newNode.roleCode || this.generateRoleCode(newNode.nameEn),
+      nameEn: newNode.nameEn,
+      nameLocal: newNode.nameLocal,
+      parentId: actualParentId,
+    });
+  }
+
+  onNodeRemoved(event: { parentId: string; nodeId: string }): void {
+    this.dialog
+      .confirm('ยืนยันการลบ', 'คุณต้องการลบบทบาทนี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.isLoading.set(true);
+          this.service.deleteRole(event.nodeId).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'บทบาทถูกลบเรียบร้อย');
+              this.loadRoles();
+            },
+            error: (err) => {
+              this.isLoading.set(false);
+              console.error('Delete error', err);
+              this.dialog.error('ลบไม่สำเร็จ', 'ไม่สามารถลบบทบาทได้');
+            },
+          });
+        }
+      });
+  }
+
+  onNodeClick(event: any): void {
+    const node = event as SicOrganizationalChartNode;
+    const role = this.roles().find((r) => r.id === node.id);
+    if (!role) {
+      this.dialog.error('ไม่พบข้อมูล', 'ไม่พบบทบาทนี้ในระบบ');
+      return;
+    }
+
+    this.dialog.open({
+      type: 'confirm',
+      component: SicOrganizationalChartEditDialog,
+      componentInputs: {
+        node: {
+          ...node,
+          roleCode: role.roleCode,
+          nameEn: role.roleNameEn,
+          nameLocal: role.roleNameLocal,
+          color: node.color,
+        },
+        onSave: (payload: { roleCode: string; nameEn: string; nameLocal: string; color: string }) => {
+          const updatedRole: Role = {
+            ...role,
+            roleCode: payload.roleCode.toUpperCase(),
+            roleNameEn: payload.nameEn,
+            roleNameLocal: payload.nameLocal,
+            rowVersion: role.rowVersion,
+          };
+
+          this.isSaving.set(true);
+          this.service
+            .saveRole(updatedRole)
+            .pipe(finalize(() => this.isSaving.set(false)))
+            .subscribe({
+              next: () => {
+                this.dialog.success('แก้ไขสำเร็จ', `อัปเดตบทบาท "${payload.nameEn}" เรียบร้อย`);
+                this.loadRoles();
+              },
+              error: (err) => {
+                console.error('Update role error', err);
+                let errorMessage = 'เกิดข้อผิดพลาด';
+                if (err.error?.message) errorMessage = err.error.message;
+                else if (err.message) errorMessage = err.message;
+                this.dialog.error('แก้ไขไม่สำเร็จ', errorMessage);
+              },
+            });
+        },
+      },
+    });
+  }
+
+  onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }): void {}
+  onDataChanged(root: SicOrganizationalChartNode): void {}
+
+  private generateRoleCode(nameEn: string): string {
+    if (!nameEn) return 'ROLE_' + Date.now();
+    let code = nameEn.toUpperCase().replace(/\s+/g, '_');
+    code = code.replace(/[^A-Z0-9_]/g, '');
+    return code.length > 50 ? code.substring(0, 50) : code;
+  }
+
+  private calculateRoleLevel(parentId: string | null): string {
+    if (!parentId) return '1';
+    const parentRole = this.roles().find((r) => r.id === parentId);
+    if (parentRole) {
+      const parentLevel = parseInt(parentRole.roleLevel) || 0;
+      return String(parentLevel + 1);
+    }
+    return '1';
+  }
+
+  private calculateSortOrder(parentId: string | null): number {
+    let siblings: Role[] = [];
+    if (!parentId) siblings = this.roles().filter((r) => !r.parentRoleId);
+    else siblings = this.roles().filter((r) => r.parentRoleId === parentId);
+    return siblings.length + 1;
+  }
+
+  private generateId(): string {
+    return crypto.randomUUID();
+  }
+
+  private getRandomColor(): string {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
+    return colors[Math.floor(Math.random() * colors.length)];
   }
 
   private getColorForRole(code: string): string {
@@ -154,65 +328,11 @@ export class Pmrt28Component implements OnInit {
       SA: '#F7DC6F',
       FIN: '#BB8FCE',
       CUSTOMER: '#85C1E9',
+      TEAM_LEAD: '#F39C12',
+      UIUX: '#9B59B6',
+      MA_SUPPORT: '#1ABC9C',
+      VIEWER: '#95A5A6',
     };
     return colors[code] || '#95A5A6';
-  }
-
-  // ===== Event Handlers =====
-  onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }): void {
-    console.log('➕ Node added:', event);
-    this.dialog.success('เพิ่มบทบาท', `เพิ่มบทบาท "${event.node.nameEn}" เรียบร้อย`).then(() => {
-      // TODO: เรียก API สร้างบทบาทใหม่
-      // แล้ว reload ข้อมูล
-    });
-  }
-
-  onNodeRemoved(event: { parentId: string; nodeId: string }): void {
-    console.log('❌ Node removed:', event);
-    this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบบทบาทนี้ใช่หรือไม่?`)
-      .then((confirmed: boolean) => {
-        if (confirmed) {
-          // TODO: เรียก API ลบบทบาท
-          this.dialog.warn('ลบบทบาท', `ลบบทบาท ID: ${event.nodeId} เรียบร้อย`);
-          // reload tree
-        }
-      });
-  }
-
-  onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }): void {
-    console.log('✏️ Node updated:', event);
-    // TODO: เรียก API อัปเดตบทบาท
-    this.dialog.success('อัปเดตบทบาท', `อัปเดตบทบาท "${event.node.nameEn}" เรียบร้อย`);
-    // reload tree
-  }
-
-  onDataChanged(root: SicOrganizationalChartNode): void {
-    console.log('🔄 Data changed:', root);
-    // ใช้เมื่อต้องการบันทึกทั้ง Tree
-  }
-
-  // ===== ปุ่มเพิ่มบทบาท =====
-  goToAddRole(): void {
-    this.router.navigate(['/feature/pm/pmrt28/add']);
-  }
-
-  // ===== เมื่อคลิกที่ Node =====
-  onNodeClick(event: any): void {
-    const node = event as SicOrganizationalChartNode;
-    this.dialog
-      .confirm('จัดการบทบาท', `คุณต้องการแก้ไขข้อมูลบทบาท "${node.nameEn}" หรือกำหนดผู้ใช้?`)
-      .then((result: boolean) => {
-        if (result) {
-          this.router.navigate(['/feature/pm/pmrt28', node.id, 'edit']);
-        } else {
-          this.router.navigate(['/feature/pm/pmrt28', node.id, 'assign']);
-        }
-      });
-  }
-
-  ngOnInit(): void {
-    // TODO: โหลดข้อมูลจริงจาก API
-    console.log('Pmrt28Component initialized');
   }
 }

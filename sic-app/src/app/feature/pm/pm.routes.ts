@@ -339,16 +339,6 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt28', // หน้า List (Role Management)
     loadComponent: () => import('./rt/pmrt28/pmrt28.component').then((m) => m.Pmrt28Component),
   },
-  {
-    path: 'pmrt28/add', // หน้าเพิ่มบทบาทใหม่
-    loadComponent: () =>
-      import('./rt/pmrt28/pmrt28A/pmrt28A.component').then((m) => m.Pmrt28AComponent),
-  },
-  {
-    path: 'pmrt28/:id/edit', // หน้าแก้ไขบทบาท
-    loadComponent: () =>
-      import('./rt/pmrt28/pmrt28A/pmrt28A.component').then((m) => m.Pmrt28AComponent),
-  },
 
   // ===== Team Management =====
   {

@@ -27,6 +27,13 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
 
     Optional<SuBusinessRole> findByIdAndBusinessId(UUID id, UUID businessId);
     List<SuBusinessRole> findByBusinessIdAndIsActiveTrue(UUID businessId);
+    
+     @Query("SELECT r FROM SuBusinessRole r WHERE r.business.id = :businessId AND r.roleCode = :roleCode AND r.isDelete = false")
+    Optional<SuBusinessRole> findByBusinessIdAndRoleCodeAndIsDeleteFalse(
+        @Param("businessId") UUID businessId, 
+        @Param("roleCode") String roleCode
+    );
+  
 
   
 }

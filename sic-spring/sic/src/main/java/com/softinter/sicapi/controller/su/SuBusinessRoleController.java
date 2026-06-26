@@ -1,23 +1,35 @@
 package com.softinter.sicapi.controller.su;
 
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.dto.request.BusinessRolePageRequest;
+import com.softinter.sicapi.dto.request.DeleteRequest;
+import com.softinter.sicapi.dto.request.SaveBusinessRoleRequest;
+import com.softinter.sicapi.dto.response.BusinessRoleResponse;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ProgramAccessService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.criteria.Predicate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,7 +41,9 @@ import java.util.stream.Collectors;
 public class SuBusinessRoleController {
 
     private final SuBusinessRoleRepository businessRoleRepository;
+    private final SuBusinessRepository businessRepository;
     private final ProgramAccessService programAccessService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
     @Operation(summary = "Get all business roles")
@@ -112,39 +126,90 @@ public class SuBusinessRoleController {
     @Operation(summary = "Save business role")
     public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest request) {
         SuBusinessRole role;
+
+        // ===== 1. กรณีแก้ไข / เพิ่มใหม่ =====
         if (request.getId() != null) {
             role = businessRoleRepository.findById(request.getId())
                     .orElseThrow(() -> new RuntimeException("Business role not found"));
             if (request.getRowVersion() != null) {
-                // Optimistic locking check
+                role.setRowVersion(request.getRowVersion());
             }
         } else {
             role = new SuBusinessRole();
         }
+
+        // ===== 2. ตรวจสอบ BusinessId (required) =====
+        if (request.getBusinessId() == null) {
+            throw new IllegalArgumentException("BusinessId is required");
+        }
+        SuBusiness business = businessRepository.findById(request.getBusinessId())
+                .orElseThrow(() -> new RuntimeException("Business not found: " + request.getBusinessId()));
+        role.setBusiness(business);
+
+        // ===== 3. ตรวจสอบ ParentRoleId (optional) =====
+        if (request.getParentRoleId() != null) {
+            SuBusinessRole parentRole = businessRoleRepository.findById(request.getParentRoleId())
+                    .orElseThrow(() -> new RuntimeException("Parent role not found: " + request.getParentRoleId()));
+            role.setParentRole(parentRole);
+        } else {
+            role.setParentRole(null);
+        }
+
+        // ===== 4. ตรวจสอบ Role Code ซ้ำ =====
+        if (request.getId() == null) {
+            // เพิ่มใหม่
+            if (businessRoleRepository.existsByBusinessIdAndRoleCodeAndIsDeleteFalse(
+                    request.getBusinessId(), request.getRoleCode())) {
+                throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
+            }
+        } else {
+            // แก้ไข: ต้องไม่ใช่ตัวเอง
+            Optional<SuBusinessRole> existing = businessRoleRepository
+                    .findByBusinessIdAndRoleCodeAndIsDeleteFalse(request.getBusinessId(), request.getRoleCode());
+            if (existing.isPresent() && !existing.get().getId().equals(request.getId())) {
+                throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
+            }
+        }
+
+        // ===== 5. ตั้งค่าฟิลด์อื่น ๆ =====
         role.setRoleCode(request.getRoleCode());
         role.setRoleNameEn(request.getRoleNameEn());
         role.setRoleNameLocal(request.getRoleNameLocal());
         role.setRoleLevel(request.getRoleLevel());
         role.setSortOrder(request.getSortOrder());
         role.setIsActive(request.isActive());
+
+        // ===== 6. บันทึก =====
         businessRoleRepository.save(role);
 
+        // ===== 7. เคลียร์ Cache =====
         programAccessService.removeAllAccessCache();
+
         return ResponseEntity.ok(role.getId());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete business role")
-    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuBusinessRole role = businessRoleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Business role not found"));
+
+        // ===== Soft Delete =====
         role.setIsDelete(true);
         role.setIsActive(false);
+        String currentUser = currentUserService.getUserId();
+        role.setDeleteBy(currentUser);
+        role.setDeleteDate(Instant.now());
+
         businessRoleRepository.save(role);
+
+        // ===== เคลียร์ Cache =====
         programAccessService.removeAllAccessCache();
+
         return ResponseEntity.noContent().build();
     }
 
+    // ===== Helper: toResponse =====
     private BusinessRoleResponse toResponse(SuBusinessRole role) {
         BusinessRoleResponse response = new BusinessRoleResponse();
         response.setId(role.getId());
