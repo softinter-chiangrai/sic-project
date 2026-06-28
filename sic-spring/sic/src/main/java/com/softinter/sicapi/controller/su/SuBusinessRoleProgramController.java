@@ -3,7 +3,11 @@ package com.softinter.sicapi.controller.su;
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
+import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
+import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProgramRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +32,8 @@ import java.util.stream.Collectors;
 public class SuBusinessRoleProgramController {
 
     private final SuBusinessRoleProgramRepository brpRepository;
+    private final SuBusinessRoleRepository businessRoleRepository;
+    private final SuProgramRepository programRepository;
 
     @GetMapping
     @Operation(summary = "Get all business role programs")
@@ -98,10 +104,70 @@ public class SuBusinessRoleProgramController {
                     .orElseThrow(() -> new RuntimeException("Business role program not found"));
         } else {
             brp = new SuBusinessRoleProgram();
+            if (request.getBusinessRoleId() != null) {
+                SuBusinessRole role = businessRoleRepository.findById(request.getBusinessRoleId())
+                        .orElseThrow(() -> new RuntimeException("Business role not found"));
+                brp.setBusinessRole(role);
+            }
+            if (request.getProgramId() != null) {
+                SuProgram program = programRepository.findById(request.getProgramId())
+                        .orElseThrow(() -> new RuntimeException("Program not found"));
+                brp.setProgram(program);
+            }
         }
         brp.setIsActive(request.isActive());
+        brp.setAdd(request.isAdd());
+        brp.setBack(request.isBack());
+        brp.setPrint(request.isPrint());
+        brp.setRemove(request.isRemove());
+        brp.setSave(request.isSave());
+        brp.setSearch(request.isSearch());
+        if (request.getRowVersion() != null) {
+            brp.setRowVersion(request.getRowVersion());
+        }
         brpRepository.save(brp);
         return ResponseEntity.ok(brp.getId());
+    }
+
+    @PostMapping("/bulk-save")
+    @Operation(summary = "Save all program permissions for a role")
+    public ResponseEntity<Void> bulkSave(@Valid @RequestBody SaveRolePermissionsRequest request) {
+        SuBusinessRole role = businessRoleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new RuntimeException("Business role not found"));
+
+        for (SaveBusinessRoleProgramRequest req : request.getModules()) {
+            SuBusinessRoleProgram brp;
+            if (req.getId() != null) {
+                brp = brpRepository.findById(req.getId())
+                        .orElseThrow(() -> new RuntimeException("Business role program not found"));
+            } else {
+                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(role.getId());
+                brp = existing.stream()
+                        .filter(x -> x.getProgram().getId().equals(req.getProgramId()))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (brp == null) {
+                    brp = new SuBusinessRoleProgram();
+                    brp.setBusinessRole(role);
+                    SuProgram program = programRepository.findById(req.getProgramId())
+                            .orElseThrow(() -> new RuntimeException("Program not found"));
+                    brp.setProgram(program);
+                }
+            }
+            brp.setIsActive(req.isActive());
+            brp.setAdd(req.isAdd());
+            brp.setBack(req.isBack());
+            brp.setPrint(req.isPrint());
+            brp.setRemove(req.isRemove());
+            brp.setSave(req.isSave());
+            brp.setSearch(req.isSearch());
+            if (req.getRowVersion() != null) {
+                brp.setRowVersion(req.getRowVersion());
+            }
+            brpRepository.save(brp);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
@@ -129,6 +195,12 @@ public class SuBusinessRoleProgramController {
             response.setProgramNameLocal(brp.getProgram().getNameLocal());
         }
         response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
+        response.setAdd(brp.isAdd());
+        response.setBack(brp.isBack());
+        response.setPrint(brp.isPrint());
+        response.setRemove(brp.isRemove());
+        response.setSave(brp.isSave());
+        response.setSearch(brp.isSearch());
         response.setRowVersion(brp.getRowVersion());
         return response;
     }

@@ -13,6 +13,12 @@ public class SaveBusinessRoleProgramRequest {
     private UUID businessRoleId;
     private UUID programId;
     private boolean isActive = true;
+    private boolean isAdd;
+    private boolean isBack;
+    private boolean isPrint;
+    private boolean isRemove;
+    private boolean isSave;
+    private boolean isSearch;
     Integer state;
     private Integer rowVersion;
 }

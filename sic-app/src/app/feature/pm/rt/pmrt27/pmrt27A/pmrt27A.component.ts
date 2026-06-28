@@ -48,53 +48,116 @@ const PERMISSION_LEVELS = [
   { value: 'None', label: 'ไม่มีสิทธิ์ (None)', color: 'gray' },
 ];
 
+import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { environment } from '../../../../../../environments/environment';
+
+
+// ===== Helper Functions =====
+export function mapBooleansToLevel(p: { isAdd: boolean, isBack: boolean, isPrint: boolean, isRemove: boolean, isSave: boolean, isSearch: boolean }): ModulePermission['level'] {
+  if (p.isAdd && p.isSave && p.isRemove && p.isPrint && p.isBack && p.isSearch) return 'Full';
+  if (p.isSearch && p.isSave && !p.isAdd && !p.isRemove && !p.isPrint) return 'Approve';
+  if (p.isSearch && p.isAdd && p.isSave && !p.isRemove && !p.isPrint) return 'Edit';
+  if (p.isSearch && !p.isAdd && !p.isSave && !p.isRemove && !p.isPrint) return 'View';
+  if (!p.isSearch && !p.isAdd && !p.isSave && !p.isRemove && !p.isPrint) return 'None';
+  return 'View';
+}
+
+export function mapLevelToBooleans(level: string): { isAdd: boolean, isBack: boolean, isPrint: boolean, isRemove: boolean, isSave: boolean, isSearch: boolean } {
+  switch (level) {
+    case 'Full':
+      return { isSearch: true, isAdd: true, isSave: true, isRemove: true, isPrint: true, isBack: true };
+    case 'Approve':
+    case 'Fix':
+    case 'View/UAT':
+      return { isSearch: true, isAdd: false, isSave: true, isRemove: false, isPrint: false, isBack: true };
+    case 'Edit':
+    case 'Test':
+    case 'Create/View':
+      return { isSearch: true, isAdd: true, isSave: true, isRemove: false, isPrint: false, isBack: true };
+    case 'View':
+      return { isSearch: true, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: true };
+    case 'None':
+    default:
+      return { isSearch: false, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: false };
+  }
+}
+
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmrt27AService {
-  // ✅ Mock Modules
-  private mockModules: ModulePermission[] = [
-    { moduleId: 'mod-001', moduleCode: 'project', moduleName: 'Project', level: 'Full' },
-    { moduleId: 'mod-002', moduleCode: 'requirement', moduleName: 'Requirement', level: 'Approve' },
-    { moduleId: 'mod-003', moduleCode: 'dfd', moduleName: 'DFD', level: 'View' },
-    { moduleId: 'mod-004', moduleCode: 'er', moduleName: 'ER', level: 'None' },
-    { moduleId: 'mod-005', moduleCode: 'spec', moduleName: 'Spec', level: 'Approve' },
-    { moduleId: 'mod-006', moduleCode: 'plan', moduleName: 'Plan', level: 'Full' },
-    { moduleId: 'mod-007', moduleCode: 'task', moduleName: 'Task', level: 'Full' },
-    { moduleId: 'mod-008', moduleCode: 'test', moduleName: 'Test', level: 'View' },
-    { moduleId: 'mod-009', moduleCode: 'bug', moduleName: 'Bug', level: 'Fix' },
-    { moduleId: 'mod-010', moduleCode: 'delivery', moduleName: 'Delivery', level: 'Full' },
-    { moduleId: 'mod-011', moduleCode: 'invoice', moduleName: 'Invoice', level: 'View' },
-    { moduleId: 'mod-012', moduleCode: 'ma', moduleName: 'MA', level: 'Full' },
-  ];
+  private readonly http = inject(HttpClient);
 
   getRolePermissions(roleId: string): Observable<RolePermissionData> {
-    // ✅ ใช้ roleId เพื่อสร้างข้อมูล
-    const roleMap: Record<string, { code: string; name: string }> = {
-      'role-001': { code: 'ADMIN', name: 'Administrator' },
-      'role-002': { code: 'PM', name: 'Project Manager' },
-      'role-003': { code: 'DEV', name: 'Developer' },
-      'role-004': { code: 'QA', name: 'QA Tester' },
-      'role-005': { code: 'CUSTOMER', name: 'Customer' },
-      'role-006': { code: 'FINANCE', name: 'Finance' },
-    };
+    // 1. Fetch role detail to get its code/name
+    const role$ = this.http.get<any>(`${environment.apiBaseUrl}/api/su/business-roles/${roleId}`);
+    // 2. Fetch all active programs
+    const programs$ = this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/programs`);
+    // 3. Fetch role's assigned programs
+    const rolePrograms$ = this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/business-role-programs`, {
+      params: { businessRoleId: roleId }
+    });
 
-    const roleInfo = roleMap[roleId] || { code: 'UNKNOWN', name: 'Unknown Role' };
+    return forkJoin({ role: role$, programs: programs$, rolePrograms: rolePrograms$ }).pipe(
+      map(({ role, programs, rolePrograms }) => {
+        const modules: ModulePermission[] = programs.map(p => {
+          const matched = rolePrograms.find(rp => rp.programId === p.id);
+          const level = matched && matched.active
+            ? mapBooleansToLevel({
+                isAdd: matched.isAdd,
+                isBack: matched.isBack,
+                isPrint: matched.isPrint,
+                isRemove: matched.isRemove,
+                isSave: matched.isSave,
+                isSearch: matched.isSearch
+              })
+            : 'None';
 
-    // ✅ Copy modules เพื่อไม่ให้แก้ไขข้อมูลต้นฉบับ
-    const modules = this.mockModules.map((m) => ({ ...m }));
+          const mod: ModulePermission = {
+            moduleId: p.id,
+            moduleCode: p.programCode,
+            moduleName: p.programNameEn,
+            level: level
+          };
+          
+          // Keep track of the business role program record id if it exists
+          if (matched) {
+            (mod as any).id = matched.id;
+          }
+          return mod;
+        });
 
-    const found: RolePermissionData = {
-      roleId: roleId,
-      roleCode: roleInfo.code,
-      roleName: roleInfo.name,
-      modules: modules,
-    };
-    return of(found).pipe(delay(300));
+        return {
+          roleId: role.id,
+          roleCode: role.roleCode,
+          roleName: role.roleNameEn,
+          modules: modules
+        };
+      })
+    );
   }
 
   saveRolePermissions(data: RolePermissionData): Observable<string> {
-    console.log('📝 Saving role permissions:', data);
-    return of('บันทึกสิทธิ์บทบาทสำเร็จ').pipe(delay(500));
+    const modulesReq = data.modules.map(mod => {
+      const perms = mapLevelToBooleans(mod.level);
+      return {
+        id: (mod as any).id || null,
+        businessRoleId: data.roleId,
+        programId: mod.moduleId,
+        isActive: mod.level !== 'None',
+        ...perms
+      };
+    });
+
+    const body = {
+      roleId: data.roleId,
+      modules: modulesReq
+    };
+
+    return this.http.post<any>(`${environment.apiBaseUrl}/api/su/business-role-programs/bulk-save`, body).pipe(
+      map(() => 'บันทึกสิทธิ์บทบาทสำเร็จ')
+    );
   }
 }
 

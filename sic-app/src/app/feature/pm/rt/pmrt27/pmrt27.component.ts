@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { Pmrt28Service } from '../pmrt28/pmrt28.service';
+import { Pmrt27AService } from './pmrt27A/pmrt27A.component';
 
 // ===== Interfaces =====
 interface RolePermissionSummary {
@@ -11,155 +13,9 @@ interface RolePermissionSummary {
   isActive: boolean;
   permissions: {
     module: string;
-    level: 'Full' | 'View' | 'Edit' | 'Approve' | 'Fix' | 'Create/View' | 'None';
+    level: 'Full' | 'View' | 'Edit' | 'Approve' | 'Fix' | 'Create/View' | 'View/UAT' | 'Test' | 'None';
   }[];
 }
-
-// ===== Mock Data (ตาม Permission Matrix) =====
-const MOCK_ROLE_PERMISSIONS: RolePermissionSummary[] = [
-  {
-    roleId: 'role-001',
-    roleCode: 'ADMIN',
-    roleName: 'Administrator',
-    userCount: 3,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'Full' },
-      { module: 'Requirement', level: 'Full' },
-      { module: 'DFD', level: 'Full' },
-      { module: 'ER', level: 'Full' },
-      { module: 'Spec', level: 'Full' },
-      { module: 'Plan', level: 'Full' },
-      { module: 'Task', level: 'Full' },
-      { module: 'Test', level: 'Full' },
-      { module: 'Bug', level: 'Full' },
-      { module: 'Delivery', level: 'Full' },
-      { module: 'Invoice', level: 'Full' },
-      { module: 'MA', level: 'Full' },
-    ],
-  },
-  {
-    roleId: 'role-002',
-    roleCode: 'PM',
-    roleName: 'Project Manager',
-    userCount: 5,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'Full' },
-      { module: 'Requirement', level: 'Approve' },
-      { module: 'DFD', level: 'View' },
-      { module: 'ER', level: 'View' },
-      { module: 'Spec', level: 'Approve' },
-      { module: 'Plan', level: 'Full' },
-      { module: 'Task', level: 'Full' },
-      { module: 'Test', level: 'View' },
-      { module: 'Bug', level: 'View' },
-      { module: 'Delivery', level: 'Full' },
-      { module: 'Invoice', level: 'View' },
-      { module: 'MA', level: 'Full' },
-    ],
-  },
-  {
-    roleId: 'role-003',
-    roleCode: 'DEV',
-    roleName: 'Developer',
-    userCount: 8,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'View' },
-      { module: 'Requirement', level: 'View' },
-      { module: 'DFD', level: 'View' },
-      { module: 'ER', level: 'View' },
-      { module: 'Spec', level: 'View' },
-      { module: 'Plan', level: 'View' },
-      { module: 'Task', level: 'Edit' },
-      { module: 'Test', level: 'View' },
-      { module: 'Bug', level: 'Fix' },
-      { module: 'Delivery', level: 'View' },
-      { module: 'Invoice', level: 'None' },
-      { module: 'MA', level: 'Fix' },
-    ],
-  },
-  {
-    roleId: 'role-004',
-    roleCode: 'QA',
-    roleName: 'QA Tester',
-    userCount: 4,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'View' },
-      { module: 'Requirement', level: 'View' },
-      { module: 'DFD', level: 'View' },
-      { module: 'ER', level: 'View' },
-      { module: 'Spec', level: 'View' },
-      { module: 'Plan', level: 'View' },
-      { module: 'Task', level: 'View' },
-      { module: 'Test', level: 'Full' },
-      { module: 'Bug', level: 'Full' },
-      { module: 'Delivery', level: 'View' },
-      { module: 'Invoice', level: 'None' },
-      { module: 'MA', level: 'Full' },
-    ],
-  },
-  {
-    roleId: 'role-005',
-    roleCode: 'CUSTOMER',
-    roleName: 'Customer',
-    userCount: 10,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'View' },
-      { module: 'Requirement', level: 'Approve' },
-      { module: 'DFD', level: 'View' },
-      { module: 'ER', level: 'None' },
-      { module: 'Spec', level: 'Approve' },
-      { module: 'Plan', level: 'View' },
-      { module: 'Task', level: 'View' },
-      { module: 'Test', level: 'View' },
-      { module: 'Bug', level: 'Create/View' },
-      { module: 'Delivery', level: 'Approve' },
-      { module: 'Invoice', level: 'View' },
-      { module: 'MA', level: 'Create/View' },
-    ],
-  },
-  {
-    roleId: 'role-006',
-    roleCode: 'FINANCE',
-    roleName: 'Finance',
-    userCount: 2,
-    isActive: true,
-    permissions: [
-      { module: 'Project', level: 'View' },
-      { module: 'Requirement', level: 'None' },
-      { module: 'DFD', level: 'None' },
-      { module: 'ER', level: 'None' },
-      { module: 'Spec', level: 'None' },
-      { module: 'Plan', level: 'View' },
-      { module: 'Task', level: 'View' },
-      { module: 'Test', level: 'View' },
-      { module: 'Bug', level: 'View' },
-      { module: 'Delivery', level: 'View' },
-      { module: 'Invoice', level: 'Full' },
-      { module: 'MA', level: 'View' },
-    ],
-  },
-];
-
-// ===== Module List (ตาม Permission Matrix) =====
-const MODULE_LIST = [
-  'Project',
-  'Requirement',
-  'DFD',
-  'ER',
-  'Spec',
-  'Plan',
-  'Task',
-  'Test',
-  'Bug',
-  'Delivery',
-  'Invoice',
-  'MA',
-];
 
 @Component({
   selector: 'app-pmrt27',
@@ -170,6 +26,8 @@ const MODULE_LIST = [
 })
 export class Pmrt27Component implements OnInit {
   private router = inject(Router);
+  private roleService = inject(Pmrt28Service);
+  private pmrt27AService = inject(Pmrt27AService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -182,8 +40,7 @@ export class Pmrt27Component implements OnInit {
   protected expandedRole = signal<string | null>(null);
 
   // ===== Data =====
-  protected roles = signal<RolePermissionSummary[]>(MOCK_ROLE_PERMISSIONS);
-  protected modules = MODULE_LIST;
+  protected roles = signal<RolePermissionSummary[]>([]);
 
   // ===== Computed =====
   protected filteredRoles = computed(() => {
@@ -244,7 +101,34 @@ export class Pmrt27Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    this.loadRoles();
+  }
+
+  loadRoles() {
+    this.isLoading.set(true);
+    const businessId = localStorage.getItem('businessId');
+    if (!businessId) {
+      this.isLoading.set(false);
+      return;
+    }
+    this.roleService.getRoles(businessId).subscribe({
+      next: (data) => {
+        const mapped: RolePermissionSummary[] = data.map(r => ({
+          roleId: r.id,
+          roleCode: r.roleCode,
+          roleName: r.roleNameEn,
+          userCount: 0, // Placeholder
+          isActive: r.isActive,
+          permissions: [] // Loaded on demand
+        }));
+        this.roles.set(mapped);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        console.error('Error loading roles:', err);
+      }
+    });
   }
 
   // ===== Actions =====
@@ -280,12 +164,42 @@ export class Pmrt27Component implements OnInit {
   }
 
   toggleExpand(roleId: string) {
-    this.expandedRole.set(this.expandedRole() === roleId ? null : roleId);
+    const currentExpanded = this.expandedRole();
+    if (currentExpanded === roleId) {
+      this.expandedRole.set(null);
+    } else {
+      this.expandedRole.set(roleId);
+      const role = this.roles().find(r => r.roleId === roleId);
+      if (role && role.permissions.length === 0) {
+        this.pmrt27AService.getRolePermissions(roleId).subscribe({
+          next: (data) => {
+            const updated = this.roles().map(r => {
+              if (r.roleId === roleId) {
+                return {
+                  ...r,
+                  permissions: data.modules
+                    .filter(m => m.level !== 'None')
+                    .map(m => ({
+                      module: m.moduleName,
+                      level: m.level
+                    }))
+                };
+              }
+              return r;
+            });
+            this.roles.set(updated);
+          },
+          error: (err) => {
+            console.error('Error fetching role permissions summary:', err);
+          }
+        });
+      }
+    }
   }
 
   goToManagePermissions(roleId: string) {
-  this.router.navigate(['/feature/pm/pmrt27', roleId]); // ✅ ถูกต้อง
-}
+    this.router.navigate(['/feature/pm/pmrt27', roleId]);
+  }
 
   // ===== Utility =====
   getStatusClass(isActive: boolean): string {

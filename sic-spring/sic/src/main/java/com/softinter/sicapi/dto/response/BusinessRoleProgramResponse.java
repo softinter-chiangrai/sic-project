@@ -14,5 +14,11 @@ public class BusinessRoleProgramResponse {
     private String programNameEn;
     private String programNameLocal;
     private boolean isActive;
+    private boolean isAdd;
+    private boolean isBack;
+    private boolean isPrint;
+    private boolean isRemove;
+    private boolean isSave;
+    private boolean isSearch;
     private Integer rowVersion;
 }
