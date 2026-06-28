@@ -168,14 +168,26 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
     @Inject(PLATFORM_ID) platformId: object,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    // ✅ ตั้งค่าภาษาเริ่มต้นให้ถูกต้องตั้งแต่เริ่ม
+    this.currentLanguage = this.resolveLanguage(
+      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
+    );
   }
 
   ngAfterViewInit(): void {
-    this.currentLanguage = this.resolveLanguage(this.translate.getCurrentLang());
+    // ✅ อัปเดตภาษาซ้ำเพื่อความปลอดภัย (เผื่อมีการเปลี่ยนแปลงระหว่าง constructor กับ afterViewInit)
+    const newLang = this.resolveLanguage(
+      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
+    );
+    if (this.currentLanguage !== newLang) {
+      this.currentLanguage = newLang;
+      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดตทันที
+    }
+
     this.languageChangeSubscription = this.translate.onLangChange.subscribe(({ lang }) => {
       this.ngZone.run(() => {
         this.currentLanguage = this.resolveLanguage(lang);
-        this.cdr.detectChanges();
+        this.cdr.detectChanges(); // ✅ มีอยู่แล้ว แต่ยืนยันว่าทำงาน
       });
     });
 

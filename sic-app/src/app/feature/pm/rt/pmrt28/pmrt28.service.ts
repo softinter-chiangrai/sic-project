@@ -1,5 +1,4 @@
 // src/app/feature/pm/pmrt28/pmrt28.service.ts
-
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -17,6 +16,7 @@ export interface Role {
   parentRoleId?: string;
   rowVersion?: number;
   isDelete?: boolean;
+  color?: string;        // ✅ เพิ่มบรรทัดนี้
 }
 
 export interface ComboboxItem {
@@ -32,7 +32,6 @@ export class Pmrt28Service {
 
   constructor(private http: HttpClient) {}
 
-  // ===== Roles =====
   getRoles(businessId: string): Observable<Role[]> {
     const params = new HttpParams().set('businessId', businessId);
     return this.http.get<Role[]>(this.baseUrl, { params });
@@ -50,7 +49,6 @@ export class Pmrt28Service {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  // ===== Combobox =====
   getComboboxParentRoles(businessId: string): Observable<ComboboxItem[]> {
     const params = new HttpParams().set('businessId', businessId);
     return this.http.get<ComboboxItem[]>(this.lovUrl, { params });

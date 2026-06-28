@@ -54,6 +54,9 @@ public class SuBusinessRole extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "color", length = 20)
+    private String color;
+
     // Collections
     @OneToMany(mappedBy = "parentRole", fetch = FetchType.LAZY)
     private List<SuBusinessRole> childRoles = new ArrayList<>();

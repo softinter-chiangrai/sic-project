@@ -178,6 +178,7 @@ public class SuBusinessRoleController {
         role.setRoleLevel(request.getRoleLevel());
         role.setSortOrder(request.getSortOrder());
         role.setIsActive(request.isActive());
+        role.setColor(request.getColor());
 
         // ===== 6. บันทึก =====
         businessRoleRepository.save(role);
@@ -227,6 +228,7 @@ public class SuBusinessRoleController {
         response.setSortOrder(role.getSortOrder());
         response.setActive(Boolean.TRUE.equals(role.getIsActive()));
         response.setRowVersion(role.getRowVersion());
+        response.setColor(role.getColor()); 
         return response;
     }
 }

@@ -42,7 +42,8 @@ export class Pmrt28Component implements OnInit {
         roleCode: role.roleCode,
         nameEn: role.roleNameEn,
         nameLocal: role.roleNameLocal,
-        color: this.getColorForRole(role.roleCode),
+        // ✅ ใช้ color จาก DB ถ้ามี ถ้าไม่มีให้คำนวณจาก roleCode (fallback)
+        color: role.color || this.getColorForRole(role.roleCode),
         editable: true,
         children: [],
         _roleCode: role.roleCode,
@@ -138,13 +139,14 @@ export class Pmrt28Component implements OnInit {
       });
   }
 
+  // ✅ เปิด dialog เพิ่มบทบาทระดับ root (ไม่มี parent)
   openAddRootRoleDialog(): void {
     const draftNode: SicOrganizationalChartNode = {
       id: this.generateId(),
       roleCode: '',
       nameEn: '',
       nameLocal: '',
-      color: this.getRandomColor(),
+      color: this.getRandomColor(), // สุ่มสีใหม่ทุกครั้ง
       children: [],
       editable: true,
     };
@@ -160,13 +162,21 @@ export class Pmrt28Component implements OnInit {
             nameEn: payload.nameEn,
             nameLocal: payload.nameLocal,
             parentId: null,
+            color: payload.color, // ✅ ส่งสี
           });
         },
       },
     });
   }
 
-  private createRole(data: { roleCode: string; nameEn: string; nameLocal: string; parentId: string | null }) {
+  // ✅ สร้างบทบาทใหม่ (ทั้ง root และลูก)
+  private createRole(data: {
+    roleCode: string;
+    nameEn: string;
+    nameLocal: string;
+    parentId: string | null;
+    color: string;
+  }) {
     const role: Role = {
       id: '',
       roleCode: data.roleCode.toUpperCase(),
@@ -178,6 +188,7 @@ export class Pmrt28Component implements OnInit {
       businessId: this.businessId(),
       parentRoleId: data.parentId || undefined,
       rowVersion: undefined,
+      color: data.color, // ✅ ส่งสีไปบันทึก
     };
 
     this.isSaving.set(true);
@@ -187,7 +198,7 @@ export class Pmrt28Component implements OnInit {
       .subscribe({
         next: () => {
           this.dialog.success('เพิ่มบทบาทสำเร็จ', `เพิ่มบทบาท "${data.nameEn}" เรียบร้อย`);
-          this.loadRoles();
+          this.loadRoles(); // โหลดใหม่
         },
         error: (err) => {
           console.error('Create role error', err);
@@ -195,10 +206,13 @@ export class Pmrt28Component implements OnInit {
           if (err.error?.message) errorMessage = err.error.message;
           else if (err.message) errorMessage = err.message;
           this.dialog.error('เพิ่มบทบาทไม่สำเร็จ', errorMessage);
+          // ✅ รีเฟรชข้อมูลเพื่อลบ node ที่เพิ่มไปแล้ว (กรณี error)
+          this.loadRoles();
         },
       });
   }
 
+  // ✅ เมื่อเพิ่ม node ผ่านปุ่ม + ในแผนภูมิ
   onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }): void {
     const newNode = event.node;
     const actualParentId = event.parentId === 'root' ? null : event.parentId;
@@ -208,9 +222,11 @@ export class Pmrt28Component implements OnInit {
       nameEn: newNode.nameEn,
       nameLocal: newNode.nameLocal,
       parentId: actualParentId,
+      color: newNode.color, // ✅ ส่งสี
     });
   }
 
+  // ✅ เมื่อลบ node
   onNodeRemoved(event: { parentId: string; nodeId: string }): void {
     this.dialog
       .confirm('ยืนยันการลบ', 'คุณต้องการลบบทบาทนี้ใช่หรือไม่?')
@@ -226,12 +242,14 @@ export class Pmrt28Component implements OnInit {
               this.isLoading.set(false);
               console.error('Delete error', err);
               this.dialog.error('ลบไม่สำเร็จ', 'ไม่สามารถลบบทบาทได้');
+              this.loadRoles(); // รีเฟรชเมื่อ error
             },
           });
         }
       });
   }
 
+  // ✅ เมื่อคลิกที่ node (แก้ไข)
   onNodeClick(event: any): void {
     const node = event as SicOrganizationalChartNode;
     const role = this.roles().find((r) => r.id === node.id);
@@ -249,7 +267,7 @@ export class Pmrt28Component implements OnInit {
           roleCode: role.roleCode,
           nameEn: role.roleNameEn,
           nameLocal: role.roleNameLocal,
-          color: node.color,
+          color: node.color || role.color, // ใช้สีที่มี
         },
         onSave: (payload: { roleCode: string; nameEn: string; nameLocal: string; color: string }) => {
           const updatedRole: Role = {
@@ -257,6 +275,7 @@ export class Pmrt28Component implements OnInit {
             roleCode: payload.roleCode.toUpperCase(),
             roleNameEn: payload.nameEn,
             roleNameLocal: payload.nameLocal,
+            color: payload.color, // ✅ ส่งสีที่เลือกกลับไป
             rowVersion: role.rowVersion,
           };
 
@@ -275,6 +294,7 @@ export class Pmrt28Component implements OnInit {
                 if (err.error?.message) errorMessage = err.error.message;
                 else if (err.message) errorMessage = err.message;
                 this.dialog.error('แก้ไขไม่สำเร็จ', errorMessage);
+                this.loadRoles(); // รีเฟรชเมื่อ error
               },
             });
         },
@@ -284,6 +304,8 @@ export class Pmrt28Component implements OnInit {
 
   onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }): void {}
   onDataChanged(root: SicOrganizationalChartNode): void {}
+
+  // ===== Utility methods =====
 
   private generateRoleCode(nameEn: string): string {
     if (!nameEn) return 'ROLE_' + Date.now();
@@ -318,8 +340,9 @@ export class Pmrt28Component implements OnInit {
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
+  // ✅ ฟังก์ชันสำหรับ fallback (ถ้า DB ไม่มีสี) – ปรับให้ไม่คืนสีเทาเสมอ
   private getColorForRole(code: string): string {
-    const colors: Record<string, string> = {
+    const specificColors: Record<string, string> = {
       ADMIN: '#FF6B6B',
       PM: '#4ECDC4',
       DEV: '#45B7D1',
@@ -333,6 +356,22 @@ export class Pmrt28Component implements OnInit {
       MA_SUPPORT: '#1ABC9C',
       VIEWER: '#95A5A6',
     };
-    return colors[code] || '#95A5A6';
+    if (code && specificColors[code]) {
+      return specificColors[code];
+    }
+    // fallback สีสันสดใส
+    const fallbackColors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+      '#F7DC6F', '#BB8FCE', '#85C1E9', '#F39C12', '#9B59B6',
+      '#1ABC9C', '#E67E22', '#2ECC71', '#3498DB', '#E74C3C'
+    ];
+    if (code) {
+      let hash = 0;
+      for (let i = 0; i < code.length; i++) {
+        hash = code.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return fallbackColors[Math.abs(hash) % fallbackColors.length];
+    }
+    return fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
   }
 }

@@ -18,4 +18,5 @@ public class BusinessRoleResponse {
     private Integer sortOrder;
     private boolean isActive;
     private Integer rowVersion;
+    private String color;
 }

@@ -20,4 +20,5 @@ public class SaveBusinessRoleRequest {
     private boolean isActive = true;
     private Integer state;
     private Integer rowVersion;
+    private String color;
 }
