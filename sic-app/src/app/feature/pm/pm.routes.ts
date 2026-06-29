@@ -346,12 +346,13 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./rt/pmrt29/pmrt29.component').then((m) => m.Pmrt29Component),
   },
   // pm.routes.ts
-   {
-  path: 'management/business/invite',
-  loadComponent: () =>
-    import('../../management/business/business-invite/business-invite.component')
-      .then(m => m.BusinessInviteComponent),
-},
+  {
+    path: 'management/business/invite',
+    loadComponent: () =>
+      import('../../management/business/business-invite/business-invite.component').then(
+        (m) => m.BusinessInviteComponent,
+      ),
+  },
   {
     path: 'pmrt29/add',
     redirectTo: '/management/business/invite',
@@ -362,4 +363,21 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
   },
+  // ===== Program Management =====
+  {
+    path: 'pmrt30',
+    loadComponent: () => import('./rt/pmrt30/pmrt30.component').then((m) => m.Pmrt30Component),
+  },
+  {
+    path: 'pmrt30/new',
+    loadComponent: () => import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
+  },
+  {
+    path: 'pmrt30/:id/edit',
+    loadComponent: () => import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
+  },
+  {
+    path: 'pmrt30/:id/permissions',
+    loadComponent: () => import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
+  }
 ];

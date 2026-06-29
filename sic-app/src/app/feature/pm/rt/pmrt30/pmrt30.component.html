@@ -1,0 +1,90 @@
+<!-- src/app/feature/pm/rt/pmrt30/pmrt30.component.html -->
+
+<div class="space-y-5 p-0.5">
+
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+        <i class="bi bi-diagram-3 text-blue-500"></i>
+        จัดการโปรแกรม
+      </h1>
+      <span class="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-0.5 rounded-full border border-gray-200 dark:border-gray-600">
+        {{ programs().length }} โปรแกรม
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่มโปรแกรม
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <p class="text-sm text-gray-500">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- TREE TABLE -->
+  @if (!isLoading() && treeData().length > 0) {
+    <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[300px]">
+              โปรแกรม
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[100px]">
+              รหัส
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+              ลำดับ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+              Route
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[280px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (node of treeData(); track node.id) {
+            <app-tree-node
+              [node]="node"
+              [level]="0"
+              (edit)="goToEdit($event)"
+              (delete)="deleteProgram($event)"
+              (permissions)="goToPermissions($event)"
+            ></app-tree-node>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- NO DATA -->
+  @if (!isLoading() && treeData().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <i class="bi bi-diagram-3 text-6xl text-gray-300 dark:text-gray-600"></i>
+      <p class="text-lg font-medium text-gray-700 dark:text-gray-300">ยังไม่มีโปรแกรมในระบบ</p>
+      <p class="text-sm text-gray-500">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
+      >
+        <i class="bi bi-plus-lg"></i>
+        สร้างโปรแกรมแรก
+      </button>
+    </div>
+  }
+
+</div>

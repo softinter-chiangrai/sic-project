@@ -1,7 +1,6 @@
-package com.softinter.sicapi.dto.request;
+// src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-import com.softinter.sicapi.entity.enums.EntityState;
+package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
 
@@ -14,11 +13,10 @@ public class SaveProgramRequest {
     private String programCode;
     private String programNameEn;
     private String programNameLocal;
-    private String programType;
-    private String programPath;
     private String programIcon;
+    private String routePath;
     private Integer sortOrder;
-    private boolean isActive = true;
+    private boolean isActive;
     private Integer state;
     private Integer rowVersion;
 }

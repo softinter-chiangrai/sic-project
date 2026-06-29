@@ -64,4 +64,18 @@ public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, Jpa
        "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
        "ORDER BY p.sortOrder ASC")
 List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
+
+
+    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findRootPrograms();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
+
+    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
+    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
