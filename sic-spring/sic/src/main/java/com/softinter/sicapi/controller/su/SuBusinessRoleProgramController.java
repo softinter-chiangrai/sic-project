@@ -128,8 +128,11 @@ public class SuBusinessRoleProgramController {
     @PostMapping("/bulk-save")
     @Operation(summary = "Save all program permissions for a role")
     public ResponseEntity<Void> bulkSave(@Valid @RequestBody SaveRolePermissionsRequest request) {
-        SuBusinessRole role = businessRoleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Business role not found"));
+        SuBusinessRole role = null;
+        if (request.getRoleId() != null) {
+            role = businessRoleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Business role not found"));
+        }
 
         for (SaveBusinessRoleProgramRequest req : request.getModules()) {
             SuBusinessRoleProgram brp;
@@ -137,7 +140,11 @@ public class SuBusinessRoleProgramController {
                 brp = brpRepository.findById(req.getId())
                         .orElseThrow(() -> new RuntimeException("Business role program not found"));
             } else {
-                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(role.getId());
+                UUID bRoleId = req.getBusinessRoleId() != null ? req.getBusinessRoleId() : (role != null ? role.getId() : null);
+                if (bRoleId == null) {
+                    throw new RuntimeException("Business role ID must not be null");
+                }
+                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(bRoleId);
                 brp = existing.stream()
                         .filter(x -> x.getProgram().getId().equals(req.getProgramId()))
                         .findFirst()
@@ -145,7 +152,9 @@ public class SuBusinessRoleProgramController {
                 
                 if (brp == null) {
                     brp = new SuBusinessRoleProgram();
-                    brp.setBusinessRole(role);
+                    SuBusinessRole moduleRole = businessRoleRepository.findById(bRoleId)
+                            .orElseThrow(() -> new RuntimeException("Business role not found"));
+                    brp.setBusinessRole(moduleRole);
                     SuProgram program = programRepository.findById(req.getProgramId())
                             .orElseThrow(() -> new RuntimeException("Program not found"));
                     brp.setProgram(program);

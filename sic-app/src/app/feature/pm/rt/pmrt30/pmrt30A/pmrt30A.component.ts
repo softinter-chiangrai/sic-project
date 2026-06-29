@@ -46,14 +46,16 @@ export class Pmrt30AComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe((params) => {
       const id = params['id'];
-      const path = this.route.snapshot.url[0]?.path;
+      const segments = this.route.snapshot.url;
+      const lastSegment = segments[segments.length - 1]?.path;
 
       // โหลดโปรแกรมทั้งหมดเพื่อใช้เป็น parent options
       this.service.getPrograms().subscribe({
         next: (progs) => this.programs.set(progs),
       });
 
-      if (path === 'permissions' && id) {
+      // ✅ ตรวจสอบส่วนสุดท้ายของ URL
+      if (lastSegment === 'permissions' && id) {
         this.isPermissionMode.set(true);
         this.programId.set(id);
         this.loadProgramWithPermissions(id);
@@ -62,10 +64,8 @@ export class Pmrt30AComponent implements OnInit {
         this.programId.set(id);
         this.loadProgram(id);
       } else {
-        // ✅ หน้าเพิ่มโปรแกรมใหม่: แสดงส่วนกำหนดสิทธิ์ด้วย
         this.isEditMode.set(false);
-        this.isPermissionMode.set(true);   // แสดงตารางบทบาท
-        this.loadRoles();
+        this.isPermissionMode.set(false);
       }
     });
   }
@@ -76,7 +76,6 @@ export class Pmrt30AComponent implements OnInit {
       next: (program) => {
         this.programForm.patchValue(program);
         this.isLoading.set(false);
-        this.loadRoles();
       },
       error: () => {
         this.isLoading.set(false);
@@ -86,8 +85,17 @@ export class Pmrt30AComponent implements OnInit {
     });
   }
 
+  /** ✅ โหลดโปรแกรม + สิทธิ์ที่มีอยู่ (สำหรับหน้า /permissions) */
   loadProgramWithPermissions(id: string) {
     this.isLoading.set(true);
+
+    const businessId = localStorage.getItem('businessId');
+    if (!businessId) {
+      this.isLoading.set(false);
+      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.router.navigate(['/management/business']);
+      return;
+    }
 
     forkJoin({
       program: this.service.getProgram(id),
@@ -97,32 +105,46 @@ export class Pmrt30AComponent implements OnInit {
         this.programForm.patchValue(program);
         this.programId.set(id);
 
-        const businessId = localStorage.getItem('businessId');
-        if (businessId) {
-          this.service.getRoles(businessId).subscribe({
-            next: (roles) => {
-              this.roles.set(roles);
-              const permissions = roles.map((role) => {
-                const existing = rolePrograms.find((rp: any) => rp.businessRoleId === role.id);
-                return {
-                  roleId: role.id,
-                  roleName: role.roleNameEn || role.roleCode,
-                  level: existing && existing.isActive ? this.mapBooleansToLevel(existing) : 'None',
-                };
-              });
-              this.rolePermissions.set(permissions);
+        // ดึงบทบาททั้งหมด
+        this.service.getRoles(businessId).subscribe({
+          next: (roles) => {
+            console.log('✅ Roles loaded:', roles);
+
+            if (!roles || roles.length === 0) {
+              this.dialog.warn('ไม่พบบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า pmrt28');
+              this.roles.set([]);
+              this.rolePermissions.set([]);
               this.isLoading.set(false);
-            },
-            error: () => {
-              this.isLoading.set(false);
-              this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดบทบาทได้');
-            },
-          });
-        } else {
-          this.isLoading.set(false);
-        }
+              return;
+            }
+
+            this.roles.set(roles);
+            // แปลงสิทธิ์ที่มีอยู่เป็น Level
+            const permissions = roles.map((role) => {
+              const existing = rolePrograms.find((rp: any) => rp.businessRoleId === role.id);
+              let level = 'None';
+              if (existing && existing.isActive) {
+                level = this.mapBooleansToLevel(existing);
+              }
+              return {
+                roleId: role.id,
+                roleName: role.roleNameEn || role.roleCode,
+                level: level,
+              };
+            });
+            this.rolePermissions.set(permissions);
+            console.log('✅ Permissions set:', permissions);
+            this.isLoading.set(false);
+          },
+          error: (error) => {
+            console.error('❌ Error loading roles:', error);
+            this.isLoading.set(false);
+            this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดบทบาทได้');
+          },
+        });
       },
-      error: () => {
+      error: (error) => {
+        console.error('❌ Error loading program:', error);
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
         this.router.navigate(['/feature/pm/pmrt30']);
@@ -145,6 +167,7 @@ export class Pmrt30AComponent implements OnInit {
           }))
         );
       },
+      error: (err) => console.error('Load roles error:', err),
     });
   }
 
@@ -156,7 +179,7 @@ export class Pmrt30AComponent implements OnInit {
     return 'None';
   }
 
-  mapLevelToBooleans(level: string): { isAdd: boolean; isBack: boolean; isPrint: boolean; isRemove: boolean; isSave: boolean; isSearch: boolean } {
+  mapLevelToBooleans(level: string) {
     switch (level) {
       case 'Full':
         return { isAdd: true, isBack: true, isPrint: true, isRemove: true, isSave: true, isSearch: true };
@@ -172,6 +195,7 @@ export class Pmrt30AComponent implements OnInit {
     }
   }
 
+  /** ✅ บันทึกโปรแกรม (กรณีเพิ่มใหม่ หรือแก้ไข) */
   saveProgram() {
     if (this.programForm.invalid) {
       this.programForm.markAllAsTouched();
@@ -182,7 +206,6 @@ export class Pmrt30AComponent implements OnInit {
     const data = this.programForm.value as Program;
     const programId = this.programId();
 
-    // ✅ กรณีแก้ไขโปรแกรมที่มีอยู่
     if (programId) {
       data.id = programId;
       this.isSaving.set(true);
@@ -200,28 +223,11 @@ export class Pmrt30AComponent implements OnInit {
       return;
     }
 
-    // ✅ กรณีสร้างโปรแกรมใหม่: ใช้ create-with-permissions เพื่อเพิ่มสิทธิ์พร้อมกัน
-    const rolePermissions: RolePermission[] = this.rolePermissions().map((rp) => ({
-      roleId: rp.roleId,
-      level: rp.level,
-    }));
-
-    const request: CreateProgramWithPermissionsRequest = {
-      parentProgramId: data.parentProgramId,
-      programCode: data.programCode,
-      programNameEn: data.programNameEn,
-      programNameLocal: data.programNameLocal,
-      programIcon: data.programIcon,
-      routePath: data.routePath,
-      sortOrder: data.sortOrder,
-      isActive: data.isActive,
-      rolePermissions,
-    };
-
+    // กรณีสร้างใหม่ (ใช้ saveProgram อย่างเดียว)
     this.isSaving.set(true);
-    this.service.createWithPermissions(request).subscribe({
+    this.service.saveProgram(data).subscribe({
       next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'สร้างโปรแกรมและกำหนดสิทธิ์เรียบร้อย');
+        this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
         this.isSaving.set(false);
         this.router.navigate(['/feature/pm/pmrt30']);
       },
@@ -232,52 +238,62 @@ export class Pmrt30AComponent implements OnInit {
     });
   }
 
+  /** ✅ บันทึกสิทธิ์ (ใช้ในหน้า /permissions) */
   savePermissions() {
-    // ฟังก์ชันนี้ใช้ในโหมด permissions แยก (ยังคงไว้)
-    // แต่ในหน้าใหม่เราจะใช้ saveProgram แทน
-    const program = this.programForm.value as Program;
-    const rolePermissions: RolePermission[] = this.rolePermissions().map((rp) => ({
-      roleId: rp.roleId,
-      level: rp.level,
-    }));
-
     const programId = this.programId();
 
-    if (programId) {
-      this.isSaving.set(true);
-      const modules = this.roles().map((role) => {
-        const perm = this.rolePermissions().find((rp) => rp.roleId === role.id);
-        const level = perm?.level || 'None';
-        const flags = this.mapLevelToBooleans(level);
-
-        return {
-          businessRoleId: role.id,
-          programId: programId,
-          isActive: level !== 'None',
-          isAdd: flags.isAdd,
-          isBack: flags.isBack,
-          isPrint: flags.isPrint,
-          isRemove: flags.isRemove,
-          isSave: flags.isSave,
-          isSearch: flags.isSearch,
-        };
-      });
-
-      this.service.bulkSaveRolePermissions(programId, modules).subscribe({
-        next: () => {
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
-          this.isSaving.set(false);
-          this.router.navigate(['/feature/pm/pmrt30']);
-        },
-        error: (err) => {
-          this.isSaving.set(false);
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-    } else {
-      // ถ้าไม่มี programId จะใช้ createWithPermissions (แต่ฟังก์ชันนี้จะไม่ถูกเรียกในกรณีนี้)
-      this.dialog.warn('ไม่สามารถบันทึกได้', 'กรุณาสร้างโปรแกรมก่อนกำหนดสิทธิ์');
+    if (!programId) {
+      this.dialog.error('ไม่พบโปรแกรม', 'กรุณาสร้างโปรแกรมก่อนกำหนดสิทธิ์');
+      return;
     }
+
+    if (this.roles().length === 0) {
+      this.dialog.warn('ไม่มีบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า pmrt28');
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    const modules = this.roles().map((role) => {
+      const perm = this.rolePermissions().find((rp) => rp.roleId === role.id);
+      const level = perm?.level || 'None';
+      const flags = this.mapLevelToBooleans(level);
+
+      return {
+        businessRoleId: role.id,
+        programId: programId,
+        isActive: level !== 'None',
+        isAdd: flags.isAdd,
+        isBack: flags.isBack,
+        isPrint: flags.isPrint,
+        isRemove: flags.isRemove,
+        isSave: flags.isSave,
+        isSearch: flags.isSearch,
+      };
+    });
+
+    const programData = this.programForm.value as Program;
+    programData.id = programId;
+
+    this.service.saveProgram(programData).subscribe({
+      next: () => {
+        this.service.bulkSaveRolePermissions(programId, modules).subscribe({
+          next: () => {
+            this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
+            this.isSaving.set(false);
+            this.router.navigate(['/feature/pm/pmrt30']);
+          },
+          error: (err) => {
+            this.isSaving.set(false);
+            this.dialog.error('บันทึกสิทธิ์ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          },
+        });
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        this.dialog.error('บันทึกข้อมูลโปรแกรมไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+      },
+    });
   }
 
   goBack() {

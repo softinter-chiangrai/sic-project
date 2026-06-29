@@ -2,6 +2,7 @@
 
 package com.softinter.sicapi.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -17,6 +18,8 @@ public class CreateProgramWithPermissionsRequest {
     private String programIcon;
     private String routePath;
     private Integer sortOrder;
+
+    @JsonProperty("isActive")
     private boolean isActive;
 
     // สิทธิ์เริ่มต้นให้แต่ละบทบาท

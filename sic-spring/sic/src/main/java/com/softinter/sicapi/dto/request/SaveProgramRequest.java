@@ -2,6 +2,7 @@
 
 package com.softinter.sicapi.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.UUID;
@@ -16,7 +17,10 @@ public class SaveProgramRequest {
     private String programIcon;
     private String routePath;
     private Integer sortOrder;
+
+    @JsonProperty("isActive")
     private boolean isActive;
+
     private Integer state;
     private Integer rowVersion;
 }

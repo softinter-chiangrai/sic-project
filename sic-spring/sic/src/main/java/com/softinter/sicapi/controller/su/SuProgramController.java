@@ -45,6 +45,7 @@ public class SuProgramController {
     private final ProgramAccessService programAccessService;
 
     @GetMapping
+    @Transactional(readOnly = true)
     @Operation(summary = "Get all programs")
     public ResponseEntity<List<ProgramResponse>> getAll() {
         List<ProgramResponse> programs = programRepository.findAllActive()

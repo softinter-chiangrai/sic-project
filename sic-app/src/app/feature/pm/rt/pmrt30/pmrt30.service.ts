@@ -61,8 +61,8 @@ export class Pmrt30Service {
           sortOrder: p.sortOrder,
           isActive: p.active ?? false,
           rowVersion: p.rowVersion,
-        }))
-      )
+        })),
+      ),
     );
   }
 
@@ -81,11 +81,11 @@ export class Pmrt30Service {
         sortOrder: p.sortOrder,
         isActive: p.active ?? false,
         rowVersion: p.rowVersion,
-      }))
+      })),
     );
   }
 
-  /** บันทึกโปรแกรม (แปลง isActive → active สำหรับ Backend) */
+  /** ✅ บันทึกโปรแกรม (ส่ง isActive ตรงไปยัง Backend) */
   saveProgram(program: Program): Observable<{ id: string }> {
     const payload = {
       id: program.id,
@@ -96,13 +96,13 @@ export class Pmrt30Service {
       programIcon: program.programIcon,
       routePath: program.routePath,
       sortOrder: program.sortOrder,
-      isActive: program.isActive,
+      isActive: program.isActive, // ✅ ใช้ isActive
       rowVersion: program.rowVersion,
     };
     return this.http.post<{ id: string }>(`${this.baseUrl}/save`, payload);
   }
 
-  /** สร้างโปรแกรมพร้อมกำหนดสิทธิ์เริ่มต้น */
+  /** ✅ สร้างโปรแกรมพร้อมกำหนดสิทธิ์เริ่มต้น (ส่ง isActive ตรงไปยัง Backend) */
   createWithPermissions(request: CreateProgramWithPermissionsRequest): Observable<{ id: string }> {
     const payload = {
       parentProgramId: request.parentProgramId,
@@ -112,7 +112,7 @@ export class Pmrt30Service {
       programIcon: request.programIcon,
       routePath: request.routePath,
       sortOrder: request.sortOrder,
-      isActive: request.isActive,
+      isActive: request.isActive, // ✅ ใช้ isActive
       rolePermissions: request.rolePermissions,
     };
     return this.http.post<{ id: string }>(`${this.baseUrl}/create-with-permissions`, payload);
