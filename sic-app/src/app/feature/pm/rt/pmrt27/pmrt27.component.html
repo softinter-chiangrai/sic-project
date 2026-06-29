@@ -1,3 +1,5 @@
+<!-- src/app/feature/pm/rt/pmrt27/pmrt27.component.html -->
+
 <div class="space-y-5 p-0.5">
 
   <!-- ===== HEADER ===== -->
@@ -15,7 +17,6 @@
 
   <!-- ===== FILTERS ===== -->
   <div class="flex flex-wrap gap-3 items-center">
-    <!-- Search -->
     <div class="relative flex-1 min-w-[200px]">
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
       <input
@@ -35,7 +36,7 @@
       }
     </div>
 
-    <!-- Filter: Status -->
+    <!-- ตัวกรองสถานะ -->
     <select
       (change)="onFilterChange($event)"
       [value]="filterStatus()"
@@ -81,16 +82,11 @@
               }
             </th>
             <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[80px]"
+              (click)="onSortChange('userCount')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]"
             >
               ผู้ใช้
-            </th>
-            <th
-              (click)="onSortChange('isActive')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px]"
-            >
-              สถานะ
-              @if (sortBy() === 'isActive') {
+              @if (sortBy() === 'userCount') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
@@ -122,11 +118,6 @@
                 <span class="text-[var(--text-active)] font-medium">{{ role.userCount }}</span>
                 <span class="text-xs text-[var(--text-muted)]"> คน</span>
               </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(role.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(role.isActive) }}
-                </span>
-              </td>
               <td class="px-4 py-3 text-center">
                 <button
                   (click)="goToManagePermissions(role.roleId)"
@@ -137,23 +128,47 @@
                 </button>
               </td>
             </tr>
-            <!-- ===== Expanded Permission Row ===== -->
+
+            <!-- ===== EXPANDED PERMISSION DETAILS ===== -->
             @if (expandedRole() === role.roleId) {
               <tr class="bg-[var(--bg)]/50">
-                <td colspan="6" class="px-4 py-3">
+                <td colspan="5" class="px-4 py-3">
                   <div class="pl-8">
-                    <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                      📋 สรุปสิทธิ์ตาม Permission Matrix
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                        📋 ระดับสิทธิ์ของแต่ละโปรแกรม
+                        <span class="ml-2 text-[var(--text-muted)] font-normal">
+                          ({{ role.permissions.length }} โปรแกรม)
+                        </span>
+                      </div>
+                      <span class="text-xs text-[var(--text-muted)]">
+                        <span class="text-emerald-500">✅</span> เปิดใช้งาน
+                        <span class="ml-2 text-gray-300">⛔</span> ปิดใช้งาน
+                      </span>
                     </div>
+
+                    <!-- แสดงชื่อโปรแกรม + ระดับสิทธิ์ (Level) แบบ Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                      @for (perm of role.permissions; track perm.module) {
-                        <div class="flex items-center gap-2 p-2 rounded-lg bg-[var(--sidebar)] border border-[var(--border)]">
-                          <span class="text-sm font-medium text-[var(--text-active)]">{{ perm.module }}</span>
+                      @for (perm of role.permissions; track perm.moduleId) {
+                        <div class="flex items-center gap-2 p-2 rounded-lg bg-[var(--sidebar)] border border-[var(--border)]"
+                             [class.opacity-50]="!perm.isActive">
+                          <span class="text-sm font-medium text-[var(--text-active)]">{{ perm.moduleName }}</span>
                           <span [class]="getLevelClass(perm.level) + ' inline-block px-2 py-0.5 rounded text-[0.6rem] font-medium ml-auto'">
                             {{ getLevelText(perm.level) }}
                           </span>
                         </div>
+                      } @empty {
+                        <div class="col-span-full text-center text-[var(--text-muted)] py-4">
+                          ไม่มีข้อมูลสิทธิ์โปรแกรม
+                        </div>
                       }
+                    </div>
+
+                    <!-- สรุปสถิติ -->
+                    <div class="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
+                      <span>🟢 เปิดใช้งาน: <strong class="text-emerald-500">{{ countActivePrograms(role.permissions) }}</strong> โปรแกรม</span>
+                      <span>🔴 ปิดใช้งาน: <strong class="text-gray-400">{{ role.permissions.length - countActivePrograms(role.permissions) }}</strong> โปรแกรม</span>
+                      <span>📊 รวม: <strong>{{ role.permissions.length }}</strong> โปรแกรม</span>
                     </div>
                   </div>
                 </td>
@@ -161,7 +176,7 @@
             }
           } @empty {
             <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
+              <td colspan="5" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลบทบาท</p>

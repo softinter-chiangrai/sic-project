@@ -1,5 +1,7 @@
+<!-- src/app/feature/pm/rt/pmrt27/pmrt27A/Pmrt27A.component.html -->
+
 <!-- ===== LOADING ===== -->
-@if (isLoading) {
+@if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสิทธิ์...</p>
@@ -7,7 +9,7 @@
 }
 
 <!-- ===== FORM ===== -->
-@if (!isLoading) {
+@if (!isLoading()) {
   <div class="space-y-5 p-0.5">
 
     <!-- HEADER -->
@@ -30,15 +32,15 @@
         </button>
         <button
           (click)="submit()"
-          [disabled]="isSaving"
+          [disabled]="isSaving()"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          @if (isSaving) {
+          @if (isSaving()) {
             <i class="bi bi-arrow-repeat animate-spin"></i>
           } @else {
             <i class="bi bi-floppy"></i>
           }
-          {{ isSaving ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์' }}
+          {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์' }}
         </button>
       </div>
     </div>
@@ -79,21 +81,20 @@
                 </div>
               </td>
               <td class="px-4 py-3">
-                <!-- ✅ ใช้ Template Reference Variable (levelSelect) แทน $event.target -->
                 <select
                   #levelSelect
-                  [value]="getCurrentLevel(module.moduleId)"
+                  [value]="module.level"
                   (change)="changeLevel(module.moduleId, levelSelect.value)"
                   class="w-full max-w-[250px] px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
                 >
                   @for (level of permissionLevels; track level.value) {
-                    <option [value]="level.value">{{ level.label }}</option>
+                    <option [value]="level.value" [selected]="level.value === module.level">{{ level.label }}</option>
                   }
                 </select>
               </td>
               <td class="px-4 py-3">
-                <span [class]="getLevelColor(getCurrentLevel(module.moduleId)) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getLevelText(getCurrentLevel(module.moduleId)) }}
+                <span [class]="getLevelColor(module.level) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getLevelText(module.level) }}
                 </span>
               </td>
             </tr>

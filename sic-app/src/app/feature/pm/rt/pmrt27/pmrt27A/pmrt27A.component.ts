@@ -1,31 +1,84 @@
+// src/app/feature/pm/rt/pmrt27/pmrt27A/pmrt27A.component.ts
+
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Injectable, OnInit, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { finalize, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { environment } from '../../../../../../environments/environment';
 
-// ===== Model =====
+// ============================================================
+// 1. Permission Levels (5 ระดับหลัก)
+// ============================================================
+
+export const PERMISSION_LEVELS = [
+  { value: 'Full', label: 'เต็มรูปแบบ (Full)', color: 'purple' },
+  { value: 'Edit', label: 'แก้ไข/เพิ่ม (Edit)', color: 'blue' },
+  { value: 'Approve', label: 'อนุมัติ (Approve)', color: 'emerald' },
+  { value: 'View', label: 'ดูอย่างเดียว (View)', color: 'gray' },
+  { value: 'None', label: 'ไม่มีสิทธิ์ (None)', color: 'gray' },
+];
+
+// ============================================================
+// 2. Conversion functions
+// ============================================================
+
+export function mapBooleansToLevel(p: {
+  isAdd: boolean;
+  isBack: boolean;
+  isPrint: boolean;
+  isRemove: boolean;
+  isSave: boolean;
+  isSearch: boolean;
+}): string {
+  if (p.isAdd && p.isSave && p.isRemove && p.isPrint && p.isBack && p.isSearch) return 'Full';
+  if (p.isAdd && p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'Edit';
+  if (!p.isAdd && p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'Approve';
+  if (!p.isAdd && !p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'View';
+  return 'None';
+}
+
+export function mapLevelToBooleans(level: string): {
+  isAdd: boolean;
+  isBack: boolean;
+  isPrint: boolean;
+  isRemove: boolean;
+  isSave: boolean;
+  isSearch: boolean;
+} {
+  switch (level) {
+    case 'Full':
+      return { isSearch: true, isAdd: true, isSave: true, isRemove: true, isPrint: true, isBack: true };
+    case 'Edit':
+      return { isSearch: true, isAdd: true, isSave: true, isRemove: false, isPrint: false, isBack: true };
+    case 'Approve':
+      return { isSearch: true, isAdd: false, isSave: true, isRemove: false, isPrint: false, isBack: true };
+    case 'View':
+      return { isSearch: true, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: true };
+    case 'None':
+    default:
+      return { isSearch: false, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: false };
+  }
+}
+
+// ============================================================
+// 3. Models
+// ============================================================
+
 interface ModulePermission {
   moduleId: string;
   moduleCode: string;
   moduleName: string;
-  level:
-    | 'Full'
-    | 'View'
-    | 'Edit'
-    | 'Approve'
-    | 'Fix'
-    | 'Create/View'
-    | 'View/UAT'
-    | 'Test'
-    | 'None';
+  level: string;
+  id?: string | null;
 }
 
 interface RolePermissionData {
@@ -35,133 +88,93 @@ interface RolePermissionData {
   modules: ModulePermission[];
 }
 
-// ===== Permission Levels =====
-const PERMISSION_LEVELS = [
-  { value: 'Full', label: 'เต็มรูปแบบ (Full)', color: 'purple' },
-  { value: 'Approve', label: 'อนุมัติ (Approve)', color: 'emerald' },
-  { value: 'Edit', label: 'แก้ไข (Edit)', color: 'blue' },
-  { value: 'Fix', label: 'แก้ไข Bug (Fix)', color: 'orange' },
-  { value: 'Create/View', label: 'สร้าง/ดู (Create/View)', color: 'cyan' },
-  { value: 'View/UAT', label: 'ดู/UAT (View/UAT)', color: 'indigo' },
-  { value: 'Test', label: 'ทดสอบ (Test)', color: 'yellow' },
-  { value: 'View', label: 'ดู (View)', color: 'gray' },
-  { value: 'None', label: 'ไม่มีสิทธิ์ (None)', color: 'gray' },
-];
+// ============================================================
+// 4. Service (แก้ไขแล้ว - เรียก API เดียว)
+// ============================================================
 
-import { HttpClient } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { environment } from '../../../../../../environments/environment';
-
-
-// ===== Helper Functions =====
-export function mapBooleansToLevel(p: { isAdd: boolean, isBack: boolean, isPrint: boolean, isRemove: boolean, isSave: boolean, isSearch: boolean }): ModulePermission['level'] {
-  if (p.isAdd && p.isSave && p.isRemove && p.isPrint && p.isBack && p.isSearch) return 'Full';
-  if (p.isSearch && p.isSave && !p.isAdd && !p.isRemove && !p.isPrint) return 'Approve';
-  if (p.isSearch && p.isAdd && p.isSave && !p.isRemove && !p.isPrint) return 'Edit';
-  if (p.isSearch && !p.isAdd && !p.isSave && !p.isRemove && !p.isPrint) return 'View';
-  if (!p.isSearch && !p.isAdd && !p.isSave && !p.isRemove && !p.isPrint) return 'None';
-  return 'View';
-}
-
-export function mapLevelToBooleans(level: string): { isAdd: boolean, isBack: boolean, isPrint: boolean, isRemove: boolean, isSave: boolean, isSearch: boolean } {
-  switch (level) {
-    case 'Full':
-      return { isSearch: true, isAdd: true, isSave: true, isRemove: true, isPrint: true, isBack: true };
-    case 'Approve':
-    case 'Fix':
-    case 'View/UAT':
-      return { isSearch: true, isAdd: false, isSave: true, isRemove: false, isPrint: false, isBack: true };
-    case 'Edit':
-    case 'Test':
-    case 'Create/View':
-      return { isSearch: true, isAdd: true, isSave: true, isRemove: false, isPrint: false, isBack: true };
-    case 'View':
-      return { isSearch: true, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: true };
-    case 'None':
-    default:
-      return { isSearch: false, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: false };
-  }
-}
-
-// ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmrt27AService {
   private readonly http = inject(HttpClient);
 
+  /**
+   * ดึงข้อมูลสิทธิ์ของบทบาทจาก API /business-role-programs
+   * ใช้ข้อมูลจาก API เดียว เพราะมี programNameEn, programCode, flags ครบ
+   */
   getRolePermissions(roleId: string): Observable<RolePermissionData> {
-    // 1. Fetch role detail to get its code/name
-    const role$ = this.http.get<any>(`${environment.apiBaseUrl}/api/su/business-roles/${roleId}`);
-    // 2. Fetch all active programs
-    const programs$ = this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/programs`);
-    // 3. Fetch role's assigned programs
-    const rolePrograms$ = this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/business-role-programs`, {
-      params: { businessRoleId: roleId }
-    });
+    const url = `${environment.apiBaseUrl}/api/su/business-role-programs`;
+    const params = { businessRoleId: roleId };
 
-    return forkJoin({ role: role$, programs: programs$, rolePrograms: rolePrograms$ }).pipe(
-      map(({ role, programs, rolePrograms }) => {
-        const modules: ModulePermission[] = programs.map(p => {
-          const matched = rolePrograms.find(rp => rp.programId === p.id);
-          const level = matched && matched.active
-            ? mapBooleansToLevel({
-                isAdd: matched.isAdd,
-                isBack: matched.isBack,
-                isPrint: matched.isPrint,
-                isRemove: matched.isRemove,
-                isSave: matched.isSave,
-                isSearch: matched.isSearch
-              })
-            : 'None';
+    return this.http.get<any[]>(url, { params }).pipe(
+      map((rolePrograms) => {
+        const modules: ModulePermission[] = rolePrograms.map((rp) => {
+          let level: string;
 
-          const mod: ModulePermission = {
-            moduleId: p.id,
-            moduleCode: p.programCode,
-            moduleName: p.programNameEn,
-            level: level
-          };
-          
-          // Keep track of the business role program record id if it exists
-          if (matched) {
-            (mod as any).id = matched.id;
+          // ถ้ามีข้อมูลและเปิดใช้งาน → แปลง flags เป็นระดับ
+          if (rp.active) {
+            level = mapBooleansToLevel({
+              isAdd: rp.add || false,
+              isBack: rp.back || false,
+              isPrint: rp.print || false,
+              isRemove: rp.remove || false,
+              isSave: rp.save || false,
+              isSearch: rp.search || false,
+            });
+          } else {
+            level = 'None';
           }
-          return mod;
+
+          // ใช้ programNameEn หรือ fallback เป็น programCode
+          const moduleName = rp.programNameEn || rp.programNameLocal || rp.programCode;
+
+          return {
+            moduleId: rp.programId,
+            moduleCode: rp.programCode,
+            moduleName: moduleName,
+            level: level,
+            id: rp.id || null,
+          };
         });
 
         return {
-          roleId: role.id,
-          roleCode: role.roleCode,
-          roleName: role.roleNameEn,
-          modules: modules
+          roleId: roleId,
+          roleCode: '',
+          roleName: '',
+          modules: modules,
         };
       })
     );
   }
 
   saveRolePermissions(data: RolePermissionData): Observable<string> {
-    const modulesReq = data.modules.map(mod => {
+    const modulesReq = data.modules.map((mod) => {
       const perms = mapLevelToBooleans(mod.level);
       return {
-        id: (mod as any).id || null,
+        id: mod.id || null,
         businessRoleId: data.roleId,
         programId: mod.moduleId,
         isActive: mod.level !== 'None',
-        ...perms
+        isAdd: perms.isAdd,
+        isBack: perms.isBack,
+        isPrint: perms.isPrint,
+        isRemove: perms.isRemove,
+        isSave: perms.isSave,
+        isSearch: perms.isSearch,
       };
     });
 
-    const body = {
-      roleId: data.roleId,
-      modules: modulesReq
-    };
-
-    return this.http.post<any>(`${environment.apiBaseUrl}/api/su/business-role-programs/bulk-save`, body).pipe(
-      map(() => 'บันทึกสิทธิ์บทบาทสำเร็จ')
-    );
+    return this.http
+      .post<any>(`${environment.apiBaseUrl}/api/su/business-role-programs/bulk-save`, {
+        roleId: data.roleId,
+        modules: modulesReq,
+      })
+      .pipe(map(() => 'บันทึกสิทธิ์บทบาทสำเร็จ'));
   }
 }
 
-// ===== Component =====
+// ============================================================
+// 5. Component
+// ============================================================
+
 @Component({
   selector: 'app-Pmrt27A',
   standalone: true,
@@ -174,21 +187,22 @@ export class Pmrt27AService {
     SicInputComponent,
   ],
   templateUrl: './Pmrt27A.component.html',
-  styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly service = inject(Pmrt27AService);
   readonly dialog = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef);
 
   roleId: string | null = null;
   roleCode = '';
   roleName = '';
-  isLoading = false;
-  isSaving = false;
 
-  // ===== Data =====
+  isLoading = signal(false);
+  isSaving = signal(false);
+
   modules = signal<ModulePermission[]>([]);
   permissionLevels = PERMISSION_LEVELS;
 
@@ -201,27 +215,35 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
         this.roleId = id;
         this.loadData(id);
       } else {
-        this.router.navigate(['/feature/pm/role-permission']);
+        this.router.navigate(['/feature/pm/pmrt27']);
       }
     });
   }
 
   loadData(roleId: string) {
-    this.isLoading = true;
-    this.service.getRolePermissions(roleId).subscribe({
-      next: (data) => {
-        this.roleCode = data.roleCode;
-        this.roleName = data.roleName;
-        this.modules.set(data.modules);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสิทธิ์ของบทบาทนี้');
-      },
-    });
+    this.isLoading.set(true);
+    this.cdr.markForCheck();
+
+    this.service
+      .getRolePermissions(roleId)
+      .pipe(
+        finalize(() => {
+          this.isLoading.set(false);
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.roleCode = data.roleCode;
+          this.roleName = data.roleName;
+          this.modules.set(data.modules);
+          console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', data.modules);
+        },
+        error: (error) => {
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสิทธิ์ของบทบาทนี้');
+        },
+      });
   }
 
   changeLevel(moduleId: string, level: string) {
@@ -233,6 +255,7 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
       return mod;
     });
     this.modules.set(updated);
+    this.cdr.markForCheck();
   }
 
   getCurrentLevel(moduleId: string): string {
@@ -243,53 +266,67 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
   getLevelColor(level: string): string {
     const map: Record<string, string> = {
       Full: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      Approve: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       Edit: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Fix: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      'Create/View': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      Approve: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       View: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'View/UAT': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
-      Test: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       None: 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
     };
     return map[level] || map['None'];
   }
 
   getLevelText(level: string): string {
-    const found = this.permissionLevels.find((l) => l.value === level);
-    return found?.label || level;
+    const map: Record<string, string> = {
+      Full: 'เต็มรูปแบบ',
+      Edit: 'แก้ไข/เพิ่ม',
+      Approve: 'อนุมัติ',
+      View: 'ดูอย่างเดียว',
+      None: 'ไม่มีสิทธิ์',
+    };
+    return map[level] || level;
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/role-permission']);
+    this.router.navigate(['/feature/pm/pmrt27']);
   }
 
   submit() {
     if (!this.roleId) {
       this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบรหัสบทบาท');
-      this.router.navigate(['/feature/pm/role-permission']);
+      this.router.navigate(['/feature/pm/pmrt27']);
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
+    this.cdr.markForCheck();
+
     const data: RolePermissionData = {
       roleId: this.roleId,
       roleCode: this.roleCode,
       roleName: this.roleName,
       modules: this.modules(),
     };
-    this.service.saveRolePermissions(data).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
-          this.router.navigate(['/feature/pm/role-permission']);
-        });
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
-    });
+
+    console.log('📤 Sending data to backend:', JSON.stringify(data, null, 2));
+
+    this.service
+      .saveRolePermissions(data)
+      .pipe(
+        finalize(() => {
+          this.isSaving.set(false);
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
+            this.router.navigate(['/feature/pm/pmrt27']);
+          });
+        },
+        error: (error) => {
+          console.error('❌ Save error:', error);
+          this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        },
+      });
   }
 }
 
