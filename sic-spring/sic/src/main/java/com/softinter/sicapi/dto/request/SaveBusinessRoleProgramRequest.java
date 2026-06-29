@@ -1,8 +1,6 @@
 package com.softinter.sicapi.dto.request;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-import com.softinter.sicapi.entity.enums.EntityState;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.UUID;
@@ -12,13 +10,28 @@ public class SaveBusinessRoleProgramRequest {
     private UUID id;
     private UUID businessRoleId;
     private UUID programId;
-    private boolean isActive = true;
-    private boolean isAdd;
-    private boolean isBack;
-    private boolean isPrint;
-    private boolean isRemove;
-    private boolean isSave;
-    private boolean isSearch;
+
+    @JsonProperty("isActive")
+    private boolean active = true;
+
+    @JsonProperty("isAdd")
+    private boolean add;
+
+    @JsonProperty("isBack")
+    private boolean back;
+
+    @JsonProperty("isPrint")
+    private boolean print;
+
+    @JsonProperty("isRemove")
+    private boolean remove;
+
+    @JsonProperty("isSave")
+    private boolean save;
+
+    @JsonProperty("isSearch")
+    private boolean search;
+
     Integer state;
     private Integer rowVersion;
 }

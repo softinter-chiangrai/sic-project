@@ -35,16 +35,12 @@ public class SuBusinessRoleProgramController {
     private final SuBusinessRoleRepository businessRoleRepository;
     private final SuProgramRepository programRepository;
 
-    @GetMapping
+     @GetMapping
     @Operation(summary = "Get all business role programs")
     public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
             @RequestParam(required = false) UUID businessRoleId) {
-        List<SuBusinessRoleProgram> list;
-        if (businessRoleId != null) {
-            list = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(businessRoleId);
-        } else {
-            list = brpRepository.findAll();
-        }
+        // ใช้เมธอดใหม่ที่ JOIN FETCH ข้อมูล businessRole และ program
+        List<SuBusinessRoleProgram> list = brpRepository.findAllWithFetch(businessRoleId);
         List<BusinessRoleProgramResponse> response = list.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

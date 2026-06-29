@@ -17,4 +17,11 @@ public interface SuBusinessRoleProgramRepository extends JpaRepository<SuBusines
     List<SuBusinessRoleProgram> findActiveByBusinessRoleId(@Param("businessRoleId") UUID businessRoleId);
 
     List<SuBusinessRoleProgram> findByBusinessRoleIdAndIsDeleteFalse(UUID businessRoleId);
+
+     @Query("SELECT brp FROM SuBusinessRoleProgram brp " +
+           "JOIN FETCH brp.businessRole " +
+           "JOIN FETCH brp.program " +
+           "WHERE brp.isDelete = false " +
+           "AND (:businessRoleId IS NULL OR brp.businessRole.id = :businessRoleId)")
+    List<SuBusinessRoleProgram> findAllWithFetch(@Param("businessRoleId") UUID businessRoleId);
 }
