@@ -9,7 +9,6 @@ import { Pmrt29Service } from '../pmrt29/pmrt29.service';
 import { Pmrt27AService } from './pmrt27A/pmrt27A.component';
 
 // ===== Interfaces =====
-
 export interface ProgramPermissionSummary {
   moduleId: string;
   moduleCode: string;
@@ -40,7 +39,6 @@ export class Pmrt27Component implements OnInit {
   private pmrt29Service = inject(Pmrt29Service);
   private pmrt27AService = inject(Pmrt27AService);
 
-  // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
@@ -112,12 +110,11 @@ export class Pmrt27Component implements OnInit {
 
   protected Math = Math;
 
-  // ===== Lifecycle =====
   ngOnInit() {
     this.loadRolesAndMembers();
   }
 
-  /** ✅ ดึงบทบาท + จำนวนผู้ใช้จริงจาก Backend */
+  /** ดึงบทบาท + จำนวนผู้ใช้จริง */
   loadRolesAndMembers() {
     this.isLoading.set(true);
     const businessId = localStorage.getItem('businessId');
@@ -126,10 +123,8 @@ export class Pmrt27Component implements OnInit {
       return;
     }
 
-    // 1. ดึงบทบาททั้งหมด
     this.roleService.getRoles(businessId).subscribe({
       next: (roles) => {
-        // 2. ดึงสมาชิกทั้งหมดเพื่อนับจำนวนผู้ใช้ต่อบทบาท
         this.pmrt29Service.getMembers(businessId, 0, 1000).subscribe({
           next: (page) => {
             const members = page.content || [];
@@ -142,14 +137,14 @@ export class Pmrt27Component implements OnInit {
               });
             });
 
-            // ✅ แปลงข้อมูล
+            // ✅ ใช้ roleName (แปลแล้ว)
             const mapped: RolePermissionSummary[] = roles.map((r) => ({
               roleId: r.id,
               roleCode: r.roleCode,
-              roleName: r.roleNameEn,
+              roleName: r.roleName || r.roleNameEn || r.roleCode, // fallback
               userCount: userCountMap.get(r.id) || 0,
               isActive: r.isActive,
-              permissions: [], // โหลดเมื่อคลิกขยาย
+              permissions: [],
             }));
 
             this.roles.set(mapped);
@@ -160,7 +155,7 @@ export class Pmrt27Component implements OnInit {
             const mapped: RolePermissionSummary[] = roles.map((r) => ({
               roleId: r.id,
               roleCode: r.roleCode,
-              roleName: r.roleNameEn,
+              roleName: r.roleName || r.roleNameEn || r.roleCode, // ✅ ใช้ roleName
               userCount: 0,
               isActive: r.isActive,
               permissions: [],
@@ -178,7 +173,6 @@ export class Pmrt27Component implements OnInit {
   }
 
   // ===== Actions =====
-
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
@@ -210,7 +204,6 @@ export class Pmrt27Component implements OnInit {
     this.currentPage.set(page);
   }
 
-  /** ✅ ขยาย/ยุบ และโหลดข้อมูลสิทธิ์จาก API */
   toggleExpand(roleId: string) {
     const currentExpanded = this.expandedRole();
     if (currentExpanded === roleId) {
@@ -222,30 +215,23 @@ export class Pmrt27Component implements OnInit {
 
     const role = this.roles().find((r) => r.roleId === roleId);
     if (role && role.permissions.length > 0) {
-      return; // มีข้อมูลแล้ว
+      return;
     }
 
-    // ✅ โหลดข้อมูลสิทธิ์
     this.isLoadingPermissions.set(true);
     this.pmrt27AService
       .getRolePermissions(roleId)
       .pipe(finalize(() => this.isLoadingPermissions.set(false)))
       .subscribe({
         next: (data) => {
-          console.log('📦 Raw data from API:', data);
-
-          // ✅ แปลงข้อมูล
           const permissions: ProgramPermissionSummary[] = data.modules.map((m) => ({
             moduleId: m.moduleId,
             moduleCode: m.moduleCode,
-            moduleName: m.moduleName, // ✅ ใช้ moduleName ที่ได้จาก API
+            moduleName: m.moduleName, // ✅ ใช้ moduleName ที่แปลแล้ว
             level: m.level,
             isActive: m.level !== 'None',
           }));
 
-          console.log('✅ Converted permissions:', permissions);
-
-          // ✅ อัปเดต roles
           const updated = this.roles().map((r) => {
             if (r.roleId === roleId) {
               return { ...r, permissions };
@@ -255,7 +241,7 @@ export class Pmrt27Component implements OnInit {
           this.roles.set(updated);
         },
         error: (err) => {
-          console.error('❌ Error fetching role permissions:', err);
+          console.error('Error fetching role permissions:', err);
         },
       });
   }
@@ -265,7 +251,6 @@ export class Pmrt27Component implements OnInit {
   }
 
   // ===== Utility =====
-
   getStatusClass(isActive: boolean): string {
     return isActive
       ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'

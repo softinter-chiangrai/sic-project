@@ -54,7 +54,6 @@ export class Pmrt30AComponent implements OnInit {
         next: (progs) => this.programs.set(progs),
       });
 
-      // ✅ ตรวจสอบส่วนสุดท้ายของ URL
       if (lastSegment === 'permissions' && id) {
         this.isPermissionMode.set(true);
         this.programId.set(id);
@@ -85,7 +84,6 @@ export class Pmrt30AComponent implements OnInit {
     });
   }
 
-  /** ✅ โหลดโปรแกรม + สิทธิ์ที่มีอยู่ (สำหรับหน้า /permissions) */
   loadProgramWithPermissions(id: string) {
     this.isLoading.set(true);
 
@@ -105,11 +103,8 @@ export class Pmrt30AComponent implements OnInit {
         this.programForm.patchValue(program);
         this.programId.set(id);
 
-        // ดึงบทบาททั้งหมด
         this.service.getRoles(businessId).subscribe({
           next: (roles) => {
-            console.log('✅ Roles loaded:', roles);
-
             if (!roles || roles.length === 0) {
               this.dialog.warn('ไม่พบบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า pmrt28');
               this.roles.set([]);
@@ -119,7 +114,7 @@ export class Pmrt30AComponent implements OnInit {
             }
 
             this.roles.set(roles);
-            // แปลงสิทธิ์ที่มีอยู่เป็น Level
+            // ✅ ใช้ roleName ที่แปลแล้ว
             const permissions = roles.map((role) => {
               const existing = rolePrograms.find((rp: any) => rp.businessRoleId === role.id);
               let level = 'None';
@@ -128,46 +123,24 @@ export class Pmrt30AComponent implements OnInit {
               }
               return {
                 roleId: role.id,
-                roleName: role.roleNameEn || role.roleCode,
+                roleName: role.roleName || role.roleNameEn || role.roleCode,
                 level: level,
               };
             });
             this.rolePermissions.set(permissions);
-            console.log('✅ Permissions set:', permissions);
             this.isLoading.set(false);
           },
-          error: (error) => {
-            console.error('❌ Error loading roles:', error);
+          error: () => {
             this.isLoading.set(false);
             this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดบทบาทได้');
           },
         });
       },
-      error: (error) => {
-        console.error('❌ Error loading program:', error);
+      error: () => {
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
         this.router.navigate(['/feature/pm/pmrt30']);
       },
-    });
-  }
-
-  loadRoles() {
-    const businessId = localStorage.getItem('businessId');
-    if (!businessId) return;
-
-    this.service.getRoles(businessId).subscribe({
-      next: (roles) => {
-        this.roles.set(roles);
-        this.rolePermissions.set(
-          roles.map((r) => ({
-            roleId: r.id,
-            roleName: r.roleNameEn || r.roleCode,
-            level: 'None',
-          }))
-        );
-      },
-      error: (err) => console.error('Load roles error:', err),
     });
   }
 
@@ -195,7 +168,6 @@ export class Pmrt30AComponent implements OnInit {
     }
   }
 
-  /** ✅ บันทึกโปรแกรม (กรณีเพิ่มใหม่ หรือแก้ไข) */
   saveProgram() {
     if (this.programForm.invalid) {
       this.programForm.markAllAsTouched();
@@ -223,7 +195,6 @@ export class Pmrt30AComponent implements OnInit {
       return;
     }
 
-    // กรณีสร้างใหม่ (ใช้ saveProgram อย่างเดียว)
     this.isSaving.set(true);
     this.service.saveProgram(data).subscribe({
       next: () => {
@@ -238,7 +209,6 @@ export class Pmrt30AComponent implements OnInit {
     });
   }
 
-  /** ✅ บันทึกสิทธิ์ (ใช้ในหน้า /permissions) */
   savePermissions() {
     const programId = this.programId();
 
@@ -312,11 +282,11 @@ export class Pmrt30AComponent implements OnInit {
 
   getLevelColor(level: string): string {
     const map: Record<string, string> = {
-      Full: 'bg-purple-100 text-purple-700',
-      Edit: 'bg-blue-100 text-blue-700',
-      Approve: 'bg-emerald-100 text-emerald-700',
-      View: 'bg-gray-100 text-gray-600',
-      None: 'bg-gray-200 text-gray-400',
+      Full: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      Edit: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approve: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      View: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      None: 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
     };
     return map[level] || map['None'];
   }

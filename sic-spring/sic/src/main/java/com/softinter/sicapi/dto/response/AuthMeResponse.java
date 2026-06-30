@@ -13,4 +13,5 @@ public class AuthMeResponse {
     private List<String> roles;
     private UUID currentBusinessId;
     private String currentBusinessName;
+    private String displayName;
 }

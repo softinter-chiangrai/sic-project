@@ -11,6 +11,7 @@ export interface Program {
   parentProgramId?: string | null;
   parentProgramCode?: string;
   programCode: string;
+  programName: string;          // ✅ ฟิลด์ที่แปลแล้ว
   programNameEn: string;
   programNameLocal: string;
   programIcon?: string;
@@ -22,7 +23,7 @@ export interface Program {
 
 export interface RolePermission {
   roleId: string;
-  level: string; // Full, Edit, Approve, View, None
+  level: string;
 }
 
 export interface CreateProgramWithPermissionsRequest {
@@ -45,7 +46,6 @@ export class Pmrt30Service {
 
   constructor(private http: HttpClient) {}
 
-  /** ดึงโปรแกรมทั้งหมด (แปลง active → isActive) */
   getPrograms(): Observable<Program[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
       map((programs) =>
@@ -54,6 +54,7 @@ export class Pmrt30Service {
           parentProgramId: p.parentProgramId,
           parentProgramCode: p.parentProgramCode,
           programCode: p.programCode,
+          programName: p.programName,          // ✅ เพิ่มตรงนี้
           programNameEn: p.programNameEn,
           programNameLocal: p.programNameLocal,
           programIcon: p.programIcon,
@@ -66,7 +67,6 @@ export class Pmrt30Service {
     );
   }
 
-  /** ดึงโปรแกรมเดี่ยว */
   getProgram(id: string): Observable<Program> {
     return this.http.get<any>(`${this.baseUrl}/${id}`).pipe(
       map((p) => ({
@@ -74,6 +74,7 @@ export class Pmrt30Service {
         parentProgramId: p.parentProgramId,
         parentProgramCode: p.parentProgramCode,
         programCode: p.programCode,
+        programName: p.programName,          // ✅ เพิ่มตรงนี้
         programNameEn: p.programNameEn,
         programNameLocal: p.programNameLocal,
         programIcon: p.programIcon,
@@ -85,7 +86,6 @@ export class Pmrt30Service {
     );
   }
 
-  /** ✅ บันทึกโปรแกรม (ส่ง isActive ตรงไปยัง Backend) */
   saveProgram(program: Program): Observable<{ id: string }> {
     const payload = {
       id: program.id,
@@ -96,13 +96,12 @@ export class Pmrt30Service {
       programIcon: program.programIcon,
       routePath: program.routePath,
       sortOrder: program.sortOrder,
-      isActive: program.isActive, // ✅ ใช้ isActive
+      isActive: program.isActive,
       rowVersion: program.rowVersion,
     };
     return this.http.post<{ id: string }>(`${this.baseUrl}/save`, payload);
   }
 
-  /** ✅ สร้างโปรแกรมพร้อมกำหนดสิทธิ์เริ่มต้น (ส่ง isActive ตรงไปยัง Backend) */
   createWithPermissions(request: CreateProgramWithPermissionsRequest): Observable<{ id: string }> {
     const payload = {
       parentProgramId: request.parentProgramId,
@@ -112,30 +111,26 @@ export class Pmrt30Service {
       programIcon: request.programIcon,
       routePath: request.routePath,
       sortOrder: request.sortOrder,
-      isActive: request.isActive, // ✅ ใช้ isActive
+      isActive: request.isActive,
       rolePermissions: request.rolePermissions,
     };
     return this.http.post<{ id: string }>(`${this.baseUrl}/create-with-permissions`, payload);
   }
 
-  /** ลบโปรแกรม (soft delete) */
   deleteProgram(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  /** ดึงบทบาททั้งหมดของธุรกิจ */
   getRoles(businessId: string): Observable<any[]> {
     const params = new HttpParams().set('businessId', businessId);
     return this.http.get<any[]>(this.rolesUrl, { params });
   }
 
-  /** ดึงสิทธิ์ของโปรแกรม (ตาม programId) */
   getRoleProgramsByProgram(programId: string): Observable<any[]> {
     const params = new HttpParams().set('programId', programId);
     return this.http.get<any[]>(this.roleProgramsUrl, { params });
   }
 
-  /** บันทึกสิทธิ์แบบ Bulk (ใช้กับโปรแกรมที่มีอยู่แล้ว) */
   bulkSaveRolePermissions(programId: string, modules: any[]): Observable<any> {
     return this.http.post(`${this.roleProgramsUrl}/bulk-save`, {
       roleId: null,
@@ -147,7 +142,6 @@ export class Pmrt30Service {
     });
   }
 
-  /** ระดับสิทธิ์ทั้งหมด */
   getPermissionLevels(): { value: string; label: string }[] {
     return [
       { value: 'Full', label: 'เต็มรูปแบบ (Full)' },

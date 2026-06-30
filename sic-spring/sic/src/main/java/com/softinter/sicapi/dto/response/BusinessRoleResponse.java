@@ -14,6 +14,7 @@ public class BusinessRoleResponse {
     private String roleCode;
     private String roleNameEn;
     private String roleNameLocal;
+    private String roleName;
     private String roleLevel;
     private Integer sortOrder;
     private boolean isActive;

@@ -1,9 +1,10 @@
 package com.softinter.sicapi.controller.auth;
 
-import com.softinter.sicapi.dto.response.ApiResponse;
 import com.softinter.sicapi.dto.response.AuthMeResponse;
+import com.softinter.sicapi.dto.response.ProfileResponse;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.ProfileService;   // ✅ inject
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,13 +25,24 @@ public class AuthController {
 
     private final CurrentUserService currentUserService;
     private final BusinessAccessService businessAccessService;
+    private final ProfileService profileService;   // ✅ เพิ่ม
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user info")
     public ResponseEntity<AuthMeResponse> getMe() {
+        String userId = currentUserService.getUserId();
         AuthMeResponse response = new AuthMeResponse();
-        response.setUserId(currentUserService.getUserId());
+        response.setUserId(userId);
         response.setUsername(currentUserService.getUsername());
+
+        // ✅ ดึงชื่อที่แปลแล้วจาก Profile
+        ProfileResponse profile = profileService.getProfileByUserId(userId);
+        if (profile != null && profile.getName() != null && !profile.getName().isBlank()) {
+            response.setDisplayName(profile.getName());
+        } else {
+            response.setDisplayName(currentUserService.getUsername());
+        }
+
         var business = businessAccessService.getBusiness(businessAccessService.getBusinessId());
         if (business != null) {
             response.setCurrentBusinessId(business.getId());

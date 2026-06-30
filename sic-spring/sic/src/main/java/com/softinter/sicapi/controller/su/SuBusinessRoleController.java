@@ -12,6 +12,8 @@ import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ProgramAccessService;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -212,23 +214,25 @@ public class SuBusinessRoleController {
 
     // ===== Helper: toResponse =====
     private BusinessRoleResponse toResponse(SuBusinessRole role) {
-        BusinessRoleResponse response = new BusinessRoleResponse();
-        response.setId(role.getId());
-        if (role.getBusiness() != null) {
-            response.setBusinessId(role.getBusiness().getId());
-        }
-        if (role.getParentRole() != null) {
-            response.setParentRoleId(role.getParentRole().getId());
-            response.setParentRoleCode(role.getParentRole().getRoleCode());
-        }
-        response.setRoleCode(role.getRoleCode());
-        response.setRoleNameEn(role.getRoleNameEn());
-        response.setRoleNameLocal(role.getRoleNameLocal());
-        response.setRoleLevel(role.getRoleLevel());
-        response.setSortOrder(role.getSortOrder());
-        response.setActive(Boolean.TRUE.equals(role.getIsActive()));
-        response.setRowVersion(role.getRowVersion());
-        response.setColor(role.getColor()); 
-        return response;
+    BusinessRoleResponse response = new BusinessRoleResponse();
+    response.setId(role.getId());
+    if (role.getBusiness() != null) {
+        response.setBusinessId(role.getBusiness().getId());
     }
+    if (role.getParentRole() != null) {
+        response.setParentRoleId(role.getParentRole().getId());
+        response.setParentRoleCode(role.getParentRole().getRoleCode());
+    }
+    response.setRoleCode(role.getRoleCode());
+    response.setRoleNameEn(role.getRoleNameEn());
+    response.setRoleNameLocal(role.getRoleNameLocal());
+    // ✅ เพิ่ม
+    response.setRoleName(LocalizationHelper.getRoleName(role));
+    response.setRoleLevel(role.getRoleLevel());
+    response.setSortOrder(role.getSortOrder());
+    response.setActive(Boolean.TRUE.equals(role.getIsActive()));
+    response.setRowVersion(role.getRowVersion());
+    response.setColor(role.getColor());
+    return response;
+}
 }

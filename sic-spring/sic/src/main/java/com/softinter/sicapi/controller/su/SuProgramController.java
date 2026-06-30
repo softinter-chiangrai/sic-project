@@ -2,35 +2,48 @@
 
 package com.softinter.sicapi.controller.su;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.softinter.sicapi.dto.request.CreateProgramWithPermissionsRequest;
 import com.softinter.sicapi.dto.request.DeleteRequest;
 import com.softinter.sicapi.dto.request.ProgramPageRequest;
 import com.softinter.sicapi.dto.request.SaveProgramRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.ProgramResponse;
-import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
 import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
-import com.softinter.sicapi.repository.su.SuProgramRepository;
-import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
+import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProgramRepository;
 import com.softinter.sicapi.service.ProgramAccessService;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/su/programs")
@@ -232,22 +245,24 @@ public class SuProgramController {
     }
 
     private ProgramResponse toResponse(SuProgram program) {
-        ProgramResponse response = new ProgramResponse();
-        response.setId(program.getId());
-        if (program.getParentProgram() != null) {
-            response.setParentProgramId(program.getParentProgram().getId());
-            response.setParentProgramCode(program.getParentProgram().getProgramCode());
-        }
-        response.setProgramCode(program.getProgramCode());
-        response.setProgramNameEn(program.getNameEn());
-        response.setProgramNameLocal(program.getNameLocal());
-        response.setProgramIcon(program.getIcon());
-        response.setRoutePath(program.getRoutePath());
-        response.setSortOrder(program.getSortOrder());
-        response.setActive(Boolean.TRUE.equals(program.getIsActive()));
-        response.setRowVersion(program.getRowVersion());
-        return response;
+    ProgramResponse response = new ProgramResponse();
+    response.setId(program.getId());
+    if (program.getParentProgram() != null) {
+        response.setParentProgramId(program.getParentProgram().getId());
+        response.setParentProgramCode(program.getParentProgram().getProgramCode());
     }
+    response.setProgramCode(program.getProgramCode());
+    response.setProgramNameEn(program.getNameEn());
+    response.setProgramNameLocal(program.getNameLocal());
+    // ✅ เพิ่ม
+    response.setProgramName(LocalizationHelper.getProgramName(program));
+    response.setProgramIcon(program.getIcon());
+    response.setRoutePath(program.getRoutePath());
+    response.setSortOrder(program.getSortOrder());
+    response.setActive(Boolean.TRUE.equals(program.getIsActive()));
+    response.setRowVersion(program.getRowVersion());
+    return response;
+}
 
     private boolean[] mapLevelToBooleans(String level) {
         switch (level) {

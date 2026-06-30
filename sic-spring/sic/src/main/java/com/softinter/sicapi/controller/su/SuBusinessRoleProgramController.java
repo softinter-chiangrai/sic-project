@@ -8,6 +8,8 @@ import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
 import com.softinter.sicapi.repository.su.SuProgramRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -187,26 +189,28 @@ public class SuBusinessRoleProgramController {
     }
 
     private BusinessRoleProgramResponse toResponse(SuBusinessRoleProgram brp) {
-        BusinessRoleProgramResponse response = new BusinessRoleProgramResponse();
-        response.setId(brp.getId());
-        if (brp.getBusinessRole() != null) {
-            response.setBusinessRoleId(brp.getBusinessRole().getId());
-            response.setBusinessRoleCode(brp.getBusinessRole().getRoleCode());
-        }
-        if (brp.getProgram() != null) {
-            response.setProgramId(brp.getProgram().getId());
-            response.setProgramCode(brp.getProgram().getProgramCode());
-            response.setProgramNameEn(brp.getProgram().getNameEn());
-            response.setProgramNameLocal(brp.getProgram().getNameLocal());
-        }
-        response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
-        response.setAdd(brp.isAdd());
-        response.setBack(brp.isBack());
-        response.setPrint(brp.isPrint());
-        response.setRemove(brp.isRemove());
-        response.setSave(brp.isSave());
-        response.setSearch(brp.isSearch());
-        response.setRowVersion(brp.getRowVersion());
-        return response;
+    BusinessRoleProgramResponse response = new BusinessRoleProgramResponse();
+    response.setId(brp.getId());
+    if (brp.getBusinessRole() != null) {
+        response.setBusinessRoleId(brp.getBusinessRole().getId());
+        response.setBusinessRoleCode(brp.getBusinessRole().getRoleCode());
     }
+    if (brp.getProgram() != null) {
+        response.setProgramId(brp.getProgram().getId());
+        response.setProgramCode(brp.getProgram().getProgramCode());
+        response.setProgramNameEn(brp.getProgram().getNameEn());
+        response.setProgramNameLocal(brp.getProgram().getNameLocal());
+        // ✅ เพิ่ม
+        response.setProgramName(LocalizationHelper.getProgramName(brp.getProgram()));
+    }
+    response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
+    response.setAdd(brp.isAdd());
+    response.setBack(brp.isBack());
+    response.setPrint(brp.isPrint());
+    response.setRemove(brp.isRemove());
+    response.setSave(brp.isSave());
+    response.setSearch(brp.isSearch());
+    response.setRowVersion(brp.getRowVersion());
+    return response;
+}
 }

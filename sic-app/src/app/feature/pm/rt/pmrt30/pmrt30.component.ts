@@ -73,7 +73,7 @@ export class Pmrt30Component implements OnInit {
       const node: TreeNode = {
         id: p.id!,
         code: p.programCode,
-        name: p.programNameEn,
+        name: p.programName,
         nameLocal: p.programNameLocal,
         icon: p.programIcon || 'bi bi-file',
         routePath: p.routePath || '',

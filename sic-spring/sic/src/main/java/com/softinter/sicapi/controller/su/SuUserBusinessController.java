@@ -4,6 +4,8 @@ import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.entity.su.SuUserBusiness;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -122,17 +124,19 @@ public class SuUserBusinessController {
         return ResponseEntity.noContent().build();
     }
 
-    private UserBusinessResponse toResponse(SuUserBusiness ub) {
-        UserBusinessResponse response = new UserBusinessResponse();
-        response.setId(ub.getId());
-        response.setUserId(ub.getUserId());
-        if (ub.getBusiness() != null) {
-            response.setBusinessId(ub.getBusiness().getId());
-            response.setBusinessCode(ub.getBusiness().getBusinessCode());
-        }
-        response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
-        response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
-        response.setRowVersion(ub.getRowVersion());
-        return response;
+   private UserBusinessResponse toResponse(SuUserBusiness ub) {
+    UserBusinessResponse response = new UserBusinessResponse();
+    response.setId(ub.getId());
+    response.setUserId(ub.getUserId());
+    if (ub.getBusiness() != null) {
+        response.setBusinessId(ub.getBusiness().getId());
+        response.setBusinessCode(ub.getBusiness().getBusinessCode());
+        // ✅ เพิ่ม
+        response.setBusinessName(LocalizationHelper.getBusinessName(ub.getBusiness()));
     }
+    response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
+    response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
+    response.setRowVersion(ub.getRowVersion());
+    return response;
+}
 }

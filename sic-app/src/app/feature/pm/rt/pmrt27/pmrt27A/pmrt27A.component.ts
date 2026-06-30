@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Injectable, OnInit, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
@@ -14,11 +14,11 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { environment } from '../../../../../../environments/environment';
+import { Pmrt28Service } from '../../pmrt28/pmrt28.service'; // ✅ import เพื่อดึงชื่อบทบาท
 
 // ============================================================
-// 1. Permission Levels (5 ระดับหลัก)
+// 1. Permission Levels
 // ============================================================
-
 export const PERMISSION_LEVELS = [
   { value: 'Full', label: 'เต็มรูปแบบ (Full)', color: 'purple' },
   { value: 'Edit', label: 'แก้ไข/เพิ่ม (Edit)', color: 'blue' },
@@ -30,7 +30,6 @@ export const PERMISSION_LEVELS = [
 // ============================================================
 // 2. Conversion functions
 // ============================================================
-
 export function mapBooleansToLevel(p: {
   isAdd: boolean;
   isBack: boolean;
@@ -72,7 +71,6 @@ export function mapLevelToBooleans(level: string): {
 // ============================================================
 // 3. Models
 // ============================================================
-
 interface ModulePermission {
   moduleId: string;
   moduleCode: string;
@@ -89,17 +87,12 @@ interface RolePermissionData {
 }
 
 // ============================================================
-// 4. Service (แก้ไขแล้ว - เรียก API เดียว)
+// 4. Service
 // ============================================================
-
 @Injectable({ providedIn: 'root' })
 export class Pmrt27AService {
   private readonly http = inject(HttpClient);
 
-  /**
-   * ดึงข้อมูลสิทธิ์ของบทบาทจาก API /business-role-programs
-   * ใช้ข้อมูลจาก API เดียว เพราะมี programNameEn, programCode, flags ครบ
-   */
   getRolePermissions(roleId: string): Observable<RolePermissionData> {
     const url = `${environment.apiBaseUrl}/api/su/business-role-programs`;
     const params = { businessRoleId: roleId };
@@ -108,8 +101,6 @@ export class Pmrt27AService {
       map((rolePrograms) => {
         const modules: ModulePermission[] = rolePrograms.map((rp) => {
           let level: string;
-
-          // ถ้ามีข้อมูลและเปิดใช้งาน → แปลง flags เป็นระดับ
           if (rp.active) {
             level = mapBooleansToLevel({
               isAdd: rp.add || false,
@@ -123,8 +114,8 @@ export class Pmrt27AService {
             level = 'None';
           }
 
-          // ใช้ programNameEn หรือ fallback เป็น programCode
-          const moduleName = rp.programNameEn || rp.programNameLocal || rp.programCode;
+          // ✅ ใช้ programName (แปลแล้ว) เป็นอันดับแรก
+          const moduleName = rp.programName || rp.programNameLocal || rp.programNameEn || rp.programCode;
 
           return {
             moduleId: rp.programId,
@@ -135,10 +126,13 @@ export class Pmrt27AService {
           };
         });
 
+        // ดึง businessRoleCode จากรายการแรก
+        const roleCode = rolePrograms.length > 0 ? rolePrograms[0].businessRoleCode : '';
+
         return {
           roleId: roleId,
-          roleCode: '',
-          roleName: '',
+          roleCode: roleCode,
+          roleName: '', // จะถูก set จาก component
           modules: modules,
         };
       })
@@ -174,7 +168,6 @@ export class Pmrt27AService {
 // ============================================================
 // 5. Component
 // ============================================================
-
 @Component({
   selector: 'app-Pmrt27A',
   standalone: true,
@@ -193,6 +186,7 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly service = inject(Pmrt27AService);
+  readonly roleService = inject(Pmrt28Service); // ✅ สำหรับดึงชื่อบทบาท
   readonly dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -224,20 +218,22 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.cdr.markForCheck();
 
-    this.service
-      .getRolePermissions(roleId)
-      .pipe(
-        finalize(() => {
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-        })
-      )
+    // ✅ ดึงข้อมูลสิทธิ์ + ชื่อบทบาทพร้อมกัน
+    forkJoin({
+      permissions: this.service.getRolePermissions(roleId),
+      roleDetail: this.roleService.getRole(roleId),
+    })
+      .pipe(finalize(() => {
+        this.isLoading.set(false);
+        this.cdr.markForCheck();
+      }))
       .subscribe({
-        next: (data) => {
-          this.roleCode = data.roleCode;
-          this.roleName = data.roleName;
-          this.modules.set(data.modules);
-          console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', data.modules);
+        next: ({ permissions, roleDetail }) => {
+          this.roleCode = permissions.roleCode || roleDetail.roleCode;
+          // ✅ ใช้ roleName ที่แปลแล้วจาก roleDetail
+          this.roleName = roleDetail.roleName || roleDetail.roleNameEn || roleDetail.roleCode;
+          this.modules.set(permissions.modules);
+          console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', permissions.modules);
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
@@ -310,12 +306,10 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
 
     this.service
       .saveRolePermissions(data)
-      .pipe(
-        finalize(() => {
-          this.isSaving.set(false);
-          this.cdr.markForCheck();
-        })
-      )
+      .pipe(finalize(() => {
+        this.isSaving.set(false);
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {

@@ -13,6 +13,7 @@ public class BusinessRoleProgramResponse {
     private String programCode;
     private String programNameEn;
     private String programNameLocal;
+    private String programName;
     private boolean isActive;
     private boolean isAdd;
     private boolean isBack;

@@ -1,24 +1,40 @@
 package com.softinter.sicapi.controller.su;
 
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.su.SuUserBusinessRole;
-import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.request.SaveUserBusinessRoleRequest;
+import com.softinter.sicapi.dto.request.UserBusinessRolePageRequest;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.UserBusinessRoleResponse;
+import com.softinter.sicapi.entity.su.SuUserBusinessRole;
+import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/su/user-business-roles")
@@ -112,22 +128,23 @@ public class SuUserBusinessRoleController {
     }
 
     private UserBusinessRoleResponse toResponse(SuUserBusinessRole ubr) {
-        UserBusinessRoleResponse response = new UserBusinessRoleResponse();
-        response.setId(ubr.getId());
-        if (ubr.getUserBusiness() != null) {
-            response.setUserBusinessId(ubr.getUserBusiness().getId());
-            response.setUserId(ubr.getUserBusiness().getUserId());
-            if (ubr.getUserBusiness().getBusiness() != null) {
-                response.setBusinessId(ubr.getUserBusiness().getBusiness().getId());
-            }
+    UserBusinessRoleResponse response = new UserBusinessRoleResponse();
+    response.setId(ubr.getId());
+    if (ubr.getUserBusiness() != null) {
+        response.setUserBusinessId(ubr.getUserBusiness().getId());
+        response.setUserId(ubr.getUserBusiness().getUserId());
+        if (ubr.getUserBusiness().getBusiness() != null) {
+            response.setBusinessId(ubr.getUserBusiness().getBusiness().getId());
         }
-        if (ubr.getBusinessRole() != null) {
-            response.setBusinessRoleId(ubr.getBusinessRole().getId());
-            response.setBusinessRoleCode(ubr.getBusinessRole().getRoleCode());
-            response.setBusinessRoleName(ubr.getBusinessRole().getRoleNameEn());
-        }
-        response.setActive(Boolean.TRUE.equals(ubr.getIsActive()));
-        response.setRowVersion(ubr.getRowVersion());
-        return response;
     }
+    if (ubr.getBusinessRole() != null) {
+        response.setBusinessRoleId(ubr.getBusinessRole().getId());
+        response.setBusinessRoleCode(ubr.getBusinessRole().getRoleCode());
+        // ✅ แก้ตรงนี้
+        response.setBusinessRoleName(LocalizationHelper.getRoleName(ubr.getBusinessRole()));
+    }
+    response.setActive(Boolean.TRUE.equals(ubr.getIsActive()));
+    response.setRowVersion(ubr.getRowVersion());
+    return response;
+}
 }

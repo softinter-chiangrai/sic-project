@@ -1,4 +1,5 @@
 // src/app/feature/pm/rt/pmrt28/pmrt28.component.ts
+
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
@@ -29,6 +30,7 @@ export class Pmrt28Component implements OnInit {
   roles = signal<Role[]>([]);
   businessId = signal<string>('');
 
+  // ✅ สร้าง Tree สำหรับแสดงแผนภูมิ
   treeData = computed(() => {
     const roles = this.roles();
     if (!roles || roles.length === 0) return null;
@@ -40,9 +42,9 @@ export class Pmrt28Component implements OnInit {
       const node: SicOrganizationalChartNode = {
         id: role.id,
         roleCode: role.roleCode,
-        nameEn: role.roleNameEn,
+        // ✅ ใช้ roleName (แปลแล้ว) แทน roleNameEn
+        nameEn: role.roleName,
         nameLocal: role.roleNameLocal,
-        // ✅ ใช้ color จาก DB ถ้ามี ถ้าไม่มีให้คำนวณจาก roleCode (fallback)
         color: role.color || this.getColorForRole(role.roleCode),
         editable: true,
         children: [],
@@ -139,14 +141,14 @@ export class Pmrt28Component implements OnInit {
       });
   }
 
-  // ✅ เปิด dialog เพิ่มบทบาทระดับ root (ไม่มี parent)
+  // ===== Dialog: เพิ่มบทบาทระดับ Root =====
   openAddRootRoleDialog(): void {
     const draftNode: SicOrganizationalChartNode = {
       id: this.generateId(),
       roleCode: '',
       nameEn: '',
       nameLocal: '',
-      color: this.getRandomColor(), // สุ่มสีใหม่ทุกครั้ง
+      color: this.getRandomColor(),
       children: [],
       editable: true,
     };
@@ -162,14 +164,14 @@ export class Pmrt28Component implements OnInit {
             nameEn: payload.nameEn,
             nameLocal: payload.nameLocal,
             parentId: null,
-            color: payload.color, // ✅ ส่งสี
+            color: payload.color,
           });
         },
       },
     });
   }
 
-  // ✅ สร้างบทบาทใหม่ (ทั้ง root และลูก)
+  // ===== สร้างบทบาท =====
   private createRole(data: {
     roleCode: string;
     nameEn: string;
@@ -180,6 +182,7 @@ export class Pmrt28Component implements OnInit {
     const role: Role = {
       id: '',
       roleCode: data.roleCode.toUpperCase(),
+      roleName: data.nameEn,           // ✅ เพิ่ม
       roleNameEn: data.nameEn,
       roleNameLocal: data.nameLocal,
       roleLevel: this.calculateRoleLevel(data.parentId),
@@ -188,7 +191,7 @@ export class Pmrt28Component implements OnInit {
       businessId: this.businessId(),
       parentRoleId: data.parentId || undefined,
       rowVersion: undefined,
-      color: data.color, // ✅ ส่งสีไปบันทึก
+      color: data.color,
     };
 
     this.isSaving.set(true);
@@ -198,7 +201,7 @@ export class Pmrt28Component implements OnInit {
       .subscribe({
         next: () => {
           this.dialog.success('เพิ่มบทบาทสำเร็จ', `เพิ่มบทบาท "${data.nameEn}" เรียบร้อย`);
-          this.loadRoles(); // โหลดใหม่
+          this.loadRoles();
         },
         error: (err) => {
           console.error('Create role error', err);
@@ -206,13 +209,12 @@ export class Pmrt28Component implements OnInit {
           if (err.error?.message) errorMessage = err.error.message;
           else if (err.message) errorMessage = err.message;
           this.dialog.error('เพิ่มบทบาทไม่สำเร็จ', errorMessage);
-          // ✅ รีเฟรชข้อมูลเพื่อลบ node ที่เพิ่มไปแล้ว (กรณี error)
           this.loadRoles();
         },
       });
   }
 
-  // ✅ เมื่อเพิ่ม node ผ่านปุ่ม + ในแผนภูมิ
+  // ===== Event: เพิ่ม Node ผ่านปุ่ม + ในแผนภูมิ =====
   onNodeAdded(event: { parentId: string; node: SicOrganizationalChartNode }): void {
     const newNode = event.node;
     const actualParentId = event.parentId === 'root' ? null : event.parentId;
@@ -222,11 +224,11 @@ export class Pmrt28Component implements OnInit {
       nameEn: newNode.nameEn,
       nameLocal: newNode.nameLocal,
       parentId: actualParentId,
-      color: newNode.color, // ✅ ส่งสี
+      color: newNode.color,
     });
   }
 
-  // ✅ เมื่อลบ node
+  // ===== Event: ลบ Node =====
   onNodeRemoved(event: { parentId: string; nodeId: string }): void {
     this.dialog
       .confirm('ยืนยันการลบ', 'คุณต้องการลบบทบาทนี้ใช่หรือไม่?')
@@ -242,14 +244,14 @@ export class Pmrt28Component implements OnInit {
               this.isLoading.set(false);
               console.error('Delete error', err);
               this.dialog.error('ลบไม่สำเร็จ', 'ไม่สามารถลบบทบาทได้');
-              this.loadRoles(); // รีเฟรชเมื่อ error
+              this.loadRoles();
             },
           });
         }
       });
   }
 
-  // ✅ เมื่อคลิกที่ node (แก้ไข)
+  // ===== Event: คลิกที่ Node (แก้ไข) =====
   onNodeClick(event: any): void {
     const node = event as SicOrganizationalChartNode;
     const role = this.roles().find((r) => r.id === node.id);
@@ -267,15 +269,16 @@ export class Pmrt28Component implements OnInit {
           roleCode: role.roleCode,
           nameEn: role.roleNameEn,
           nameLocal: role.roleNameLocal,
-          color: node.color || role.color, // ใช้สีที่มี
+          color: node.color || role.color,
         },
         onSave: (payload: { roleCode: string; nameEn: string; nameLocal: string; color: string }) => {
           const updatedRole: Role = {
             ...role,
             roleCode: payload.roleCode.toUpperCase(),
+            roleName: payload.nameEn,           // ✅ เพิ่ม
             roleNameEn: payload.nameEn,
             roleNameLocal: payload.nameLocal,
-            color: payload.color, // ✅ ส่งสีที่เลือกกลับไป
+            color: payload.color,
             rowVersion: role.rowVersion,
           };
 
@@ -294,7 +297,7 @@ export class Pmrt28Component implements OnInit {
                 if (err.error?.message) errorMessage = err.error.message;
                 else if (err.message) errorMessage = err.message;
                 this.dialog.error('แก้ไขไม่สำเร็จ', errorMessage);
-                this.loadRoles(); // รีเฟรชเมื่อ error
+                this.loadRoles();
               },
             });
         },
@@ -305,7 +308,7 @@ export class Pmrt28Component implements OnInit {
   onNodeUpdated(event: { nodeId: string; node: SicOrganizationalChartNode }): void {}
   onDataChanged(root: SicOrganizationalChartNode): void {}
 
-  // ===== Utility methods =====
+  // ===== Utility Methods =====
 
   private generateRoleCode(nameEn: string): string {
     if (!nameEn) return 'ROLE_' + Date.now();
@@ -340,7 +343,6 @@ export class Pmrt28Component implements OnInit {
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
-  // ✅ ฟังก์ชันสำหรับ fallback (ถ้า DB ไม่มีสี) – ปรับให้ไม่คืนสีเทาเสมอ
   private getColorForRole(code: string): string {
     const specificColors: Record<string, string> = {
       ADMIN: '#FF6B6B',
@@ -359,7 +361,6 @@ export class Pmrt28Component implements OnInit {
     if (code && specificColors[code]) {
       return specificColors[code];
     }
-    // fallback สีสันสดใส
     const fallbackColors = [
       '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
       '#F7DC6F', '#BB8FCE', '#85C1E9', '#F39C12', '#9B59B6',

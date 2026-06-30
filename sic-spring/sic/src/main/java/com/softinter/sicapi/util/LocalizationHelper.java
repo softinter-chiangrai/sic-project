@@ -7,6 +7,7 @@ import com.softinter.sicapi.entity.db.DbParameter;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
 import com.softinter.sicapi.entity.db.DbTitle;
+import com.softinter.sicapi.entity.ex.ExExample;
 import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
 import com.softinter.sicapi.entity.su.SuMessage;
@@ -200,4 +201,13 @@ public class LocalizationHelper {
     public static String getText(Supplier<String> en, Supplier<String> local) {
         return getLocalized(Map.of("en", en, "th", local));
     }
+
+    // LocalizationHelper.java
+public static String getMessage(ExExample example) {
+    if (example == null) return null;
+    return getLocalized(Map.of(
+            "en", example::getMessageEn,
+            "th", example::getMessageLocal
+    ));
+}
 }

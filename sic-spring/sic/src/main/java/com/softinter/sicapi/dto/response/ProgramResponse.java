@@ -14,6 +14,7 @@ public class ProgramResponse {
     private String programCode;
     private String programNameEn;
     private String programNameLocal;
+    private String programName;
     private String programIcon;
     private String routePath;
     private Integer sortOrder;

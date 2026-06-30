@@ -1,7 +1,6 @@
 <!-- src/app/feature/pm/rt/pmrt30/pmrt30A/pmrt30A.component.html -->
 
 <div class="max-w-3xl mx-auto p-4 space-y-6">
-
   <!-- HEADER -->
   <div class="flex items-center justify-between">
     <div>
@@ -34,14 +33,19 @@
   <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <div
+        class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+      ></div>
       <p class="text-sm text-gray-500">กำลังโหลด...</p>
     </div>
   }
 
   @if (!isLoading()) {
-    <form [formGroup]="programForm" (ngSubmit)="isPermissionMode() ? savePermissions() : saveProgram()" class="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-
+    <form
+      [formGroup]="programForm"
+      (ngSubmit)="isPermissionMode() ? savePermissions() : saveProgram()"
+      class="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+    >
       <!-- Program Code -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -69,7 +73,9 @@
           class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           placeholder="เช่น Permission Management"
         />
-        @if (programForm.get('programNameEn')?.touched && programForm.get('programNameEn')?.invalid) {
+        @if (
+          programForm.get('programNameEn')?.touched && programForm.get('programNameEn')?.invalid
+        ) {
           <p class="text-xs text-red-500 mt-1">กรุณากรอกชื่อโปรแกรม (ภาษาอังกฤษ)</p>
         }
       </div>
@@ -85,7 +91,10 @@
           class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           placeholder="เช่น จัดการสิทธิ์"
         />
-        @if (programForm.get('programNameLocal')?.touched && programForm.get('programNameLocal')?.invalid) {
+        @if (
+          programForm.get('programNameLocal')?.touched &&
+          programForm.get('programNameLocal')?.invalid
+        ) {
           <p class="text-xs text-red-500 mt-1">กรุณากรอกชื่อโปรแกรม (ภาษาไทย)</p>
         }
       </div>
@@ -93,7 +102,9 @@
       <!-- Icon & Route -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ไอคอน</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >ไอคอน</label
+          >
           <input
             type="text"
             formControlName="programIcon"
@@ -102,7 +113,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route Path</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >Route Path</label
+          >
           <input
             type="text"
             formControlName="routePath"
@@ -115,19 +128,21 @@
       <!-- Parent Program & Sort Order -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">โปรแกรมแม่</label>
-          <select
-            formControlName="parentProgramId"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none pr-8"
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >โปรแกรมแม่</label
           >
+          <select formControlName="parentProgramId" class="...">
             <option [value]="null">ไม่มี (Root)</option>
             @for (p of programs(); track p.id) {
-              <option [value]="p.id">{{ p.programCode }} - {{ p.programNameEn }}</option>
+              <!-- ✅ แก้ไข: ใช้ p.programName แทน p.programNameEn -->
+              <option [value]="p.id">{{ p.programCode }} - {{ p.programName }}</option>
             }
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ลำดับ</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >ลำดับ</label
+          >
           <input
             type="number"
             formControlName="sortOrder"
@@ -168,8 +183,12 @@
           @if (roles().length > 0) {
             <div class="space-y-2 max-h-[300px] overflow-y-auto">
               @for (rp of rolePermissions(); track rp.roleId) {
-                <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                  <span class="font-medium text-gray-700 dark:text-gray-300">{{ rp.roleName }}</span>
+                <div
+                  class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                >
+                  <span class="font-medium text-gray-700 dark:text-gray-300">{{
+                    rp.roleName
+                  }}</span>
                   <select
                     [value]="rp.level"
                     (change)="updateRolePermission(rp.roleId, $any($event.target).value)"
@@ -208,7 +227,6 @@
           {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
         </button>
       </div>
-
     </form>
   }
 </div>

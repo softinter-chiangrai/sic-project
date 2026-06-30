@@ -1,7 +1,8 @@
 package com.softinter.sicapi.controller.db;
 
-import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.repository.db.DbParameterRepository;
+import com.softinter.sicapi.util.LocalizationHelper;  // ✅ เพิ่ม
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +27,10 @@ public class DbParameterController {
     public ResponseEntity<List<LovResponse>> getLov(@RequestParam(required = false, defaultValue = "COMMON") String group) {
         List<LovResponse> lov = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group)
                 .stream()
-                .map(p -> new LovResponse(p.getParameterCode(), p.getParameterNameEn()))
+                .map(p -> new LovResponse(
+                        p.getParameterCode(),
+                        LocalizationHelper.getParameterName(p)  // ✅ แก้
+                ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lov);
     }
