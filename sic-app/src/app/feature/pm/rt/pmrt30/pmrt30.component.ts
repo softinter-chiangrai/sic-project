@@ -1,13 +1,12 @@
 // src/app/feature/pm/rt/pmrt30/pmrt30.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmrt30Service, Program } from './pmrt30.service';
-import { TreeNodeComponent } from '../../../../core/component/sic-treenode/tree-node.component';
 
-
+/** โครงสร้าง TreeNode (เหมือนเดิม) */
 interface TreeNode {
   id: string;
   code: string;
@@ -19,8 +18,11 @@ interface TreeNode {
   isActive: boolean;
   children: TreeNode[];
   parentProgramId?: string | null;
-  level: number;
+  level: number; // level ใช้ใน FlatNode
 }
+
+/** FlatNode = TreeNode ที่เพิ่ม level เพื่อจัด indent */
+type FlatNode = TreeNode & { level: number };
 
 /** Helper: ดึงชื่อจาก Program หรือ TreeNode */
 function getProgramName(program: Program | TreeNode): string {
@@ -33,7 +35,7 @@ function getProgramName(program: Program | TreeNode): string {
 @Component({
   selector: 'app-pmrt30',
   standalone: true,
-  imports: [CommonModule, RouterModule, TreeNodeComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmrt30.component.html',
   styleUrl: './pmrt30.component.css',
 })
@@ -45,6 +47,28 @@ export class Pmrt30Component implements OnInit {
   isLoading = signal(false);
   programs = signal<Program[]>([]);
   treeData = signal<TreeNode[]>([]);
+
+  // เก็บ ID ของ node ที่ขยาย (ใช้ Set เพื่อเพิ่ม/ลบได้เร็ว)
+  expandedIds = signal<Set<string>>(new Set());
+
+  // คำนวณรายการ node ที่จะแสดง (เฉพาะ node ที่ขยาย)
+  visibleNodes = computed<FlatNode[]>(() => {
+    const tree = this.treeData();
+    const expanded = this.expandedIds();
+    const result: FlatNode[] = [];
+
+    const flatten = (nodes: TreeNode[], level: number) => {
+      for (const node of nodes) {
+        result.push({ ...node, level });
+        if (expanded.has(node.id) && node.children.length > 0) {
+          flatten(node.children, level + 1);
+        }
+      }
+    };
+
+    flatten(tree, 0);
+    return result;
+  });
 
   ngOnInit() {
     this.loadData();
@@ -65,6 +89,7 @@ export class Pmrt30Component implements OnInit {
     });
   }
 
+  /** สร้างต้นไม้จาก List ของ Program */
   buildTree(programs: Program[]) {
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
@@ -99,6 +124,7 @@ export class Pmrt30Component implements OnInit {
       }
     });
 
+    // เรียงลำดับ
     const sortChildren = (nodes: TreeNode[]) => {
       nodes.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       nodes.forEach((node) => sortChildren(node.children));
@@ -106,8 +132,48 @@ export class Pmrt30Component implements OnInit {
     sortChildren(roots);
 
     this.treeData.set(roots);
+    // ขยายทั้งหมดให้เห็นโครงสร้าง
+    this.expandAll();
   }
 
+  /** ขยายทุกโหนด */
+  expandAll() {
+    const allIds = this.getAllNodeIds(this.treeData());
+    this.expandedIds.set(allIds);
+  }
+
+  /** ดึง ID ทั้งหมดจากต้นไม้ */
+  getAllNodeIds(nodes: TreeNode[]): Set<string> {
+    const ids = new Set<string>();
+    const traverse = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        ids.add(node.id);
+        traverse(node.children);
+      }
+    };
+    traverse(nodes);
+    return ids;
+  }
+
+  /** สลับสถานะขยาย/ย่อ */
+  toggleExpand(id: string) {
+    this.expandedIds.update((set) => {
+      const newSet = new Set(set);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }
+
+  /** ตรวจสอบว่าขยายอยู่หรือไม่ (ใช้ใน template) */
+  isExpanded(id: string): boolean {
+    return this.expandedIds().has(id);
+  }
+
+  // ---------- Navigation & Actions ----------
   goToAdd() {
     this.router.navigate(['/feature/pm/pmrt30/new']);
   }
@@ -156,5 +222,3 @@ export class Pmrt30Component implements OnInit {
     return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 }
-
-export default Pmrt30Component;

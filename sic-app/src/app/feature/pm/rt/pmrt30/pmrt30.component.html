@@ -1,7 +1,6 @@
 <!-- src/app/feature/pm/rt/pmrt30/pmrt30.component.html -->
 
 <div class="space-y-5 p-0.5">
-
   <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
@@ -9,7 +8,9 @@
         <i class="bi bi-diagram-3 text-blue-500"></i>
         จัดการโปรแกรม
       </h1>
-      <span class="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-0.5 rounded-full border border-gray-200 dark:border-gray-600">
+      <span
+        class="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-0.5 rounded-full border border-gray-200 dark:border-gray-600"
+      >
         {{ programs().length }} โปรแกรม
       </span>
     </div>
@@ -25,46 +26,170 @@
   <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <div
+        class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+      ></div>
       <p class="text-sm text-gray-500">กำลังโหลดข้อมูล...</p>
     </div>
   }
 
-  <!-- TREE TABLE -->
+  <!-- TREE TABLE (ไม่มีเส้นขอบและไม่มี hover) -->
   @if (!isLoading() && treeData().length > 0) {
-    <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+    <!-- ลบ border และ rounded-xl ออก -->
+    <div class="overflow-x-auto bg-white dark:bg-gray-900 shadow-sm">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <!-- ลบเส้นใต้หัวตาราง -->
+        <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[300px]">
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[260px]"
+            >
               โปรแกรม
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[100px]">
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[100px]"
+            >
               รหัส
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[70px]"
+            >
               ลำดับ
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[120px]"
+            >
               Route
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]">
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]"
+            >
               สถานะ
             </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[280px]">
+            <th
+              class="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[220px]"
+            >
               จัดการ
             </th>
           </tr>
         </thead>
         <tbody>
-          @for (node of treeData(); track node.id) {
-            <app-tree-node
-              [node]="node"
-              [level]="0"
-              (edit)="goToEdit($event)"
-              (delete)="deleteProgram($event)"
-              (permissions)="goToPermissions($event)"
-            ></app-tree-node>
+          @for (flatNode of visibleNodes(); track flatNode.id) {
+            <!-- ลบ hover และ border-bottom ออก -->
+            <tr>
+              <!-- ชื่อโปรแกรม + tree indent -->
+              <td class="px-4 py-2">
+                <div
+                  class="flex items-center gap-1.5"
+                  [style.padding-left.px]="flatNode.level * 20"
+                >
+                  <!-- ปุ่ม toggle -->
+                  @if (flatNode.children.length > 0) {
+                    <button
+                      (click)="toggleExpand(flatNode.id)"
+                      class="w-4 h-4 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <i
+                        class="bi text-xs"
+                        [class.bi-chevron-right]="!isExpanded(flatNode.id)"
+                        [class.bi-chevron-down]="isExpanded(flatNode.id)"
+                      ></i>
+                    </button>
+                  } @else {
+                    <span class="w-4"></span>
+                  }
+
+                  <!-- ไอคอน -->
+                  <i
+                    class="bi text-gray-500 dark:text-gray-400 text-sm"
+                    [class]="flatNode.icon || 'bi-file-earmark'"
+                  ></i>
+
+                  <!-- ชื่อโปรแกรม (คลิกเพื่อขยาย/ย่อ) -->
+                  <span
+                    class="font-medium text-gray-800 dark:text-white cursor-pointer"
+                    (click)="toggleExpand(flatNode.id)"
+                  >
+                    {{ flatNode.name }}
+                  </span>
+
+                  <!-- จำนวนลูก -->
+                  @if (flatNode.children.length > 0) {
+                    <span class="text-xs text-gray-400 dark:text-gray-500"
+                      >[{{ flatNode.children.length }}]</span
+                    >
+                  }
+                </div>
+              </td>
+
+              <!-- รหัส -->
+              <td class="px-4 py-2">
+                <span class="text-xs font-mono text-blue-600 dark:text-blue-400">{{
+                  flatNode.code
+                }}</span>
+              </td>
+
+              <!-- ลำดับ -->
+              <td class="px-4 py-2">
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{
+                  flatNode.sortOrder
+                }}</span>
+              </td>
+
+              <!-- Route -->
+              <td class="px-4 py-2">
+                <span
+                  class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate block max-w-[120px]"
+                >
+                  {{ flatNode.routePath || '-' }}
+                </span>
+              </td>
+
+              <!-- สถานะ -->
+              <td class="px-4 py-2">
+                <span
+                  class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [class.bg-emerald-100]="flatNode.isActive"
+                  [class.text-emerald-700]="flatNode.isActive"
+                  [class.bg-gray-200]="!flatNode.isActive"
+                  [class.text-gray-600]="!flatNode.isActive"
+                  [class.dark:bg-emerald-900/30]="flatNode.isActive"
+                  [class.dark:text-emerald-400]="flatNode.isActive"
+                  [class.dark:bg-gray-700]="!flatNode.isActive"
+                  [class.dark:text-gray-400]="!flatNode.isActive"
+                >
+                  {{ flatNode.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                </span>
+              </td>
+
+              <!-- จัดการ -->
+              <td class="px-4 py-2 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    (click)="goToEdit(flatNode)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    (click)="goToPermissions(flatNode)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all"
+                    title="กำหนดสิทธิ์"
+                  >
+                    <i class="bi bi-shield-lock"></i>
+                  </button>
+                  <button
+                    (click)="deleteProgram(flatNode)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="ลบ"
+                    [disabled]="flatNode.children.length > 0"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
           }
         </tbody>
       </table>
@@ -86,5 +211,4 @@
       </button>
     </div>
   }
-
 </div>

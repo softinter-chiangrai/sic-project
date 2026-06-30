@@ -1,3 +1,17 @@
+/* src/app/feature/pm/rt/pmrt30/pmrt30.component.css */
+/* ปรับแต่งเพิ่มเติมตามต้องการ */
 :host {
   display: block;
+}
+
+/* ทำให้ตัวอักษร route ไม่ล้น */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ปรับขนาดปุ่มให้เหมาะสม */
+button i {
+  font-size: 0.875rem;
 }
