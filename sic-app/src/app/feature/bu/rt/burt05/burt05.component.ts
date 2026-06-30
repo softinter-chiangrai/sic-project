@@ -1,10 +1,10 @@
-// src/app/feature/pm/rt/pmrt30/pmrt30.component.ts
+// src/app/feature/bu/rt/burt05/burt05.component.ts
 
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Pmrt30Service, Program } from './pmrt30.service';
+import { burt05Service, Program } from './burt05.service';
 
 /** โครงสร้าง TreeNode (เหมือนเดิม) */
 interface TreeNode {
@@ -33,14 +33,14 @@ function getProgramName(program: Program | TreeNode): string {
 }
 
 @Component({
-  selector: 'app-pmrt30',
+  selector: 'app-burt05',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt30.component.html',
-  styleUrl: './pmrt30.component.css',
+  templateUrl: './burt05.component.html',
+  styleUrl: './burt05.component.css',
 })
-export class Pmrt30Component implements OnInit {
-  private service = inject(Pmrt30Service);
+export class Burt05Component implements OnInit {
+  private service = inject(burt05Service);
   private dialog = inject(DialogService);
   private router = inject(Router);
 
@@ -175,15 +175,15 @@ export class Pmrt30Component implements OnInit {
 
   // ---------- Navigation & Actions ----------
   goToAdd() {
-    this.router.navigate(['/feature/pm/pmrt30/new']);
+    this.router.navigate(['/feature/bu/burt05/new']);
   }
 
   goToEdit(program: Program | TreeNode) {
-    this.router.navigate(['/feature/pm/pmrt30', program.id, 'edit']);
+    this.router.navigate(['/feature/bu/burt05', program.id, 'edit']);
   }
 
   goToPermissions(program: Program | TreeNode) {
-    this.router.navigate(['/feature/pm/pmrt30', program.id, 'permissions']);
+    this.router.navigate(['/feature/bu/burt05', program.id, 'permissions']);
   }
 
   deleteProgram(program: Program | TreeNode) {

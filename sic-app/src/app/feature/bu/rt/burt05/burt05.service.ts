@@ -1,4 +1,4 @@
-// src/app/feature/pm/rt/pmrt30/pmrt30.service.ts
+// src/app/feature/bu/rt/burt05/burt05.service.ts
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -11,7 +11,7 @@ export interface Program {
   parentProgramId?: string | null;
   parentProgramCode?: string;
   programCode: string;
-  programName: string;          // ✅ ฟิลด์ที่แปลแล้ว
+  programName: string; // ✅ ฟิลด์ที่แปลแล้ว
   programNameEn: string;
   programNameLocal: string;
   programIcon?: string;
@@ -39,7 +39,7 @@ export interface CreateProgramWithPermissionsRequest {
 }
 
 @Injectable({ providedIn: 'root' })
-export class Pmrt30Service {
+export class burt05Service {
   private baseUrl = `${environment.apiBaseUrl}/api/su/programs`;
   private rolesUrl = `${environment.apiBaseUrl}/api/su/business-roles`;
   private roleProgramsUrl = `${environment.apiBaseUrl}/api/su/business-role-programs`;
@@ -54,7 +54,7 @@ export class Pmrt30Service {
           parentProgramId: p.parentProgramId,
           parentProgramCode: p.parentProgramCode,
           programCode: p.programCode,
-          programName: p.programName,          // ✅ เพิ่มตรงนี้
+          programName: p.programName, // ✅ เพิ่มตรงนี้
           programNameEn: p.programNameEn,
           programNameLocal: p.programNameLocal,
           programIcon: p.programIcon,
@@ -74,7 +74,7 @@ export class Pmrt30Service {
         parentProgramId: p.parentProgramId,
         parentProgramCode: p.parentProgramCode,
         programCode: p.programCode,
-        programName: p.programName,          // ✅ เพิ่มตรงนี้
+        programName: p.programName, // ✅ เพิ่มตรงนี้
         programNameEn: p.programNameEn,
         programNameLocal: p.programNameLocal,
         programIcon: p.programIcon,

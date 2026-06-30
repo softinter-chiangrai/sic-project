@@ -1,4 +1,4 @@
-// src/app/feature/pm/rt/pmrt29/pmrt29A/pmrt29A.component.ts
+// src/app/feature/bu/rt/burt04/burt04A/burt04A.component.ts
 
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
@@ -10,10 +10,11 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { ComboboxRole, Pmrt29Service } from '../pmrt29.service';
+// ✅ แก้ไข: เปลี่ยนจาก Pmrt29Service เป็น burt04Service
+import { ComboboxRole, burt04Service } from '../burt04.service';
 
 @Component({
-  selector: 'app-pmrt29A',
+  selector: 'app-burt04A',
   standalone: true,
   imports: [
     CommonModule,
@@ -23,16 +24,17 @@ import { ComboboxRole, Pmrt29Service } from '../pmrt29.service';
     SicInputComponent,
     SicComboboxComponent,
   ],
-  templateUrl: './pmrt29A.component.html',
+  templateUrl: './burt04A.component.html',
 })
-export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
+export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private service = inject(Pmrt29Service);
+  // ✅ แก้ไข: เปลี่ยนจาก Pmrt29Service เป็น burt04Service
+  private service = inject(burt04Service);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
 
-  @ViewChild('roleCombobox') roleCombobox!: SicComboboxComponent; // ✅ อ้างอิงถึง Combobox
+  @ViewChild('roleCombobox') roleCombobox!: SicComboboxComponent;
 
   isEdit = false;
   memberId: string | null = null;
@@ -55,7 +57,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   ngOnInit() {
     if (!this.businessId) {
       this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
-      this.router.navigate(['/feature/pm/pmrt29']);
+      this.router.navigate(['/feature/bu/burt04']);
       return;
     }
     this.loadRoles();
@@ -70,12 +72,13 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  // ✅ เพิ่ม type ให้กับ callback parameters
   loadRoles() {
     this.service.getComboboxRoles().subscribe({
-      next: (roles) => {
+      next: (roles: ComboboxRole[]) => {
         this.allRoles.set(roles);
       },
-      error: (err) => console.error('Load roles error', err),
+      error: (err: any) => console.error('Load roles error', err),
     });
   }
 
@@ -85,7 +88,7 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
       .getMemberById(id)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (member) => {
+        next: (member: any) => {
           this.form.patchValue({
             id: member.id,
             userId: member.userId,
@@ -95,15 +98,14 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
             isActive: member.isActive,
           });
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('Load member error', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
-          this.router.navigate(['/feature/pm/pmrt29']);
+          this.router.navigate(['/feature/bu/burt04']);
         },
       });
   }
 
-  // ✅ เมื่อเลือกบทบาทจาก Combobox
   onRoleSelect(item: ComboboxRole | null) {
     if (!item) return;
 
@@ -113,21 +115,16 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
     const current = this.form.get('roleIds')?.value || [];
     if (current.includes(roleId)) {
       this.dialog.warn('ซ้ำ', 'บทบาทนี้ถูกเลือกแล้ว');
-      // ✅ เคลียร์ Combobox
       this.roleCombobox.clearSelection();
       return;
     }
 
-    // ✅ เพิ่มบทบาททันที
     const newList = [...current, roleId];
     this.form.patchValue({ roleIds: newList });
     this.form.markAsDirty();
-
-    // ✅ เคลียร์ Combobox เพื่อให้เลือกใหม่ได้
     this.roleCombobox.clearSelection();
   }
 
-  // ✅ ลบบทบาทออกจาก list
   removeRole(roleId: string) {
     const current = this.form.get('roleIds')?.value || [];
     const newList = current.filter((id: string) => id !== roleId);
@@ -138,10 +135,10 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
   onBack() {
     if (this.form.dirty) {
       this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then((ok) => {
-        if (ok) this.router.navigate(['/feature/pm/pmrt29']);
+        if (ok) this.router.navigate(['/feature/bu/burt04']);
       });
     } else {
-      this.router.navigate(['/feature/pm/pmrt29']);
+      this.router.navigate(['/feature/bu/burt04']);
     }
   }
 
@@ -161,9 +158,9 @@ export class Pmrt29AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
-          this.router.navigate(['/feature/pm/pmrt29']);
+          this.router.navigate(['/feature/bu/burt04']);
         },
-        error: (err) => {
+        error: (err: any) => {
           this.dialog.error('ผิดพลาด', err.message || 'ไม่สามารถบันทึกได้');
           console.error('Update error', err);
         },

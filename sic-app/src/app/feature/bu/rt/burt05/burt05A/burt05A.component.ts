@@ -1,25 +1,26 @@
-// src/app/feature/pm/rt/pmrt30/pmrt30A/pmrt30A.component.ts
+// src/app/feature/bu/rt/burt05/burt05A/burt05A.component.ts
 
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { Pmrt30Service, Program, RolePermission, CreateProgramWithPermissionsRequest } from '../pmrt30.service';
+// ✅ แก้ไข: เปลี่ยนจาก Pmrt30Service เป็น burt05Service
+import { burt05Service, Program } from '../burt05.service';
 
 @Component({
-  selector: 'app-pmrt30A',
+  selector: 'app-burt05A',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './pmrt30A.component.html',
+  templateUrl: './burt05A.component.html',
 })
-export class Pmrt30AComponent implements OnInit {
+export class Burt05AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private service = inject(Pmrt30Service);
+  // ✅ แก้ไข: เปลี่ยนจาก Pmrt30Service เป็น burt05Service
+  private service = inject(burt05Service);
   private dialog = inject(DialogService);
 
   isLoading = signal(false);
@@ -49,9 +50,9 @@ export class Pmrt30AComponent implements OnInit {
       const segments = this.route.snapshot.url;
       const lastSegment = segments[segments.length - 1]?.path;
 
-      // โหลดโปรแกรมทั้งหมดเพื่อใช้เป็น parent options
       this.service.getPrograms().subscribe({
-        next: (progs) => this.programs.set(progs),
+        next: (progs: Program[]) => this.programs.set(progs),
+        error: (err: any) => console.error('Load programs error', err),
       });
 
       if (lastSegment === 'permissions' && id) {
@@ -69,17 +70,18 @@ export class Pmrt30AComponent implements OnInit {
     });
   }
 
+  // ✅ เพิ่ม type ให้กับ callback parameters
   loadProgram(id: string) {
     this.isLoading.set(true);
     this.service.getProgram(id).subscribe({
-      next: (program) => {
+      next: (program: Program) => {
         this.programForm.patchValue(program);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (err: any) => {
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
-        this.router.navigate(['/feature/pm/pmrt30']);
+        this.router.navigate(['/feature/bu/burt05']);
       },
     });
   }
@@ -104,9 +106,9 @@ export class Pmrt30AComponent implements OnInit {
         this.programId.set(id);
 
         this.service.getRoles(businessId).subscribe({
-          next: (roles) => {
+          next: (roles: any[]) => {
             if (!roles || roles.length === 0) {
-              this.dialog.warn('ไม่พบบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า pmrt28');
+              this.dialog.warn('ไม่พบบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า burt03');
               this.roles.set([]);
               this.rolePermissions.set([]);
               this.isLoading.set(false);
@@ -114,8 +116,7 @@ export class Pmrt30AComponent implements OnInit {
             }
 
             this.roles.set(roles);
-            // ✅ ใช้ roleName ที่แปลแล้ว
-            const permissions = roles.map((role) => {
+            const permissions = roles.map((role: any) => {
               const existing = rolePrograms.find((rp: any) => rp.businessRoleId === role.id);
               let level = 'None';
               if (existing && existing.isActive) {
@@ -130,41 +131,101 @@ export class Pmrt30AComponent implements OnInit {
             this.rolePermissions.set(permissions);
             this.isLoading.set(false);
           },
-          error: () => {
+          error: (err: any) => {
             this.isLoading.set(false);
             this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดบทบาทได้');
           },
         });
       },
-      error: () => {
+      error: (err: any) => {
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
-        this.router.navigate(['/feature/pm/pmrt30']);
+        this.router.navigate(['/feature/bu/burt05']);
       },
     });
   }
 
   mapBooleansToLevel(perm: any): string {
-    if (perm.isAdd && perm.isSave && perm.isRemove && perm.isPrint && perm.isBack && perm.isSearch) return 'Full';
-    if (perm.isAdd && perm.isSave && !perm.isRemove && !perm.isPrint && perm.isBack && perm.isSearch) return 'Edit';
-    if (!perm.isAdd && perm.isSave && !perm.isRemove && !perm.isPrint && perm.isBack && perm.isSearch) return 'Approve';
-    if (!perm.isAdd && !perm.isSave && !perm.isRemove && !perm.isPrint && perm.isBack && perm.isSearch) return 'View';
+    if (perm.isAdd && perm.isSave && perm.isRemove && perm.isPrint && perm.isBack && perm.isSearch)
+      return 'Full';
+    if (
+      perm.isAdd &&
+      perm.isSave &&
+      !perm.isRemove &&
+      !perm.isPrint &&
+      perm.isBack &&
+      perm.isSearch
+    )
+      return 'Edit';
+    if (
+      !perm.isAdd &&
+      perm.isSave &&
+      !perm.isRemove &&
+      !perm.isPrint &&
+      perm.isBack &&
+      perm.isSearch
+    )
+      return 'Approve';
+    if (
+      !perm.isAdd &&
+      !perm.isSave &&
+      !perm.isRemove &&
+      !perm.isPrint &&
+      perm.isBack &&
+      perm.isSearch
+    )
+      return 'View';
     return 'None';
   }
 
   mapLevelToBooleans(level: string) {
     switch (level) {
       case 'Full':
-        return { isAdd: true, isBack: true, isPrint: true, isRemove: true, isSave: true, isSearch: true };
+        return {
+          isAdd: true,
+          isBack: true,
+          isPrint: true,
+          isRemove: true,
+          isSave: true,
+          isSearch: true,
+        };
       case 'Edit':
-        return { isAdd: true, isBack: true, isPrint: false, isRemove: false, isSave: true, isSearch: true };
+        return {
+          isAdd: true,
+          isBack: true,
+          isPrint: false,
+          isRemove: false,
+          isSave: true,
+          isSearch: true,
+        };
       case 'Approve':
-        return { isAdd: false, isBack: true, isPrint: false, isRemove: false, isSave: true, isSearch: true };
+        return {
+          isAdd: false,
+          isBack: true,
+          isPrint: false,
+          isRemove: false,
+          isSave: true,
+          isSearch: true,
+        };
       case 'View':
-        return { isAdd: false, isBack: true, isPrint: false, isRemove: false, isSave: false, isSearch: true };
+        return {
+          isAdd: false,
+          isBack: true,
+          isPrint: false,
+          isRemove: false,
+          isSave: false,
+          isSearch: true,
+        };
       case 'None':
       default:
-        return { isAdd: false, isBack: false, isPrint: false, isRemove: false, isSave: false, isSearch: false };
+        return {
+          isAdd: false,
+          isBack: false,
+          isPrint: false,
+          isRemove: false,
+          isSave: false,
+          isSearch: false,
+        };
     }
   }
 
@@ -185,9 +246,9 @@ export class Pmrt30AComponent implements OnInit {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
           this.isSaving.set(false);
-          this.router.navigate(['/feature/pm/pmrt30']);
+          this.router.navigate(['/feature/bu/burt05']);
         },
-        error: (err) => {
+        error: (err: any) => {
           this.isSaving.set(false);
           this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
         },
@@ -200,9 +261,9 @@ export class Pmrt30AComponent implements OnInit {
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
         this.isSaving.set(false);
-        this.router.navigate(['/feature/pm/pmrt30']);
+        this.router.navigate(['/feature/bu/burt05']);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isSaving.set(false);
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
@@ -218,13 +279,13 @@ export class Pmrt30AComponent implements OnInit {
     }
 
     if (this.roles().length === 0) {
-      this.dialog.warn('ไม่มีบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า pmrt28');
+      this.dialog.warn('ไม่มีบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า burt03');
       return;
     }
 
     this.isSaving.set(true);
 
-    const modules = this.roles().map((role) => {
+    const modules = this.roles().map((role: any) => {
       const perm = this.rolePermissions().find((rp) => rp.roleId === role.id);
       const level = perm?.level || 'None';
       const flags = this.mapLevelToBooleans(level);
@@ -251,15 +312,15 @@ export class Pmrt30AComponent implements OnInit {
           next: () => {
             this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
             this.isSaving.set(false);
-            this.router.navigate(['/feature/pm/pmrt30']);
+            this.router.navigate(['/feature/bu/burt05']);
           },
-          error: (err) => {
+          error: (err: any) => {
             this.isSaving.set(false);
             this.dialog.error('บันทึกสิทธิ์ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
           },
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isSaving.set(false);
         this.dialog.error('บันทึกข้อมูลโปรแกรมไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
@@ -267,7 +328,7 @@ export class Pmrt30AComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/feature/pm/pmrt30']);
+    this.router.navigate(['/feature/bu/burt05']);
   }
 
   getRoleLevel(roleId: string): string {
@@ -276,7 +337,7 @@ export class Pmrt30AComponent implements OnInit {
 
   updateRolePermission(roleId: string, level: string) {
     this.rolePermissions.update((list) =>
-      list.map((rp) => (rp.roleId === roleId ? { ...rp, level } : rp))
+      list.map((rp) => (rp.roleId === roleId ? { ...rp, level } : rp)),
     );
   }
 
@@ -303,4 +364,4 @@ export class Pmrt30AComponent implements OnInit {
   }
 }
 
-export default Pmrt30AComponent;
+export default Burt05AComponent;

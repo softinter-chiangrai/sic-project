@@ -35,7 +35,7 @@ public class SuUserBusinessMemberController {
     private final SuUserBusinessMemberService memberService;
 
     @GetMapping
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ (หน้า pmrt29)")
+    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ (หน้า burt04)")
     public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
             @RequestParam UUID businessId,
             @PageableDefault(size = 10) Pageable pageable) {

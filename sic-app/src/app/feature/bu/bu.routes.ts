@@ -7,74 +7,78 @@ export const routes: Routes = [
     redirectTo: '/feature',
     pathMatch: 'full',
   },
-  {
+   {
     path: 'burt01',
     loadComponent: () => import('./rt/burt01/burt01.component').then((m) => m.Burt01Component),
     resolve: { form: burt01Resolver },
   },
-  // ===== Permission Management (BURT02) =====
+
+  // ===== BURT02 - Permission Management =====
   {
-    path: 'bu/burt02', // ✅ เปลี่ยนจาก 'pmrt27'
-    loadComponent: () => import('./rt/pmrt27/pmrt27.component').then((m) => m.Pmrt27Component),
+    path: 'burt02',                         // ✅ ไม่มี 'bu/'
+    loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component),
   },
   {
-    path: 'bu/burt02/:id', // ✅ เปลี่ยนจาก 'pmrt27/:id'
+    path: 'burt02/:id',                     // ✅ ไม่มี 'bu/'
     loadComponent: () =>
-      import('./rt/pmrt27/pmrt27A/pmrt27A.component').then((m) => m.Pmrt27AComponent),
+      import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
   },
 
-  // ===== Role Management (BURT03) =====
+  // ===== BURT03 - Role Management =====
   {
-    path: 'bu/burt03', // ✅ เปลี่ยนจาก 'pmrt28'
-    loadComponent: () => import('./rt/pmrt28/pmrt28.component').then((m) => m.Pmrt28Component),
+    path: 'burt03',                         // ✅ ไม่มี 'bu/'
+    loadComponent: () => import('./rt/burt03/burt03.component').then((m) => m.Burt03Component),
   },
 
-  // ===== Team Management (BURT04) =====
+  // ===== BURT04 - Team Management =====
   {
-    path: 'bu/burt04', // ✅ เปลี่ยนจาก 'pmrt29'
-    loadComponent: () => import('./rt/pmrt29/pmrt29.component').then((m) => m.Pmrt29Component),
+    path: 'burt04',                         // ✅ ไม่มี 'bu/'
+    loadComponent: () => import('./rt/burt04/burt04.component').then((m) => m.Burt04AComponent),
   },
-  // pm.routes.ts
   {
-    path: 'management/business/invite', // คงเดิม (Business Invite)
+    path: 'burt04/:id/edit',                // ✅ ไม่มี 'bu/'
+    loadComponent: () =>
+      import('./rt/burt04/burt04A/burt04A.component').then((m) => m.Burt04AComponent),
+  },
+  {
+    path: 'burt04/add',                     // ✅ ไม่มี 'bu/'
+    redirectTo: '/management/business/invite',
+    pathMatch: 'full',
+  },
+
+  // ===== BURT05 - Program Management =====
+  {
+    path: 'burt05',                         // ✅ ไม่มี 'bu/'
+    loadComponent: () => import('./rt/burt05/burt05.component').then((m) => m.Burt05Component),
+  },
+  {
+    path: 'burt05/new',                     // ✅ ไม่มี 'bu/'
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+  {
+    path: 'burt05/:id/edit',                // ✅ ไม่มี 'bu/'
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+  {
+    path: 'burt05/:id/permissions',         // ✅ ไม่มี 'bu/'
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+
+  // ===== BURP01 - Activity Log =====
+  {
+    path: 'burp01',                         // ✅ ไม่มี 'bu/'
+    loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
+  },
+
+  // ===== Business Invite (ภายนอก) =====
+  {
+    path: 'invite',                         // ✅ ใช้ได้ผ่าน /feature/bu/invite
     loadComponent: () =>
       import('../../management/business/business-invite/business-invite.component').then(
         (m) => m.BusinessInviteComponent,
       ),
-  },
-  {
-    path: 'bu/burt04/add', // ✅ เปลี่ยนจาก 'pmrt29/add'
-    redirectTo: '/management/business/invite',
-    pathMatch: 'full',
-  },
-  {
-    path: 'bu/burt04/:id/edit', // ✅ เปลี่ยนจาก 'pmrt29/:id/edit'
-    loadComponent: () =>
-      import('./rt/pmrt29/pmrt29A/pmrt29A.component').then((m) => m.Pmrt29AComponent),
-  },
-
-  // ===== Program Management (BURT05) =====
-  {
-    path: 'bu/burt05', // ✅ เปลี่ยนจาก 'pmrt30'
-    loadComponent: () => import('./rt/pmrt30/pmrt30.component').then((m) => m.Pmrt30Component),
-  },
-  {
-    path: 'bu/burt05/new', // ✅ เปลี่ยนจาก 'pmrt30/new'
-    loadComponent: () =>
-      import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
-  },
-  {
-    path: 'bu/burt05/:id/edit', // ✅ เปลี่ยนจาก 'pmrt30/:id/edit'
-    loadComponent: () =>
-      import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
-  },
-  {
-    path: 'bu/burt05/:id/permissions', // ✅ เปลี่ยนจาก 'pmrt30/:id/permissions'
-    loadComponent: () =>
-      import('./rt/pmrt30/pmrt30A/pmrt30A.component').then((m) => m.Pmrt30AComponent),
-  },
-  {
-    path: 'burp01',
-    loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
   },
 ];

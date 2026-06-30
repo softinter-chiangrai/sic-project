@@ -1,1 +1,69 @@
-<p>budt03 works!</p>
+<!-- src/app/feature/bu/rt/burt03/burt03.component.html -->
+<div class="space-y-5 p-0.5">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+        ลำดับชั้นบทบาท
+      </h1>
+      <span
+        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
+      >
+        {{ flatRoles().length }} บทบาท
+      </span>
+    </div>
+    <button
+      (click)="openAddRootRoleDialog()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+    >
+      <i class="bi bi-plus-lg"></i> เพิ่มบทบาท
+    </button>
+  </div>
+
+  <!-- CHART -->
+  <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+    @if (hasData() && treeData()) {
+      <sic-organizational-chart
+        [root]="treeData()!"
+        (nodeAdded)="onNodeAdded($event)"
+        (nodeRemoved)="onNodeRemoved($event)"
+        (nodeUpdated)="onNodeUpdated($event)"
+        (dataChanged)="onDataChanged($event)"
+        (nodeClick)="onNodeClick($event)"
+      ></sic-organizational-chart>
+    }
+
+    @if (!hasData() && !isLoading()) {
+      <div class="flex flex-col items-center justify-center py-16 gap-4">
+        <i class="bi bi-diagram-3 text-6xl text-[var(--text-muted)] opacity-30"></i>
+        <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีบทบาทในระบบ</p>
+        <p class="text-sm text-[var(--text-muted)]">คลิกปุ่ม "เพิ่มบทบาท" เพื่อสร้างบทบาทแรก</p>
+        <button
+          (click)="openAddRootRoleDialog()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+        >
+          <i class="bi bi-plus-lg"></i> สร้างบทบาทแรก
+        </button>
+      </div>
+    }
+
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-16 gap-4">
+        <div
+          class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+        ></div>
+        <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      </div>
+    }
+  </div>
+
+  @if (isSaving()) {
+    <div class="flex items-center justify-center gap-2 text-sm text-[var(--text-muted)] py-2">
+      <div
+        class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      กำลังบันทึก...
+    </div>
+  }
+</div>

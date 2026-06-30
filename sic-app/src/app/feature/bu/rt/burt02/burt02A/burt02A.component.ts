@@ -1,20 +1,28 @@
-// src/app/feature/pm/rt/pmrt27/pmrt27A/pmrt27A.component.ts
+// src/app/feature/bu/rt/pmrt27/burt02A/burt02A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Injectable, OnInit, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  inject,
+  Injectable,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
-import { finalize, map, switchMap } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
+import { forkJoin, Observable } from 'rxjs';
+import { finalize, map } from 'rxjs/operators';
 
+import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { environment } from '../../../../../../environments/environment';
-import { Pmrt28Service } from '../../pmrt28/pmrt28.service'; // ✅ import เพื่อดึงชื่อบทบาท
+import { burt03Service } from '../../burt03/burt03.service';
 
 // ============================================================
 // 1. Permission Levels
@@ -55,16 +63,51 @@ export function mapLevelToBooleans(level: string): {
 } {
   switch (level) {
     case 'Full':
-      return { isSearch: true, isAdd: true, isSave: true, isRemove: true, isPrint: true, isBack: true };
+      return {
+        isSearch: true,
+        isAdd: true,
+        isSave: true,
+        isRemove: true,
+        isPrint: true,
+        isBack: true,
+      };
     case 'Edit':
-      return { isSearch: true, isAdd: true, isSave: true, isRemove: false, isPrint: false, isBack: true };
+      return {
+        isSearch: true,
+        isAdd: true,
+        isSave: true,
+        isRemove: false,
+        isPrint: false,
+        isBack: true,
+      };
     case 'Approve':
-      return { isSearch: true, isAdd: false, isSave: true, isRemove: false, isPrint: false, isBack: true };
+      return {
+        isSearch: true,
+        isAdd: false,
+        isSave: true,
+        isRemove: false,
+        isPrint: false,
+        isBack: true,
+      };
     case 'View':
-      return { isSearch: true, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: true };
+      return {
+        isSearch: true,
+        isAdd: false,
+        isSave: false,
+        isRemove: false,
+        isPrint: false,
+        isBack: true,
+      };
     case 'None':
     default:
-      return { isSearch: false, isAdd: false, isSave: false, isRemove: false, isPrint: false, isBack: false };
+      return {
+        isSearch: false,
+        isAdd: false,
+        isSave: false,
+        isRemove: false,
+        isPrint: false,
+        isBack: false,
+      };
   }
 }
 
@@ -90,7 +133,7 @@ interface RolePermissionData {
 // 4. Service
 // ============================================================
 @Injectable({ providedIn: 'root' })
-export class Pmrt27AService {
+export class burt02AService {
   private readonly http = inject(HttpClient);
 
   getRolePermissions(roleId: string): Observable<RolePermissionData> {
@@ -115,7 +158,8 @@ export class Pmrt27AService {
           }
 
           // ✅ ใช้ programName (แปลแล้ว) เป็นอันดับแรก
-          const moduleName = rp.programName || rp.programNameLocal || rp.programNameEn || rp.programCode;
+          const moduleName =
+            rp.programName || rp.programNameLocal || rp.programNameEn || rp.programCode;
 
           return {
             moduleId: rp.programId,
@@ -135,7 +179,7 @@ export class Pmrt27AService {
           roleName: '', // จะถูก set จาก component
           modules: modules,
         };
-      })
+      }),
     );
   }
 
@@ -169,7 +213,7 @@ export class Pmrt27AService {
 // 5. Component
 // ============================================================
 @Component({
-  selector: 'app-Pmrt27A',
+  selector: 'app-burt02A',
   standalone: true,
   imports: [
     CommonModule,
@@ -179,14 +223,14 @@ export class Pmrt27AService {
     SicComboboxComponent,
     SicInputComponent,
   ],
-  templateUrl: './Pmrt27A.component.html',
+  templateUrl: './burt02A.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
+export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
-  readonly service = inject(Pmrt27AService);
-  readonly roleService = inject(Pmrt28Service); // ✅ สำหรับดึงชื่อบทบาท
+  readonly service = inject(burt02AService);
+  readonly roleService = inject(burt03Service); // ✅ สำหรับดึงชื่อบทบาท
   readonly dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -209,7 +253,7 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
         this.roleId = id;
         this.loadData(id);
       } else {
-        this.router.navigate(['/feature/pm/pmrt27']);
+        this.router.navigate(['/feature/bu/pmrt27']);
       }
     });
   }
@@ -223,10 +267,12 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
       permissions: this.service.getRolePermissions(roleId),
       roleDetail: this.roleService.getRole(roleId),
     })
-      .pipe(finalize(() => {
-        this.isLoading.set(false);
-        this.cdr.markForCheck();
-      }))
+      .pipe(
+        finalize(() => {
+          this.isLoading.set(false);
+          this.cdr.markForCheck();
+        }),
+      )
       .subscribe({
         next: ({ permissions, roleDetail }) => {
           this.roleCode = permissions.roleCode || roleDetail.roleCode;
@@ -282,13 +328,13 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/pmrt27']);
+    this.router.navigate(['/feature/bu/pmrt27']);
   }
 
   submit() {
     if (!this.roleId) {
       this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบรหัสบทบาท');
-      this.router.navigate(['/feature/pm/pmrt27']);
+      this.router.navigate(['/feature/bu/pmrt27']);
       return;
     }
 
@@ -306,14 +352,16 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
 
     this.service
       .saveRolePermissions(data)
-      .pipe(finalize(() => {
-        this.isSaving.set(false);
-        this.cdr.markForCheck();
-      }))
+      .pipe(
+        finalize(() => {
+          this.isSaving.set(false);
+          this.cdr.markForCheck();
+        }),
+      )
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
-            this.router.navigate(['/feature/pm/pmrt27']);
+            this.router.navigate(['/feature/bu/pmrt27']);
           });
         },
         error: (error) => {
@@ -324,4 +372,4 @@ export class Pmrt27AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmrt27AComponent;
+export default Burt02AComponent;

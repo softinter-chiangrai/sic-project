@@ -1,4 +1,4 @@
-// src/app/feature/pm/rt/pmrt28/pmrt28.service.ts
+// src/app/feature/bu/rt/burt03/burt03.service.ts
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -8,7 +8,7 @@ import { environment } from '../../../../../environments/environment';
 export interface Role {
   id: string;
   roleCode: string;
-  roleName: string;          // ✅ เพิ่ม – ฟิลด์ที่แปลแล้วจาก Backend
+  roleName: string; // ✅ เพิ่ม – ฟิลด์ที่แปลแล้วจาก Backend
   roleNameEn: string;
   roleNameLocal: string;
   roleLevel: string;
@@ -18,7 +18,7 @@ export interface Role {
   parentRoleId?: string;
   rowVersion?: number;
   isDelete?: boolean;
-  color?: string;            // ✅ เพิ่ม – สีของบทบาท
+  color?: string; // ✅ เพิ่ม – สีของบทบาท
 }
 
 export interface ComboboxItem {
@@ -27,7 +27,7 @@ export interface ComboboxItem {
 }
 
 @Injectable({ providedIn: 'root' })
-export class Pmrt28Service {
+export class burt03Service {
   private baseUrl = environment.apiBaseUrl + '/api/su/business-roles';
   private businessUrl = environment.apiBaseUrl + '/api/business';
   private lovUrl = environment.apiBaseUrl + '/api/su/business-roles/lov';

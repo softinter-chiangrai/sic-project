@@ -1,9 +1,11 @@
-<!-- src/app/feature/pm/rt/pmrt27/pmrt27A/Pmrt27A.component.html -->
+<!-- src/app/feature/bu/rt/pmrt27/burt02A/burt02A.component.html -->
 
 <!-- ===== LOADING ===== -->
 @if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <div
+      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสิทธิ์...</p>
   </div>
 }
@@ -11,7 +13,6 @@
 <!-- ===== FORM ===== -->
 @if (!isLoading()) {
   <div class="space-y-5 p-0.5">
-
     <!-- HEADER -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
@@ -45,27 +46,42 @@
     </div>
 
     <!-- Legend -->
-    <div class="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+    <div
+      class="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]"
+    >
       <span class="font-medium text-[var(--text-active)]">📌 ระดับสิทธิ์:</span>
       @for (level of permissionLevels; track level.value) {
-        <span [class]="getLevelColor(level.value) + ' inline-block px-2 py-0.5 rounded text-[0.6rem] font-medium'">
+        <span
+          [class]="
+            getLevelColor(level.value) +
+            ' inline-block px-2 py-0.5 rounded text-[0.6rem] font-medium'
+          "
+        >
           {{ level.label }}
         </span>
       }
     </div>
 
     <!-- Permission Table -->
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+    <div
+      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
+    >
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]"
+            >
               โมดูล
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]"
+            >
               ระดับสิทธิ์
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]"
+            >
               สถานะปัจจุบัน
             </th>
           </tr>
@@ -87,12 +103,19 @@
                   class="w-full max-w-[250px] px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
                 >
                   @for (level of permissionLevels; track level.value) {
-                    <option [value]="level.value" [selected]="level.value === module.level">{{ level.label }}</option>
+                    <option [value]="level.value" [selected]="level.value === module.level">
+                      {{ level.label }}
+                    </option>
                   }
                 </select>
               </td>
               <td class="px-4 py-3">
-                <span [class]="getLevelColor(module.level) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                <span
+                  [class]="
+                    getLevelColor(module.level) +
+                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+                  "
+                >
                   {{ getLevelText(module.level) }}
                 </span>
               </td>
@@ -112,10 +135,11 @@
     </div>
 
     <!-- Summary -->
-    <div class="flex justify-between items-center text-sm text-[var(--text-muted)] border-t border-[var(--border)] pt-4">
+    <div
+      class="flex justify-between items-center text-sm text-[var(--text-muted)] border-t border-[var(--border)] pt-4"
+    >
       <span>โมดูลทั้งหมด: {{ modules().length }} รายการ</span>
       <span>เลือกระดับสิทธิ์จาก dropdown เพื่อปรับเปลี่ยน</span>
     </div>
-
   </div>
 }

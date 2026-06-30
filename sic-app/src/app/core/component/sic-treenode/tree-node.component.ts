@@ -1,7 +1,7 @@
-// src/app/feature/pm/rt/pmrt30/tree-node.component.ts
+// src/app/feature/pm/rt/burt05/tree-node.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 
 export interface TreeNode {
   id: string;
@@ -31,14 +31,21 @@ export interface TreeNode {
               (click)="toggleExpand($event)"
               class="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              <i class="bi" [class.bi-chevron-right]="!isExpanded()" [class.bi-chevron-down]="isExpanded()"></i>
+              <i
+                class="bi"
+                [class.bi-chevron-right]="!isExpanded()"
+                [class.bi-chevron-down]="isExpanded()"
+              ></i>
             </button>
           } @else {
             <span class="w-5"></span>
           }
 
           <!-- ไอคอน -->
-          <i class="bi text-gray-500 dark:text-gray-400" [class]="node.icon || 'bi-file-earmark'"></i>
+          <i
+            class="bi text-gray-500 dark:text-gray-400"
+            [class]="node.icon || 'bi-file-earmark'"
+          ></i>
 
           <!-- ชื่อโปรแกรม (คลิกเพื่อขยาย/ย่อ) -->
           <span
@@ -50,7 +57,9 @@ export interface TreeNode {
 
           <!-- จำนวนลูก -->
           @if (node.children.length > 0) {
-            <span class="text-xs text-gray-400 dark:text-gray-500">[{{ node.children.length }}]</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500"
+              >[{{ node.children.length }}]</span
+            >
           }
         </div>
       </td>
@@ -64,15 +73,17 @@ export interface TreeNode {
         <span class="text-xs text-gray-500 dark:text-gray-400">{{ node.routePath || '-' }}</span>
       </td>
       <td class="px-4 py-3">
-        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
-              [class.bg-emerald-100]="node.isActive"
-              [class.text-emerald-700]="node.isActive"
-              [class.bg-gray-200]="!node.isActive"
-              [class.text-gray-600]="!node.isActive"
-              [class.dark:bg-emerald-900/30]="node.isActive"
-              [class.dark:text-emerald-400]="node.isActive"
-              [class.dark:bg-gray-700]="!node.isActive"
-              [class.dark:text-gray-400]="!node.isActive">
+        <span
+          class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+          [class.bg-emerald-100]="node.isActive"
+          [class.text-emerald-700]="node.isActive"
+          [class.bg-gray-200]="!node.isActive"
+          [class.text-gray-600]="!node.isActive"
+          [class.dark:bg-emerald-900/30]="node.isActive"
+          [class.dark:text-emerald-400]="node.isActive"
+          [class.dark:bg-gray-700]="!node.isActive"
+          [class.dark:text-gray-400]="!node.isActive"
+        >
           {{ node.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
         </span>
       </td>

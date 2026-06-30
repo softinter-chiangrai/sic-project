@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -11,7 +11,7 @@ export interface Business {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BusinessService {
   private readonly STORAGE_KEY = 'businessId';
@@ -33,7 +33,7 @@ export class BusinessService {
     localStorage.setItem(this.STORAGE_KEY, id);
   }
 
-  /** ดึงรายการธุรกิจทั้งหมดของผู้ใช้ (ใช้ในหน้า pmrt29) */
+  /** ดึงรายการธุรกิจทั้งหมดของผู้ใช้ (ใช้ในหน้า burt04) */
   getMyBusinesses(): Observable<Business[]> {
     return this.http.get<Business[]>(`${this.apiUrl}/my-business`);
   }

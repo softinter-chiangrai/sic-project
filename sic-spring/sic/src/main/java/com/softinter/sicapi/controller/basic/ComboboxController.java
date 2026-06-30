@@ -133,7 +133,7 @@ public class ComboboxController {
 
      // ✅ เพิ่ม method นี้
     @GetMapping("/combobox-role")
-    @Operation(summary = "Get business roles for combobox (ใช้ในหน้า pmrt29A)")
+    @Operation(summary = "Get business roles for combobox (ใช้ในหน้า burt04A)")
     public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
         return ResponseEntity.ok(businessInviteService.getComboboxRoles());
     }

@@ -1,31 +1,24 @@
-<!-- src/app/feature/pm/rt/pmrt29/pmrt29A/pmrt29A.component.html -->
+<!-- src/app/feature/bu/rt/pmrt29/burt04A/burt04A.component.html -->
 
 @if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <div
+      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
   </div>
 }
 
 @if (!isLoading()) {
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-2xl mx-auto p-4 space-y-6">
-
     <h2 class="text-3xl font-semibold text-center text-[var(--text-active)]">
       {{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในธุรกิจ' }}
     </h2>
 
     <!-- User Info (readonly) -->
-    <sic-input
-      label="ชื่อผู้ใช้"
-      formControlName="userName"
-      [disabled]="true"
-    ></sic-input>
+    <sic-input label="ชื่อผู้ใช้" formControlName="userName" [disabled]="true"></sic-input>
 
-    <sic-input
-      label="อีเมล"
-      formControlName="userEmail"
-      [disabled]="true"
-    ></sic-input>
+    <sic-input label="อีเมล" formControlName="userEmail" [disabled]="true"></sic-input>
 
     <!-- ✅ เลือกบทบาท -->
     <div>
@@ -48,7 +41,9 @@
       <!-- ✅ แสดงรายการบทบาทที่เลือกแล้ว -->
       <div class="mt-3 flex flex-wrap gap-2">
         @for (roleId of form.get('roleIds')?.value || []; track roleId) {
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+          <span
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20"
+          >
             {{ getRoleName(roleId) }}
             <button
               type="button"
@@ -94,6 +89,5 @@
         {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
       </sic-button>
     </div>
-
   </form>
 }
