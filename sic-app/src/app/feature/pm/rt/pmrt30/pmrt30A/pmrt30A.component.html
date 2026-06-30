@@ -131,10 +131,13 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >โปรแกรมแม่</label
           >
-          <select formControlName="parentProgramId" class="...">
+          <!-- ✅ แก้ไข: เพิ่ม class ให้สมบูรณ์เหมือน input อื่นๆ -->
+          <select
+            formControlName="parentProgramId"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none pr-8"
+          >
             <option [value]="null">ไม่มี (Root)</option>
             @for (p of programs(); track p.id) {
-              <!-- ✅ แก้ไข: ใช้ p.programName แทน p.programNameEn -->
               <option [value]="p.id">{{ p.programCode }} - {{ p.programName }}</option>
             }
           </select>
@@ -189,6 +192,7 @@
                   <span class="font-medium text-gray-700 dark:text-gray-300">{{
                     rp.roleName
                   }}</span>
+                  <!-- ✅ แก้ไข: เพิ่ม appearance-none ให้ select ในส่วนนี้ด้วย -->
                   <select
                     [value]="rp.level"
                     (change)="updateRolePermission(rp.roleId, $any($event.target).value)"
