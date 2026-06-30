@@ -1,0 +1,83 @@
+// src/app/feature/pm/rt/pmrt01A/pmrt01A.service.ts
+
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import type { CustomerModel } from './pmrt01A.model';
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class Pmrt01AService {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/su-customer';
+
+  // ✅ Combobox endpoints (ใช้ของ Budt01Controller)
+  apiGetLovPersonType = environment.apiBaseUrl + '/api/bu/burt01/lov-person-type';
+  apiGetComboboxTitle = environment.apiBaseUrl + '/api/bu/burt01/combobox-title';
+  apiGetComboboxCountry = environment.apiBaseUrl + '/api/bu/burt01/combobox-country';
+  apiGetComboboxProvince = environment.apiBaseUrl + '/api/bu/burt01/combobox-province';
+  apiGetComboboxDistrict = environment.apiBaseUrl + '/api/bu/burt01/combobox-district';
+  apiGetComboboxSubDistrict = environment.apiBaseUrl + '/api/bu/burt01/combobox-sub-district';
+
+  // ===== CRUD =====
+
+  /** ดึงรายการลูกค้าแบบแบ่งหน้า */
+  getCustomers(
+    businessId: string,
+    page: number,
+    size: number,
+    keyword?: string
+  ): Observable<PageResponse<CustomerModel>> {
+    let params = new HttpParams()
+      .set('businessId', businessId)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (keyword) params = params.set('keyword', keyword);
+    return this.http.get<PageResponse<CustomerModel>>(this.baseUrl, { params });
+  }
+
+  /** ดึงลูกค้าตาม ID */
+  getCustomer(id: string): Observable<CustomerModel> {
+    return this.http.get<CustomerModel>(`${this.baseUrl}/${id}`);
+  }
+
+  /** สร้างลูกค้าใหม่ */
+  createCustomer(businessId: string, data: CustomerModel): Observable<CustomerModel> {
+    const params = new HttpParams().set('businessId', businessId);
+    return this.http.post<CustomerModel>(this.baseUrl, data, { params });
+  }
+
+  /** อัปเดตลูกล้า */
+  updateCustomer(id: string, data: CustomerModel): Observable<CustomerModel> {
+    return this.http.put<CustomerModel>(`${this.baseUrl}/${id}`, data);
+  }
+
+  /** ลบลูกค้า (soft delete) */
+  deleteCustomer(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  /** ดึงลูกค้าที่ Active ทั้งหมด (ไม่แบ่งหน้า) */
+  getActiveCustomers(businessId: string): Observable<CustomerModel[]> {
+    const params = new HttpParams().set('businessId', businessId);
+    return this.http.get<CustomerModel[]>(`${this.baseUrl}/active`, { params });
+  }
+
+  /** ค้นหาลูกค้า */
+  searchCustomers(businessId: string, keyword: string, page: number, size: number) {
+    const params = new HttpParams()
+      .set('businessId', businessId)
+      .set('keyword', keyword)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<PageResponse<CustomerModel>>(`${this.baseUrl}/search`, { params });
+  }
+}

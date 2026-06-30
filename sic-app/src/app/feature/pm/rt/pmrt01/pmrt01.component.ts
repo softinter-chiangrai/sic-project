@@ -1,154 +1,65 @@
+// src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
+
 import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
 
-// ===== Interfaces =====
-interface Customer {
-  id: string;
-  code: string;
-  firstNameEn: string;
-  lastNameEn: string;
-  firstNameLocal?: string;
-  lastNameLocal?: string;
-  email: string;
-  phoneNumber?: string;
-  isActive: boolean;
-  taxId?: string;
-  addressEn?: string;
-  addressLocal?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { DialogService } from '../../../../core/services/dialog.service';
+import type { CustomerModel } from './pmrt01A/pmrt01A.model';
+import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 
-// ===== Component =====
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt01Component implements OnInit {
-  private fb = inject(FormBuilder);
   private router = inject(Router);
+  private service = inject(Pmrt01AService);
+  private dialog = inject(DialogService);
 
-  // ===== State Signals =====
+  // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('createdAt');
-  protected sortDir = signal<'asc' | 'desc'>('desc');
+  protected sortBy = signal('customerCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected selectedCustomer = signal<Customer | null>(null);
-
-  // ===== Data =====
-  protected customers = signal<Customer[]>([
-    {
-      id: '1',
-      code: 'CUS-001',
-      firstNameEn: 'สมชาย',
-      lastNameEn: 'ใจดี',
-      firstNameLocal: 'สมชาย',
-      lastNameLocal: 'ใจดี',
-      email: 'somchai@example.com',
-      phoneNumber: '081-234-5678',
-      isActive: true,
-      taxId: '1-2345-67890-12-3',
-      createdAt: '2024-01-15 09:30:00',
-      updatedAt: '2024-01-15 09:30:00',
-    },
-    {
-      id: '2',
-      code: 'CUS-002',
-      firstNameEn: 'สมหญิง',
-      lastNameEn: 'รักเรียน',
-      firstNameLocal: 'สมหญิง',
-      lastNameLocal: 'รักเรียน',
-      email: 'somying@example.com',
-      phoneNumber: '082-345-6789',
-      isActive: true,
-      taxId: '2-3456-78901-23-4',
-      createdAt: '2024-02-20 14:15:00',
-      updatedAt: '2024-02-20 14:15:00',
-    },
-    {
-      id: '3',
-      code: 'CUS-003',
-      firstNameEn: 'บริษัท',
-      lastNameEn: 'ซอฟต์แวร์ จำกัด',
-      firstNameLocal: 'บริษัท',
-      lastNameLocal: 'ซอฟต์แวร์ จำกัด',
-      email: 'info@softflow.com',
-      phoneNumber: '083-456-7890',
-      isActive: false,
-      taxId: '3-4567-89012-34-5',
-      createdAt: '2024-03-10 10:00:00',
-      updatedAt: '2024-03-10 10:00:00',
-    },
-    {
-      id: '4',
-      code: 'CUS-004',
-      firstNameEn: 'วิชัย',
-      lastNameEn: 'พัฒนาชัย',
-      firstNameLocal: 'วิชัย',
-      lastNameLocal: 'พัฒนาชัย',
-      email: 'vichai@example.com',
-      phoneNumber: '084-567-8901',
-      isActive: true,
-      taxId: '4-5678-90123-45-6',
-      createdAt: '2024-03-15 16:45:00',
-      updatedAt: '2024-03-15 16:45:00',
-    },
-    {
-      id: '5',
-      code: 'CUS-005',
-      firstNameEn: 'มานี',
-      lastNameEn: 'มีทรัพย์',
-      firstNameLocal: 'มานี',
-      lastNameLocal: 'มีทรัพย์',
-      email: 'manee@example.com',
-      phoneNumber: '085-678-9012',
-      isActive: false,
-      taxId: '5-6789-01234-56-7',
-      createdAt: '2024-04-01 08:20:00',
-      updatedAt: '2024-04-01 08:20:00',
-    },
-  ]);
+  protected customers = signal<CustomerModel[]>([]);
+  protected totalItems = signal(0);
+  protected businessId = '';
 
   // ===== Computed =====
   protected filteredCustomers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const status = this.filterStatus();
-
     let result = this.customers();
-
     if (term) {
-      result = result.filter(c =>
-        c.code.toLowerCase().includes(term) ||
-        `${c.firstNameEn} ${c.lastNameEn}`.toLowerCase().includes(term) ||
-        c.email.toLowerCase().includes(term) ||
-        (c.phoneNumber && c.phoneNumber.includes(term))
+      result = result.filter(
+        (c) =>
+          c.customerCode?.toLowerCase().includes(term) ||
+          c.companyNameEn?.toLowerCase().includes(term) ||
+          c.companyNameLocal?.toLowerCase().includes(term) ||
+          c.email?.toLowerCase().includes(term) ||
+          c.contactPerson?.toLowerCase().includes(term)
       );
     }
-
-    if (status === 'active') {
-      result = result.filter(c => c.isActive);
-    } else if (status === 'inactive') {
-      result = result.filter(c => !c.isActive);
-    }
+    if (status === 'active') result = result.filter((c) => c.isActive);
+    else if (status === 'inactive') result = result.filter((c) => !c.isActive);
 
     const sortField = this.sortBy();
     const direction = this.sortDir();
     result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Customer] ?? '';
-      const bVal = b[sortField as keyof Customer] ?? '';
+      const aVal = a[sortField as keyof CustomerModel] ?? '';
+      const bVal = b[sortField as keyof CustomerModel] ?? '';
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return direction === 'asc' ? 1 : -1;
       return 0;
     });
-
     return result;
   });
 
@@ -158,34 +69,57 @@ export class Pmrt01Component implements OnInit {
     return all.slice(start, start + this.pageSize());
   });
 
-  protected totalItems = computed(() => this.filteredCustomers().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
-  // ===== Math =====
   protected Math = Math;
 
-  // ===== Lifecycle =====
   ngOnInit() {
-    // เรียก API จริง
-    // this.loadCustomers();
+    this.businessId = localStorage.getItem('businessId') || '';
+    if (this.businessId) {
+      this.loadCustomers();
+    }
   }
 
-  // ===== Actions =====
+  loadCustomers() {
+    this.isLoading.set(true);
+    const page = this.currentPage() - 1;
+    this.service
+      .getCustomers(this.businessId, page, this.pageSize(), this.searchTerm() || undefined)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (pageData) => {
+          this.customers.set(pageData.content);
+          this.totalItems.set(pageData.totalElements);
+        },
+        error: (err) => {
+          console.error('Load customers error', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
+        },
+      });
+  }
+
+  // ===== Event Handlers =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
     this.currentPage.set(1);
   }
 
@@ -207,54 +141,75 @@ export class Pmrt01Component implements OnInit {
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.loadCustomers(); // โหลดข้อมูลใหม่
   }
 
   goToAdd() {
-  this.router.navigate(['/feature/pm/customer/new']);
-}
-
-goToEdit(id: string) {
-  this.router.navigate(['/feature/pm/customer', id, 'edit']);
-}
-
-// ✅ แก้ไข goToView (ถ้ามี)
-goToView(id: string) {
-  this.router.navigate(['/feature/pm/customer', id, 'view']);
-}
-
-  toggleActive(customer: Customer) {
-    const updated = { ...customer, isActive: !customer.isActive };
-    this.customers.update(list =>
-      list.map(c => c.id === customer.id ? updated : c)
-    );
+    this.router.navigate(['/feature/pm/customer/new']);
   }
 
-  deleteCustomer(id: string) {
-    if (confirm('คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?')) {
-      this.customers.update(list => list.filter(c => c.id !== id));
+  goToEdit(id: string | undefined) {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
+      return;
     }
+    this.router.navigate(['/feature/pm/customer', id, 'edit']);
   }
 
-  getStatusClass(isActive: boolean): string {
+  toggleActive(customer: CustomerModel) {
+    if (!customer.id) return;
+    const updated = { ...customer, isActive: !customer.isActive };
+    this.service.updateCustomer(customer.id, updated).subscribe({
+      next: () => {
+        this.loadCustomers();
+        this.dialog.success('อัปเดตสถานะสำเร็จ', `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`);
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
+      },
+    });
+  }
+
+  deleteCustomer(id: string | undefined) {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
+      return;
+    }
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        this.service.deleteCustomer(id).subscribe({
+          next: () => {
+            this.loadCustomers();
+            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
+          },
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
+          },
+        });
+      }
+    });
+  }
+
+  // ===== Utility Methods =====
+  // ✅ รองรับ boolean | undefined
+  getStatusClass(isActive: boolean | undefined): string {
     return isActive
-      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
       : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
   }
 
-  getStatusText(isActive: boolean): string {
+  getStatusText(isActive: boolean | undefined): string {
     return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 
-  getInitials(firstName: string, lastName: string): string {
-    return (firstName?.charAt(0) || '') + (lastName?.charAt(0) || '');
+  // ✅ รองรับ string | undefined
+  getInitials(companyName: string | undefined): string {
+    if (!companyName) return '?';
+    return companyName.charAt(0).toUpperCase();
   }
 
-  formatDate(dateStr: string): string {
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -269,5 +224,3 @@ goToView(id: string) {
     }
   }
 }
-
-export default Pmrt01Component;

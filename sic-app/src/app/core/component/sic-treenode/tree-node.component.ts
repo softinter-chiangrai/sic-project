@@ -47,8 +47,7 @@ export interface TreeNode {
           >
             {{ node.name }}
           </span>
-          <!-- ❌ ลบวงเล็บภาษาไทยออกแล้ว -->
-          <!-- <span class="text-xs text-gray-500 dark:text-gray-400">({{ node.nameLocal }})</span> -->
+          <span class="text-xs text-gray-500 dark:text-gray-400">({{ node.nameLocal }})</span>
 
           <!-- จำนวนลูก -->
           @if (node.children.length > 0) {
