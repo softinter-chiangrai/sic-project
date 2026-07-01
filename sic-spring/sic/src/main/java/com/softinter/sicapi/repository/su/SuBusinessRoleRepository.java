@@ -33,6 +33,10 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
         @Param("businessId") UUID businessId, 
         @Param("roleCode") String roleCode
     );
+
+    @Query("SELECT r FROM SuBusinessRole r WHERE r.business.id = :businessId AND r.roleCode = :roleCode AND r.isDelete = true")
+    Optional<SuBusinessRole> findByBusinessIdAndRoleCodeAndIsDeleteTrue(@Param("businessId") UUID businessId,
+                                                                     @Param("roleCode") String roleCode);
   
 
   

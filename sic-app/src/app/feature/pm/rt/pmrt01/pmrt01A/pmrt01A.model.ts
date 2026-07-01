@@ -1,33 +1,43 @@
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.model.ts
 
+import type { SicFromData } from "../../../../../core/model/sic-from-data";
 import type { StorageUploadReference } from "../../../../../core/services/chat.service";
+
 
 export interface CustomerModel {
   id?: string;
-  customerCode: string;                    // แทน businessCode
+  customerCode: string;
   taxId?: string;
-  companyNameEn: string;                  // แทน firstNameEn (ใช้ชื่อบริษัท)
-  companyNameLocal: string;               // แทน firstNameLocal
-  contactPerson?: string;                 // เพิ่ม
+  companyNameEn: string;
+  companyNameLocal: string;
+  contactPerson?: string;
   phoneNumber?: string;
   email?: string;
-  lineId?: string;                        // เพิ่ม
+  lineId?: string;
   addressEn?: string;
   addressLocal?: string;
   provinceId?: string;
   districtId?: string;
   subDistrictId?: string;
+  countryId?: string;
   zipCode?: string;
-  customerType?: string;                  // เพิ่ม (เช่น "INDIVIDUAL", "CORPORATE")
-  remark?: string;                        // เพิ่ม
+  customerType?: string;
+  remark?: string;
   isActive?: boolean;
-  // ฟิลด์เพิ่มเติมจาก Backend (response)
+
+  // Response fields
   provinceName?: string;
+  countryName?: string;
   districtName?: string;
   subDistrictName?: string;
+
+  // State & Version
   state?: number;
   rowVersion?: number;
-  // เก็บไว้สำหรับ upload
   uploadGroupId?: string;
   uploadGroupData?: StorageUploadReference[];
+}
+
+export interface CustomerFormData {
+  customer: SicFromData<CustomerModel>;
 }

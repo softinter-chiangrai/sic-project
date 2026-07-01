@@ -29,4 +29,5 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
                                 @Param("deleteBy") String deleteBy,
                                 @Param("deleteDate") Instant deleteDate,
                                 @Param("now") Instant now);
+
 }

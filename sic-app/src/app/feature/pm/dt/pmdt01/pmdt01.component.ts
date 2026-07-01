@@ -81,8 +81,6 @@ export class Pmdt01Component implements OnInit, CanComponentDeactivate {
     });
   }
 
- 
-
   onCountryChange(event: any): void {
     this.formCustomerData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
     this.formCustomerData.formGroup.get('provinceId')?.setValue(null);
@@ -108,7 +106,7 @@ export class Pmdt01Component implements OnInit, CanComponentDeactivate {
 
   // ✅ แก้ไข onBack
   onBack(): void {
-    this.router.navigate(['/feature/pm/customer']);
+    this.router.navigate(['/feature/pm/pmrt01']);
   }
 
   // ✅ แก้ไข submit
@@ -124,32 +122,30 @@ export class Pmdt01Component implements OnInit, CanComponentDeactivate {
       next: (response) => {
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
           this.formCustomerData.markAsPristine();
-          this.router.navigate(['/feature/pm/customer']); // ✅ แก้ไข
+          this.router.navigate(['/feature/pm/pmrt01']); // ✅ แก้ไข
         });
       },
       error: (error) => {
         this.dialog.error('บันทึก', error);
       },
     });
-
-    
   }
   isLoading = false; // เพิ่มไว้ด้านบน
 
-loadCustomer(id: string) {
-  this.isLoading = true;  // เริ่มโหลด
-  this.service.getCustomer(id).subscribe({
-    next: (data) => {
-      this.formCustomerData.formGroup.patchValue(data);
-      this.isLoading = false;
-      console.log('✅ โหลดข้อมูลสำเร็จ:', data);
-    },
-    error: (error) => {
-      this.isLoading = false;
-      console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-      this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
-      this.router.navigate(['/feature/pm/customer']);
-    }
-  });
-}
+  loadCustomer(id: string) {
+    this.isLoading = true; // เริ่มโหลด
+    this.service.getCustomer(id).subscribe({
+      next: (data) => {
+        this.formCustomerData.formGroup.patchValue(data);
+        this.isLoading = false;
+        console.log('✅ โหลดข้อมูลสำเร็จ:', data);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
+        this.router.navigate(['/feature/pm/pmrt01']);
+      },
+    });
+  }
 }

@@ -8,7 +8,9 @@
         <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
         รายการลูกค้า
       </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+      <span
+        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
+      >
         {{ totalItems() }} รายการ
       </span>
     </div>
@@ -23,7 +25,9 @@
   <!-- FILTERS -->
   <div class="flex flex-wrap gap-3 items-center">
     <div class="relative flex-1 min-w-[200px]">
-      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <i
+        class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
+      ></i>
       <input
         type="text"
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
@@ -55,14 +59,18 @@
   <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
       <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
     </div>
   }
 
   <!-- TABLE -->
   @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+    <div
+      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
+    >
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
@@ -72,7 +80,11 @@
             >
               รหัส
               @if (sortBy() === 'customerCode') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
               }
             </th>
             <th
@@ -81,7 +93,11 @@
             >
               ชื่อบริษัท
               @if (sortBy() === 'companyNameEn') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
               }
             </th>
             <th
@@ -90,7 +106,11 @@
             >
               อีเมล
               @if (sortBy() === 'email') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
               }
             </th>
             <th
@@ -104,10 +124,16 @@
             >
               สถานะ
               @if (sortBy() === 'isActive') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
               }
             </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+            <th
+              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
+            >
               จัดการ
             </th>
           </tr>
@@ -117,7 +143,9 @@
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
               <!-- รหัส -->
               <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                <span
+                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
+                >
                   {{ customer.customerCode }}
                 </span>
               </td>
@@ -125,9 +153,20 @@
               <!-- ชื่อบริษัท -->
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase">
-                    {{ getInitials(customer.companyNameEn) }}
-                  </div>
+                  @if (customer.uploadGroupData && customer.uploadGroupData.length > 0) {
+                    <img
+                      [src]="getImageUrl(customer)"
+                      alt="{{ customer.companyNameEn }}"
+                      class="w-9 h-9 rounded-full object-cover border border-[var(--border)] flex-shrink-0"
+                      (error)="onImageError($event)"
+                    />
+                  } @else {
+                    <div
+                      class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase"
+                    >
+                      {{ getInitials(customer.companyNameEn) }}
+                    </div>
+                  }
                   <div class="min-w-0">
                     <div class="font-medium text-[var(--text-active)] truncate">
                       {{ customer.companyNameEn }}
@@ -143,7 +182,10 @@
 
               <!-- อีเมล -->
               <td class="px-4 py-3">
-                <a [href]="'mailto:' + customer.email" class="text-[var(--crm-primary)] hover:underline transition-colors">
+                <a
+                  [href]="'mailto:' + customer.email"
+                  class="text-[var(--crm-primary)] hover:underline transition-colors"
+                >
                   {{ customer.email }}
                 </a>
               </td>
@@ -155,7 +197,12 @@
 
               <!-- สถานะ -->
               <td class="px-4 py-3">
-                <span [class]="getStatusClass(customer.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                <span
+                  [class]="
+                    getStatusClass(customer.isActive) +
+                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+                  "
+                >
                   {{ getStatusText(customer.isActive) }}
                 </span>
               </td>
@@ -181,7 +228,11 @@
                     [class.dark:hover:bg-gray-700]="!customer.isActive"
                     [title]="customer.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
                   >
-                    <i class="bi" [class.bi-check-circle-fill]="customer.isActive" [class.bi-x-circle]="!customer.isActive"></i>
+                    <i
+                      class="bi"
+                      [class.bi-check-circle-fill]="customer.isActive"
+                      [class.bi-x-circle]="!customer.isActive"
+                    ></i>
                   </button>
                   <button
                     (click)="deleteCustomer(customer.id)"
@@ -201,7 +252,7 @@
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลลูกค้า</p>
                   <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มลูกค้าใหม่</p>
                   <button
-                    [routerLink]="['/feature/pm/customer/new']"
+                    [routerLink]="['/feature/pm/pmrt01/new']"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
                   >
                     <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
@@ -220,9 +271,13 @@
     <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
       <div class="text-sm text-[var(--text-muted)]">
         แสดง
-        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        <strong class="text-[var(--text-active)]">{{
+          (currentPage() - 1) * pageSize() + 1
+        }}</strong>
         -
-        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        <strong class="text-[var(--text-active)]">{{
+          Math.min(currentPage() * pageSize(), totalItems())
+        }}</strong>
         จาก
         <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
         รายการ
@@ -240,9 +295,10 @@
         @for (page of pageNumbers(); track page) {
           <button
             (click)="onPageChange(page)"
-            [class]="page === currentPage()
-              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
+            [class]="
+              page === currentPage()
+                ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+                : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
             "
           >
             {{ page }}

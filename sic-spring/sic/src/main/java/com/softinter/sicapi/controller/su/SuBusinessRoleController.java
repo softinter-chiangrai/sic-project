@@ -125,71 +125,100 @@ public class SuBusinessRoleController {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save business role")
-    public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest request) {
-        SuBusinessRole role;
+@Operation(summary = "Save business role")
+public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest request) {
+    SuBusinessRole role;
 
-        // ===== 1. กรณีแก้ไข / เพิ่มใหม่ =====
-        if (request.getId() != null) {
-            role = businessRoleRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Business role not found"));
-            if (request.getRowVersion() != null) {
-                role.setRowVersion(request.getRowVersion());
-            }
-        } else {
-            role = new SuBusinessRole();
+    // ===== 1. กรณีแก้ไข (มี id) =====
+    if (request.getId() != null) {
+        role = businessRoleRepository.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("Business role not found"));
+        if (request.getRowVersion() != null) {
+            role.setRowVersion(request.getRowVersion());
         }
+    } else {
+        // ===== กรณีเพิ่มใหม่ (ไม่มี id) =====
 
-        // ===== 2. ตรวจสอบ BusinessId (required) =====
+        // 2. ตรวจสอบ BusinessId (required)
         if (request.getBusinessId() == null) {
             throw new IllegalArgumentException("BusinessId is required");
         }
+
+        // 🔍 3. ค้นหาบทบาทที่ถูกลบ (isDelete = true) ที่มี roleCode และ businessId เดียวกัน
+        Optional<SuBusinessRole> deletedRole = businessRoleRepository
+                .findByBusinessIdAndRoleCodeAndIsDeleteTrue(request.getBusinessId(), request.getRoleCode());
+
+        if (deletedRole.isPresent()) {
+            // ✅ พบ => กู้คืน (Reactivate) แทนการสร้างใหม่
+            role = deletedRole.get();
+            role.setIsDelete(false);
+            role.setIsActive(true);
+            role.setDeleteBy(null);
+            role.setDeleteDate(null);
+
+            // อัปเดตข้อมูลจาก request (อาจมีการเปลี่ยนแปลง)
+            SuBusiness business = businessRepository.findById(request.getBusinessId())
+                    .orElseThrow(() -> new RuntimeException("Business not found: " + request.getBusinessId()));
+            role.setBusiness(business);
+
+            if (request.getParentRoleId() != null) {
+                SuBusinessRole parentRole = businessRoleRepository.findById(request.getParentRoleId())
+                        .orElseThrow(() -> new RuntimeException("Parent role not found: " + request.getParentRoleId()));
+                role.setParentRole(parentRole);
+            } else {
+                role.setParentRole(null);
+            }
+
+            role.setRoleNameEn(request.getRoleNameEn());
+            role.setRoleNameLocal(request.getRoleNameLocal());
+            role.setRoleLevel(request.getRoleLevel());
+            role.setSortOrder(request.getSortOrder());
+            role.setColor(request.getColor());
+            // isActive ถูกตั้งเป็น true แล้ว
+
+            businessRoleRepository.save(role);
+            programAccessService.removeAllAccessCache();
+            return ResponseEntity.ok(role.getId());
+        }
+
+        // 4. ถ้าไม่มี deleted role ให้สร้างใหม่ (ตามปกติ)
+        role = new SuBusinessRole();
+
+        // 5. ตั้งค่า business / parent
         SuBusiness business = businessRepository.findById(request.getBusinessId())
                 .orElseThrow(() -> new RuntimeException("Business not found: " + request.getBusinessId()));
         role.setBusiness(business);
 
-        // ===== 3. ตรวจสอบ ParentRoleId (optional) =====
         if (request.getParentRoleId() != null) {
             SuBusinessRole parentRole = businessRoleRepository.findById(request.getParentRoleId())
                     .orElseThrow(() -> new RuntimeException("Parent role not found: " + request.getParentRoleId()));
             role.setParentRole(parentRole);
-        } else {
-            role.setParentRole(null);
         }
 
-        // ===== 4. ตรวจสอบ Role Code ซ้ำ =====
-        if (request.getId() == null) {
-            // เพิ่มใหม่
-            if (businessRoleRepository.existsByBusinessIdAndRoleCodeAndIsDeleteFalse(
-                    request.getBusinessId(), request.getRoleCode())) {
-                throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
-            }
-        } else {
-            // แก้ไข: ต้องไม่ใช่ตัวเอง
-            Optional<SuBusinessRole> existing = businessRoleRepository
-                    .findByBusinessIdAndRoleCodeAndIsDeleteFalse(request.getBusinessId(), request.getRoleCode());
-            if (existing.isPresent() && !existing.get().getId().equals(request.getId())) {
-                throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
-            }
+        // 6. ตรวจสอบ Role Code ซ้ำ (เฉพาะ active)
+        if (businessRoleRepository.existsByBusinessIdAndRoleCodeAndIsDeleteFalse(
+                request.getBusinessId(), request.getRoleCode())) {
+            throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
         }
-
-        // ===== 5. ตั้งค่าฟิลด์อื่น ๆ =====
-        role.setRoleCode(request.getRoleCode());
-        role.setRoleNameEn(request.getRoleNameEn());
-        role.setRoleNameLocal(request.getRoleNameLocal());
-        role.setRoleLevel(request.getRoleLevel());
-        role.setSortOrder(request.getSortOrder());
-        role.setIsActive(request.isActive());
-        role.setColor(request.getColor());
-
-        // ===== 6. บันทึก =====
-        businessRoleRepository.save(role);
-
-        // ===== 7. เคลียร์ Cache =====
-        programAccessService.removeAllAccessCache();
-
-        return ResponseEntity.ok(role.getId());
     }
+
+    // ===== ตั้งค่าฟิลด์อื่น ๆ (สำหรับทั้งแก้ไขและสร้างใหม่) =====
+    role.setRoleCode(request.getRoleCode());
+    role.setRoleNameEn(request.getRoleNameEn());
+    role.setRoleNameLocal(request.getRoleNameLocal());
+    role.setRoleLevel(request.getRoleLevel());
+    role.setSortOrder(request.getSortOrder());
+    role.setIsActive(request.isActive());
+    role.setColor(request.getColor());
+
+    // ===== บันทึก =====
+    businessRoleRepository.save(role);
+
+    // ===== เคลียร์ Cache =====
+    programAccessService.removeAllAccessCache();
+
+    return ResponseEntity.ok(role.getId());
+}
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete business role")

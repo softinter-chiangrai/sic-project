@@ -29,4 +29,28 @@ public interface SuCustomerRepository extends JpaRepository<SuCustomer, UUID> {
     Page<SuCustomer> searchByKeyword(@Param("businessId") UUID businessId,
                                      @Param("keyword") String keyword,
                                      Pageable pageable);
+
+    Optional<SuCustomer> findByIdAndBusinessId(UUID id, UUID businessId);
+
+    @Query("SELECT c FROM SuCustomer c " +
+           "LEFT JOIN FETCH c.province p " +
+           "LEFT JOIN FETCH p.country " +
+           "LEFT JOIN FETCH c.district " +
+           "LEFT JOIN FETCH c.subDistrict " +
+           "WHERE c.businessId = :businessId AND c.isDelete = false AND c.isActive = true")
+    Page<SuCustomer> findByBusinessIdAndIsActiveTrueWithFetch(@Param("businessId") UUID businessId,
+                                                               Pageable pageable);
+
+    @Query("SELECT c FROM SuCustomer c " +
+           "LEFT JOIN FETCH c.province p " +
+           "LEFT JOIN FETCH p.country " +
+           "LEFT JOIN FETCH c.district " +
+           "LEFT JOIN FETCH c.subDistrict " +
+           "WHERE c.businessId = :businessId AND c.isDelete = false " +
+           "AND (LOWER(c.companyNameEn) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(c.companyNameLocal) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<SuCustomer> searchByKeywordWithFetch(@Param("businessId") UUID businessId,
+                                              @Param("keyword") String keyword,
+                                              Pageable pageable);
 }

@@ -61,4 +61,10 @@ public class SuCustomerRequest {
     private Boolean isActive = true;
 
     private String remark;
+
+    // State & Version (for optimistic locking)
+    private Integer state;
+    private Integer rowVersion;
+
+    private UUID uploadGroupId;
 }

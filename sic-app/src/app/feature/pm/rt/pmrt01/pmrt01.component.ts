@@ -1,13 +1,21 @@
 // src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
 
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { DialogService } from '../../../../core/services/dialog.service';
-import type { CustomerModel } from './pmrt01A/pmrt01A.model';
+import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmrt01',
@@ -26,10 +34,10 @@ export class Pmrt01Component implements OnInit {
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('customerCode');
+  protected sortBy = signal('customerCode'); // ✅ เปลี่ยนเป็น customerCode
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected customers = signal<CustomerModel[]>([]);
+  protected customers = signal<CustomerModel[]>([]); // ✅ เปลี่ยนชื่อเป็น customers และใช้ CustomerModel
   protected totalItems = signal(0);
   protected businessId = '';
 
@@ -45,7 +53,7 @@ export class Pmrt01Component implements OnInit {
           c.companyNameEn?.toLowerCase().includes(term) ||
           c.companyNameLocal?.toLowerCase().includes(term) ||
           c.email?.toLowerCase().includes(term) ||
-          c.contactPerson?.toLowerCase().includes(term)
+          c.contactPerson?.toLowerCase().includes(term),
       );
     }
     if (status === 'active') result = result.filter((c) => c.isActive);
@@ -89,11 +97,12 @@ export class Pmrt01Component implements OnInit {
   ngOnInit() {
     this.businessId = localStorage.getItem('businessId') || '';
     if (this.businessId) {
-      this.loadCustomers();
+      this.loadCustomers(); // ✅ เปลี่ยนชื่อเป็น loadCustomers
     }
   }
 
   loadCustomers() {
+    // ✅ เปลี่ยนชื่อเป็น loadCustomers
     this.isLoading.set(true);
     const page = this.currentPage() - 1;
     this.service
@@ -145,7 +154,7 @@ export class Pmrt01Component implements OnInit {
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/customer/new']);
+    this.router.navigate(['/feature/pm/pmrt01/new']); // ✅ เปลี่ยน path ตาม routes
   }
 
   goToEdit(id: string | undefined) {
@@ -153,16 +162,21 @@ export class Pmrt01Component implements OnInit {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
       return;
     }
-    this.router.navigate(['/feature/pm/customer', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt01', id, 'edit']); // ✅ เปลี่ยน path ตาม routes
   }
 
   toggleActive(customer: CustomerModel) {
+    // ✅ เปลี่ยนพารามิเตอร์เป็น customer
     if (!customer.id) return;
     const updated = { ...customer, isActive: !customer.isActive };
     this.service.updateCustomer(customer.id, updated).subscribe({
+      // ✅ ใช้ updateCustomer
       next: () => {
         this.loadCustomers();
-        this.dialog.success('อัปเดตสถานะสำเร็จ', `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`);
+        this.dialog.success(
+          'อัปเดตสถานะสำเร็จ',
+          `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
+        );
       },
       error: (err) => {
         this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
@@ -171,6 +185,7 @@ export class Pmrt01Component implements OnInit {
   }
 
   deleteCustomer(id: string | undefined) {
+    // ✅ เปลี่ยนชื่อเป็น deleteCustomer
     if (!id) {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
       return;
@@ -178,6 +193,7 @@ export class Pmrt01Component implements OnInit {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
       if (confirmed) {
         this.service.deleteCustomer(id).subscribe({
+          // ✅ ใช้ deleteCustomer
           next: () => {
             this.loadCustomers();
             this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
@@ -191,7 +207,6 @@ export class Pmrt01Component implements OnInit {
   }
 
   // ===== Utility Methods =====
-  // ✅ รองรับ boolean | undefined
   getStatusClass(isActive: boolean | undefined): string {
     return isActive
       ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
@@ -202,7 +217,6 @@ export class Pmrt01Component implements OnInit {
     return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 
-  // ✅ รองรับ string | undefined
   getInitials(companyName: string | undefined): string {
     if (!companyName) return '?';
     return companyName.charAt(0).toUpperCase();
@@ -222,5 +236,16 @@ export class Pmrt01Component implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+  getImageUrl(customer: CustomerModel): string {
+    if (!customer.uploadGroupId) {
+      return '';
+    }
+    return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
   }
 }

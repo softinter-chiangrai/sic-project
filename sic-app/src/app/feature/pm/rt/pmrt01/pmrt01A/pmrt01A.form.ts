@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CustomerModel } from './pmrt01A.model';
 import type { ToForm } from '../../../../../core/types/form.type';
 
+
 export class Pmrt01AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<CustomerModel>> {
     return fb.group<ToForm<CustomerModel>>({
@@ -21,6 +22,7 @@ export class Pmrt01AForm {
       provinceId: fb.control(null),
       districtId: fb.control(null),
       subDistrictId: fb.control(null),
+      countryId: fb.control(null),
       zipCode: fb.control(null, [Validators.maxLength(20)]),
       customerType: fb.control(null, [Validators.maxLength(50)]),
       remark: fb.control(null, [Validators.maxLength(500)]),

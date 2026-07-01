@@ -1,18 +1,25 @@
 import { Routes } from '@angular/router';
+import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
+import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
+
 
 export const PM_ROUTES: Routes = [
-  // ===== Customer =====
+   // ===== Customer =====
   {
-    path: 'customer',
+    path: 'pmrt01',
     loadComponent: () => import('./rt/pmrt01/pmrt01.component').then((m) => m.Pmrt01Component),
   },
   {
-    path: 'customer/new',
-    loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
+    path: 'pmrt01/new',
+    loadComponent: () => import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
+    resolve: { form: customerCreateResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   {
-    path: 'customer/:id/edit',
-    loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
+    path: 'pmrt01/:id/edit',
+    loadComponent: () => import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
+    resolve: { form: customerEditResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
 
   // ===== Contract =====

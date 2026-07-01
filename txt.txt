@@ -33,3 +33,5 @@ http://localhost:4200/management/business
 testuser1 รหัส 12345
 
 sk-7364673d9657412a812848ca606c0d56
+
+npx repomix

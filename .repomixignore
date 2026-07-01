@@ -1,0 +1,51 @@
+# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
+dist/
+build/
+out/
+sic-api/
+sic-auth/
+sic-database/
+sic-storage/
+.kilo/
+.github/
+Migrations/
+
+# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
+**/.angular/
+**/.vscode/
+**/.editorconfig
+**/.gitignore
+**/.postcssrc.json
+**/angular.json
+**/package-lock.json
+**/package.json
+**/README.md
+**/tsconfig.app.json
+**/tsconfig.json
+**/tsconfig.spec.json
+**/tmp_do_not_use.txt
+
+# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
+src/assets/
+public/images/
+
+# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.txt
+*.xml
+*.gitignore
+*.md
+*.json
+
+# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
+**/Migrations/
+**/App_Data/
+**/bin/
+**/obj/
+**/node_modules/

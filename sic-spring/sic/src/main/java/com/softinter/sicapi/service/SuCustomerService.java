@@ -1,13 +1,12 @@
 package com.softinter.sicapi.service;
 
-import java.util.List;
-import java.util.UUID;
-
+import com.softinter.sicapi.dto.request.SuCustomerRequest;
+import com.softinter.sicapi.dto.response.SuCustomerResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.softinter.sicapi.dto.request.SuCustomerRequest;
-import com.softinter.sicapi.dto.response.SuCustomerResponse;
+import java.util.List;
+import java.util.UUID;
 
 public interface SuCustomerService {
 

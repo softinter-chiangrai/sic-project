@@ -21,6 +21,9 @@ public class SuCustomer extends BaseBusinessEntity {
     @Column(name = "customer_code", nullable = false, length = 30)
     private String customerCode;
 
+    @Column(name = "upload_group_id")
+    private UUID uploadGroupId;
+
     @Column(name = "tax_id", length = 30)
     private String taxId;
 
@@ -52,7 +55,7 @@ public class SuCustomer extends BaseBusinessEntity {
     private String zipCode;
 
     @Column(name = "customer_type", length = 50)
-    private String customerType; // COMPANY, GOVERNMENT, INDIVIDUAL
+    private String customerType;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -61,7 +64,6 @@ public class SuCustomer extends BaseBusinessEntity {
     private String remark;
 
     // ===== Relationships =====
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "province_id")
     private DbProvince province;
@@ -74,7 +76,7 @@ public class SuCustomer extends BaseBusinessEntity {
     @JoinColumn(name = "sub_district_id")
     private DbSubDistrict subDistrict;
 
-    // Foreign key fields (for query convenience)
+    // Foreign key fields (read-only)
     @Column(name = "province_id", insertable = false, updatable = false)
     private UUID provinceId;
 
