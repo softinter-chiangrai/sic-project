@@ -3,7 +3,6 @@
 @if (formCustomerData; as data) {
   <form [formGroup]="data.formGroup" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
-
       <!-- HEADER -->
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
@@ -12,7 +11,9 @@
       </div>
 
       <!-- Profile Picture -->
-       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-profile
           [size]="150"
           [visibility]="4"
@@ -24,20 +25,24 @@
       </div>
 
       <!-- Customer Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input
           label="รหัสลูกค้า"
           formControlName="customerCode"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกรหัสลูกค้า',
-            maxlength: 'รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร'
+            maxlength: 'รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร',
           }"
         ></sic-input>
       </div>
 
       <!-- Tax ID -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input
           label="เลขประจำตัวผู้เสียภาษี"
           [mask]="'0-0000-00000-00-0'"
@@ -46,41 +51,46 @@
       </div>
 
       <!-- Company Name (English) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input
           label="ชื่อบริษัท (อังกฤษ)"
           formControlName="companyNameEn"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกชื่อบริษัท (อังกฤษ)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร'
+            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
           }"
         ></sic-input>
       </div>
 
       <!-- Company Name (Local) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input
           label="ชื่อบริษัท (ไทย)"
           formControlName="companyNameLocal"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกชื่อบริษัท (ไทย)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร'
+            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
           }"
         ></sic-input>
       </div>
 
       <!-- Contact Person -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ผู้ติดต่อ"
-          formControlName="contactPerson"
-        ></sic-input>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="ผู้ติดต่อ" formControlName="contactPerson"></sic-input>
       </div>
 
       <!-- Country -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-combobox
           label="ประเทศ"
           formControlName="countryId"
@@ -91,7 +101,9 @@
       </div>
 
       <!-- Address (English) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input-area
           label="ที่อยู่ (อังกฤษ)"
           formControlName="addressEn"
@@ -100,7 +112,9 @@
       </div>
 
       <!-- Address (Local) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input-area
           label="ที่อยู่ (ไทย)"
           formControlName="addressLocal"
@@ -109,7 +123,9 @@
       </div>
 
       <!-- Province / District / Sub-District -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-combobox
           label="จังหวัด"
           formControlName="provinceId"
@@ -119,7 +135,9 @@
         >
         </sic-combobox>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-combobox
           label="อำเภอ"
           formControlName="districtId"
@@ -129,7 +147,9 @@
         >
         </sic-combobox>
       </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-combobox
           label="ตำบล"
           formControlName="subDistrictId"
@@ -141,49 +161,51 @@
       </div>
 
       <!-- Zip Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
       </div>
 
       <!-- Email -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <sic-input
           label="อีเมล"
           formControlName="email"
           [errorMessages]="{
             email: 'กรุณากรอกอีเมลให้ถูกต้อง',
-            maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร'
+            maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร',
           }"
         ></sic-input>
       </div>
 
       <!-- Phone Number -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-phone
-          label="เบอร์โทรศัพท์"
-          formControlName="phoneNumber"
-        ></sic-input-phone>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
       </div>
 
       <!-- Line ID -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="Line ID"
-          formControlName="lineId"
-        ></sic-input>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="Line ID" formControlName="lineId"></sic-input>
       </div>
 
       <!-- Remark -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="หมายเหตุ"
-          formControlName="remark"
-          [rows]="2"
-        ></sic-input-area>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area label="หมายเหตุ" formControlName="remark" [rows]="2"></sic-input-area>
       </div>
 
       <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
         <label class="flex items-center gap-2 cursor-pointer text-sm">
           <input
             type="checkbox"
@@ -195,7 +217,9 @@
       </div>
 
       <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
         <div class="flex-1">
           <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
             <i class="bi bi-arrow-left"></i> ย้อนกลับ
@@ -208,7 +232,6 @@
           </sic-button>
         </div>
       </div>
-
     </div>
   </form>
 }

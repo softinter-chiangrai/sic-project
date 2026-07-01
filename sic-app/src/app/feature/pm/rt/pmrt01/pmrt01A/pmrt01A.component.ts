@@ -20,6 +20,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt01AForm } from './pmrt01A.form';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmrt01a',
@@ -43,7 +44,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   private router = inject(Router);
   public service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
-  private cdr = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef); // ✅ ต้องมี
   private fb = inject(FormBuilder);
 
   formCustomerData!: SicFromData<CustomerModel>;
@@ -53,14 +54,13 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   businessId = '';
 
   // ✅ Getter สำหรับรูปโปรไฟล์ — อ่านจาก uploadGroupData โดยตรง
-  get profileImageUrl(): string {
-    const uploadData = this.formCustomerData?.formGroup?.get('uploadGroupData')?.value;
-    if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
-      const first = uploadData[0];
-      return first?.accessUrl || 'images/profile.png';
-    }
-    return 'images/profile.png';
+ get profileImageUrl(): string {
+  const uploadGroupId = this.formCustomerData?.formGroup?.get('uploadGroupId')?.value;
+  if (uploadGroupId) {
+    return `${environment.apiBaseUrl}/api/storage/avatar/${uploadGroupId}`;
   }
+  return 'images/profile.png';
+}
 
   pageDirty = () => this.formCustomerData?.dirty ?? false;
 
@@ -72,17 +72,19 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    // รับข้อมูลจาก resolver
     const data = this.route.snapshot.data['form'];
     if (data && data.customer) {
       this.formCustomerData = data.customer;
       this.formCustomerData.formGroup.updateValueAndValidity();
-      this.cdr.detectChanges();
+      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดต
     } else {
       const form = Pmrt01AForm.createForm(this.fb);
       this.formCustomerData = new SicFromData<CustomerModel>(form);
       this.cdr.detectChanges();
     }
 
+    // ตรวจสอบว่าเป็นโหมดแก้ไขหรือไม่
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
@@ -99,17 +101,25 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading = true;
     this.service
       .getCustomer(id)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }))
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          // ไม่ต้องใช้ detectChanges ที่นี่ (อาจเร็วเกินไป)
+        }),
+      )
       .subscribe({
         next: (data) => {
           this.formCustomerData.formGroup.patchValue(data);
           this.formCustomerData.formGroup.updateValueAndValidity();
+
+          // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
           this.cdr.detectChanges();
+
+          console.log('✅ โหลดข้อมูลสำเร็จ:', data);
         },
-        error: () => {
+        error: (error) => {
+          this.isLoading = false;
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
           this.router.navigate(['/feature/pm/pmrt01']);
         },
@@ -151,6 +161,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    // ✅ sync uploadGroupId
     const uploadData = this.formCustomerData.formGroup.get('uploadGroupData')?.value;
     if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
       const firstUpload = uploadData[0];
