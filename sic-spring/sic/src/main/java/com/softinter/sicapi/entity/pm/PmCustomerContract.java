@@ -1,14 +1,21 @@
 package com.softinter.sicapi.entity.pm;
 
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "pm_customer_contract")
@@ -44,4 +51,19 @@ public class PmCustomerContract extends BaseBusinessEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "payment_terms", length = 500)
+    private String paymentTerms;
+
+    @Column(name = "scope_summary", columnDefinition = "TEXT")
+    private String scopeSummary;
+
+    @Column(name = "renewal_status", length = 50)
+    private String renewalStatus;
+
+    @Transient
+    private UUID projectId;
+
+    @Transient
+    private PmCustomerProject project;
 }

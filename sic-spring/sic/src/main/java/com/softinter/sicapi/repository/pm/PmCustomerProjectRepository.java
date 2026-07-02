@@ -35,4 +35,7 @@ public interface PmCustomerProjectRepository extends JpaRepository<PmCustomerPro
 Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("customerId") UUID customerId, 
                                                                   @Param("businessId") UUID businessId, 
                                                                   Pageable pageable);
+
+    List<PmCustomerProject> findByContractIdAndIsDeleteFalse(UUID contractId);
+
 }

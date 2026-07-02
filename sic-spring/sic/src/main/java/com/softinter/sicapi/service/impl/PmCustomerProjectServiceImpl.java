@@ -1,5 +1,12 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.softinter.sicapi.dto.request.PmCustomerProjectRequest;
 import com.softinter.sicapi.dto.response.PmCustomerProjectResponse;
 import com.softinter.sicapi.entity.pm.PmCustomer;
@@ -9,13 +16,8 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.service.PmCustomerProjectService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +91,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PmCustomerProjectResponse findById(UUID id) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));

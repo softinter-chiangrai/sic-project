@@ -44,50 +44,27 @@
         ></sic-combobox>
       </div>
 
-      <!-- Customer -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ลูกค้า"
-          formControlName="customerId"
-          [apiUrl]="service.getComboboxCustomer()"
-          [required]="true"
-          [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
-        ></sic-combobox>
-      </div>
+      <!-- ❌ ลบฟิลด์ลูกค้าและโครงการออกแล้ว -->
 
-      <!-- Project -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="โครงการ"
-          formControlName="projectId"
-          [apiUrl]="service.getComboboxProject()"
-          [params]="{ customerId: form.get('customerId')?.value }"
-          [required]="true"
-          [errorMessages]="{ required: 'กรุณาเลือกโครงการ' }"
-        ></sic-combobox>
-      </div>
-
-      <!-- Start Date & End Date -->
+      <!-- ✅ เปลี่ยนเป็น sic-datepicker -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
-          <sic-input
+          <sic-datepicker
             label="วันที่เริ่ม"
-            type="text"
             formControlName="startDate"
             [required]="true"
-            placeholder="DD/MM/YYYY"
-            [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
-          ></sic-input>
+            placeholder="เลือกวันที่เริ่ม"
+            dateFormat="DD/MM/YYYY"
+          ></sic-datepicker>
         </div>
         <div class="flex-1">
-          <sic-input
+          <sic-datepicker
             label="วันที่สิ้นสุด"
-            type="text"
             formControlName="endDate"
             [required]="true"
-            placeholder="DD/MM/YYYY"
-            [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุด' }"
-          ></sic-input>
+            placeholder="เลือกวันที่สิ้นสุด"
+            dateFormat="DD/MM/YYYY"
+          ></sic-datepicker>
         </div>
       </div>
 
