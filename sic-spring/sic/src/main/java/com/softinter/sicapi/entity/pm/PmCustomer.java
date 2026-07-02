@@ -1,4 +1,4 @@
-package com.softinter.sicapi.entity.su;
+package com.softinter.sicapi.entity.pm;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import com.softinter.sicapi.entity.db.DbDistrict;
@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "su_customer")
+@Table(name = "pm_customer")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class SuCustomer extends BaseBusinessEntity {
+public class PmCustomer extends BaseBusinessEntity {
 
     @Column(name = "customer_code", nullable = false, length = 30)
     private String customerCode;

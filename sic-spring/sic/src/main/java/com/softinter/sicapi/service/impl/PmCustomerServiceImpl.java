@@ -1,20 +1,20 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.dto.request.SuCustomerRequest;
-import com.softinter.sicapi.dto.response.SuCustomerResponse;
+import com.softinter.sicapi.dto.request.PmCustomerRequest;
+import com.softinter.sicapi.dto.response.PmCustomerResponse;
 import com.softinter.sicapi.entity.db.DbDistrict;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
 import com.softinter.sicapi.entity.enums.FileVisibility;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
-import com.softinter.sicapi.entity.su.SuCustomer;
+import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.repository.db.DbDistrictRepository;
 import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
-import com.softinter.sicapi.repository.su.SuCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.SuCustomerService;
+import com.softinter.sicapi.service.PmCustomerService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,94 +29,94 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class SuCustomerServiceImpl implements SuCustomerService {
+public class PmCustomerServiceImpl implements PmCustomerService {
 
-    private final SuCustomerRepository suCustomerRepository;
+    private final PmCustomerRepository PmCustomerRepository;
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
-     private final SuUploadRepository uploadRepository; 
+    private final SuUploadRepository uploadRepository; 
 
     @Override
     @Transactional
-    public SuCustomerResponse create(UUID businessId, SuCustomerRequest request) {
+    public PmCustomerResponse create(UUID businessId, PmCustomerRequest request) {
         // ตรวจสอบรหัสซ้ำ
-        suCustomerRepository.findByBusinessIdAndCustomerCode(businessId, request.getCustomerCode())
+        PmCustomerRepository.findByBusinessIdAndCustomerCode(businessId, request.getCustomerCode())
                 .ifPresent(existing -> {
                     throw new RuntimeException("รหัสลูกค้า '" + request.getCustomerCode() + "' ถูกใช้แล้ว");
                 });
 
-        SuCustomer customer = new SuCustomer();
+        PmCustomer customer = new PmCustomer();
         customer.setBusinessId(businessId);
         mapRequestToEntity(request, customer);
-        customer = suCustomerRepository.save(customer);
+        customer = PmCustomerRepository.save(customer);
         return toResponse(customer);
     }
 
     @Override
     @Transactional
-    public SuCustomerResponse update(UUID id, SuCustomerRequest request) {
-        SuCustomer customer = suCustomerRepository.findById(id)
+    public PmCustomerResponse update(UUID id, PmCustomerRequest request) {
+        PmCustomer customer = PmCustomerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + id));
 
         // ถ้าเปลี่ยนรหัส ตรวจสอบซ้ำ
         if (!customer.getCustomerCode().equals(request.getCustomerCode())) {
-            suCustomerRepository.findByBusinessIdAndCustomerCode(customer.getBusinessId(), request.getCustomerCode())
+            PmCustomerRepository.findByBusinessIdAndCustomerCode(customer.getBusinessId(), request.getCustomerCode())
                     .ifPresent(existing -> {
                         throw new RuntimeException("รหัสลูกค้า '" + request.getCustomerCode() + "' ถูกใช้แล้ว");
                     });
         }
 
         mapRequestToEntity(request, customer);
-        customer = suCustomerRepository.save(customer);
+        customer = PmCustomerRepository.save(customer);
         return toResponse(customer);
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
-        SuCustomer customer = suCustomerRepository.findById(id)
+        PmCustomer customer = PmCustomerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + id));
         customer.setIsDelete(true);
         customer.setIsActive(false);
-        suCustomerRepository.save(customer);
+        PmCustomerRepository.save(customer);
     }
 
     @Override
     @Transactional(readOnly = true) 
-    public SuCustomerResponse findById(UUID id) {
-        SuCustomer customer = suCustomerRepository.findById(id)
+    public PmCustomerResponse findById(UUID id) {
+        PmCustomer customer = PmCustomerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + id));
         return toResponse(customer);
     }
 
     @Override
     @Transactional(readOnly = true) 
-    public SuCustomerResponse findByCustomerCode(UUID businessId, String customerCode) {
-        SuCustomer customer = suCustomerRepository.findByBusinessIdAndCustomerCode(businessId, customerCode)
+    public PmCustomerResponse findByCustomerCode(UUID businessId, String customerCode) {
+        PmCustomer customer = PmCustomerRepository.findByBusinessIdAndCustomerCode(businessId, customerCode)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + customerCode));
         return toResponse(customer);
     }
 
      @Override
     @Transactional(readOnly = true)
-    public Page<SuCustomerResponse> findAllByBusiness(UUID businessId, Pageable pageable) {
+    public Page<PmCustomerResponse> findAllByBusiness(UUID businessId, Pageable pageable) {
         // ✅ ใช้เมธอดที่มี JOIN FETCH
-        return suCustomerRepository.findByBusinessIdAndIsActiveTrueWithFetch(businessId, pageable)
+        return PmCustomerRepository.findByBusinessIdAndIsActiveTrueWithFetch(businessId, pageable)
                 .map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SuCustomerResponse> search(UUID businessId, String keyword, Pageable pageable) {
+    public Page<PmCustomerResponse> search(UUID businessId, String keyword, Pageable pageable) {
         // ✅ ใช้เมธอดที่มี JOIN FETCH
-        return suCustomerRepository.searchByKeywordWithFetch(businessId, keyword, pageable)
+        return PmCustomerRepository.searchByKeywordWithFetch(businessId, keyword, pageable)
                 .map(this::toResponse);
     }
 
     @Override
-    public List<SuCustomerResponse> findAllActiveByBusiness(UUID businessId) {
-        return suCustomerRepository.findByBusinessIdAndIsActiveTrue(businessId)
+    public List<PmCustomerResponse> findAllActiveByBusiness(UUID businessId) {
+        return PmCustomerRepository.findByBusinessIdAndIsActiveTrue(businessId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -124,7 +124,7 @@ public class SuCustomerServiceImpl implements SuCustomerService {
 
     // ===== Private Helpers =====
 
-    private void mapRequestToEntity(SuCustomerRequest request, SuCustomer customer) {
+    private void mapRequestToEntity(PmCustomerRequest request, PmCustomer customer) {
         customer.setCustomerCode(request.getCustomerCode());
         customer.setTaxId(request.getTaxId());
         customer.setCompanyNameEn(request.getCompanyNameEn());
@@ -172,7 +172,7 @@ public class SuCustomerServiceImpl implements SuCustomerService {
         }
     }
 
-    private SuCustomerResponse toResponse(SuCustomer customer) {
+    private PmCustomerResponse toResponse(PmCustomer customer) {
     // สร้าง uploadGroupData
     List<StorageUploadReference> uploadData = new ArrayList<>();
     if (customer.getUploadGroupId() != null) {
@@ -194,7 +194,7 @@ public class SuCustomerServiceImpl implements SuCustomerService {
         }
     }
 
-        return SuCustomerResponse.builder()
+        return PmCustomerResponse.builder()
                 .id(customer.getId())
                 .businessId(customer.getBusinessId())
                 .customerCode(customer.getCustomerCode())

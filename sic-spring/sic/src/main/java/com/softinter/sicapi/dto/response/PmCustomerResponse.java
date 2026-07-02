@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SuCustomerResponse {
+public class PmCustomerResponse {
     private UUID id;
     private UUID businessId;
     private UUID uploadGroupId;  // ✅ เพิ่ม

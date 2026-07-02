@@ -1,36 +1,49 @@
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02.component.html -->
-
 <div class="space-y-5 p-0.5">
 
-  <!-- ===== HEADER ===== -->
+  <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-briefcase-fill text-[var(--crm-primary)]"></i>
-        รายการโครงการ
+        @if (filterCustomerName()) {
+          โครงการของ: {{ filterCustomerName() }}
+        } @else {
+          รายการโครงการ
+        }
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
         {{ totalItems() }} รายการ
       </span>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่มโครงการ
-    </button>
+    <div class="flex gap-2">
+      @if (filterCustomerId()) {
+        <button
+          (click)="goBackToCustomer()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-arrow-left"></i>
+          กลับ
+        </button>
+      }
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+      >
+        <i class="bi bi-plus-lg"></i>
+        เพิ่มโครงการ
+      </button>
+    </div>
   </div>
 
-  <!-- ===== FILTERS ===== -->
+  <!-- FILTERS -->
   <div class="flex flex-wrap gap-3 items-center">
-    <!-- Search -->
     <div class="relative flex-1 min-w-[200px]">
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
       <input
         type="text"
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหารหัส, ชื่อโครงการ, ลูกค้า..."
+        placeholder="ค้นหารหัส, ชื่อโครงการ..."
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -44,15 +57,36 @@
       }
     </div>
 
+    <!-- ✅ Date Range Filters -->
+    <div class="flex items-center gap-2">
+      <input
+        type="date"
+        class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+        [value]="filterStartDate()"
+        (change)="onStartDateChange($event)"
+        placeholder="วันที่เริ่ม"
+        title="กรองวันที่เริ่ม"
+      />
+      <span class="text-[var(--text-muted)] text-xs">ถึง</span>
+      <input
+        type="date"
+        class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+        [value]="filterEndDate()"
+        (change)="onEndDateChange($event)"
+        placeholder="วันที่สิ้นสุด"
+        title="กรองวันที่สิ้นสุด"
+      />
+    </div>
+
     <!-- Filter: Status -->
     <select
       (change)="onFilterChange($event)"
       [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
     >
       <option value="all">📊 ทุกสถานะ</option>
       @for (status of statusOptions; track status) {
-        <option [value]="status">{{ status }}</option>
+        <option [value]="status">{{ getStatusText(status) }}</option>
       }
     </select>
 
@@ -60,7 +94,7 @@
     <select
       (change)="onPriorityChange($event)"
       [value]="filterPriority()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
     >
       <option value="all">⚡ ทุกระดับความสำคัญ</option>
       @for (priority of priorityOptions; track priority) {
@@ -69,7 +103,7 @@
     </select>
   </div>
 
-  <!-- ===== LOADING ===== -->
+  <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -77,62 +111,47 @@
     </div>
   }
 
-  <!-- ===== TABLE ===== -->
+  <!-- TABLE -->
   @if (!isLoading()) {
     <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
-            <th
-              (click)="onSortChange('projectCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              รหัสโครงการ
+            <th (click)="onSortChange('projectCode')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
+              รหัส
               @if (sortBy() === 'projectCode') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
-            <th
-              (click)="onSortChange('projectName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-            >
+            <th (click)="onSortChange('projectName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]">
               ชื่อโครงการ
               @if (sortBy() === 'projectName') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
-            <th
-              (click)="onSortChange('customerName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
+            <th (click)="onSortChange('customerName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]">
               ลูกค้า
               @if (sortBy() === 'customerName') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
-            <th
-              (click)="onSortChange('status')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
-            >
+            <th (click)="onSortChange('status')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]">
               สถานะ
               @if (sortBy() === 'status') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
-            >
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
               Manday
             </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px] hidden md:table-cell"
-            >
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px] hidden md:table-cell">
               ระยะเวลา
             </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
-            >
+            <th (click)="onSortChange('priority')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
               ความสำคัญ
+              @if (sortBy() === 'priority') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
             </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
               จัดการ
@@ -140,7 +159,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-[var(--border)]">
-          @for (project of paginatedProjects(); track project.id) {
+          @for (project of projects(); track project.id) {
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
               <td class="px-4 py-3">
                 <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
@@ -155,7 +174,7 @@
               </td>
               <td class="px-4 py-3">
                 <span [class]="getStatusClass(project.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ project.status }}
+                  {{ getStatusText(project.status) }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -186,9 +205,9 @@
                   <button
                     (click)="goToView(project.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูข้อมูล"
+                    title="ดู Dashboard"
                   >
-                    <i class="bi bi-eye"></i>
+                    <i class="bi bi-speedometer2"></i>
                   </button>
                   <button
                     (click)="goToEdit(project.id)"
@@ -207,12 +226,8 @@
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลโครงการ</p>
                   <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มโครงการใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่มโครงการ
+                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
+                    <i class="bi bi-plus-lg"></i> เพิ่มโครงการ
                   </button>
                 </div>
               </td>
@@ -223,7 +238,7 @@
     </div>
   }
 
-  <!-- ===== PAGINATION ===== -->
+  <!-- PAGINATION -->
   @if (totalItems() > 0) {
     <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
       <div class="text-sm text-[var(--text-muted)]">

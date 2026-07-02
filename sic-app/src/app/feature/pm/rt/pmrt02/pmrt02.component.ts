@@ -1,45 +1,17 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
-
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-
 import { DialogService } from '../../../../core/services/dialog.service';
-import { environment } from '../../../../../environments/environment';
-
-// ===== Interfaces =====
-export interface Project {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  contractId: string;
-  contractNo: string;
-  projectManager: string;
-  ba: string;
-  sa: string;
-  startDate: string;
-  plannedEndDate: string;
-  actualEndDate?: string;
-  budgetManday: number;
-  usedManday: number;
-  status: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  isActive: boolean;
-  createdAt: string;
-  rowVersion?: number;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+import { PmCustomerProject, Pmrt02Service } from './pmrt02.service';
 
 @Component({
   selector: 'app-pmrt02',
@@ -51,7 +23,7 @@ export interface PageResponse<T> {
 export class Pmrt02Component implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private http = inject(HttpClient);
+  private service = inject(Pmrt02Service);
   private dialog = inject(DialogService);
 
   // ===== State =====
@@ -60,30 +32,23 @@ export class Pmrt02Component implements OnInit {
   protected filterPriority = signal('all');
   protected filterCustomerId = signal<string | null>(null);
   protected filterCustomerName = signal<string>('');
+  // ✅ เพิ่ม state สำหรับ Date Filter
+  protected filterStartDate = signal<string>('');
+  protected filterEndDate = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('projectCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-
-  // ===== Data =====
-  protected projects = signal<Project[]>([]);
+  protected projects = signal<PmCustomerProject[]>([]);
   protected totalItems = signal(0);
 
-  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
-
   // ===== Computed =====
-  protected filteredProjects = computed(() => {
-    // ใช้ projects จาก API โดยตรง (backend จัดการ filter แล้ว)
-    return this.projects();
+  protected totalPages = computed(() => {
+    const total = this.totalItems();
+    const size = this.pageSize();
+    return total > 0 ? Math.ceil(total / size) : 1;
   });
-
-  protected paginatedProjects = computed(() => {
-    // Backend จัดการ pagination แล้ว
-    return this.projects();
-  });
-
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
@@ -107,21 +72,19 @@ export class Pmrt02Component implements OnInit {
     'Requirement Approval', 'System Analysis', 'DFD Design', 'ER Design',
     'Specification Design', 'Specification Approval', 'Planning', 'Development',
     'Internal Testing', 'UAT', 'Bug Fixing', 'Ready for Delivery', 'Delivered',
-    'Invoicing', 'Closed', 'MA Active',
+    'Invoicing', 'Closed', 'MA Active'
   ];
-
   priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // อ่าน queryParams
     this.route.queryParams.subscribe((params) => {
       const customerId = params['customerId'];
       if (customerId) {
         this.filterCustomerId.set(customerId);
-        // ดึงชื่อลูกค้าจาก queryParams หรือจากข้อมูลที่โหลด
-        const customerName = params['customerName'] || '';
-        this.filterCustomerName.set(customerName);
+        if (params['customerName']) {
+          this.filterCustomerName.set(params['customerName']);
+        }
       } else {
         this.filterCustomerId.set(null);
         this.filterCustomerName.set('');
@@ -129,77 +92,47 @@ export class Pmrt02Component implements OnInit {
       this.currentPage.set(1);
       this.loadProjects();
     });
-
-    // ถ้าไม่มี queryParams ให้โหลดทั้งหมด
-    if (!this.route.snapshot.queryParams['customerId']) {
-      this.loadProjects();
-    }
   }
 
-  // ===== Load Projects from API =====
+  // ===== Load Data =====
   loadProjects() {
     this.isLoading.set(true);
+    // ✅ ส่ง page เป็น 0-based
+    const page = this.currentPage() - 1;
 
-    let params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString());
-
-    // กรองตาม customerId
-    const customerId = this.filterCustomerId();
-    if (customerId) {
-      params = params.set('customerId', customerId);
-    }
-
-    // ค้นหา
-    const keyword = this.searchTerm();
-    if (keyword) {
-      params = params.set('keyword', keyword);
-    }
-
-    // สถานะ
-    const status = this.filterStatus();
-    if (status !== 'all') {
-      params = params.set('status', status);
-    }
-
-    // ความสำคัญ
-    const priority = this.filterPriority();
-    if (priority !== 'all') {
-      params = params.set('priority', priority);
-    }
-
-    // เรียงลำดับ
-    if (this.sortBy()) {
-      params = params
-        .set('sortBy', this.sortBy())
-        .set('sortDir', this.sortDir());
-    }
-
-    this.http.get<PageResponse<Project>>(this.apiUrl, { params })
+    this.service
+      .getProjects({
+        customerId: this.filterCustomerId() || undefined,
+        keyword: this.searchTerm() || undefined,
+        startDate: this.filterStartDate() || undefined,
+        endDate: this.filterEndDate() || undefined,
+        page: page,
+        size: this.pageSize(),
+        sortBy: this.sortBy(),
+        sortDir: this.sortDir(),
+      })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.projects.set(response.content || []);
-          this.totalItems.set(response.totalElements || 0);
-
-          // ถ้ามี customerId แต่ยังไม่มีชื่อ ให้ลองดึงจากข้อมูลที่โหลด
+          this.projects.set(response.data || []);
+          this.totalItems.set(response.pageable?.totalElements || 0);
           if (this.filterCustomerId() && !this.filterCustomerName()) {
-            const firstProject = response.content?.[0];
-            if (firstProject?.customerName) {
-              this.filterCustomerName.set(firstProject.customerName);
+            const first = response.data?.[0];
+            if (first?.customerName) {
+              this.filterCustomerName.set(first.customerName);
             }
           }
         },
-        error: (error) => {
-          console.error('Load projects error:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโครงการได้');
+        error: (err) => {
+          console.error('Load projects error:', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาด');
           this.projects.set([]);
           this.totalItems.set(0);
         },
       });
   }
 
-  // ===== Actions =====
+  // ===== Event Handlers =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
@@ -227,6 +160,21 @@ export class Pmrt02Component implements OnInit {
     this.loadProjects();
   }
 
+  // ✅ Date Filter Handlers
+  onStartDateChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.filterStartDate.set(input.value);
+    this.currentPage.set(1);
+    this.loadProjects();
+  }
+
+  onEndDateChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.filterEndDate.set(input.value);
+    this.currentPage.set(1);
+    this.loadProjects();
+  }
+
   onSortChange(field: string) {
     if (this.sortBy() === field) {
       this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
@@ -243,27 +191,26 @@ export class Pmrt02Component implements OnInit {
     this.loadProjects();
   }
 
+  // ===== Navigation =====
   goToAdd() {
     const customerId = this.filterCustomerId();
     if (customerId) {
-      this.router.navigate(['/feature/pm/pmrt02/new'], {
-        queryParams: { customerId },
-      });
+      this.router.navigate(['/feature/pm/pmrt02/new'], { queryParams: { customerId } });
     } else {
       this.router.navigate(['/feature/pm/pmrt02/new']);
     }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/pmrt02A', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt02', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/pmrt02A', id, 'view']);
+    this.router.navigate(['/feature/pm/pmrt03', id]);
   }
 
   goBackToCustomer() {
-    this.router.navigate(['/feature/pm/pmrt02']);
+    this.router.navigate(['/feature/pm/pmrt01']);
   }
 
   // ===== Utility =====

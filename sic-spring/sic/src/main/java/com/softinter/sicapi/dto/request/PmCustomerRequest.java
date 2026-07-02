@@ -1,5 +1,7 @@
 package com.softinter.sicapi.dto.request;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -7,13 +9,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SuCustomerRequest {
+public class PmCustomerRequest {
 
     @NotBlank(message = "กรุณาระบุรหัสลูกค้า")
     @Size(max = 30, message = "รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร")
