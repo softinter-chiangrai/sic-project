@@ -12,6 +12,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { PmCustomerProject, Pmrt02Service } from './pmrt02.service';
+import { CustomerStateService } from '../pmrt01/customer-state.service';
 
 @Component({
   selector: 'app-pmrt02',
@@ -25,6 +26,7 @@ export class Pmrt02Component implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(Pmrt02Service);
   private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -68,37 +70,55 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Options =====
   statusOptions = [
-    'Prospect', 'Contract Drafting', 'Contract Signed', 'Requirement Gathering',
-    'Requirement Approval', 'System Analysis', 'DFD Design', 'ER Design',
-    'Specification Design', 'Specification Approval', 'Planning', 'Development',
-    'Internal Testing', 'UAT', 'Bug Fixing', 'Ready for Delivery', 'Delivered',
-    'Invoicing', 'Closed', 'MA Active'
+    'Prospect',
+    'Contract Drafting',
+    'Contract Signed',
+    'Requirement Gathering',
+    'Requirement Approval',
+    'System Analysis',
+    'DFD Design',
+    'ER Design',
+    'Specification Design',
+    'Specification Approval',
+    'Planning',
+    'Development',
+    'Internal Testing',
+    'UAT',
+    'Bug Fixing',
+    'Ready for Delivery',
+    'Delivered',
+    'Invoicing',
+    'Closed',
+    'MA Active',
   ];
   priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      const customerId = params['customerId'];
-      if (customerId) {
-        this.filterCustomerId.set(customerId);
-        if (params['customerName']) {
-          this.filterCustomerName.set(params['customerName']);
-        }
-      } else {
-        this.filterCustomerId.set(null);
-        this.filterCustomerName.set('');
-      }
-      this.currentPage.set(1);
-      this.loadProjects();
-    });
-  }
+  // ✅ ใช้ทั้ง queryParams และ Service
+  this.route.queryParams.subscribe((params) => {
+    let customerId = params['customerId'] || this.customerState.getCustomerId();
+    let customerName = params['customerName'] || this.customerState.getCustomerName();
+
+    if (!customerId) {
+      this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
+      this.router.navigate(['/feature/pm/pmrt01']);
+      return;
+    }
+
+    // ✅ เก็บไว้ใน Service (เผื่อ refresh)
+    this.customerState.setCustomer(customerId, customerName);
+    this.filterCustomerId.set(customerId);
+    this.filterCustomerName.set(customerName);
+    this.loadProjects();
+  });
+}
 
   // ===== Load Data =====
   loadProjects() {
     this.isLoading.set(true);
-    // ✅ ส่ง page เป็น 0-based
-    const page = this.currentPage() - 1;
+    // ✅ ส่ง page = currentPage() (เริ่มที่ 1) แทน currentPage() - 1
+    const page = this.currentPage();
 
     this.service
       .getProjects({
@@ -106,7 +126,7 @@ export class Pmrt02Component implements OnInit {
         keyword: this.searchTerm() || undefined,
         startDate: this.filterStartDate() || undefined,
         endDate: this.filterEndDate() || undefined,
-        page: page,
+        page: page, // ✅ 1-based
         size: this.pageSize(),
         sortBy: this.sortBy(),
         sortDir: this.sortDir(),
@@ -217,10 +237,13 @@ export class Pmrt02Component implements OnInit {
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
       Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'Contract Drafting':
+        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      'Requirement Gathering': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      'Requirement Approval': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Gathering':
+        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Approval':
+        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
       'System Analysis': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'DFD Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'ER Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
@@ -228,7 +251,8 @@ export class Pmrt02Component implements OnInit {
       'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
       Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'Internal Testing':
+        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       'Ready for Delivery': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',

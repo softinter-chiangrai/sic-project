@@ -1,5 +1,12 @@
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.html -->
-@if (form) {
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+  </div>
+}
+
+@if (!isLoading && form) {
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
       
@@ -8,6 +15,11 @@
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
           {{ isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ' }}
         </h2>
+        @if (customerName()) {
+          <p class="text-sm text-[var(--text-muted)] mt-2">
+            ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
+          </p>
+        }
       </div>
 
       <!-- Project Code -->
@@ -16,8 +28,11 @@
           label="รหัสโครงการ"
           formControlName="projectCode"
           [required]="true"
-          placeholder="เช่น PRJ-2024-001"
+          placeholder="PRJ-001"
         ></sic-input>
+        @if (form.get('projectCode')?.touched && form.get('projectCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัสโครงการ</p>
+        }
       </div>
 
       <!-- Project Name -->
@@ -26,89 +41,108 @@
           label="ชื่อโครงการ"
           formControlName="projectName"
           [required]="true"
-          placeholder="ระบุชื่อโครงการ"
+          placeholder="ระบบ CRM"
         ></sic-input>
+        @if (form.get('projectName')?.touched && form.get('projectName')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อโครงการ</p>
+        }
       </div>
+
+      <!-- ✅ Hidden fields -->
+      <input type="hidden" formControlName="customerId" />
+      <input type="hidden" formControlName="contractId" />
+      <input type="hidden" formControlName="contractNo" />
 
       <!-- Dates -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
-          <sic-input
+          <sic-datepicker
             label="วันที่เริ่ม"
-            type="date"
             formControlName="startDate"
             [required]="true"
-          ></sic-input>
+            placeholder="เลือกวันที่เริ่ม"
+          ></sic-datepicker>
+          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          }
         </div>
         <div class="flex-1">
-          <sic-input
+          <sic-datepicker
             label="วันที่สิ้นสุดตามแผน"
-            type="date"
             formControlName="plannedEndDate"
             [required]="true"
-          ></sic-input>
+            placeholder="เลือกวันที่สิ้นสุด"
+          ></sic-datepicker>
+          @if (form.get('plannedEndDate')?.touched && form.get('plannedEndDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+          }
         </div>
       </div>
 
       <!-- Actual End Date (Optional) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
+        <sic-datepicker
           label="วันที่สิ้นสุดจริง"
-          type="date"
           formControlName="actualEndDate"
-        ></sic-input>
+          placeholder="เลือกวันที่สิ้นสุดจริง"
+        ></sic-datepicker>
       </div>
 
       <!-- Mandays -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
-          <sic-input
-            label="งบประมาณ Manday"
-            type="number"
+          <sic-number
+            label="Manday ตามแผน"
             formControlName="budgetManday"
             [required]="true"
             placeholder="0"
-          ></sic-input>
+          ></sic-number>
+          @if (form.get('budgetManday')?.touched && form.get('budgetManday')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday</p>
+          }
         </div>
         <div class="flex-1">
-          <sic-input
-            label="Manday ที่ใช้ไป"
-            type="number"
+          <sic-number
+            label="Manday ที่ใช้จริง"
             formControlName="usedManday"
             placeholder="0"
-          ></sic-input>
+          ></sic-number>
         </div>
       </div>
 
-      <!-- Status & Priority -->
+      <!-- ✅ Status & Priority (ใช้ Select ธรรมดาแทน Combobox) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
-          <sic-combobox
-            label="สถานะโครงการ"
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">สถานะโครงการ</label>
+          <select
             formControlName="status"
-            [apiUrl]="" 
-            [options]="statusOptions.map(s => ({ value: s, text: s }))"
-            [required]="true"
-          ></sic-combobox>
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+          >
+            @for (status of statusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
         </div>
         <div class="flex-1">
-          <sic-combobox
-            label="ระดับความสำคัญ"
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ระดับความสำคัญ</label>
+          <select
             formControlName="priority"
-            [apiUrl]=""
-            [options]="priorityOptions.map(p => ({ value: p, text: p }))"
-            [required]="true"
-          ></sic-combobox>
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+          >
+            @for (priority of priorityOptions; track priority) {
+              <option [value]="priority">{{ priority }}</option>
+            }
+          </select>
         </div>
       </div>
 
       <!-- Description -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input-area
-          label="รายละเอียดเพิ่มเติม"
+          label="คำอธิบายเพิ่มเติม"
           formControlName="description"
           [rows]="3"
-          placeholder="อธิบายขอบเขตหรือหมายเหตุ..."
+          placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับโครงการ"
         ></sic-input-area>
       </div>
 

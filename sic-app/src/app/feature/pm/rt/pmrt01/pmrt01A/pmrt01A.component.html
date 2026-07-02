@@ -31,6 +31,7 @@
         <sic-input
           label="รหัสลูกค้า"
           formControlName="customerCode"
+          placeholder="เช่น CUS-001"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกรหัสลูกค้า',
@@ -45,6 +46,7 @@
       >
         <sic-input
           label="เลขประจำตัวผู้เสียภาษี"
+          placeholder="0-0000-00000-00-0"
           [mask]="'0-0000-00000-00-0'"
           formControlName="taxId"
         ></sic-input>
@@ -57,6 +59,7 @@
         <sic-input
           label="ชื่อบริษัท (อังกฤษ)"
           formControlName="companyNameEn"
+          placeholder="ABC Corporation"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกชื่อบริษัท (อังกฤษ)',
@@ -72,6 +75,7 @@
         <sic-input
           label="ชื่อบริษัท (ไทย)"
           formControlName="companyNameLocal"
+          placeholder="บริษัท เอบีซี จำกัด"
           [required]="true"
           [errorMessages]="{
             required: 'กรุณากรอกชื่อบริษัท (ไทย)',
@@ -84,7 +88,11 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input label="ผู้ติดต่อ" formControlName="contactPerson"></sic-input>
+        <sic-input
+          label="ผู้ติดต่อ"
+          formControlName="contactPerson"
+          placeholder="ชื่อผู้ประสานงาน"
+        ></sic-input>
       </div>
 
       <!-- Country -->
@@ -94,6 +102,7 @@
         <sic-combobox
           label="ประเทศ"
           formControlName="countryId"
+          placeholder="เลือกประเทศ"
           [apiUrl]="service.apiGetComboboxCountry"
           (selectionChanged)="onCountryChange($event)"
         >
@@ -107,6 +116,7 @@
         <sic-input-area
           label="ที่อยู่ (อังกฤษ)"
           formControlName="addressEn"
+          placeholder="123 Main Street"
           [rows]="2"
         ></sic-input-area>
       </div>
@@ -118,6 +128,7 @@
         <sic-input-area
           label="ที่อยู่ (ไทย)"
           formControlName="addressLocal"
+          placeholder="123 ถนนสุขุมวิท"
           [rows]="2"
         ></sic-input-area>
       </div>
@@ -129,6 +140,7 @@
         <sic-combobox
           label="จังหวัด"
           formControlName="provinceId"
+          placeholder="เลือกจังหวัด"
           [apiUrl]="service.apiGetComboboxProvince"
           [params]="{ countryId: data.formGroup.get('countryId')?.value }"
           (selectionChanged)="onProvinceChange($event)"
@@ -141,6 +153,7 @@
         <sic-combobox
           label="อำเภอ"
           formControlName="districtId"
+          placeholder="เลือกอำเภอ"
           [apiUrl]="service.apiGetComboboxDistrict"
           [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
           (selectionChanged)="onDistrictChange($event)"
@@ -153,6 +166,7 @@
         <sic-combobox
           label="ตำบล"
           formControlName="subDistrictId"
+          placeholder="เลือกตำบล"
           [apiUrl]="service.apiGetComboboxSubDistrict"
           [params]="{ districtId: data.formGroup.get('districtId')?.value }"
           (selectionChanged)="onSubDistrictChange($event)"
@@ -164,7 +178,11 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+        <sic-input
+          label="รหัสไปรษณีย์"
+          formControlName="zipCode"
+          placeholder="10110"
+        ></sic-input>
       </div>
 
       <!-- Email -->
@@ -174,6 +192,7 @@
         <sic-input
           label="อีเมล"
           formControlName="email"
+          placeholder="example@company.com"
           [errorMessages]="{
             email: 'กรุณากรอกอีเมลให้ถูกต้อง',
             maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร',
@@ -185,21 +204,34 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+        <sic-input-phone
+          label="เบอร์โทรศัพท์"
+          formControlName="phoneNumber"
+          placeholder="081-234-5678"
+        ></sic-input-phone>
       </div>
 
       <!-- Line ID -->
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input label="Line ID" formControlName="lineId"></sic-input>
+        <sic-input
+          label="Line ID"
+          formControlName="lineId"
+          placeholder="@lineid"
+        ></sic-input>
       </div>
 
       <!-- Remark -->
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input-area label="หมายเหตุ" formControlName="remark" [rows]="2"></sic-input-area>
+        <sic-input-area
+          label="หมายเหตุ"
+          formControlName="remark"
+          placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
+          [rows]="2"
+        ></sic-input-area>
       </div>
 
       <!-- Active Status -->

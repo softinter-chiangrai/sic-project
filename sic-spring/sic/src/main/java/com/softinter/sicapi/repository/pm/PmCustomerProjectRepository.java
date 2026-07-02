@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,4 +28,11 @@ public interface PmCustomerProjectRepository extends JpaRepository<PmCustomerPro
 
     // สำหรับค้นหาด้วย keyword + businessId
     Page<PmCustomerProject> findByCustomerIdAndBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(UUID customerId, UUID businessId, String keyword, Pageable pageable);
+
+    @Query("SELECT p FROM PmCustomerProject p " +
+       "JOIN FETCH p.customer c " +
+       "WHERE p.customerId = :customerId AND p.businessId = :businessId AND p.isDelete = false")
+Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("customerId") UUID customerId, 
+                                                                  @Param("businessId") UUID businessId, 
+                                                                  Pageable pageable);
 }

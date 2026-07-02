@@ -16,6 +16,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from './customer-state.service';
 
 @Component({
   selector: 'app-pmrt01',
@@ -28,6 +29,8 @@ export class Pmrt01Component implements OnInit {
   private router = inject(Router);
   private service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
+
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -248,4 +251,8 @@ export class Pmrt01Component implements OnInit {
     }
     return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
   }
+  goToProjects(customer: CustomerModel) {
+  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
+  this.router.navigate(['/feature/pm/pmrt02']);
+}
 }

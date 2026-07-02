@@ -96,6 +96,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> findByCustomerId(UUID customerId, UUID businessId, Pageable pageable) {
         Page<PmCustomerProject> page;
         if (businessId != null) {
@@ -107,6 +108,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> searchByCustomerId(UUID customerId, UUID businessId, String keyword, Pageable pageable) {
         Page<PmCustomerProject> page;
         if (businessId != null) {
