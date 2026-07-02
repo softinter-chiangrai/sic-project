@@ -252,9 +252,6 @@ sic-app/src/app/feature/pm/dt/pmdt01/pmdt01.form.ts
 sic-app/src/app/feature/pm/dt/pmdt01/pmdt01.model.ts
 sic-app/src/app/feature/pm/dt/pmdt01/pmdt01.resolver.ts
 sic-app/src/app/feature/pm/dt/pmdt01/pmdt01.service.ts
-sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.css
-sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.html
-sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.css
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.html
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.ts
@@ -342,12 +339,19 @@ sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.css
 sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html
 sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
 sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts
+sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.css
+sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.html
+sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.css
 sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.html
 sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
+sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.service.ts
 sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.css
 sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.html
 sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
+sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04Acomponent.css
+sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.html
+sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
 sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.css
 sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.html
 sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.ts
@@ -718,15 +722,950 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/util/LocalizationHelper.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/util/PaginationUtil.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/util/UniquenessValidator.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/websocket/ChatWebSocketController.java
-sic-spring/sic/src/main/resources/application.yml
-sic-spring/sic/src/main/resources/db/migration/V1__baseline.sql
-sic-spring/sic/src/main/resources/db/migration/V20260623141143_edit_name_table_customer.sql
-sic-spring/sic/src/main/resources/db/migration/V20260623145339__create_table_su_team_and_su_team_member.sql
-sic-spring/sic/src/main/resources/db/migration/V2__create_customer_table.sql
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.css">
+
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.html">
+<!-- src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.html -->
+
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ' }}
+        </h2>
+      </div>
+
+      <!-- Project Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัสโครงการ"
+          formControlName="projectCode"
+          [required]="true"
+          placeholder="PRJ-001"
+        ></sic-input>
+        @if (form.get('projectCode')?.touched && form.get('projectCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัสโครงการ</p>
+        }
+      </div>
+
+      <!-- Project Name -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อโครงการ"
+          formControlName="projectName"
+          [required]="true"
+          placeholder="ระบบ CRM"
+        ></sic-input>
+        @if (form.get('projectName')?.touched && form.get('projectName')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อโครงการ</p>
+        }
+      </div>
+
+      <!-- Customer -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลูกค้า"
+          formControlName="customerId"
+          [apiUrl]="service.apiGetComboboxCustomer"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('customerId')?.touched && form.get('customerId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกลูกค้า</p>
+        }
+      </div>
+
+      <!-- Contract -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สัญญา"
+          formControlName="contractId"
+          [apiUrl]="service.apiGetComboboxContract"
+          [params]="{ customerId: form.get('customerId')?.value }"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('contractId')?.touched && form.get('contractId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสัญญา</p>
+        }
+      </div>
+
+      <!-- Project Manager, BA, SA -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="Project Manager"
+            formControlName="projectManager"
+            placeholder="สมศักดิ์ รุ่งเรือง"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="BA"
+            formControlName="ba"
+            placeholder="สมหญิง รักเรียน"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="SA"
+            formControlName="sa"
+            placeholder="วิชัย พัฒนาชัย"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Start Date, Planned End Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุดตามแผน"
+            type="text"
+            formControlName="plannedEndDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('plannedEndDate')?.touched && form.get('plannedEndDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุดตามแผน</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุดจริง"
+            type="text"
+            formControlName="actualEndDate"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Budget Manday, Used Manday -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="Manday ตามแผน"
+            type="text"
+            formControlName="budgetManday"
+            [required]="true"
+            placeholder="0"
+          ></sic-input>
+          @if (form.get('budgetManday')?.touched && form.get('budgetManday')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday ตามแผน</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="Manday ที่ใช้จริง"
+            type="text"
+            formControlName="usedManday"
+            placeholder="0"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะโครงการ"
+          formControlName="status"
+          [apiUrl]="service.apiGetLovStatus"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ระดับความสำคัญ"
+          formControlName="priority"
+          [apiUrl]="service.apiGetLovPriority"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="คำอธิบายเพิ่มเติม"
+          formControlName="description"
+          [rows]="3"
+          placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับโครงการ"
+        ></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งานโครงการ</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts">
+// src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
+
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
+// ===== Model =====
+export interface ProjectModel {
+  id: string;
+  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customerName?: string;
+  contractId: string;
+  contractNo?: string;
+  projectManager: string;
+  ba: string;
+  sa: string;
+  startDate: string;
+  plannedEndDate: string;
+  actualEndDate?: string;
+  budgetManday: number;
+  usedManday: number;
+  status: string;
+  priority: string;
+  description?: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}
+
+// ===== Form =====
+class Pmrt02AForm {
+  static createForm(fb: FormBuilder) {
+    return fb.group({
+      id: [null],
+      projectCode: [null, [Validators.required, Validators.maxLength(30)]],
+      projectName: [null, [Validators.required, Validators.maxLength(255)]],
+      customerId: [null, [Validators.required]],
+      customerName: [null],
+      contractId: [null, [Validators.required]],
+      contractNo: [null],
+      projectManager: [null, [Validators.maxLength(100)]],
+      ba: [null, [Validators.maxLength(100)]],
+      sa: [null, [Validators.maxLength(100)]],
+      startDate: [null, [Validators.required]],
+      plannedEndDate: [null, [Validators.required]],
+      actualEndDate: [null],
+      budgetManday: [null, [Validators.required, Validators.min(0)]],
+      usedManday: [0, [Validators.min(0)]],
+      status: ['Prospect', [Validators.required]],
+      priority: ['Medium', [Validators.required]],
+      description: [null, [Validators.maxLength(1000)]],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
+    });
+  }
+}
+
+// ===== Service =====
+@Injectable({ providedIn: 'root' })
+export class Pmrt02AService {
+  private mockProjects: ProjectModel[] = [
+    {
+      id: '1',
+      projectCode: 'PRJ-001',
+      projectName: 'ระบบ CRM',
+      customerId: '1',
+      customerName: 'สมชาย ใจดี',
+      contractId: '1',
+      contractNo: 'CT-001',
+      projectManager: 'สมศักดิ์ รุ่งเรือง',
+      ba: 'สมหญิง รักเรียน',
+      sa: 'วิชัย พัฒนาชัย',
+      startDate: '2024-01-15',
+      plannedEndDate: '2024-06-30',
+      actualEndDate: '2024-07-15',
+      budgetManday: 120,
+      usedManday: 135,
+      status: 'Development',
+      priority: 'High',
+      isActive: true,
+      state: 1,
+      rowVersion: 0,
+    },
+  ];
+
+  apiGetComboboxCustomer = '/api/project/combobox-customer';
+  apiGetComboboxContract = '/api/project/combobox-contract';
+  apiGetLovStatus = '/api/project/lov-status';
+  apiGetLovPriority = '/api/project/lov-priority';
+
+  save(project: ProjectModel): Observable<string> {
+    console.log('📝 Saving project:', project);
+    return of('บันทึกสำเร็จ').pipe(delay(500));
+  }
+
+  getProject(id: string): Observable<ProjectModel> {
+    const found = this.mockProjects.find((p) => p.id === id);
+    if (found) {
+      return of(found).pipe(delay(300));
+    }
+    const emptyProject: ProjectModel = {
+      id: '',
+      projectCode: '',
+      projectName: '',
+      customerId: '',
+      customerName: '',
+      contractId: '',
+      contractNo: '',
+      projectManager: '',
+      ba: '',
+      sa: '',
+      startDate: '',
+      plannedEndDate: '',
+      actualEndDate: '',
+      budgetManday: 0,
+      usedManday: 0,
+      status: 'Prospect',
+      priority: 'Medium',
+      isActive: true,
+      state: 1,
+      rowVersion: 0,
+    };
+    return of(emptyProject).pipe(delay(300));
+  }
+}
+
+// ===== Component =====
+@Component({
+  selector: 'app-pmrt02a',  // ✅ เปลี่ยน selector
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicComboboxComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+  ],
+  templateUrl: './pmrt02A.component.html',  // ✅ ใช้ไฟล์ html ใหม่
+  styles: [],
+})
+export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {  // ✅ เปลี่ยนชื่อ class
+  readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
+  readonly service = inject(Pmrt02AService);
+  readonly dialog = inject(DialogService);
+  private readonly fb = inject(FormBuilder);
+
+  form!: FormGroup;
+  isEdit = false;
+  projectId: string | null = null;
+  isLoading = false;
+
+  pageDirty = () => this.form?.dirty ?? false;
+
+  ngOnInit(): void {
+    this.initForm();
+
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.projectId = id;
+        this.loadProject(id);
+      }
+    });
+  }
+
+  initForm(): void {
+    this.form = Pmrt02AForm.createForm(this.fb);
+  }
+
+  loadProject(id: string) {
+    this.isLoading = true;
+    this.service.getProject(id).subscribe({
+      next: (data) => {
+        this.form.patchValue(data);
+        this.isLoading = false;
+        console.log('✅ โหลดข้อมูลโครงการสำเร็จ:', data);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการรหัสนี้');
+        this.router.navigate(['/feature/pm/pmrt02']);  // ✅ เปลี่ยน path
+      },
+    });
+  }
+
+  onBack(): void {
+    this.router.navigate(['/feature/pm/pmrt02']);  // ✅ เปลี่ยน path
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      return;
+    }
+
+    const data = this.form.value;
+    this.service.save(data).subscribe({
+      next: () => {
+        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
+          this.form.markAsPristine();
+          this.router.navigate(['/feature/pm/pmrt02']);  // ✅ เปลี่ยน path
+        });
+      },
+      error: (error) => {
+        this.dialog.error('บันทึกไม่สำเร็จ', error);
+      },
+    });
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.service.ts">
+// src/app/feature/pm/rt/pmrt02/pmrt02.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+
+export interface Project {
+  id: string;
+  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customerName: string;
+  contractId: string;
+  contractNo: string;
+  projectManager: string;
+  ba: string;
+  sa: string;
+  startDate: string;
+  plannedEndDate: string;
+  actualEndDate?: string;
+  budgetManday: number;
+  usedManday: number;
+  status: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  isActive: boolean;
+  createdAt: string;
+  rowVersion?: number;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class Pmrt02Service {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/pm/projects'; // หรือ '/api/su-project'
+
+  getProjects(
+    businessId: string,
+    customerId?: string | null,
+    keyword?: string,
+    page: number = 0,
+    size: number = 10,
+    sortBy?: string,
+    sortDir?: 'asc' | 'desc'
+  ): Observable<PageResponse<Project>> {
+    let params = new HttpParams()
+      .set('businessId', businessId)
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    if (customerId) params = params.set('customerId', customerId);
+    if (keyword) params = params.set('keyword', keyword);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    if (sortDir) params = params.set('sortDir', sortDir);
+
+    return this.http.get<PageResponse<Project>>(this.baseUrl, { params });
+  }
+
+  // (อาจมี getProjectById, save, delete ด้วย)
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04Acomponent.css">
+
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.html">
+<!-- src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.html -->
+
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา' }}
+        </h2>
+      </div>
+
+      <!-- Contract No -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เลขที่สัญญา"
+          formControlName="contractNo"
+          [required]="true"
+          [errorMessages]="{
+            required: 'กรุณาระบุเลขที่สัญญา',
+            maxlength: 'เลขที่สัญญาต้องไม่เกิน 50 ตัวอักษร'
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Contract Type -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภทสัญญา"
+          formControlName="contractType"
+          [apiUrl]="service.getLovContractType()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกประเภทสัญญา' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Customer -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลูกค้า"
+          formControlName="customerId"
+          [apiUrl]="service.getComboboxCustomer()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.getComboboxProject()"
+          [params]="{ customerId: form.get('customerId')?.value }"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกโครงการ' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Start Date & End Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+            [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุด"
+            type="text"
+            formControlName="endDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+            [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุด' }"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Contract Value -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="มูลค่าสัญญา (บาท)"
+          type="text"
+          formControlName="contractValue"
+          [required]="true"
+          placeholder="0.00"
+          [errorMessages]="{
+            required: 'กรุณาระบุมูลค่าสัญญา',
+            min: 'มูลค่าต้องมากกว่า 0'
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Payment Terms -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เงื่อนไขการชำระเงิน"
+          formControlName="paymentTerms"
+          placeholder="เช่น จ่ายตามงวด 3 งวด, จ่ายรายเดือน"
+        ></sic-input>
+      </div>
+
+      <!-- Scope Summary -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="สรุปขอบเขตงาน"
+          formControlName="scopeSummary"
+          [rows]="3"
+          placeholder="ระบุขอบเขตงานหลักของสัญญานี้"
+        ></sic-input-area>
+      </div>
+
+      <!-- Sign Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะลงนาม"
+          formControlName="signStatus"
+          [apiUrl]="service.getLovSignStatus()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกสถานะลงนาม' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งานสัญญา</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+            [disabled]="isSaving"
+          >
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts">
+// src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';  // ✅ แก้ไข import
+import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { environment } from '../../../../../../environments/environment';
+
+// ===== Model =====
+export interface ContractModel {
+  id: string;
+  contractNo: string;
+  contractType: string;
+  customerId: string;
+  customerName?: string;
+  projectId: string;
+  projectName?: string;
+  startDate: string;
+  endDate: string;
+  contractValue: number;
+  paymentTerms: string;
+  scopeSummary: string;
+  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  renewalStatus: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}
+
+// ===== Form =====
+class Pmrt04AForm {
+  static createForm(fb: FormBuilder) {
+    return fb.group({
+      id: [null],
+      contractNo: [null, [Validators.required, Validators.maxLength(50)]],
+      contractType: [null, [Validators.required, Validators.maxLength(50)]],
+      customerId: [null, [Validators.required]],
+      customerName: [null],
+      projectId: [null, [Validators.required]],
+      projectName: [null],
+      startDate: [null, [Validators.required]],
+      endDate: [null, [Validators.required]],
+      contractValue: [null, [Validators.required, Validators.min(0)]],
+      paymentTerms: [null, [Validators.maxLength(500)]],
+      scopeSummary: [null, [Validators.maxLength(1000)]],
+      signStatus: ['Draft', [Validators.required]],
+      renewalStatus: ['ยังไม่ต่อ'],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
+    });
+  }
+}
+
+// ===== Service =====
+@Injectable({ providedIn: 'root' })
+export class Pmrt04AService {
+  private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
+
+  constructor(private http: HttpClient) {}
+
+  save(contract: ContractModel): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/save`, contract);
+  }
+
+  getContract(id: string): Observable<ContractModel> {
+    return this.http.get<ContractModel>(`${this.apiUrl}/${id}`);
+  }
+
+  getComboboxCustomer(): string {
+    return `${this.apiUrl}/combobox-customer`;
+  }
+
+  getComboboxProject(): string {
+    return `${this.apiUrl}/combobox-project`;
+  }
+
+  getLovContractType(): string {
+    return `${this.apiUrl}/lov-contract-type`;
+  }
+
+  getLovSignStatus(): string {
+    return `${this.apiUrl}/lov-sign-status`;
+  }
+}
+
+// ===== Component =====
+@Component({
+  selector: 'app-pmrt04a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicComboboxComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+  ],
+  templateUrl: './pmrt04A.component.html',
+  styles: [],
+})
+export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  // ✅ เปลี่ยนเป็น public เพื่อให้ template ใช้ได้
+  public service = inject(Pmrt04AService);
+  private dialog = inject(DialogService);
+  private fb = inject(FormBuilder);
+
+  form!: FormGroup;
+  isEdit = false;
+  contractId: string | null = null;
+  isLoading = false;
+  isSaving = false;
+
+  pageDirty = () => this.form?.dirty ?? false;
+
+  ngOnInit(): void {
+    this.initForm();
+
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.contractId = id;
+        this.loadContract(id);
+      }
+    });
+
+    this.form.get('customerId')?.valueChanges.subscribe(() => {
+      this.form.patchValue({ projectId: null });
+    });
+  }
+
+  initForm(): void {
+    this.form = Pmrt04AForm.createForm(this.fb);
+  }
+
+  loadContract(id: string) {
+    this.isLoading = true;
+    this.service.getContract(id)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          this.form.patchValue(data);
+          console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
+        },
+        error: (error) => {
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
+          this.router.navigate(['/feature/pm/pmrt04']);
+        },
+      });
+  }
+
+  onBack(): void {
+    const customerId = this.form.get('customerId')?.value;
+    if (customerId) {
+      this.router.navigate(['/feature/pm/pmrt04'], {
+        queryParams: { customerId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt04']);
+    }
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      return;
+    }
+
+    this.isSaving = true;
+    const data = this.form.value;
+
+    this.service.save(data)
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
+            this.form.markAsPristine();
+            const customerId = this.form.get('customerId')?.value;
+            if (customerId) {
+              this.router.navigate(['/feature/pm/pmrt04'], {
+                queryParams: { customerId },
+              });
+            } else {
+              this.router.navigate(['/feature/pm/pmrt04']);
+            }
+          });
+        },
+        error: (error) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+}
+</file>
 
 <file path=".repomixignore">
 # ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
@@ -740,6 +1679,7 @@ sic-storage/
 .kilo/
 .github/
 Migrations/
+resources/
 
 # โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
 **/.angular/
@@ -12850,9 +13790,14 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   get displaySrc(): string {
-    const activeValue = this.getActiveValue();
-    return this.localObjectUrl ?? activeValue?.accessUrl ?? this.src ?? this.defaultImageSrc;
+  // ✅ ใช้ src ที่ส่งเข้ามาเป็นอันดับแรก
+  if (this.src && this.src !== this.defaultImageSrc) {
+    return this.src;
   }
+
+  const activeValue = this.getActiveValue();
+  return this.localObjectUrl ?? activeValue?.accessUrl ?? this.defaultImageSrc;
+}
 
   get avatarSize(): string {
     if (typeof this.size === 'number') {
@@ -23964,467 +24909,6 @@ export class Pmdt01Service {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.css">
-
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.html">
-<!-- ===== LOADING ===== -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div
-      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-    ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
-  </div>
-}
-
-<!-- ===== FORM ===== -->
-@if (!isLoading && formContractData; as data) {
-  <form [formGroup]="data.formGroup" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา' }}
-        </h2>
-      </div>
-
-      <!-- เลขที่สัญญา -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input label="เลขที่สัญญา" formControlName="contractNo" [required]="true"></sic-input>
-        @if (
-          data.formGroup.get('contractNo')?.touched && data.formGroup.get('contractNo')?.invalid
-        ) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขที่สัญญา</p>
-        }
-      </div>
-
-      <!-- ประเภทสัญญา -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="ประเภทสัญญา"
-          formControlName="contractType"
-          [apiUrl]="service.apiGetLovContractType"
-          [required]="true"
-        ></sic-combobox>
-        @if (
-          data.formGroup.get('contractType')?.touched && data.formGroup.get('contractType')?.invalid
-        ) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภทสัญญา</p>
-        }
-      </div>
-
-      <!-- ลูกค้า -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="ลูกค้า"
-          formControlName="customerId"
-          [apiUrl]="service.apiGetComboboxCustomer"
-          [required]="true"
-        ></sic-combobox>
-        @if (
-          data.formGroup.get('customerId')?.touched && data.formGroup.get('customerId')?.invalid
-        ) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกลูกค้า</p>
-        }
-      </div>
-
-      <!-- โครงการ (ถ้ามี) -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="โครงการ (ถ้ามี)"
-          formControlName="projectId"
-          [apiUrl]="service.apiGetComboboxProject"
-          [params]="{ customerId: data.formGroup.get('customerId')?.value }"
-        ></sic-combobox>
-      </div>
-
-      <!-- วันที่เริ่ม - วันที่สิ้นสุด -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
-      >
-        <div class="flex-1">
-          <sic-input
-            label="วันที่เริ่ม"
-            type="text"
-            formControlName="startDate"
-            [required]="true"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-          @if (
-            data.formGroup.get('startDate')?.touched && data.formGroup.get('startDate')?.invalid
-          ) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
-          }
-        </div>
-        <div class="flex-1">
-          <sic-input
-            label="วันที่สิ้นสุด"
-            type="text"
-            formControlName="endDate"
-            [required]="true"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-          @if (data.formGroup.get('endDate')?.touched && data.formGroup.get('endDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
-          }
-        </div>
-      </div>
-
-      <!-- มูลค่าสัญญา -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="มูลค่าสัญญา (บาท)"
-          type="text"
-          formControlName="contractValue"
-          [required]="true"
-          placeholder="0"
-        ></sic-input>
-        @if (
-          data.formGroup.get('contractValue')?.touched &&
-          data.formGroup.get('contractValue')?.invalid
-        ) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุมูลค่าสัญญา</p>
-        }
-      </div>
-
-      <!-- เงื่อนไขการชำระเงิน -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="เงื่อนไขการชำระเงิน"
-          formControlName="paymentTerms"
-          placeholder="เช่น จ่ายตามงวด 3 งวด, จ่ายรายเดือน"
-        ></sic-input>
-      </div>
-
-      <!-- สรุปขอบเขตงาน -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input-area
-          label="สรุปขอบเขตงาน"
-          formControlName="scopeSummary"
-          [rows]="3"
-          placeholder="ระบุขอบเขตงานหลักของสัญญานี้"
-        ></sic-input-area>
-      </div>
-
-      <!-- สถานะลงนาม -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="สถานะลงนาม"
-          formControlName="signStatus"
-          [apiUrl]="service.apiGetLovSignStatus"
-          [required]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- อัปโหลดไฟล์สัญญา -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ไฟล์สัญญา</label>
-        <div class="flex items-center gap-3 flex-wrap">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
-          >
-            <i class="bi bi-upload"></i>
-            อัปโหลดไฟล์
-          </button>
-          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีไฟล์</span>
-          <span class="text-xs text-[var(--text-muted)]">(PDF, DOC, DOCX)</span>
-        </div>
-      </div>
-
-      <!-- เปิดใช้งานสัญญา -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งานสัญญา</span>
-        </label>
-      </div>
-
-      <!-- ปุ่ม Action -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
-      >
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-          </sic-button>
-        </div>
-      </div>
-    </div>
-  </form>
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts">
-import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { DialogService } from '../../../../core/services/dialog.service';
-
-// ===== Model =====
-export interface ContractModel {
-  id: string;
-  contractNo: string;
-  contractType: string;
-  customerId: string;
-  customerName?: string;
-  projectId?: string;
-  projectName?: string;
-  startDate: string;
-  endDate: string;
-  contractValue: number;
-  paymentTerms: string;
-  scopeSummary: string;
-  contractFile?: string;
-  signStatus: string;
-  renewalStatus: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
-
-// ===== Form =====
-class Pmdt02Form {
-  static createForm(fb: FormBuilder) {
-    return fb.group({
-      id: [null],
-      contractNo: [null, [Validators.required, Validators.maxLength(50)]],
-      contractType: [null, [Validators.required, Validators.maxLength(50)]],
-      customerId: [null, [Validators.required]],
-      customerName: [null],
-      projectId: [null],
-      projectName: [null],
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      contractValue: [null, [Validators.required, Validators.min(0)]],
-      paymentTerms: [null, [Validators.maxLength(500)]],
-      scopeSummary: [null, [Validators.maxLength(1000)]],
-      contractFile: [null],
-      signStatus: ['Draft', [Validators.required]],
-      renewalStatus: ['ยังไม่ต่อ'],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt02Service {
-  private mockContracts: ContractModel[] = [
-    {
-      id: '1',
-      contractNo: 'CT-001',
-      contractType: 'Development Contract',
-      customerId: '1',
-      customerName: 'สมชาย ใจดี',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      startDate: '2024-01-01',
-      endDate: '2024-06-30',
-      contractValue: 500000,
-      paymentTerms: 'จ่ายตามงวด 3 งวด',
-      scopeSummary: 'พัฒนาระบบ CRM ครบวงจร',
-      signStatus: 'Signed',
-      renewalStatus: 'ยังไม่ต่อ',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-    {
-      id: '2',
-      contractNo: 'CT-002',
-      contractType: 'Maintenance Contract',
-      customerId: '1',
-      customerName: 'สมชาย ใจดี',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      startDate: '2024-07-01',
-      endDate: '2025-06-30',
-      contractValue: 50000,
-      paymentTerms: 'จ่ายรายเดือน',
-      scopeSummary: 'ดูแลระบบ CRM หลังส่งมอบ',
-      signStatus: 'Draft',
-      renewalStatus: 'รอต่อ',
-      isActive: false,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  // ✅ API Endpoints
-  apiGetComboboxCustomer = '/api/contract/combobox-customer';
-  apiGetComboboxProject = '/api/contract/combobox-project';
-  apiGetLovContractType = '/api/contract/lov-contract-type';
-  apiGetLovSignStatus = '/api/contract/lov-sign-status';
-
-  save(contract: ContractModel): Observable<string> {
-    console.log('📝 Saving contract:', contract);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getContract(id: string): Observable<ContractModel> {
-    const found = this.mockContracts.find((c) => c.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const emptyContract: ContractModel = {
-      id: '',
-      contractNo: '',
-      contractType: '',
-      customerId: '',
-      customerName: '',
-      projectId: '',
-      projectName: '',
-      startDate: '',
-      endDate: '',
-      contractValue: 0,
-      paymentTerms: '',
-      scopeSummary: '',
-      signStatus: 'Draft',
-      renewalStatus: 'ยังไม่ต่อ',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(emptyContract).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
-@Component({
-  selector: 'app-pmdt02',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent, // ✅ ต้องมี
-  ],
-  templateUrl: './pmdt02.component.html',
-  styles: [],
-})
-export class Pmdt02Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt02Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
-
-  formContractData!: SicFromData<ContractModel>;
-  isEdit = false;
-  contractId: string | null = null;
-  isLoading = false;
-
-  pageDirty = () => this.formContractData?.dirty ?? false;
-
-  ngOnInit(): void {
-    const form = Pmdt02Form.createForm(this.fb);
-    this.formContractData = new SicFromData<ContractModel>(form);
-
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.contractId = id;
-        this.loadContract(id);
-      }
-    });
-  }
-
-  loadContract(id: string) {
-    this.isLoading = true;
-    this.service.getContract(id).subscribe({
-      next: (data) => {
-        this.formContractData.formGroup.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
-        this.router.navigate(['/feature/pm/contract']);
-      },
-    });
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/contract']);
-  }
-
-  submit() {
-    this.formContractData.markAllAsTouched();
-    if (this.formContractData.invalid) {
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
-    }
-
-    const data = this.formContractData.value;
-    this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
-          this.formContractData.markAsPristine();
-          this.router.navigate(['/feature/pm/contract']);
-        });
-      },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
-    });
-  }
-}
-
-export default Pmdt02Component;
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.css">
 
 </file>
@@ -33826,613 +34310,8 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.html">
-<div class="space-y-5 p-0.5">
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-        รายการสัญญา
-      </h1>
-      <span
-        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
-      >
-        {{ totalItems() }} รายการ
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่มสัญญา
-    </button>
-  </div>
+<!-- src/app/feature/pm/rt/pmrt02/pmrt02.component.html -->
 
-  <!-- ===== FILTERS ===== -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <!-- Search -->
-    <div class="relative flex-1 min-w-[200px]">
-      <i
-        class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
-      ></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาเลขสัญญา, ลูกค้า, ประเภท..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
-    </div>
-
-    <!-- Filter: Status -->
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">🌐 ทั้งหมด</option>
-      <option value="active">✅ ใช้งาน</option>
-      <option value="inactive">⛔ ไม่ใช้งาน</option>
-    </select>
-
-    <!-- Filter: Contract Type -->
-    <select
-      (change)="onTypeChange($event)"
-      [value]="filterType()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📋 ทุกประเภท</option>
-      @for (type of contractTypes; track type) {
-        <option [value]="type">{{ type }}</option>
-      }
-    </select>
-  </div>
-
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- ===== TABLE ===== -->
-  @if (!isLoading()) {
-    <div
-      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
-    >
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th
-              (click)="onSortChange('contractNo')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              เลขสัญญา
-              @if (sortBy() === 'contractNo') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('contractType')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-            >
-              ประเภทสัญญา
-              @if (sortBy() === 'contractType') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('customerName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-            >
-              ลูกค้า
-              @if (sortBy() === 'customerName') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('contractValue')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              มูลค่า
-              @if (sortBy() === 'contractValue') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('startDate')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[140px] hidden md:table-cell"
-            >
-              ระยะเวลา
-              @if (sortBy() === 'startDate') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('signStatus')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              สถานะลงนาม
-              @if (sortBy() === 'signStatus') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
-            >
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (contract of paginatedContracts(); track contract.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span
-                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
-                >
-                  {{ contract.contractNo }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text-active)]">{{ contract.contractType }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-[var(--text-active)]">{{ contract.customerName }}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
-                {{ formatCurrency(contract.contractValue) }}
-              </td>
-              <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
-                {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
-              </td>
-              <td class="px-4 py-3">
-                <span
-                  [class]="
-                    getSignStatusClass(contract.signStatus) +
-                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                  "
-                >
-                  {{ getSignStatusText(contract.signStatus) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1">
-                  <!-- View -->
-                  <button
-                    (click)="goToView(contract.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูข้อมูล"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </button>
-                  <!-- Edit -->
-                  <button
-                    (click)="goToEdit(contract.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลสัญญา</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มสัญญาใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่มสัญญา
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- ===== PAGINATION ===== -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{
-          (currentPage() - 1) * pageSize() + 1
-        }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{
-          Math.min(currentPage() * pageSize(), totalItems())
-        }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
-      </div>
-
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="
-              page === currentPage()
-                ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-                : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
-            "
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.ts">
-import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-
-// ===== Interfaces =====
-interface Contract {
-  id: string;
-  contractNo: string;
-  contractType: string;
-  customerId: string;
-  customerName: string;
-  projectId?: string;
-  projectName?: string;
-  startDate: string;
-  endDate: string;
-  contractValue: number;
-  paymentTerms: string;
-  scopeSummary: string;
-  contractFile?: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
-  renewalStatus: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-// ===== Mock Data =====
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: '1',
-    contractNo: 'CT-001',
-    contractType: 'Development Contract',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    startDate: '2024-01-01',
-    endDate: '2024-06-30',
-    contractValue: 500000,
-    paymentTerms: 'จ่ายตามงวด 3 งวด',
-    scopeSummary: 'พัฒนาระบบ CRM ครบวงจร',
-    signStatus: 'Signed',
-    renewalStatus: 'ยังไม่ต่อ',
-    isActive: true,
-    createdAt: '2024-01-01 09:00:00',
-  },
-  {
-    id: '2',
-    contractNo: 'CT-002',
-    contractType: 'Maintenance Contract',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    startDate: '2024-07-01',
-    endDate: '2025-06-30',
-    contractValue: 50000,
-    paymentTerms: 'จ่ายรายเดือน',
-    scopeSummary: 'ดูแลระบบ CRM หลังส่งมอบ',
-    signStatus: 'Draft',
-    renewalStatus: 'รอต่อ',
-    isActive: false,
-    createdAt: '2024-06-15 14:30:00',
-  },
-  {
-    id: '3',
-    contractNo: 'CT-003',
-    contractType: 'Development Contract',
-    customerId: '2',
-    customerName: 'บริษัท ซอฟต์แวร์ จำกัด',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    startDate: '2024-03-01',
-    endDate: '2024-08-31',
-    contractValue: 300000,
-    paymentTerms: 'จ่ายตาม Milestone',
-    scopeSummary: 'พัฒนาระบบบริหารทรัพยากรบุคคล',
-    signStatus: 'Sent',
-    renewalStatus: 'ยังไม่ต่อ',
-    isActive: true,
-    createdAt: '2024-02-28 10:00:00',
-  },
-];
-
-@Component({
-  selector: 'app-pmrt02',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt02.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class Pmrt02Component implements OnInit {
-  private router = inject(Router);
-
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected filterType = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('contractNo');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
-
-  // ===== Data =====
-  protected contracts = signal<Contract[]>(MOCK_CONTRACTS);
-
-  // ===== Computed =====
-  protected filteredContracts = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const type = this.filterType();
-
-    let result = this.contracts();
-
-    if (term) {
-      result = result.filter(
-        (c) =>
-          c.contractNo.toLowerCase().includes(term) ||
-          c.customerName.toLowerCase().includes(term) ||
-          c.contractType.toLowerCase().includes(term),
-      );
-    }
-
-    if (status === 'active') {
-      result = result.filter((c) => c.isActive);
-    } else if (status === 'inactive') {
-      result = result.filter((c) => !c.isActive);
-    }
-
-    if (type !== 'all') {
-      result = result.filter((c) => c.contractType === type);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Contract] ?? '';
-      const bVal = b[sortField as keyof Contract] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  });
-
-  protected paginatedContracts = computed(() => {
-    const all = this.filteredContracts();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredContracts().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
-  });
-
-  protected Math = Math;
-
-  // ===== Contract Types (for filter dropdown) =====
-  contractTypes = [
-    'Development Contract',
-    'Maintenance Contract',
-    'Change Request Contract',
-    'Extension Contract',
-    'Support Contract',
-  ];
-
-  // ===== Lifecycle =====
-  ngOnInit() {
-    // TODO: เรียก API จริง
-    // this.loadContracts();
-  }
-
-  // ===== Actions =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onTypeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterType.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  goToAdd() {
-    this.router.navigate(['/feature/pm/contract/new']);
-  }
-
-  goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/contract', id, 'edit']);
-  }
-
-  goToView(id: string) {
-    this.router.navigate(['/feature/pm/contract', id, 'view']);
-  }
-
-  // ===== Utility =====
-  getStatusClass(isActive: boolean): string {
-    return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
-  }
-
-  getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-
-  getSignStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      Sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Signed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Draft'];
-  }
-
-  getSignStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      Sent: 'ส่งแล้ว',
-      Signed: 'ลงนามแล้ว',
-      Expired: 'หมดอายุ',
-    };
-    return map[status] || status;
-  }
-
-  formatDate(dateStr: string): string {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB',
-      minimumFractionDigits: 0,
-    }).format(value);
-  }
-}
-
-export default Pmrt02Component;
-</file>
-
-<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.css">
-
-</file>
-
-<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.html">
 <div class="space-y-5 p-0.5">
 
   <!-- ===== HEADER ===== -->
@@ -34704,13 +34583,20 @@ export default Pmrt02Component;
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.ts">
+<file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.ts">
+// src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
+
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 // ===== Interfaces =====
-interface Project {
+export interface Project {
   id: string;
   projectCode: string;
   projectName: string;
@@ -34730,89 +34616,36 @@ interface Project {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   isActive: boolean;
   createdAt: string;
+  rowVersion?: number;
 }
 
-// ===== Mock Data =====
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: '1',
-    projectCode: 'PRJ-001',
-    projectName: 'ระบบ CRM',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    contractId: '1',
-    contractNo: 'CT-001',
-    projectManager: 'สมศักดิ์ รุ่งเรือง',
-    ba: 'สมหญิง รักเรียน',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-01-15',
-    plannedEndDate: '2024-06-30',
-    actualEndDate: '2024-07-15',
-    budgetManday: 120,
-    usedManday: 135,
-    status: 'Development',
-    priority: 'High',
-    isActive: true,
-    createdAt: '2024-01-10 09:00:00',
-  },
-  {
-    id: '2',
-    projectCode: 'PRJ-002',
-    projectName: 'ระบบ HR',
-    customerId: '2',
-    customerName: 'บริษัท ซอฟต์แวร์ จำกัด',
-    contractId: '3',
-    contractNo: 'CT-003',
-    projectManager: 'มานี มีทรัพย์',
-    ba: 'สมชาย ใจดี',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-03-01',
-    plannedEndDate: '2024-08-31',
-    actualEndDate: '',
-    budgetManday: 80,
-    usedManday: 45,
-    status: 'Requirement Gathering',
-    priority: 'Medium',
-    isActive: true,
-    createdAt: '2024-02-28 10:00:00',
-  },
-  {
-    id: '3',
-    projectCode: 'PRJ-003',
-    projectName: 'ระบบสินค้าคงคลัง',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    contractId: '2',
-    contractNo: 'CT-002',
-    projectManager: 'สมศักดิ์ รุ่งเรือง',
-    ba: 'สมหญิง รักเรียน',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-06-01',
-    plannedEndDate: '2024-11-30',
-    actualEndDate: '',
-    budgetManday: 100,
-    usedManday: 20,
-    status: 'Planning',
-    priority: 'Low',
-    isActive: true,
-    createdAt: '2024-05-20 14:30:00',
-  },
-];
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
 
 @Component({
-  selector: 'app-pmrt03',
+  selector: 'app-pmrt02',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt03.component.html',
+  templateUrl: './pmrt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmrt03Component implements OnInit {
+export class Pmrt02Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
 
   // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected filterPriority = signal('all');
+  protected filterCustomerId = signal<string | null>(null);
+  protected filterCustomerName = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('projectCode');
@@ -34820,99 +34653,136 @@ export class Pmrt03Component implements OnInit {
   protected isLoading = signal(false);
 
   // ===== Data =====
-  protected projects = signal<Project[]>(MOCK_PROJECTS);
+  protected projects = signal<Project[]>([]);
+  protected totalItems = signal(0);
+
+  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Computed =====
   protected filteredProjects = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const priority = this.filterPriority();
-
-    let result = this.projects();
-
-    if (term) {
-      result = result.filter(
-        (p) =>
-          p.projectCode.toLowerCase().includes(term) ||
-          p.projectName.toLowerCase().includes(term) ||
-          p.customerName.toLowerCase().includes(term) ||
-          p.projectManager.toLowerCase().includes(term)
-      );
-    }
-
-    if (status !== 'all') {
-      result = result.filter((p) => p.status === status);
-    }
-
-    if (priority !== 'all') {
-      result = result.filter((p) => p.priority === priority);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Project] ?? '';
-      const bVal = b[sortField as keyof Project] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
+    // ใช้ projects จาก API โดยตรง (backend จัดการ filter แล้ว)
+    return this.projects();
   });
 
   protected paginatedProjects = computed(() => {
-    const all = this.filteredProjects();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
+    // Backend จัดการ pagination แล้ว
+    return this.projects();
   });
 
-  protected totalItems = computed(() => this.filteredProjects().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
   protected Math = Math;
 
   // ===== Options =====
   statusOptions = [
-    'Prospect',
-    'Contract Drafting',
-    'Contract Signed',
-    'Requirement Gathering',
-    'Requirement Approval',
-    'System Analysis',
-    'DFD Design',
-    'ER Design',
-    'Specification Design',
-    'Specification Approval',
-    'Planning',
-    'Development',
-    'Internal Testing',
-    'UAT',
-    'Bug Fixing',
-    'Ready for Delivery',
-    'Delivered',
-    'Invoicing',
-    'Closed',
-    'MA Active',
+    'Prospect', 'Contract Drafting', 'Contract Signed', 'Requirement Gathering',
+    'Requirement Approval', 'System Analysis', 'DFD Design', 'ER Design',
+    'Specification Design', 'Specification Approval', 'Planning', 'Development',
+    'Internal Testing', 'UAT', 'Bug Fixing', 'Ready for Delivery', 'Delivered',
+    'Invoicing', 'Closed', 'MA Active',
   ];
 
   priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    // อ่าน queryParams
+    this.route.queryParams.subscribe((params) => {
+      const customerId = params['customerId'];
+      if (customerId) {
+        this.filterCustomerId.set(customerId);
+        // ดึงชื่อลูกค้าจาก queryParams หรือจากข้อมูลที่โหลด
+        const customerName = params['customerName'] || '';
+        this.filterCustomerName.set(customerName);
+      } else {
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
+      }
+      this.currentPage.set(1);
+      this.loadProjects();
+    });
+
+    // ถ้าไม่มี queryParams ให้โหลดทั้งหมด
+    if (!this.route.snapshot.queryParams['customerId']) {
+      this.loadProjects();
+    }
+  }
+
+  // ===== Load Projects from API =====
+  loadProjects() {
+    this.isLoading.set(true);
+
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString());
+
+    // กรองตาม customerId
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
+
+    // ค้นหา
+    const keyword = this.searchTerm();
+    if (keyword) {
+      params = params.set('keyword', keyword);
+    }
+
+    // สถานะ
+    const status = this.filterStatus();
+    if (status !== 'all') {
+      params = params.set('status', status);
+    }
+
+    // ความสำคัญ
+    const priority = this.filterPriority();
+    if (priority !== 'all') {
+      params = params.set('priority', priority);
+    }
+
+    // เรียงลำดับ
+    if (this.sortBy()) {
+      params = params
+        .set('sortBy', this.sortBy())
+        .set('sortDir', this.sortDir());
+    }
+
+    this.http.get<PageResponse<Project>>(this.apiUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.projects.set(response.content || []);
+          this.totalItems.set(response.totalElements || 0);
+
+          // ถ้ามี customerId แต่ยังไม่มีชื่อ ให้ลองดึงจากข้อมูลที่โหลด
+          if (this.filterCustomerId() && !this.filterCustomerName()) {
+            const firstProject = response.content?.[0];
+            if (firstProject?.customerName) {
+              this.filterCustomerName.set(firstProject.customerName);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Load projects error:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโครงการได้');
+          this.projects.set([]);
+          this.totalItems.set(0);
+        },
+      });
   }
 
   // ===== Actions =====
@@ -34920,18 +34790,27 @@ export class Pmrt03Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadProjects();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadProjects();
   }
 
   onPriorityChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterPriority.set(select.value);
     this.currentPage.set(1);
+    this.loadProjects();
   }
 
   onSortChange(field: string) {
@@ -34941,28 +34820,36 @@ export class Pmrt03Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadProjects();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/project/new']);
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      this.router.navigate(['/feature/pm/pmrt02/new'], {
+        queryParams: { customerId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt02/new']);
+    }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/project', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt02A', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/project', id, 'view']);
+    this.router.navigate(['/feature/pm/pmrt02A', id, 'view']);
+  }
+
+  goBackToCustomer() {
+    this.router.navigate(['/feature/pm/pmrt02']);
   }
 
   // ===== Utility =====
@@ -35002,7 +34889,34 @@ export class Pmrt03Component implements OnInit {
     return map[priority] || map['Low'];
   }
 
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Prospect: 'โอกาส',
+      'Contract Drafting': 'ร่างสัญญา',
+      'Contract Signed': 'เซ็นสัญญา',
+      'Requirement Gathering': 'เก็บ Requirement',
+      'Requirement Approval': 'อนุมัติ Requirement',
+      'System Analysis': 'วิเคราะห์ระบบ',
+      'DFD Design': 'ออกแบบ DFD',
+      'ER Design': 'ออกแบบ ER',
+      'Specification Design': 'ออกแบบ Spec',
+      'Specification Approval': 'อนุมัติ Spec',
+      Planning: 'วางแผน',
+      Development: 'พัฒนา',
+      'Internal Testing': 'ทดสอบภายใน',
+      UAT: 'ทดสอบ UAT',
+      'Bug Fixing': 'แก้ไข Bug',
+      'Ready for Delivery': 'พร้อมส่งมอบ',
+      Delivered: 'ส่งมอบแล้ว',
+      Invoicing: 'ออก Invoice',
+      Closed: 'ปิดโครงการ',
+      'MA Active': 'อยู่ใน MA',
+    };
+    return map[status] || status;
+  }
+
   formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -35020,8 +34934,640 @@ export class Pmrt03Component implements OnInit {
     return Math.min(Math.round((used / budget) * 100), 100);
   }
 }
+</file>
 
-export default Pmrt03Component;
+<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.css">
+/* src/app/feature/pm/rt/pmrt03/pmrt03.component.css */
+
+:host {
+  display: block;
+}
+
+/* Hover effect for stat cards */
+.bg-\[var\(--sidebar\)\] {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bg-\[var\(--sidebar\)\]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth progress bar transition */
+.w-full .h-full {
+  transition: width 0.6s ease;
+}
+
+/* Quick action buttons */
+.grid button {
+  transition: all 0.15s ease;
+}
+
+.grid button:hover {
+  transform: translateY(-1px);
+}
+
+/* Truncate text */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.html">
+<!-- src/app/feature/pm/rt/pmrt03/pmrt03.component.html -->
+
+<!-- ===== LOADING ===== -->
+@if (isLoading()) {
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <div class="w-14 h-14 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+  </div>
+}
+
+<!-- ===== ERROR ===== -->
+@if (error()) {
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <i class="bi bi-exclamation-triangle text-5xl text-[var(--crm-danger)]"></i>
+    <p class="text-lg font-medium text-[var(--text-active)]">{{ error() }}</p>
+    <button
+      (click)="goBack()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+    >
+      <i class="bi bi-arrow-left"></i>
+      กลับไปหน้ารายการ
+    </button>
+  </div>
+}
+
+<!-- ===== DASHBOARD ===== -->
+@if (project(); as p) {
+  <div class="space-y-6 p-0.5">
+
+    <!-- ===== HEADER ===== -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button
+          (click)="goBack()"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+          title="กลับ"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <h1 class="text-2xl font-bold text-[var(--text-active)]">{{ p.projectName }}</h1>
+            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+              {{ p.projectCode }}
+            </span>
+            <span [class]="getStatusClass(p.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+              {{ getStatusText(p.status) }}
+            </span>
+            @if (!p.isActive) {
+              <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                ปิดใช้งาน
+              </span>
+            }
+          </div>
+          <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
+            <span><i class="bi bi-person"></i> {{ p.customerName }}</span>
+            <span><i class="bi bi-file-earmark-text"></i> สัญญา: {{ p.contractNo }}</span>
+            <span><i class="bi bi-person-badge"></i> PM: {{ p.projectManager }}</span>
+            <span><i class="bi bi-calendar"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.plannedEndDate) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="goToGantt()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-bar-chart"></i>
+          Gantt
+        </button>
+        <button
+          (click)="goToEdit()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+        >
+          <i class="bi bi-pencil"></i>
+          แก้ไขโครงการ
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Phase</p>
+        <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.phaseCount }}</p>
+      </div>
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Tasks</p>
+        <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.taskCount }}</p>
+        <p class="text-xs text-[var(--text-muted)]">เสร็จ {{ p.taskCompletedCount }} / {{ p.taskCount }}</p>
+      </div>
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Requirements</p>
+        <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.requirementCount }}</p>
+      </div>
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Bugs</p>
+        <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.bugCount }}</p>
+        <p class="text-xs text-[var(--text-muted)]">เปิด {{ p.bugOpenCount }} / {{ p.bugCount }}</p>
+      </div>
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm col-span-2">
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Manday</p>
+        <div class="flex items-center gap-3">
+          <span class="text-2xl font-bold text-[var(--text-active)]">{{ p.usedManday }}</span>
+          <span class="text-sm text-[var(--text-muted)]">/ {{ p.budgetManday }}</span>
+          <span class="text-sm font-medium text-[var(--text-active)] ml-auto">{{ getMandayProgress() }}%</span>
+        </div>
+        <div class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden mt-1">
+          <div
+            class="h-full rounded-full transition-all"
+            [style.width.%]="getMandayProgress()"
+            [style.background]="getMandayProgress() > 80 ? 'var(--crm-danger)' : getMandayProgress() > 50 ? 'var(--crm-warning)' : 'var(--crm-success)'"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DESCRIPTION ===== -->
+    @if (p.description) {
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+        <p class="text-sm text-[var(--text)]">{{ p.description }}</p>
+      </div>
+    }
+
+    <!-- ===== QUICK ACTIONS ===== -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+      <button
+        (click)="goToPhases()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-layers text-[var(--crm-primary)]"></i>
+        Phase
+      </button>
+      <button
+        (click)="goToTasks()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
+        Tasks
+      </button>
+      <button
+        (click)="goToRequirements()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
+        Requirements
+      </button>
+      <button
+        (click)="goToBugs()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-bug text-[var(--crm-danger)]"></i>
+        Bugs
+      </button>
+      <button
+        (click)="goToGantt()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-bar-chart-fill text-[var(--crm-primary)]"></i>
+        Gantt
+      </button>
+      <button
+        (click)="goToContracts()"
+        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+        สัญญา
+      </button>
+    </div>
+
+    <!-- ===== RECENT PHASES & TASKS ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Recent Phases -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
+          <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-layers text-[var(--crm-primary)]"></i>
+            Phase ล่าสุด
+          </h3>
+          <button
+            (click)="goToPhases()"
+            class="text-xs text-[var(--crm-primary)] hover:underline"
+          >
+            ดูทั้งหมด →
+          </button>
+        </div>
+        <div class="divide-y divide-[var(--border)]">
+          @for (phase of p.recentPhases; track phase.id) {
+            <div
+              class="flex items-center justify-between px-5 py-3 hover:bg-[var(--sidebar-hover)] cursor-pointer transition-colors"
+              (click)="goToPhaseDetail(phase.id)"
+            >
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ phase.phaseName }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ phase.phaseCode }} · {{ formatDate(phase.endDate) }}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span [class]="getStatusClass(phase.status) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                  {{ getStatusText(phase.status) }}
+                </span>
+                <span class="text-xs font-mono text-[var(--text-muted)] min-w-[2.5rem] text-right">
+                  {{ phase.progress }}%
+                </span>
+                <div class="w-12 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all"
+                    [style.width.%]="phase.progress"
+                    [class]="getProgressClass(phase.progress)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">
+              ไม่มี Phase
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Recent Tasks -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
+          <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
+            งานล่าสุด
+          </h3>
+          <button
+            (click)="goToTasks()"
+            class="text-xs text-[var(--crm-primary)] hover:underline"
+          >
+            ดูทั้งหมด →
+          </button>
+        </div>
+        <div class="divide-y divide-[var(--border)]">
+          @for (task of p.recentTasks; track task.id) {
+            <div
+              class="flex items-center justify-between px-5 py-3 hover:bg-[var(--sidebar-hover)] cursor-pointer transition-colors"
+              (click)="goToTaskDetail(task.id)"
+            >
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ task.taskName }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ task.taskCode }} · {{ task.assignedTo }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span [class]="getPriorityClass(task.priority) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                  {{ getPriorityText(task.priority) }}
+                </span>
+                <span [class]="getStatusClass(task.status) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                  {{ getStatusText(task.status) }}
+                </span>
+              </div>
+            </div>
+          } @empty {
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">
+              ไม่มีงาน
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.ts">
+// src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { delay, finalize } from 'rxjs/operators';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
+
+// ===== Interfaces =====
+export interface ProjectDashboard {
+  id: string;
+  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customerName: string;
+  contractId: string;
+  contractNo: string;
+  projectManager: string;
+  ba: string;
+  sa: string;
+  startDate: string;
+  plannedEndDate: string;
+  actualEndDate?: string;
+  budgetManday: number;
+  usedManday: number;
+  status: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  description?: string;
+  isActive: boolean;
+  rowVersion?: number;
+
+  // Summary stats
+  phaseCount: number;
+  taskCount: number;
+  taskCompletedCount: number;
+  requirementCount: number;
+  bugCount: number;
+  bugOpenCount: number;
+
+  // Recent items (for quick view)
+  recentPhases: RecentPhase[];
+  recentTasks: RecentTask[];
+}
+
+export interface RecentPhase {
+  id: string;
+  phaseCode: string;
+  phaseName: string;
+  status: string;
+  progress: number;
+  endDate: string;
+}
+
+export interface RecentTask {
+  id: string;
+  taskCode: string;
+  taskName: string;
+  assignedTo: string;
+  status: string;
+  priority: string;
+}
+
+@Component({
+  selector: 'app-pmrt03',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './pmrt03.component.html',
+  styleUrl: './pmrt03.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Pmrt03Component implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
+
+  // ===== State =====
+  protected isLoading = signal(false);
+  protected project = signal<ProjectDashboard | null>(null);
+  protected projectId = signal<string>('');
+  protected error = signal<string | null>(null);
+
+  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
+
+  // ===== Lifecycle =====
+  ngOnInit(): void {
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.projectId.set(id);
+        this.loadDashboard(id);
+      } else {
+        this.router.navigate(['/feature/pm/pmrt02']);
+      }
+    });
+  }
+
+  // ===== Load Data =====
+  loadDashboard(id: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    // ใช้ Mock Data (เปลี่ยนเป็น HTTP จริงเมื่อเชื่อมต่อ API)
+    this.getMockData(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.project.set(data);
+        },
+        error: (err: any) => {
+          console.error('Load project dashboard error:', err);
+          this.error.set('ไม่สามารถโหลดข้อมูลโครงการได้');
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการหรือเกิดข้อผิดพลาด');
+          this.router.navigate(['/feature/pm/pmrt02']);
+        },
+      });
+  }
+
+  // ===== Mock Data (ลบเมื่อเชื่อมต่อ API จริง) =====
+  private getMockData(id: string): Observable<ProjectDashboard> {
+    const mockData: ProjectDashboard = {
+      id: id,
+      projectCode: 'PRJ-001',
+      projectName: 'ระบบบริหารจัดการลูกค้า (CRM)',
+      customerId: '1',
+      customerName: 'บริษัท ซอฟต์อินเตอร์ จำกัด',
+      contractId: '1',
+      contractNo: 'CT-001',
+      projectManager: 'สมศักดิ์ รุ่งเรือง',
+      ba: 'สมหญิง รักเรียน',
+      sa: 'วิชัย พัฒนาชัย',
+      startDate: '2024-01-15',
+      plannedEndDate: '2024-06-30',
+      actualEndDate: undefined,
+      budgetManday: 120,
+      usedManday: 85,
+      status: 'Development',
+      priority: 'High',
+      description: 'พัฒนาระบบ CRM สำหรับบริหารจัดการข้อมูลลูกค้า ติดตามการขาย และการบริการหลังการขาย',
+      isActive: true,
+      phaseCount: 5,
+      taskCount: 23,
+      taskCompletedCount: 12,
+      requirementCount: 15,
+      bugCount: 8,
+      bugOpenCount: 3,
+      recentPhases: [
+        { id: 'p1', phaseCode: 'PH-001', phaseName: 'Requirement & Analysis', status: 'Done', progress: 100, endDate: '2024-02-28' },
+        { id: 'p2', phaseCode: 'PH-002', phaseName: 'System Design', status: 'In Progress', progress: 75, endDate: '2024-03-31' },
+        { id: 'p3', phaseCode: 'PH-003', phaseName: 'Development', status: 'Not Started', progress: 0, endDate: '2024-05-31' },
+      ],
+      recentTasks: [
+        { id: 't1', taskCode: 'TASK-001', taskName: 'ออกแบบ Database Schema', assignedTo: 'วิชัย พัฒนาชัย', status: 'Done', priority: 'High' },
+        { id: 't2', taskCode: 'TASK-002', taskName: 'พัฒนา API Login', assignedTo: 'สมชาย ใจดี', status: 'In Progress', priority: 'High' },
+        { id: 't3', taskCode: 'TASK-003', taskName: 'พัฒนา UI Dashboard', assignedTo: 'มานี มีทรัพย์', status: 'Todo', priority: 'Medium' },
+      ],
+    };
+
+    return of(mockData).pipe(delay(500));
+  }
+
+  // ===== Navigation Actions =====
+  goToEdit() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/pmrt02', id, 'edit']);
+  }
+
+  goToPhases() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/phase'], { queryParams: { projectId: id } });
+  }
+
+  goToTasks() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
+  }
+
+  goToRequirements() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
+  }
+
+  goToBugs() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
+  }
+
+  goToGantt() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
+  }
+
+  goToContracts() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
+  }
+
+  goToPhaseDetail(phaseId: string) {
+    this.router.navigate(['/feature/pm/phase', phaseId, 'edit']);
+  }
+
+  goToTaskDetail(taskId: string) {
+    this.router.navigate(['/feature/pm/task', taskId, 'edit']);
+  }
+
+  goBack() {
+    this.router.navigate(['/feature/pm/pmrt02']);
+  }
+
+  // ===== Utility =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      'Requirement Gathering': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Approval': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'System Analysis': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'DFD Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'ER Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'Specification Design': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+      'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      'Ready for Delivery': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+      Delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      Invoicing: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+      Closed: 'bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+      'MA Active': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Low: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      High: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[priority] || map['Low'];
+  }
+
+  getPriorityText(priority: string): string {
+    const map: Record<string, string> = {
+      Low: 'ต่ำ',
+      Medium: 'ปานกลาง',
+      High: 'สูง',
+      Critical: 'วิกฤต',
+    };
+    return map[priority] || priority;
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'ยังไม่เริ่ม',
+      'In Progress': 'กำลังดำเนินการ',
+      Done: 'เสร็จสิ้น',
+      Delayed: 'ล่าช้า',
+      Prospect: 'โอกาส',
+      'Contract Drafting': 'ร่างสัญญา',
+      'Contract Signed': 'เซ็นสัญญา',
+      'Requirement Gathering': 'เก็บ Requirement',
+      'Requirement Approval': 'อนุมัติ Requirement',
+      'System Analysis': 'วิเคราะห์ระบบ',
+      'DFD Design': 'ออกแบบ DFD',
+      'ER Design': 'ออกแบบ ER',
+      'Specification Design': 'ออกแบบ Spec',
+      'Specification Approval': 'อนุมัติ Spec',
+      Planning: 'วางแผน',
+      Development: 'พัฒนา',
+      'Internal Testing': 'ทดสอบภายใน',
+      UAT: 'ทดสอบ UAT',
+      'Bug Fixing': 'แก้ไข Bug',
+      'Ready for Delivery': 'พร้อมส่งมอบ',
+      Delivered: 'ส่งมอบแล้ว',
+      Invoicing: 'ออก Invoice',
+      Closed: 'ปิดโครงการ',
+      'MA Active': 'อยู่ใน MA',
+    };
+    return map[status] || status;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  getProgressClass(progress: number): string {
+    if (progress >= 80) return 'bg-emerald-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 20) return 'bg-yellow-500';
+    return 'bg-gray-400';
+  }
+
+  getMandayProgress(): number {
+    const project = this.project();
+    if (!project) return 0;
+    if (project.budgetManday === 0) return 0;
+    return Math.min(Math.round((project.usedManday / project.budgetManday) * 100), 100);
+  }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.css">
@@ -35029,37 +35575,54 @@ export default Pmrt03Component;
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.html">
+<!-- src/app/feature/pm/rt/pmrt04/pmrt04.component.html -->
+
 <div class="space-y-5 p-0.5">
 
-  <!-- ===== HEADER ===== -->
+  <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-layers-fill text-[var(--crm-primary)]"></i>
-        รายการ Phase / Milestone
+        <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+        @if (filterCustomerName()) {
+          สัญญาของ: {{ filterCustomerName() }}
+        } @else {
+          รายการสัญญา
+        }
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
         {{ totalItems() }} รายการ
       </span>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่ม Phase
-    </button>
+
+    <div class="flex gap-2">
+      @if (filterCustomerId()) {
+        <button
+          (click)="goBackToCustomer()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-arrow-left"></i>
+          กลับ
+        </button>
+      }
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+      >
+        <i class="bi bi-plus-lg"></i>
+        เพิ่มสัญญา
+      </button>
+    </div>
   </div>
 
-  <!-- ===== FILTERS ===== -->
+  <!-- FILTERS -->
   <div class="flex flex-wrap gap-3 items-center">
-    <!-- Search -->
     <div class="relative flex-1 min-w-[200px]">
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
       <input
         type="text"
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาชื่อ Phase, โครงการ, Owner..."
+        placeholder="ค้นหาเลขสัญญา, ลูกค้า, ประเภท..."
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -35073,7 +35636,6 @@ export default Pmrt03Component;
       }
     </div>
 
-    <!-- Filter: Status -->
     <select
       (change)="onFilterChange($event)"
       [value]="filterStatus()"
@@ -35085,20 +35647,19 @@ export default Pmrt03Component;
       }
     </select>
 
-    <!-- Filter: Project -->
     <select
-      (change)="onProjectChange($event)"
-      [value]="filterProject()"
+      (change)="onTypeChange($event)"
+      [value]="filterType()"
       class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
     >
-      <option value="all">📁 ทุกโครงการ</option>
-      @for (project of projectOptions; track project.id) {
-        <option [value]="project.id">{{ project.name }}</option>
+      <option value="all">📋 ทุกประเภท</option>
+      @for (type of contractTypes(); track type) {
+        <option [value]="type">{{ type }}</option>
       }
     </select>
   </div>
 
-  <!-- ===== LOADING ===== -->
+  <!-- LOADING -->
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -35106,34 +35667,42 @@ export default Pmrt03Component;
     </div>
   }
 
-  <!-- ===== TABLE ===== -->
+  <!-- TABLE -->
   @if (!isLoading()) {
     <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
-            <th class="px-4 py-3 w-10"></th>
             <th
-              (click)="onSortChange('phaseCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
+              (click)="onSortChange('contractNo')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
             >
-              รหัส Phase
-              @if (sortBy() === 'phaseCode') {
+              เลขสัญญา
+              @if (sortBy() === 'contractNo') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
             <th
-              (click)="onSortChange('phaseName')"
+              (click)="onSortChange('contractType')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[140px]"
+            >
+              ประเภท
+              @if (sortBy() === 'contractType') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('customerName')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
             >
-              ชื่อ Phase
-              @if (sortBy() === 'phaseName') {
+              ลูกค้า
+              @if (sortBy() === 'customerName') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
             <th
               (click)="onSortChange('projectName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
             >
               โครงการ
               @if (sortBy() === 'projectName') {
@@ -35141,84 +35710,79 @@ export default Pmrt03Component;
               }
             </th>
             <th
-              (click)="onSortChange('status')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[110px]"
+              (click)="onSortChange('contractValue')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
             >
-              สถานะ
-              @if (sortBy() === 'status') {
+              มูลค่า
+              @if (sortBy() === 'contractValue') {
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
-            >
-              Progress
             </th>
             <th
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px] hidden md:table-cell"
             >
               ระยะเวลา
             </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+            <th
+              (click)="onSortChange('signStatus')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
+            >
+              สถานะลงนาม
+              @if (sortBy() === 'signStatus') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[200px]"
+            >
               จัดการ
             </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[var(--border)]">
-          @for (phase of paginatedPhases(); track phase.id) {
+          @for (contract of paginatedContracts(); track contract.id) {
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3 text-center">
-                @if (phase.milestones.length > 0) {
-                  <button
-                    (click)="toggleExpand(phase.id)"
-                    class="w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--sidebar-hover)] transition-colors"
-                  >
-                    <i class="bi" [class.bi-chevron-right]="expandedPhase() !== phase.id" [class.bi-chevron-down]="expandedPhase() === phase.id"></i>
-                  </button>
-                }
-              </td>
               <td class="px-4 py-3">
                 <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  {{ phase.phaseCode }}
+                  {{ contract.contractNo }}
                 </span>
               </td>
               <td class="px-4 py-3">
-                <span class="font-medium text-[var(--text-active)]">{{ phase.phaseName }}</span>
+                <span class="text-[var(--text-active)]">{{ contract.contractType }}</span>
               </td>
               <td class="px-4 py-3">
-                <span class="text-[var(--text)]">{{ phase.projectName }}</span>
+                <span class="text-[var(--text-active)]">{{ contract.customerName }}</span>
               </td>
               <td class="px-4 py-3">
-                <span [class]="getStatusClass(phase.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(phase.status) }}
-                </span>
+                <button
+                  (click)="goToProject(contract.projectId)"
+                  class="text-[var(--crm-primary)] hover:underline transition-colors"
+                >
+                  {{ contract.projectName }}
+                </button>
               </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all"
-                      [style.width.%]="phase.progress"
-                      [style.background]="phase.progress >= 80 ? 'var(--crm-success)' : phase.progress >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)'"
-                    ></div>
-                  </div>
-                  <span class="text-xs font-mono text-[var(--text-muted)]">{{ phase.progress }}%</span>
-                </div>
+              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
+                {{ formatCurrency(contract.contractValue) }}
               </td>
               <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
-                {{ formatDate(phase.startDate) }} - {{ formatDate(phase.endDate) }}
+                {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(contract.signStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(contract.signStatus) }}
+                </span>
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center gap-1">
                   <button
-                    (click)="goToView(phase.id)"
+                    (click)="goToView(contract.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     title="ดูข้อมูล"
                   >
                     <i class="bi bi-eye"></i>
                   </button>
                   <button
-                    (click)="goToEdit(phase.id)"
+                    (click)="goToEdit(contract.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
                     title="แก้ไข"
                   >
@@ -35227,63 +35791,19 @@ export default Pmrt03Component;
                 </div>
               </td>
             </tr>
-            @if (expandedPhase() === phase.id && phase.milestones.length > 0) {
-              <tr class="bg-[var(--bg)]/50">
-                <td colspan="8" class="px-4 py-2">
-                  <div class="pl-8">
-                    <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Milestone</div>
-                    <table class="w-full text-sm">
-                      <thead>
-                        <tr class="border-b border-[var(--border)]">
-                          <th class="px-3 py-2 text-left text-xs text-[var(--text-muted)]">ชื่อ Milestone</th>
-                          <th class="px-3 py-2 text-left text-xs text-[var(--text-muted)]">กำหนดส่ง</th>
-                          <th class="px-3 py-2 text-left text-xs text-[var(--text-muted)]">สถานะ</th>
-                          <th class="px-3 py-2 text-left text-xs text-[var(--text-muted)]">Progress</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (milestone of phase.milestones; track milestone.id) {
-                          <tr class="border-b border-[var(--border)] last:border-0">
-                            <td class="px-3 py-2 text-[var(--text-active)]">{{ milestone.milestoneName }}</td>
-                            <td class="px-3 py-2 text-[var(--text-muted)] font-mono">{{ formatDate(milestone.dueDate) }}</td>
-                            <td class="px-3 py-2">
-                              <span [class]="getMilestoneStatusClass(milestone.status) + ' inline-block px-2 py-0.5 rounded-full text-xs font-medium'">
-                                {{ getStatusText(milestone.status) }}
-                              </span>
-                            </td>
-                            <td class="px-3 py-2">
-                              <div class="flex items-center gap-2">
-                                <div class="w-12 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
-                                  <div
-                                    class="h-full rounded-full transition-all"
-                                    [style.width.%]="milestone.progress"
-                                    [style.background]="milestone.progress >= 80 ? 'var(--crm-success)' : milestone.progress >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)'"
-                                  ></div>
-                                </div>
-                                <span class="text-xs font-mono text-[var(--text-muted)]">{{ milestone.progress }}%</span>
-                              </div>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                </td>
-              </tr>
-            }
           } @empty {
             <tr>
               <td colspan="8" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Phase</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Phase ใหม่</p>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลสัญญา</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มสัญญาใหม่</p>
                   <button
                     (click)="goToAdd()"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
                   >
                     <i class="bi bi-plus-lg"></i>
-                    เพิ่ม Phase
+                    เพิ่มสัญญา
                   </button>
                 </div>
               </td>
@@ -35294,7 +35814,7 @@ export default Pmrt03Component;
     </div>
   }
 
-  <!-- ===== PAGINATION ===== -->
+  <!-- PAGINATION -->
   @if (totalItems() > 0) {
     <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
       <div class="text-sm text-[var(--text-muted)]">
@@ -35338,104 +35858,49 @@ export default Pmrt03Component;
       </div>
     </div>
   }
-
 </div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.ts">
+// src/app/feature/pm/rt/pmrt04/pmrt04.component.ts
+
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 // ===== Interfaces =====
-interface Phase {
+export interface Contract {
   id: string;
-  phaseCode: string;
-  phaseName: string;
+  contractNo: string;
+  contractType: string;
+  customerId: string;
+  customerName: string;
   projectId: string;
   projectName: string;
-  description: string;
   startDate: string;
   endDate: string;
-  owner: string;
-  status: 'Not Started' | 'In Progress' | 'Done' | 'Delayed';
-  dependency?: string;
-  progress: number;
+  contractValue: number;
+  paymentTerms: string;
+  scopeSummary: string;
+  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  renewalStatus: string;
   isActive: boolean;
   createdAt: string;
-  milestones: Milestone[];
+  rowVersion?: number;
 }
 
-interface Milestone {
-  id: string;
-  milestoneName: string;
-  dueDate: string;
-  status: string;
-  progress: number;
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
-
-// ===== Mock Data =====
-const MOCK_PHASES: Phase[] = [
-  {
-    id: '1',
-    phaseCode: 'PH-001',
-    phaseName: 'Requirement & Analysis',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    description: 'เก็บความต้องการและวิเคราะห์ระบบ',
-    startDate: '2024-01-15',
-    endDate: '2024-02-28',
-    owner: 'สมหญิง รักเรียน',
-    status: 'Done',
-    dependency: '',
-    progress: 100,
-    isActive: true,
-    createdAt: '2024-01-10 09:00:00',
-    milestones: [
-      { id: '1-1', milestoneName: 'เก็บ Requirement เสร็จ', dueDate: '2024-02-01', status: 'Done', progress: 100 },
-      { id: '1-2', milestoneName: 'BA Confirm Requirement', dueDate: '2024-02-15', status: 'Done', progress: 100 },
-      { id: '1-3', milestoneName: 'Customer Confirm Requirement', dueDate: '2024-02-28', status: 'Done', progress: 100 },
-    ],
-  },
-  {
-    id: '2',
-    phaseCode: 'PH-002',
-    phaseName: 'Design',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    description: 'ออกแบบ DFD, ER Diagram และ Specification',
-    startDate: '2024-03-01',
-    endDate: '2024-04-15',
-    owner: 'วิชัย พัฒนาชัย',
-    status: 'In Progress',
-    dependency: 'PH-001',
-    progress: 60,
-    isActive: true,
-    createdAt: '2024-02-20 10:00:00',
-    milestones: [
-      { id: '2-1', milestoneName: 'DFD Design', dueDate: '2024-03-20', status: 'Done', progress: 100 },
-      { id: '2-2', milestoneName: 'ER Design', dueDate: '2024-04-01', status: 'In Progress', progress: 70 },
-      { id: '2-3', milestoneName: 'Specification', dueDate: '2024-04-15', status: 'Not Started', progress: 0 },
-    ],
-  },
-  {
-    id: '3',
-    phaseCode: 'PH-003',
-    phaseName: 'Development',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    description: 'พัฒนาระบบตาม Specification',
-    startDate: '2024-04-01',
-    endDate: '2024-07-31',
-    owner: 'สมศักดิ์ รุ่งเรือง',
-    status: 'Not Started',
-    dependency: 'PH-002',
-    progress: 0,
-    isActive: true,
-    createdAt: '2024-03-15 14:30:00',
-    milestones: [],
-  },
-];
 
 @Component({
   selector: 'app-pmrt04',
@@ -35446,93 +35911,145 @@ const MOCK_PHASES: Phase[] = [
 })
 export class Pmrt04Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
 
   // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
-  protected filterProject = signal('all');
+  protected filterType = signal('all');
+  protected filterCustomerId = signal<string | null>(null);
+  protected filterCustomerName = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('phaseCode');
+  protected sortBy = signal('contractNo');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected expandedPhase = signal<string | null>(null);
 
   // ===== Data =====
-  protected phases = signal<Phase[]>(MOCK_PHASES);
+  protected contracts = signal<Contract[]>([]);
+  protected totalItems = signal(0);
+  protected contractTypes = signal<string[]>([]);
+
+  private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
 
   // ===== Computed =====
-  protected filteredPhases = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const project = this.filterProject();
+  protected filteredContracts = computed(() => this.contracts());
+  protected paginatedContracts = computed(() => this.contracts());
 
-    let result = this.phases();
-
-    if (term) {
-      result = result.filter(
-        (p) =>
-          p.phaseCode.toLowerCase().includes(term) ||
-          p.phaseName.toLowerCase().includes(term) ||
-          p.projectName.toLowerCase().includes(term) ||
-          p.owner.toLowerCase().includes(term)
-      );
-    }
-
-    if (status !== 'all') {
-      result = result.filter((p) => p.status === status);
-    }
-
-    if (project !== 'all') {
-      result = result.filter((p) => p.projectId === project);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Phase] ?? '';
-      const bVal = b[sortField as keyof Phase] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  });
-
-  protected paginatedPhases = computed(() => {
-    const all = this.filteredPhases();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredPhases().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
   protected Math = Math;
 
   // ===== Options =====
-  statusOptions = ['Not Started', 'In Progress', 'Done', 'Delayed'];
-  projectOptions = [
-    { id: '1', name: 'ระบบ CRM' },
-    { id: '2', name: 'ระบบ HR' },
-  ];
+  statusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
+  signStatusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    this.loadContractTypes();
+
+    this.route.queryParams.subscribe((params) => {
+      const customerId = params['customerId'];
+      if (customerId) {
+        this.filterCustomerId.set(customerId);
+        const customerName = params['customerName'] || '';
+        this.filterCustomerName.set(customerName);
+      } else {
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
+      }
+      this.currentPage.set(1);
+      this.loadContracts();
+    });
+
+    if (!this.route.snapshot.queryParams['customerId']) {
+      this.loadContracts();
+    }
+  }
+
+  // ===== Load Data =====
+  loadContractTypes() {
+    // TODO: ดึงจาก API จริง
+    // this.http.get<string[]>(`${this.apiUrl}/types`).subscribe(...)
+    this.contractTypes.set([
+      'Development Contract',
+      'Maintenance Contract',
+      'Support Contract',
+      'Change Request Contract',
+      'Extension Contract',
+    ]);
+  }
+
+  loadContracts() {
+    this.isLoading.set(true);
+
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString());
+
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
+
+    const keyword = this.searchTerm();
+    if (keyword) {
+      params = params.set('keyword', keyword);
+    }
+
+    const status = this.filterStatus();
+    if (status !== 'all') {
+      params = params.set('status', status);
+    }
+
+    const type = this.filterType();
+    if (type !== 'all') {
+      params = params.set('contractType', type);
+    }
+
+    if (this.sortBy()) {
+      params = params
+        .set('sortBy', this.sortBy())
+        .set('sortDir', this.sortDir());
+    }
+
+    this.http.get<PageResponse<Contract>>(this.apiUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.contracts.set(response.content || []);
+          this.totalItems.set(response.totalElements || 0);
+
+          if (this.filterCustomerId() && !this.filterCustomerName()) {
+            const firstContract = response.content?.[0];
+            if (firstContract?.customerName) {
+              this.filterCustomerName.set(firstContract.customerName);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Load contracts error:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการสัญญาได้');
+          this.contracts.set([]);
+          this.totalItems.set(0);
+        },
+      });
   }
 
   // ===== Actions =====
@@ -35540,18 +36057,27 @@ export class Pmrt04Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadContracts();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadContracts();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadContracts();
   }
 
-  onProjectChange(event: Event) {
+  onTypeChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.filterProject.set(select.value);
+    this.filterType.set(select.value);
     this.currentPage.set(1);
+    this.loadContracts();
   }
 
   onSortChange(field: string) {
@@ -35561,56 +36087,65 @@ export class Pmrt04Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadContracts();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  toggleExpand(id: string) {
-    this.expandedPhase.set(this.expandedPhase() === id ? null : id);
+    this.loadContracts();
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/phase/new']);
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      this.router.navigate(['/feature/pm/pmrt04/new'], {
+        queryParams: { customerId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt04/new']);
+    }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/phase', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt04', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/phase', id, 'view']);
+    this.router.navigate(['/feature/pm/pmrt04', id, 'view']);
+  }
+
+  goBackToCustomer() {
+    this.router.navigate(['/feature/pm/pmrt01']);
+  }
+
+  goToProject(projectId: string) {
+    this.router.navigate(['/feature/pm/pmrt03', projectId]);
   }
 
   // ===== Utility =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Signed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
-    return map[status] || map['Not Started'];
+    return map[status] || map['Draft'];
   }
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      'Not Started': 'ยังไม่เริ่ม',
-      'In Progress': 'กำลังดำเนินการ',
-      Done: 'เสร็จสิ้น',
-      Delayed: 'ล่าช้า',
+      Draft: 'ร่าง',
+      Sent: 'ส่งแล้ว',
+      Signed: 'ลงนามแล้ว',
+      Expired: 'หมดอายุ',
     };
     return map[status] || status;
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -35623,18 +36158,15 @@ export class Pmrt04Component implements OnInit {
     }
   }
 
-  getMilestoneStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Not Started'];
+  formatCurrency(value: number): string {
+    if (!value) return '0.00';
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 2,
+    }).format(value);
   }
 }
-
-export default Pmrt04Component;
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.css">
@@ -52665,117 +53197,6 @@ public final class UniquenessValidator {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/resources/db/migration/V1__baseline.sql">
--- =====================================================
--- V1__baseline.sql
--- Baseline schema from .NET application
--- Flyway will skip execution because baseline-on-migrate=true
--- =====================================================
-
--- 🔴 IMPORTANT: All tables already exist in the database
--- This file is for Flyway to record baseline version 1
-
-SELECT '✅ Baseline version 1 is ready!' as message;
-
--- (Optional: ใส่ SQL Schema ทั้งหมดที่นี่ก็ได้ แต่ Flyway จะไม่รัน)
-</file>
-
-<file path="sic-spring/sic/src/main/resources/db/migration/V20260623141143_edit_name_table_customer.sql">
-ALTER TABLE customer RENAME TO su_customer;
-</file>
-
-<file path="sic-spring/sic/src/main/resources/db/migration/V20260623145339__create_table_su_team_and_su_team_member.sql">
--- =====================================================
--- V3__create_su_team_tables.sql
--- สร้างตารางสำหรับจัดการทีม (Team Management)
--- =====================================================
-
--- =====================================================
--- 1. ตาราง su_team (ทีม)
--- =====================================================
-CREATE TABLE IF NOT EXISTS su_team (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    business_id UUID NOT NULL,
-    team_code VARCHAR(30) NOT NULL,
-    team_name_en VARCHAR(255) NOT NULL,
-    team_name_local VARCHAR(255) NOT NULL,
-    description TEXT,
-    leader_id VARCHAR(100), -- user id ของหัวหน้าทีม (จาก Keycloak)
-    is_active BOOLEAN DEFAULT true,
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_delete BOOLEAN DEFAULT false,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMP
-);
-
--- ✅ ตรวจสอบก่อนสร้าง Unique Constraint
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uk_su_team_code'
-    ) THEN
-        ALTER TABLE su_team 
-            ADD CONSTRAINT uk_su_team_code UNIQUE (business_id, team_code);
-    END IF;
-END $$;
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_su_team_business_id ON su_team(business_id);
-CREATE INDEX IF NOT EXISTS idx_su_team_leader_id ON su_team(leader_id);
-CREATE INDEX IF NOT EXISTS idx_su_team_is_active ON su_team(is_active);
-
-
--- =====================================================
--- 2. ตาราง su_team_member (สมาชิกในทีม)
--- =====================================================
-CREATE TABLE IF NOT EXISTS su_team_member (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    team_id UUID NOT NULL,
-    user_id VARCHAR(100) NOT NULL,
-    role_in_team VARCHAR(50), -- LEADER, MEMBER, COORDINATOR
-    is_active BOOLEAN DEFAULT true,
-    joined_date TIMESTAMP DEFAULT NOW(),
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_delete BOOLEAN DEFAULT false,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMP
-);
-
--- ✅ ตรวจสอบก่อนสร้าง Unique Constraint
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uk_su_team_member'
-    ) THEN
-        ALTER TABLE su_team_member 
-            ADD CONSTRAINT uk_su_team_member UNIQUE (team_id, user_id);
-    END IF;
-END $$;
-
--- ✅ ตรวจสอบก่อนสร้าง Foreign Key
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'fk_su_team_member_team'
-    ) THEN
-        ALTER TABLE su_team_member 
-            ADD CONSTRAINT fk_su_team_member_team 
-            FOREIGN KEY (team_id) REFERENCES su_team(id) ON DELETE CASCADE;
-    END IF;
-END $$;
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_su_team_member_team_id ON su_team_member(team_id);
-CREATE INDEX IF NOT EXISTS idx_su_team_member_user_id ON su_team_member(user_id);
-CREATE INDEX IF NOT EXISTS idx_su_team_member_is_active ON su_team_member(is_active);
-</file>
-
 <file path="sic-app/src/app/core/auth/auth.service.ts">
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -58363,418 +58784,6 @@ export class Pmdt01Component implements OnInit, CanComponentDeactivate {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.html">
-<!-- src/app/feature/pm/rt/pmrt01A/pmrt01A.component.html -->
-
-@if (formCustomerData; as data) {
-  <form [formGroup]="data.formGroup" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มข้อมูลลูกค้า' }}
-        </h2>
-      </div>
-
-      <!-- Profile Picture -->
-       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-profile
-          [size]="150"
-          [visibility]="4"
-          formControlName="uploadGroupData"
-          [src]="profileImageUrl"
-        >
-        </sic-profile>
-        <p class="text-center text-xs text-[var(--text-muted)] mt-2">คลิกเพื่ออัปโหลดรูปโปรไฟล์</p>
-      </div>
-
-      <!-- Customer Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="รหัสลูกค้า"
-          formControlName="customerCode"
-          [required]="true"
-          [errorMessages]="{
-            required: 'กรุณากรอกรหัสลูกค้า',
-            maxlength: 'รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร'
-          }"
-        ></sic-input>
-      </div>
-
-      <!-- Tax ID -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="เลขประจำตัวผู้เสียภาษี"
-          [mask]="'0-0000-00000-00-0'"
-          formControlName="taxId"
-        ></sic-input>
-      </div>
-
-      <!-- Company Name (English) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อบริษัท (อังกฤษ)"
-          formControlName="companyNameEn"
-          [required]="true"
-          [errorMessages]="{
-            required: 'กรุณากรอกชื่อบริษัท (อังกฤษ)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร'
-          }"
-        ></sic-input>
-      </div>
-
-      <!-- Company Name (Local) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อบริษัท (ไทย)"
-          formControlName="companyNameLocal"
-          [required]="true"
-          [errorMessages]="{
-            required: 'กรุณากรอกชื่อบริษัท (ไทย)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร'
-          }"
-        ></sic-input>
-      </div>
-
-      <!-- Contact Person -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ผู้ติดต่อ"
-          formControlName="contactPerson"
-        ></sic-input>
-      </div>
-
-      <!-- Country -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ประเทศ"
-          formControlName="countryId"
-          [apiUrl]="service.apiGetComboboxCountry"
-          (selectionChanged)="onCountryChange($event)"
-        >
-        </sic-combobox>
-      </div>
-
-      <!-- Address (English) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="ที่อยู่ (อังกฤษ)"
-          formControlName="addressEn"
-          [rows]="2"
-        ></sic-input-area>
-      </div>
-
-      <!-- Address (Local) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="ที่อยู่ (ไทย)"
-          formControlName="addressLocal"
-          [rows]="2"
-        ></sic-input-area>
-      </div>
-
-      <!-- Province / District / Sub-District -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="จังหวัด"
-          formControlName="provinceId"
-          [apiUrl]="service.apiGetComboboxProvince"
-          [params]="{ countryId: data.formGroup.get('countryId')?.value }"
-          (selectionChanged)="onProvinceChange($event)"
-        >
-        </sic-combobox>
-      </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="อำเภอ"
-          formControlName="districtId"
-          [apiUrl]="service.apiGetComboboxDistrict"
-          [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
-          (selectionChanged)="onDistrictChange($event)"
-        >
-        </sic-combobox>
-      </div>
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ตำบล"
-          formControlName="subDistrictId"
-          [apiUrl]="service.apiGetComboboxSubDistrict"
-          [params]="{ districtId: data.formGroup.get('districtId')?.value }"
-          (selectionChanged)="onSubDistrictChange($event)"
-        >
-        </sic-combobox>
-      </div>
-
-      <!-- Zip Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
-      </div>
-
-      <!-- Email -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="อีเมล"
-          formControlName="email"
-          [errorMessages]="{
-            email: 'กรุณากรอกอีเมลให้ถูกต้อง',
-            maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร'
-          }"
-        ></sic-input>
-      </div>
-
-      <!-- Phone Number -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-phone
-          label="เบอร์โทรศัพท์"
-          formControlName="phoneNumber"
-        ></sic-input-phone>
-      </div>
-
-      <!-- Line ID -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="Line ID"
-          formControlName="lineId"
-        ></sic-input>
-      </div>
-
-      <!-- Remark -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="หมายเหตุ"
-          formControlName="remark"
-          [rows]="2"
-        ></sic-input-area>
-      </div>
-
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
-            <i class="bi bi-arrow-left"></i> ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-          </sic-button>
-        </div>
-      </div>
-
-    </div>
-  </form>
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts">
-// src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts
-
-import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicProfileComponent } from '../../../../../core/component/sic-profile/sic-profile.component';
-import { SicRadioComponent } from '../../../../../core/component/sic-radio/sic-radio.component';
-import { CustomerModel } from './pmrt01A.model';
-import { Pmrt01AService } from './pmrt01A.service';
-
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputPhoneComponent } from '../../../../../core/component/sic-input-phone/sic-input-phone.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { Pmrt01AForm } from './pmrt01A.form';
-
-@Component({
-  selector: 'app-pmrt01a',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicProfileComponent,
-    SicRadioComponent,
-    SicComboboxComponent,
-    SicButtonComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicInputPhoneComponent,
-  ],
-  templateUrl: './pmrt01A.component.html',
-})
-export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  public service = inject(Pmrt01AService);
-  private dialog = inject(DialogService);
-  private cdr = inject(ChangeDetectorRef);
-  private fb = inject(FormBuilder);
-
-  formCustomerData!: SicFromData<CustomerModel>;
-  isEdit = false;
-  customerId: string | null = null;
-  isLoading = false;
-  businessId = '';
-
-  // ✅ Getter สำหรับรูปโปรไฟล์ — อ่านจาก uploadGroupData โดยตรง
-  get profileImageUrl(): string {
-    const uploadData = this.formCustomerData?.formGroup?.get('uploadGroupData')?.value;
-    if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
-      const first = uploadData[0];
-      return first?.accessUrl || 'images/profile.png';
-    }
-    return 'images/profile.png';
-  }
-
-  pageDirty = () => this.formCustomerData?.dirty ?? false;
-
-  ngOnInit(): void {
-    this.businessId = localStorage.getItem('businessId') || '';
-    if (!this.businessId) {
-      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
-      this.router.navigate(['/management/business']);
-      return;
-    }
-
-    const data = this.route.snapshot.data['form'];
-    if (data && data.customer) {
-      this.formCustomerData = data.customer;
-      this.formCustomerData.formGroup.updateValueAndValidity();
-      this.cdr.detectChanges();
-    } else {
-      const form = Pmrt01AForm.createForm(this.fb);
-      this.formCustomerData = new SicFromData<CustomerModel>(form);
-      this.cdr.detectChanges();
-    }
-
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.customerId = id;
-        if (!this.formCustomerData.formGroup.get('id')?.value) {
-          this.loadCustomer(id);
-        }
-      }
-    });
-  }
-
-  loadCustomer(id: string) {
-    this.isLoading = true;
-    this.service
-      .getCustomer(id)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }))
-      .subscribe({
-        next: (data) => {
-          this.formCustomerData.formGroup.patchValue(data);
-          this.formCustomerData.formGroup.updateValueAndValidity();
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
-          this.router.navigate(['/feature/pm/pmrt01']);
-        },
-      });
-  }
-
-  // ---- Event Handlers ----
-  onCountryChange(event: any): void {
-    this.formCustomerData.formGroup.get('provinceId')?.setValue(null);
-    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onProvinceChange(event: any): void {
-    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onDistrictChange(event: any): void {
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onSubDistrictChange(event: any): void {
-    const zipCode = event?.zipCode ?? null;
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(zipCode);
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/pmrt01']);
-  }
-
-  submit() {
-    this.formCustomerData.markAllAsTouched();
-    if (this.formCustomerData.invalid) {
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
-    }
-
-    const uploadData = this.formCustomerData.formGroup.get('uploadGroupData')?.value;
-    if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
-      const firstUpload = uploadData[0];
-      if (firstUpload?.uploadGroupId) {
-        this.formCustomerData.formGroup.patchValue({
-          uploadGroupId: firstUpload.uploadGroupId,
-        });
-      }
-    }
-
-    const data = this.formCustomerData.value as CustomerModel;
-
-    if (this.isEdit && this.customerId) {
-      this.service.updateCustomer(this.customerId, data).subscribe({
-        next: () => {
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
-            this.formCustomerData.markAsPristine();
-            this.router.navigate(['/feature/pm/pmrt01']);
-          });
-        },
-        error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-    } else {
-      this.service.createCustomer(this.businessId, data).subscribe({
-        next: () => {
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
-            this.formCustomerData.markAsPristine();
-            this.router.navigate(['/feature/pm/pmrt01']);
-          });
-        },
-        error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-    }
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.form.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.form.ts
 
@@ -62284,65 +62293,6 @@ public static String getMessage(ExExample example) {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/resources/db/migration/V2__create_customer_table.sql">
--- =====================================================
--- ตาราง customer (ลูกค้า)
--- =====================================================
-
--- ✅ สร้างตาราง ชื่อ customer
-CREATE TABLE IF NOT EXISTS customer (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    business_id UUID NOT NULL,
-    customer_code VARCHAR(30) NOT NULL,
-    tax_id VARCHAR(30),
-    company_name_en VARCHAR(255) NOT NULL,
-    company_name_local VARCHAR(255) NOT NULL,
-    contact_person VARCHAR(255),
-    phone_number VARCHAR(20),
-    email VARCHAR(320),
-    line_id VARCHAR(100),
-    address_en VARCHAR(500),
-    address_local VARCHAR(500),
-    province_id UUID,
-    district_id UUID,
-    sub_district_id UUID,
-    zip_code VARCHAR(20),
-    customer_type VARCHAR(50),
-    is_active BOOLEAN DEFAULT true,
-    remark TEXT,
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_delete BOOLEAN DEFAULT false,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMP
-);
-
--- ✅ สร้าง Unique constraint
-ALTER TABLE customer 
-    ADD CONSTRAINT uk_customer_code UNIQUE (business_id, customer_code);
-
--- ✅ เพิ่ม Foreign Key Constraints
-ALTER TABLE customer 
-    ADD CONSTRAINT fk_customer_province 
-    FOREIGN KEY (province_id) REFERENCES db_province(id);
-
-ALTER TABLE customer 
-    ADD CONSTRAINT fk_customer_district 
-    FOREIGN KEY (district_id) REFERENCES db_district(id);
-
-ALTER TABLE customer 
-    ADD CONSTRAINT fk_customer_sub_district 
-    FOREIGN KEY (sub_district_id) REFERENCES db_sub_district(id);
-
--- ✅ สร้าง Index เพื่อเพิ่มประสิทธิภาพการค้นหา
-CREATE INDEX IF NOT EXISTS idx_customer_business_id ON customer(business_id);
-CREATE INDEX IF NOT EXISTS idx_customer_is_active ON customer(is_active);
-CREATE INDEX IF NOT EXISTS idx_customer_customer_code ON customer(customer_code);
-CREATE INDEX IF NOT EXISTS idx_customer_company_name_en ON customer(company_name_en);
-</file>
-
 <file path="sic-app/src/app/app.config.ts">
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -63384,6 +63334,458 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
 
   onSearch(): void {
     console.log('search');
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.html">
+<!-- src/app/feature/pm/rt/pmrt01A/pmrt01A.component.html -->
+
+@if (formCustomerData; as data) {
+  <form [formGroup]="data.formGroup" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มข้อมูลลูกค้า' }}
+        </h2>
+      </div>
+
+      <!-- Profile Picture -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-profile
+          [size]="150"
+          [visibility]="4"
+          formControlName="uploadGroupData"
+          [src]="profileImageUrl"
+        >
+        </sic-profile>
+        <p class="text-center text-xs text-[var(--text-muted)] mt-2">คลิกเพื่ออัปโหลดรูปโปรไฟล์</p>
+      </div>
+
+      <!-- Customer Code -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="รหัสลูกค้า"
+          formControlName="customerCode"
+          [required]="true"
+          [errorMessages]="{
+            required: 'กรุณากรอกรหัสลูกค้า',
+            maxlength: 'รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร',
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Tax ID -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="เลขประจำตัวผู้เสียภาษี"
+          [mask]="'0-0000-00000-00-0'"
+          formControlName="taxId"
+        ></sic-input>
+      </div>
+
+      <!-- Company Name (English) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ชื่อบริษัท (อังกฤษ)"
+          formControlName="companyNameEn"
+          [required]="true"
+          [errorMessages]="{
+            required: 'กรุณากรอกชื่อบริษัท (อังกฤษ)',
+            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Company Name (Local) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="ชื่อบริษัท (ไทย)"
+          formControlName="companyNameLocal"
+          [required]="true"
+          [errorMessages]="{
+            required: 'กรุณากรอกชื่อบริษัท (ไทย)',
+            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Contact Person -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="ผู้ติดต่อ" formControlName="contactPerson"></sic-input>
+      </div>
+
+      <!-- Country -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="ประเทศ"
+          formControlName="countryId"
+          [apiUrl]="service.apiGetComboboxCountry"
+          (selectionChanged)="onCountryChange($event)"
+        >
+        </sic-combobox>
+      </div>
+
+      <!-- Address (English) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="ที่อยู่ (อังกฤษ)"
+          formControlName="addressEn"
+          [rows]="2"
+        ></sic-input-area>
+      </div>
+
+      <!-- Address (Local) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area
+          label="ที่อยู่ (ไทย)"
+          formControlName="addressLocal"
+          [rows]="2"
+        ></sic-input-area>
+      </div>
+
+      <!-- Province / District / Sub-District -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="จังหวัด"
+          formControlName="provinceId"
+          [apiUrl]="service.apiGetComboboxProvince"
+          [params]="{ countryId: data.formGroup.get('countryId')?.value }"
+          (selectionChanged)="onProvinceChange($event)"
+        >
+        </sic-combobox>
+      </div>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="อำเภอ"
+          formControlName="districtId"
+          [apiUrl]="service.apiGetComboboxDistrict"
+          [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
+          (selectionChanged)="onDistrictChange($event)"
+        >
+        </sic-combobox>
+      </div>
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-combobox
+          label="ตำบล"
+          formControlName="subDistrictId"
+          [apiUrl]="service.apiGetComboboxSubDistrict"
+          [params]="{ districtId: data.formGroup.get('districtId')?.value }"
+          (selectionChanged)="onSubDistrictChange($event)"
+        >
+        </sic-combobox>
+      </div>
+
+      <!-- Zip Code -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+      </div>
+
+      <!-- Email -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input
+          label="อีเมล"
+          formControlName="email"
+          [errorMessages]="{
+            email: 'กรุณากรอกอีเมลให้ถูกต้อง',
+            maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร',
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Phone Number -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+      </div>
+
+      <!-- Line ID -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input label="Line ID" formControlName="lineId"></sic-input>
+      </div>
+
+      <!-- Remark -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-input-area label="หมายเหตุ" formControlName="remark" [rows]="2"></sic-input-area>
+      </div>
+
+      <!-- Active Status -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+      >
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          </sic-button>
+        </div>
+      </div>
+    </div>
+  </form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts">
+// src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicProfileComponent } from '../../../../../core/component/sic-profile/sic-profile.component';
+import { SicRadioComponent } from '../../../../../core/component/sic-radio/sic-radio.component';
+import { CustomerModel } from './pmrt01A.model';
+import { Pmrt01AService } from './pmrt01A.service';
+
+import { environment } from '../../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputPhoneComponent } from '../../../../../core/component/sic-input-phone/sic-input-phone.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { Pmrt01AForm } from './pmrt01A.form';
+
+@Component({
+  selector: 'app-pmrt01a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicProfileComponent,
+    SicRadioComponent,
+    SicComboboxComponent,
+    SicButtonComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+    SicInputPhoneComponent,
+  ],
+  templateUrl: './pmrt01A.component.html',
+})
+export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  public service = inject(Pmrt01AService);
+  private dialog = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef); // ✅ ต้องมี
+  private fb = inject(FormBuilder);
+
+  formCustomerData!: SicFromData<CustomerModel>;
+  isEdit = false;
+  customerId: string | null = null;
+  isLoading = false;
+  businessId = '';
+
+  // ✅ Getter สำหรับรูปโปรไฟล์ — อ่านจาก uploadGroupData โดยตรง
+  // pmrt01A.component.ts
+
+  get profileImageUrl(): string {
+    const uploadGroupId = this.formCustomerData?.formGroup?.get('uploadGroupId')?.value;
+    console.log('🔍 profileImageUrl - uploadGroupId:', uploadGroupId);
+    if (uploadGroupId) {
+      const url = `${environment.apiBaseUrl}/api/storage/avatar/${uploadGroupId}`;
+      console.log('🔍 profileImageUrl - URL:', url);
+      return url;
+    }
+    console.log('🔍 profileImageUrl - fallback to default');
+    return 'images/profile.png';
+  }
+
+  pageDirty = () => this.formCustomerData?.dirty ?? false;
+
+  ngOnInit(): void {
+    this.businessId = localStorage.getItem('businessId') || '';
+    if (!this.businessId) {
+      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.router.navigate(['/management/business']);
+      return;
+    }
+
+    // รับข้อมูลจาก resolver
+    const data = this.route.snapshot.data['form'];
+    if (data && data.customer) {
+      this.formCustomerData = data.customer;
+      this.formCustomerData.formGroup.updateValueAndValidity();
+      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดต
+    } else {
+      const form = Pmrt01AForm.createForm(this.fb);
+      this.formCustomerData = new SicFromData<CustomerModel>(form);
+      this.cdr.detectChanges();
+    }
+
+    // ตรวจสอบว่าเป็นโหมดแก้ไขหรือไม่
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.customerId = id;
+        if (!this.formCustomerData.formGroup.get('id')?.value) {
+          this.loadCustomer(id);
+        }
+      }
+    });
+  }
+
+  loadCustomer(id: string) {
+    this.isLoading = true;
+    this.service
+      .getCustomer(id)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          // ไม่ต้องใช้ detectChanges ที่นี่ (อาจเร็วเกินไป)
+        }),
+      )
+      .subscribe({
+        next: (data) => {
+          this.formCustomerData.formGroup.patchValue(data);
+          this.formCustomerData.formGroup.updateValueAndValidity();
+
+          // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
+          this.cdr.detectChanges();
+
+          console.log('✅ โหลดข้อมูลสำเร็จ:', data);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
+          this.router.navigate(['/feature/pm/pmrt01']);
+        },
+      });
+  }
+
+  // ---- Event Handlers ----
+  onCountryChange(event: any): void {
+    this.formCustomerData.formGroup.get('provinceId')?.setValue(null);
+    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
+    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
+    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onProvinceChange(event: any): void {
+    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
+    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
+    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onDistrictChange(event: any): void {
+    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
+    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onSubDistrictChange(event: any): void {
+    const zipCode = event?.zipCode ?? null;
+    this.formCustomerData.formGroup.get('zipCode')?.setValue(zipCode);
+  }
+
+  onBack(): void {
+    this.router.navigate(['/feature/pm/pmrt01']);
+  }
+
+  submit() {
+    this.formCustomerData.markAllAsTouched();
+    if (this.formCustomerData.invalid) {
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      return;
+    }
+
+    // ✅ sync uploadGroupId
+    const uploadData = this.formCustomerData.formGroup.get('uploadGroupData')?.value;
+    if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
+      const firstUpload = uploadData[0];
+      if (firstUpload?.uploadGroupId) {
+        this.formCustomerData.formGroup.patchValue({
+          uploadGroupId: firstUpload.uploadGroupId,
+        });
+      }
+    }
+
+    const data = this.formCustomerData.value as CustomerModel;
+
+    if (this.isEdit && this.customerId) {
+      this.service.updateCustomer(this.customerId, data).subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
+            this.formCustomerData.markAsPristine();
+            this.router.navigate(['/feature/pm/pmrt01']);
+          });
+        },
+        error: (err) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+    } else {
+      this.service.createCustomer(this.businessId, data).subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
+            this.formCustomerData.markAsPristine();
+            this.router.navigate(['/feature/pm/pmrt01']);
+          });
+        },
+        error: (err) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+    }
   }
 }
 </file>
@@ -66702,6 +67104,14 @@ export const routes: Routes = [
               <!-- จัดการ -->
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center gap-1">
+                  <button
+                    [routerLink]="['/feature/pm/pmrt02']"
+                    [queryParams]="{ customerId: customer.id }"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="ดูโครงการทั้งหมดของลูกค้ารายนี้"
+                  >
+                    <i class="bi bi-briefcase"></i>
+                  </button>
                   <button
                     (click)="goToEdit(customer.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
@@ -74452,94 +74862,6 @@ public class ProfileServiceImpl implements ProfileService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/resources/application.yml">
-server:
-  port: 5265
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:54320/sic_app # ✅ ใช้ชื่อ DB ที่คุณมีอยู่
-    username: sic-app # ✅ ใช้ user ที่คุณมี
-    password: SicApp2026
-    driver-class-name: org.postgresql.Driver
-
-  # ===== ✅ เพิ่ม Flyway Configuration =====
-  flyway:
-    enabled: true
-    baseline-on-migrate: true # ✅ บอก Flyway ว่า DB มี Schema อยู่แล้ว
-    baseline-version: "1" # ✅ กำหนด Baseline Version
-    validate-on-migrate: false # ✅ ข้ามการ Validate (เพราะ schema มาจาก .NET)
-    locations: classpath:db/migration # ✅ โฟลเดอร์ที่เก็บไฟล์ SQL
-    schemas: public # ✅ Schema ที่ใช้
-    table: flyway_schema_history # ✅ ชื่อตาราง History (ค่าเริ่มต้น)
-
-  jpa:
-    hibernate:
-      ddl-auto: none # ✅ ถูกต้องแล้ว (ไม่ให้ Hibernate แก้ไข Schema)
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-        jdbc:
-          batch_size: 20
-    open-in-view: false
-
-  web:
-    cors:
-      allowed-origins:
-        - http://localhost:4200
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: phurinsukman3@gmail.com
-    password: qeivnricakfexxzh
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-
-app:
-  keycloak:
-    realm: sic-project
-    auth-server-url: http://localhost:8080
-    ssl-required: none
-    resource: sic-app
-    verify-token-audience: false
-    credentials:
-      secret: ""
-    confidential-port: 0
-
-  storage:
-    s3:
-      bucket: public-files
-      document-bucket: documents
-      region: us-east-1
-      access-key: seaweedfs
-      secret-key: seaweedfs-secret
-      endpoint: http://localhost:8888
-      path-style-access-enabled: true
-
-logging:
-  pattern:
-    console: "%msg%n"
-  level:
-    root: ERROR
-    com.softinter.sicapi: DEBUG
-    org.springframework.mail: DEBUG
-    com.softinter.sicapi.service.impl: ERROR
-    org.springframework.security: DEBUG
-    org.flywaydb: DEBUG #
-
-spring.main.banner-mode: off
-</file>
-
 <file path="sic-app/src/app/feature/pm/pm.routes.ts">
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
@@ -74565,33 +74887,39 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
 
-  // ===== Contract =====
+   // ===== Project =====
   {
-    path: 'contract',
+    path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
   },
   {
-    path: 'contract/new',
-    loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+    path: 'pmrt02/new',
+    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
   },
   {
-    path: 'contract/:id/edit',
-    loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+    path: 'pmrt02/:id/edit',
+    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
   },
 
-  // ===== Project =====
-  {
-    path: 'project',
-    loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
-  },
-  {
-    path: 'project/new',
-    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  },
-  {
-    path: 'project/:id/edit',
-    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  },
+  // ===== Project Dashboard =====
+{
+  path: 'pmrt03/:id',
+  loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
+},
+
+  // Contract 
+{
+  path: 'pmrt04',
+  loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
+},
+{
+  path: 'pmrt04/new',
+  loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+},
+{
+  path: 'pmrt04/:id/edit',
+  loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+},
 
   // ===== phase =====
   {

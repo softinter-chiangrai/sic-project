@@ -96,9 +96,14 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   get displaySrc(): string {
-    const activeValue = this.getActiveValue();
-    return this.localObjectUrl ?? activeValue?.accessUrl ?? this.src ?? this.defaultImageSrc;
+  // ✅ ใช้ src ที่ส่งเข้ามาเป็นอันดับแรก
+  if (this.src && this.src !== this.defaultImageSrc) {
+    return this.src;
   }
+
+  const activeValue = this.getActiveValue();
+  return this.localObjectUrl ?? activeValue?.accessUrl ?? this.defaultImageSrc;
+}
 
   get avatarSize(): string {
     if (typeof this.size === 'number') {

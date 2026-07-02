@@ -1,9 +1,17 @@
+// src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
+
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { delay, finalize } from 'rxjs/operators';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 // ===== Interfaces =====
-interface Project {
+export interface ProjectDashboard {
   id: string;
   projectCode: string;
   projectName: string;
@@ -21,246 +29,196 @@ interface Project {
   usedManday: number;
   status: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  description?: string;
   isActive: boolean;
-  createdAt: string;
+  rowVersion?: number;
+
+  // Summary stats
+  phaseCount: number;
+  taskCount: number;
+  taskCompletedCount: number;
+  requirementCount: number;
+  bugCount: number;
+  bugOpenCount: number;
+
+  // Recent items (for quick view)
+  recentPhases: RecentPhase[];
+  recentTasks: RecentTask[];
 }
 
-// ===== Mock Data =====
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: '1',
-    projectCode: 'PRJ-001',
-    projectName: 'ระบบ CRM',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    contractId: '1',
-    contractNo: 'CT-001',
-    projectManager: 'สมศักดิ์ รุ่งเรือง',
-    ba: 'สมหญิง รักเรียน',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-01-15',
-    plannedEndDate: '2024-06-30',
-    actualEndDate: '2024-07-15',
-    budgetManday: 120,
-    usedManday: 135,
-    status: 'Development',
-    priority: 'High',
-    isActive: true,
-    createdAt: '2024-01-10 09:00:00',
-  },
-  {
-    id: '2',
-    projectCode: 'PRJ-002',
-    projectName: 'ระบบ HR',
-    customerId: '2',
-    customerName: 'บริษัท ซอฟต์แวร์ จำกัด',
-    contractId: '3',
-    contractNo: 'CT-003',
-    projectManager: 'มานี มีทรัพย์',
-    ba: 'สมชาย ใจดี',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-03-01',
-    plannedEndDate: '2024-08-31',
-    actualEndDate: '',
-    budgetManday: 80,
-    usedManday: 45,
-    status: 'Requirement Gathering',
-    priority: 'Medium',
-    isActive: true,
-    createdAt: '2024-02-28 10:00:00',
-  },
-  {
-    id: '3',
-    projectCode: 'PRJ-003',
-    projectName: 'ระบบสินค้าคงคลัง',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    contractId: '2',
-    contractNo: 'CT-002',
-    projectManager: 'สมศักดิ์ รุ่งเรือง',
-    ba: 'สมหญิง รักเรียน',
-    sa: 'วิชัย พัฒนาชัย',
-    startDate: '2024-06-01',
-    plannedEndDate: '2024-11-30',
-    actualEndDate: '',
-    budgetManday: 100,
-    usedManday: 20,
-    status: 'Planning',
-    priority: 'Low',
-    isActive: true,
-    createdAt: '2024-05-20 14:30:00',
-  },
-];
+export interface RecentPhase {
+  id: string;
+  phaseCode: string;
+  phaseName: string;
+  status: string;
+  progress: number;
+  endDate: string;
+}
+
+export interface RecentTask {
+  id: string;
+  taskCode: string;
+  taskName: string;
+  assignedTo: string;
+  status: string;
+  priority: string;
+}
 
 @Component({
   selector: 'app-pmrt03',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './pmrt03.component.html',
+  styleUrl: './pmrt03.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt03Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
 
   // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected filterPriority = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('projectCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
+  protected project = signal<ProjectDashboard | null>(null);
+  protected projectId = signal<string>('');
+  protected error = signal<string | null>(null);
 
-  // ===== Data =====
-  protected projects = signal<Project[]>(MOCK_PROJECTS);
-
-  // ===== Computed =====
-  protected filteredProjects = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const priority = this.filterPriority();
-
-    let result = this.projects();
-
-    if (term) {
-      result = result.filter(
-        (p) =>
-          p.projectCode.toLowerCase().includes(term) ||
-          p.projectName.toLowerCase().includes(term) ||
-          p.customerName.toLowerCase().includes(term) ||
-          p.projectManager.toLowerCase().includes(term)
-      );
-    }
-
-    if (status !== 'all') {
-      result = result.filter((p) => p.status === status);
-    }
-
-    if (priority !== 'all') {
-      result = result.filter((p) => p.priority === priority);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Project] ?? '';
-      const bVal = b[sortField as keyof Project] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  });
-
-  protected paginatedProjects = computed(() => {
-    const all = this.filteredProjects();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredProjects().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
-  });
-
-  protected Math = Math;
-
-  // ===== Options =====
-  statusOptions = [
-    'Prospect',
-    'Contract Drafting',
-    'Contract Signed',
-    'Requirement Gathering',
-    'Requirement Approval',
-    'System Analysis',
-    'DFD Design',
-    'ER Design',
-    'Specification Design',
-    'Specification Approval',
-    'Planning',
-    'Development',
-    'Internal Testing',
-    'UAT',
-    'Bug Fixing',
-    'Ready for Delivery',
-    'Delivered',
-    'Invoicing',
-    'Closed',
-    'MA Active',
-  ];
-
-  priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
+  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Lifecycle =====
-  ngOnInit() {
-    // TODO: เรียก API จริง
+  ngOnInit(): void {
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.projectId.set(id);
+        this.loadDashboard(id);
+      } else {
+        this.router.navigate(['/feature/pm/pmrt02']);
+      }
+    });
   }
 
-  // ===== Actions =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
+  // ===== Load Data =====
+  loadDashboard(id: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    // ใช้ Mock Data (เปลี่ยนเป็น HTTP จริงเมื่อเชื่อมต่อ API)
+    this.getMockData(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.project.set(data);
+        },
+        error: (err: any) => {
+          console.error('Load project dashboard error:', err);
+          this.error.set('ไม่สามารถโหลดข้อมูลโครงการได้');
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการหรือเกิดข้อผิดพลาด');
+          this.router.navigate(['/feature/pm/pmrt02']);
+        },
+      });
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
+  // ===== Mock Data (ลบเมื่อเชื่อมต่อ API จริง) =====
+  private getMockData(id: string): Observable<ProjectDashboard> {
+    const mockData: ProjectDashboard = {
+      id: id,
+      projectCode: 'PRJ-001',
+      projectName: 'ระบบบริหารจัดการลูกค้า (CRM)',
+      customerId: '1',
+      customerName: 'บริษัท ซอฟต์อินเตอร์ จำกัด',
+      contractId: '1',
+      contractNo: 'CT-001',
+      projectManager: 'สมศักดิ์ รุ่งเรือง',
+      ba: 'สมหญิง รักเรียน',
+      sa: 'วิชัย พัฒนาชัย',
+      startDate: '2024-01-15',
+      plannedEndDate: '2024-06-30',
+      actualEndDate: undefined,
+      budgetManday: 120,
+      usedManday: 85,
+      status: 'Development',
+      priority: 'High',
+      description: 'พัฒนาระบบ CRM สำหรับบริหารจัดการข้อมูลลูกค้า ติดตามการขาย และการบริการหลังการขาย',
+      isActive: true,
+      phaseCount: 5,
+      taskCount: 23,
+      taskCompletedCount: 12,
+      requirementCount: 15,
+      bugCount: 8,
+      bugOpenCount: 3,
+      recentPhases: [
+        { id: 'p1', phaseCode: 'PH-001', phaseName: 'Requirement & Analysis', status: 'Done', progress: 100, endDate: '2024-02-28' },
+        { id: 'p2', phaseCode: 'PH-002', phaseName: 'System Design', status: 'In Progress', progress: 75, endDate: '2024-03-31' },
+        { id: 'p3', phaseCode: 'PH-003', phaseName: 'Development', status: 'Not Started', progress: 0, endDate: '2024-05-31' },
+      ],
+      recentTasks: [
+        { id: 't1', taskCode: 'TASK-001', taskName: 'ออกแบบ Database Schema', assignedTo: 'วิชัย พัฒนาชัย', status: 'Done', priority: 'High' },
+        { id: 't2', taskCode: 'TASK-002', taskName: 'พัฒนา API Login', assignedTo: 'สมชาย ใจดี', status: 'In Progress', priority: 'High' },
+        { id: 't3', taskCode: 'TASK-003', taskName: 'พัฒนา UI Dashboard', assignedTo: 'มานี มีทรัพย์', status: 'Todo', priority: 'Medium' },
+      ],
+    };
+
+    return of(mockData).pipe(delay(500));
   }
 
-  onPriorityChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterPriority.set(select.value);
-    this.currentPage.set(1);
+  // ===== Navigation Actions =====
+  goToEdit() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/pmrt02', id, 'edit']);
   }
 
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
+  goToPhases() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/phase'], { queryParams: { projectId: id } });
   }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
+  goToTasks() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
   }
 
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
+  goToRequirements() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
   }
 
-  goToAdd() {
-    this.router.navigate(['/feature/pm/project/new']);
+  goToBugs() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
   }
 
-  goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/project', id, 'edit']);
+  goToGantt() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
   }
 
-  goToView(id: string) {
-    this.router.navigate(['/feature/pm/project', id, 'view']);
+  goToContracts() {
+    const id = this.projectId();
+    this.router.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
+  }
+
+  goToPhaseDetail(phaseId: string) {
+    this.router.navigate(['/feature/pm/phase', phaseId, 'edit']);
+  }
+
+  goToTaskDetail(taskId: string) {
+    this.router.navigate(['/feature/pm/task', taskId, 'edit']);
+  }
+
+  goBack() {
+    this.router.navigate(['/feature/pm/pmrt02']);
   }
 
   // ===== Utility =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
+      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
       'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -272,7 +230,6 @@ export class Pmrt03Component implements OnInit {
       'Specification Design': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-      Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
@@ -282,7 +239,7 @@ export class Pmrt03Component implements OnInit {
       Closed: 'bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
       'MA Active': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     };
-    return map[status] || map['Prospect'];
+    return map[status] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
   }
 
   getPriorityClass(priority: string): string {
@@ -295,7 +252,48 @@ export class Pmrt03Component implements OnInit {
     return map[priority] || map['Low'];
   }
 
+  getPriorityText(priority: string): string {
+    const map: Record<string, string> = {
+      Low: 'ต่ำ',
+      Medium: 'ปานกลาง',
+      High: 'สูง',
+      Critical: 'วิกฤต',
+    };
+    return map[priority] || priority;
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'ยังไม่เริ่ม',
+      'In Progress': 'กำลังดำเนินการ',
+      Done: 'เสร็จสิ้น',
+      Delayed: 'ล่าช้า',
+      Prospect: 'โอกาส',
+      'Contract Drafting': 'ร่างสัญญา',
+      'Contract Signed': 'เซ็นสัญญา',
+      'Requirement Gathering': 'เก็บ Requirement',
+      'Requirement Approval': 'อนุมัติ Requirement',
+      'System Analysis': 'วิเคราะห์ระบบ',
+      'DFD Design': 'ออกแบบ DFD',
+      'ER Design': 'ออกแบบ ER',
+      'Specification Design': 'ออกแบบ Spec',
+      'Specification Approval': 'อนุมัติ Spec',
+      Planning: 'วางแผน',
+      Development: 'พัฒนา',
+      'Internal Testing': 'ทดสอบภายใน',
+      UAT: 'ทดสอบ UAT',
+      'Bug Fixing': 'แก้ไข Bug',
+      'Ready for Delivery': 'พร้อมส่งมอบ',
+      Delivered: 'ส่งมอบแล้ว',
+      Invoicing: 'ออก Invoice',
+      Closed: 'ปิดโครงการ',
+      'MA Active': 'อยู่ใน MA',
+    };
+    return map[status] || status;
+  }
+
   formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -308,10 +306,17 @@ export class Pmrt03Component implements OnInit {
     }
   }
 
-  getProgress(used: number, budget: number): number {
-    if (budget === 0) return 0;
-    return Math.min(Math.round((used / budget) * 100), 100);
+  getProgressClass(progress: number): string {
+    if (progress >= 80) return 'bg-emerald-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 20) return 'bg-yellow-500';
+    return 'bg-gray-400';
+  }
+
+  getMandayProgress(): number {
+    const project = this.project();
+    if (!project) return 0;
+    if (project.budgetManday === 0) return 0;
+    return Math.min(Math.round((project.usedManday / project.budgetManday) * 100), 100);
   }
 }
-
-export default Pmrt03Component;

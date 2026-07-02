@@ -7,7 +7,7 @@ ng g c feature/pm/dt/pmdt01 --standalone --skip-tests
 ng g c feature/pm/dt/pmdt30
 
 ng g c feature/pm/rt/pmrt01A
-ng g c feature/pm/rt/pmrt01/pmrt01A
+ng g c feature/pm/rt/pmrt02/pmrt02A
 
 http://localhost:4200/feature/pm/phase
 
@@ -22,7 +22,7 @@ https://icons.getbootstrap.com/
 
 this.router.navigate(['/feature/pm/pmrt27', roleId]);
 
-mvnw.cmd flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:54320/sic_app -Dflyway.user=sic-app -Dflyway.password=SicApp2026
+mvn flyway:migrate
 
 aaf5910e-abab-44ce-8826-847d3195e868 usertest1
 

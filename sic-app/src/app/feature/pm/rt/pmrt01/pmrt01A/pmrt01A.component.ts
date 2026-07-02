@@ -12,6 +12,7 @@ import { SicRadioComponent } from '../../../../../core/component/sic-radio/sic-r
 import { CustomerModel } from './pmrt01A.model';
 import { Pmrt01AService } from './pmrt01A.service';
 
+import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputPhoneComponent } from '../../../../../core/component/sic-input-phone/sic-input-phone.component';
@@ -20,7 +21,6 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt01AForm } from './pmrt01A.form';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmrt01a',
@@ -54,13 +54,19 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   businessId = '';
 
   // ✅ Getter สำหรับรูปโปรไฟล์ — อ่านจาก uploadGroupData โดยตรง
- get profileImageUrl(): string {
-  const uploadGroupId = this.formCustomerData?.formGroup?.get('uploadGroupId')?.value;
-  if (uploadGroupId) {
-    return `${environment.apiBaseUrl}/api/storage/avatar/${uploadGroupId}`;
+  // pmrt01A.component.ts
+
+  get profileImageUrl(): string {
+    const uploadGroupId = this.formCustomerData?.formGroup?.get('uploadGroupId')?.value;
+    console.log('🔍 profileImageUrl - uploadGroupId:', uploadGroupId);
+    if (uploadGroupId) {
+      const url = `${environment.apiBaseUrl}/api/storage/avatar/${uploadGroupId}`;
+      console.log('🔍 profileImageUrl - URL:', url);
+      return url;
+    }
+    console.log('🔍 profileImageUrl - fallback to default');
+    return 'images/profile.png';
   }
-  return 'images/profile.png';
-}
 
   pageDirty = () => this.formCustomerData?.dirty ?? false;
 

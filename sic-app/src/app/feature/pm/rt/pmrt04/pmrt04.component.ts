@@ -1,96 +1,42 @@
+// src/app/feature/pm/rt/pmrt04/pmrt04.component.ts
+
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 // ===== Interfaces =====
-interface Phase {
+export interface Contract {
   id: string;
-  phaseCode: string;
-  phaseName: string;
+  contractNo: string;
+  contractType: string;
+  customerId: string;
+  customerName: string;
   projectId: string;
   projectName: string;
-  description: string;
   startDate: string;
   endDate: string;
-  owner: string;
-  status: 'Not Started' | 'In Progress' | 'Done' | 'Delayed';
-  dependency?: string;
-  progress: number;
+  contractValue: number;
+  paymentTerms: string;
+  scopeSummary: string;
+  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  renewalStatus: string;
   isActive: boolean;
   createdAt: string;
-  milestones: Milestone[];
+  rowVersion?: number;
 }
 
-interface Milestone {
-  id: string;
-  milestoneName: string;
-  dueDate: string;
-  status: string;
-  progress: number;
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
-
-// ===== Mock Data =====
-const MOCK_PHASES: Phase[] = [
-  {
-    id: '1',
-    phaseCode: 'PH-001',
-    phaseName: 'Requirement & Analysis',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    description: 'เก็บความต้องการและวิเคราะห์ระบบ',
-    startDate: '2024-01-15',
-    endDate: '2024-02-28',
-    owner: 'สมหญิง รักเรียน',
-    status: 'Done',
-    dependency: '',
-    progress: 100,
-    isActive: true,
-    createdAt: '2024-01-10 09:00:00',
-    milestones: [
-      { id: '1-1', milestoneName: 'เก็บ Requirement เสร็จ', dueDate: '2024-02-01', status: 'Done', progress: 100 },
-      { id: '1-2', milestoneName: 'BA Confirm Requirement', dueDate: '2024-02-15', status: 'Done', progress: 100 },
-      { id: '1-3', milestoneName: 'Customer Confirm Requirement', dueDate: '2024-02-28', status: 'Done', progress: 100 },
-    ],
-  },
-  {
-    id: '2',
-    phaseCode: 'PH-002',
-    phaseName: 'Design',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    description: 'ออกแบบ DFD, ER Diagram และ Specification',
-    startDate: '2024-03-01',
-    endDate: '2024-04-15',
-    owner: 'วิชัย พัฒนาชัย',
-    status: 'In Progress',
-    dependency: 'PH-001',
-    progress: 60,
-    isActive: true,
-    createdAt: '2024-02-20 10:00:00',
-    milestones: [
-      { id: '2-1', milestoneName: 'DFD Design', dueDate: '2024-03-20', status: 'Done', progress: 100 },
-      { id: '2-2', milestoneName: 'ER Design', dueDate: '2024-04-01', status: 'In Progress', progress: 70 },
-      { id: '2-3', milestoneName: 'Specification', dueDate: '2024-04-15', status: 'Not Started', progress: 0 },
-    ],
-  },
-  {
-    id: '3',
-    phaseCode: 'PH-003',
-    phaseName: 'Development',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    description: 'พัฒนาระบบตาม Specification',
-    startDate: '2024-04-01',
-    endDate: '2024-07-31',
-    owner: 'สมศักดิ์ รุ่งเรือง',
-    status: 'Not Started',
-    dependency: 'PH-002',
-    progress: 0,
-    isActive: true,
-    createdAt: '2024-03-15 14:30:00',
-    milestones: [],
-  },
-];
 
 @Component({
   selector: 'app-pmrt04',
@@ -101,93 +47,145 @@ const MOCK_PHASES: Phase[] = [
 })
 export class Pmrt04Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
 
   // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
-  protected filterProject = signal('all');
+  protected filterType = signal('all');
+  protected filterCustomerId = signal<string | null>(null);
+  protected filterCustomerName = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('phaseCode');
+  protected sortBy = signal('contractNo');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected expandedPhase = signal<string | null>(null);
 
   // ===== Data =====
-  protected phases = signal<Phase[]>(MOCK_PHASES);
+  protected contracts = signal<Contract[]>([]);
+  protected totalItems = signal(0);
+  protected contractTypes = signal<string[]>([]);
+
+  private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
 
   // ===== Computed =====
-  protected filteredPhases = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const project = this.filterProject();
+  protected filteredContracts = computed(() => this.contracts());
+  protected paginatedContracts = computed(() => this.contracts());
 
-    let result = this.phases();
-
-    if (term) {
-      result = result.filter(
-        (p) =>
-          p.phaseCode.toLowerCase().includes(term) ||
-          p.phaseName.toLowerCase().includes(term) ||
-          p.projectName.toLowerCase().includes(term) ||
-          p.owner.toLowerCase().includes(term)
-      );
-    }
-
-    if (status !== 'all') {
-      result = result.filter((p) => p.status === status);
-    }
-
-    if (project !== 'all') {
-      result = result.filter((p) => p.projectId === project);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Phase] ?? '';
-      const bVal = b[sortField as keyof Phase] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  });
-
-  protected paginatedPhases = computed(() => {
-    const all = this.filteredPhases();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredPhases().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
   protected Math = Math;
 
   // ===== Options =====
-  statusOptions = ['Not Started', 'In Progress', 'Done', 'Delayed'];
-  projectOptions = [
-    { id: '1', name: 'ระบบ CRM' },
-    { id: '2', name: 'ระบบ HR' },
-  ];
+  statusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
+  signStatusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    this.loadContractTypes();
+
+    this.route.queryParams.subscribe((params) => {
+      const customerId = params['customerId'];
+      if (customerId) {
+        this.filterCustomerId.set(customerId);
+        const customerName = params['customerName'] || '';
+        this.filterCustomerName.set(customerName);
+      } else {
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
+      }
+      this.currentPage.set(1);
+      this.loadContracts();
+    });
+
+    if (!this.route.snapshot.queryParams['customerId']) {
+      this.loadContracts();
+    }
+  }
+
+  // ===== Load Data =====
+  loadContractTypes() {
+    // TODO: ดึงจาก API จริง
+    // this.http.get<string[]>(`${this.apiUrl}/types`).subscribe(...)
+    this.contractTypes.set([
+      'Development Contract',
+      'Maintenance Contract',
+      'Support Contract',
+      'Change Request Contract',
+      'Extension Contract',
+    ]);
+  }
+
+  loadContracts() {
+    this.isLoading.set(true);
+
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString());
+
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
+
+    const keyword = this.searchTerm();
+    if (keyword) {
+      params = params.set('keyword', keyword);
+    }
+
+    const status = this.filterStatus();
+    if (status !== 'all') {
+      params = params.set('status', status);
+    }
+
+    const type = this.filterType();
+    if (type !== 'all') {
+      params = params.set('contractType', type);
+    }
+
+    if (this.sortBy()) {
+      params = params
+        .set('sortBy', this.sortBy())
+        .set('sortDir', this.sortDir());
+    }
+
+    this.http.get<PageResponse<Contract>>(this.apiUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.contracts.set(response.content || []);
+          this.totalItems.set(response.totalElements || 0);
+
+          if (this.filterCustomerId() && !this.filterCustomerName()) {
+            const firstContract = response.content?.[0];
+            if (firstContract?.customerName) {
+              this.filterCustomerName.set(firstContract.customerName);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Load contracts error:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการสัญญาได้');
+          this.contracts.set([]);
+          this.totalItems.set(0);
+        },
+      });
   }
 
   // ===== Actions =====
@@ -195,18 +193,27 @@ export class Pmrt04Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadContracts();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadContracts();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadContracts();
   }
 
-  onProjectChange(event: Event) {
+  onTypeChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.filterProject.set(select.value);
+    this.filterType.set(select.value);
     this.currentPage.set(1);
+    this.loadContracts();
   }
 
   onSortChange(field: string) {
@@ -216,56 +223,65 @@ export class Pmrt04Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadContracts();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  toggleExpand(id: string) {
-    this.expandedPhase.set(this.expandedPhase() === id ? null : id);
+    this.loadContracts();
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/phase/new']);
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      this.router.navigate(['/feature/pm/pmrt04/new'], {
+        queryParams: { customerId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt04/new']);
+    }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/phase', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt04', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/phase', id, 'view']);
+    this.router.navigate(['/feature/pm/pmrt04', id, 'view']);
+  }
+
+  goBackToCustomer() {
+    this.router.navigate(['/feature/pm/pmrt01']);
+  }
+
+  goToProject(projectId: string) {
+    this.router.navigate(['/feature/pm/pmrt03', projectId]);
   }
 
   // ===== Utility =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Signed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
-    return map[status] || map['Not Started'];
+    return map[status] || map['Draft'];
   }
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      'Not Started': 'ยังไม่เริ่ม',
-      'In Progress': 'กำลังดำเนินการ',
-      Done: 'เสร็จสิ้น',
-      Delayed: 'ล่าช้า',
+      Draft: 'ร่าง',
+      Sent: 'ส่งแล้ว',
+      Signed: 'ลงนามแล้ว',
+      Expired: 'หมดอายุ',
     };
     return map[status] || status;
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -278,15 +294,12 @@ export class Pmrt04Component implements OnInit {
     }
   }
 
-  getMilestoneStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Not Started'];
+  formatCurrency(value: number): string {
+    if (!value) return '0.00';
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 2,
+    }).format(value);
   }
 }
-
-export default Pmrt04Component;

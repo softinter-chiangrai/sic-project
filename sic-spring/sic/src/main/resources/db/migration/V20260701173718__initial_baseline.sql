@@ -1,0 +1,2 @@
+-- Baseline of existing database (from .NET system)
+-- This migration is used by Flyway to mark version 1 as the starting point.

@@ -1,0 +1,183 @@
+<!-- src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.html -->
+
+<!-- ===== LOADING ===== -->
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา' }}
+        </h2>
+      </div>
+
+      <!-- Contract No -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เลขที่สัญญา"
+          formControlName="contractNo"
+          [required]="true"
+          [errorMessages]="{
+            required: 'กรุณาระบุเลขที่สัญญา',
+            maxlength: 'เลขที่สัญญาต้องไม่เกิน 50 ตัวอักษร'
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Contract Type -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภทสัญญา"
+          formControlName="contractType"
+          [apiUrl]="service.getLovContractType()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกประเภทสัญญา' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Customer -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลูกค้า"
+          formControlName="customerId"
+          [apiUrl]="service.getComboboxCustomer()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.getComboboxProject()"
+          [params]="{ customerId: form.get('customerId')?.value }"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกโครงการ' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Start Date & End Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่เริ่ม"
+            type="text"
+            formControlName="startDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+            [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
+          ></sic-input>
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่สิ้นสุด"
+            type="text"
+            formControlName="endDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+            [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุด' }"
+          ></sic-input>
+        </div>
+      </div>
+
+      <!-- Contract Value -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="มูลค่าสัญญา (บาท)"
+          type="text"
+          formControlName="contractValue"
+          [required]="true"
+          placeholder="0.00"
+          [errorMessages]="{
+            required: 'กรุณาระบุมูลค่าสัญญา',
+            min: 'มูลค่าต้องมากกว่า 0'
+          }"
+        ></sic-input>
+      </div>
+
+      <!-- Payment Terms -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="เงื่อนไขการชำระเงิน"
+          formControlName="paymentTerms"
+          placeholder="เช่น จ่ายตามงวด 3 งวด, จ่ายรายเดือน"
+        ></sic-input>
+      </div>
+
+      <!-- Scope Summary -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="สรุปขอบเขตงาน"
+          formControlName="scopeSummary"
+          [rows]="3"
+          placeholder="ระบุขอบเขตงานหลักของสัญญานี้"
+        ></sic-input-area>
+      </div>
+
+      <!-- Sign Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะลงนาม"
+          formControlName="signStatus"
+          [apiUrl]="service.getLovSignStatus()"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกสถานะลงนาม' }"
+        ></sic-combobox>
+      </div>
+
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งานสัญญา</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+            [disabled]="isSaving"
+          >
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

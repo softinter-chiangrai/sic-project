@@ -22,33 +22,39 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
 
-  // ===== Contract =====
+   // ===== Project =====
   {
-    path: 'contract',
+    path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
   },
   {
-    path: 'contract/new',
-    loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+    path: 'pmrt02/new',
+    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
   },
   {
-    path: 'contract/:id/edit',
-    loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+    path: 'pmrt02/:id/edit',
+    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
   },
 
-  // ===== Project =====
-  {
-    path: 'project',
-    loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
-  },
-  {
-    path: 'project/new',
-    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  },
-  {
-    path: 'project/:id/edit',
-    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  },
+  // ===== Project Dashboard =====
+{
+  path: 'pmrt03/:id',
+  loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
+},
+
+  // Contract 
+{
+  path: 'pmrt04',
+  loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
+},
+{
+  path: 'pmrt04/new',
+  loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+},
+{
+  path: 'pmrt04/:id/edit',
+  loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+},
 
   // ===== phase =====
   {

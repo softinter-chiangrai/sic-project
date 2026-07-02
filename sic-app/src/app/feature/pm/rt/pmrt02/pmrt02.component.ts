@@ -1,92 +1,45 @@
+// src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
+
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 // ===== Interfaces =====
-interface Contract {
+export interface Project {
   id: string;
-  contractNo: string;
-  contractType: string;
+  projectCode: string;
+  projectName: string;
   customerId: string;
   customerName: string;
-  projectId?: string;
-  projectName?: string;
+  contractId: string;
+  contractNo: string;
+  projectManager: string;
+  ba: string;
+  sa: string;
   startDate: string;
-  endDate: string;
-  contractValue: number;
-  paymentTerms: string;
-  scopeSummary: string;
-  contractFile?: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
-  renewalStatus: string;
+  plannedEndDate: string;
+  actualEndDate?: string;
+  budgetManday: number;
+  usedManday: number;
+  status: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
   isActive: boolean;
   createdAt: string;
+  rowVersion?: number;
 }
 
-// ===== Mock Data =====
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: '1',
-    contractNo: 'CT-001',
-    contractType: 'Development Contract',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    startDate: '2024-01-01',
-    endDate: '2024-06-30',
-    contractValue: 500000,
-    paymentTerms: 'จ่ายตามงวด 3 งวด',
-    scopeSummary: 'พัฒนาระบบ CRM ครบวงจร',
-    signStatus: 'Signed',
-    renewalStatus: 'ยังไม่ต่อ',
-    isActive: true,
-    createdAt: '2024-01-01 09:00:00',
-  },
-  {
-    id: '2',
-    contractNo: 'CT-002',
-    contractType: 'Maintenance Contract',
-    customerId: '1',
-    customerName: 'สมชาย ใจดี',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    startDate: '2024-07-01',
-    endDate: '2025-06-30',
-    contractValue: 50000,
-    paymentTerms: 'จ่ายรายเดือน',
-    scopeSummary: 'ดูแลระบบ CRM หลังส่งมอบ',
-    signStatus: 'Draft',
-    renewalStatus: 'รอต่อ',
-    isActive: false,
-    createdAt: '2024-06-15 14:30:00',
-  },
-  {
-    id: '3',
-    contractNo: 'CT-003',
-    contractType: 'Development Contract',
-    customerId: '2',
-    customerName: 'บริษัท ซอฟต์แวร์ จำกัด',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    startDate: '2024-03-01',
-    endDate: '2024-08-31',
-    contractValue: 300000,
-    paymentTerms: 'จ่ายตาม Milestone',
-    scopeSummary: 'พัฒนาระบบบริหารทรัพยากรบุคคล',
-    signStatus: 'Sent',
-    renewalStatus: 'ยังไม่ต่อ',
-    isActive: true,
-    createdAt: '2024-02-28 10:00:00',
-  },
-];
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
 
 @Component({
   selector: 'app-pmrt02',
@@ -97,96 +50,153 @@ const MOCK_CONTRACTS: Contract[] = [
 })
 export class Pmrt02Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
 
   // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
-  protected filterType = signal('all');
+  protected filterPriority = signal('all');
+  protected filterCustomerId = signal<string | null>(null);
+  protected filterCustomerName = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('contractNo');
+  protected sortBy = signal('projectCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
 
   // ===== Data =====
-  protected contracts = signal<Contract[]>(MOCK_CONTRACTS);
+  protected projects = signal<Project[]>([]);
+  protected totalItems = signal(0);
+
+  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Computed =====
-  protected filteredContracts = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const type = this.filterType();
-
-    let result = this.contracts();
-
-    if (term) {
-      result = result.filter(
-        (c) =>
-          c.contractNo.toLowerCase().includes(term) ||
-          c.customerName.toLowerCase().includes(term) ||
-          c.contractType.toLowerCase().includes(term),
-      );
-    }
-
-    if (status === 'active') {
-      result = result.filter((c) => c.isActive);
-    } else if (status === 'inactive') {
-      result = result.filter((c) => !c.isActive);
-    }
-
-    if (type !== 'all') {
-      result = result.filter((c) => c.contractType === type);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Contract] ?? '';
-      const bVal = b[sortField as keyof Contract] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
+  protected filteredProjects = computed(() => {
+    // ใช้ projects จาก API โดยตรง (backend จัดการ filter แล้ว)
+    return this.projects();
   });
 
-  protected paginatedContracts = computed(() => {
-    const all = this.filteredContracts();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
+  protected paginatedProjects = computed(() => {
+    // Backend จัดการ pagination แล้ว
+    return this.projects();
   });
 
-  protected totalItems = computed(() => this.filteredContracts().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   });
 
   protected Math = Math;
 
-  // ===== Contract Types (for filter dropdown) =====
-  contractTypes = [
-    'Development Contract',
-    'Maintenance Contract',
-    'Change Request Contract',
-    'Extension Contract',
-    'Support Contract',
+  // ===== Options =====
+  statusOptions = [
+    'Prospect', 'Contract Drafting', 'Contract Signed', 'Requirement Gathering',
+    'Requirement Approval', 'System Analysis', 'DFD Design', 'ER Design',
+    'Specification Design', 'Specification Approval', 'Planning', 'Development',
+    'Internal Testing', 'UAT', 'Bug Fixing', 'Ready for Delivery', 'Delivered',
+    'Invoicing', 'Closed', 'MA Active',
   ];
+
+  priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
-    // this.loadContracts();
+    // อ่าน queryParams
+    this.route.queryParams.subscribe((params) => {
+      const customerId = params['customerId'];
+      if (customerId) {
+        this.filterCustomerId.set(customerId);
+        // ดึงชื่อลูกค้าจาก queryParams หรือจากข้อมูลที่โหลด
+        const customerName = params['customerName'] || '';
+        this.filterCustomerName.set(customerName);
+      } else {
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
+      }
+      this.currentPage.set(1);
+      this.loadProjects();
+    });
+
+    // ถ้าไม่มี queryParams ให้โหลดทั้งหมด
+    if (!this.route.snapshot.queryParams['customerId']) {
+      this.loadProjects();
+    }
+  }
+
+  // ===== Load Projects from API =====
+  loadProjects() {
+    this.isLoading.set(true);
+
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString());
+
+    // กรองตาม customerId
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
+
+    // ค้นหา
+    const keyword = this.searchTerm();
+    if (keyword) {
+      params = params.set('keyword', keyword);
+    }
+
+    // สถานะ
+    const status = this.filterStatus();
+    if (status !== 'all') {
+      params = params.set('status', status);
+    }
+
+    // ความสำคัญ
+    const priority = this.filterPriority();
+    if (priority !== 'all') {
+      params = params.set('priority', priority);
+    }
+
+    // เรียงลำดับ
+    if (this.sortBy()) {
+      params = params
+        .set('sortBy', this.sortBy())
+        .set('sortDir', this.sortDir());
+    }
+
+    this.http.get<PageResponse<Project>>(this.apiUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.projects.set(response.content || []);
+          this.totalItems.set(response.totalElements || 0);
+
+          // ถ้ามี customerId แต่ยังไม่มีชื่อ ให้ลองดึงจากข้อมูลที่โหลด
+          if (this.filterCustomerId() && !this.filterCustomerName()) {
+            const firstProject = response.content?.[0];
+            if (firstProject?.customerName) {
+              this.filterCustomerName.set(firstProject.customerName);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Load projects error:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโครงการได้');
+          this.projects.set([]);
+          this.totalItems.set(0);
+        },
+      });
   }
 
   // ===== Actions =====
@@ -194,18 +204,27 @@ export class Pmrt02Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadProjects();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadProjects();
   }
 
-  onTypeChange(event: Event) {
+  onPriorityChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.filterType.set(select.value);
+    this.filterPriority.set(select.value);
     this.currentPage.set(1);
+    this.loadProjects();
   }
 
   onSortChange(field: string) {
@@ -215,62 +234,103 @@ export class Pmrt02Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadProjects();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/contract/new']);
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      this.router.navigate(['/feature/pm/pmrt02/new'], {
+        queryParams: { customerId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt02/new']);
+    }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/contract', id, 'edit']);
+    this.router.navigate(['/feature/pm/pmrt02A', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/contract', id, 'view']);
+    this.router.navigate(['/feature/pm/pmrt02A', id, 'view']);
+  }
+
+  goBackToCustomer() {
+    this.router.navigate(['/feature/pm/pmrt02']);
   }
 
   // ===== Utility =====
-  getStatusClass(isActive: boolean): string {
-    return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
-  }
-
-  getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-
-  getSignStatusClass(status: string): string {
+  getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      Sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Signed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      'Requirement Gathering': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Approval': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'System Analysis': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'DFD Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'ER Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'Specification Design': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+      Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      'Ready for Delivery': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+      Delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      Invoicing: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+      Closed: 'bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+      'MA Active': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     };
-    return map[status] || map['Draft'];
+    return map[status] || map['Prospect'];
   }
 
-  getSignStatusText(status: string): string {
+  getPriorityClass(priority: string): string {
     const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      Sent: 'ส่งแล้ว',
-      Signed: 'ลงนามแล้ว',
-      Expired: 'หมดอายุ',
+      Low: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      High: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[priority] || map['Low'];
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Prospect: 'โอกาส',
+      'Contract Drafting': 'ร่างสัญญา',
+      'Contract Signed': 'เซ็นสัญญา',
+      'Requirement Gathering': 'เก็บ Requirement',
+      'Requirement Approval': 'อนุมัติ Requirement',
+      'System Analysis': 'วิเคราะห์ระบบ',
+      'DFD Design': 'ออกแบบ DFD',
+      'ER Design': 'ออกแบบ ER',
+      'Specification Design': 'ออกแบบ Spec',
+      'Specification Approval': 'อนุมัติ Spec',
+      Planning: 'วางแผน',
+      Development: 'พัฒนา',
+      'Internal Testing': 'ทดสอบภายใน',
+      UAT: 'ทดสอบ UAT',
+      'Bug Fixing': 'แก้ไข Bug',
+      'Ready for Delivery': 'พร้อมส่งมอบ',
+      Delivered: 'ส่งมอบแล้ว',
+      Invoicing: 'ออก Invoice',
+      Closed: 'ปิดโครงการ',
+      'MA Active': 'อยู่ใน MA',
     };
     return map[status] || status;
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -283,13 +343,8 @@ export class Pmrt02Component implements OnInit {
     }
   }
 
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB',
-      minimumFractionDigits: 0,
-    }).format(value);
+  getProgress(used: number, budget: number): number {
+    if (budget === 0) return 0;
+    return Math.min(Math.round((used / budget) * 100), 100);
   }
 }
-
-export default Pmrt02Component;

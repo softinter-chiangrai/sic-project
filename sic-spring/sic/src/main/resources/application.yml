@@ -80,6 +80,6 @@ logging:
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: ERROR
     org.springframework.security: DEBUG
-    org.flywaydb: DEBUG #
+    org.flywaydb: DEBUG 
 
 spring.main.banner-mode: off
