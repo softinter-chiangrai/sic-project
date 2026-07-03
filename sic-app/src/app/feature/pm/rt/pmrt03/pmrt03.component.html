@@ -124,49 +124,165 @@
     }
 
     <!-- ===== QUICK ACTIONS ===== -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-      <button
-        (click)="goToPhases()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-layers text-[var(--crm-primary)]"></i>
-        Phase
-      </button>
-      <button
-        (click)="goToTasks()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-        Tasks
-      </button>
-      <button
-        (click)="goToRequirements()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
-        Requirements
-      </button>
-      <button
-        (click)="goToBugs()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-bug text-[var(--crm-danger)]"></i>
-        Bugs
-      </button>
-      <button
-        (click)="goToGantt()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-bar-chart-fill text-[var(--crm-primary)]"></i>
-        Gantt
-      </button>
-      <button
-        (click)="goToContracts()"
-        class="flex items-center gap-2 px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-        สัญญา
-      </button>
+    <div>
+      <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+        <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
+        เมนูด่วน
+      </h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+        <!-- Phase -->
+        <button
+          (click)="goToPhases()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-layers text-xl text-[var(--crm-primary)]"></i>
+          <span>Phase</span>
+        </button>
+        <!-- Requirement -->
+        <button
+          (click)="goToRequirements()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-clipboard-check text-xl text-[var(--crm-primary)]"></i>
+          <span>Requirement</span>
+        </button>
+        <!-- Change Request -->
+        <button
+          (click)="goToChangeRequests()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-arrow-left-right text-xl text-[var(--crm-warning)]"></i>
+          <span>Change Request</span>
+        </button>
+        <!-- Specification -->
+        <button
+          (click)="goToSpecifications()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
+          <span>Specification</span>
+        </button>
+        <!-- Design Review -->
+        <button
+          (click)="goToDesignReviews()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-eye text-xl text-[var(--crm-primary)]"></i>
+          <span>Design Review</span>
+        </button>
+        <!-- Planning / Manday -->
+        <button
+          (click)="goToPlanning()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-calendar-check text-xl text-[var(--crm-primary)]"></i>
+          <span>Planning</span>
+        </button>
+        <!-- Tasks -->
+        <button
+          (click)="goToTasks()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
+          <span>Tasks</span>
+        </button>
+        <!-- Discussion -->
+        <button
+          (click)="goToDiscussion()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-chat-dots text-xl text-[var(--crm-primary)]"></i>
+          <span>Discussion</span>
+        </button>
+        <!-- Test Case -->
+        <button
+          (click)="goToTestCases()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
+          <span>Test Case</span>
+        </button>
+        <!-- Bug -->
+        <button
+          (click)="goToBugs()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
+          <span>Bug</span>
+        </button>
+        <!-- Delivery -->
+        <button
+          (click)="goToDeliveries()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-box-seam text-xl text-[var(--crm-primary)]"></i>
+          <span>Delivery</span>
+        </button>
+        <!-- Manual -->
+        <button
+          (click)="goToManuals()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-book text-xl text-[var(--crm-primary)]"></i>
+          <span>Manual</span>
+        </button>
+        <!-- Contract -->
+        <button
+          (click)="goToContracts()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-file-earmark-text text-xl text-[var(--crm-primary)]"></i>
+          <span>สัญญา</span>
+        </button>
+        <!-- Invoice -->
+        <button
+          (click)="goToInvoices()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-receipt text-xl text-[var(--crm-primary)]"></i>
+          <span>Invoice</span>
+        </button>
+        <!-- MA Ticket -->
+        <button
+          (click)="goToMATickets()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-headset text-xl text-[var(--crm-primary)]"></i>
+          <span>MA Ticket</span>
+        </button>
+        <!-- Renewal -->
+        <button
+          (click)="goToRenewals()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-arrow-repeat text-xl text-[var(--crm-primary)]"></i>
+          <span>Renewal</span>
+        </button>
+        <!-- Approval -->
+        <button
+          (click)="goToApprovals()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-check-circle text-xl text-[var(--crm-success)]"></i>
+          <span>Approval</span>
+        </button>
+        <!-- Version Control -->
+        <button
+          (click)="goToVersions()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-tags text-xl text-[var(--crm-primary)]"></i>
+          <span>Version</span>
+        </button>
+        <!-- Gantt -->
+        <button
+          (click)="goToGantt()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-bar-chart-fill text-xl text-[var(--crm-primary)]"></i>
+          <span>Gantt</span>
+        </button>
+      </div>
     </div>
 
     <!-- ===== RECENT PHASES & TASKS ===== -->

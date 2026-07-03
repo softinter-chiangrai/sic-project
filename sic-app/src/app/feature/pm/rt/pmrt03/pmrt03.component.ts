@@ -201,6 +201,73 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
   }
 
+  // ---- เพิ่ม Navigation สำหรับ Module อื่นๆ ----
+  goToChangeRequests() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/change-request'], { queryParams: { projectId: id } });
+  }
+
+  goToSpecifications() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId: id } });
+  }
+
+  goToDesignReviews() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/design-review'], { queryParams: { projectId: id } });
+  }
+
+  goToPlanning() {
+    const id = this.projectId();
+    // ไปที่หน้า Task (Planning) หรือถ้ามีหน้า Planning แยกก็เปลี่ยน path
+    this.navigation.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
+  }
+
+  goToDiscussion() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/discussion'], { queryParams: { projectId: id } });
+  }
+
+  goToTestCases() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/test-case'], { queryParams: { projectId: id } });
+  }
+
+  goToDeliveries() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/delivery'], { queryParams: { projectId: id } });
+  }
+
+  goToManuals() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/manual'], { queryParams: { projectId: id } });
+  }
+
+  goToInvoices() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/invoice'], { queryParams: { projectId: id } });
+  }
+
+  goToMATickets() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/ma-ticket'], { queryParams: { projectId: id } });
+  }
+
+  goToRenewals() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/renewal'], { queryParams: { projectId: id } });
+  }
+
+  goToApprovals() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/approval'], { queryParams: { projectId: id } });
+  }
+
+  goToVersions() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/version'], { queryParams: { projectId: id } });
+  }
+
   goToPhaseDetail(phaseId: string) {
     this.navigation.navigate(['/feature/pm/phase', phaseId, 'edit']);
   }
