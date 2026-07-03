@@ -10,7 +10,6 @@ import { delay, finalize } from 'rxjs/operators';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { environment } from '../../../../../environments/environment';
 import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 // ===== Interfaces =====
 export interface ProjectDashboard {
@@ -80,7 +79,6 @@ export class Pmrt03Component implements OnInit {
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
-  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected isLoading = signal(false);
@@ -91,31 +89,17 @@ export class Pmrt03Component implements OnInit {
   private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Lifecycle =====
- // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
-
-ngOnInit(): void {
-  // ✅ อ่านจาก queryParams แทน params
-  this.route.queryParams.subscribe((params) => {
-    const projectId = params['projectId'];
-    const customerId = params['customerId'];
-
-    // ตรวจสอบว่ามี projectId หรือไม่
-    if (!projectId) {
-      this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
-      this.navigation.navigate(['/feature/pm/pmrt02']);
-      return;
-    }
-
-    // เก็บ customerId ไว้ใน State (เผื่อใช้)
-    if (customerId) {
-      this.customerState.setCustomer(customerId);
-    }
-
-    // ตั้งค่า projectId และโหลดข้อมูล
-    this.projectId.set(projectId);
-    this.loadDashboard(projectId);
-  });
-}
+  ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      const projectId = params['projectId'];
+      if (!projectId) {
+        this.navigation.navigate(['/feature/pm/pmrt02']);
+        return;
+      }
+      this.projectId.set(projectId);
+      this.loadDashboard(projectId);
+    });
+  }
 
   // ===== Load Data =====
   loadDashboard(id: string) {

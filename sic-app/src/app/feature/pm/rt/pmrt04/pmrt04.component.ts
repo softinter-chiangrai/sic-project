@@ -112,72 +112,35 @@ export class Pmrt04Component implements OnInit {
   ngOnInit() {
     this.loadContractTypes();
 
-    // ✅ จัดการ queryParams แบบมีเงื่อนไข
-    this.route.queryParams
-      .pipe(
-        switchMap((params) => {
-          const customerId = params['customerId'] || null;
-          const projectId = params['projectId'] || null;
+    this.route.queryParams.subscribe((params) => {
+      const projectId = params['projectId'];
 
-          this.filterProjectId.set(projectId);
+      if (!projectId) {
+        this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
+        this.navigation.navigate(['/feature/pm/pmrt02']);
+        return;
+      }
 
-          // ถ้ามี customerId ให้ใช้เลย
-          if (customerId) {
-            this.filterCustomerId.set(customerId);
-            const customerName = params['customerName'] || '';
-            this.filterCustomerName.set(customerName);
-            this.currentPage.set(1);
-            return of(null); // ไม่ต้องเรียก project API
-          }
+      this.filterProjectId.set(projectId);
 
-          // ถ้ามี projectId และยังไม่มี customerId ให้ดึงจาก project
-          if (projectId) {
-            return this.projectService.getProject(projectId).pipe(
-              finalize(() => {
-                // หลังจากได้ข้อมูลแล้วโหลด contracts
-                this.loadContracts();
-              }),
-            );
-          }
-
-          // ถ้าไม่มีทั้ง customerId และ projectId ให้ reset
-          this.filterCustomerId.set(null);
-          this.filterCustomerName.set('');
-          this.currentPage.set(1);
-          return of(null);
-        }),
-      )
-      .subscribe({
+      this.projectService.getProject(projectId).subscribe({
         next: (project) => {
-          if (project) {
-            // กรณีมี projectId แต่ไม่มี customerId → ได้ project จาก API
-            this.filterCustomerId.set(project.customerId);
-            this.filterCustomerName.set(project.customerName);
-            this.currentPage.set(1);
-            // loadContracts() ถูกเรียกใน finalize ของ switchMap แล้ว
-          } else {
-            // ✅ กรณีมี customerId → โหลดทันที (ไม่ต้องสนใจ projectId)
-            if (this.filterCustomerId()) {
-              this.loadContracts();
-            }
-            // ถ้าไม่มีทั้ง customerId และ projectId → โหลดทั้งหมด
-            else if (!this.filterProjectId()) {
-              this.loadContracts();
-            }
-            // ถ้ามีแค่ projectId อย่างเดียว → switchMap จะเรียก project API และ load ใน finalize
-          }
+          this.filterCustomerId.set(project.customerId);
+          this.filterCustomerName.set(project.customerName);
+          this.currentPage.set(1);
+          this.loadContracts();
         },
         error: (err) => {
-          console.error('Error fetching project:', err);
+          console.error('Error loading project:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
           this.navigation.navigate(['/feature/pm/pmrt02']);
         },
       });
+    });
   }
 
   // ===== Load Data =====
   loadContractTypes() {
-    // TODO: ดึงจาก API จริง
     this.contractTypes.set([
       'Development Contract',
       'Maintenance Contract',
@@ -226,7 +189,6 @@ export class Pmrt04Component implements OnInit {
           this.contracts.set(response.content || []);
           this.totalItems.set(response.totalElements || 0);
 
-          // ถ้ามี customerId แต่ยังไม่มีชื่อลูกค้า ให้ดึงจาก response
           if (this.filterCustomerId() && !this.filterCustomerName()) {
             const firstContract = response.content?.[0];
             if (firstContract?.customerName) {
@@ -312,26 +274,37 @@ export class Pmrt04Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
   }
 
+  // ✅ เพิ่ม method นี้
+  goToRenew(contractId: string): void {
+    const customerId = this.filterCustomerId();
+    const projectId = this.filterProjectId();
+    const queryParams: any = {};
+    if (customerId) {
+      queryParams.customerId = customerId;
+      queryParams.customerName = this.filterCustomerName();
+    }
+    if (projectId) {
+      queryParams.projectId = projectId;
+    }
+    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId], { queryParams });
+  }
+
   goBackToCustomer() {
-    // ✅ ถ้ามี projectId ให้กลับไป pmrt02 (รายการโครงการ)
-    if (this.filterProjectId()) {
-      this.navigation.navigate(['/feature/pm/pmrt02']);
-    } else if (this.filterCustomerId()) {
-      this.navigation.navigate(['/feature/pm/pmrt01']);
+    const customerId = this.filterCustomerId();
+    if (customerId) {
+      this.navigation.navigate(['/feature/pm/pmrt02'], {
+        queryParams: { customerId: customerId },
+      });
     } else {
       this.navigation.navigate(['/feature/pm/pmrt02']);
     }
   }
 
-
-goToProject(projectId: string) {
-  this.navigation.navigate(['/feature/pm/pmrt03'], {
-    queryParams: {
-      projectId: projectId,       
-      customerId: this.filterCustomerId(),
-    },
-  });
-}
+  goToProject(projectId: string) {
+    this.navigation.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: projectId },
+    });
+  }
 
   // ===== Utility =====
   getStatusClass(status: string): string {

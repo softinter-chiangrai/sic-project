@@ -1,0 +1,190 @@
+<!-- src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.component.html -->
+
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div
+      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+  </div>
+}
+
+@if (!isLoading && originalContract) {
+  <div class="max-w-4xl mx-auto p-0.5">
+    <div class="flex items-center gap-3 mb-6">
+      <button
+        (click)="onBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
+        ต่อสัญญา
+      </h1>
+      <span
+        class="inline-block px-3 py-1 rounded-lg text-sm font-mono font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
+      >
+        {{ originalContract.contractNo }}
+      </span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="space-y-6">
+        <!-- ข้อมูลสัญญาเดิม -->
+        <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+          <div class="section-title">
+            <i class="bi bi-file-earmark-text"></i>
+            ข้อมูลสัญญาเดิม
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p class="info-label">เลขที่สัญญา</p>
+              <p class="info-value">{{ originalContract.contractNo }}</p>
+            </div>
+            <div>
+              <p class="info-label">ประเภท</p>
+              <p class="info-value">{{ originalContract.contractType }}</p>
+            </div>
+            <div>
+              <p class="info-label">ลูกค้า</p>
+              <p class="info-value">{{ originalContract.customerId || '-' }}</p>
+            </div>
+            <div>
+              <p class="info-label">โครงการ</p>
+              <p class="info-value">{{ originalContract.projectId || '-' }}</p>
+            </div>
+            <div>
+              <p class="info-label">วันที่เริ่ม</p>
+              <p class="info-value">{{ formatDate(originalContract.startDate) }}</p>
+            </div>
+            <div>
+              <p class="info-label">วันที่สิ้นสุด</p>
+              <p class="info-value">{{ formatDate(originalContract.endDate) }}</p>
+            </div>
+            <div>
+              <p class="info-label">มูลค่า</p>
+              <p class="info-value">{{ formatCurrency(originalContract.contractValue) }}</p>
+            </div>
+            <div>
+              <p class="info-label">สถานะการต่อ</p>
+              <p class="info-value">{{ originalContract.renewalStatus || 'ยังไม่ต่อ' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ข้อมูลสัญญาใหม่ -->
+        <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+          <div class="section-title">
+            <i class="bi bi-pencil-square"></i>
+            ข้อมูลสัญญาใหม่
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- วันที่เริ่มใหม่ -->
+            <div>
+              <sic-datepicker
+                label="วันที่เริ่ม (ใหม่)"
+                formControlName="newStartDate"
+                [required]="true"
+                placeholder="เลือกวันที่เริ่ม"
+                dateFormat="DD/MM/YYYY"
+              ></sic-datepicker>
+              @if (form.get('newStartDate')?.touched && form.get('newStartDate')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+              }
+            </div>
+
+            <!-- วันที่สิ้นสุดใหม่ -->
+            <div>
+              <sic-datepicker
+                label="วันที่สิ้นสุด (ใหม่)"
+                formControlName="newEndDate"
+                [required]="true"
+                placeholder="เลือกวันที่สิ้นสุด"
+                dateFormat="DD/MM/YYYY"
+              ></sic-datepicker>
+              @if (form.get('newEndDate')?.touched && form.get('newEndDate')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+              }
+              @if (form.hasError('endDateInvalid')) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">
+                  วันที่สิ้นสุดต้องมากกว่าวันที่เริ่ม
+                </p>
+              }
+            </div>
+
+            <!-- มูลค่าใหม่ -->
+            <div>
+              <sic-input
+                label="มูลค่าสัญญา (ใหม่)"
+                type="text"
+                formControlName="newContractValue"
+                [required]="true"
+                placeholder="0.00"
+              ></sic-input>
+              @if (form.get('newContractValue')?.touched && form.get('newContractValue')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุมูลค่า</p>
+              }
+            </div>
+
+            <!-- สถานะการต่อ -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+                >สถานะการต่อสัญญา</label
+              >
+              <select
+                formControlName="renewalStatus"
+                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+              >
+                <option value="ต่อแล้ว">ต่อแล้ว</option>
+                <option value="รอต่อ">รอต่อ</option>
+                <option value="ยังไม่ต่อ">ยังไม่ต่อ</option>
+                <option value="ยกเลิก">ยกเลิก</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- หมายเหตุ -->
+          <div class="mt-4">
+            <sic-input-area
+              label="หมายเหตุการต่อสัญญา"
+              formControlName="renewalRemark"
+              [rows]="2"
+              placeholder="ระบุเหตุผลหรือรายละเอียดเพิ่มเติม (ถ้ามี)"
+            ></sic-input-area>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-4 pt-2">
+          <div class="flex-1">
+            <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+              <i class="bi bi-arrow-left"></i>
+              ย้อนกลับ
+            </sic-button>
+          </div>
+          <div class="flex-[2]">
+            <sic-button
+              [fullWidth]="true"
+              [type]="'submit'"
+              variant="primary"
+              [disabled]="isSaving || form.invalid"
+            >
+              @if (isSaving) {
+                <i class="bi bi-arrow-repeat animate-spin"></i>
+                กำลังบันทึก...
+              } @else {
+                <i class="bi bi-check-lg"></i>
+                ยืนยันการต่อสัญญา
+              }
+            </sic-button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+}

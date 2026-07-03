@@ -17,6 +17,7 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 
 // ===== Model =====
 export interface ContractModel {
@@ -115,6 +116,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
    private navigation = inject(NavigationService);
+   private projectService = inject(Pmrt02Service); 
 
   form!: FormGroup;
   isEdit = false;
@@ -128,38 +130,48 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   pageDirty = () => this.form?.dirty ?? false;
 
-  ngOnInit(): void {
-    this.initForm();
+ // pmrt04A.component.ts
+ngOnInit(): void {
+  this.initForm();
 
-    // ✅ อ่าน customerId และ projectId จาก queryParams
-    this.route.queryParams.subscribe((params) => {
-      this.customerId = params['customerId'] || null;
-      this.projectId = params['projectId'] || null;
-      console.log('🔍 customerId from queryParams:', this.customerId);
-      console.log('🔍 projectId from queryParams:', this.projectId);
+  this.route.queryParams.subscribe((params) => {
+    const projectId = params['projectId'];
 
-      // ✅ ถ้าไม่มี customerId ให้แจ้งเตือนและกลับไปหน้ารายการ
-      if (!this.customerId) {
-        this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
+    if (!projectId) {
+      this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
+      this.navigation.navigate(['/feature/pm/pmrt04']);
+      return;
+    }
+
+    this.projectId = projectId;
+
+    // ✅ โหลด project เพื่อเอา customerId
+    this.projectService.getProject(projectId).subscribe({
+      next: (project) => {
+        this.customerId = project.customerId;
+        this.form.patchValue({ 
+          projectId: projectId,
+          customerId: project.customerId  // ใส่ในฟอร์ม (เผื่อบันทึก)
+        });
+      },
+      error: (err) => {
+        console.error('Error loading project:', err);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
         this.navigation.navigate(['/feature/pm/pmrt04']);
-        return;
-      }
-
-      if (this.projectId) {
-        this.form.patchValue({ projectId: this.projectId });
       }
     });
+  });
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.contractId = id;
-        this.loadContract(id);
-      }
-    });
-  }
-
+  // ส่วนแก้ไข (ถ้ามี id ใน params)
+  this.route.params.subscribe((params) => {
+    const id = params['id'];
+    if (id) {
+      this.isEdit = true;
+      this.contractId = id;
+      this.loadContract(id);
+    }
+  });
+}
   initForm(): void {
     this.form = Pmrt04AForm.createForm(this.fb);
   }

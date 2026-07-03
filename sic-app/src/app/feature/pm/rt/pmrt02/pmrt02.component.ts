@@ -97,14 +97,13 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      let customerId = params['customerId'] || this.customerState.getCustomerId();
-
-      if (!customerId) {
-        this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-        this.navigation.navigate(['/feature/pm/pmrt01']);
-        return;
-      }
+  this.route.queryParams.subscribe((params) => {
+    let customerId = params['customerId'] || this.customerState.getCustomerId();
+    if (!customerId) {
+      this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
+      this.navigation.navigate(['/feature/pm/pmrt01']);
+      return;
+    }
 
       this.customerState.setCustomer(customerId);
       this.filterCustomerId.set(customerId);
@@ -224,13 +223,12 @@ export class Pmrt02Component implements OnInit {
   }
 
   goToView(projectId: string) {
+  
   this.navigation.navigate(['/feature/pm/pmrt03'], {
-    queryParams: {
-      projectId: projectId,        
-      customerId: this.filterCustomerId(),
-    },
+    queryParams: { projectId: projectId }
   });
 }
+
 
   goBackToCustomer() {
     this.navigation.navigate(['/feature/pm/pmrt01']);

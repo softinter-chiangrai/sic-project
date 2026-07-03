@@ -1,8 +1,8 @@
 // src/app/feature/pm/pm.routes.ts
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
-import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { customerGuard } from '../../core/guard/customer.guard';
+import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -12,13 +12,15 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'pmrt01/new',
-    loadComponent: () => import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
     resolve: { form: customerCreateResolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'pmrt01/:id/edit',
-    loadComponent: () => import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt01/pmrt01A/pmrt01A.component').then((m) => m.Pmrt01AComponent),
     resolve: { form: customerEditResolver },
     canDeactivate: [CanDeactivateGuard],
   },
@@ -31,12 +33,14 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'pmrt02/new',
-    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
   },
   {
     path: 'pmrt02/:id/edit',
-    loadComponent: () => import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
   },
 
@@ -55,15 +59,22 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'pmrt04/new',
-    loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard],
   },
   {
     path: 'pmrt04/:id/edit',
-    loadComponent: () => import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard],
   },
-
+  {
+    path: 'pmrt04/renew/:id',
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.pmrt04BComponent),
+    canActivate: [customerGuard],
+  },
   // ===== Phase =====
   {
     path: 'phase',

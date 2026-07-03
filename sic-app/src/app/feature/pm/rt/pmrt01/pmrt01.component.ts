@@ -248,7 +248,9 @@ export class Pmrt01Component implements OnInit {
     return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
   }
   goToProjects(customer: CustomerModel) {
-    this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-    this.navigation.navigate(['/feature/pm/pmrt02']);
-  }
+  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
+  this.navigation.navigate(['/feature/pm/pmrt02'], {
+    queryParams: { customerId: customer.id }
+  });
+}
 }
