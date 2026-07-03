@@ -252,6 +252,13 @@
                   >
                     <i class="bi bi-arrow-repeat text-sm"></i>
                   </button>
+                  <button
+                    (click)="deleteContract(contract)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบสัญญา"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
               </td>
             </tr>

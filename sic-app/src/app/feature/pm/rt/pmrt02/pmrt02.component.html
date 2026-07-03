@@ -36,7 +36,7 @@
     </div>
   </div>
 
-  <!-- FILTERS -->
+  <!-- FILTERS (ไม่มี Date Range) -->
   <div class="flex flex-wrap gap-3 items-center">
     <div class="relative flex-1 min-w-[200px]">
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
@@ -55,27 +55,6 @@
           <i class="bi bi-x-lg text-xs"></i>
         </button>
       }
-    </div>
-
-    <!-- ✅ Date Range Filters -->
-    <div class="flex items-center gap-2">
-      <input
-        type="date"
-        class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-        [value]="filterStartDate()"
-        (change)="onStartDateChange($event)"
-        placeholder="วันที่เริ่ม"
-        title="กรองวันที่เริ่ม"
-      />
-      <span class="text-[var(--text-muted)] text-xs">ถึง</span>
-      <input
-        type="date"
-        class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-        [value]="filterEndDate()"
-        (change)="onEndDateChange($event)"
-        placeholder="วันที่สิ้นสุด"
-        title="กรองวันที่สิ้นสุด"
-      />
     </div>
 
     <!-- Filter: Status -->

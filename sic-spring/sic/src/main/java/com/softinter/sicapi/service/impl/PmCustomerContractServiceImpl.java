@@ -1,5 +1,19 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PmCustomerContractResponse;
@@ -11,20 +25,6 @@ import com.softinter.sicapi.service.PmCustomerContractService;
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -124,7 +124,6 @@ public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
 }
 
     @Override
-    @Transactional(readOnly = true)
     public void deleteContract(UUID id) {
         PmCustomerContract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));

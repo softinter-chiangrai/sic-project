@@ -36,9 +36,6 @@ export class Pmrt02Component implements OnInit {
   protected filterPriority = signal('all');
   protected filterCustomerId = signal<string | null>(null);
   protected filterCustomerName = signal<string>('');
-  // ✅ เพิ่ม state สำหรับ Date Filter
-  protected filterStartDate = signal<string>('');
-  protected filterEndDate = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('projectCode');
@@ -97,13 +94,13 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
-  this.route.queryParams.subscribe((params) => {
-    let customerId = params['customerId'] || this.customerState.getCustomerId();
-    if (!customerId) {
-      this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-      this.navigation.navigate(['/feature/pm/pmrt01']);
-      return;
-    }
+    this.route.queryParams.subscribe((params) => {
+      let customerId = params['customerId'] || this.customerState.getCustomerId();
+      if (!customerId) {
+        this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
+        this.navigation.navigate(['/feature/pm/pmrt01']);
+        return;
+      }
 
       this.customerState.setCustomer(customerId);
       this.filterCustomerId.set(customerId);
@@ -112,6 +109,7 @@ export class Pmrt02Component implements OnInit {
       this.loadProjects();
     });
   }
+
   // ===== Load Data =====
   loadProjects() {
     this.isLoading.set(true);
@@ -121,8 +119,6 @@ export class Pmrt02Component implements OnInit {
       .getProjects({
         customerId: this.filterCustomerId() || undefined,
         keyword: this.searchTerm() || undefined,
-        startDate: this.filterStartDate() || undefined,
-        endDate: this.filterEndDate() || undefined,
         page: page,
         size: this.pageSize(),
         sortBy: this.sortBy(),
@@ -177,21 +173,6 @@ export class Pmrt02Component implements OnInit {
     this.loadProjects();
   }
 
-  // ✅ Date Filter Handlers
-  onStartDateChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.filterStartDate.set(input.value);
-    this.currentPage.set(1);
-    this.loadProjects();
-  }
-
-  onEndDateChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.filterEndDate.set(input.value);
-    this.currentPage.set(1);
-    this.loadProjects();
-  }
-
   onSortChange(field: string) {
     if (this.sortBy() === field) {
       this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
@@ -223,12 +204,10 @@ export class Pmrt02Component implements OnInit {
   }
 
   goToView(projectId: string) {
-  
-  this.navigation.navigate(['/feature/pm/pmrt03'], {
-    queryParams: { projectId: projectId }
-  });
-}
-
+    this.navigation.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: projectId }
+    });
+  }
 
   goBackToCustomer() {
     this.navigation.navigate(['/feature/pm/pmrt01']);
@@ -238,13 +217,10 @@ export class Pmrt02Component implements OnInit {
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
       Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'Contract Drafting':
-        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      'Requirement Gathering':
-        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      'Requirement Approval':
-        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Gathering': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Approval': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
       'System Analysis': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'DFD Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'ER Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
@@ -252,8 +228,7 @@ export class Pmrt02Component implements OnInit {
       'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
       Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      'Internal Testing':
-        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       'Ready for Delivery': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',

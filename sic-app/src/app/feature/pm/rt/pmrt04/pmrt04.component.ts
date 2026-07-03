@@ -249,6 +249,7 @@ export class Pmrt04Component implements OnInit {
     this.loadContracts();
   }
 
+  // ===== Navigation =====
   goToAdd() {
     const customerId = this.filterCustomerId();
     const projectId = this.filterProjectId();
@@ -267,26 +268,18 @@ export class Pmrt04Component implements OnInit {
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit']);
+    const projectId = this.filterProjectId();
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit'], {
+      queryParams: { projectId }
+    });
   }
 
   goToView(id: string) {
     this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
   }
 
-  // ✅ เพิ่ม method นี้
-  goToRenew(contractId: string): void {
-    const customerId = this.filterCustomerId();
-    const projectId = this.filterProjectId();
-    const queryParams: any = {};
-    if (customerId) {
-      queryParams.customerId = customerId;
-      queryParams.customerName = this.filterCustomerName();
-    }
-    if (projectId) {
-      queryParams.projectId = projectId;
-    }
-    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId], { queryParams });
+  goToRenew(contractId: string) {
+    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId]);
   }
 
   goBackToCustomer() {
@@ -304,6 +297,40 @@ export class Pmrt04Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt03'], {
       queryParams: { projectId: projectId },
     });
+  }
+
+  // ✅ เพิ่ม method ลบสัญญา (อ้างอิงจาก pmrt01)
+  deleteContract(contract: Contract) {
+    if (!contract.id) {
+      this.dialog.warn('ไม่พบรหัสสัญญา', 'ไม่สามารถลบข้อมูลได้');
+      return;
+    }
+
+    this.dialog.confirm(
+    'ยืนยันการลบสัญญา',
+    `คุณต้องการลบสัญญา ${contract.contractNo} (${contract.contractType}) ของ ${contract.customerName} ใช่หรือไม่?\n⚠️ การดำเนินการนี้ไม่สามารถกู้คืนได้`
+    )
+      .then((confirmed) => {
+        if (confirmed) {
+          this.isLoading.set(true);
+          this.http
+            .delete(`${this.apiUrl}/${contract.id}`)
+            .pipe(finalize(() => this.isLoading.set(false)))
+            .subscribe({
+              next: () => {
+                this.dialog.success('ลบสำเร็จ', `สัญญา ${contract.contractNo} ถูกลบเรียบร้อย`);
+                this.loadContracts(); // โหลดรายการใหม่
+              },
+              error: (error) => {
+                console.error('Delete contract error:', error);
+                this.dialog.error(
+                  'ลบไม่สำเร็จ',
+                  error.error?.message || 'เกิดข้อผิดพลาดในการลบข้อมูล'
+                );
+              },
+            });
+        }
+      });
   }
 
   // ===== Utility =====

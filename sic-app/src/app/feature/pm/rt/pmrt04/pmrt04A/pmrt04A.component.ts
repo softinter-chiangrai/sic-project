@@ -140,43 +140,33 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 ngOnInit(): void {
   this.initForm();
 
+  // รับ projectId จาก queryParams (optional) เพื่อใช้ในกรณีสร้างใหม่
   this.route.queryParams.subscribe((params) => {
     const projectId = params['projectId'];
-
-    if (!projectId) {
-      this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
-      this.navigation.navigate(['/feature/pm/pmrt04']);
-      return;
+    if (projectId) {
+      this.projectId = projectId;
+      this.projectService.getProject(projectId).subscribe({
+        next: (project) => {
+          this.customerId = project.customerId;
+          this.form.patchValue({ projectId, customerId: project.customerId });
+          this.cdr.detectChanges();
+        },
+        error: () => this.navigation.navigate(['/feature/pm/pmrt04'])
+      });
     }
-
-    this.projectId = projectId;
-
-    this.projectService.getProject(projectId).subscribe({
-      next: (project) => {
-        this.customerId = project.customerId;
-        this.form.patchValue({
-          projectId: projectId,
-          customerId: project.customerId
-        });
-        this.cdr.detectChanges(); 
-      },
-      error: (err) => {
-        console.error('Error loading project:', err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
-        this.navigation.navigate(['/feature/pm/pmrt04']);
-      }
-    });
   });
 
+  // กรณีแก้ไข: โหลดข้อมูลสัญญา ซึ่งจะได้ projectId และ customerId จาก data
   this.route.params.subscribe((params) => {
     const id = params['id'];
     if (id) {
       this.isEdit = true;
       this.contractId = id;
-      this.loadContract(id);
+      this.loadContract(id); // ใน loadContract จะ set this.projectId = data.projectId
     }
   });
 }
+
   initForm(): void {
     this.form = Pmrt04AForm.createForm(this.fb);
   }
@@ -187,7 +177,7 @@ ngOnInit(): void {
       .getContract(id)
       .pipe(finalize(() => {
         this.isLoading = false;
-        this.cdr.detectChanges(); // ✅ บังคับให้อัปเดต View
+        this.cdr.detectChanges(); 
       }))
       .subscribe({
         next: (data) => {

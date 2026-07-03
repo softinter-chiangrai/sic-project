@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, NgZone, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -29,7 +29,6 @@ import { ContractModel, Pmrt04AService } from '../pmrt04A/pmrt04A.component';
     SicInputAreaComponent,
   ],
   templateUrl: './pmrt04B.component.html',
-  // ❌ ลบ styles array ออก เพราะใช้ Tailwind ใน HTML แทน
 })
 export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
@@ -38,6 +37,7 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone); // ✅ ใช้ NgZone เพื่อบังคับ Change Detection
 
   form!: FormGroup;
   contractId: string | null = null;
@@ -90,8 +90,11 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
       .getContract(id)
       .pipe(
         finalize(() => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
+          // ✅ ใช้ NgZone.run() เพื่อให้ Angular รับรู้การเปลี่ยนแปลงทันที
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          });
         }),
       )
       .subscribe({
@@ -112,7 +115,10 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
           });
 
           this.form.markAsPristine();
-          this.cdr.detectChanges();
+          // ✅ อัปเดต View หลังจาก patchValue
+          this.ngZone.run(() => {
+            this.cdr.detectChanges();
+          });
         },
         error: (error) => {
           console.error('Load contract error:', error);
@@ -122,17 +128,29 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
+  // ✅ เมธอดสำหรับนำทางกลับไปหน้ารายการสัญญา โดยใช้ projectId จากข้อมูลสัญญา
+  private navigateBack(): void {
+    const projectId = this.originalContract?.projectId;
+    if (projectId) {
+      // ส่ง projectId กลับไปเพื่อให้หน้ารายการแสดงสัญญาของโครงการนั้น
+      this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId } });
+    } else {
+      // ถ้าไม่มี projectId ไปหน้า list ทั่วไป
+      this.navigation.navigate(['/feature/pm/pmrt04']);
+    }
+  }
+
   onBack(): void {
     if (this.form.dirty) {
       this.dialog
         .confirm('ยืนยัน', 'คุณยังไม่ได้บันทึกข้อมูล ต้องการออกจากหน้านี้ใช่หรือไม่?')
         .then((confirmed) => {
           if (confirmed) {
-            this.navigation.navigate(['/feature/pm/pmrt04']);
+            this.navigateBack();
           }
         });
     } else {
-      this.navigation.navigate(['/feature/pm/pmrt04']);
+      this.navigateBack();
     }
   }
 
@@ -183,14 +201,22 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
           this.isSaving = true;
           this.service
             .save(newContract)
-            .pipe(finalize(() => (this.isSaving = false)))
+            .pipe(
+              finalize(() => {
+                // ✅ ใช้ NgZone.run() เพื่ออัปเดต isSaving และ View
+                this.ngZone.run(() => {
+                  this.isSaving = false;
+                  this.cdr.detectChanges();
+                });
+              }),
+            )
             .subscribe({
               next: () => {
                 this.dialog
                   .success('ต่อสัญญาสำเร็จ', `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`)
                   .then(() => {
                     this.form.markAsPristine();
-                    this.navigation.navigate(['/feature/pm/pmrt04']);
+                    this.navigateBack(); // ✅ กลับไปหน้ารายการสัญญา
                   });
               },
               error: (error) => {

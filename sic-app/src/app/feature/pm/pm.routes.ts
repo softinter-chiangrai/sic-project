@@ -1,7 +1,9 @@
 // src/app/feature/pm/pm.routes.ts
+
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
+import { projectGuard } from '../../core/guard/project.guard'; // ✅ import
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 
 export const PM_ROUTES: Routes = [
@@ -25,11 +27,11 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
 
-  // ===== Project =====
+  // ===== Project (ไม่ต้องใช้ projectGuard) =====
   {
     path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard], // ❌ ไม่ต้อง projectGuard
   },
   {
     path: 'pmrt02/new',
@@ -44,145 +46,146 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard],
   },
 
-  // ===== Project Dashboard =====
+  // ===== Project Dashboard (ต้องมีทั้ง customer และ project) =====
   {
     path: 'pmrt03',
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard], // ✅ ใช้ทั้งคู่
   },
 
   // ===== Contract =====
   {
     path: 'pmrt04',
     loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmrt04/new',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmrt04/:id/edit',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmrt04/renew/:id',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.pmrt04BComponent),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard], // ✅ ใช้ทั้งคู่
   },
+
   // ===== Phase =====
   {
     path: 'phase',
-    loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component), // note: ใช้ component เดียวกับ pmrt04 หรือเปลี่ยน?
-    canActivate: [customerGuard],
+    loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'phase/new',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'phase/:id/edit',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Requirement =====
   {
     path: 'requirement',
     loadComponent: () => import('./rt/pmrt05/pmrt05.component').then((m) => m.Pmrt05Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'requirement/new',
     loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'requirement/:id/edit',
     loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'requirement/:id/approval',
     loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Change Request =====
   {
     path: 'change-request',
     loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'change-request/new',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'change-request/:id/edit',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Specification =====
   {
     path: 'specification',
     loadComponent: () => import('./rt/pmrt10/pmrt10.component').then((m) => m.Pmrt10Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'specification/new',
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'specification/:id/edit',
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Design Review =====
   {
     path: 'design-review',
     loadComponent: () => import('./rt/pmrt11/pmrt11.component').then((m) => m.Pmrt11Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'design-review/new',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'design-review/:id/edit',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Task =====
   {
     path: 'task',
     loadComponent: () => import('./rt/pmrt12/pmrt12.component').then((m) => m.Pmrt12Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'task/new',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'task/:id/edit',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'my-tasks',
+    path: 'my-tasks', // ✅ ไม่ต้อง projectGuard (งานของตัวเอง)
     loadComponent: () => import('./rt/pmrt13/pmrt13.component').then((m) => m.Pmrt13Component),
     canActivate: [customerGuard],
   },
@@ -203,191 +206,191 @@ export const PM_ROUTES: Routes = [
   {
     path: 'gantt',
     loadComponent: () => import('./rt/pmrt14/pmrt14.component').then((m) => m.Pmrt14Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'gantt/:id/update',
     loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Test Case =====
   {
     path: 'test-case',
     loadComponent: () => import('./rt/pmrt16/pmrt16.component').then((m) => m.Pmrt16Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'test-case/new',
     loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'test-case/:id/edit',
     loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'test-case/:id/view',
     loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'test-execution/:id',
     loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Bug =====
   {
     path: 'bug',
     loadComponent: () => import('./rt/pmrt17/pmrt17.component').then((m) => m.Pmrt17Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'bug/new',
     loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'bug/:id/edit',
     loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'bug/:id/view',
     loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Delivery =====
   {
     path: 'delivery',
     loadComponent: () => import('./rt/pmrt18/pmrt18.component').then((m) => m.Pmrt18Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'delivery/new',
     loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'delivery/:id/edit',
     loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'delivery/:id/view',
     loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== User Manual =====
   {
     path: 'manual',
     loadComponent: () => import('./rt/pmrt19/pmrt19.component').then((m) => m.Pmrt19Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'manual/new',
     loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'manual/:id/edit',
     loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'manual/:id/view',
     loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Invoice =====
   {
     path: 'invoice',
     loadComponent: () => import('./rt/pmrt20/pmrt20.component').then((m) => m.Pmrt20Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'invoice/new',
     loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'invoice/:id/edit',
     loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'invoice/:id/view',
     loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Payment =====
   {
     path: 'payment',
     loadComponent: () => import('./rt/pmrt20A/pmrt20A.component').then((m) => m.Pmrt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'payment/new',
     loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'payment/:id/edit',
     loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'payment/:id/view',
     loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== MA Ticket =====
   {
     path: 'ma-ticket',
     loadComponent: () => import('./rt/pmrt21/pmrt21.component').then((m) => m.Pmrt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'ma-ticket/new',
     loadComponent: () => import('./dt/pmdt21/pmdt21.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'ma-ticket/:id/edit',
     loadComponent: () => import('./dt/pmdt21/pmdt21.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'ma-ticket/:id/view',
     loadComponent: () => import('./dt/pmdt21/pmdt21.component').then((m) => m.Pmdt21Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Renewal =====
   {
     path: 'renewal',
     loadComponent: () => import('./rt/pmrt22/pmrt22.component').then((m) => m.Pmrt22Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'renewal/:id',
     loadComponent: () => import('./dt/pmdt22/pmdt22.component').then((m) => m.Pmdt22Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'renewal/:id/view',
     loadComponent: () => import('./dt/pmdt22/pmdt22.component').then((m) => m.Pmdt22Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Approval Center =====
+  // ===== Approval Center (อาจไม่ต้อง projectGuard) =====
   {
     path: 'approval',
     loadComponent: () => import('./rt/pmrt23/pmrt23.component').then((m) => m.Pmrt23Component),
@@ -399,7 +402,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard],
   },
 
-  // ===== Dashboard =====
+  // ===== Dashboard (อาจไม่ต้อง projectGuard) =====
   {
     path: 'dashboard',
     loadComponent: () => import('./rt/pmrt24/pmrt24.component').then((m) => m.Pmrt24Component),
@@ -410,30 +413,30 @@ export const PM_ROUTES: Routes = [
   {
     path: 'version',
     loadComponent: () => import('./rt/pmrt25/pmrt25.component').then((m) => m.Pmrt25Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'version/new',
     loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'version/:id/edit',
     loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'version/:id/view',
     loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'version/history/:code',
     loadComponent: () => import('./rt/pmrt25/pmrt25.component').then((m) => m.Pmrt25Component),
-    canActivate: [customerGuard],
+    canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Audit Log =====
+  // ===== Audit Log (อาจไม่ต้อง projectGuard) =====
   {
     path: 'audit',
     loadComponent: () => import('./rt/pmrt26/pmrt26.component').then((m) => m.Pmrt26Component),
