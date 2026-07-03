@@ -20,12 +20,14 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 
 // ===== Model =====
+// src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
+
 export interface ContractModel {
   id?: string;
   contractNo: string;
   contractType: string;
-  customerId?: string; // ✅ เพิ่ม customerId (optional)
-  projectId: string; // ✅ จำเป็น
+  customerId?: string;
+  projectId: string;
   startDate: string | Date;
   endDate: string | Date;
   contractValue: number;
@@ -36,6 +38,9 @@ export interface ContractModel {
   isActive: boolean;
   state?: number;
   rowVersion?: number;
+  // ✅ เพิ่มตรงนี้
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 // ===== Form =====

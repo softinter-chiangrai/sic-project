@@ -75,6 +75,12 @@ export const PM_ROUTES: Routes = [
       import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.pmrt04BComponent),
     canActivate: [customerGuard],
   },
+  {
+    path: 'pmrt04/:id/view',
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04C/pmrt04C.component').then((m) => m.pmrt04CComponent),
+    canActivate: [customerGuard],
+  },
   // ===== Phase =====
   {
     path: 'phase',

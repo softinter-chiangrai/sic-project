@@ -1,0 +1,215 @@
+<!-- src/app/feature/pm/rt/pmrt04/pmrt04C/pmrt04C.component.html -->
+
+<!-- ===== LOADING ===== -->
+@if (isLoading()) {
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <div
+      class="w-14 h-14 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+  </div>
+}
+
+<!-- ===== ERROR ===== -->
+@if (error()) {
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <i class="bi bi-exclamation-triangle text-5xl text-[var(--crm-danger)]"></i>
+    <p class="text-lg font-medium text-[var(--text-active)]">{{ error() }}</p>
+    <button
+      (click)="goBack()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+    >
+      <i class="bi bi-arrow-left"></i>
+      กลับไปหน้ารายการ
+    </button>
+  </div>
+}
+
+<!-- ===== DETAIL ===== -->
+@if (contract(); as c) {
+  <div class="space-y-6 p-0.5">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button
+          (click)="goBack()"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+          title="กลับ"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+              {{ c.contractNo }}
+            </h1>
+            <span [class]="getStatusClass(c.signStatus) + ' status-badge'">
+              {{ getStatusText(c.signStatus) }}
+            </span>
+            <span [class]="isActiveClass(c.isActive)">
+              {{ isActive(c.isActive) }}
+            </span>
+          </div>
+          <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
+            <span>
+              <i class="bi bi-person"></i>
+              <button
+                (click)="goToCustomer()"
+                class="text-[var(--crm-primary)] hover:underline transition-colors"
+              >
+                {{ c.customerId || 'ไม่ระบุ' }}
+              </button>
+            </span>
+            <span>
+              <i class="bi bi-briefcase"></i>
+              <button
+                (click)="goToProject()"
+                class="text-[var(--crm-primary)] hover:underline transition-colors"
+              >
+                {{ c.projectId || 'ไม่ระบุ' }}
+              </button>
+            </span>
+            <span><i class="bi bi-calendar"></i> {{ formatDate(c.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="goToEdit()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-amber-600 border border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all"
+        >
+          <i class="bi bi-pencil"></i>
+          แก้ไข
+        </button>
+        <button
+          (click)="goToRenew()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[var(--crm-primary)] border border-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all"
+        >
+          <i class="bi bi-arrow-repeat"></i>
+          ต่อสัญญา
+        </button>
+        <button
+          (click)="goBack()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-x-lg"></i>
+          ปิด
+        </button>
+      </div>
+    </div>
+
+    <!-- ข้อมูลหลัก -->
+    <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-6 shadow-sm">
+      <div class="section-title">
+        <i class="bi bi-info-circle"></i>
+        ข้อมูลสัญญา
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="info-label">เลขที่สัญญา</span>
+          <span class="info-value">{{ c.contractNo }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">ประเภทสัญญา</span>
+          <span class="info-value">{{ c.contractType }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">สถานะลงนาม</span>
+          <span [class]="getStatusClass(c.signStatus) + ' status-badge'">
+            {{ getStatusText(c.signStatus) }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">สถานะการต่อสัญญา</span>
+          <span [class]="getRenewalStatusClass(c.renewalStatus) + ' status-badge'">
+            {{ getRenewalStatusText(c.renewalStatus) }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">วันที่เริ่ม</span>
+          <span class="info-value">{{ formatDate(c.startDate) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">วันที่สิ้นสุด</span>
+          <span class="info-value">{{ formatDate(c.endDate) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">มูลค่าสัญญา</span>
+          <span class="info-value text-lg font-bold text-[var(--crm-primary)]">
+            {{ formatCurrency(c.contractValue) }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="info-label">สถานะ</span>
+          <span class="info-value" [class]="isActiveClass(c.isActive)">
+            {{ isActive(c.isActive) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- เงื่อนไขการชำระเงิน และขอบเขตงาน -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- เงื่อนไขการชำระเงิน -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-6 shadow-sm">
+        <div class="section-title !text-base">
+          <i class="bi bi-credit-card"></i>
+          เงื่อนไขการชำระเงิน
+        </div>
+        @if (c.paymentTerms) {
+          <p class="text-sm text-[var(--text)] whitespace-pre-line">{{ c.paymentTerms }}</p>
+        } @else {
+          <p class="text-sm text-[var(--text-muted)] italic">ไม่มีข้อมูล</p>
+        }
+      </div>
+
+      <!-- สถานะการต่อสัญญา -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-6 shadow-sm">
+        <div class="section-title !text-base">
+          <i class="bi bi-arrow-repeat"></i>
+          การต่อสัญญา
+        </div>
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-sm text-[var(--text-muted)]">สถานะการต่อ</span>
+            <span [class]="getRenewalStatusClass(c.renewalStatus) + ' status-badge'">
+              {{ getRenewalStatusText(c.renewalStatus) }}
+            </span>
+          </div>
+          @if (c.renewalStatus === 'ต่อแล้ว') {
+            <div class="flex justify-between text-sm">
+              <span class="text-[var(--text-muted)]">หมายเหตุ</span>
+              <span class="text-[var(--text-active)]">ต่อสัญญาเรียบร้อยแล้ว</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ขอบเขตงาน -->
+    <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-6 shadow-sm">
+      <div class="section-title !text-base">
+        <i class="bi bi-file-text"></i>
+        สรุปขอบเขตงาน
+      </div>
+      @if (c.scopeSummary) {
+        <p class="text-sm text-[var(--text)] whitespace-pre-line">{{ c.scopeSummary }}</p>
+      } @else {
+        <p class="text-sm text-[var(--text-muted)] italic">ไม่มีข้อมูล</p>
+      }
+    </div>
+
+    <!-- ข้อมูลระบบ (Timestamp) -->
+    <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
+      <div class="flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
+        <span>สร้างเมื่อ: {{ formatDate(c.createdAt) }}</span>
+        @if (c.rowVersion !== undefined) {
+          <span>เวอร์ชัน: {{ c.rowVersion }}</span>
+        }
+      </div>
+    </div>
+  </div>
+}
