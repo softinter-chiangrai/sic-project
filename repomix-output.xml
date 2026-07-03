@@ -48526,7 +48526,7 @@ public class PmCustomerRequest {
     private String zipCode;
 
     @Size(max = 50)
-    private String customerType;
+    private String personType;
 
     private Boolean isActive = true;
 
@@ -48992,7 +48992,7 @@ public class PmCustomerResponse {
     private UUID subDistrictId;
     private String subDistrictName;
     private String zipCode;
-    private String customerType;
+    private String personType;
     private Boolean isActive;
     private String remark;
     private Instant createdDate;
@@ -49504,7 +49504,7 @@ public class PmCustomer extends BaseBusinessEntity {
     private String zipCode;
 
     @Column(name = "customer_type", length = 50)
-    private String customerType;
+    private String personType;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -50216,7 +50216,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
         customer.setAddressEn(request.getAddressEn());
         customer.setAddressLocal(request.getAddressLocal());
         customer.setZipCode(request.getZipCode());
-        customer.setCustomerType(request.getCustomerType());
+        customer.setpersonType(request.getpersonType());
         customer.setIsActive(request.getIsActive());
         customer.setRemark(request.getRemark());
         customer.setUploadGroupId(request.getUploadGroupId());
@@ -50306,7 +50306,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
                         ? LocalizationHelper.getSubDistrictName(customer.getSubDistrict())
                         : null)
                 .zipCode(customer.getZipCode())
-                .customerType(customer.getCustomerType())
+                .personType(customer.getpersonType())
                 .isActive(customer.getIsActive())
                 .remark(customer.getRemark())
                 .createdDate(customer.getCreatedDate())
@@ -57120,7 +57120,7 @@ export class Pmrt01AForm {
       subDistrictId: fb.control(null),
       countryId: fb.control(null),
       zipCode: fb.control(null, [Validators.maxLength(20)]),
-      customerType: fb.control(null, [Validators.maxLength(50)]),
+      personType: fb.control(null, [Validators.maxLength(50)]),
       remark: fb.control(null, [Validators.maxLength(500)]),
       isActive: fb.control(true),
       uploadGroupId: fb.control(null),
@@ -57156,7 +57156,7 @@ export interface CustomerModel {
   subDistrictId?: string;
   countryId?: string;
   zipCode?: string;
-  customerType?: string;
+  personType?: string;
   remark?: string;
   isActive?: boolean;
 

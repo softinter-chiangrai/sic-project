@@ -1,18 +1,32 @@
 import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  effect,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
+import { DialogService } from '../../services/dialog.service';
 import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
-import { TranslateModule } from '@ngx-translate/core';
-import { DialogService } from '../../services/dialog.service';
+import { SicCardComponent } from '../sic-card/sic-card.component';
+import {
+  BusinessInfoModel,
+  MenuItemModel,
+  ProfileInfoModel,
+  SidebarItem,
+} from './sic-sidebar.model';
 import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
-import { BusinessInfoModel, MenuItemModel, MenuActionFlags, ProfileInfoModel, SidebarItem } from './sic-sidebar.model';
-import { Router, RouterLink, NavigationEnd } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
-import { SicCardComponent } from "../sic-card/sic-card.component";
-import { FormsModule } from "@angular/forms";
 
 interface BreadcrumbItem {
   label: string;
@@ -24,7 +38,14 @@ interface BreadcrumbItem {
 @Component({
   selector: 'sic-sidebar',
   standalone: true,
-  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet, SicCardComponent, FormsModule],
+  imports: [
+    TooltipDirective,
+    TranslateModule,
+    RouterLink,
+    NgTemplateOutlet,
+    SicCardComponent,
+    FormsModule,
+  ],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
   host: {
@@ -40,14 +61,15 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly service = inject(SicSidebarService);
   public readonly router = inject(Router);
 
+  private readonly ngZone = inject(NgZone);
   private clockTimer?: ReturnType<typeof setInterval>;
   private routerSubscription?: Subscription;
 
-  isBack:boolean = false;
-  isSearch:boolean = false; 
-  isAdd:boolean = false;
-  isSave:boolean = false;
-  isPrint:boolean = false;
+  isBack: boolean = false;
+  isSearch: boolean = false;
+  isAdd: boolean = false;
+  isSave: boolean = false;
+  isPrint: boolean = false;
 
   /** Raw menu items from API — kept so we can look up flags on route change */
   private rawMenuItems: MenuItemModel[] = [];
@@ -109,10 +131,17 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
         this.updateActionFlags();
       });
 
-    setTimeout(() => {
-      this.updateClock();
-      this.clockTimer = setInterval(() => this.updateClock(), 1000);
-    }, 0);
+    // 🔥 แก้ไขตรงนี้: ครอบด้วย runOutsideAngular เพื่อไม่ให้นาฬิกาไปกวน Change Detection หน้าอื่น
+    this.ngZone.runOutsideAngular(() => {
+      setTimeout(() => {
+        // เมื่อต้องการอัปเดตค่า Signal (UI ของตัวนาฬิกาเอง) ค่อยดึงกลับเข้าโซนสั้นๆ
+        this.ngZone.run(() => this.updateClock());
+
+        this.clockTimer = setInterval(() => {
+          this.ngZone.run(() => this.updateClock());
+        }, 1000);
+      }, 0);
+    });
   }
 
   loadInfomations(): void {
@@ -147,11 +176,11 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       : null;
 
     const f = flags ?? this.service.DEFAULT_FLAGS;
-    this.isBack   = f.isBack;
+    this.isBack = f.isBack;
     this.isSearch = f.isSearch;
-    this.isAdd    = f.isAdd;
-    this.isSave   = f.isSave;
-    this.isPrint  = f.isPrint;
+    this.isAdd = f.isAdd;
+    this.isSave = f.isSave;
+    this.isPrint = f.isPrint;
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -164,9 +193,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       label: item.name,
       icon: item.icon ?? 'bi-circle',
       path: item.path ?? undefined,
-      children: item.children?.length
-        ? item.children.map((c) => this.mapMenuItem(c))
-        : undefined,
+      children: item.children?.length ? item.children.map((c) => this.mapMenuItem(c)) : undefined,
     };
   }
 
@@ -205,7 +232,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       icon: 'bi-house-door',
     };
     const activeTrail = this.findActiveTrail(this.mainMenu(), this.currentUrl()) ?? [];
-    const trailWithoutDashboard = activeTrail.filter((item) => item.code !== this.DASHBOARD_ITEM.code);
+    const trailWithoutDashboard = activeTrail.filter(
+      (item) => item.code !== this.DASHBOARD_ITEM.code,
+    );
     const breadcrumbItems: BreadcrumbItem[] = [home];
 
     for (const item of trailWithoutDashboard) {
@@ -225,7 +254,11 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     );
   }
 
-  private findActiveTrail(items: SidebarItem[], url: string, trail: SidebarItem[] = []): SidebarItem[] | null {
+  private findActiveTrail(
+    items: SidebarItem[],
+    url: string,
+    trail: SidebarItem[] = [],
+  ): SidebarItem[] | null {
     for (const item of items) {
       const nextTrail = [...trail, item];
       if (item.path && this.isPathActive(item.path, url)) {
@@ -297,9 +330,15 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     return this.expandedMenus().includes(code);
   }
 
-  openMobileSidebar(): void { this.isMobileSidebarOpen.set(true); }
-  closeMobileSidebar(): void { this.isMobileSidebarOpen.set(false); }
-  toggleTheme(): void { this.themeService.toggleDark(); }
+  openMobileSidebar(): void {
+    this.isMobileSidebarOpen.set(true);
+  }
+  closeMobileSidebar(): void {
+    this.isMobileSidebarOpen.set(false);
+  }
+  toggleTheme(): void {
+    this.themeService.toggleDark();
+  }
 
   toggleLanguage(): void {
     const next: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';

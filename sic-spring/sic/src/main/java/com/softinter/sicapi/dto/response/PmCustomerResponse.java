@@ -40,7 +40,7 @@ public class PmCustomerResponse {
     private UUID subDistrictId;
     private String subDistrictName;
     private String zipCode;
-    private String customerType;
+    private String personType;
     private Boolean isActive;
     private String remark;
     private Instant createdDate;

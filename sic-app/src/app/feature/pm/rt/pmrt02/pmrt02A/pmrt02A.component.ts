@@ -1,6 +1,6 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -62,7 +62,8 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private readonly fb = inject(FormBuilder);
   private projectService = inject(Pmrt02AService);
   private customerState = inject(CustomerStateService);
-   private navigation = inject(NavigationService);
+  private navigation = inject(NavigationService);
+  private cdr = inject(ChangeDetectorRef);
 
   form!: FormGroup;
   isEdit = false;
@@ -144,7 +145,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading = true;
     this.projectService
       .getById(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
+    }))
       .subscribe({
         next: (data: ProjectModel) => {
           this.form.patchValue(data);

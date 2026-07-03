@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -29,25 +29,7 @@ import { ContractModel, Pmrt04AService } from '../pmrt04A/pmrt04A.component';
     SicInputAreaComponent,
   ],
   templateUrl: './pmrt04B.component.html',
-  styles: [
-    `
-      .info-label {
-        @apply text-xs text-[var(--text-muted)] uppercase tracking-wider;
-      }
-      .info-value {
-        @apply text-sm font-medium text-[var(--text-active)];
-      }
-      .divider {
-        @apply border-t border-[var(--border)] my-4;
-      }
-      .section-title {
-        @apply text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2;
-      }
-      .section-title i {
-        @apply text-[var(--crm-primary)];
-      }
-    `,
-  ],
+  // ❌ ลบ styles array ออก เพราะใช้ Tailwind ใน HTML แทน
 })
 export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
@@ -55,6 +37,7 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private service = inject(Pmrt04AService);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
+  private cdr = inject(ChangeDetectorRef);
 
   form!: FormGroup;
   contractId: string | null = null;
@@ -105,7 +88,12 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
     this.isLoading = true;
     this.service
       .getContract(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }),
+      )
       .subscribe({
         next: (data) => {
           this.originalContract = data;
@@ -124,6 +112,7 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
           });
 
           this.form.markAsPristine();
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Load contract error:', error);
@@ -158,7 +147,6 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
     const original = this.originalContract;
     if (!original) return;
 
-    // ✅ แปลง string | Date → string ที่ปลอดภัย
     const startDateStr =
       formValue.newStartDate instanceof Date
         ? formValue.newStartDate.toISOString().split('T')[0]
@@ -170,10 +158,10 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
 
     const newContract: ContractModel = {
       ...original,
-      id: undefined, // ให้ backend สร้าง ID ใหม่
+      id: undefined,
       contractNo: `${original.contractNo}-R`,
-      startDate: startDateStr, // ✅ string
-      endDate: endDateStr, // ✅ string
+      startDate: startDateStr,
+      endDate: endDateStr,
       contractValue: formValue.newContractValue,
       renewalStatus: formValue.renewalStatus,
       isActive: true,
@@ -213,7 +201,6 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
-  // ✅ แก้ไข: รองรับทั้ง string และ Date
   formatDate(dateStr: string | Date | undefined): string {
     if (!dateStr) return '-';
     try {

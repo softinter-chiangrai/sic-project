@@ -35,3 +35,11 @@ testuser1 รหัส 12345
 sk-7364673d9657412a812848ca606c0d56
 
 npx repomix
+
+
+private cdr = inject(ChangeDetectorRef);
+
+.pipe(finalize(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
+    }))

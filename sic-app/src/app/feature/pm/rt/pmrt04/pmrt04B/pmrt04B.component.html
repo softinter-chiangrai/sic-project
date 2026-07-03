@@ -34,52 +34,52 @@
       <div class="space-y-6">
         <!-- ข้อมูลสัญญาเดิม -->
         <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
-          <div class="section-title">
-            <i class="bi bi-file-earmark-text"></i>
+          <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+            <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
             ข้อมูลสัญญาเดิม
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p class="info-label">เลขที่สัญญา</p>
-              <p class="info-value">{{ originalContract.contractNo }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">เลขที่สัญญา</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.contractNo }}</p>
             </div>
             <div>
-              <p class="info-label">ประเภท</p>
-              <p class="info-value">{{ originalContract.contractType }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ประเภท</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.contractType }}</p>
             </div>
             <div>
-              <p class="info-label">ลูกค้า</p>
-              <p class="info-value">{{ originalContract.customerId || '-' }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ลูกค้า</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.customerId || '-' }}</p>
             </div>
             <div>
-              <p class="info-label">โครงการ</p>
-              <p class="info-value">{{ originalContract.projectId || '-' }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">โครงการ</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.projectId || '-' }}</p>
             </div>
             <div>
-              <p class="info-label">วันที่เริ่ม</p>
-              <p class="info-value">{{ formatDate(originalContract.startDate) }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่เริ่ม</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ formatDate(originalContract.startDate) }}</p>
             </div>
             <div>
-              <p class="info-label">วันที่สิ้นสุด</p>
-              <p class="info-value">{{ formatDate(originalContract.endDate) }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่สิ้นสุด</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ formatDate(originalContract.endDate) }}</p>
             </div>
             <div>
-              <p class="info-label">มูลค่า</p>
-              <p class="info-value">{{ formatCurrency(originalContract.contractValue) }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">มูลค่า</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ formatCurrency(originalContract.contractValue) }}</p>
             </div>
             <div>
-              <p class="info-label">สถานะการต่อ</p>
-              <p class="info-value">{{ originalContract.renewalStatus || 'ยังไม่ต่อ' }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">สถานะการต่อ</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.renewalStatus || 'ยังไม่ต่อ' }}</p>
             </div>
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="border-t border-[var(--border)] my-4"></div>
 
         <!-- ข้อมูลสัญญาใหม่ -->
         <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
-          <div class="section-title">
-            <i class="bi bi-pencil-square"></i>
+          <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+            <i class="bi bi-pencil-square text-[var(--crm-primary)]"></i>
             ข้อมูลสัญญาใหม่
           </div>
 

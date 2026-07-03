@@ -23,6 +23,17 @@
         </sic-profile>
         <p class="text-center text-xs text-[var(--text-muted)] mt-2">คลิกเพื่ออัปโหลดรูปโปรไฟล์</p>
       </div>
+      <!-- ✅ ประเภทลูกค้า (บุคคลธรรมดา / นิติบุคคล) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+      >
+        <sic-radio
+          formControlName="personType"
+          direction="horizontal"
+          alignment="center"
+          [apiUrl]="service.apiGetLovPersonType"
+        ></sic-radio>
+      </div>
 
       <!-- Customer Code -->
       <div
@@ -178,11 +189,7 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input
-          label="รหัสไปรษณีย์"
-          formControlName="zipCode"
-          placeholder="10110"
-        ></sic-input>
+        <sic-input label="รหัสไปรษณีย์" formControlName="zipCode" placeholder="10110"></sic-input>
       </div>
 
       <!-- Email -->
@@ -215,11 +222,7 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input
-          label="Line ID"
-          formControlName="lineId"
-          placeholder="@lineid"
-        ></sic-input>
+        <sic-input label="Line ID" formControlName="lineId" placeholder="@lineid"></sic-input>
       </div>
 
       <!-- Remark -->

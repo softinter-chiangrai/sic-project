@@ -56,7 +56,7 @@ public class PmCustomerRequest {
     private String zipCode;
 
     @Size(max = 50)
-    private String customerType;
+    private String personType;
 
     private Boolean isActive = true;
 

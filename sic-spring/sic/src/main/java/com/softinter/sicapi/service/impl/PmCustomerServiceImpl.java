@@ -1,5 +1,15 @@
 package com.softinter.sicapi.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.softinter.sicapi.dto.request.PmCustomerRequest;
 import com.softinter.sicapi.dto.response.PmCustomerResponse;
 import com.softinter.sicapi.entity.db.DbDistrict;
@@ -16,16 +26,8 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.PmCustomerService;
 import com.softinter.sicapi.util.LocalizationHelper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -136,7 +138,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
         customer.setAddressEn(request.getAddressEn());
         customer.setAddressLocal(request.getAddressLocal());
         customer.setZipCode(request.getZipCode());
-        customer.setCustomerType(request.getCustomerType());
+        customer.setPersonType(request.getPersonType());
         customer.setIsActive(request.getIsActive());
         customer.setRemark(request.getRemark());
         customer.setUploadGroupId(request.getUploadGroupId());
@@ -226,7 +228,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
                         ? LocalizationHelper.getSubDistrictName(customer.getSubDistrict())
                         : null)
                 .zipCode(customer.getZipCode())
-                .customerType(customer.getCustomerType())
+                .personType(customer.getPersonType())
                 .isActive(customer.getIsActive())
                 .remark(customer.getRemark())
                 .createdDate(customer.getCreatedDate())

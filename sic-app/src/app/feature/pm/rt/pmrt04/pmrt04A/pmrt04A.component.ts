@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, Injectable, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -122,6 +122,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
    private navigation = inject(NavigationService);
    private projectService = inject(Pmrt02Service); 
+    private cdr = inject(ChangeDetectorRef); 
 
   form!: FormGroup;
   isEdit = false;
@@ -150,14 +151,14 @@ ngOnInit(): void {
 
     this.projectId = projectId;
 
-    // ✅ โหลด project เพื่อเอา customerId
     this.projectService.getProject(projectId).subscribe({
       next: (project) => {
         this.customerId = project.customerId;
-        this.form.patchValue({ 
+        this.form.patchValue({
           projectId: projectId,
-          customerId: project.customerId  // ใส่ในฟอร์ม (เผื่อบันทึก)
+          customerId: project.customerId
         });
+        this.cdr.detectChanges(); 
       },
       error: (err) => {
         console.error('Error loading project:', err);
@@ -167,7 +168,6 @@ ngOnInit(): void {
     });
   });
 
-  // ส่วนแก้ไข (ถ้ามี id ใน params)
   this.route.params.subscribe((params) => {
     const id = params['id'];
     if (id) {
@@ -181,14 +181,16 @@ ngOnInit(): void {
     this.form = Pmrt04AForm.createForm(this.fb);
   }
 
-  loadContract(id: string) {
+ loadContract(id: string) {
     this.isLoading = true;
     this.service
       .getContract(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        this.cdr.detectChanges(); // ✅ บังคับให้อัปเดต View
+      }))
       .subscribe({
         next: (data) => {
-          // ✅ ถ้าข้อมูลมี customerId ให้เก็บไว้
           if (data.customerId) {
             this.customerId = data.customerId;
           }
@@ -196,7 +198,9 @@ ngOnInit(): void {
             this.projectId = data.projectId;
           }
           this.form.patchValue(data);
+          this.form.markAsPristine();
           console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
+          this.cdr.detectChanges(); // ✅ อัปเดต View ทันที
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);

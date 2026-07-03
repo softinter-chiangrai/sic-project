@@ -1,15 +1,21 @@
 package com.softinter.sicapi.entity.pm;
 
+import java.util.UUID;
+
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import com.softinter.sicapi.entity.db.DbDistrict;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "pm_customer")
@@ -54,8 +60,8 @@ public class PmCustomer extends BaseBusinessEntity {
     @Column(name = "zip_code", length = 20)
     private String zipCode;
 
-    @Column(name = "customer_type", length = 50)
-    private String customerType;
+    @Column(name = "person_type") 
+    private String personType;
 
     @Column(name = "is_active")
     private Boolean isActive = true;

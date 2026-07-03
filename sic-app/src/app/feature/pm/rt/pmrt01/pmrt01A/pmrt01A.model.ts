@@ -1,12 +1,12 @@
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.model.ts
 
-import type { SicFromData } from "../../../../../core/model/sic-from-data";
-import type { StorageUploadReference } from "../../../../../core/services/chat.service";
-
+import type { SicFromData } from '../../../../../core/model/sic-from-data';
+import type { StorageUploadReference } from '../../../../../core/services/chat.service';
 
 export interface CustomerModel {
   id?: string;
   customerCode: string;
+  personType?: string;
   taxId?: string;
   companyNameEn: string;
   companyNameLocal: string;
@@ -21,7 +21,6 @@ export interface CustomerModel {
   subDistrictId?: string;
   countryId?: string;
   zipCode?: string;
-  customerType?: string;
   remark?: string;
   isActive?: boolean;
 
