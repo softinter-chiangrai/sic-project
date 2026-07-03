@@ -9,6 +9,8 @@ import { delay, finalize } from 'rxjs/operators';
 
 import { DialogService } from '../../../../core/services/dialog.service';
 import { environment } from '../../../../../environments/environment';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 // ===== Interfaces =====
 export interface ProjectDashboard {
@@ -77,6 +79,8 @@ export class Pmrt03Component implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected isLoading = signal(false);
@@ -87,17 +91,31 @@ export class Pmrt03Component implements OnInit {
   private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Lifecycle =====
-  ngOnInit(): void {
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.projectId.set(id);
-        this.loadDashboard(id);
-      } else {
-        this.router.navigate(['/feature/pm/pmrt02']);
-      }
-    });
-  }
+ // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
+
+ngOnInit(): void {
+  // ✅ อ่านจาก queryParams แทน params
+  this.route.queryParams.subscribe((params) => {
+    const projectId = params['projectId'];
+    const customerId = params['customerId'];
+
+    // ตรวจสอบว่ามี projectId หรือไม่
+    if (!projectId) {
+      this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+      return;
+    }
+
+    // เก็บ customerId ไว้ใน State (เผื่อใช้)
+    if (customerId) {
+      this.customerState.setCustomer(customerId);
+    }
+
+    // ตั้งค่า projectId และโหลดข้อมูล
+    this.projectId.set(projectId);
+    this.loadDashboard(projectId);
+  });
+}
 
   // ===== Load Data =====
   loadDashboard(id: string) {
@@ -115,7 +133,7 @@ export class Pmrt03Component implements OnInit {
           console.error('Load project dashboard error:', err);
           this.error.set('ไม่สามารถโหลดข้อมูลโครงการได้');
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการหรือเกิดข้อผิดพลาด');
-          this.router.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/pmrt02']);
         },
       });
   }
@@ -166,49 +184,49 @@ export class Pmrt03Component implements OnInit {
   // ===== Navigation Actions =====
   goToEdit() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/pmrt02', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit']);
   }
 
   goToPhases() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/phase'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/phase'], { queryParams: { projectId: id } });
   }
 
   goToTasks() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
   }
 
   goToRequirements() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
   }
 
   goToBugs() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
   }
 
   goToGantt() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
   }
 
   goToContracts() {
     const id = this.projectId();
-    this.router.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
   }
 
   goToPhaseDetail(phaseId: string) {
-    this.router.navigate(['/feature/pm/phase', phaseId, 'edit']);
+    this.navigation.navigate(['/feature/pm/phase', phaseId, 'edit']);
   }
 
   goToTaskDetail(taskId: string) {
-    this.router.navigate(['/feature/pm/task', taskId, 'edit']);
+    this.navigation.navigate(['/feature/pm/task', taskId, 'edit']);
   }
 
   goBack() {
-    this.router.navigate(['/feature/pm/pmrt02']);
+    this.navigation.navigate(['/feature/pm/pmrt02']);
   }
 
   // ===== Utility =====

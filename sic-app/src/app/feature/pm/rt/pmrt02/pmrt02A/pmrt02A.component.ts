@@ -6,14 +6,15 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt02AService } from './pmrt02A.service';
-import { CustomerStateService } from '../../pmrt01/customer-state.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
 
 // ===== Interface =====
 export interface ProjectModel {
@@ -61,6 +62,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private readonly fb = inject(FormBuilder);
   private projectService = inject(Pmrt02AService);
   private customerState = inject(CustomerStateService);
+   private navigation = inject(NavigationService);
 
   form!: FormGroup;
   isEdit = false;
@@ -71,11 +73,26 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   customerName = signal<string>('');
 
   statusOptions = [
-    'Prospect', 'Contract Drafting', 'Contract Signed', 'Requirement Gathering',
-    'Requirement Approval', 'System Analysis', 'DFD Design', 'ER Design',
-    'Specification Design', 'Specification Approval', 'Planning', 'Development',
-    'Internal Testing', 'UAT', 'Bug Fixing', 'Ready for Delivery', 'Delivered',
-    'Invoicing', 'Closed', 'MA Active',
+    'Prospect',
+    'Contract Drafting',
+    'Contract Signed',
+    'Requirement Gathering',
+    'Requirement Approval',
+    'System Analysis',
+    'DFD Design',
+    'ER Design',
+    'Specification Design',
+    'Specification Approval',
+    'Planning',
+    'Development',
+    'Internal Testing',
+    'UAT',
+    'Bug Fixing',
+    'Ready for Delivery',
+    'Delivered',
+    'Invoicing',
+    'Closed',
+    'MA Active',
   ];
   priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
@@ -125,8 +142,9 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   loadProject(id: string) {
     this.isLoading = true;
-    this.projectService.getById(id)
-      .pipe(finalize(() => this.isLoading = false))
+    this.projectService
+      .getById(id)
+      .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (data: ProjectModel) => {
           this.form.patchValue(data);
@@ -137,54 +155,52 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         error: (err) => {
           console.error('Load project error:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการ');
-          this.router.navigate(['/feature/pm/pmrt02']);
-        }
+          this.navigation.navigate(['/feature/pm/pmrt02']);
+        },
       });
   }
 
   onBack(): void {
-  const customerId = this.form.get('customerId')?.value;
-  if (customerId) {
-    this.customerState.setCustomer(customerId);
-    this.router.navigate(['/feature/pm/pmrt02']);
-  } else {
-    this.router.navigate(['/feature/pm/pmrt02']);
-  }
-}
-
-submit() {
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-    return;
+    const customerId = this.form.get('customerId')?.value;
+    if (customerId) {
+      this.customerState.setCustomer(customerId);
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+    } else {
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+    }
   }
 
-  this.isSaving = true;
-  const data = this.form.value as ProjectModel;
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
 
-  // ✅ ตรวจสอบ before call
-  let request$;
-  if (this.isEdit && this.projectId) {
-    request$ = this.projectService.update(this.projectId, data);
-  } else {
-    request$ = this.projectService.create(data);
-  }
+    this.isSaving = true;
+    const data = this.form.value as ProjectModel;
 
-  request$
-    .pipe(finalize(() => this.isSaving = false))
-    .subscribe({
+    // ✅ ตรวจสอบ before call
+    let request$;
+    if (this.isEdit && this.projectId) {
+      request$ = this.projectService.update(this.projectId, data);
+    } else {
+      request$ = this.projectService.create(data);
+    }
+
+    request$.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย');
         // ✅ กลับไป pmrt02 พร้อม customerId (ใช้ CustomerStateService)
         const customerId = this.form.get('customerId')?.value;
         if (customerId) this.customerState.setCustomer(customerId);
-        this.router.navigate(['/feature/pm/pmrt02']);
+        this.navigation.navigate(['/feature/pm/pmrt02']);
       },
       error: (err) => {
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-      }
+      },
     });
-}
+  }
 
   pageDirty = () => this.form?.dirty ?? false;
 }

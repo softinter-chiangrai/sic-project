@@ -10,9 +10,10 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 import { PmCustomerProject, Pmrt02Service } from './pmrt02.service';
-import { CustomerStateService } from '../pmrt01/customer-state.service';
 
 @Component({
   selector: 'app-pmrt02',
@@ -27,6 +28,7 @@ export class Pmrt02Component implements OnInit {
   private service = inject(Pmrt02Service);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private navigation = inject(NavigationService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -95,29 +97,25 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
-  // ✅ ใช้ทั้ง queryParams และ Service
-  this.route.queryParams.subscribe((params) => {
-    let customerId = params['customerId'] || this.customerState.getCustomerId();
-    let customerName = params['customerName'] || this.customerState.getCustomerName();
+    this.route.queryParams.subscribe((params) => {
+      let customerId = params['customerId'] || this.customerState.getCustomerId();
 
-    if (!customerId) {
-      this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-      this.router.navigate(['/feature/pm/pmrt01']);
-      return;
-    }
+      if (!customerId) {
+        this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
+        this.navigation.navigate(['/feature/pm/pmrt01']);
+        return;
+      }
 
-    // ✅ เก็บไว้ใน Service (เผื่อ refresh)
-    this.customerState.setCustomer(customerId, customerName);
-    this.filterCustomerId.set(customerId);
-    this.filterCustomerName.set(customerName);
-    this.loadProjects();
-  });
-}
+      this.customerState.setCustomer(customerId);
+      this.filterCustomerId.set(customerId);
+      this.filterCustomerName.set('');
 
+      this.loadProjects();
+    });
+  }
   // ===== Load Data =====
   loadProjects() {
     this.isLoading.set(true);
-    // ✅ ส่ง page = currentPage() (เริ่มที่ 1) แทน currentPage() - 1
     const page = this.currentPage();
 
     this.service
@@ -126,7 +124,7 @@ export class Pmrt02Component implements OnInit {
         keyword: this.searchTerm() || undefined,
         startDate: this.filterStartDate() || undefined,
         endDate: this.filterEndDate() || undefined,
-        page: page, // ✅ 1-based
+        page: page,
         size: this.pageSize(),
         sortBy: this.sortBy(),
         sortDir: this.sortDir(),
@@ -215,22 +213,27 @@ export class Pmrt02Component implements OnInit {
   goToAdd() {
     const customerId = this.filterCustomerId();
     if (customerId) {
-      this.router.navigate(['/feature/pm/pmrt02/new'], { queryParams: { customerId } });
+      this.navigation.navigate(['/feature/pm/pmrt02/new'], { queryParams: { customerId } });
     } else {
-      this.router.navigate(['/feature/pm/pmrt02/new']);
+      this.navigation.navigate(['/feature/pm/pmrt02/new']);
     }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/pmrt02', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit']);
   }
 
-  goToView(id: string) {
-    this.router.navigate(['/feature/pm/pmrt03', id]);
-  }
+  goToView(projectId: string) {
+  this.navigation.navigate(['/feature/pm/pmrt03'], {
+    queryParams: {
+      projectId: projectId,        
+      customerId: this.filterCustomerId(),
+    },
+  });
+}
 
   goBackToCustomer() {
-    this.router.navigate(['/feature/pm/pmrt01']);
+    this.navigation.navigate(['/feature/pm/pmrt01']);
   }
 
   // ===== Utility =====

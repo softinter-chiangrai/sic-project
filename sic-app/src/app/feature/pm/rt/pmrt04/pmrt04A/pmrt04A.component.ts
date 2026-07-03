@@ -16,14 +16,15 @@ import { SicInputAreaComponent } from '../../../../../core/component/sic-input-a
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
 
 // ===== Model =====
 export interface ContractModel {
   id?: string;
   contractNo: string;
   contractType: string;
-  customerId?: string;        // ✅ เพิ่ม customerId (optional)
-  projectId: string;          // ✅ จำเป็น
+  customerId?: string; // ✅ เพิ่ม customerId (optional)
+  projectId: string; // ✅ จำเป็น
   startDate: string | Date;
   endDate: string | Date;
   contractValue: number;
@@ -113,6 +114,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   public service = inject(Pmrt04AService);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
+   private navigation = inject(NavigationService);
 
   form!: FormGroup;
   isEdit = false;
@@ -127,140 +129,140 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
-  this.initForm();
+    this.initForm();
 
-  // ✅ อ่าน customerId และ projectId จาก queryParams
-  this.route.queryParams.subscribe((params) => {
-    this.customerId = params['customerId'] || null;
-    this.projectId = params['projectId'] || null;
-    console.log('🔍 customerId from queryParams:', this.customerId);
-    console.log('🔍 projectId from queryParams:', this.projectId);
-    
-    // ✅ ถ้าไม่มี customerId ให้แจ้งเตือนและกลับไปหน้ารายการ
-    if (!this.customerId) {
-      this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
-      this.router.navigate(['/feature/pm/pmrt04']);
-      return;
-    }
+    // ✅ อ่าน customerId และ projectId จาก queryParams
+    this.route.queryParams.subscribe((params) => {
+      this.customerId = params['customerId'] || null;
+      this.projectId = params['projectId'] || null;
+      console.log('🔍 customerId from queryParams:', this.customerId);
+      console.log('🔍 projectId from queryParams:', this.projectId);
 
-    if (this.projectId) {
-      this.form.patchValue({ projectId: this.projectId });
-    }
-  });
+      // ✅ ถ้าไม่มี customerId ให้แจ้งเตือนและกลับไปหน้ารายการ
+      if (!this.customerId) {
+        this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
+        this.navigation.navigate(['/feature/pm/pmrt04']);
+        return;
+      }
 
-  this.route.params.subscribe((params) => {
-    const id = params['id'];
-    if (id) {
-      this.isEdit = true;
-      this.contractId = id;
-      this.loadContract(id);
-    }
-  });
-}
+      if (this.projectId) {
+        this.form.patchValue({ projectId: this.projectId });
+      }
+    });
+
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.contractId = id;
+        this.loadContract(id);
+      }
+    });
+  }
 
   initForm(): void {
     this.form = Pmrt04AForm.createForm(this.fb);
   }
 
   loadContract(id: string) {
-  this.isLoading = true;
-  this.service
-    .getContract(id)
-    .pipe(finalize(() => (this.isLoading = false)))
-    .subscribe({
-      next: (data) => {
-        // ✅ ถ้าข้อมูลมี customerId ให้เก็บไว้
-        if (data.customerId) {
-          this.customerId = data.customerId;
-        }
-        if (data.projectId) {
-          this.projectId = data.projectId;
-        }
-        this.form.patchValue(data);
-        console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
-      },
-      error: (error) => {
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
-        this.router.navigate(['/feature/pm/pmrt04']);
-      },
-    });
-}
+    this.isLoading = true;
+    this.service
+      .getContract(id)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          // ✅ ถ้าข้อมูลมี customerId ให้เก็บไว้
+          if (data.customerId) {
+            this.customerId = data.customerId;
+          }
+          if (data.projectId) {
+            this.projectId = data.projectId;
+          }
+          this.form.patchValue(data);
+          console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
+        },
+        error: (error) => {
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
+          this.navigation.navigate(['/feature/pm/pmrt04']);
+        },
+      });
+  }
 
   onBack(): void {
     if (this.projectId) {
-      this.router.navigate(['/feature/pm/pmrt04'], {
-        queryParams: { projectId: this.projectId }
+      this.navigation.navigate(['/feature/pm/pmrt04'], {
+        queryParams: { projectId: this.projectId },
       });
     } else if (this.customerId) {
-      this.router.navigate(['/feature/pm/pmrt04'], {
-        queryParams: { customerId: this.customerId }
+      this.navigation.navigate(['/feature/pm/pmrt04'], {
+        queryParams: { customerId: this.customerId },
       });
     } else {
-      this.router.navigate(['/feature/pm/pmrt04']);
+      this.navigation.navigate(['/feature/pm/pmrt04']);
     }
   }
 
   submit() {
-  // ✅ เพิ่ม log เพื่อดูค่าฟอร์ม
-  console.log('📋 Form Value:', this.form.value);
-  console.log('✅ Form Valid?', this.form.valid);
-  console.log('❌ Form Errors:', this.form.errors);
+    // ✅ เพิ่ม log เพื่อดูค่าฟอร์ม
+    console.log('📋 Form Value:', this.form.value);
+    console.log('✅ Form Valid?', this.form.valid);
+    console.log('❌ Form Errors:', this.form.errors);
 
-  // ✅ แสดง error ของแต่ละฟิลด์
-  Object.keys(this.form.controls).forEach((key) => {
-    const control = this.form.get(key);
-    if (control?.invalid) {
-      console.log(`❌ Field "${key}" is invalid:`, control.errors);
-      console.log(`   Value:`, control.value);
-    }
-  });
-
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-    return;
-  }
-
-  this.isSaving = true;
-  
-  // ✅ ดึงค่าจากฟอร์ม
-  const data = this.form.value as ContractModel;
-  
-  // ✅ สำคัญ: เพิ่ม customerId จาก queryParams ลงในข้อมูลที่ส่ง
-  if (this.customerId) {
-    data.customerId = this.customerId;
-  } else {
-    // ถ้าไม่มี customerId ให้แจ้งเตือน
-    this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
-    this.isSaving = false;
-    return;
-  }
-
-  console.log('📤 Sending data with customerId:', data);
-
-  this.service
-    .save(data)
-    .pipe(finalize(() => (this.isSaving = false)))
-    .subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          // ✅ กลับไปหน้ารายการสัญญาพร้อม projectId หรือ customerId
-          if (this.projectId) {
-            this.router.navigate(['/feature/pm/pmrt04'], {
-              queryParams: { projectId: this.projectId }
-            });
-          } else {
-            this.router.navigate(['/feature/pm/pmrt04'], {
-              queryParams: { customerId: this.customerId }
-            });
-          }
-        });
-      },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
-      },
+    // ✅ แสดง error ของแต่ละฟิลด์
+    Object.keys(this.form.controls).forEach((key) => {
+      const control = this.form.get(key);
+      if (control?.invalid) {
+        console.log(`❌ Field "${key}" is invalid:`, control.errors);
+        console.log(`   Value:`, control.value);
+      }
     });
-}
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      return;
+    }
+
+    this.isSaving = true;
+
+    // ✅ ดึงค่าจากฟอร์ม
+    const data = this.form.value as ContractModel;
+
+    // ✅ สำคัญ: เพิ่ม customerId จาก queryParams ลงในข้อมูลที่ส่ง
+    if (this.customerId) {
+      data.customerId = this.customerId;
+    } else {
+      // ถ้าไม่มี customerId ให้แจ้งเตือน
+      this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
+      this.isSaving = false;
+      return;
+    }
+
+    console.log('📤 Sending data with customerId:', data);
+
+    this.service
+      .save(data)
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
+            this.form.markAsPristine();
+            // ✅ กลับไปหน้ารายการสัญญาพร้อม projectId หรือ customerId
+            if (this.projectId) {
+              this.navigation.navigate(['/feature/pm/pmrt04'], {
+                queryParams: { projectId: this.projectId },
+              });
+            } else {
+              this.navigation.navigate(['/feature/pm/pmrt04'], {
+                queryParams: { customerId: this.customerId },
+              });
+            }
+          });
+        },
+        error: (error) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
 }

@@ -21,6 +21,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt01AForm } from './pmrt01A.form';
+import { NavigationService } from '../../../../../core/services/navigation.service';
 
 @Component({
   selector: 'app-pmrt01a',
@@ -44,8 +45,9 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   private router = inject(Router);
   public service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
-  private cdr = inject(ChangeDetectorRef); // ✅ ต้องมี
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
+   private navigation = inject(NavigationService);
 
   formCustomerData!: SicFromData<CustomerModel>;
   isEdit = false;
@@ -74,7 +76,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     this.businessId = localStorage.getItem('businessId') || '';
     if (!this.businessId) {
       this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
-      this.router.navigate(['/management/business']);
+      this.navigation.navigate(['/management/business']);
       return;
     }
 
@@ -127,7 +129,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
           this.isLoading = false;
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
-          this.router.navigate(['/feature/pm/pmrt01']);
+          this.navigation.navigate(['/feature/pm/pmrt01']);
         },
       });
   }
@@ -157,7 +159,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/pmrt01']);
+    this.navigation.navigate(['/feature/pm/pmrt01']);
   }
 
   submit() {
@@ -185,7 +187,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
             this.formCustomerData.markAsPristine();
-            this.router.navigate(['/feature/pm/pmrt01']);
+            this.navigation.navigate(['/feature/pm/pmrt01']);
           });
         },
         error: (err) => {
@@ -197,7 +199,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
             this.formCustomerData.markAsPristine();
-            this.router.navigate(['/feature/pm/pmrt01']);
+            this.navigation.navigate(['/feature/pm/pmrt01']);
           });
         },
         error: (err) => {

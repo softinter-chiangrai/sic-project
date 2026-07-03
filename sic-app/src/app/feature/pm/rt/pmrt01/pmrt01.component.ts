@@ -12,11 +12,12 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
-import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from './customer-state.service';
 
 @Component({
   selector: 'app-pmrt01',
@@ -30,17 +31,17 @@ export class Pmrt01Component implements OnInit {
   private service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
-
+  private navigation = inject(NavigationService);
 
   // ===== State =====
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('customerCode'); // ✅ เปลี่ยนเป็น customerCode
+  protected sortBy = signal('customerCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected customers = signal<CustomerModel[]>([]); // ✅ เปลี่ยนชื่อเป็น customers และใช้ CustomerModel
+  protected customers = signal<CustomerModel[]>([]);
   protected totalItems = signal(0);
   protected businessId = '';
 
@@ -100,12 +101,11 @@ export class Pmrt01Component implements OnInit {
   ngOnInit() {
     this.businessId = localStorage.getItem('businessId') || '';
     if (this.businessId) {
-      this.loadCustomers(); // ✅ เปลี่ยนชื่อเป็น loadCustomers
+      this.loadCustomers();
     }
   }
 
   loadCustomers() {
-    // ✅ เปลี่ยนชื่อเป็น loadCustomers
     this.isLoading.set(true);
     const page = this.currentPage() - 1;
     this.service
@@ -157,7 +157,7 @@ export class Pmrt01Component implements OnInit {
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/pmrt01/new']); // ✅ เปลี่ยน path ตาม routes
+     this.navigation.navigate(['/feature/pm/pmrt01/new']);
   }
 
   goToEdit(id: string | undefined) {
@@ -165,15 +165,13 @@ export class Pmrt01Component implements OnInit {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
       return;
     }
-    this.router.navigate(['/feature/pm/pmrt01', id, 'edit']); // ✅ เปลี่ยน path ตาม routes
+    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']); 
   }
 
   toggleActive(customer: CustomerModel) {
-    // ✅ เปลี่ยนพารามิเตอร์เป็น customer
     if (!customer.id) return;
     const updated = { ...customer, isActive: !customer.isActive };
     this.service.updateCustomer(customer.id, updated).subscribe({
-      // ✅ ใช้ updateCustomer
       next: () => {
         this.loadCustomers();
         this.dialog.success(
@@ -188,7 +186,6 @@ export class Pmrt01Component implements OnInit {
   }
 
   deleteCustomer(id: string | undefined) {
-    // ✅ เปลี่ยนชื่อเป็น deleteCustomer
     if (!id) {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
       return;
@@ -196,7 +193,6 @@ export class Pmrt01Component implements OnInit {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
       if (confirmed) {
         this.service.deleteCustomer(id).subscribe({
-          // ✅ ใช้ deleteCustomer
           next: () => {
             this.loadCustomers();
             this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
@@ -252,7 +248,7 @@ export class Pmrt01Component implements OnInit {
     return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
   }
   goToProjects(customer: CustomerModel) {
-  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-  this.router.navigate(['/feature/pm/pmrt02']);
-}
+    this.customerState.setCustomer(customer.id!, customer.companyNameEn);
+    this.navigation.navigate(['/feature/pm/pmrt02']);
+  }
 }

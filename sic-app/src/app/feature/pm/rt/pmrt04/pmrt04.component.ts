@@ -15,7 +15,8 @@ import { finalize, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Pmrt02Service } from '../pmrt02/pmrt02.service'; // ✅ เพิ่ม import
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 
 // ===== Interfaces =====
 export interface Contract {
@@ -58,7 +59,8 @@ export class Pmrt04Component implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
-  private projectService = inject(Pmrt02Service); // ✅ inject service
+  private projectService = inject(Pmrt02Service);
+  private navigation = inject(NavigationService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -66,7 +68,7 @@ export class Pmrt04Component implements OnInit {
   protected filterType = signal('all');
   protected filterCustomerId = signal<string | null>(null);
   protected filterCustomerName = signal<string>('');
-  protected filterProjectId = signal<string | null>(null); // ✅ เก็บ projectId ไว้
+  protected filterProjectId = signal<string | null>(null);
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('contractNo');
@@ -148,22 +150,27 @@ export class Pmrt04Component implements OnInit {
       .subscribe({
         next: (project) => {
           if (project) {
-            // ✅ ตั้งค่า customerId และ customerName จาก project
+            // กรณีมี projectId แต่ไม่มี customerId → ได้ project จาก API
             this.filterCustomerId.set(project.customerId);
             this.filterCustomerName.set(project.customerName);
             this.currentPage.set(1);
-            // loadContracts() ถูกเรียกใน finalize แล้ว
+            // loadContracts() ถูกเรียกใน finalize ของ switchMap แล้ว
           } else {
-            // ถ้าไม่มี project (มี customerId หรือไม่มีอะไรเลย) ให้โหลด contracts
-            if (!this.filterProjectId()) {
+            // ✅ กรณีมี customerId → โหลดทันที (ไม่ต้องสนใจ projectId)
+            if (this.filterCustomerId()) {
               this.loadContracts();
             }
+            // ถ้าไม่มีทั้ง customerId และ projectId → โหลดทั้งหมด
+            else if (!this.filterProjectId()) {
+              this.loadContracts();
+            }
+            // ถ้ามีแค่ projectId อย่างเดียว → switchMap จะเรียก project API และ load ใน finalize
           }
         },
         error: (err) => {
           console.error('Error fetching project:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
-          this.router.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/pmrt02']);
         },
       });
   }
@@ -288,37 +295,43 @@ export class Pmrt04Component implements OnInit {
       if (projectId) {
         queryParams.projectId = projectId;
       }
-      this.router.navigate(['/feature/pm/pmrt04/new'], {
+      this.navigation.navigate(['/feature/pm/pmrt04/new'], {
         queryParams,
       });
     } else {
       this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
-      this.router.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/pmrt02']);
     }
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/pmrt04', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.router.navigate(['/feature/pm/pmrt04', id, 'view']);
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
   }
 
   goBackToCustomer() {
     // ✅ ถ้ามี projectId ให้กลับไป pmrt02 (รายการโครงการ)
     if (this.filterProjectId()) {
-      this.router.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/pmrt02']);
     } else if (this.filterCustomerId()) {
-      this.router.navigate(['/feature/pm/pmrt01']);
+      this.navigation.navigate(['/feature/pm/pmrt01']);
     } else {
-      this.router.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/pmrt02']);
     }
   }
 
-  goToProject(projectId: string) {
-    this.router.navigate(['/feature/pm/pmrt03', projectId]);
-  }
+
+goToProject(projectId: string) {
+  this.navigation.navigate(['/feature/pm/pmrt03'], {
+    queryParams: {
+      projectId: projectId,       
+      customerId: this.filterCustomerId(),
+    },
+  });
+}
 
   // ===== Utility =====
   getStatusClass(status: string): string {

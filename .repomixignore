@@ -43,6 +43,7 @@ public/images/
 *.gitignore
 *.md
 *.json
+*.gitattributes
 
 # ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
 **/Migrations/
