@@ -43,3 +43,5 @@ private cdr = inject(ChangeDetectorRef);
       this.isLoading = false;
       this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
     }))
+
+git reset --hard 2f0b6fd8510c4bf251a53aa66e16355e6a994b5a

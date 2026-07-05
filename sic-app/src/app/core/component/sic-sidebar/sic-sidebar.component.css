@@ -19,8 +19,8 @@
   justify-content: space-between;
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(12px);
+  background: var(--bg) !important; /* ทึบ */
+  backdrop-filter: none !important; /* ลบเบลอ */
 }
 
 .brand,
@@ -94,7 +94,8 @@
   width: min(18rem, calc(100vw - 2rem));
   height: 100vh;
   min-height: 100vh;
-  background: var(--sidebar);
+  background: var(--sidebar) !important; /* ทึบ */
+  backdrop-filter: none !important; /* ลบเบลอ */
   border-right: 1px solid var(--border);
   transform: translateX(-100%);
   transition: transform 0.25s ease;
@@ -124,6 +125,7 @@
 .quick-section,
 .user-profile-section {
   border-bottom: 1px solid var(--border);
+  background: var(--sidebar) !important; /* ทึบ */
 }
 
 .sidebar-header {
@@ -133,6 +135,7 @@
 
 .sidebar-search-wrap {
   padding: 0.75rem;
+  background: var(--sidebar) !important;
 }
 
 .search-container {
@@ -206,6 +209,7 @@
   flex: 1;
   padding: 0.35rem 0.55rem 0.9rem;
   overflow-y: auto;
+  background: var(--sidebar) !important; /* ทึบ */
 }
 
 .sidebar-menu-item {
@@ -330,7 +334,7 @@
 
 .user-profile-section {
   padding: 0.95rem 1rem;
-  background: var(--sidebar);
+  background: var(--sidebar) !important; /* ทึบ */
 }
 
 .user-profile-container {
