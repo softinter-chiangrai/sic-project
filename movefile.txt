@@ -48,7 +48,10 @@ ren burt05\burt05A\pmrt30A.component.css burt05A.component.css
 
 echo ✅ เปลี่ยนชื่อไฟล์และโฟลเดอร์ 27-30 เสร็จสิ้น!
 
-ren "pmrt04-c" "pmrt04C"
-ren "pmrt04C\pmrt04-c.component.ts" "pmrt04C.component.ts"
-ren "pmrt04C\pmrt04-c.component.html" "pmrt04C.component.html"
-ren "pmrt04C\pmrt04-c.component.css" "pmrt04C.component.css"
+ren "pmrt04-c" "pmrt01A"
+ren "pmrt01A\pmrt04-c.component.ts" "pmrt01A.component.ts"
+ren "pmrt01A\pmrt04-c.component.html" "pmrt01A.component.html"
+ren "pmrt01A\pmrt04-c.component.css" "pmrt01A.component.css"
+
+ng g c feature/pm/rt/pmrt01A
+ng g c feature/pm/dt/pmdt02/pmdt02A

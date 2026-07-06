@@ -1,118 +1,17 @@
+// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { TaskService } from '../../../../core/services/task.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
+import type { TaskRequest, TaskResponse } from '../../../../core/model/phase.model';
+import { SicTimepickerComponent } from '../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
 
-// ===== Model =====
-export interface PhaseModel {
-  id: string;
-  phaseCode: string;
-  phaseName: string;
-  projectId: string;
-  projectName?: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  owner: string;
-  status: string;
-  dependency?: string;
-  progress: number;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
 
-// ===== Form =====
-class Pmdt04Form {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      phaseCode: [null, [Validators.required, Validators.maxLength(30)]],
-      phaseName: [null, [Validators.required, Validators.maxLength(255)]],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      description: [null, [Validators.maxLength(1000)]],
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      owner: [null, [Validators.maxLength(100)]],
-      status: ['Not Started', [Validators.required]],
-      dependency: [null],
-      progress: [0, [Validators.min(0), Validators.max(100)]],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt04Service {
-  private mockPhases: PhaseModel[] = [
-    {
-      id: '1',
-      phaseCode: 'PH-001',
-      phaseName: 'Requirement & Analysis',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      description: 'เก็บความต้องการและวิเคราะห์ระบบ',
-      startDate: '2024-01-15',
-      endDate: '2024-02-28',
-      owner: 'สมหญิง รักเรียน',
-      status: 'Done',
-      dependency: '',
-      progress: 100,
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  apiGetComboboxProject = '/api/phase/combobox-project';
-  apiGetLovStatus = '/api/phase/lov-status';
-
-  save(phase: PhaseModel): Observable<string> {
-    console.log('📝 Saving phase:', phase);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getPhase(id: string): Observable<PhaseModel> {
-    const found = this.mockPhases.find((p) => p.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const emptyPhase: PhaseModel = {
-      id: '',
-      phaseCode: '',
-      phaseName: '',
-      projectId: '',
-      projectName: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      owner: '',
-      status: 'Not Started',
-      dependency: '',
-      progress: 0,
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(emptyPhase).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
@@ -120,88 +19,118 @@ export class Pmdt04Service {
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
   ],
   templateUrl: './pmdt04.component.html',
-  styles: [],
 })
-export class Pmdt04Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt04Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+export class Pmdt04Component implements OnInit {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private dialog = inject(DialogService);
+  private drawerService = inject(DrawerService);
 
-  form!: FormGroup;
-  isEdit = false;
-  phaseId: string | null = null;
-  isLoading = false;
+  @Input() workPackageId = '';
+  @Input() projectId = '';
+  @Input() phaseId = '';
+  @Input() taskId: string | null = null;
+  @Input() isEdit = false;
+  @Input() data: TaskResponse | null = null;
 
-  statusOptions = ['Not Started', 'In Progress', 'Done', 'Delayed'];
+  @Output() saved = new EventEmitter<TaskResponse>();
+  @Output() cancelled = new EventEmitter<void>();
 
-  pageDirty = () => this.form?.dirty ?? false;
+  form = this.fb.group({
+    taskCode: ['', Validators.required],
+    taskName: ['', Validators.required],
+    description: [''],
+    assignedTo: [''],
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
+    priority: ['Medium'],
+  });
 
-  ngOnInit(): void {
-    this.initForm();
+  ngOnInit() {
+    if (this.isEdit && !this.data && this.taskId) {
+      this.loadTask(this.taskId);
+    }
+    if (this.isEdit && this.data) {
+      this.patchForm(this.data);
+    }
+  }
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.phaseId = id;
-        this.loadPhase(id);
-      }
+  loadTask(id: string) {
+    this.taskService.getTaskById(id).subscribe({
+      next: (data) => this.patchForm(data),
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
 
-  initForm(): void {
-    this.form = Pmdt04Form.createForm(this.fb);
-  }
-
-  loadPhase(id: string) {
-    this.isLoading = true;
-    this.service.getPhase(id).subscribe({
-      next: (data) => {
-        this.form.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูล Phase สำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Phase รหัสนี้');
-        this.router.navigate(['/feature/pm/phase']);
-      },
+  patchForm(data: TaskResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    this.form.patchValue({
+      taskCode: data.taskCode,
+      taskName: data.taskName,
+      description: data.description,
+      assignedTo: data.assignedTo,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      estimateManday: data.estimateManday ?? null,
+      priority: data.priority,
     });
   }
 
-  onBack(): void {
-    this.router.navigate(['/feature/pm/phase']);
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
   }
 
-  submit() {
+  onSubmit() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
-    const data = this.form.value;
-    this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Phase ถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/phase']);
-        });
+    const raw = this.form.value;
+    const data: TaskRequest = {
+      workPackageId: this.workPackageId,
+      taskCode: raw.taskCode!,
+      taskName: raw.taskName!,
+      description: raw.description || undefined,
+      assignedTo: raw.assignedTo || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      estimateManday: raw.estimateManday!,
+      priority: raw.priority || 'Medium',
+    };
+
+    const request = this.isEdit && this.taskId
+      ? this.taskService.updateTask(this.taskId, data)
+      : this.taskService.createTask(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
+        this.saved.emit(res);
+        this.drawerService.close();
       },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
-}
 
-export default Pmdt04Component;
+  cancel() {
+    this.cancelled.emit();
+    this.drawerService.close();
+  }
+}

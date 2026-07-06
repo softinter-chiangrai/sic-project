@@ -1,17 +1,20 @@
 package com.softinter.sicapi.entity.ex;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "ex_example")
@@ -30,10 +33,10 @@ public class ExExample extends BaseEntity {
     private String messageLocal;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private Instant startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;
+    private Instant endDate;
 
     @Column(name = "start_time")
     private LocalTime startTime;

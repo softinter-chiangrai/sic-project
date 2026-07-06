@@ -1,11 +1,10 @@
 package com.softinter.sicapi.dto.response;
 
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.UUID;
+
+import lombok.Data;
 
 @Data
 public class PmCustomerContractResponse {
@@ -16,8 +15,8 @@ public class PmCustomerContractResponse {
     private String customerName;
     private UUID projectId;       // สำหรับแสดง (ถ้ามี)
     private String projectName;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private Instant startDate;
+    private Instant endDate;
     private BigDecimal contractValue;
     private String paymentTerms;
     private String scopeSummary;

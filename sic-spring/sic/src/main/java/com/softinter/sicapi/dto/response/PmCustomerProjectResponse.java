@@ -1,10 +1,9 @@
 package com.softinter.sicapi.dto.response;
 
-import lombok.Data;
-
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.UUID;
+
+import lombok.Data;
 
 @Data
 public class PmCustomerProjectResponse {
@@ -19,9 +18,9 @@ public class PmCustomerProjectResponse {
 
     private String projectCode;
     private String projectName;
-    private LocalDate startDate;
-    private LocalDate plannedEndDate;
-    private LocalDate actualEndDate;
+    private Instant startDate;
+    private Instant plannedEndDate;
+    private Instant actualEndDate;
     private Integer budgetManday;
     private Integer usedManday;
     private String status;

@@ -1,0 +1,292 @@
+<!-- src/app/feature/pm/dt/pmdt02/pmdt02.component.html -->
+
+<div class="space-y-5 p-4">
+
+  <!-- Back & Breadcrumb -->
+  <div class="flex items-center gap-3 flex-wrap">
+    <button (click)="goBack()" class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all">
+      <i class="bi bi-arrow-left text-xl"></i>
+    </button>
+    <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+      <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId() }" class="hover:text-[var(--crm-primary)]">Phases</a>
+      <span>/</span>
+      <span class="text-[var(--text-active)] font-medium">{{ phase()?.phaseName || 'Phase' }}</span>
+    </div>
+  </div>
+
+  <!-- Phase Header with Progress -->
+  @if (phase(); as p) {
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5">
+      <div>
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-3">
+          {{ p.phaseName }}
+          <span [class]="getStatusClass(p.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ getStatusText(p.status) }}
+          </span>
+        </h1>
+        <p class="text-sm text-[var(--text-muted)] mt-1">{{ p.description || 'ไม่มีคำอธิบาย' }}</p>
+        <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-2">
+          <span><i class="bi bi-calendar3"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</span>
+          <span><i class="bi bi-person"></i> {{ p.owner || '-' }}</span>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-[var(--text-active)]">{{ p.progress }}%</span>
+          <span class="text-xs text-[var(--text-muted)]">{{ p.taskCompletedCount }}/{{ p.taskCount }} Tasks</span>
+        </div>
+        <div class="w-48 h-2 bg-[var(--bg)] rounded-full overflow-hidden">
+          <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="p.progress"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="flex justify-center py-12">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (!isLoading() && phase(); as p) {
+
+    <!-- ===== TAB SWITCHER (Workspace / Gantt) ===== -->
+    <div class="flex gap-1 border-b border-[var(--border)]">
+      <button
+        (click)="rightTab.set('workspace')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'workspace' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+      >
+        <i class="bi bi-list-task mr-1"></i> Workspace
+      </button>
+      <button
+        (click)="rightTab.set('gantt')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+      >
+        <i class="bi bi-bar-chart mr-1"></i> Gantt Chart
+      </button>
+    </div>
+
+    <!-- ===== TAB 1: WORKSPACE ===== -->
+    @if (rightTab() === 'workspace') {
+
+      <!-- Milestones Section -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
+          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-flag text-[var(--crm-primary)]"></i>
+            Milestones
+            <span class="text-xs text-[var(--text-muted)] font-normal">({{ p.milestones?.length || 0 }})</span>
+          </h2>
+          <button (click)="openCreateMilestone()" class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+            <i class="bi bi-plus-lg"></i> เพิ่ม
+          </button>
+        </div>
+
+        <div class="px-5 py-3 overflow-x-auto flex gap-4">
+          @for (ms of p.milestones || []; track ms.id) {
+            <div class="min-w-[200px] flex-shrink-0 bg-[var(--bg)] rounded-lg border border-[var(--border)] p-3 hover:shadow-md transition-shadow">
+              <div class="flex items-start justify-between">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ ms.milestoneName }}</p>
+                  <p class="text-xs text-[var(--text-muted)]">{{ formatDate(ms.dueDate) }}</p>
+                </div>
+                <div class="flex gap-0.5 ml-2 flex-shrink-0">
+                  <button (click)="editMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button (click)="deleteMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <span [class]="getStatusClass(ms.status) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                  {{ getStatusText(ms.status) }}
+                </span>
+                <span class="text-xs text-[var(--text-muted)]">
+                  {{ ms.workPackages?.length || 0 }} Work Packages
+                </span>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-[var(--text-muted)] py-2">ยังไม่มี Milestone</p>
+          }
+        </div>
+      </div>
+
+      <!-- Work Packages & Tasks Section -->
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
+          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
+            Work Packages & Tasks
+            <span class="text-xs text-[var(--text-muted)] font-normal">({{ getTotalWorkPackages(p) }} Work Packages)</span>
+          </h2>
+          <button (click)="openCreateWorkPackageFromHeader()" class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+            <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
+          </button>
+        </div>
+
+        <div class="px-5 py-3 space-y-3 max-h-[500px] overflow-y-auto">
+          @for (ms of p.milestones || []; track ms.id) {
+            @for (wp of ms.workPackages || []; track wp.id) {
+              <!-- Work Package -->
+              <div class="border border-[var(--border)] rounded-lg overflow-hidden">
+                <div
+                  (click)="toggleWorkPackage(wp.id)"
+                  class="flex items-center justify-between px-4 py-2 bg-[var(--bg)] cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors"
+                >
+                  <div class="flex items-center gap-3">
+                    <i class="bi bi-chevron-right text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
+                    <i class="bi bi-folder text-[var(--crm-warning)]"></i>
+                    <span class="font-medium text-[var(--text-active)]">{{ wp.packageName }}</span>
+                    <span [class]="getStatusClass(wp.status) + ' px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                      {{ getStatusText(wp.status) }}
+                    </span>
+                    <span class="text-xs text-[var(--text-muted)]">{{ wp.tasks?.length || 0 }} tasks</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button (click)="openCreateTask(wp.id); $event.stopPropagation()" class="text-xs text-[var(--crm-primary)] hover:underline p-1 rounded">
+                      <i class="bi bi-plus-lg"></i> Task
+                    </button>
+                    <button (click)="editWorkPackage(wp, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button (click)="deleteWorkPackage(wp, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                @if (expandedWorkPackage() === wp.id) {
+                  <div class="px-4 py-3 space-y-1.5 border-t border-[var(--border)]">
+                    @for (task of wp.tasks || []; track task.id) {
+                      <div class="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                          <input
+                            type="checkbox"
+                            class="w-4 h-4 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)] flex-shrink-0"
+                            [checked]="task.status === 'Done'"
+                            (change)="toggleTaskStatus(task, $event)"
+                          />
+                          <span class="text-sm text-[var(--text-active)] truncate" [class.line-through]="task.status === 'Done'">{{ task.taskName }}</span>
+                          <span [class]="getStatusClass(task.status) + ' px-2 py-0.5 rounded-full text-[0.6rem] font-medium flex-shrink-0'">
+                            {{ getStatusText(task.status) }}
+                          </span>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                          <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                            <i class="bi bi-person"></i> {{ task.assignedTo || '-' }}
+                          </span>
+                          <span class="text-xs text-[var(--text-muted)] font-mono">{{ task.taskCode }}</span>
+                          <button (click)="editTask(task, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button (click)="deleteTask(task, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    } @empty {
+                      <p class="text-sm text-[var(--text-muted)] italic py-2">ไม่มี Task ใน Work Package นี้</p>
+                    }
+                    <button (click)="openCreateTask(wp.id)" class="text-xs text-[var(--crm-primary)] hover:underline mt-1 flex items-center gap-1">
+                      <i class="bi bi-plus-lg"></i> เพิ่ม Task
+                    </button>
+                  </div>
+                }
+              </div>
+            } @empty {
+              <p class="text-sm text-[var(--text-muted)] text-center py-6">ยังไม่มี Work Package</p>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ===== TAB 2: GANTT CHART ===== -->
+    @if (rightTab() === 'gantt') {
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden p-4">
+        <div class="overflow-x-auto">
+          <div class="min-w-[800px]">
+            <!-- Header -->
+            <div class="flex border-b border-[var(--border)] bg-[var(--bg)]">
+              <div class="w-48 flex-shrink-0 px-3 py-2 text-xs font-semibold text-[var(--text-muted)]">Item</div>
+              <div class="flex-1 relative px-3 py-2">
+                <div class="flex text-xs text-[var(--text-muted)]">
+                  @for (i of [].constructor(12); track i) {
+                    <span class="flex-1 text-center">{{ i + 1 }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Phase Row -->
+            <div class="flex border-b border-[var(--border)]">
+              <div class="w-48 flex-shrink-0 px-3 py-2 text-sm font-medium text-[var(--text-active)]">Phase</div>
+              <div class="flex-1 relative px-3 py-2">
+                <div class="relative h-6 w-full bg-[var(--bg)] rounded overflow-hidden">
+                  <div
+                    class="absolute top-0.5 h-5 rounded transition-all"
+                    [style.left.%]="0"
+                    [style.width.%]="100"
+                    [style.background]="p.status === 'Done' ? 'var(--crm-success)' : p.status === 'Delayed' ? 'var(--crm-danger)' : 'var(--crm-primary)'"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Work Packages & Tasks -->
+            @for (ms of p.milestones || []; track ms.id) {
+              @for (wp of ms.workPackages || []; track wp.id) {
+                <div class="flex border-b border-[var(--border)]">
+                  <div class="w-48 flex-shrink-0 px-3 py-2 text-sm text-[var(--text)]">📦 {{ wp.packageName }}</div>
+                  <div class="flex-1 relative px-3 py-2">
+                    <div class="relative h-6 w-full bg-[var(--bg)] rounded overflow-hidden">
+                      <div
+                        class="absolute top-0.5 h-5 rounded transition-all"
+                        [style.left.%]="0"
+                        [style.width.%]="100"
+                        style="background: var(--crm-secondary); opacity:0.7;"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                @for (task of wp.tasks || []; track task.id) {
+                  <div class="flex border-b border-[var(--border)] pl-8">
+                    <div class="w-48 flex-shrink-0 px-3 py-1.5 text-sm text-[var(--text-muted)]">▸ {{ task.taskName }}</div>
+                    <div class="flex-1 relative px-3 py-1.5">
+                      <div class="relative h-4 w-full bg-[var(--bg)] rounded overflow-hidden">
+                        <div
+                          class="absolute top-0 h-4 rounded transition-all"
+                          [style.left.%]="0"
+                          [style.width.%]="100"
+                          [style.background]="task.status === 'Done' ? 'var(--crm-success)' : 'var(--crm-primary)'"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+            }
+
+            <!-- Milestones as diamonds -->
+            <div class="flex border-b border-[var(--border)] bg-[var(--bg)]/50">
+              <div class="w-48 flex-shrink-0 px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">🚩 Milestones</div>
+              <div class="flex-1 relative px-3 py-1.5 flex items-center gap-2 flex-wrap">
+                @for (ms of p.milestones || []; track ms.id) {
+                  <span class="text-sm" title="{{ ms.milestoneName }} ({{ formatDate(ms.dueDate) }})">♦️</span>
+                }
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

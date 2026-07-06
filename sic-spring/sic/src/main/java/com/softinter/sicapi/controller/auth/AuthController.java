@@ -4,7 +4,7 @@ import com.softinter.sicapi.dto.response.AuthMeResponse;
 import com.softinter.sicapi.dto.response.ProfileResponse;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.ProfileService;   // ✅ inject
+import com.softinter.sicapi.service.ProfileService; 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +25,7 @@ public class AuthController {
 
     private final CurrentUserService currentUserService;
     private final BusinessAccessService businessAccessService;
-    private final ProfileService profileService;   // ✅ เพิ่ม
+    private final ProfileService profileService;  
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user info")

@@ -4,9 +4,9 @@ ng g c feature/pm/rt/PMRT02 --standalone --skip-tests
 
 ng g c feature/pm/dt/pmdt01 --standalone --skip-tests
 
-ng g c feature/pm/dt/pmdt30
+ng g c feature/pm/dt/pmdt02
 
-ng g c feature/pm/rt/pmrt01A
+ng g c feature/pm/rt/pmrt01A\
 ng g c feature/pm/rt/pmrt04/pmrt04C
 
 http://localhost:4200/feature/pm/phase
@@ -17,7 +17,7 @@ Starting SicApiApplication
 
 Role-Based Access Control (RBAC) 
 
-https://icons.getbootstrap.com/
+https://icons.getbootstrap.com/csadsadsadsa
 
 
 this.router.navigate(['/feature/pm/pmrt27', roleId]);
@@ -45,3 +45,8 @@ private cdr = inject(ChangeDetectorRef);
     }))
 
 git reset --hard 2f0b6fd8510c4bf251a53aa66e16355e6a994b5a
+
+
+https://github.com/softinter-chiangrai/sic-project/tree/Rin เข้าไปอ่านโค้ดทั้งหมดใน github นี้เเล้วสร้าง program เเบบบูรณ์โดยใช้ spring-boot + angular + tailwind +postgresssql ไม่ต้องไปสนใจโค้ด .net ใน folder sic-api เราไม่ใช้เเล้วเรามาใช้เป็น springboot เเทนใน folder sic-spring/sic เราได้เขียนโค้ดไว้ให้เเล้วเเต่ยังไม่เส็จสมบูณ์ ขอโค้ดที่เสร็จสมบูรณ์ตาม requirement ที่ให้ไป พร้อมเอาไปใช้งานได้จริง ขอเป็นเเบบ production พร้อมนำไปใช้งานได้จริงทัันที Software Project Lifecycle Management System ขอโค้ด project ทั้ังหมดเเบบไฟล์ zip มาเลย
+
+สร้าง program Software Project Lifecycle Management System  เเบบบูรณ์โดยใช้ spring-boot + angular + tailwind +postgresssql  เราได้เขียนโค้ดไว้ให้เเล้วเเต่ยังไม่เส็จสมบูณ์ ขอโค้ดที่เสร็จสมบูรณ์ตาม requirement ที่ให้ไป พร้อมเอาไปใช้งานได้จริง ขอเป็นเเบบ production พร้อมนำไปใช้งานได้จริงทัันที ขอโค้ด project ทั้ังหมดเเบบไฟล์ zip มาเลย

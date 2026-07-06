@@ -3,7 +3,7 @@
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
-import { projectGuard } from '../../core/guard/project.guard'; // ✅ import
+import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 
 export const PM_ROUTES: Routes = [
@@ -27,11 +27,11 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
 
-  // ===== Project (ไม่ต้องใช้ projectGuard) =====
+  // ===== Project =====
   {
     path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
-    canActivate: [customerGuard], // ❌ ไม่ต้อง projectGuard
+    canActivate: [customerGuard],
   },
   {
     path: 'pmrt02/new',
@@ -46,11 +46,11 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard],
   },
 
-  // ===== Project Dashboard (ต้องมีทั้ง customer และ project) =====
+  // ===== Project Dashboard =====
   {
     path: 'pmrt03',
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
-    canActivate: [customerGuard, projectGuard], // ✅ ใช้ทั้งคู่
+    canActivate: [customerGuard, projectGuard],
   },
 
   // ===== Contract =====
@@ -75,25 +75,81 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt04/renew/:id',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.pmrt04BComponent),
-    canActivate: [customerGuard, projectGuard], // ✅ ใช้ทั้งคู่
+    canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Phase =====
-  {
-    path: 'phase',
-    loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'phase/new',
-    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'phase/:id/edit',
-    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-    canActivate: [customerGuard, projectGuard],
-  },
+  // ============================================================
+  // ===== PHASE & MILESTONE MANAGEMENT (แก้ไข + เพิ่มใหม่) =====
+  // ============================================================
+
+  // ---- Phase List ----
+{
+  path: 'phase',
+  loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- Phase Form (Create) ----
+{
+  path: 'phase/new',
+  loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- Phase Form (Edit) ----
+{
+  path: 'phase/:id/edit',
+  loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- Phase Detail (แสดง Milestone, WorkPackage, Task) ----
+{
+  path: 'phase/:id',
+  loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- Milestone Form ----
+{
+  path: 'milestone/new',
+  loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'milestone/:id/edit',
+  loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- WorkPackage Form ----
+{
+  path: 'work-package/new',
+  loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'work-package/:id/edit',
+  loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
+  canActivate: [customerGuard, projectGuard],
+},
+
+// ---- Task Form ----
+{
+  path: 'task/new',
+  loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'task/:id/edit',
+  loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
+  canActivate: [customerGuard, projectGuard],
+},
+
+
+  // ============================================================
+  // ===== หน้าอื่นๆ ที่มีอยู่เดิม =====
+  // ============================================================
 
   // ===== Requirement =====
   {
@@ -168,24 +224,24 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Task =====
+  // ===== Task (เดิม) =====
   {
-    path: 'task',
+    path: 'task-list',
     loadComponent: () => import('./rt/pmrt12/pmrt12.component').then((m) => m.Pmrt12Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'task/new',
+    path: 'task-list/new',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'task/:id/edit',
+    path: 'task-list/:id/edit',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'my-tasks', // ✅ ไม่ต้อง projectGuard (งานของตัวเอง)
+    path: 'my-tasks',
     loadComponent: () => import('./rt/pmrt13/pmrt13.component').then((m) => m.Pmrt13Component),
     canActivate: [customerGuard],
   },
@@ -390,7 +446,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Approval Center (อาจไม่ต้อง projectGuard) =====
+  // ===== Approval Center =====
   {
     path: 'approval',
     loadComponent: () => import('./rt/pmrt23/pmrt23.component').then((m) => m.Pmrt23Component),
@@ -402,7 +458,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard],
   },
 
-  // ===== Dashboard (อาจไม่ต้อง projectGuard) =====
+  // ===== Dashboard =====
   {
     path: 'dashboard',
     loadComponent: () => import('./rt/pmrt24/pmrt24.component').then((m) => m.Pmrt24Component),
@@ -436,7 +492,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Audit Log (อาจไม่ต้อง projectGuard) =====
+  // ===== Audit Log =====
   {
     path: 'audit',
     loadComponent: () => import('./rt/pmrt26/pmrt26.component').then((m) => m.Pmrt26Component),

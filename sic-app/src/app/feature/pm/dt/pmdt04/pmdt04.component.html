@@ -1,189 +1,117 @@
-<!-- ===== LOADING ===== -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div
-      class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-    ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Phase...</p>
-  </div>
-}
+<!-- src/app/feature/pm/dt/pmdt04/pmdt04.component.html -->
 
-<!-- ===== FORM ===== -->
-@if (!isLoading && form) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูล Phase' : 'เพิ่มข้อมูล Phase' }}
-        </h2>
+<!-- Breadcrumbs -->
+<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
+  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
+  <span>/</span>
+  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
+  <span>/</span>
+  @if (isEdit) {
+    <span>Edit Task</span>
+  } @else {
+    <span>New Task</span>
+  }
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
+    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
+  </h2>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
       </div>
-
-      <!-- Phase Code -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="รหัส Phase"
-          formControlName="phaseCode"
-          [required]="true"
-          placeholder="PH-001"
-        ></sic-input>
-        @if (form.get('phaseCode')?.touched && form.get('phaseCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Phase</p>
-        }
-      </div>
-
-      <!-- Phase Name -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="ชื่อ Phase"
-          formControlName="phaseName"
-          [required]="true"
-          placeholder="Requirement & Analysis"
-        ></sic-input>
-        @if (form.get('phaseName')?.touched && form.get('phaseName')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Phase</p>
-        }
-      </div>
-
-      <!-- Project -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="โครงการ"
-          formControlName="projectId"
-          [apiUrl]="service.apiGetComboboxProject"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
-        }
-      </div>
-
-      <!-- Owner -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="ผู้รับผิดชอบหลัก"
-          formControlName="owner"
-          placeholder="สมหญิง รักเรียน"
-        ></sic-input>
-      </div>
-
-      <!-- Start Date - End Date -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
-      >
-        <div class="flex-1">
-          <sic-input
-            label="วันที่เริ่ม"
-            type="text"
-            formControlName="startDate"
-            [required]="true"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
-          }
-        </div>
-        <div class="flex-1">
-          <sic-input
-            label="วันที่สิ้นสุด"
-            type="text"
-            formControlName="endDate"
-            [required]="true"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-          @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
-          }
-        </div>
-      </div>
-
-      <!-- Status -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovStatus"
-          [required]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- Dependency -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="Dependency (Phase ที่ต้องรอ)"
-          formControlName="dependency"
-          placeholder="PH-001"
-        ></sic-input>
-      </div>
-
-      <!-- Progress -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input
-          label="ความคืบหน้า (%)"
-          type="text"
-          formControlName="progress"
-          placeholder="0"
-        ></sic-input>
-        <p class="text-xs text-[var(--text-muted)] mt-1">0-100</p>
-      </div>
-
-      <!-- Description -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <sic-input-area
-          label="คำอธิบาย"
-          formControlName="description"
-          [rows]="3"
-          placeholder="รายละเอียดของ Phase นี้"
-        ></sic-input-area>
-      </div>
-
-      <!-- Active Status -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
-      >
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน Phase</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
-      >
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-          </sic-button>
-        </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
       </div>
     </div>
+
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
+      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">ผู้รับผิดชอบ</label>
+      <input type="text" formControlName="assignedTo" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    </div>
+
+    <!-- Start Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่เริ่ม"
+          formControlName="startDate"
+          [required]="true"
+          placeholder="เลือกวันที่เริ่ม"
+        ></sic-datepicker>
+        @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาเริ่ม"
+          formControlName="startTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <!-- End Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่สิ้นสุด"
+          formControlName="endDate"
+          [required]="true"
+          placeholder="เลือกวันที่สิ้นสุด"
+        ></sic-datepicker>
+        @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาสิ้นสุด"
+          formControlName="endTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
+        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
+        }
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
+        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
+          <option value="Low">ต่ำ</option>
+          <option value="Medium">ปานกลาง</option>
+          <option value="High">สูง</option>
+          <option value="Critical">วิกฤต</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
+        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+      </button>
+      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        ยกเลิก
+      </button>
+    </div>
+
   </form>
-}
+</div>

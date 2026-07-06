@@ -1,14 +1,20 @@
 package com.softinter.sicapi.entity.pm;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import com.softinter.sicapi.entity.su.SuBusiness;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 @Table(name = "pm_customer_project")
@@ -43,13 +49,13 @@ public class PmCustomerProject extends BaseBusinessEntity {
     private String projectName;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private Instant startDate;
 
     @Column(name = "planned_end_date")
-    private LocalDate plannedEndDate;
+    private Instant plannedEndDate;
 
     @Column(name = "actual_end_date")
-    private LocalDate actualEndDate;
+    private Instant actualEndDate;
 
     @Column(name = "budget_manday")
     private Integer budgetManday;

@@ -1,151 +1,159 @@
+// src/app/feature/pm/dt/pmdt01/pmdt01.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputPhoneComponent } from '../../../../core/component/sic-input-phone/sic-input-phone.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicProfileComponent } from '../../../../core/component/sic-profile/sic-profile.component';
-import { SicRadioComponent } from '../../../../core/component/sic-radio/sic-radio.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Pmdt01Form } from './pmdt01.form';
-import { CustomerModel } from './pmdt01.model';
-import { Pmdt01Service } from './pmdt01.service';
+
+import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
+import type { PhaseResponse } from '../../../../core/model/phase.model';
+import { PhaseService } from '../../../../core/services/phase.service';
+import { Pmdt01AComponent } from './pmdt01A/pmdt01A.component';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicProfileComponent,
-    SicRadioComponent,
-    SicComboboxComponent,
-    SicButtonComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicInputPhoneComponent,
-  ],
+  imports: [CommonModule],
   templateUrl: './pmdt01.component.html',
-  styles: [], // ✅ เปลี่ยนจาก styleUrl เป็น styles
 })
-export class Pmdt01Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt01Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder); // ✅ ย้ายมาไว้ที่นี่
+export class Pmdt01Component implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private phaseService = inject(PhaseService);
+  private dialog = inject(DialogService);
+  private drawerService = inject(DrawerService);
 
-  formCustomerData!: SicFromData<CustomerModel>;
-  isEdit = false;
-  customerId: string | null = null;
+  projectId = signal<string>('');
+  phases = signal<PhaseResponse[]>([]);
+  isLoading = signal(false);
 
-  pageDirty = () => this.formCustomerData?.dirty ?? false;
+  // Tab switching
+  viewMode = signal<'list' | 'gantt'>('list');
 
-  ngOnInit(): void {
-    // รับข้อมูลจาก resolver (ถ้ามี)
-    const data = this.route.snapshot.data['form'];
-    if (data?.customer) {
-      this.formCustomerData = data.customer;
-    } else {
-      // ✅ ใช้ this.fb แทน inject(FormBuilder)
-      const form = Pmdt01Form.createForm(this.fb);
-      this.formCustomerData = new SicFromData<CustomerModel>(form);
-    }
-
-    // ตรวจสอบว่าเป็นโหมดแก้ไขหรือไม่
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.customerId = id;
-        this.loadCustomer(id);
-      }
-    });
-
-    // เมื่อเปลี่ยน personType ให้ปรับฟิลด์สาขา
-    this.formCustomerData.formGroup.get('personType')?.valueChanges.subscribe((val) => {
-      const branchControl = this.formCustomerData.formGroup.get('branchCode');
-      if (val === 'CORPORATE') {
-        branchControl?.enable();
+  ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      const pid = params['projectId'];
+      if (pid) {
+        this.projectId.set(pid);
+        this.loadPhases();
       } else {
-        branchControl?.disable();
-        branchControl?.setValue(null);
+        this.router.navigate(['/feature/pm/pmrt02']);
       }
     });
   }
 
-  onCountryChange(event: any): void {
-    this.formCustomerData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
-    this.formCustomerData.formGroup.get('provinceId')?.setValue(null);
-    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  loadPhases() {
+    this.isLoading.set(true);
+    this.phaseService.getPhases(this.projectId()).subscribe({
+      next: (data) => this.phases.set(data),
+      error: (err) => {
+        console.error(err);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลด Phase ได้');
+      },
+      complete: () => this.isLoading.set(false),
+    });
   }
 
-  onProvinceChange(event: any): void {
-    this.formCustomerData.formGroup.get('districtId')?.setValue(null);
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  goToDetail(phaseId: string) {
+    this.router.navigate(['/feature/pm/phase', phaseId], {
+      queryParams: { projectId: this.projectId() },
+    });
   }
 
-  onDistrictChange(event: any): void {
-    this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(null);
+  // เปิด Drawer สำหรับสร้าง Phase
+  openCreatePhase() {
+    this.drawerService.open({
+      component: Pmdt01AComponent,
+      title: 'สร้าง Phase ใหม่',
+      inputs: {
+        projectId: this.projectId(),
+        isEdit: false,
+      },
+      width: '600px',
+    });
   }
 
-  onSubDistrictChange(event: any): void {
-    this.formCustomerData.formGroup.get('zipCode')?.setValue(event.zipCode);
+  // เปิด Drawer สำหรับแก้ไข Phase
+  editPhase(phase: PhaseResponse, event: Event) {
+    event.stopPropagation();
+    this.drawerService.open({
+      component: Pmdt01AComponent,
+      title: 'แก้ไข Phase',
+      inputs: {
+        phaseId: phase.id,
+        projectId: this.projectId(),
+        isEdit: true,
+        data: phase,
+      },
+      width: '600px',
+    });
   }
 
-  // ✅ แก้ไข onBack
-  onBack(): void {
-    this.router.navigate(['/feature/pm/pmrt01']);
+  deletePhase(phase: PhaseResponse, event: Event) {
+    event.stopPropagation();
+    this.dialog
+      .confirm('ยืนยันการลบ', `คุณต้องการลบ Phase "${phase.phaseName}" ใช่หรือไม่?`)
+      .then((confirmed) => {
+        if (confirmed) {
+          this.phaseService.deletePhase(phase.id).subscribe({
+            next: () => this.loadPhases(),
+            error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+          });
+        }
+      });
   }
 
-  // ✅ แก้ไข submit
-  submit() {
-    this.formCustomerData.markAllAsTouched();
-    if (this.formCustomerData.invalid) {
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
+  // Utility
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'bg-gray-100 text-gray-600',
+      'In Progress': 'bg-blue-100 text-blue-700',
+      Done: 'bg-emerald-100 text-emerald-700',
+      Delayed: 'bg-red-100 text-red-700',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'ยังไม่เริ่ม',
+      'In Progress': 'กำลังดำเนินการ',
+      Done: 'เสร็จสิ้น',
+      Delayed: 'ล่าช้า',
+    };
+    return map[status] || status;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
     }
-
-    const data = this.formCustomerData.value;
-    this.service.save(data).subscribe({
-      next: (response) => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
-          this.formCustomerData.markAsPristine();
-          this.router.navigate(['/feature/pm/pmrt01']); // ✅ แก้ไข
-        });
-      },
-      error: (error) => {
-        this.dialog.error('บันทึก', error);
-      },
-    });
   }
-  isLoading = false; // เพิ่มไว้ด้านบน
 
-  loadCustomer(id: string) {
-    this.isLoading = true; // เริ่มโหลด
-    this.service.getCustomer(id).subscribe({
-      next: (data) => {
-        this.formCustomerData.formGroup.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
-        this.router.navigate(['/feature/pm/pmrt01']);
-      },
-    });
+  // Gantt helper (สำหรับแสดง Gantt View ง่ายๆ)
+  getBarPosition(phase: PhaseResponse): { left: number; width: number } {
+    // สมมติว่าเรามี startDate และ endDate
+    // เราจะหา min/max ของทุก Phase
+    const allDates = this.phases().flatMap((p) => [
+      new Date(p.startDate).getTime(),
+      new Date(p.endDate).getTime(),
+    ]);
+    if (allDates.length === 0) return { left: 0, width: 100 };
+    const min = Math.min(...allDates);
+    const max = Math.max(...allDates);
+    const total = max - min || 1;
+    const start = new Date(phase.startDate).getTime();
+    const end = new Date(phase.endDate).getTime();
+    return {
+      left: ((start - min) / total) * 100,
+      width: ((end - start) / total) * 100,
+    };
   }
 }

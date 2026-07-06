@@ -1,0 +1,1 @@
+ALTER TABLE pm_phase DROP COLUMN business_id;

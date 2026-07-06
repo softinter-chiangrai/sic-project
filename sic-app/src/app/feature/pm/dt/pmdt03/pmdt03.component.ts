@@ -1,142 +1,17 @@
+// src/app/feature/pm/dt/pmdt03/pmdt03.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { WorkPackageService } from '../../../../core/services/work-package.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
+import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../core/component/sic-timepicker/sic-timepicker.component';
+import type { WorkPackageRequest, WorkPackageResponse } from '../../../../core/model/phase.model';
 
-// ===== Model =====
-export interface ProjectModel {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  customerId: string;
-  customerName?: string;
-  contractId: string;
-  contractNo?: string;
-  projectManager: string;
-  ba: string;
-  sa: string;
-  startDate: string;
-  plannedEndDate: string;
-  actualEndDate?: string;
-  budgetManday: number;
-  usedManday: number;
-  status: string;
-  priority: string;
-  description?: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
 
-// ===== Form =====
-class Pmdt03Form {
-  static createForm(fb: FormBuilder) {
-    return fb.group({
-      id: [null],
-      projectCode: [null, [Validators.required, Validators.maxLength(30)]],
-      projectName: [null, [Validators.required, Validators.maxLength(255)]],
-      customerId: [null, [Validators.required]],
-      customerName: [null],
-      contractId: [null, [Validators.required]],
-      contractNo: [null],
-      projectManager: [null, [Validators.maxLength(100)]],
-      ba: [null, [Validators.maxLength(100)]],
-      sa: [null, [Validators.maxLength(100)]],
-      startDate: [null, [Validators.required]],
-      plannedEndDate: [null, [Validators.required]],
-      actualEndDate: [null],
-      budgetManday: [null, [Validators.required, Validators.min(0)]],
-      usedManday: [0, [Validators.min(0)]],
-      status: ['Prospect', [Validators.required]],
-      priority: ['Medium', [Validators.required]],
-      description: [null, [Validators.maxLength(1000)]],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt03Service {
-  private mockProjects: ProjectModel[] = [
-    {
-      id: '1',
-      projectCode: 'PRJ-001',
-      projectName: 'ระบบ CRM',
-      customerId: '1',
-      customerName: 'สมชาย ใจดี',
-      contractId: '1',
-      contractNo: 'CT-001',
-      projectManager: 'สมศักดิ์ รุ่งเรือง',
-      ba: 'สมหญิง รักเรียน',
-      sa: 'วิชัย พัฒนาชัย',
-      startDate: '2024-01-15',
-      plannedEndDate: '2024-06-30',
-      actualEndDate: '2024-07-15',
-      budgetManday: 120,
-      usedManday: 135,
-      status: 'Development',
-      priority: 'High',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  apiGetComboboxCustomer = '/api/project/combobox-customer';
-  apiGetComboboxContract = '/api/project/combobox-contract';
-  apiGetLovStatus = '/api/project/lov-status';
-  apiGetLovPriority = '/api/project/lov-priority';
-
-  save(project: ProjectModel): Observable<string> {
-    console.log('📝 Saving project:', project);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getProject(id: string): Observable<ProjectModel> {
-    const found = this.mockProjects.find((p) => p.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const emptyProject: ProjectModel = {
-      id: '',
-      projectCode: '',
-      projectName: '',
-      customerId: '',
-      customerName: '',
-      contractId: '',
-      contractNo: '',
-      projectManager: '',
-      ba: '',
-      sa: '',
-      startDate: '',
-      plannedEndDate: '',
-      actualEndDate: '',
-      budgetManday: 0,
-      usedManday: 0,
-      status: 'Prospect',
-      priority: 'Medium',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(emptyProject).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt03',
   standalone: true,
@@ -144,83 +19,108 @@ export class Pmdt03Service {
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
   ],
   templateUrl: './pmdt03.component.html',
-  styles: [],
 })
-export class Pmdt03Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt03Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+export class Pmdt03Component implements OnInit {
+  private fb = inject(FormBuilder);
+  private wpService = inject(WorkPackageService);
+  private dialog = inject(DialogService);
+  private drawerService = inject(DrawerService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  formProjectData!: SicFromData<ProjectModel>;
-  isEdit = false;
-  projectId: string | null = null;
-  isLoading = false;
+  @Input() milestoneId = '';
+  @Input() projectId = '';
+  @Input() phaseId = '';
+  @Input() wpId: string | null = null;
+  @Input() isEdit = false;
+  @Input() data: WorkPackageResponse | null = null;
 
-  pageDirty = () => this.formProjectData?.dirty ?? false;
+  @Output() saved = new EventEmitter<WorkPackageResponse>();
+  @Output() cancelled = new EventEmitter<void>();
 
-  ngOnInit(): void {
-    const form = Pmdt03Form.createForm(this.fb);
-    this.formProjectData = new SicFromData<ProjectModel>(form);
+  form = this.fb.group({
+    packageName: ['', Validators.required],
+    description: [''],
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+  });
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.projectId = id;
-        this.loadProject(id);
-      }
+  ngOnInit() {
+    if (this.isEdit && !this.data && this.wpId) {
+      this.loadWorkPackage(this.wpId);
+    }
+    if (this.isEdit && this.data) {
+      this.patchForm(this.data);
+    }
+  }
+
+  loadWorkPackage(id: string) {
+    this.wpService.getWorkPackageById(id).subscribe({
+      next: (data) => this.patchForm(data),
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
 
-  loadProject(id: string) {
-    this.isLoading = true;
-    this.service.getProject(id).subscribe({
-      next: (data) => {
-        this.formProjectData.formGroup.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลโครงการสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการรหัสนี้');
-        this.router.navigate(['/feature/pm/project']);
-      },
+  patchForm(data: WorkPackageResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    this.form.patchValue({
+      packageName: data.packageName,
+      description: data.description,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
     });
   }
 
-  onBack(): void {
-    this.router.navigate(['/feature/pm/project']);
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
   }
 
-  submit() {
-    this.formProjectData.markAllAsTouched();
-    if (this.formProjectData.invalid) {
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
-    const data = this.formProjectData.value;
-    this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
-          this.formProjectData.markAsPristine();
-          this.router.navigate(['/feature/pm/project']);
-        });
+    const raw = this.form.value;
+    const data: WorkPackageRequest = {
+      milestoneId: this.milestoneId,
+      packageName: raw.packageName!,
+      description: raw.description || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+    };
+
+    const request = this.isEdit && this.wpId
+      ? this.wpService.updateWorkPackage(this.wpId, data)
+      : this.wpService.createWorkPackage(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Work Package เรียบร้อย' : 'สร้าง Work Package เรียบร้อย');
+        this.saved.emit(res);
+        this.drawerService.close();
       },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
-}
 
-export default Pmdt03Component;
+  cancel() {
+    this.cancelled.emit();
+    this.drawerService.close();
+  }
+}

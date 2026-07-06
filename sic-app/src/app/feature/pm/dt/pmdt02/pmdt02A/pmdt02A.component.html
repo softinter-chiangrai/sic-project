@@ -1,0 +1,65 @@
+<!-- src/app/feature/pm/dt/pmdt02A/pmdt02A.component.html -->
+
+<!-- Breadcrumbs -->
+<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
+  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
+  <span>/</span>
+  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
+  <span>/</span>
+  @if (isEdit) {
+    <span>Edit Milestone</span>
+  } @else {
+    <span>New Milestone</span>
+  }
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
+    {{ isEdit ? 'แก้ไข Milestone' : 'สร้าง Milestone ใหม่' }}
+  </h2>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Milestone <span class="text-red-500">*</span></label>
+      <input type="text" formControlName="milestoneName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
+      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
+    </div>
+
+    <!-- Due Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่ครบกำหนด"
+          formControlName="dueDate"
+          [required]="true"
+          placeholder="เลือกวันที่"
+        ></sic-datepicker>
+        @if (form.get('dueDate')?.touched && form.get('dueDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่ครบกำหนด</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาครบกำหนด"
+          formControlName="dueTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
+        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+      </button>
+      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        ยกเลิก
+      </button>
+    </div>
+
+  </form>
+</div>
