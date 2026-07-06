@@ -1,14 +1,14 @@
-// src/app/feature/pm/services/milestone.service.ts
-
+// src/app/core/services/milestone.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import type { MilestoneRequest, MilestoneResponse } from '../model/phase.model';
 
+import { MilestoneRequest, MilestoneResponse } from '../model/phase.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MilestoneService {
-  private baseUrl = `/api/pm/milestones`;
+  private baseUrl = environment.apiBaseUrl + '/api/pm/milestones';
 
   constructor(private http: HttpClient) {}
 

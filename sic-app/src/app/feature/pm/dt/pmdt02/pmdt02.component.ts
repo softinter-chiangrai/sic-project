@@ -149,21 +149,38 @@ export class Pmdt02Component implements OnInit {
       },
       width: '560px',
     });
+    
+    // Subscribe to saved event to reload the phase data
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        // If drawer is closed, we reload to ensure we get the latest data
+        this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
+    });
   }
 
   editMilestone(ms: MilestoneResponse, event: Event) {
     event.stopPropagation();
+    const phaseId = this.currentPhaseId();
     this.drawerService.open({
       component: Pmdt02AComponent,
       title: 'แก้ไข Milestone',
       inputs: {
         milestoneId: ms.id,
-        phaseId: this.currentPhaseId(),
+        phaseId: phaseId,
         projectId: this.projectId(),
         isEdit: true,
         data: ms,
       },
       width: '560px',
+    });
+
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        if (phaseId) this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
     });
   }
 
@@ -187,21 +204,30 @@ export class Pmdt02Component implements OnInit {
 
   // ---- Drawer: WorkPackage ----
   openCreateWorkPackage(milestoneId: string) {
+    const phaseId = this.currentPhaseId();
     this.drawerService.open({
       component: Pmdt03Component,
       title: 'สร้าง Work Package',
       inputs: {
         milestoneId: milestoneId,
         projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
+        phaseId: phaseId,
         isEdit: false,
       },
       width: '560px',
+    });
+
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        if (phaseId) this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
     });
   }
 
   editWorkPackage(wp: WorkPackageResponse, event: Event) {
     event.stopPropagation();
+    const phaseId = this.currentPhaseId();
     this.drawerService.open({
       component: Pmdt03Component,
       title: 'แก้ไข Work Package',
@@ -209,11 +235,18 @@ export class Pmdt02Component implements OnInit {
         wpId: wp.id,
         milestoneId: wp.milestoneId,
         projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
+        phaseId: phaseId,
         isEdit: true,
         data: wp,
       },
       width: '560px',
+    });
+
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        if (phaseId) this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
     });
   }
 
@@ -234,21 +267,30 @@ export class Pmdt02Component implements OnInit {
 
   // ---- Drawer: Task ----
   openCreateTask(wpId: string) {
+    const phaseId = this.currentPhaseId();
     this.drawerService.open({
       component: Pmdt04Component,
       title: 'สร้าง Task',
       inputs: {
         workPackageId: wpId,
         projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
+        phaseId: phaseId,
         isEdit: false,
       },
       width: '560px',
+    });
+
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        if (phaseId) this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
     });
   }
 
   editTask(task: TaskResponse, event: Event) {
     event.stopPropagation();
+    const phaseId = this.currentPhaseId();
     this.drawerService.open({
       component: Pmdt04Component,
       title: 'แก้ไข Task',
@@ -256,11 +298,18 @@ export class Pmdt02Component implements OnInit {
         taskId: task.id,
         workPackageId: task.workPackageId,
         projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
+        phaseId: phaseId,
         isEdit: true,
         data: task,
       },
       width: '560px',
+    });
+
+    const subscription = this.drawerService.drawer$.subscribe((config) => {
+      if (!config) {
+        if (phaseId) this.loadPhaseDetail(phaseId);
+        subscription.unsubscribe();
+      }
     });
   }
 
