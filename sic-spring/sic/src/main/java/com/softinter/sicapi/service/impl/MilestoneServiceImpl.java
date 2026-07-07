@@ -10,8 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.MilestoneRequest;
 import com.softinter.sicapi.dto.response.MilestoneResponse;
+import com.softinter.sicapi.dto.response.TaskResponse;
+import com.softinter.sicapi.dto.response.WorkPackageResponse;
 import com.softinter.sicapi.entity.pm.PmMilestone;
 import com.softinter.sicapi.entity.pm.PmPhase;
+import com.softinter.sicapi.entity.pm.PmTask;
+import com.softinter.sicapi.entity.pm.PmWorkPackage;
 import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.repository.pm.PmPhaseRepository;
 import com.softinter.sicapi.service.MilestoneService;
@@ -91,6 +95,59 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setDescription(ms.getDescription());
         dto.setDueDate(ms.getDueDate());
         dto.setStatus(ms.getStatus());
+        
+        List<WorkPackageResponse> wpResponses = new java.util.ArrayList<>();
+        if (ms.getWorkPackages() != null) {
+            for (PmWorkPackage wp : ms.getWorkPackages()) {
+                if (wp.getIsDelete() == null || !wp.getIsDelete()) {
+                    wpResponses.add(toWorkPackageResponse(wp));
+                }
+            }
+        }
+        dto.setWorkPackages(wpResponses);
+        return dto;
+    }
+
+    private WorkPackageResponse toWorkPackageResponse(PmWorkPackage wp) {
+        WorkPackageResponse dto = new WorkPackageResponse();
+        dto.setId(wp.getId());
+        dto.setMilestoneId(wp.getMilestone().getId());
+        dto.setMilestoneName(wp.getMilestone().getMilestoneName());
+        dto.setPackageName(wp.getPackageName());
+        dto.setDescription(wp.getDescription());
+        dto.setStartDate(wp.getStartDate());
+        dto.setEndDate(wp.getEndDate());
+        dto.setStatus(wp.getStatus());
+        
+        List<TaskResponse> taskResponses = new java.util.ArrayList<>();
+        if (wp.getTasks() != null) {
+            for (PmTask task : wp.getTasks()) {
+                if (task.getIsDelete() == null || !task.getIsDelete()) {
+                    taskResponses.add(toTaskResponse(task));
+                }
+            }
+        }
+        dto.setTasks(taskResponses);
+        return dto;
+    }
+
+    private TaskResponse toTaskResponse(PmTask task) {
+        TaskResponse dto = new TaskResponse();
+        dto.setId(task.getId());
+        dto.setWorkPackageId(task.getWorkPackage().getId());
+        dto.setWorkPackageName(task.getWorkPackage().getPackageName());
+        dto.setTaskCode(task.getTaskCode());
+        dto.setTaskName(task.getTaskName());
+        dto.setDescription(task.getDescription());
+        dto.setAssignedTo(task.getAssignedTo());
+        dto.setStartDate(task.getStartDate());
+        dto.setEndDate(task.getEndDate());
+        dto.setActualStart(task.getActualStart());
+        dto.setActualEnd(task.getActualEnd());
+        dto.setEstimateManday(task.getEstimateManday());
+        dto.setActualManday(task.getActualManday());
+        dto.setStatus(task.getStatus());
+        dto.setPriority(task.getPriority());
         return dto;
     }
 }

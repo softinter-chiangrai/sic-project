@@ -1,4 +1,3 @@
-// src/app/core/component/sic-drawer/drawer.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -23,7 +22,9 @@ export class DrawerService {
   }
 
   close() {
-    // ✅ ลบ setTimeout ที่ไม่จำเป็นออก
-    this.drawerSubject.next(null);
+    // ครอบด้วย setTimeout ขนาดย่อม (0ms) เพื่อป้องกันปัญหาสเตตัสเปลี่ยนกะทันหันในคิวงานปัจจุบัน
+    setTimeout(() => {
+      this.drawerSubject.next(null);
+    }, 0);
   }
 }

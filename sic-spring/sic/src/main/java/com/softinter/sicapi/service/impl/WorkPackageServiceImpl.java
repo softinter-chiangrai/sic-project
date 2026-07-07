@@ -27,12 +27,13 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     private final PmWorkPackageRepository wpRepository;
     private final PmMilestoneRepository milestoneRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public List<WorkPackageResponse> getWorkPackagesByMilestoneId(UUID milestoneId) {
         return wpRepository.findByMilestoneIdAndIsDeleteFalse(milestoneId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
-
+    @Transactional(readOnly = true)
     @Override
     public WorkPackageResponse getWorkPackageById(UUID wpId) {
         PmWorkPackage wp = wpRepository.findById(wpId)

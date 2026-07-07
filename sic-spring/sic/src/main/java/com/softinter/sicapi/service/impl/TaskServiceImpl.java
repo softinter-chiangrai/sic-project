@@ -32,12 +32,14 @@ public class TaskServiceImpl implements TaskService {
     private final PmPhaseRepository phaseRepository;  // ✅ เพิ่ม
 
     @Override
+    @Transactional(readOnly = true)
     public List<TaskResponse> getTasksByWorkPackageId(UUID wpId) {
         return taskRepository.findByWorkPackageIdAndIsDeleteFalse(wpId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TaskResponse getTaskById(UUID taskId) {
         PmTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));

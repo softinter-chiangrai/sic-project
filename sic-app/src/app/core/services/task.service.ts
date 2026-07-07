@@ -1,14 +1,14 @@
 // src/app/feature/pm/services/task.service.ts
 
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import type { TaskRequest, TaskResponse } from '../model/phase.model';
-
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  private baseUrl = `/api/pm/tasks`;
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
 
   constructor(private http: HttpClient) {}
 
