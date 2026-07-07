@@ -1,12 +1,14 @@
-// src/app/core/services/drawer.service.ts
+// src/app/core/component/sic-drawer/drawer.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 export interface DrawerConfig {
-  component: any;                      
-  inputs?: Record<string, any>;       
+  component: any;
+  inputs?: Record<string, any>;
   title?: string;
   width?: string;
+  onSaved?: () => void;    
+  onCancelled?: () => void; 
 }
 
 @Injectable({
@@ -21,6 +23,7 @@ export class DrawerService {
   }
 
   close() {
+    // ✅ ลบ setTimeout ที่ไม่จำเป็นออก
     this.drawerSubject.next(null);
   }
 }
