@@ -35,18 +35,6 @@
       }
     </div>
 
-    <!-- Filter: Project -->
-    <select
-      (change)="onProjectChange($event)"
-      [value]="filterProject()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📁 ทุกโครงการ</option>
-      @for (project of projectOptions; track project.id) {
-        <option [value]="project.id">{{ project.name }}</option>
-      }
-    </select>
-
     <!-- Filter: Status -->
     <select
       (change)="onStatusChange($event)"
@@ -61,7 +49,7 @@
   </div>
 
   <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
+  @if (isLoading) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
       <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
@@ -69,7 +57,7 @@
   }
 
   <!-- ===== GANTT CHART ===== -->
-  @if (!isLoading() && filteredTasks().length > 0) {
+  @if (!isLoading && filteredTasks().length > 0) {
     <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
       <div class="min-w-[800px]">
         <!-- Header: Date Labels -->
@@ -79,8 +67,8 @@
           </div>
           <div class="flex-1 relative px-4 py-2">
             <div class="flex text-xs text-[var(--text-muted)]">
-              @for (day of [].constructor(Math.min(getDaysBetween(), 30)); track $index) {
-                <span class="flex-1 text-center">{{ $index + 1 }}</span>
+              @for (day of days(); track day) {
+                <span class="flex-1 text-center">{{ day }}</span>
               }
             </div>
           </div>
@@ -101,15 +89,13 @@
             <!-- Gantt Bar -->
             <div class="flex-1 relative px-4 py-3">
               <div class="relative h-8 w-full bg-[var(--bg)] rounded overflow-hidden">
-                <!-- Bar -->
                 <div
                   class="absolute top-1 h-6 rounded transition-all cursor-pointer hover:shadow-md"
                   [style.left.%]="getBarPosition(task).left"
                   [style.width.%]="getBarPosition(task).width"
                   [style.background]="getBarColor(task.status)"
                   [style.opacity]="task.status === 'Cancelled' ? 0.4 : 1"
-                  (click)="goToUpdate(task.id)"
-                  title="คลิกเพื่ออัปเดตกำหนดการ"
+                  title="{{ task.taskCode }}"
                 >
                   <span class="absolute inset-0 flex items-center justify-center text-xs text-white font-medium truncate px-1">
                     {{ task.taskCode }}
@@ -154,7 +140,7 @@
       </span>
     </div>
 
-  } @else if (!isLoading() && filteredTasks().length === 0) {
+  } @else if (!isLoading && filteredTasks().length === 0) {
     <div class="text-center py-12 text-[var(--text-muted)]">
       <i class="bi bi-inbox text-5xl block mb-3 opacity-30"></i>
       <p>ไม่พบข้อมูลงาน</p>

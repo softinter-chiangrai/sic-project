@@ -3,6 +3,7 @@ package com.softinter.sicapi.entity.pm;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.softinter.sicapi.entity.base.BaseEntity;
 
@@ -25,6 +26,9 @@ public class PmPhase extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;
+
+    @Column(name = "business_id", nullable = false)
+    private UUID businessId;
 
     @Column(name = "phase_name", nullable = false, length = 255)
     private String phaseName;

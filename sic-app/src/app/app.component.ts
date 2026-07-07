@@ -7,14 +7,15 @@ import { ThemeService } from './core/services/theme.service';
 import { LanguageService } from './core/services/language.service';
 import { DateTimeUtil } from './core/utils/datetime.util';
 import { SicNumberConfigService } from './core/component/sic-number/sic-number.config';
-import { DrawerComponent } from './core/component/sic-drawer/drawer.component';
+import { DrawerComponent } from "./core/component/sic-drawer/drawer.component";
+
 
 @Component({
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    DrawerComponent, 
-  ],
+    DrawerComponent
+],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   providers: [],

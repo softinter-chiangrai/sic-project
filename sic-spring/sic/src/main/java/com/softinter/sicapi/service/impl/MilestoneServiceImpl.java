@@ -28,12 +28,14 @@ public class MilestoneServiceImpl implements MilestoneService {
     private final PmPhaseRepository phaseRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<MilestoneResponse> getMilestonesByPhaseId(UUID phaseId) {
         return milestoneRepository.findByPhaseIdAndIsDeleteFalseOrderByDueDateAsc(phaseId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MilestoneResponse getMilestoneById(UUID milestoneId) {
         PmMilestone ms = milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new RuntimeException("Milestone not found"));

@@ -1,14 +1,15 @@
 // src/app/feature/pm/services/work-package.service.ts
-
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import type { WorkPackageRequest, WorkPackageResponse } from '../model/phase.model';
 
 
 @Injectable({ providedIn: 'root' })
 export class WorkPackageService {
-  private baseUrl = `/api/pm/work-packages`;
+  
+  private baseUrl = environment.apiBaseUrl + '/api/pm/work-packages';
 
   constructor(private http: HttpClient) {}
 

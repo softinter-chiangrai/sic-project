@@ -1,9 +1,8 @@
+// src/app/core/component/sic-ganttchart/ganttchart.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, Input, signal } from '@angular/core';
 
-// ===== Interfaces =====
-interface Task {
+export interface GanttTask {
   id: string;
   taskCode: string;
   taskName: string;
@@ -12,142 +11,38 @@ interface Task {
   assignedTo: string;
   startDate: string;
   endDate: string;
-  actualStart?: string;
-  actualEnd?: string;
-  estimateManday: number;
-  actualManday: number;
-  status: 'Todo' | 'In Progress' | 'Waiting Review' | 'Waiting Fix' | 'Done' | 'Delayed' | 'Blocked' | 'Cancelled';
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  dependency?: string;
-  dependencyName?: string;
-  isActive: boolean;
+  status: string;
+  priority?: string;
+  estimateManday?: number;
+  actualManday?: number;
 }
 
-// ===== Mock Data =====
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    taskCode: 'TASK-001',
-    taskName: 'ออกแบบ Table Customer',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมหญิง รักเรียน',
-    startDate: '2024-01-15',
-    endDate: '2024-01-20',
-    estimateManday: 3,
-    actualManday: 4,
-    status: 'Done',
-    priority: 'High',
-    dependency: '',
-    dependencyName: '',
-    isActive: true,
-  },
-  {
-    id: '2',
-    taskCode: 'TASK-002',
-    taskName: 'พัฒนา Customer API',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมชาย ใจดี',
-    startDate: '2024-01-22',
-    endDate: '2024-01-28',
-    actualStart: '2024-01-22',
-    actualEnd: '',
-    estimateManday: 5,
-    actualManday: 4,
-    status: 'In Progress',
-    priority: 'High',
-    dependency: 'TASK-001',
-    dependencyName: 'ออกแบบ Table Customer',
-    isActive: true,
-  },
-  {
-    id: '3',
-    taskCode: 'TASK-003',
-    taskName: 'พัฒนา Customer UI',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'วิชัย พัฒนาชัย',
-    startDate: '2024-01-29',
-    endDate: '2024-02-05',
-    actualStart: '',
-    actualEnd: '',
-    estimateManday: 4,
-    actualManday: 0,
-    status: 'Todo',
-    priority: 'Medium',
-    dependency: 'TASK-002',
-    dependencyName: 'พัฒนา Customer API',
-    isActive: true,
-  },
-  {
-    id: '4',
-    taskCode: 'TASK-004',
-    taskName: 'ออกแบบ ER Diagram ระบบ HR',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    assignedTo: 'มานี มีทรัพย์',
-    startDate: '2024-02-01',
-    endDate: '2024-02-07',
-    actualStart: '2024-02-01',
-    actualEnd: '',
-    estimateManday: 4,
-    actualManday: 2,
-    status: 'Delayed',
-    priority: 'Critical',
-    dependency: '',
-    dependencyName: '',
-    isActive: true,
-  },
-  {
-    id: '5',
-    taskCode: 'TASK-005',
-    taskName: 'ทดสอบระบบ Login',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมศักดิ์ รุ่งเรือง',
-    startDate: '2024-02-10',
-    endDate: '2024-02-12',
-    actualStart: '',
-    actualEnd: '',
-    estimateManday: 2,
-    actualManday: 0,
-    status: 'Blocked',
-    priority: 'High',
-    dependency: 'TASK-002',
-    dependencyName: 'พัฒนา Customer API',
-    isActive: true,
-  },
-];
-
 @Component({
-  selector: 'app-pmrt14',
+  selector: 'sic-ganttchart',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt14.component.html',
+  imports: [CommonModule],
+  templateUrl: './ganttchart.component.html',
+  styleUrls: ['./ganttchart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmrt14Component implements OnInit {
-  private router = inject(Router);
+export class SicGanttchartComponent {
+  @Input() tasks: GanttTask[] = [];
+  @Input() projectId?: string;
+  @Input() phaseId?: string;
+  @Input() isLoading = false;
 
   // ===== State =====
   protected searchTerm = signal('');
-  protected filterProject = signal('all');
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected isLoading = signal(false);
-
-  // ===== Data =====
-  protected tasks = signal<Task[]>(MOCK_TASKS);
 
   // ===== Computed =====
   protected filteredTasks = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    const project = this.filterProject();
     const status = this.filterStatus();
 
-    let result = this.tasks();
+    let result = this.tasks;
 
     if (term) {
       result = result.filter(
@@ -157,10 +52,6 @@ export class Pmrt14Component implements OnInit {
           t.projectName.toLowerCase().includes(term) ||
           t.assignedTo.toLowerCase().includes(term)
       );
-    }
-
-    if (project !== 'all') {
-      result = result.filter((t) => t.projectId === project);
     }
 
     if (status !== 'all') {
@@ -191,22 +82,36 @@ export class Pmrt14Component implements OnInit {
     });
   });
 
-  // ===== Date Range for Gantt =====
+  // ===== Date Range for Gantt (แก้ไขให้ปลอดภัย) =====
   protected dateRange = computed(() => {
     const tasks = this.filteredTasks();
-    if (tasks.length === 0) return { min: new Date(), max: new Date() };
+    if (tasks.length === 0) {
+      const now = new Date();
+      return { min: now, max: now };
+    }
 
-    let minDate = new Date(tasks[0].startDate);
-    let maxDate = new Date(tasks[0].endDate);
+    // กรองเฉพาะ task ที่มีวันที่ถูกต้อง
+    const validTasks = tasks.filter((t) => {
+      const start = new Date(t.startDate);
+      const end = new Date(t.endDate);
+      return !isNaN(start.getTime()) && !isNaN(end.getTime());
+    });
 
-    tasks.forEach((t) => {
+    if (validTasks.length === 0) {
+      const now = new Date();
+      return { min: now, max: now };
+    }
+
+    let minDate = new Date(validTasks[0].startDate);
+    let maxDate = new Date(validTasks[0].endDate);
+
+    validTasks.forEach((t) => {
       const start = new Date(t.startDate);
       const end = new Date(t.endDate);
       if (start < minDate) minDate = start;
       if (end > maxDate) maxDate = end;
     });
 
-    // เพิ่ม buffer 2 วัน
     minDate.setDate(minDate.getDate() - 2);
     maxDate.setDate(maxDate.getDate() + 2);
 
@@ -216,33 +121,26 @@ export class Pmrt14Component implements OnInit {
   protected getDaysBetween = computed(() => {
     const range = this.dateRange();
     const diff = range.max.getTime() - range.min.getTime();
+    if (isNaN(diff) || diff <= 0) {
+      return 1; // fallback อย่างน้อย 1 วัน
+    }
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  });
+
+  protected days = computed(() => {
+    const count = Math.min(this.getDaysBetween(), 30);
+    return Array.from({ length: count }, (_, i) => i + 1);
   });
 
   protected Math = Math;
 
-  // ===== Options =====
-  projectOptions = [
-    { id: '1', name: 'ระบบ CRM' },
-    { id: '2', name: 'ระบบ HR' },
-  ];
+  // ===== Status Options =====
   statusOptions = ['Todo', 'In Progress', 'Waiting Review', 'Waiting Fix', 'Done', 'Delayed', 'Blocked', 'Cancelled'];
-
-  // ===== Lifecycle =====
-  ngOnInit() {
-    // TODO: เรียก API จริง
-  }
 
   // ===== Actions =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-  }
-
-  onProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterProject.set(select.value);
     this.currentPage.set(1);
   }
 
@@ -260,10 +158,6 @@ export class Pmrt14Component implements OnInit {
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
-  }
-
-  goToUpdate(id: string) {
-    this.router.navigate(['/feature/pm/gantt', id, 'update']);
   }
 
   // ===== Utility =====
@@ -308,14 +202,19 @@ export class Pmrt14Component implements OnInit {
     }
   }
 
-  // ===== Gantt Helper =====
-  getBarPosition(task: Task): { left: number; width: number } {
+  // ===== Gantt Helper (แก้ไขให้ปลอดภัย) =====
+  getBarPosition(task: GanttTask): { left: number; width: number } {
     const range = this.dateRange();
     const totalDays = range.max.getTime() - range.min.getTime();
-    if (totalDays === 0) return { left: 0, width: 100 };
+    if (totalDays <= 0) {
+      return { left: 0, width: 100 };
+    }
 
     const start = new Date(task.startDate);
     const end = new Date(task.endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { left: 0, width: 0 };
+    }
 
     const left = ((start.getTime() - range.min.getTime()) / totalDays) * 100;
     const width = ((end.getTime() - start.getTime()) / totalDays) * 100;
@@ -340,5 +239,3 @@ export class Pmrt14Component implements OnInit {
     return map[status] || 'var(--crm-secondary)';
   }
 }
-
-export default Pmrt14Component;

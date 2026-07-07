@@ -259,16 +259,16 @@ export const PM_ROUTES: Routes = [
   },
 
   // ===== Gantt =====
-  {
-    path: 'gantt',
-    loadComponent: () => import('./rt/pmrt14/pmrt14.component').then((m) => m.Pmrt14Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'gantt/:id/update',
-    loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
-    canActivate: [customerGuard, projectGuard],
-  },
+{
+  path: 'gantt',
+  loadComponent: () => import('../../core/component/sic-ganttchart/ganttchart.component').then((m) => m.SicGanttchartComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'gantt/:id/update',
+  loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
+  canActivate: [customerGuard, projectGuard],
+},
 
   // ===== Test Case =====
   {

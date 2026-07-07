@@ -2,14 +2,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import type { PhaseRequest, PhaseResponse } from '../../../../../core/model/phase.model';
-import { PhaseService } from '../../../../../core/services/phase.service';
-import { DrawerService } from '../../../../../core/component/sic-drawer/drawer.service';
 import { RouterModule } from '@angular/router';
-
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { DrawerService } from '../../../../../core/component/sic-drawer/drawer.service';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import type { PhaseRequest, PhaseResponse } from '../../../../../core/model/phase.model';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { PhaseService } from '../../../../../core/services/phase.service';
 
 @Component({
   selector: 'app-pmdt01A',
@@ -51,7 +50,9 @@ export class Pmdt01AComponent implements OnInit {
   ngOnInit() {
     if (this.isEdit && this.data) {
       const startDate = this.data.startDate ? this.data.startDate.split('T')[0] : '';
-      const startTime = this.data.startDate ? this.data.startDate.split('T')[1]?.substring(0, 5) : '';
+      const startTime = this.data.startDate
+        ? this.data.startDate.split('T')[1]?.substring(0, 5)
+        : '';
       const endDate = this.data.endDate ? this.data.endDate.split('T')[0] : '';
       const endTime = this.data.endDate ? this.data.endDate.split('T')[1]?.substring(0, 5) : '';
       this.form.patchValue({
@@ -92,13 +93,17 @@ export class Pmdt01AComponent implements OnInit {
       dependencyId: raw.dependencyId || undefined,
     };
 
-    const request = this.isEdit && this.phaseId
-      ? this.phaseService.updatePhase(this.phaseId, data)
-      : this.phaseService.createPhase(this.projectId, data);
+    const request =
+      this.isEdit && this.phaseId
+        ? this.phaseService.updatePhase(this.phaseId, data)
+        : this.phaseService.createPhase(this.projectId, data);
 
     request.subscribe({
       next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย');
+        this.dialog.success(
+          'สำเร็จ',
+          this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
+        );
         this.saved.emit(res);
         this.drawerService.close(); // ปิด Drawer
       },

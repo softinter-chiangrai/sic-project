@@ -35,6 +35,9 @@ public abstract class BaseBusinessEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(name = "business_id", nullable = false, length = 36)
+    private UUID businessId;
+
     @CreatedBy
     @Column(name = "created_by", nullable = false, length = 100)
     private String createdBy = "system";
@@ -60,14 +63,10 @@ public abstract class BaseBusinessEntity {
     @Column(name = "delete_date")
     private Instant deleteDate; 
 
-    @Column(name = "business_id", nullable = false, length = 36)
-    private UUID businessId;
-
     @Version
     @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
     private Integer  rowVersion;
 
-    
     @Transient
     private EntityState state = EntityState.DETACHED;
 

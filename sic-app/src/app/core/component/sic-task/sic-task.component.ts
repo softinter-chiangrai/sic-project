@@ -16,6 +16,8 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
 import { SicCalendarComponent, SicCalendarTask, SicCalendarViewRange } from '../sic-calendar/sic-calendar.component';
+import { environment } from '../../../../environments/environment';
+
 
 export type SicTaskPersistState = 4 | 3 | 2;
 
@@ -164,11 +166,17 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     this.cdr.markForCheck();
 
     try {
-      const payload = tasksToPersist.map((task) => this.buildSavePayload(task, this.toPersistState(this.getTaskState(task))));
+      const payload = tasksToPersist.map((task) =>
+        this.buildSavePayload(task, this.toPersistState(this.getTaskState(task)))
+      );
 
-      await firstValueFrom(this.http.request(this.config.saveMethod ?? 'POST', this.config.saveApi, {
-        body: payload,
-      }));
+      // ✅ ใช้ full URL
+      const saveUrl = this.buildFullUrl(this.config.saveApi);
+      await firstValueFrom(
+        this.http.request(this.config.saveMethod ?? 'POST', saveUrl, {
+          body: payload,
+        })
+      );
 
       void this.dialogService.success('Save Complete', 'Task calendar data was saved successfully.');
       this.loadTasks();
@@ -191,6 +199,17 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     this.loadTasks();
   }
 
+  // ===== ตัวช่วยจัดการ URL =====
+  private buildFullUrl(url: string): string {
+    if (!url) return url;
+    // ถ้าเป็น full URL แล้ว (เริ่มต้นด้วย http:// หรือ https://) ให้ใช้ตรงนั้น
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+    // มิฉะนั้นต่อกับ apiBaseUrl
+    return `${environment.apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   private loadTasks(): void {
     if (!this.clientReady) {
       return;
@@ -204,28 +223,33 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     this.errorMessage = null;
     this.cdr.markForCheck();
 
-    this.http.get<Record<string, unknown>[] | SicTaskResponse<Record<string, unknown>>>(this.config.api, {
-      params: this.buildSearchParams(),
-    }).subscribe({
-      next: (response) => {
-        const normalized = this.normalizeResponse(response)
-          .map((item) => this.mapSearchItem(item))
-          .filter((task) => !!task.id);
+    // ✅ ใช้ full URL
+    const fullUrl = this.buildFullUrl(this.config.api);
 
-        this.tasks = normalized;
-        this.captureOriginalSnapshots(normalized);
-        this.loading = false;
-        this.tasksChange.emit(this.cloneTasks(normalized));
-        this.cdr.markForCheck();
-      },
-      error: (error: any) => {
-        const message = error?.error?.message || error?.message || 'Unable to load task calendar data.';
-        this.errorMessage = message;
-        this.loading = false;
-        void this.dialogService.error('Task Error', message);
-        this.cdr.markForCheck();
-      },
-    });
+    this.http
+      .get<Record<string, unknown>[] | SicTaskResponse<Record<string, unknown>>>(fullUrl, {
+        params: this.buildSearchParams(),
+      })
+      .subscribe({
+        next: (response) => {
+          const normalized = this.normalizeResponse(response)
+            .map((item) => this.mapSearchItem(item))
+            .filter((task) => !!task.id);
+
+          this.tasks = normalized;
+          this.captureOriginalSnapshots(normalized);
+          this.loading = false;
+          this.tasksChange.emit(this.cloneTasks(normalized));
+          this.cdr.markForCheck();
+        },
+        error: (error: any) => {
+          const message = error?.error?.message || error?.message || 'Unable to load task calendar data.';
+          this.errorMessage = message;
+          this.loading = false;
+          void this.dialogService.error('Task Error', message);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   private buildSearchParams(): HttpParams {
@@ -261,7 +285,9 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     return params;
   }
 
-  private normalizeResponse(response: Record<string, unknown>[] | SicTaskResponse<Record<string, unknown>>): Record<string, unknown>[] {
+  private normalizeResponse(
+    response: Record<string, unknown>[] | SicTaskResponse<Record<string, unknown>>
+  ): Record<string, unknown>[] {
     if (Array.isArray(response)) {
       return response;
     }
@@ -414,3 +440,5 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     return null;
   }
 }
+
+export type { SicCalendarTask };

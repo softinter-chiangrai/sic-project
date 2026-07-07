@@ -1,0 +1,1 @@
+ALTER TABLE pm_phase ADD COLUMN business_id UUID;
