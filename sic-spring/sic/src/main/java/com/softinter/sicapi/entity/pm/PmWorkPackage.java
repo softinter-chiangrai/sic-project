@@ -38,6 +38,9 @@ public class PmWorkPackage extends BaseEntity {
     @Column(name = "end_date")
     private Instant endDate;
 
+    @Column(name = "color", length = 20)
+    private String color;
+
     @Column(length = 20)
     private String status;
 

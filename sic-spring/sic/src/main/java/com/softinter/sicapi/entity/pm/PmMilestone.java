@@ -35,6 +35,9 @@ public class PmMilestone extends BaseEntity {
     @Column(name = "due_date")
     private Instant dueDate;
 
+    @Column(name = "color", length = 20)
+    private String color;
+
     @Column(length = 20)
     private String status;
 

@@ -65,6 +65,7 @@ public class PhaseServiceImpl implements PhaseService {
         phase.setStartDate(request.getStartDate());
         phase.setEndDate(request.getEndDate());
         phase.setOwner(request.getOwner());
+        phase.setColor(request.getColor());
         phase.setStatus("Not Started");
         phase.setProgress(0);
 
@@ -89,6 +90,7 @@ public class PhaseServiceImpl implements PhaseService {
         phase.setStartDate(request.getStartDate());
         phase.setEndDate(request.getEndDate());
         phase.setOwner(request.getOwner());
+        phase.setColor(request.getColor());
 
         if (request.getDependencyId() != null) {
             PmPhase dep = phaseRepository.findById(request.getDependencyId())
@@ -124,7 +126,7 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setOwner(phase.getOwner());
         dto.setStatus(phase.getStatus());
         dto.setProgress(phase.getProgress());
-
+        dto.setColor(phase.getColor());
         if (phase.getDependency() != null) {
             dto.setDependencyId(phase.getDependency().getId());
             dto.setDependencyName(phase.getDependency().getPhaseName());

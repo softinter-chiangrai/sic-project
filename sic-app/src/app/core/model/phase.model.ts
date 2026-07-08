@@ -1,4 +1,4 @@
-// src/app/feature/pm/models/phase.model.ts
+// src/app/core/model/phase.model.ts
 
 export interface PhaseRequest {
   projectId: string;
@@ -8,6 +8,7 @@ export interface PhaseRequest {
   endDate: string;
   owner?: string;
   dependencyId?: string;
+  color?: string;
 }
 
 export interface PhaseResponse {
@@ -18,6 +19,7 @@ export interface PhaseResponse {
   description?: string;
   startDate: string;
   endDate: string;
+  color?: string;
   owner?: string;
   status: string;
   progress: number;
@@ -34,6 +36,7 @@ export interface MilestoneRequest {
   milestoneName: string;
   description?: string;
   dueDate: string;
+  color?: string;
 }
 
 export interface MilestoneResponse {
@@ -44,6 +47,7 @@ export interface MilestoneResponse {
   description?: string;
   dueDate: string;
   status: string;
+  color?: string;
   workPackages?: WorkPackageResponse[];
 }
 
@@ -53,6 +57,7 @@ export interface WorkPackageRequest {
   description?: string;
   startDate: string;
   endDate: string;
+  color?: string;
 }
 
 export interface WorkPackageResponse {
@@ -64,6 +69,7 @@ export interface WorkPackageResponse {
   startDate: string;
   endDate: string;
   status: string;
+  color?: string;
   tasks?: TaskResponse[];
 }
 
@@ -77,6 +83,7 @@ export interface TaskRequest {
   endDate: string;
   estimateManday?: number;
   priority?: string;
+  color?: string;
 }
 
 export interface TaskResponse {
@@ -94,5 +101,6 @@ export interface TaskResponse {
   estimateManday: number;
   actualManday?: number;
   status: string;
+  color?: string;
   priority: string;
 }

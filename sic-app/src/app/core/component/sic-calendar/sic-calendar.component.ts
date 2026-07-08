@@ -24,6 +24,18 @@ import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.comp
 import { SicInputComponent } from '../sic-input/sic-input.component';
 import { SicInputAreaComponent } from '../sic-input-area/sic-input-area.component';
 
+// ===== NEW INTERFACE =====
+export interface CalendarItem {
+  id: string;
+  type: 'phase' | 'milestone' | 'workpackage' | 'task' | 'other';
+  title: string;
+  color: string;
+  date: string;
+  completed?: boolean;
+  extra?: Record<string, any>;
+}
+
+// ===== EXISTING TASK INTERFACE (keep for backward compatibility) =====
 export interface SicCalendarTask {
   id: string;
   title: string;
@@ -45,6 +57,7 @@ type TaskDraftPayload = {
   color: string;
 };
 
+// Task Dialog Component (unchanged)
 @Component({
   selector: 'sic-calendar-task-dialog',
   standalone: true,
@@ -108,16 +121,12 @@ class SicCalendarTaskDialog implements OnInit {
   }
 
   save(): void {
-    if (!this.canSave) {
-      return;
-    }
-
+    if (!this.canSave) return;
     this.onSave({
       title: this.title.trim(),
       description: this.description.trim() || undefined,
       color: this.color.trim() || '#4ECDC4',
     });
-
     this.dialogService.close(true);
   }
 
@@ -132,13 +141,14 @@ class SicCalendarTaskDialog implements OnInit {
   imports: [CommonModule],
   templateUrl: './sic-calendar.component.html',
   styleUrl: './sic-calendar.component.css',
-  host: {
-    ngSkipHydration: 'true',
-  },
+  host: { ngSkipHydration: 'true' },
 })
 export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
+  // ===== INPUTS =====
   @Input() label?: string;
   @Input() tasks: SicCalendarTask[] = [];
+  @Input() items: CalendarItem[] = [];                 // NEW: ข้อมูลแบบรวม
+  @Input() mode: 'view' | 'edit' = 'edit';             // NEW: view = แสดงอย่างเดียว, edit = เปิด dialog เพิ่ม task
   @Input() disabled = false;
   @Input() readonly = false;
   @Input() hint?: string;
@@ -147,14 +157,18 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   @Input() emptyStateTitle = 'No tasks for this day';
   @Input() emptyStateDescription = 'Pick a day and add your first task.';
 
+  // ===== OUTPUTS =====
   @Output() tasksChange = new EventEmitter<SicCalendarTask[]>();
   @Output() taskAdded = new EventEmitter<SicCalendarTask>();
   @Output() taskRemoved = new EventEmitter<SicCalendarTask>();
   @Output() taskSelected = new EventEmitter<string>();
   @Output() viewRangeChange = new EventEmitter<SicCalendarViewRange>();
+  @Output() itemClick = new EventEmitter<CalendarItem>();   // NEW: คลิกรายการในวัน
+  @Output() dateClick = new EventEmitter<Dayjs>();          // NEW: คลิกวันที่ (เฉพาะ mode='view')
 
   @HostBinding('class.sic-calendar-host') readonly hostClass = true;
 
+  // ===== STATE =====
   selectedDate: Dayjs;
   currentViewDate: Dayjs;
   calendarDays: Dayjs[] = [];
@@ -187,7 +201,6 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     this.syncTasks(this.tasks);
-
     this.languageChangeSubscription = DateTimeUtil.onEraChange().subscribe(() => {
       this.era = DateTimeUtil.getDefaults().era;
       this.offset = DateTimeUtil.getDefaults().offset;
@@ -200,7 +213,6 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
       this.emitViewRangeChange();
       this.cdr.markForCheck();
     });
-
     this.emitViewRangeChange();
   }
 
@@ -220,6 +232,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
     this.languageChangeSubscription?.unsubscribe();
   }
 
+  // ===== GETTERS =====
   get selectedDateLabel(): string {
     return this.selectedDate.format(this.normalizeYearFormat('D MMMM YYYY'));
   }
@@ -249,18 +262,13 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   getYearRangeLabel(): string {
-    if (!this.years.length) {
-      return '';
-    }
-
+    if (!this.years.length) return '';
     const lastYear = this.years.at(-1);
-    if (lastYear === undefined) {
-      return '';
-    }
-
+    if (lastYear === undefined) return '';
     return `${this.getDisplayYear(this.years[0])} - ${this.getDisplayYear(lastYear)}`;
   }
 
+  // ===== NAVIGATION =====
   previousMonth(): void {
     this.currentViewDate = this.currentViewDate.subtract(1, 'month');
     this.generateYears();
@@ -275,11 +283,9 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
     this.emitViewRangeChange();
   }
 
-  // ✅ ปรับ selectDate ให้เปิด Dialog ทันที
+  // ===== DATE SELECTION =====
   selectDate(date: Dayjs): void {
-    if (this.disabled || this.isDateDisabled(date)) {
-      return;
-    }
+    if (this.disabled || this.isDateDisabled(date)) return;
 
     const changedMonth = !date.isSame(this.currentViewDate, 'month');
     this.selectedDate = date;
@@ -292,15 +298,23 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
       this.emitViewRangeChange();
     }
 
-    // ✅ เปิด dialog เพิ่ม task ทันที
-    this.openAddTaskDialog();
+    if (this.mode === 'edit') {
+      this.openAddTaskDialog();             // เปิด dialog เพิ่ม task (แบบเดิม)
+    } else {
+      this.dateClick.emit(date);            // mode='view' ส่ง event ไปให้ parent
+    }
   }
 
-  toggleYearView(): void {
-    if (this.disabled) {
-      return;
-    }
+  // ===== ITEM CLICK =====
+  onItemClick(item: CalendarItem, event: Event): void {
+    event.stopPropagation();
+    if (this.disabled) return;
+    this.itemClick.emit(item);
+  }
 
+  // ===== YEAR / MONTH PICKER =====
+  toggleYearView(): void {
+    if (this.disabled) return;
     this.yearViewOpen = !this.yearViewOpen;
     if (this.yearViewOpen) {
       this.monthViewOpen = false;
@@ -314,10 +328,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   selectYear(year: number): void {
-    if (this.disabled) {
-      return;
-    }
-
+    if (this.disabled) return;
     this.currentViewDate = this.currentViewDate.year(year);
     this.yearViewOpen = false;
     this.monthViewOpen = true;
@@ -326,10 +337,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   selectMonth(month: number): void {
-    if (this.disabled) {
-      return;
-    }
-
+    if (this.disabled) return;
     this.currentViewDate = this.currentViewDate.month(month);
     this.monthViewOpen = false;
     this.generateYears();
@@ -338,15 +346,9 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onMonthSelectionChange(value: number | string): void {
-    if (this.disabled) {
-      return;
-    }
-
+    if (this.disabled) return;
     const monthIndex = Number(value);
-    if (!Number.isInteger(monthIndex) || monthIndex < 0 || monthIndex > 11) {
-      return;
-    }
-
+    if (!Number.isInteger(monthIndex) || monthIndex < 0 || monthIndex > 11) return;
     this.currentViewDate = this.currentViewDate.month(monthIndex);
     this.generateYears();
     this.generateCalendar();
@@ -354,15 +356,9 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onYearSelectionChange(value: number | string): void {
-    if (this.disabled) {
-      return;
-    }
-
+    if (this.disabled) return;
     const year = Number(value);
-    if (!Number.isInteger(year)) {
-      return;
-    }
-
+    if (!Number.isInteger(year)) return;
     this.currentViewDate = this.currentViewDate.year(year);
     this.generateYears();
     this.generateCalendar();
@@ -378,10 +374,9 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
     this.emitViewRangeChange();
   }
 
+  // ===== ADD TASK DIALOG (เดิม) =====
   openAddTaskDialog(): void {
-    if (this.readonly || this.disabled) {
-      return;
-    }
+    if (this.readonly || this.disabled) return;
 
     this.dialogService.open({
       type: 'confirm',
@@ -398,7 +393,6 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
             completed: false,
             date: this.selectedDate.startOf('day').toISOString(),
           };
-
           this.tasksInternal = [...this.tasksInternal, newTask];
           this.emitTasks();
           this.taskAdded.emit({ ...newTask });
@@ -409,10 +403,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
 
   removeTask(taskId: string): void {
     const removed = this.tasksInternal.find((task) => task.id === taskId);
-    if (!removed) {
-      return;
-    }
-
+    if (!removed) return;
     this.tasksInternal = this.tasksInternal.filter((task) => task.id !== taskId);
     this.emitTasks();
     this.taskRemoved.emit({ ...removed });
@@ -426,14 +417,44 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   clearTasks(): void {
-    if (this.disabled || this.readonly) {
-      return;
-    }
-
+    if (this.disabled || this.readonly) return;
     this.tasksInternal = [];
     this.emitTasks();
   }
 
+  // ===== ฟังก์ชันสำหรับแสดงข้อมูลในวัน =====
+  // ใช้รวมทั้ง tasks และ items ที่ส่งเข้ามา
+  getItemsForDate(date: Dayjs): CalendarItem[] {
+    const fromTasks: CalendarItem[] = this.tasksInternal
+      .filter((task) => this.isTaskOnDate(task, date))
+      .map((task) => ({
+        id: task.id,
+        type: 'task',
+        title: task.title,
+        color: task.color || '#4ECDC4',
+        date: task.date,
+        completed: task.completed || false,
+      }));
+
+    const fromItems = this.items.filter((item) => {
+      const itemDate = dayjs.utc(item.date).utcOffset(this.offset).locale(this.resolveLocale(this.era));
+      return itemDate.isValid() && itemDate.isSame(date, 'day');
+    });
+
+    // รวมและเรียงตาม title
+    return [...fromTasks, ...fromItems].sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  getVisibleItemsForDate(date: Dayjs): CalendarItem[] {
+    return this.getItemsForDate(date).slice(0, 3);
+  }
+
+  getOverflowItemCount(date: Dayjs): number {
+    const total = this.getItemsForDate(date).length;
+    return total > 3 ? total - 3 : 0;
+  }
+
+  // ฟังก์ชันเก่าที่ใช้เฉพาะ task (ยังคงไว้)
   taskCountForDate(date: Dayjs): number {
     return this.getTasksForDate(date).length;
   }
@@ -457,30 +478,16 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   isDateDisabled(date: Dayjs): boolean {
     const minDate = this.resolveBoundaryDate(this.minDate);
     const maxDate = this.resolveBoundaryDate(this.maxDate);
-
-    if (minDate && date.isBefore(minDate, 'day')) {
-      return true;
-    }
-
-    if (maxDate && date.isAfter(maxDate, 'day')) {
-      return true;
-    }
-
+    if (minDate && date.isBefore(minDate, 'day')) return true;
+    if (maxDate && date.isAfter(maxDate, 'day')) return true;
     return false;
   }
 
-  getVisibleTasksForDate(date: Dayjs): SicCalendarTask[] {
-    return this.getTasksForDate(date).slice(0, 3);
-  }
-
-  getOverflowTaskCount(date: Dayjs): number {
-    const total = this.getTasksForDate(date).length;
-    return total > 3 ? total - 3 : 0;
-  }
-
+  // ===== TRACK BY =====
   trackByDate = (_index: number, date: Dayjs): string => date.toISOString();
-  trackByTask = (_index: number, task: SicCalendarTask): string => task.id;
+  trackByItem = (_index: number, item: CalendarItem): string => item.id;
 
+  // ===== PRIVATE METHODS =====
   private syncTasks(tasks: SicCalendarTask[] | null | undefined): void {
     this.tasksInternal = this.cloneTasks(tasks ?? []);
     this.cdr.markForCheck();
@@ -514,7 +521,6 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
       this.weekDaysFull = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
       return;
     }
-
     this.weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     this.weekDaysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   }
@@ -548,10 +554,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private resolveBoundaryDate(value: Date | string | null | undefined): Dayjs | null {
-    if (!value) {
-      return null;
-    }
-
+    if (!value) return null;
     const parsed = dayjs.utc(value).utcOffset(this.offset).locale(this.resolveLocale(this.era));
     return parsed.isValid() ? parsed : null;
   }

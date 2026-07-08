@@ -1,10 +1,11 @@
-// src/app/feature/pm/dt/pmdt02A/pmdt02A.component.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { MilestoneService } from '../../../../../core/services/milestone.service';
 import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
@@ -18,6 +19,7 @@ import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/mo
     RouterModule,
     SicDatepickerComponent,
     SicTimepickerComponent,
+    SicColorpickerComponent,   // ✅ import
   ],
   templateUrl: './pmdt02A.component.html',
 })
@@ -34,11 +36,13 @@ export class Pmdt02AComponent implements OnInit {
   isEdit = false;
   data: MilestoneResponse | null = null;
 
+  // ✅ เพิ่ม color ในฟอร์ม
   form = this.fb.group({
     milestoneName: ['', Validators.required],
     description: [''],
     dueDate: ['', Validators.required],
     dueTime: ['', Validators.required],
+    color: [''], // ✅ เพิ่ม
   });
 
   ngOnInit() {
@@ -74,6 +78,7 @@ export class Pmdt02AComponent implements OnInit {
       description: data.description,
       dueDate: dueDate,
       dueTime: dueTime,
+      color: data.color || '', // ✅ patch ค่าสี
     });
   }
 
@@ -97,6 +102,7 @@ export class Pmdt02AComponent implements OnInit {
       milestoneName: raw.milestoneName!,
       description: raw.description || undefined,
       dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
+      color: raw.color || undefined, // ✅ ส่งค่าสี
     };
 
     const request = this.isEdit && this.milestoneId

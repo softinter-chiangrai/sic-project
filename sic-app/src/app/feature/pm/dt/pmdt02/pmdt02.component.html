@@ -1,7 +1,7 @@
 <!-- src/app/feature/pm/dt/pmdt02/pmdt02.component.html -->
 <div class="space-y-5 p-4">
 
-    <!-- ===== BACK & BREADCRUMB ===== -->
+    <!-- ===== BACK & BREADCRUMB (เหมือนเดิม) ===== -->
     <div class="flex items-center gap-3 flex-wrap">
         <button (click)="goBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all">
@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<!-- ===== PHASE HEADER ===== -->
+<!-- ===== PHASE HEADER (เหมือนเดิม) ===== -->
 @if (phase(); as p) {
 <div class="flex flex-wrap items-center justify-between gap-4 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5">
     <div>
@@ -43,7 +43,7 @@
 </div>
 }
 
-<!-- ===== LOADING ===== -->
+<!-- ===== LOADING (เหมือนเดิม) ===== -->
 @if (isLoading()) {
 <div class="flex justify-center py-12">
     <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -52,7 +52,7 @@
 
 @if (!isLoading() && phase(); as p) {
 
-<!-- ===== TAB SWITCHER ===== -->
+<!-- ===== TAB SWITCHER (เหมือนเดิม) ===== -->
 <div class="flex gap-1 border-b border-[var(--border)]">
     <button
     (click)="rightTab.set('list')"
@@ -77,13 +77,10 @@ class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
 </button>
 </div>
 
-<!-- ============================================================ -->
-<!-- ===== TAB 1: LIST (split view: Milestones | Work Packages) ===== -->
-<!-- ============================================================ -->
+<!-- ===== TAB 1: LIST (เหมือนเดิม) ===== -->
 @if (rightTab() === 'list') {
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-    <!-- ===== LEFT COLUMN: MILESTONES ===== -->
+    <!-- Left: Milestones -->
     <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
         <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
             <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
@@ -96,11 +93,9 @@ class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
             <i class="bi bi-plus-lg"></i> เพิ่ม
         </button>
     </div>
-
     <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         @for (ms of p.milestones || []; track ms.id) {
         <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-            <!-- Milestone header -->
             <div
             class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors"
             (click)="toggleMilestone(ms.id)"
@@ -125,7 +120,6 @@ class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
         </button>
     </div>
 </div>
-
 <!-- Work packages under milestone -->
 @if (expandedMilestone() === ms.id) {
 <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
@@ -168,7 +162,7 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
 </div>
 </div>
 
-<!-- ===== RIGHT COLUMN: WORK PACKAGES & TASKS ===== -->
+<!-- Right: Work Packages & Tasks -->
 <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
     <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
         <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
@@ -181,12 +175,10 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
         <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
     </button>
 </div>
-
 <div class="flex-1 overflow-y-auto px-3 py-2 space-y-2">
     @for (ms of p.milestones || []; track ms.id) {
     @for (wp of ms.workPackages || []; track wp.id) {
     <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-        <!-- Work Package header -->
         <div
         class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors"
         (click)="toggleWorkPackage(wp.id)"
@@ -215,7 +207,6 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
     </button>
 </div>
 </div>
-
 <!-- Tasks under work package -->
 @if (expandedWorkPackage() === wp.id) {
 <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
@@ -261,13 +252,10 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
 }
 </div>
 </div>
-
 </div>
 }
 
-<!-- ============================================================ -->
-<!-- ===== TAB 2: CALENDAR ===== -->
-<!-- ============================================================ -->
+<!-- ===== TAB 2: CALENDAR (ปรับปรุง) ===== -->
 @if (rightTab() === 'calendar') {
 <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
     <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
@@ -275,27 +263,23 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
             <i class="bi bi-calendar3 text-[var(--crm-primary)]"></i>
             ปฏิทินงาน
         </h2>
-        <span class="text-xs text-[var(--text-muted)]">คลิกวันที่เพื่อเพิ่ม/จัดการงาน</span>
+        <span class="text-xs text-[var(--text-muted)]">คลิกรายการเพื่อแก้ไข</span>
     </div>
     <div class="p-4">
-        <sic-task
-        [config]="taskConfig()"
-        [disabled]="false"
-        [readonly]="false"
-        [label]="'Tasks'"
-        [hint]="'คลิกวันที่ในปฏิทินเพื่อเพิ่มงาน'"
-        (tasksChange)="onCalendarTasksChange($event)"
-        (taskAdded)="onTaskAdded($event)"
-        (taskRemoved)="onTaskRemoved($event)"
+        <sic-calendar
+            [items]="calendarItems()"
+            [mode]="'view'"
+            [disabled]="false"
+            [label]="'ปฏิทิน Phase'"
+            [hint]="'คลิกรายการเพื่อไปแก้ไข'"
+            (itemClick)="onCalendarItemClick($event)"
         >
-    </sic-task>
-</div>
+        </sic-calendar>
+    </div>
 </div>
 }
 
-<!-- ============================================================ -->
-<!-- ===== TAB 3: GANTT (ใช้ Component ใหม่) ===== -->
-<!-- ============================================================ -->
+<!-- ===== TAB 3: GANTT (เหมือนเดิม) ===== -->
 @if (rightTab() === 'gantt') {
 <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden p-4">
     <sic-ganttchart

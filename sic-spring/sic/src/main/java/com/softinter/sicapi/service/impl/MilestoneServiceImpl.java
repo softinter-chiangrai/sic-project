@@ -58,6 +58,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         ms.setDescription(request.getDescription());
         ms.setDueDate(request.getDueDate());  
         ms.setStatus("Not Started");
+        ms.setColor(request.getColor());  
 
         ms = milestoneRepository.save(ms);
         return toResponse(ms);
@@ -72,7 +73,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         ms.setMilestoneName(request.getMilestoneName());
         ms.setDescription(request.getDescription());
         ms.setDueDate(request.getDueDate());
-
+        ms.setColor(request.getColor());
         ms = milestoneRepository.save(ms);
         return toResponse(ms);
     }
@@ -95,7 +96,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setDescription(ms.getDescription());
         dto.setDueDate(ms.getDueDate());
         dto.setStatus(ms.getStatus());
-        
+        dto.setColor(ms.getColor());
         List<WorkPackageResponse> wpResponses = new java.util.ArrayList<>();
         if (ms.getWorkPackages() != null) {
             for (PmWorkPackage wp : ms.getWorkPackages()) {

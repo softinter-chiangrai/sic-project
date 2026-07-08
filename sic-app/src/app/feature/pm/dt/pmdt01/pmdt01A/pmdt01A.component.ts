@@ -1,10 +1,11 @@
-// src/app/feature/pm/dt/pmdt01A/pmdt01A.component.ts
+// src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import type { PhaseRequest, PhaseResponse } from '../../../../../core/model/phase.model';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { PhaseService } from '../../../../../core/services/phase.service';
@@ -17,6 +18,7 @@ import { PhaseService } from '../../../../../core/services/phase.service';
     ReactiveFormsModule,
     SicDatepickerComponent,
     SicTimepickerComponent,
+    SicColorpickerComponent,   // ✅ import
     RouterModule,
   ],
   templateUrl: './pmdt01A.component.html',
@@ -33,6 +35,7 @@ export class Pmdt01AComponent implements OnInit {
   isEdit = false;
   data: PhaseResponse | null = null;
 
+  // ✅ เพิ่ม color ในฟอร์ม
   form = this.fb.group({
     phaseName: ['', Validators.required],
     description: [''],
@@ -42,15 +45,14 @@ export class Pmdt01AComponent implements OnInit {
     endTime: ['', Validators.required],
     owner: [''],
     dependencyId: [''],
+    color: [''], // ✅ เพิ่มบรรทัดนี้
   });
 
   ngOnInit() {
-    // รับ projectId จาก queryParams
     this.route.queryParams.subscribe((params) => {
       this.projectId = params['projectId'] || '';
     });
 
-    // ตรวจสอบว่าเป็น edit หรือไม่ โดยดูจาก param id
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
@@ -88,6 +90,7 @@ export class Pmdt01AComponent implements OnInit {
       endTime: endTime,
       owner: data.owner,
       dependencyId: data.dependencyId || '',
+      color: data.color || '', // ✅ patch ค่าสี
     });
   }
 
@@ -114,6 +117,7 @@ export class Pmdt01AComponent implements OnInit {
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
       owner: raw.owner || undefined,
       dependencyId: raw.dependencyId || undefined,
+      color: raw.color || undefined, // ✅ ส่งค่าสี
     };
 
     const request =
@@ -127,7 +131,6 @@ export class Pmdt01AComponent implements OnInit {
           'สำเร็จ',
           this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
         );
-        // กลับไปที่หน้า Phase List พร้อม projectId
         this.router.navigate(['/feature/pm/pmdt01'], {
           queryParams: { projectId: this.projectId },
         });

@@ -15,5 +15,6 @@ public class MilestoneResponse {
     private String description;
     private Instant dueDate;
     private String status;
+    private String color;
     private List<WorkPackageResponse> workPackages;
 }

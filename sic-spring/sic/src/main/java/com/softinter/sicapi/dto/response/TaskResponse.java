@@ -20,5 +20,6 @@ public class TaskResponse {
     private Integer estimateManday;
     private Integer actualManday;
     private String status;
+    private String color;
     private String priority;
 }

@@ -54,6 +54,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setStartDate(request.getStartDate());
         wp.setEndDate(request.getEndDate());
         wp.setStatus("Not Started");
+        wp.setColor(request.getColor());
 
         wp = wpRepository.save(wp);
         return toResponse(wp);
@@ -69,6 +70,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setDescription(request.getDescription());
         wp.setStartDate(request.getStartDate());
         wp.setEndDate(request.getEndDate());
+        wp.setColor(request.getColor());
 
         wp = wpRepository.save(wp);
         return toResponse(wp);
@@ -93,6 +95,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         dto.setStartDate(wp.getStartDate());
         dto.setEndDate(wp.getEndDate());
         dto.setStatus(wp.getStatus());
+        dto.setColor(wp.getColor());
         return dto;
     }
 }

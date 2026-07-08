@@ -11,4 +11,5 @@ public class WorkPackageRequest {
     private String description;
     private Instant startDate;
     private Instant endDate;
+    private String color;
 }

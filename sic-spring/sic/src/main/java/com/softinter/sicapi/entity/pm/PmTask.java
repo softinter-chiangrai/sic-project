@@ -49,6 +49,9 @@ public class PmTask extends BaseEntity {
     @Column(name = "estimate_manday")
     private Integer estimateManday;
 
+    @Column(name = "color", length = 20)
+    private String color;
+
     @Column(name = "actual_manday")
     private Integer actualManday;
 

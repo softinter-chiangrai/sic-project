@@ -15,6 +15,7 @@ public class PhaseResponse {
     private String description;
     private Instant startDate;
     private Instant endDate;
+    private String color;
     private String owner;
     private String status;
     private Integer progress;

@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
 import com.softinter.sicapi.entity.su.SuProfile;
@@ -22,6 +24,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.SuUserBusinessMemberService;
 import com.softinter.sicapi.util.LocalizationHelper;  // ✅ import
+import com.softinter.sicapi.util.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,47 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     public Page<SuUserBusinessMemberResponse> getMembers(UUID businessId, Pageable pageable) {
         Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
         return entityPage.map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, String keyword, int pageNumberZeroBased, int pageSize) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNumberZeroBased, pageSize);
+        Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
+
+        List<LovResponse> items = entityPage.getContent().stream().map(ub -> {
+            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+            String displayName = ub.getUserId();
+            if (profile != null) {
+                String fullName = LocalizationHelper.getFullName(profile);
+                if (fullName != null && !fullName.isBlank()) {
+                    displayName = fullName;
+                }
+            }
+            return new LovResponse(displayName, displayName);
+        }).toList();
+
+        return PaginationUtil.of(items, pageNumberZeroBased, pageSize, entityPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LovResponse getComboboxMemberByValue(UUID businessId, String value) {
+        List<SuUserBusiness> allMembers = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
+        for (SuUserBusiness ub : allMembers) {
+            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+            String displayName = ub.getUserId();
+            if (profile != null) {
+                String fullName = LocalizationHelper.getFullName(profile);
+                if (fullName != null && !fullName.isBlank()) {
+                    displayName = fullName;
+                }
+            }
+            if (displayName.equals(value)) {
+                return new LovResponse(displayName, displayName);
+            }
+        }
+        return new LovResponse(value, value);
     }
 
     @Override

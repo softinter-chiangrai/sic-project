@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import dayjs from '../../../../core/dayjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 
 import type {
@@ -15,26 +16,21 @@ import { PhaseService } from '../../../../core/services/phase.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { WorkPackageService } from '../../../../core/services/work-package.service';
 
-import { environment } from '../../../../../environments/environment';
 import {
   GanttTask,
   SicGanttchartComponent,
 } from '../../../../core/component/sic-ganttchart/ganttchart.component';
+
+// ✅ import จาก sic-calendar.component
 import {
-  SicCalendarTask,
-  SicTaskComponent,
-  SicTaskConfig,
-} from '../../../../core/component/sic-task/sic-task.component';
+  CalendarItem,
+  SicCalendarComponent,
+} from '../../../../core/component/sic-calendar/sic-calendar.component';
 
 @Component({
   selector: 'app-pmdt02',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    SicTaskComponent,
-    SicGanttchartComponent,
-  ],
+  imports: [CommonModule, RouterModule, SicGanttchartComponent, SicCalendarComponent],
   templateUrl: './pmdt02.component.html',
 })
 export class Pmdt02Component implements OnInit {
@@ -46,6 +42,7 @@ export class Pmdt02Component implements OnInit {
   private taskService = inject(TaskService);
   private dialog = inject(DialogService);
 
+  // ===== SIGNALS =====
   phase = signal<PhaseResponse | null>(null);
   isLoading = signal(false);
   projectId = signal('');
@@ -54,36 +51,7 @@ export class Pmdt02Component implements OnInit {
   expandedWorkPackage = signal<string | null>(null);
   rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
 
-  taskConfig = computed<SicTaskConfig>(() => ({
-    api: `${environment.apiBaseUrl}/api/pm/projects/${this.currentPhaseId()}/tasks`,
-    id: 'id',
-    startDateParam: 'startDate',
-    endDateParam: 'endDate',
-    saveApi: `${environment.apiBaseUrl}/api/pm/tasks`,
-    saveMethod: 'POST',
-    mapSearchItem: (item: Record<string, unknown>): SicCalendarTask => {
-      return {
-        id: String(item['id'] || crypto.randomUUID()),
-        title: String(item['taskName'] || item['title'] || 'Untitled Task'),
-        description: String(item['description'] || ''),
-        date: String(item['endDate'] || item['startDate'] || new Date().toISOString()),
-        color: '#4ECDC4',
-        completed: item['status'] === 'Done',
-      };
-    },
-    savePayload: (task: SicCalendarTask, state: number): unknown => {
-      return {
-        id: task.id,
-        taskName: task.title,
-        description: task.description,
-        endDate: task.date,
-        status: task.completed ? 'Done' : 'Todo',
-        workPackageId: null,
-        state: state,
-      };
-    },
-  }));
-
+  // ===== GANTT TASKS (ใช้ใน template) =====
   protected ganttTasks = computed<GanttTask[]>(() => {
     const p = this.phase();
     if (!p) return [];
@@ -112,6 +80,116 @@ export class Pmdt02Component implements OnInit {
     return tasks;
   });
 
+  // ===== CALENDAR ITEMS (ใช้ใน template) =====
+  calendarItems = computed<CalendarItem[]>(() => {
+    const p = this.phase();
+    if (!p) return [];
+    const result: CalendarItem[] = [];
+
+    // ✅ Phase
+    if (p.startDate && p.endDate) {
+      const start = dayjs.utc(p.startDate);
+      const end = dayjs.utc(p.endDate);
+      const days = end.diff(start, 'day') + 1;
+      for (let i = 0; i < days; i++) {
+        const date = start.add(i, 'day');
+        result.push({
+          id: p.id,
+          type: 'phase',
+          title: p.phaseName,
+          color: p.color || '#4A90D9', // ✅ อ่านจาก p.color
+          date: date.toISOString(),
+          completed: false,
+        });
+      }
+    }
+
+    // ✅ Milestone
+    p.milestones?.forEach((ms) => {
+      if (ms.dueDate) {
+        result.push({
+          id: ms.id,
+          type: 'milestone',
+          title: ms.milestoneName,
+          color: ms.color || '#E67E22', // ✅ อ่านจาก ms.color
+          date: dayjs.utc(ms.dueDate).toISOString(),
+          completed: false,
+        });
+      }
+
+      // ✅ WorkPackage
+      ms.workPackages?.forEach((wp) => {
+        if (wp.startDate && wp.endDate) {
+          const start = dayjs.utc(wp.startDate);
+          const end = dayjs.utc(wp.endDate);
+          const days = end.diff(start, 'day') + 1;
+          for (let i = 0; i < days; i++) {
+            const date = start.add(i, 'day');
+            result.push({
+              id: wp.id,
+              type: 'workpackage',
+              title: wp.packageName,
+              color: wp.color || '#8E44AD', // ✅ อ่านจาก wp.color
+              date: date.toISOString(),
+              completed: false,
+            });
+          }
+        }
+
+        // ✅ Task
+        wp.tasks?.forEach((task) => {
+          if (task.startDate) {
+            result.push({
+              id: task.id,
+              type: 'task',
+              title: task.taskName,
+              color: task.color || '#2ECC71', // ✅ อ่านจาก task.color
+              date: dayjs.utc(task.startDate).toISOString(),
+              completed: task.status === 'Done',
+              extra: { workPackageId: wp.id },
+            });
+          }
+        });
+      });
+    });
+
+    return result;
+  });
+
+  // ===== HANDLER: คลิกรายการในปฏิทิน =====
+  onCalendarItemClick(item: CalendarItem): void {
+    const projectId = this.projectId();
+    const phaseId = this.currentPhaseId();
+
+    switch (item.type) {
+      case 'phase':
+        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
+          queryParams: { projectId },
+        });
+        break;
+      case 'milestone':
+        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'workpackage':
+        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'task':
+        // ✅ แก้ไข: ใช้ ['workPackageId'] แทน .workPackageId
+        const wpId = item.extra?.['workPackageId'] || '';
+        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: wpId },
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ===== LIFECYCLE =====
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
       const phaseId = params.get('id');
@@ -131,40 +209,40 @@ export class Pmdt02Component implements OnInit {
   }
 
   loadPhaseDetail(phaseId: string) {
-    this.isLoading.set(true);
-    this.phaseService.getPhaseById(phaseId).subscribe({
-      next: (data) => {
-        this.phase.set(data);
-        if (data.milestones && data.milestones.length > 0) {
-          this.loadWorkPackagesForMilestones(data.milestones);
-        } else {
-          this.loadMilestones(phaseId);
-        }
-      },
-      error: (err) => {
-        console.error(err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
-        this.router.navigate(['/feature/pm/pmdt01'], {
-          queryParams: { projectId: this.projectId() },
-        });
-      },
-      complete: () => this.isLoading.set(false),
-    });
-  }
+  this.isLoading.set(true);
+  this.phaseService.getPhaseById(phaseId).subscribe({
+    next: (data) => {
+      this.phase.set(data);
+      // ✅ เรียก loadMilestones ทุกครั้ง เพื่อให้ได้ข้อมูลล่าสุด (รวม color)
+      this.loadMilestones(phaseId);
+    },
+    error: (err) => {
+      console.error(err);
+      this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
+      this.router.navigate(['/feature/pm/pmdt01'], {
+        queryParams: { projectId: this.projectId() },
+      });
+    },
+    complete: () => this.isLoading.set(false),
+  });
+}
 
   loadMilestones(phaseId: string) {
-    this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
-      next: (milestones) => {
-        const current = this.phase();
-        if (current) {
-          current.milestones = milestones;
-          this.phase.set({ ...current });
-          this.loadWorkPackagesForMilestones(milestones);
-        }
-      },
-      error: (err) => console.error(err),
-    });
-  }
+  this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
+    next: (milestones) => {
+      const current = this.phase();
+      if (current) {
+        // ✅ ใช้ spread สร้าง object ใหม่ trigger change detection
+        this.phase.set({
+          ...current,
+          milestones: milestones,
+        });
+        this.loadWorkPackagesForMilestones(milestones);
+      }
+    },
+    error: (err) => console.error(err),
+  });
+}
 
   private loadWorkPackagesForMilestones(milestones: MilestoneResponse[]) {
     if (!milestones || milestones.length === 0) return;
@@ -208,6 +286,7 @@ export class Pmdt02Component implements OnInit {
     }
   }
 
+  // ===== TOGGLE =====
   toggleMilestone(msId: string) {
     this.expandedMilestone.set(this.expandedMilestone() === msId ? null : msId);
   }
@@ -227,7 +306,7 @@ export class Pmdt02Component implements OnInit {
     return count;
   }
 
-  // ===== Milestone CRUD (ใช้ Router) =====
+  // ===== CRUD =====
   openCreateMilestone() {
     const phaseId = this.currentPhaseId();
     if (!phaseId) return;
@@ -261,7 +340,6 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== Work Package CRUD (ใช้ Router) =====
   openCreateWorkPackage(milestoneId: string) {
     this.router.navigate(['/feature/pm/work-package/new'], {
       queryParams: {
@@ -313,7 +391,6 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== Task CRUD (ใช้ Router) =====
   openCreateTask(workPackageId: string) {
     this.router.navigate(['/feature/pm/task/new'], {
       queryParams: {
@@ -360,23 +437,11 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== Navigation =====
   goBack() {
     this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId() } });
   }
 
-  // ===== Calendar Events =====
-  onCalendarTasksChange(tasks: SicCalendarTask[]) {
-    console.log('Tasks changed:', tasks);
-  }
-  onTaskAdded(task: SicCalendarTask) {
-    console.log('Task added:', task);
-  }
-  onTaskRemoved(task: SicCalendarTask) {
-    console.log('Task removed:', task);
-  }
-
-  // ===== Status Utilities =====
+  // ===== UTILITIES =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
       'Not Started': 'bg-gray-100 text-gray-600',

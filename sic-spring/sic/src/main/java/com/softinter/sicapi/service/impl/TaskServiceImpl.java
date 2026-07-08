@@ -63,6 +63,7 @@ public class TaskServiceImpl implements TaskService {
         task.setEstimateManday(request.getEstimateManday());
         task.setPriority(request.getPriority());
         task.setStatus("Todo");
+        task.setColor(request.getColor());
 
         task = taskRepository.save(task);
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
@@ -83,6 +84,7 @@ public class TaskServiceImpl implements TaskService {
         task.setEndDate(request.getEndDate());
         task.setEstimateManday(request.getEstimateManday());
         task.setPriority(request.getPriority());
+        task.setColor(request.getColor());
 
         task = taskRepository.save(task);
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
@@ -146,6 +148,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setActualManday(task.getActualManday());
         dto.setStatus(task.getStatus());
         dto.setPriority(task.getPriority());
+        
         return dto;
     }
 }

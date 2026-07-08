@@ -7,6 +7,7 @@
 
   <div class="sic-calendar__control">
     <div class="sic-calendar__surface">
+      <!-- Toolbar -->
       <div class="sic-calendar__toolbar">
         <div class="sic-calendar__toolbar-left-slot">
           <ng-content select="[sicCalendarToolbarLeft]"></ng-content>
@@ -44,10 +45,9 @@
             </button>
           </div>
         </div>
-
-
       </div>
 
+      <!-- Year/Month Picker (unchanged) -->
       @if (yearViewOpen || monthViewOpen) {
         <button
           type="button"
@@ -100,6 +100,7 @@
         </div>
       }
 
+      <!-- Weekdays -->
       <div class="sic-calendar__weekdays sic-calendar__weekdays--header">
         @for (day of weekDays; track $index) {
           <div class="sic-calendar__weekday">
@@ -108,6 +109,7 @@
         }
       </div>
 
+      <!-- Days Grid -->
       <div class="sic-calendar__days sic-calendar__days--month">
         @for (date of calendarDays; track trackByDate($index, date)) {
           <button
@@ -121,26 +123,25 @@
             (click)="selectDate(date)">
             <div class="sic-calendar__day-head">
               <span class="sic-calendar__day-number">{{ date.date() }}</span>
-              @if (getOverflowTaskCount(date) > 0) {
-                <span class="sic-calendar__day-more">+{{ getOverflowTaskCount(date) }} more</span>
+              @if (getOverflowItemCount(date) > 0) {
+                <span class="sic-calendar__day-more">+{{ getOverflowItemCount(date) }} more</span>
               }
             </div>
 
             <div class="sic-calendar__day-events">
-              @for (task of getVisibleTasksForDate(date); track trackByTask($index, task)) {
+              @for (item of getVisibleItemsForDate(date); track trackByItem($index, item)) {
                 <span
                   class="sic-calendar__event-pill"
-                  [style.--task-color]="task.color || '#4ECDC4'"
-                  [attr.data-completed]="task.completed ? 'true' : null">
-                  {{ task.title }}
+                  [style.--task-color]="item.color || '#4ECDC4'"
+                  [attr.data-completed]="item.completed ? 'true' : null"
+                  (click)="onItemClick(item, $event)">
+                  {{ item.title }}
                 </span>
               }
             </div>
           </button>
         }
       </div>
-
-
     </div>
   </div>
 

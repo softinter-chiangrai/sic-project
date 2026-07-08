@@ -1,4 +1,4 @@
-<!-- src/app/feature/pm/dt/pmdt01A/pmdt01A.component.html -->
+<!-- src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.html -->
 
 <!-- Breadcrumbs -->
 <div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1">
@@ -84,6 +84,15 @@
     <div>
       <label class="block text-sm font-medium text-[var(--text)]">Phase ที่ต้องพึ่งพา (Dependency)</label>
       <input type="text" formControlName="dependencyId" placeholder="ระบุ ID (ถ้ามี)" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    </div>
+
+    <!-- ✅ Color Picker -->
+    <div>
+      <sic-colorpicker
+        label="เลือกสี Phase"
+        formControlName="color"
+        placeholder="#4A90D9"
+      ></sic-colorpicker>
     </div>
 
     <!-- Buttons -->

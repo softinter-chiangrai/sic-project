@@ -1,0 +1,4 @@
+ALTER TABLE pm_phase ADD COLUMN color VARCHAR(20);
+ALTER TABLE pm_milestone ADD COLUMN color VARCHAR(20);
+ALTER TABLE pm_work_package ADD COLUMN color VARCHAR(20);
+ALTER TABLE pm_task ADD COLUMN color VARCHAR(20);

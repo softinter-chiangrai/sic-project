@@ -10,4 +10,5 @@ public class MilestoneRequest {
     private String milestoneName;
     private String description;
     private Instant dueDate;
+    private String color;
 }

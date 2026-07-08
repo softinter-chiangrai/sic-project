@@ -1,14 +1,14 @@
-// src/app/feature/pm/dt/pmdt02B/pmdt02B.component.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { WorkPackageService } from '../../../../../core/services/work-package.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
-
 
 @Component({
   selector: 'app-pmdt02B',
@@ -19,6 +19,7 @@ import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../cor
     RouterModule,
     SicDatepickerComponent,
     SicTimepickerComponent,
+    SicColorpickerComponent,   // ✅ import
   ],
   templateUrl: './pmdt02B.component.html',
 })
@@ -36,6 +37,7 @@ export class Pmdt02BComponent implements OnInit {
   isEdit = false;
   data: WorkPackageResponse | null = null;
 
+  // ✅ เพิ่ม color ในฟอร์ม
   form = this.fb.group({
     packageName: ['', Validators.required],
     description: [''],
@@ -43,6 +45,7 @@ export class Pmdt02BComponent implements OnInit {
     startTime: ['', Validators.required],
     endDate: ['', Validators.required],
     endTime: ['', Validators.required],
+    color: [''], // ✅ เพิ่ม
   });
 
   ngOnInit() {
@@ -83,6 +86,7 @@ export class Pmdt02BComponent implements OnInit {
       startTime: startTime,
       endDate: endDate,
       endTime: endTime,
+      color: data.color || '', // ✅ patch ค่าสี
     });
   }
 
@@ -107,6 +111,7 @@ export class Pmdt02BComponent implements OnInit {
       description: raw.description || undefined,
       startDate: this.buildISOString(raw.startDate, raw.startTime!),
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      color: raw.color || undefined, // ✅ ส่งค่าสี
     };
 
     const request = this.isEdit && this.wpId

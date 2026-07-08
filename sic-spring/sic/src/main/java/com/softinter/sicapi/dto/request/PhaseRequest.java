@@ -11,6 +11,7 @@ public class PhaseRequest {
     private String description;
     private Instant startDate;
     private Instant endDate;
+    private String color;
     private String owner;
     private UUID dependencyId; 
 }

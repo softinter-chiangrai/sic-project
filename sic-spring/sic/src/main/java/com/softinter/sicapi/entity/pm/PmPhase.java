@@ -36,6 +36,9 @@ public class PmPhase extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "color", length = 20)
+    private String color;
+
     @Column(name = "start_date")
     private Instant startDate;
 

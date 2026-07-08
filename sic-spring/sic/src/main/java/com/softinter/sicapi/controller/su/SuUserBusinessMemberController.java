@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
 import com.softinter.sicapi.service.SuUserBusinessMemberService;
 
@@ -40,6 +43,24 @@ public class SuUserBusinessMemberController {
             @RequestParam UUID businessId,
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
+    }
+
+    @GetMapping("/combobox")
+    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจแบบ combobox (ใช้ใน pmdt02C)")
+    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
+            @RequestParam UUID businessId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null && !value.isBlank()) {
+            LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
     }
 
     @PostMapping

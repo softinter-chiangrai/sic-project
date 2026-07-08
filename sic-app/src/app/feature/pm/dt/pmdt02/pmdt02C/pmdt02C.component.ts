@@ -1,14 +1,17 @@
-// src/app/feature/pm/dt/pmdt02C/pmdt02C.component.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../../environments/environment';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { TaskService } from '../../../../../core/services/task.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
-
 
 @Component({
   selector: 'app-pmdt02C',
@@ -17,8 +20,10 @@ import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
+    SicComboboxComponent,
     SicDatepickerComponent,
     SicTimepickerComponent,
+    SicColorpickerComponent,
   ],
   templateUrl: './pmdt02C.component.html',
 })
@@ -28,6 +33,7 @@ export class Pmdt02CComponent implements OnInit {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private businessService = inject(BusinessService);
 
   workPackageId = '';
   projectId = '';
@@ -36,6 +42,9 @@ export class Pmdt02CComponent implements OnInit {
   isEdit = false;
   data: TaskResponse | null = null;
 
+  assignedToApiUrl = '';
+
+  // ✅ เพิ่ม color ในฟอร์ม
   form = this.fb.group({
     taskCode: ['', Validators.required],
     taskName: ['', Validators.required],
@@ -47,9 +56,15 @@ export class Pmdt02CComponent implements OnInit {
     endTime: ['', Validators.required],
     estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
     priority: ['Medium'],
+    color: [''], // ✅ เพิ่ม
   });
 
   ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/su-user-business/members/combobox?businessId=${businessId}`;
+    }
+
     this.route.paramMap.subscribe((params) => {
       this.taskId = params.get('id');
       this.isEdit = !!this.taskId;
@@ -91,6 +106,7 @@ export class Pmdt02CComponent implements OnInit {
       endTime: endTime,
       estimateManday: data.estimateManday ?? null,
       priority: data.priority,
+      color: data.color || '', // ✅ patch ค่าสี
     });
   }
 
@@ -119,6 +135,7 @@ export class Pmdt02CComponent implements OnInit {
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
       estimateManday: raw.estimateManday!,
       priority: raw.priority || 'Medium',
+      color: raw.color || undefined, // ✅ ส่งค่าสี
     };
 
     const request = this.isEdit && this.taskId

@@ -16,5 +16,6 @@ public class WorkPackageResponse {
     private Instant startDate;
     private Instant endDate;
     private String status;
+    private String color;
     private List<TaskResponse> tasks;
 }
