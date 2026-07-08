@@ -39,29 +39,11 @@ public class SuUserBusinessMemberController {
     private final SuUserBusinessMemberService memberService;
 
     @GetMapping
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ (หน้า burt04)")
+    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
     public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
             @RequestParam UUID businessId,
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
-    }
-
-    @GetMapping("/combobox")
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจแบบ combobox (ใช้ใน pmdt02C)")
-    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
-            @RequestParam UUID businessId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null && !value.isBlank()) {
-            LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
     }
 
     @PostMapping
@@ -77,7 +59,7 @@ public class SuUserBusinessMemberController {
     @PutMapping("/{userBusinessId}")
 public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
         @PathVariable UUID userBusinessId,
-        @RequestParam(required = false) List<UUID> roleIds,  // ✅ เปลี่ยนเป็น List
+        @RequestParam(required = false) List<UUID> roleIds,  
         @RequestParam(required = false) Boolean isActive) {
     return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
 }

@@ -15,6 +15,7 @@ import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.ComboboxService;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
 import com.softinter.sicapi.util.PaginationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,7 @@ public class ComboboxController {
 
     private final ComboboxService comboboxService;
     private final BusinessInviteService businessInviteService;
+    private final SuUserBusinessMemberService memberService;
 
     @GetMapping("/combobox-title")
     @Operation(summary = "Get titles (prefix names) with pagination")
@@ -131,11 +133,27 @@ public class ComboboxController {
         return ResponseEntity.ok(comboboxService.getSubDistricts(districtId, keyword, zeroBasedPage, pageSize, lang));
     }
 
-     // ✅ เพิ่ม method นี้
     @GetMapping("/combobox-role")
-    @Operation(summary = "Get business roles for combobox (ใช้ในหน้า burt04A)")
+    @Operation(summary = "Get business roles for combobox ")
     public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
         return ResponseEntity.ok(businessInviteService.getComboboxRoles());
     }
-    
+
+    @GetMapping("/combobox-members")
+    @Operation(summary = "Get business members for combobox ")
+    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
+        @RequestParam UUID businessId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) String value,
+        @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+    int zeroBasedPage = pageNumber - 1;
+
+    if (value != null && !value.isBlank()) {
+        LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
+        return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+    }
+
+    return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
+}
 }

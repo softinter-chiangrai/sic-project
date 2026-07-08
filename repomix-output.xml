@@ -529,7 +529,6 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/config/WebConfig.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/config/WebSocketConfig.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/auth/AuthController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/BaseController.java
-sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/Budt01Controller.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/BusinessController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ChatHubController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ComboboxController.java
@@ -792,55 +791,6 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/websocket/ChatWebSocketControl
 
 <files>
 This section contains the contents of the repository's files.
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmTaskAssignee.java">
-package com.softinter.sicapi.entity.pm;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-@Entity
-@Table(name = "pm_task_assignee")
-@Data
-@EqualsAndHashCode(callSuper = true)
-public class PmTaskAssignee extends BaseBusinessEntity {
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private PmTask task;
-
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
-
-    @Column(name = "role_in_task", length = 50)
-    private String roleInTask;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTaskAssigneeRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.softinter.sicapi.entity.pm.PmTaskAssignee;
-
-
-
-public interface PmTaskAssigneeRepository extends JpaRepository<PmTaskAssignee, UUID> {
-    List<PmTaskAssignee> findByTaskId(UUID taskId);
-    void deleteByTaskId(UUID taskId);
-}
-</file>
 
 <file path="pmrt_route">
 รหัสหน้า	ชื่อ	หน้าที่
@@ -45481,117 +45431,6 @@ public abstract class BaseController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/Budt01Controller.java">
-package com.softinter.sicapi.controller.basic;
-
-import com.softinter.sicapi.dto.request.SaveBusinessRequest;
-import com.softinter.sicapi.dto.response.BusinessResponse;
-import com.softinter.sicapi.dto.response.LovResponse;
-import com.softinter.sicapi.service.BusinessAccessService;
-import com.softinter.sicapi.service.ComboboxService;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.util.LanguageUtils;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/bu/burt01")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Business Setting (BURT01)", description = "Business Setting API")
-// @PreAuthorize("hasAuthority('BURT01')")
-public class Budt01Controller {
-
-    private final ComboboxService comboboxService;
-    private final BusinessAccessService businessAccessService;
-    private final CurrentUserService currentUserService; 
-
-    @GetMapping
-    @Operation(summary = "Get business setting info")
-    public ResponseEntity<BusinessResponse> getBusinessInfo() {
-        UUID businessId = businessAccessService.getBusinessId();
-        if (businessId == null) {
-            return ResponseEntity.notFound().build();
-        }
-        BusinessResponse response = businessAccessService.getBusinessInfo(businessId);
-        if (response == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/lov-person-type")
-    @Operation(summary = "Get person type LOV")
-    public ResponseEntity<List<LovResponse>> getLovPersonType() {
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getPersonTypeLov(lang));
-    }
-
-    @GetMapping("/combobox-title")
-    @Operation(summary = "Get title combobox")
-    public ResponseEntity<List<LovResponse>> getComboboxTitle(
-            @RequestParam(required = false) String personType,
-            @RequestParam(required = false) String value) {
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getTitleList(personType, value, lang));
-    }
-
-    @GetMapping("/combobox-country")
-    @Operation(summary = "Get country combobox")
-    public ResponseEntity<List<LovResponse>> getComboboxCountry(
-            @RequestParam(required = false) String value) {
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getCountryList(value, lang));
-    }
-
-    @GetMapping("/combobox-province")
-    @Operation(summary = "Get province combobox")
-    public ResponseEntity<List<LovResponse>> getComboboxProvince(
-            @RequestParam(required = false) String countryId,
-            @RequestParam(required = false) String value) {
-        UUID countryUuid = countryId != null ? UUID.fromString(countryId) : null;
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getProvinceList(countryUuid, value, lang));
-    }
-
-    @GetMapping("/combobox-district")
-    @Operation(summary = "Get district combobox")
-    public ResponseEntity<List<LovResponse>> getComboboxDistrict(
-            @RequestParam(required = false) String provinceId,
-            @RequestParam(required = false) String value) {
-        UUID provinceUuid = provinceId != null ? UUID.fromString(provinceId) : null;
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getDistrictList(provinceUuid, value, lang));
-    }
-
-    @GetMapping("/combobox-sub-district")
-    @Operation(summary = "Get sub-district combobox")
-    public ResponseEntity<List<LovResponse>> getComboboxSubDistrict(
-            @RequestParam(required = false) String districtId,
-            @RequestParam(required = false) String value) {
-        UUID districtUuid = districtId != null ? UUID.fromString(districtId) : null;
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getSubDistrictList(districtUuid, value, lang));
-    }
-
-  @PostMapping("/save")
-    @Operation(summary = "Save business setting")
-    public ResponseEntity<UUID> saveBusinessInfo(@RequestBody SaveBusinessRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID id = businessAccessService.saveBusiness(request, userId);
-        return ResponseEntity.ok(id);
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ChatHubController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -47178,6 +47017,37 @@ public class DbTitle extends BaseEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmTaskAssignee.java">
+package com.softinter.sicapi.entity.pm;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Entity
+@Table(name = "pm_task_assignee")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class PmTaskAssignee extends BaseBusinessEntity {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", nullable = false)
+    private PmTask task;
+
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
+
+    @Column(name = "role_in_task", length = 50)
+    private String roleInTask;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuBusiness.java">
 package com.softinter.sicapi.entity.su;
 
@@ -47615,6 +47485,24 @@ import com.softinter.sicapi.entity.pm.PmPhase;
 @Repository
 public interface PmPhaseRepository extends JpaRepository<PmPhase, UUID> {
     List<PmPhase> findByProjectIdAndIsDeleteFalseOrderByStartDateAsc(UUID projectId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTaskAssigneeRepository.java">
+package com.softinter.sicapi.repository.pm;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.softinter.sicapi.entity.pm.PmTaskAssignee;
+
+
+
+public interface PmTaskAssigneeRepository extends JpaRepository<PmTaskAssignee, UUID> {
+    List<PmTaskAssignee> findByTaskId(UUID taskId);
+    void deleteByTaskId(UUID taskId);
 }
 </file>
 
@@ -48316,54 +48204,6 @@ public class FileVisibilityDeserializer extends JsonDeserializer<FileVisibility>
     public FileVisibility deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         String value = p.getText();
         return FileVisibilityConverter.fromString(value);
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/util/PaginationUtil.java">
-package com.softinter.sicapi.util;
-
-import com.softinter.sicapi.dto.Pageable;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class PaginationUtil {
-
-    private PaginationUtil() {} // ป้องกันการ instantiate
-
-    public static <T> PaginationResponse<T> of(List<T> data, int pageNumberZeroBased, int pageSize, long totalElements) {
-        PaginationResponse<T> response = new PaginationResponse<>();
-        response.setData(data != null ? data : new ArrayList<>());
-
-        Pageable pageable = new Pageable();
-        pageable.setPageNumber(pageNumberZeroBased + 1);  
-        pageable.setPageSize(pageSize);
-        pageable.setTotalElements(totalElements);
-        pageable.calculateTotalPages();
-
-        response.setPageable(pageable);
-        return response;
-    }
-
-    public static <T> PaginationResponse<T> ofSingleItem(T item, int pageNumberZeroBased, int pageSize) {
-        PaginationResponse<T> response = new PaginationResponse<>();
-        if (item != null) {
-            response.setData(List.of(item));
-        } else {
-            response.setData(new ArrayList<>());
-        }
-
-        Pageable pageable = new Pageable();
-        pageable.setPageNumber(pageNumberZeroBased + 1);
-        pageable.setPageSize(pageSize);
-        long totalElements = (item != null) ? 1 : 0;
-        pageable.setTotalElements(totalElements);
-        pageable.calculateTotalPages();
-
-        response.setPageable(pageable);
-        return response;
     }
 }
 </file>
@@ -52215,118 +52055,6 @@ export interface BusinessInfoModel{
 </div>
 </file>
 
-<file path="sic-app/src/app/core/model/phase.model.ts">
-// src/app/core/model/phase.model.ts
-
-export interface PhaseRequest {
-  projectId: string;
-  phaseName: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  owner?: string;
-  dependencyId?: string;
-  color?: string;
-}
-
-export interface PhaseResponse {
-  id: string;
-  projectId: string;
-  projectName: string;
-  phaseName: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  color?: string;
-  owner?: string;
-  status: string;
-  progress: number;
-  dependencyId?: string;
-  dependencyName?: string;
-  milestoneCount: number;
-  taskCount: number;
-  taskCompletedCount: number;
-  milestones?: MilestoneResponse[];
-}
-
-export interface MilestoneRequest {
-  phaseId: string;
-  milestoneName: string;
-  description?: string;
-  dueDate: string;
-  color?: string;
-}
-
-export interface MilestoneResponse {
-  id: string;
-  phaseId: string;
-  phaseName: string;
-  milestoneName: string;
-  description?: string;
-  dueDate: string;
-  status: string;
-  color?: string;
-  workPackages?: WorkPackageResponse[];
-}
-
-export interface WorkPackageRequest {
-  milestoneId: string;
-  packageName: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  color?: string;
-}
-
-export interface WorkPackageResponse {
-  id: string;
-  milestoneId: string;
-  milestoneName: string;
-  packageName: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  color?: string;
-  tasks?: TaskResponse[];
-}
-
-export interface TaskRequest {
-  workPackageId: string;
-  taskCode: string;
-  taskName: string;
-  description?: string;
-  assignedTo?: string;
-  startDate: string;
-  endDate: string;
-  estimateManday: number;
-  priority?: string;
-  color?: string;
-  assigneeIds?: string[]; // ✅ เพิ่ม
-}
-
-export interface TaskResponse {
-  id: string;
-  workPackageId: string;
-  workPackageName: string;
-  taskCode: string;
-  taskName: string;
-  description?: string;
-  assignedTo?: string;
-  startDate: string;
-  endDate: string;
-  actualStart?: string;
-  actualEnd?: string;
-  estimateManday: number;
-  actualManday?: number;
-  status: string;
-  color?: string;
-  priority: string;
-  assigneeIds?: string[]; // ✅ เพิ่ม
-  assigneeNames?: Record<string, string>; // ✅ เพิ่ม
-}
-</file>
-
 <file path="sic-app/src/app/core/services/business.service.ts">
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -54896,374 +54624,6 @@ export class Pmdt02BComponent implements OnInit {
 
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html">
-<!-- src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html -->
-
-<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
-  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
-  <span>/</span>
-  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
-  <span>/</span>
-  @if (isEdit) {
-    <span>Edit Task</span>
-  } @else {
-    <span>New Task</span>
-  }
-</div>
-
-<div class="max-w-2xl mx-auto">
-  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
-    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
-  </h2>
-
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-
-    <!-- Task Code & Name -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-      </div>
-    </div>
-
-    <!-- Description -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
-      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
-    </div>
-
-    <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบร่วม</label>
-      
-      <!-- Combobox เลือกทีละคน -->
-      <sic-combobox
-        #assigneeCombobox
-        [apiUrl]="assignedToApiUrl"
-        valueField="value"
-        textField="text"
-        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
-        [clearable]="true"
-        (selectionChanged)="onAssigneeSelect($event)"
-      ></sic-combobox>
-
-      <!-- แสดงรายชื่อที่เลือกเป็น Chips -->
-      <div class="mt-2 flex flex-wrap gap-2">
-        @for (userId of assigneeIds.value || []; track userId) {
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-            {{ getAssigneeName(userId) }}
-            <button type="button" (click)="removeAssignee(userId)" class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors" title="ลบ">
-              <i class="bi bi-x-lg text-xs"></i>
-            </button>
-          </span>
-        }
-        @if ((assigneeIds.value || []).length === 0) {
-          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีผู้รับผิดชอบร่วม</span>
-        }
-      </div>
-    </div>
-
-    <!-- Start Date + Time -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <sic-datepicker
-          label="วันที่เริ่ม"
-          formControlName="startDate"
-          [required]="true"
-          placeholder="เลือกวันที่เริ่ม"
-        ></sic-datepicker>
-        @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
-        }
-      </div>
-      <div>
-        <sic-timepicker
-          label="เวลาเริ่ม"
-          formControlName="startTime"
-          placeholder="เลือกเวลา"
-        ></sic-timepicker>
-      </div>
-    </div>
-
-    <!-- End Date + Time -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <sic-datepicker
-          label="วันที่สิ้นสุด"
-          formControlName="endDate"
-          [required]="true"
-          placeholder="เลือกวันที่สิ้นสุด"
-        ></sic-datepicker>
-        @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
-        }
-      </div>
-      <div>
-        <sic-timepicker
-          label="เวลาสิ้นสุด"
-          formControlName="endTime"
-          placeholder="เลือกเวลา"
-        ></sic-timepicker>
-      </div>
-    </div>
-
-    <!-- Estimate Manday & Priority -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
-        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
-        }
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
-        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
-          <option value="Low">ต่ำ</option>
-          <option value="Medium">ปานกลาง</option>
-          <option value="High">สูง</option>
-          <option value="Critical">วิกฤต</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Color Picker -->
-    <div>
-      <sic-colorpicker
-        label="เลือกสี Task"
-        formControlName="color"
-        placeholder="#2ECC71"
-      ></sic-colorpicker>
-    </div>
-
-    <!-- Buttons -->
-    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
-      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
-        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-      </button>
-      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
-        ยกเลิก
-      </button>
-    </div>
-
-  </form>
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
-
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { environment } from '../../../../../../environments/environment';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { TaskService } from '../../../../../core/services/task.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { BusinessService } from '../../../../../core/services/business.service';
-import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
-
-@Component({
-  selector: 'app-pmdt02C',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicComboboxComponent,
-    SicDatepickerComponent,
-    SicTimepickerComponent,
-    SicColorpickerComponent,
-  ],
-  templateUrl: './pmdt02C.component.html',
-})
-export class Pmdt02CComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private taskService = inject(TaskService);
-  private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private businessService = inject(BusinessService);
-
-  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
-
-  workPackageId = '';
-  projectId = '';
-  phaseId = '';
-  taskId: string | null = null;
-  isEdit = false;
-  data: TaskResponse | null = null;
-  assignedToApiUrl = '';
-
-  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
-  assigneeNames: Record<string, string> = {};
-
-  form = this.fb.group({
-    taskCode: ['', Validators.required],
-    taskName: ['', Validators.required],
-    description: [''],
-    assignedTo: [''], // คนหลัก (optional)
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
-    priority: ['Medium'],
-    color: [''],
-    assigneeIds: [[]], // ✅ array ของ userId
-  });
-
-  get assigneeIds(): FormControl {
-    return this.form.get('assigneeIds') as FormControl;
-  }
-
-  ngOnInit() {
-    const businessId = this.businessService.getCurrentBusinessId();
-    if (businessId) {
-      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/su-user-business/members/combobox?businessId=${businessId}`;
-    }
-
-    this.route.paramMap.subscribe((params) => {
-      this.taskId = params.get('id');
-      this.isEdit = !!this.taskId;
-    });
-
-    this.route.queryParams.subscribe((qParams) => {
-      this.workPackageId = qParams['workPackageId'] || '';
-      this.projectId = qParams['projectId'] || '';
-      this.phaseId = qParams['phaseId'] || '';
-      if (this.isEdit && this.taskId) {
-        this.loadTask(this.taskId);
-      }
-    });
-  }
-
-  loadTask(id: string) {
-    this.taskService.getTaskById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
-    });
-  }
-
-  patchForm(data: TaskResponse) {
-    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
-    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
-
-    this.form.patchValue({
-      taskCode: data.taskCode,
-      taskName: data.taskName,
-      description: data.description,
-      assignedTo: data.assignedTo,
-      startDate: startDate,
-      startTime: startTime,
-      endDate: endDate,
-      endTime: endTime,
-      estimateManday: data.estimateManday ?? null,
-      priority: data.priority,
-      color: data.color || '',
-    });
-
-    // ✅ โหลด assigneeIds และ assigneeNames
-    if (data.assigneeIds) {
-      this.assigneeIds.setValue(data.assigneeIds);
-    }
-    if (data.assigneeNames) {
-      this.assigneeNames = data.assigneeNames;
-    }
-  }
-
-  // ✅ เมื่อเลือกจาก combobox
-  onAssigneeSelect(item: any) {
-    if (!item) return;
-    const userId = item.value;
-    const current = this.assigneeIds.value || [];
-    if (current.includes(userId)) {
-      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
-      this.assigneeCombobox.clearSelection();
-      return;
-    }
-    this.assigneeNames[userId] = item.text;
-    this.assigneeIds.setValue([...current, userId]);
-    this.assigneeCombobox.clearSelection();
-  }
-
-  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
-  removeAssignee(userId: string) {
-    const current = this.assigneeIds.value || [];
-    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
-    delete this.assigneeNames[userId];
-  }
-
-  // ✅ ดูชื่อจาก userId
-  getAssigneeName(userId: string): string {
-    return this.assigneeNames[userId] || userId;
-  }
-
-  private buildISOString(date: any, time: string): string {
-    if (!date) return '';
-    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
-    if (!dateStr) return '';
-    const timeStr = time || '00:00';
-    return `${dateStr}T${timeStr}:00Z`;
-  }
-
-  onSubmit() {
-    if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const raw = this.form.value;
-    const data: TaskRequest = {
-      workPackageId: this.workPackageId,
-      taskCode: raw.taskCode!,
-      taskName: raw.taskName!,
-      description: raw.description || undefined,
-      assignedTo: raw.assignedTo || undefined,
-      startDate: this.buildISOString(raw.startDate, raw.startTime!),
-      endDate: this.buildISOString(raw.endDate, raw.endTime!),
-      estimateManday: raw.estimateManday!,
-      priority: raw.priority || 'Medium',
-      color: raw.color || undefined,
-      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
-    };
-
-    const request = this.isEdit && this.taskId
-      ? this.taskService.updateTask(this.taskId, data)
-      : this.taskService.createTask(data);
-
-    request.subscribe({
-      next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
-      },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
-    });
-  }
-
-  cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.resolver.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.resolver.ts
 
@@ -57573,31 +56933,6 @@ public class SaveUserBusinessRoleRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/TaskRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import lombok.Data;
-
-@Data
-public class TaskRequest {
-    private UUID workPackageId;
-    private String taskCode;
-    private String taskName;
-    private String description;
-    private String assignedTo;
-    private Instant startDate;
-    private Instant endDate;
-    private Integer estimateManday;
-    private String priority;
-    private String color;
-    private List<String> assigneeIds;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/WorkPackageRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -57956,39 +57291,6 @@ public class SuUserBusinessMemberResponse {
     private Boolean isDefault;
     private Instant createdDate;
     private UUID roleId;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/TaskResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import lombok.Data;
-
-@Data
-public class TaskResponse {
-    private UUID id;
-    private UUID workPackageId;
-    private String workPackageName;
-    private String taskCode;
-    private String taskName;
-    private String description;
-    private String assignedTo;
-    private Instant startDate;
-    private Instant endDate;
-    private Instant actualStart;
-    private Instant actualEnd;
-    private Integer estimateManday;
-    private Integer actualManday;
-    private String status;
-    private String color;
-    private String priority;
-    private List<String> assigneeIds;
-    private Map<String, String> assigneeNames; 
 }
 </file>
 
@@ -58353,124 +57655,6 @@ public class PmMilestone extends BaseEntity {
 
     @OneToMany(mappedBy = "milestone", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PmWorkPackage> workPackages = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmTask.java">
-package com.softinter.sicapi.entity.pm;
-
-import java.time.Instant;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
-
-@Entity
-@Table(name = "pm_task")
-@Getter @Setter
-public class PmTask extends BaseBusinessEntity {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "work_package_id")
-    private PmWorkPackage workPackage;
-
-    @Column(name = "task_code", nullable = false, length = 30)
-    private String taskCode;
-
-    @Column(name = "task_name", nullable = false, length = 255)
-    private String taskName;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "assigned_to", length = 100)
-    private String assignedTo;
-
-    @Column(name = "start_date")
-    private Instant startDate;
-
-    @Column(name = "end_date")
-    private Instant endDate;
-
-    @Column(name = "actual_start")
-    private Instant actualStart;
-
-    @Column(name = "actual_end")
-    private Instant actualEnd;
-
-    @Column(name = "estimate_manday")
-    private Integer estimateManday;
-
-    @Column(name = "color", length = 20)
-    private String color;
-
-    @Column(name = "actual_manday")
-    private Integer actualManday;
-
-    @Column(length = 20)
-    private String status;
-
-    @Column(length = 20)
-    private String priority;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmWorkPackage.java">
-package com.softinter.sicapi.entity.pm;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
-
-@Entity
-@Table(name = "pm_work_package")
-@Getter @Setter
-public class PmWorkPackage extends BaseBusinessEntity  {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "milestone_id", nullable = false)
-    private PmMilestone milestone;
-
-    @Column(name = "package_name", nullable = false, length = 255)
-    private String packageName;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "start_date")
-    private Instant startDate;
-
-    @Column(name = "end_date")
-    private Instant endDate;
-
-    @Column(name = "color", length = 20)
-    private String color;
-
-    @Column(length = 20)
-    private String status;
-
-    @OneToMany(mappedBy = "workPackage", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmTask> tasks = new ArrayList<>();
 }
 </file>
 
@@ -60067,6 +59251,54 @@ public static String getMessage(ExExample example) {
             "th", example::getMessageLocal
     ));
 }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/util/PaginationUtil.java">
+package com.softinter.sicapi.util;
+
+import com.softinter.sicapi.dto.Pageable;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PaginationUtil {
+
+    private PaginationUtil() {} // ป้องกันการ instantiate
+
+    public static <T> PaginationResponse<T> of(List<T> data, int pageNumberZeroBased, int pageSize, long totalElements) {
+        PaginationResponse<T> response = new PaginationResponse<>();
+        response.setData(data != null ? data : new ArrayList<>());
+
+        Pageable pageable = new Pageable();
+        pageable.setPageNumber(pageNumberZeroBased + 1);  
+        pageable.setPageSize(pageSize);
+        pageable.setTotalElements(totalElements);
+        pageable.calculateTotalPages();
+
+        response.setPageable(pageable);
+        return response;
+    }
+
+    public static <T> PaginationResponse<T> ofSingleItem(T item, int pageNumberZeroBased, int pageSize) {
+        PaginationResponse<T> response = new PaginationResponse<>();
+        if (item != null) {
+            response.setData(List.of(item));
+        } else {
+            response.setData(new ArrayList<>());
+        }
+
+        Pageable pageable = new Pageable();
+        pageable.setPageNumber(pageNumberZeroBased + 1);
+        pageable.setPageSize(pageSize);
+        long totalElements = (item != null) ? 1 : 0;
+        pageable.setTotalElements(totalElements);
+        pageable.calculateTotalPages();
+
+        response.setPageable(pageable);
+        return response;
+    }
 }
 </file>
 
@@ -61768,6 +61000,118 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
 export type { SicCalendarTask };
 </file>
 
+<file path="sic-app/src/app/core/model/phase.model.ts">
+// src/app/core/model/phase.model.ts
+
+export interface PhaseRequest {
+  projectId: string;
+  phaseName: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  owner?: string;
+  dependencyId?: string;
+  color?: string;
+}
+
+export interface PhaseResponse {
+  id: string;
+  projectId: string;
+  projectName: string;
+  phaseName: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  color?: string;
+  owner?: string;
+  status: string;
+  progress: number;
+  dependencyId?: string;
+  dependencyName?: string;
+  milestoneCount: number;
+  taskCount: number;
+  taskCompletedCount: number;
+  milestones?: MilestoneResponse[];
+}
+
+export interface MilestoneRequest {
+  phaseId: string;
+  milestoneName: string;
+  description?: string;
+  dueDate: string;
+  color?: string;
+}
+
+export interface MilestoneResponse {
+  id: string;
+  phaseId: string;
+  phaseName: string;
+  milestoneName: string;
+  description?: string;
+  dueDate: string;
+  status: string;
+  color?: string;
+  workPackages?: WorkPackageResponse[];
+}
+
+export interface WorkPackageRequest {
+  milestoneId: string;
+  packageName: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  color?: string;
+}
+
+export interface WorkPackageResponse {
+  id: string;
+  milestoneId: string;
+  milestoneName: string;
+  packageName: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  color?: string;
+  tasks?: TaskResponse[];
+}
+
+export interface TaskRequest {
+  workPackageId: string;
+  taskCode: string;
+  taskName: string;
+  description?: string;
+  assignedTo?: string;
+  startDate: string;
+  endDate: string;
+  estimateManday: number;
+  priority?: string;
+  color?: string;
+  assigneeIds?: string[]; // ✅ เพิ่ม
+}
+
+export interface TaskResponse {
+  id: string;
+  workPackageId: string;
+  workPackageName: string;
+  taskCode: string;
+  taskName: string;
+  description?: string;
+  assignedTo?: string;
+  startDate: string;
+  endDate: string;
+  actualStart?: string;
+  actualEnd?: string;
+  estimateManday: number;
+  actualManday?: number;
+  status: string;
+  color?: string;
+  priority: string;
+  assigneeIds?: string[]; // ✅ เพิ่ม
+  assigneeNames?: Record<string, string>; // ✅ เพิ่ม
+}
+</file>
+
 <file path="sic-app/src/app/core/services/chat.service.ts">
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -62887,6 +62231,374 @@ export class Pmdt02AComponent implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Milestone เรียบร้อย' : 'สร้าง Milestone เรียบร้อย');
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
+      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+    });
+  }
+
+  cancel() {
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html">
+<!-- src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html -->
+
+<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
+  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
+  <span>/</span>
+  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
+  <span>/</span>
+  @if (isEdit) {
+    <span>Edit Task</span>
+  } @else {
+    <span>New Task</span>
+  }
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
+    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
+  </h2>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <!-- Task Code & Name -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
+      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
+    </div>
+
+    <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบร่วม</label>
+      
+      <!-- Combobox เลือกทีละคน -->
+      <sic-combobox
+        #assigneeCombobox
+        [apiUrl]="assignedToApiUrl"
+        valueField="value"
+        textField="text"
+        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
+        [clearable]="true"
+        (selectionChanged)="onAssigneeSelect($event)"
+      ></sic-combobox>
+
+      <!-- แสดงรายชื่อที่เลือกเป็น Chips -->
+      <div class="mt-2 flex flex-wrap gap-2">
+        @for (userId of assigneeIds.value || []; track userId) {
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+            {{ getAssigneeName(userId) }}
+            <button type="button" (click)="removeAssignee(userId)" class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors" title="ลบ">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </span>
+        }
+        @if ((assigneeIds.value || []).length === 0) {
+          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีผู้รับผิดชอบร่วม</span>
+        }
+      </div>
+    </div>
+
+    <!-- Start Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่เริ่ม"
+          formControlName="startDate"
+          [required]="true"
+          placeholder="เลือกวันที่เริ่ม"
+        ></sic-datepicker>
+        @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาเริ่ม"
+          formControlName="startTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <!-- End Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่สิ้นสุด"
+          formControlName="endDate"
+          [required]="true"
+          placeholder="เลือกวันที่สิ้นสุด"
+        ></sic-datepicker>
+        @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาสิ้นสุด"
+          formControlName="endTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <!-- Estimate Manday & Priority -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
+        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
+        }
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
+        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
+          <option value="Low">ต่ำ</option>
+          <option value="Medium">ปานกลาง</option>
+          <option value="High">สูง</option>
+          <option value="Critical">วิกฤต</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Color Picker -->
+    <div>
+      <sic-colorpicker
+        label="เลือกสี Task"
+        formControlName="color"
+        placeholder="#2ECC71"
+      ></sic-colorpicker>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
+        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+      </button>
+      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        ยกเลิก
+      </button>
+    </div>
+
+  </form>
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../../environments/environment';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { TaskService } from '../../../../../core/services/task.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
+import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
+
+@Component({
+  selector: 'app-pmdt02C',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicComboboxComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,
+  ],
+  templateUrl: './pmdt02C.component.html',
+})
+export class Pmdt02CComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private dialog = inject(DialogService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private businessService = inject(BusinessService);
+
+  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
+
+  workPackageId = '';
+  projectId = '';
+  phaseId = '';
+  taskId: string | null = null;
+  isEdit = false;
+  data: TaskResponse | null = null;
+  assignedToApiUrl = '';
+
+  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
+  assigneeNames: Record<string, string> = {};
+
+  form = this.fb.group({
+    taskCode: ['', Validators.required],
+    taskName: ['', Validators.required],
+    description: [''],
+    assignedTo: [''], // คนหลัก (optional)
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
+    priority: ['Medium'],
+    color: [''],
+    assigneeIds: [[]], // ✅ array ของ userId
+  });
+
+  get assigneeIds(): FormControl {
+    return this.form.get('assigneeIds') as FormControl;
+  }
+
+  ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/su-user-business/members/combobox?businessId=${businessId}`;
+    }
+
+    this.route.paramMap.subscribe((params) => {
+      this.taskId = params.get('id');
+      this.isEdit = !!this.taskId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.workPackageId = qParams['workPackageId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      if (this.isEdit && this.taskId) {
+        this.loadTask(this.taskId);
+      }
+    });
+  }
+
+  loadTask(id: string) {
+    this.taskService.getTaskById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: TaskResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
+    this.form.patchValue({
+      taskCode: data.taskCode,
+      taskName: data.taskName,
+      description: data.description,
+      assignedTo: data.assignedTo,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      estimateManday: data.estimateManday ?? null,
+      priority: data.priority,
+      color: data.color || '',
+    });
+
+    // ✅ โหลด assigneeIds และ assigneeNames
+    if (data.assigneeIds) {
+      this.assigneeIds.setValue(data.assigneeIds);
+    }
+    if (data.assigneeNames) {
+      this.assigneeNames = data.assigneeNames;
+    }
+  }
+
+  // ✅ เมื่อเลือกจาก combobox
+  onAssigneeSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const current = this.assigneeIds.value || [];
+    if (current.includes(userId)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      this.assigneeCombobox.clearSelection();
+      return;
+    }
+    this.assigneeNames[userId] = item.text;
+    this.assigneeIds.setValue([...current, userId]);
+    this.assigneeCombobox.clearSelection();
+  }
+
+  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
+  removeAssignee(userId: string) {
+    const current = this.assigneeIds.value || [];
+    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
+    delete this.assigneeNames[userId];
+  }
+
+  // ✅ ดูชื่อจาก userId
+  getAssigneeName(userId: string): string {
+    return this.assigneeNames[userId] || userId;
+  }
+
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    const raw = this.form.value;
+    const data: TaskRequest = {
+      workPackageId: this.workPackageId,
+      taskCode: raw.taskCode!,
+      taskName: raw.taskName!,
+      description: raw.description || undefined,
+      assignedTo: raw.assignedTo || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      estimateManday: raw.estimateManday!,
+      priority: raw.priority || 'Medium',
+      color: raw.color || undefined,
+      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
+    };
+
+    const request = this.isEdit && this.taskId
+      ? this.taskService.updateTask(this.taskId, data)
+      : this.taskService.createTask(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
         this.router.navigate(['/feature/pm/phase', this.phaseId], {
           queryParams: { projectId: this.projectId },
         });
@@ -64647,6 +64359,31 @@ public class SendVerifyRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/TaskRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import lombok.Data;
+
+@Data
+public class TaskRequest {
+    private UUID workPackageId;
+    private String taskCode;
+    private String taskName;
+    private String description;
+    private String assignedTo;
+    private Instant startDate;
+    private Instant endDate;
+    private Integer estimateManday;
+    private String priority;
+    private String color;
+    private List<String> assigneeIds;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -64840,6 +64577,39 @@ public class StorageUploadResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/TaskResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import lombok.Data;
+
+@Data
+public class TaskResponse {
+    private UUID id;
+    private UUID workPackageId;
+    private String workPackageName;
+    private String taskCode;
+    private String taskName;
+    private String description;
+    private String assignedTo;
+    private Instant startDate;
+    private Instant endDate;
+    private Instant actualStart;
+    private Instant actualEnd;
+    private Integer estimateManday;
+    private Integer actualManday;
+    private String status;
+    private String color;
+    private String priority;
+    private List<String> assigneeIds;
+    private Map<String, String> assigneeNames; 
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/enums/FileCategory.java">
 package com.softinter.sicapi.entity.enums;
 
@@ -64985,6 +64755,124 @@ public class PmPhase extends BaseEntity {
 
     @OneToMany(mappedBy = "phase", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PmMilestone> milestones = new ArrayList<>();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmTask.java">
+package com.softinter.sicapi.entity.pm;
+
+import java.time.Instant;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "pm_task")
+@Getter @Setter
+public class PmTask extends BaseBusinessEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_package_id")
+    private PmWorkPackage workPackage;
+
+    @Column(name = "task_code", nullable = false, length = 30)
+    private String taskCode;
+
+    @Column(name = "task_name", nullable = false, length = 255)
+    private String taskName;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "assigned_to", length = 100)
+    private String assignedTo;
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "end_date")
+    private Instant endDate;
+
+    @Column(name = "actual_start")
+    private Instant actualStart;
+
+    @Column(name = "actual_end")
+    private Instant actualEnd;
+
+    @Column(name = "estimate_manday")
+    private Integer estimateManday;
+
+    @Column(name = "color", length = 20)
+    private String color;
+
+    @Column(name = "actual_manday")
+    private Integer actualManday;
+
+    @Column(length = 20)
+    private String status;
+
+    @Column(length = 20)
+    private String priority;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmWorkPackage.java">
+package com.softinter.sicapi.entity.pm;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "pm_work_package")
+@Getter @Setter
+public class PmWorkPackage extends BaseBusinessEntity  {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "milestone_id", nullable = false)
+    private PmMilestone milestone;
+
+    @Column(name = "package_name", nullable = false, length = 255)
+    private String packageName;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "end_date")
+    private Instant endDate;
+
+    @Column(name = "color", length = 20)
+    private String color;
+
+    @Column(length = 20)
+    private String status;
+
+    @OneToMany(mappedBy = "workPackage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmTask> tasks = new ArrayList<>();
 }
 </file>
 
@@ -66347,229 +66235,6 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setUpdatedDate(project.getUpdatedDate());
         response.setRowVersion(project.getRowVersion());
         return response;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java">
-// src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java
-
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.request.TaskRequest;
-import com.softinter.sicapi.dto.response.TaskResponse;
-import com.softinter.sicapi.entity.pm.PmMilestone;
-import com.softinter.sicapi.entity.pm.PmPhase;
-import com.softinter.sicapi.entity.pm.PmTask;
-import com.softinter.sicapi.entity.pm.PmTaskAssignee;
-import com.softinter.sicapi.entity.pm.PmWorkPackage;
-import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.repository.pm.PmPhaseRepository;
-import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
-import com.softinter.sicapi.repository.pm.PmTaskRepository;
-import com.softinter.sicapi.repository.pm.PmWorkPackageRepository;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
-import com.softinter.sicapi.service.TaskService;
-import com.softinter.sicapi.util.LocalizationHelper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
-
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class TaskServiceImpl implements TaskService {
-
-    private final PmTaskRepository taskRepository;
-    private final PmWorkPackageRepository wpRepository;
-    private final PmPhaseRepository phaseRepository;
-    private final PmTaskAssigneeRepository taskAssigneeRepository;
-    private final SuUserBusinessRepository userBusinessRepository;
-    private final SuProfileRepository profileRepository;
-
-    // ===== CREATE =====
-    @Override
-    @Transactional
-    public TaskResponse createTask(TaskRequest request) {
-        PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
-
-        PmTask task = new PmTask();
-        task.setWorkPackage(wp);
-        task.setBusinessId(wp.getBusinessId());
-        task.setTaskCode(request.getTaskCode());
-        task.setTaskName(request.getTaskName());
-        task.setDescription(request.getDescription());
-        task.setAssignedTo(request.getAssignedTo());
-        task.setStartDate(request.getStartDate());
-        task.setEndDate(request.getEndDate());
-        task.setEstimateManday(request.getEstimateManday());
-        task.setPriority(request.getPriority());
-        task.setStatus("Todo");
-        task.setColor(request.getColor());
-
-        task = taskRepository.save(task);
-
-        // ✅ บันทึกผู้รับผิดชอบร่วม (assignees)
-        saveAssignees(task, request.getAssigneeIds());
-
-        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
-        return toResponse(task);
-    }
-
-    // ===== UPDATE =====
-    @Override
-    @Transactional
-    public TaskResponse updateTask(UUID taskId, TaskRequest request) {
-        PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-
-        task.setTaskCode(request.getTaskCode());
-        task.setTaskName(request.getTaskName());
-        task.setDescription(request.getDescription());
-        task.setAssignedTo(request.getAssignedTo());
-        task.setStartDate(request.getStartDate());
-        task.setEndDate(request.getEndDate());
-        task.setEstimateManday(request.getEstimateManday());
-        task.setPriority(request.getPriority());
-        task.setColor(request.getColor());
-
-        task = taskRepository.save(task);
-
-        // ✅ อัปเดตผู้รับผิดชอบร่วม: ลบเก่า แล้วเพิ่มใหม่
-        taskAssigneeRepository.deleteByTaskId(taskId);
-        saveAssignees(task, request.getAssigneeIds());
-
-        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
-        return toResponse(task);
-    }
-
-    // ===== PRIVATE: บันทึก assignees =====
-    private void saveAssignees(PmTask task, List<String> assigneeIds) {
-        if (assigneeIds == null || assigneeIds.isEmpty()) {
-            return;
-        }
-
-        // ✅ ตรวจสอบว่า assignee ทุกคนเป็นสมาชิกของ business นี้
-        UUID businessId = task.getBusinessId();
-        long count = userBusinessRepository.countByUserIdInAndBusinessId(assigneeIds, businessId);
-        if (count != assigneeIds.size()) {
-            throw new IllegalArgumentException("One or more assignees are not members of this business.");
-        }
-
-        for (String userId : assigneeIds) {
-            PmTaskAssignee assignee = new PmTaskAssignee();
-            assignee.setTask(task);
-            assignee.setUserId(userId);
-            assignee.setBusinessId(businessId);
-            // role_in_task ปล่อย null หรือกำหนดค่า default
-            taskAssigneeRepository.save(assignee);
-        }
-    }
-
-    // ===== PRIVATE: Entity → Response =====
-    private TaskResponse toResponse(PmTask task) {
-        TaskResponse dto = new TaskResponse();
-        dto.setId(task.getId());
-        if (task.getWorkPackage() != null) {
-            dto.setWorkPackageId(task.getWorkPackage().getId());
-            dto.setWorkPackageName(task.getWorkPackage().getPackageName());
-        }
-        dto.setTaskCode(task.getTaskCode());
-        dto.setTaskName(task.getTaskName());
-        dto.setDescription(task.getDescription());
-        dto.setAssignedTo(task.getAssignedTo());
-        dto.setStartDate(task.getStartDate());
-        dto.setEndDate(task.getEndDate());
-        dto.setActualStart(task.getActualStart());
-        dto.setActualEnd(task.getActualEnd());
-        dto.setEstimateManday(task.getEstimateManday());
-        dto.setActualManday(task.getActualManday());
-        dto.setStatus(task.getStatus());
-        dto.setPriority(task.getPriority());
-        dto.setColor(task.getColor());
-
-        // ✅ ดึงผู้รับผิดชอบร่วม (assignees)
-        List<PmTaskAssignee> assignees = taskAssigneeRepository.findByTaskId(task.getId());
-        if (assignees != null && !assignees.isEmpty()) {
-            List<String> userIds = assignees.stream()
-                    .map(PmTaskAssignee::getUserId)
-                    .collect(Collectors.toList());
-            dto.setAssigneeIds(userIds);
-
-            // ✅ ดึงชื่อผู้ใช้จาก SuProfile
-            Map<String, String> names = new HashMap<>();
-            List<SuProfile> profiles = profileRepository.findByUserIdIn(userIds);
-            for (SuProfile profile : profiles) {
-                String fullName = LocalizationHelper.getFullName(profile);
-                names.put(profile.getUserId(), fullName != null ? fullName : profile.getUserId());
-            }
-            // กรณีหาชื่อไม่เจอ ให้ใช้ userId เป็นชื่อ
-            for (String userId : userIds) {
-                names.putIfAbsent(userId, userId);
-            }
-            dto.setAssigneeNames(names);
-        }
-
-        return dto;
-    }
-
-    // ===== PRIVATE: อัปเดตความคืบหน้าของ Phase =====
-    private void updatePhaseProgress(PmPhase phase) {
-        int total = 0, done = 0;
-        for (PmMilestone ms : phase.getMilestones()) {
-            for (PmWorkPackage wp : ms.getWorkPackages()) {
-                for (PmTask task : wp.getTasks()) {
-                    if (!task.getIsDelete()) {
-                        total++;
-                        if ("Done".equals(task.getStatus())) done++;
-                    }
-                }
-            }
-        }
-        int progress = total == 0 ? 0 : (done * 100 / total);
-        phase.setProgress(progress);
-        phaseRepository.save(phase);
-    }
-
-    // ===== METHOD อื่น ๆ (GET, DELETE) =====
-    @Override
-    @Transactional(readOnly = true)
-    public List<TaskResponse> getTasksByWorkPackageId(UUID wpId) {
-        return taskRepository.findByWorkPackageIdAndIsDeleteFalse(wpId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public TaskResponse getTaskById(UUID taskId) {
-        PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-        return toResponse(task);
-    }
-
-    @Override
-    @Transactional
-    public void deleteTask(UUID taskId) {
-        PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-        task.setIsDelete(true);
-        task.setDeleteDate(Instant.now());
-        taskRepository.save(task);
-        // อัปเดต progress ของ phase
-        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
-    }
-
-    @Override
-    public List<TaskResponse> getAllTasksByProjectId(UUID projectId) {
-        // TODO: implement if needed
-        return List.of();
     }
 }
 </file>
@@ -68595,6 +68260,7 @@ import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.ComboboxService;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
 import com.softinter.sicapi.util.PaginationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -68611,6 +68277,7 @@ public class ComboboxController {
 
     private final ComboboxService comboboxService;
     private final BusinessInviteService businessInviteService;
+    private final SuUserBusinessMemberService memberService;
 
     @GetMapping("/combobox-title")
     @Operation(summary = "Get titles (prefix names) with pagination")
@@ -68711,13 +68378,29 @@ public class ComboboxController {
         return ResponseEntity.ok(comboboxService.getSubDistricts(districtId, keyword, zeroBasedPage, pageSize, lang));
     }
 
-     // ✅ เพิ่ม method นี้
     @GetMapping("/combobox-role")
-    @Operation(summary = "Get business roles for combobox (ใช้ในหน้า burt04A)")
+    @Operation(summary = "Get business roles for combobox ")
     public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
         return ResponseEntity.ok(businessInviteService.getComboboxRoles());
     }
-    
+
+    @GetMapping("/combobox-members")
+    @Operation(summary = "Get business members for combobox ")
+    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
+        @RequestParam UUID businessId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) String value,
+        @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+    int zeroBasedPage = pageNumber - 1;
+
+    if (value != null && !value.isBlank()) {
+        LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
+        return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+    }
+
+    return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
+}
 }
 </file>
 
@@ -69025,105 +68708,6 @@ public class SuUserBusinessController {
     response.setRowVersion(ub.getRowVersion());
     return response;
 }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessMemberController.java">
-package com.softinter.sicapi.controller.su;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.response.ComboboxResponse;
-import com.softinter.sicapi.dto.response.LovResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
-import com.softinter.sicapi.service.SuUserBusinessMemberService;
-import com.softinter.sicapi.util.PaginationUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping("/api/su-user-business/members")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "User Business Member", description = "จัดการสมาชิกในธุรกิจ")
-public class SuUserBusinessMemberController {
-
-    private final SuUserBusinessMemberService memberService;
-
-    @GetMapping
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ (หน้า burt04)")
-    public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
-            @RequestParam UUID businessId,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
-    }
-
-    @GetMapping("/combobox")
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจแบบ combobox (ใช้ใน pmdt02C)")
-    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
-            @RequestParam UUID businessId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null && !value.isBlank()) {
-            LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
-    }
-
-    @PostMapping
-    @Operation(summary = "เพิ่มสมาชิกเข้าธุรกิจ")
-    public ResponseEntity<SuUserBusinessMemberResponse> addMember(
-            @RequestParam UUID businessId,
-            @RequestParam String userId,
-            @RequestParam(required = false) UUID roleId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(memberService.addMember(businessId, userId, roleId));
-    }
-
-    @PutMapping("/{userBusinessId}")
-public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
-        @PathVariable UUID userBusinessId,
-        @RequestParam(required = false) List<UUID> roleIds,  // ✅ เปลี่ยนเป็น List
-        @RequestParam(required = false) Boolean isActive) {
-    return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
-}
-
-    @DeleteMapping("/{userBusinessId}")
-    @Operation(summary = "ลบสมาชิกออกจากธุรกิจ (soft delete)")
-    public ResponseEntity<Void> removeMember(@PathVariable UUID userBusinessId) {
-        memberService.removeMember(userBusinessId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
-        return ResponseEntity.ok(memberService.getMemberById(id));
-    }
 }
 </file>
 
@@ -70510,6 +70094,221 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setStatus(task.getStatus());
         dto.setPriority(task.getPriority());
         return dto;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java">
+// src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java
+
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.request.TaskRequest;
+import com.softinter.sicapi.dto.response.TaskResponse;
+import com.softinter.sicapi.entity.pm.PmMilestone;
+import com.softinter.sicapi.entity.pm.PmPhase;
+import com.softinter.sicapi.entity.pm.PmTask;
+import com.softinter.sicapi.entity.pm.PmTaskAssignee;
+import com.softinter.sicapi.entity.pm.PmWorkPackage;
+import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.repository.pm.PmPhaseRepository;
+import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
+import com.softinter.sicapi.repository.pm.PmTaskRepository;
+import com.softinter.sicapi.repository.pm.PmWorkPackageRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
+import com.softinter.sicapi.service.TaskService;
+import com.softinter.sicapi.util.LocalizationHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class TaskServiceImpl implements TaskService {
+
+    private final PmTaskRepository taskRepository;
+    private final PmWorkPackageRepository wpRepository;
+    private final PmPhaseRepository phaseRepository;
+    private final PmTaskAssigneeRepository taskAssigneeRepository;
+    private final SuUserBusinessRepository userBusinessRepository;
+    private final SuProfileRepository profileRepository;
+
+    // ===== CREATE =====
+    @Override
+    @Transactional
+    public TaskResponse createTask(TaskRequest request) {
+        PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
+                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+
+        PmTask task = new PmTask();
+        task.setWorkPackage(wp);
+        task.setBusinessId(wp.getBusinessId());
+        task.setTaskCode(request.getTaskCode());
+        task.setTaskName(request.getTaskName());
+        task.setDescription(request.getDescription());
+        task.setAssignedTo(request.getAssignedTo());
+        task.setStartDate(request.getStartDate());
+        task.setEndDate(request.getEndDate());
+        task.setEstimateManday(request.getEstimateManday());
+        task.setPriority(request.getPriority());
+        task.setStatus("Todo");
+        task.setColor(request.getColor());
+
+        task = taskRepository.save(task);
+
+        // ✅ บันทึกผู้รับผิดชอบร่วม (assignees)
+        saveAssignees(task, request.getAssigneeIds());
+
+        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+        return toResponse(task);
+    }
+
+    // ===== UPDATE =====
+    @Override
+    @Transactional
+    public TaskResponse updateTask(UUID taskId, TaskRequest request) {
+        PmTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        task.setTaskCode(request.getTaskCode());
+        task.setTaskName(request.getTaskName());
+        task.setDescription(request.getDescription());
+        task.setAssignedTo(request.getAssignedTo());
+        task.setStartDate(request.getStartDate());
+        task.setEndDate(request.getEndDate());
+        task.setEstimateManday(request.getEstimateManday());
+        task.setPriority(request.getPriority());
+        task.setColor(request.getColor());
+
+        task = taskRepository.save(task);
+
+        // ✅ อัปเดตผู้รับผิดชอบร่วม: ลบเก่า แล้วเพิ่มใหม่
+        taskAssigneeRepository.deleteByTaskId(taskId);
+        saveAssignees(task, request.getAssigneeIds());
+
+        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+        return toResponse(task);
+    }
+
+    // ===== PRIVATE: บันทึก assignees =====
+    private void saveAssignees(PmTask task, List<String> assigneeIds) {
+        if (assigneeIds == null || assigneeIds.isEmpty()) {
+            return;
+        }
+
+        for (String userId : assigneeIds) {
+            PmTaskAssignee assignee = new PmTaskAssignee();
+            assignee.setTask(task);
+            assignee.setUserId(userId);
+            // role_in_task ปล่อย null หรือกำหนดค่า default
+            taskAssigneeRepository.save(assignee);
+        }
+    }
+
+    // ===== PRIVATE: Entity → Response =====
+    private TaskResponse toResponse(PmTask task) {
+        TaskResponse dto = new TaskResponse();
+        dto.setId(task.getId());
+        if (task.getWorkPackage() != null) {
+            dto.setWorkPackageId(task.getWorkPackage().getId());
+            dto.setWorkPackageName(task.getWorkPackage().getPackageName());
+        }
+        dto.setTaskCode(task.getTaskCode());
+        dto.setTaskName(task.getTaskName());
+        dto.setDescription(task.getDescription());
+        dto.setAssignedTo(task.getAssignedTo());
+        dto.setStartDate(task.getStartDate());
+        dto.setEndDate(task.getEndDate());
+        dto.setActualStart(task.getActualStart());
+        dto.setActualEnd(task.getActualEnd());
+        dto.setEstimateManday(task.getEstimateManday());
+        dto.setActualManday(task.getActualManday());
+        dto.setStatus(task.getStatus());
+        dto.setPriority(task.getPriority());
+        dto.setColor(task.getColor());
+
+        // ✅ ดึงผู้รับผิดชอบร่วม (assignees)
+        List<PmTaskAssignee> assignees = taskAssigneeRepository.findByTaskId(task.getId());
+        if (assignees != null && !assignees.isEmpty()) {
+            List<String> userIds = assignees.stream()
+                    .map(PmTaskAssignee::getUserId)
+                    .collect(Collectors.toList());
+            dto.setAssigneeIds(userIds);
+
+            // ✅ ดึงชื่อผู้ใช้จาก SuProfile
+            Map<String, String> names = new HashMap<>();
+            List<SuProfile> profiles = profileRepository.findByUserIdIn(userIds);
+            for (SuProfile profile : profiles) {
+                String fullName = LocalizationHelper.getFullName(profile);
+                names.put(profile.getUserId(), fullName != null ? fullName : profile.getUserId());
+            }
+            // กรณีหาชื่อไม่เจอ ให้ใช้ userId เป็นชื่อ
+            for (String userId : userIds) {
+                names.putIfAbsent(userId, userId);
+            }
+            dto.setAssigneeNames(names);
+        }
+
+        return dto;
+    }
+
+    // ===== PRIVATE: อัปเดตความคืบหน้าของ Phase =====
+    private void updatePhaseProgress(PmPhase phase) {
+        int total = 0, done = 0;
+        for (PmMilestone ms : phase.getMilestones()) {
+            for (PmWorkPackage wp : ms.getWorkPackages()) {
+                for (PmTask task : wp.getTasks()) {
+                    if (!task.getIsDelete()) {
+                        total++;
+                        if ("Done".equals(task.getStatus())) done++;
+                    }
+                }
+            }
+        }
+        int progress = total == 0 ? 0 : (done * 100 / total);
+        phase.setProgress(progress);
+        phaseRepository.save(phase);
+    }
+
+    // ===== METHOD อื่น ๆ (GET, DELETE) =====
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getTasksByWorkPackageId(UUID wpId) {
+        return taskRepository.findByWorkPackageIdAndIsDeleteFalse(wpId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskResponse getTaskById(UUID taskId) {
+        PmTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        return toResponse(task);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTask(UUID taskId) {
+        PmTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setIsDelete(true);
+        task.setDeleteDate(Instant.now());
+        taskRepository.save(task);
+        // อัปเดต progress ของ phase
+        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+    }
+
+    @Override
+    public List<TaskResponse> getAllTasksByProjectId(UUID projectId) {
+        // TODO: implement if needed
+        return List.of();
     }
 }
 </file>
@@ -73416,6 +73215,87 @@ public class ChatController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessMemberController.java">
+package com.softinter.sicapi.controller.su;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.PaginationUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/su-user-business/members")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "User Business Member", description = "จัดการสมาชิกในธุรกิจ")
+public class SuUserBusinessMemberController {
+
+    private final SuUserBusinessMemberService memberService;
+
+    @GetMapping
+    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
+    public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
+            @RequestParam UUID businessId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
+    }
+
+    @PostMapping
+    @Operation(summary = "เพิ่มสมาชิกเข้าธุรกิจ")
+    public ResponseEntity<SuUserBusinessMemberResponse> addMember(
+            @RequestParam UUID businessId,
+            @RequestParam String userId,
+            @RequestParam(required = false) UUID roleId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(memberService.addMember(businessId, userId, roleId));
+    }
+
+    @PutMapping("/{userBusinessId}")
+public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
+        @PathVariable UUID userBusinessId,
+        @RequestParam(required = false) List<UUID> roleIds,  
+        @RequestParam(required = false) Boolean isActive) {
+    return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
+}
+
+    @DeleteMapping("/{userBusinessId}")
+    @Operation(summary = "ลบสมาชิกออกจากธุรกิจ (soft delete)")
+    public ResponseEntity<Void> removeMember(@PathVariable UUID userBusinessId) {
+        memberService.removeMember(userBusinessId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
+        return ResponseEntity.ok(memberService.getMemberById(id));
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -73686,48 +73566,6 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProfileRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.entity.su.SuProfile;
-
-@Repository
-public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
-
-    Optional<SuProfile> findByUserId(String userId); 
-    
-    boolean existsByUserId(String userId);
-
-    // หรือถ้าต้องการ check isDelete
-    Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
-
-    boolean existsByEmailIgnoreCase(String email);
-    
-    Optional<SuProfile> findByEmailIgnoreCase(String email);
-
-    Optional<SuProfile> findByPhoneNumber(String phoneNumber);
-
-    Optional<SuProfile> findByTaxId(String taxId);
-
-
-    boolean existsByPhoneNumber(String phoneNumber);
-    
-    boolean existsByTaxId(String taxId);
-
-    @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
-    List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/MenuServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -73822,254 +73660,6 @@ public class MenuServiceImpl implements MenuService {
         }
 
         return node;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessMemberServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.response.LovResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
-import com.softinter.sicapi.entity.su.SuBusinessRole;
-import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
-import com.softinter.sicapi.entity.su.SuUserBusinessRole;
-import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
-import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.SuUserBusinessMemberService;
-import com.softinter.sicapi.util.LocalizationHelper;  // ✅ import
-import com.softinter.sicapi.util.PaginationUtil;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberService {
-
-    private final SuUserBusinessRepository userBusinessRepository;
-    private final SuUserBusinessRoleRepository userBusinessRoleRepository;
-    private final SuBusinessRoleRepository businessRoleRepository;
-    private final CurrentUserService currentUserService;
-    private final SuProfileRepository profileRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SuUserBusinessMemberResponse> getMembers(UUID businessId, Pageable pageable) {
-        Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
-        return entityPage.map(this::toResponse);
-    }
-
-    @Override
-public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, String keyword, int pageNumberZeroBased, int pageSize) {
-    Pageable pageable = PageRequest.of(pageNumberZeroBased, pageSize);
-    Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
-
-    List<LovResponse> items = entityPage.getContent().stream().map(ub -> {
-        SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
-        String displayName = ub.getUserId();
-        if (profile != null) {
-            String fullName = LocalizationHelper.getFullName(profile);
-            if (fullName != null && !fullName.isBlank()) {
-                displayName = fullName;
-            }
-        }
-        return new LovResponse(ub.getUserId(), displayName);
-    }).collect(Collectors.toList());
-
-    return PaginationUtil.of(items, pageNumberZeroBased, pageSize, entityPage.getTotalElements());
-}
-
-    @Override
-    @Transactional(readOnly = true)
-    public LovResponse getComboboxMemberByValue(UUID businessId, String value) {
-        List<SuUserBusiness> allMembers = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
-        for (SuUserBusiness ub : allMembers) {
-            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
-            String displayName = ub.getUserId();
-            if (profile != null) {
-                String fullName = LocalizationHelper.getFullName(profile);
-                if (fullName != null && !fullName.isBlank()) {
-                    displayName = fullName;
-                }
-            }
-            if (displayName.equals(value)) {
-                return new LovResponse(displayName, displayName);
-            }
-        }
-        return new LovResponse(value, value);
-    }
-
-    @Override
-    @Transactional
-    public SuUserBusinessMemberResponse addMember(UUID businessId, String userId, UUID roleId) {
-        SuUserBusiness userBusiness = userBusinessRepository.findByUserIdAndBusinessId(userId, businessId)
-                .orElse(null);
-
-        if (userBusiness == null) {
-            boolean isFirstBusiness = userBusinessRepository.countByUserId(userId) == 0;
-            userBusiness = new SuUserBusiness();
-            userBusiness.setUserId(userId);
-            userBusiness.setBusinessId(businessId);
-            userBusiness.setIsDefault(isFirstBusiness);
-            userBusiness.setIsActive(true);
-            userBusiness.setCreatedBy(currentUserService.getUserId());
-            userBusiness.setCreatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        } else {
-            userBusiness.setIsActive(true);
-            userBusiness.setUpdatedBy(currentUserService.getUserId());
-            userBusiness.setUpdatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        }
-
-        if (roleId != null) {
-            SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, businessId)
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found in this business."));
-
-            boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
-                    userBusiness.getId(), roleId);
-            if (!hasRole) {
-                SuUserBusinessRole userRole = new SuUserBusinessRole();
-                userRole.setUserBusiness(userBusiness);
-                userRole.setBusinessRole(role);
-                userRole.setIsPrimary(false);
-                userRole.setIsActive(true);
-                userRole.setCreatedBy(currentUserService.getUserId());
-                userRole.setCreatedDate(Instant.now());
-                userBusinessRoleRepository.save(userRole);
-            }
-        }
-
-        return toResponse(userBusiness);
-    }
-
-    @Override
-    @Transactional
-    public SuUserBusinessMemberResponse updateMember(UUID userBusinessId, List<UUID> roleIds, Boolean isActive) {
-        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
-
-        if (isActive != null) {
-            userBusiness.setIsActive(isActive);
-            userBusiness.setUpdatedBy(currentUserService.getUserId());
-            userBusiness.setUpdatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        }
-
-        if (roleIds != null && !roleIds.isEmpty()) {
-            // ลบบทบาทเก่าทั้งหมด
-            userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
-
-            // เพิ่มบทบาทใหม่ทั้งหมด
-            for (UUID roleId : roleIds) {
-                SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, userBusiness.getBusinessId())
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found in this business: " + roleId));
-
-                SuUserBusinessRole userRole = new SuUserBusinessRole();
-                userRole.setUserBusiness(userBusiness);
-                userRole.setBusinessRole(role);
-                userRole.setIsPrimary(false);
-                userRole.setIsActive(true);
-                userRole.setCreatedBy(currentUserService.getUserId());
-                userRole.setCreatedDate(Instant.now());
-                userBusinessRoleRepository.save(userRole);
-            }
-        }
-
-        return toResponse(userBusiness);
-    }
-
-    @Override
-    @Transactional
-    public void removeMember(UUID userBusinessId) {
-        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
-
-        userBusiness.setIsActive(false);
-        userBusiness.setIsDelete(true);
-        userBusiness.setDeleteBy(currentUserService.getUserId());
-        userBusiness.setDeleteDate(Instant.now());
-        userBusinessRepository.save(userBusiness);
-
-        userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
-        log.info("Member removed: {}", userBusinessId);
-    }
-
-    // ============================================================
-    // ✅ toResponse - ใช้ LocalizationHelper แทน if/else
-    // ============================================================
-    private SuUserBusinessMemberResponse toResponse(SuUserBusiness ub) {
-        // 1. ดึง Profile
-        SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
-
-        String displayName = ub.getUserId();
-        String email = "";
-
-        if (profile != null) {
-            // ✅ ใช้ LocalizationHelper.getFullName(profile)
-            String fullName = LocalizationHelper.getFullName(profile);
-            if (fullName != null && !fullName.isBlank()) {
-                displayName = fullName;
-            }
-            email = profile.getEmail() != null ? profile.getEmail() : "";
-        }
-
-        // 2. ดึง Role Names (หลายบทบาท)
-        List<String> roleIds = new ArrayList<>();
-        List<String> roleNames = new ArrayList<>();
-
-        List<SuUserBusinessRole> userRoles = userBusinessRoleRepository
-                .findByUserBusinessIdAndIsActiveTrue(ub.getId());
-
-        if (userRoles != null && !userRoles.isEmpty()) {
-            for (SuUserBusinessRole userRole : userRoles) {
-                if (userRole.getBusinessRole() != null) {
-                    roleIds.add(userRole.getBusinessRole().getId().toString());
-                    // ✅ ใช้ LocalizationHelper.getRoleName(role)
-                    roleNames.add(LocalizationHelper.getRoleName(userRole.getBusinessRole()));
-                }
-            }
-        }
-
-        return SuUserBusinessMemberResponse.builder()
-                .id(ub.getId())
-                .businessId(ub.getBusinessId())
-                .userId(ub.getUserId())
-                .userName(displayName)
-                .userEmail(email)
-                .roleIds(roleIds)
-                .roleNames(roleNames)
-                .isActive(ub.getIsActive())
-                .isDefault(ub.getIsDefault())
-                .createdDate(ub.getCreatedDate())
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SuUserBusinessMemberResponse getMemberById(UUID userBusinessId) {
-        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + userBusinessId));
-        return toResponse(userBusiness);
     }
 }
 </file>
@@ -75633,6 +75223,48 @@ public class SaveProgramRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProfileRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.entity.su.SuProfile;
+
+@Repository
+public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
+
+    Optional<SuProfile> findByUserId(String userId); 
+    
+    boolean existsByUserId(String userId);
+
+    // หรือถ้าต้องการ check isDelete
+    Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
+
+    boolean existsByEmailIgnoreCase(String email);
+    
+    Optional<SuProfile> findByEmailIgnoreCase(String email);
+
+    Optional<SuProfile> findByPhoneNumber(String phoneNumber);
+
+    Optional<SuProfile> findByTaxId(String taxId);
+
+
+    boolean existsByPhoneNumber(String phoneNumber);
+    
+    boolean existsByTaxId(String taxId);
+
+    @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
+    List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -75750,6 +75382,254 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
                                 @Param("deleteDate") Instant deleteDate,
                                 @Param("now") Instant now);
 
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessMemberServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
+import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
+import com.softinter.sicapi.entity.su.SuUserBusinessRole;
+import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.LocalizationHelper;  // ✅ import
+import com.softinter.sicapi.util.PaginationUtil;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberService {
+
+    private final SuUserBusinessRepository userBusinessRepository;
+    private final SuUserBusinessRoleRepository userBusinessRoleRepository;
+    private final SuBusinessRoleRepository businessRoleRepository;
+    private final CurrentUserService currentUserService;
+    private final SuProfileRepository profileRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SuUserBusinessMemberResponse> getMembers(UUID businessId, Pageable pageable) {
+        Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
+        return entityPage.map(this::toResponse);
+    }
+
+    @Override
+public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, String keyword, int pageNumberZeroBased, int pageSize) {
+    Pageable pageable = PageRequest.of(pageNumberZeroBased, pageSize);
+    Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
+
+    List<LovResponse> items = entityPage.getContent().stream().map(ub -> {
+        SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+        String displayName = ub.getUserId();
+        if (profile != null) {
+            String fullName = LocalizationHelper.getFullName(profile);
+            if (fullName != null && !fullName.isBlank()) {
+                displayName = fullName;
+            }
+        }
+        return new LovResponse(ub.getUserId(), displayName);
+    }).collect(Collectors.toList());
+
+    return PaginationUtil.of(items, pageNumberZeroBased, pageSize, entityPage.getTotalElements());
+}
+
+    @Override
+    @Transactional(readOnly = true)
+    public LovResponse getComboboxMemberByValue(UUID businessId, String value) {
+        List<SuUserBusiness> allMembers = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
+        for (SuUserBusiness ub : allMembers) {
+            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+            String displayName = ub.getUserId();
+            if (profile != null) {
+                String fullName = LocalizationHelper.getFullName(profile);
+                if (fullName != null && !fullName.isBlank()) {
+                    displayName = fullName;
+                }
+            }
+            if (displayName.equals(value)) {
+                return new LovResponse(displayName, displayName);
+            }
+        }
+        return new LovResponse(value, value);
+    }
+
+    @Override
+    @Transactional
+    public SuUserBusinessMemberResponse addMember(UUID businessId, String userId, UUID roleId) {
+        SuUserBusiness userBusiness = userBusinessRepository.findByUserIdAndBusinessId(userId, businessId)
+                .orElse(null);
+
+        if (userBusiness == null) {
+            boolean isFirstBusiness = userBusinessRepository.countByUserId(userId) == 0;
+            userBusiness = new SuUserBusiness();
+            userBusiness.setUserId(userId);
+            userBusiness.setBusinessId(businessId);
+            userBusiness.setIsDefault(isFirstBusiness);
+            userBusiness.setIsActive(true);
+            userBusiness.setCreatedBy(currentUserService.getUserId());
+            userBusiness.setCreatedDate(Instant.now());
+            userBusiness = userBusinessRepository.save(userBusiness);
+        } else {
+            userBusiness.setIsActive(true);
+            userBusiness.setUpdatedBy(currentUserService.getUserId());
+            userBusiness.setUpdatedDate(Instant.now());
+            userBusiness = userBusinessRepository.save(userBusiness);
+        }
+
+        if (roleId != null) {
+            SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, businessId)
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found in this business."));
+
+            boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
+                    userBusiness.getId(), roleId);
+            if (!hasRole) {
+                SuUserBusinessRole userRole = new SuUserBusinessRole();
+                userRole.setUserBusiness(userBusiness);
+                userRole.setBusinessRole(role);
+                userRole.setIsPrimary(false);
+                userRole.setIsActive(true);
+                userRole.setCreatedBy(currentUserService.getUserId());
+                userRole.setCreatedDate(Instant.now());
+                userBusinessRoleRepository.save(userRole);
+            }
+        }
+
+        return toResponse(userBusiness);
+    }
+
+    @Override
+    @Transactional
+    public SuUserBusinessMemberResponse updateMember(UUID userBusinessId, List<UUID> roleIds, Boolean isActive) {
+        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        if (isActive != null) {
+            userBusiness.setIsActive(isActive);
+            userBusiness.setUpdatedBy(currentUserService.getUserId());
+            userBusiness.setUpdatedDate(Instant.now());
+            userBusiness = userBusinessRepository.save(userBusiness);
+        }
+
+        if (roleIds != null && !roleIds.isEmpty()) {
+            // ลบบทบาทเก่าทั้งหมด
+            userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
+
+            // เพิ่มบทบาทใหม่ทั้งหมด
+            for (UUID roleId : roleIds) {
+                SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, userBusiness.getBusinessId())
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found in this business: " + roleId));
+
+                SuUserBusinessRole userRole = new SuUserBusinessRole();
+                userRole.setUserBusiness(userBusiness);
+                userRole.setBusinessRole(role);
+                userRole.setIsPrimary(false);
+                userRole.setIsActive(true);
+                userRole.setCreatedBy(currentUserService.getUserId());
+                userRole.setCreatedDate(Instant.now());
+                userBusinessRoleRepository.save(userRole);
+            }
+        }
+
+        return toResponse(userBusiness);
+    }
+
+    @Override
+    @Transactional
+    public void removeMember(UUID userBusinessId) {
+        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        userBusiness.setIsActive(false);
+        userBusiness.setIsDelete(true);
+        userBusiness.setDeleteBy(currentUserService.getUserId());
+        userBusiness.setDeleteDate(Instant.now());
+        userBusinessRepository.save(userBusiness);
+
+        userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
+        log.info("Member removed: {}", userBusinessId);
+    }
+
+    // ============================================================
+    // ✅ toResponse - ใช้ LocalizationHelper แทน if/else
+    // ============================================================
+    private SuUserBusinessMemberResponse toResponse(SuUserBusiness ub) {
+        // 1. ดึง Profile
+        SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+
+        String displayName = ub.getUserId();
+        String email = "";
+
+        if (profile != null) {
+            // ✅ ใช้ LocalizationHelper.getFullName(profile)
+            String fullName = LocalizationHelper.getFullName(profile);
+            if (fullName != null && !fullName.isBlank()) {
+                displayName = fullName;
+            }
+            email = profile.getEmail() != null ? profile.getEmail() : "";
+        }
+
+        // 2. ดึง Role Names (หลายบทบาท)
+        List<String> roleIds = new ArrayList<>();
+        List<String> roleNames = new ArrayList<>();
+
+        List<SuUserBusinessRole> userRoles = userBusinessRoleRepository
+                .findByUserBusinessIdAndIsActiveTrue(ub.getId());
+
+        if (userRoles != null && !userRoles.isEmpty()) {
+            for (SuUserBusinessRole userRole : userRoles) {
+                if (userRole.getBusinessRole() != null) {
+                    roleIds.add(userRole.getBusinessRole().getId().toString());
+                    // ✅ ใช้ LocalizationHelper.getRoleName(role)
+                    roleNames.add(LocalizationHelper.getRoleName(userRole.getBusinessRole()));
+                }
+            }
+        }
+
+        return SuUserBusinessMemberResponse.builder()
+                .id(ub.getId())
+                .businessId(ub.getBusinessId())
+                .userId(ub.getUserId())
+                .userName(displayName)
+                .userEmail(email)
+                .roleIds(roleIds)
+                .roleNames(roleNames)
+                .isActive(ub.getIsActive())
+                .isDefault(ub.getIsDefault())
+                .createdDate(ub.getCreatedDate())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SuUserBusinessMemberResponse getMemberById(UUID userBusinessId) {
+        SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + userBusinessId));
+        return toResponse(userBusiness);
+    }
 }
 </file>
 
@@ -77283,62 +77163,6 @@ public class SuBusinessRoleProgramController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserBusinessRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;   // ✅ ใช้ Spring Pageable
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
-
-@Repository
-public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, UUID>, JpaSpecificationExecutor<SuUserBusiness> {
-
-    // ✅ ใช้ org.springframework.data.domain.Pageable
-    Page<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId, Pageable pageable);
-
-    List<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId);
-
-    @Query("SELECT ub FROM SuUserBusiness ub JOIN FETCH ub.business b JOIN FETCH b.title WHERE ub.userId = :userId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false ORDER BY ub.isDefault DESC, b.id")
-    List<SuUserBusiness> findActiveByUserId(@Param("userId") String userId);
-
-    @Query("SELECT ub FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.business.id = :businessId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false")
-    Optional<SuUserBusiness> findByUserIdAndBusinessId(@Param("userId") String userId, @Param("businessId") UUID businessId);
-
-    @Query("SELECT CASE WHEN COUNT(ub) > 0 THEN true ELSE false END FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false AND ub.business.id = :businessId")
-    boolean canAccessBusiness(@Param("userId") String userId, @Param("businessId") UUID businessId);
-
-    @Query("SELECT DISTINCT ub.business.id FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false")
-    List<UUID> findBusinessIdsByUserId(@Param("userId") String userId);
-
-    @Modifying
-    @Query("UPDATE SuUserBusiness ub SET ub.isDefault = CASE WHEN ub.business.id = :businessId THEN true ELSE false END WHERE ub.userId = :userId AND ub.isActive = true")
-    int updateDefaultBusiness(@Param("userId") String userId, @Param("businessId") UUID businessId);
-
-    List<SuUserBusiness> findByUserIdAndIsActiveTrue(String userId);
-
-    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true")
-    long countByUserId(@Param("userId") String userId);
-
-    boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
-
-    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId IN :userIds AND ub.businessId = :businessId AND ub.isActive = true")
-    long countByUserIdInAndBusinessId(@Param("userIds") List<String> userIds, @Param("businessId") UUID businessId);
-
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/VerifyServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -78282,6 +78106,62 @@ public abstract class BaseEntity {
         }
     }
     
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserBusinessRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;   // ✅ ใช้ Spring Pageable
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
+
+@Repository
+public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, UUID>, JpaSpecificationExecutor<SuUserBusiness> {
+
+    // ✅ ใช้ org.springframework.data.domain.Pageable
+    Page<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId, Pageable pageable);
+
+    List<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId);
+
+    @Query("SELECT ub FROM SuUserBusiness ub JOIN FETCH ub.business b JOIN FETCH b.title WHERE ub.userId = :userId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false ORDER BY ub.isDefault DESC, b.id")
+    List<SuUserBusiness> findActiveByUserId(@Param("userId") String userId);
+
+    @Query("SELECT ub FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.business.id = :businessId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false")
+    Optional<SuUserBusiness> findByUserIdAndBusinessId(@Param("userId") String userId, @Param("businessId") UUID businessId);
+
+    @Query("SELECT CASE WHEN COUNT(ub) > 0 THEN true ELSE false END FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false AND ub.business.id = :businessId")
+    boolean canAccessBusiness(@Param("userId") String userId, @Param("businessId") UUID businessId);
+
+    @Query("SELECT DISTINCT ub.business.id FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false")
+    List<UUID> findBusinessIdsByUserId(@Param("userId") String userId);
+
+    @Modifying
+    @Query("UPDATE SuUserBusiness ub SET ub.isDefault = CASE WHEN ub.business.id = :businessId THEN true ELSE false END WHERE ub.userId = :userId AND ub.isActive = true")
+    int updateDefaultBusiness(@Param("userId") String userId, @Param("businessId") UUID businessId);
+
+    List<SuUserBusiness> findByUserIdAndIsActiveTrue(String userId);
+
+    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true")
+    long countByUserId(@Param("userId") String userId);
+
+    boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
+
+    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId IN :userIds AND ub.businessId = :businessId AND ub.isActive = true")
+    long countByUserIdInAndBusinessId(@Param("userIds") List<String> userIds, @Param("businessId") UUID businessId);
+
 }
 </file>
 

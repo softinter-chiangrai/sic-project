@@ -73,7 +73,7 @@
           } @else if (showEmptyState) {
             <div class="sic-combobox__state">{{ emptyText }}</div>
           } @else {
-            @for (item of options; track trackOption($index, item); let index = $index) {
+            @for (item of filteredOptions; track trackOption($index, item); let index = $index) {
               <button
                 type="button"
                 class="sic-combobox__option"

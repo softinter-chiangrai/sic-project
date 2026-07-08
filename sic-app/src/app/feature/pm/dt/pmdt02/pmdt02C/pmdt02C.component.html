@@ -49,6 +49,7 @@
         textField="text"
         placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
         [clearable]="true"
+        [excludeValues]="assigneeIds.value || []"
         (selectionChanged)="onAssigneeSelect($event)"
       ></sic-combobox>
 

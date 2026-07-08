@@ -82,6 +82,20 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   @Input() clearable = true;
   @Input() hint?: string;
   @Input() errorMessages: Record<string, string> = {};
+  @Input() excludeValues: any[] = [];
+
+  get filteredOptions(): any[] {
+    if (!this.excludeValues || this.excludeValues.length === 0) {
+      return this.options;
+    }
+    return this.options.filter((item) => {
+      const itemVal = this.resolveValue(item);
+      if (itemVal === this.value) {
+        return true;
+      }
+      return !this.excludeValues.includes(itemVal);
+    });
+  }
 
   @Output() selectionChanged = new EventEmitter<any>();
 
@@ -190,11 +204,11 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   }
 
   get showLoadingState(): boolean {
-    return this.loading && this.options.length === 0;
+    return this.loading && this.filteredOptions.length === 0;
   }
 
   get showEmptyState(): boolean {
-    return !this.loading && this.options.length === 0;
+    return !this.loading && this.filteredOptions.length === 0;
   }
 
   get canLoadMore(): boolean {
@@ -397,8 +411,8 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
 
     if (event.key === 'Enter') {
       event.preventDefault();
-      if (this.opened && this.activeIndex >= 0 && this.activeIndex < this.options.length) {
-        this.selectOption(this.options[this.activeIndex]);
+      if (this.opened && this.activeIndex >= 0 && this.activeIndex < this.filteredOptions.length) {
+        this.selectOption(this.filteredOptions[this.activeIndex]);
       }
       return;
     }
@@ -508,14 +522,14 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   }
 
   private moveActive(step: 1 | -1): void {
-    if (this.options.length === 0) {
+    if (this.filteredOptions.length === 0) {
       return;
     }
 
     if (this.activeIndex < 0) {
-      this.activeIndex = step === 1 ? 0 : this.options.length - 1;
+      this.activeIndex = step === 1 ? 0 : this.filteredOptions.length - 1;
     } else {
-      this.activeIndex = Math.max(0, Math.min(this.options.length - 1, this.activeIndex + step));
+      this.activeIndex = Math.max(0, Math.min(this.filteredOptions.length - 1, this.activeIndex + step));
     }
 
     this.scrollActiveIntoView();
@@ -576,13 +590,13 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
           this.loading = false;
           this.loadSubscription = null;
 
-          const selectedIndex = this.options.findIndex((item) => this.resolveValue(item) === this.value);
+          const selectedIndex = this.filteredOptions.findIndex((item) => this.resolveValue(item) === this.value);
           if (reset) {
                 let nextActiveIndex = -1;
 
                 if (selectedIndex >= 0) {
                   nextActiveIndex = selectedIndex;
-                } else if (this.options.length > 0) {
+                } else if (this.filteredOptions.length > 0) {
                   nextActiveIndex = 0;
                 }
 

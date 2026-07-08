@@ -71,7 +71,7 @@ export class Pmdt02CComponent implements OnInit {
   ngOnInit() {
     const businessId = this.businessService.getCurrentBusinessId();
     if (businessId) {
-      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/su-user-business/members/combobox?businessId=${businessId}`;
+      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
     }
 
     this.route.paramMap.subscribe((params) => {
