@@ -1,7 +1,8 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
+
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
@@ -35,29 +36,37 @@ export class Pmdt02CComponent implements OnInit {
   private router = inject(Router);
   private businessService = inject(BusinessService);
 
+  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
+
   workPackageId = '';
   projectId = '';
   phaseId = '';
   taskId: string | null = null;
   isEdit = false;
   data: TaskResponse | null = null;
-
   assignedToApiUrl = '';
 
-  // ✅ เพิ่ม color ในฟอร์ม
+  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
+  assigneeNames: Record<string, string> = {};
+
   form = this.fb.group({
     taskCode: ['', Validators.required],
     taskName: ['', Validators.required],
     description: [''],
-    assignedTo: [''],
+    assignedTo: [''], // คนหลัก (optional)
     startDate: ['', Validators.required],
     startTime: ['', Validators.required],
     endDate: ['', Validators.required],
     endTime: ['', Validators.required],
     estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
     priority: ['Medium'],
-    color: [''], // ✅ เพิ่ม
+    color: [''],
+    assigneeIds: [[]], // ✅ array ของ userId
   });
+
+  get assigneeIds(): FormControl {
+    return this.form.get('assigneeIds') as FormControl;
+  }
 
   ngOnInit() {
     const businessId = this.businessService.getCurrentBusinessId();
@@ -95,6 +104,7 @@ export class Pmdt02CComponent implements OnInit {
     const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
     this.form.patchValue({
       taskCode: data.taskCode,
       taskName: data.taskName,
@@ -106,8 +116,43 @@ export class Pmdt02CComponent implements OnInit {
       endTime: endTime,
       estimateManday: data.estimateManday ?? null,
       priority: data.priority,
-      color: data.color || '', // ✅ patch ค่าสี
+      color: data.color || '',
     });
+
+    // ✅ โหลด assigneeIds และ assigneeNames
+    if (data.assigneeIds) {
+      this.assigneeIds.setValue(data.assigneeIds);
+    }
+    if (data.assigneeNames) {
+      this.assigneeNames = data.assigneeNames;
+    }
+  }
+
+  // ✅ เมื่อเลือกจาก combobox
+  onAssigneeSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const current = this.assigneeIds.value || [];
+    if (current.includes(userId)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      this.assigneeCombobox.clearSelection();
+      return;
+    }
+    this.assigneeNames[userId] = item.text;
+    this.assigneeIds.setValue([...current, userId]);
+    this.assigneeCombobox.clearSelection();
+  }
+
+  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
+  removeAssignee(userId: string) {
+    const current = this.assigneeIds.value || [];
+    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
+    delete this.assigneeNames[userId];
+  }
+
+  // ✅ ดูชื่อจาก userId
+  getAssigneeName(userId: string): string {
+    return this.assigneeNames[userId] || userId;
   }
 
   private buildISOString(date: any, time: string): string {
@@ -135,7 +180,8 @@ export class Pmdt02CComponent implements OnInit {
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
       estimateManday: raw.estimateManday!,
       priority: raw.priority || 'Medium',
-      color: raw.color || undefined, // ✅ ส่งค่าสี
+      color: raw.color || undefined,
+      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
     };
 
     const request = this.isEdit && this.taskId

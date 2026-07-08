@@ -4,8 +4,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,25 +50,24 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, String keyword, int pageNumberZeroBased, int pageSize) {
-        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNumberZeroBased, pageSize);
-        Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
+public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, String keyword, int pageNumberZeroBased, int pageSize) {
+    Pageable pageable = PageRequest.of(pageNumberZeroBased, pageSize);
+    Page<SuUserBusiness> entityPage = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable);
 
-        List<LovResponse> items = entityPage.getContent().stream().map(ub -> {
-            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
-            String displayName = ub.getUserId();
-            if (profile != null) {
-                String fullName = LocalizationHelper.getFullName(profile);
-                if (fullName != null && !fullName.isBlank()) {
-                    displayName = fullName;
-                }
+    List<LovResponse> items = entityPage.getContent().stream().map(ub -> {
+        SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+        String displayName = ub.getUserId();
+        if (profile != null) {
+            String fullName = LocalizationHelper.getFullName(profile);
+            if (fullName != null && !fullName.isBlank()) {
+                displayName = fullName;
             }
-            return new LovResponse(displayName, displayName);
-        }).toList();
+        }
+        return new LovResponse(ub.getUserId(), displayName);
+    }).collect(Collectors.toList());
 
-        return PaginationUtil.of(items, pageNumberZeroBased, pageSize, entityPage.getTotalElements());
-    }
+    return PaginationUtil.of(items, pageNumberZeroBased, pageSize, entityPage.getTotalElements());
+}
 
     @Override
     @Transactional(readOnly = true)

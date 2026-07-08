@@ -47,4 +47,7 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
 
     boolean existsByUserIdAndBusinessId(String userId, UUID businessId);
 
+    @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId IN :userIds AND ub.businessId = :businessId AND ub.isActive = true")
+    long countByUserIdInAndBusinessId(@Param("userIds") List<String> userIds, @Param("businessId") UUID businessId);
+
 }

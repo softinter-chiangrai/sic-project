@@ -1,9 +1,12 @@
 package com.softinter.sicapi.repository.su;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.softinter.sicapi.entity.su.SuProfile;
@@ -26,7 +29,11 @@ public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
 
     Optional<SuProfile> findByTaxId(String taxId);
 
-    // SuProfileRepository.java
-boolean existsByPhoneNumber(String phoneNumber);
-boolean existsByTaxId(String taxId);
+
+    boolean existsByPhoneNumber(String phoneNumber);
+    
+    boolean existsByTaxId(String taxId);
+
+    @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
+    List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
 }

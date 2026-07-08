@@ -1,6 +1,7 @@
 package com.softinter.sicapi.dto.request;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.Data;
@@ -17,4 +18,5 @@ public class TaskRequest {
     private Integer estimateManday;
     private String priority;
     private String color;
+    private List<String> assigneeIds;
 }

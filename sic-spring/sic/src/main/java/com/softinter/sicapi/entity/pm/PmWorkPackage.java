@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -20,7 +20,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "pm_work_package")
 @Getter @Setter
-public class PmWorkPackage extends BaseEntity {
+public class PmWorkPackage extends BaseBusinessEntity  {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "milestone_id", nullable = false)

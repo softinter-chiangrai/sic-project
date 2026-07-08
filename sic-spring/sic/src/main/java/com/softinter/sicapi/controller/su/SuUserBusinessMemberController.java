@@ -22,6 +22,7 @@ import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
 import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.PaginationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

@@ -81,9 +81,10 @@ export interface TaskRequest {
   assignedTo?: string;
   startDate: string;
   endDate: string;
-  estimateManday?: number;
+  estimateManday: number;
   priority?: string;
   color?: string;
+  assigneeIds?: string[]; // ✅ เพิ่ม
 }
 
 export interface TaskResponse {
@@ -103,4 +104,6 @@ export interface TaskResponse {
   status: string;
   color?: string;
   priority: string;
+  assigneeIds?: string[]; // ✅ เพิ่ม
+  assigneeNames?: Record<string, string>; // ✅ เพิ่ม
 }

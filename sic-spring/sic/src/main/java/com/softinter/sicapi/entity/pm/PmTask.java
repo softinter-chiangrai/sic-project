@@ -2,7 +2,7 @@ package com.softinter.sicapi.entity.pm;
 
 import java.time.Instant;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "pm_task")
 @Getter @Setter
-public class PmTask extends BaseEntity {
+public class PmTask extends BaseBusinessEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_package_id")

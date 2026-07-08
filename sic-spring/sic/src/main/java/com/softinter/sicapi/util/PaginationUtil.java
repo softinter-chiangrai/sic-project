@@ -15,7 +15,7 @@ public class PaginationUtil {
         response.setData(data != null ? data : new ArrayList<>());
 
         Pageable pageable = new Pageable();
-        pageable.setPageNumber(pageNumberZeroBased + 1);  // 1-indexed สำหรับ frontend
+        pageable.setPageNumber(pageNumberZeroBased + 1);  
         pageable.setPageSize(pageSize);
         pageable.setTotalElements(totalElements);
         pageable.calculateTotalPages();

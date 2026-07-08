@@ -1,8 +1,11 @@
 package com.softinter.sicapi.dto.response;
 
-import lombok.Data;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import lombok.Data;
 
 @Data
 public class TaskResponse {
@@ -22,4 +25,6 @@ public class TaskResponse {
     private String status;
     private String color;
     private String priority;
+    private List<String> assigneeIds;
+    private Map<String, String> assigneeNames; 
 }
