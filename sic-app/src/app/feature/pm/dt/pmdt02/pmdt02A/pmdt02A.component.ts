@@ -1,15 +1,13 @@
 // src/app/feature/pm/dt/pmdt02A/pmdt02A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
-
 import { MilestoneService } from '../../../../../core/services/milestone.service';
 import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
-import { DrawerService } from '../../../../../core/component/sic-drawer/drawer.service';
 
 @Component({
   selector: 'app-pmdt02A',
@@ -27,20 +25,14 @@ export class Pmdt02AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private milestoneService = inject(MilestoneService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  @Input() phaseId = '';
-  @Input() projectId = '';
-  @Input() milestoneId: string | null = null;
-  @Input() isEdit = false;
-  @Input() data: MilestoneResponse | null = null;
-
-  @Output() saved = new EventEmitter<MilestoneResponse>();
-  @Output() cancelled = new EventEmitter<void>();
-
-  phaseName = '';
+  phaseId = '';
+  projectId = '';
+  milestoneId: string | null = null;
+  isEdit = false;
+  data: MilestoneResponse | null = null;
 
   form = this.fb.group({
     milestoneName: ['', Validators.required],
@@ -50,17 +42,26 @@ export class Pmdt02AComponent implements OnInit {
   });
 
   ngOnInit() {
-    if (this.isEdit && !this.data && this.milestoneId) {
-      this.loadMilestone(this.milestoneId);
-    }
-    if (this.isEdit && this.data) {
-      this.patchForm(this.data);
-    }
+    this.route.paramMap.subscribe((params) => {
+      this.milestoneId = params.get('id');
+      this.isEdit = !!this.milestoneId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.phaseId = qParams['phaseId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      if (this.isEdit && this.milestoneId) {
+        this.loadMilestone(this.milestoneId);
+      }
+    });
   }
 
   loadMilestone(id: string) {
     this.milestoneService.getMilestoneById(id).subscribe({
-      next: (data) => this.patchForm(data),
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
       error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
@@ -105,15 +106,17 @@ export class Pmdt02AComponent implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Milestone เรียบร้อย' : 'สร้าง Milestone เรียบร้อย');
-        this.saved.emit(res);
-        this.drawerService.close();
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
       },
       error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
 
   cancel() {
-    this.cancelled.emit();
-    this.drawerService.close();
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
   }
 }

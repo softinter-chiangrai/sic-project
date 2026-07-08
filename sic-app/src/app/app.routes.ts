@@ -65,7 +65,6 @@ export const routes: Routes = [
         path: 'su',
         loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
       },
-      // ✅ เพิ่ม pm
       {
         path: 'pm',
         loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),

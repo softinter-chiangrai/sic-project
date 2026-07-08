@@ -1,5 +1,4 @@
 // src/app/feature/pm/pm.routes.ts
-
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
@@ -83,73 +82,65 @@ export const PM_ROUTES: Routes = [
   // ============================================================
 
   // ---- Phase List ----
-{
-  path: 'phase',
-  loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
-  canActivate: [customerGuard, projectGuard],
-},
+  {
+    path: 'phase',
+    loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+  // ---- Phase Form (Create) ----
+  {
+    path: 'phase/new',
+    loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  // ---- Phase Form (Edit) ----
+  {
+    path: 'phase/:id/edit',
+    loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  // ---- Phase Detail ----
+  {
+    path: 'phase/:id',
+    loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
+    canActivate: [customerGuard, projectGuard],
+  },
 
-// ---- Phase Form (Create) ----
-{
-  path: 'phase/new',
-  loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
+  // ---- Milestone Form (ใช้ Pmdt02AComponent) ----
+  {
+    path: 'milestone/new',
+    loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'milestone/:id/edit',
+    loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
 
-// ---- Phase Form (Edit) ----
-{
-  path: 'phase/:id/edit',
-  loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
+  // ---- WorkPackage Form (ใช้ Pmdt02BComponent) ----
+  {
+    path: 'work-package/new',
+    loadComponent: () => import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'work-package/:id/edit',
+    loadComponent: () => import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
 
-// ---- Phase Detail (แสดง Milestone, WorkPackage, Task) ----
-{
-  path: 'phase/:id',
-  loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
-  canActivate: [customerGuard, projectGuard],
-},
-
-// ---- Milestone Form ----
-{
-  path: 'milestone/new',
-  loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'milestone/:id/edit',
-  loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
-
-// ---- WorkPackage Form ----
-{
-  path: 'work-package/new',
-  loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'work-package/:id/edit',
-  loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-  canActivate: [customerGuard, projectGuard],
-},
-
-// ---- Task Form ----
-{
-  path: 'task/new',
-  loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'task/:id/edit',
-  loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
-  canActivate: [customerGuard, projectGuard],
-},
-
-
-  // ============================================================
-  // ===== หน้าอื่นๆ ที่มีอยู่เดิม =====
-  // ============================================================
+  // ---- Task Form (ใช้ Pmdt02CComponent) ----
+  {
+    path: 'task/new',
+    loadComponent: () => import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'task/:id/edit',
+    loadComponent: () => import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
 
   // ===== Requirement =====
   {
@@ -259,16 +250,16 @@ export const PM_ROUTES: Routes = [
   },
 
   // ===== Gantt =====
-{
-  path: 'gantt',
-  loadComponent: () => import('../../core/component/sic-ganttchart/ganttchart.component').then((m) => m.SicGanttchartComponent),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'gantt/:id/update',
-  loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
-  canActivate: [customerGuard, projectGuard],
-},
+  {
+    path: 'gantt',
+    loadComponent: () => import('../../core/component/sic-ganttchart/ganttchart.component').then((m) => m.SicGanttchartComponent),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'gantt/:id/update',
+    loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
+    canActivate: [customerGuard, projectGuard],
+  },
 
   // ===== Test Case =====
   {

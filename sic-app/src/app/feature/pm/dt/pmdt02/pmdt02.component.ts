@@ -15,11 +15,6 @@ import { PhaseService } from '../../../../core/services/phase.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { WorkPackageService } from '../../../../core/services/work-package.service';
 
-import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
-import { Pmdt03Component } from '../pmdt03/pmdt03.component';
-import { Pmdt04Component } from '../pmdt04/pmdt04.component';
-import { Pmdt02AComponent } from './pmdt02A/pmdt02A.component';
-
 import { environment } from '../../../../../environments/environment';
 import {
   GanttTask,
@@ -39,9 +34,6 @@ import {
     RouterModule,
     SicTaskComponent,
     SicGanttchartComponent,
-    Pmdt02AComponent,
-    Pmdt03Component,
-    Pmdt04Component,
   ],
   templateUrl: './pmdt02.component.html',
 })
@@ -53,9 +45,7 @@ export class Pmdt02Component implements OnInit {
   private wpService = inject(WorkPackageService);
   private taskService = inject(TaskService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
 
-  // ===== State =====
   phase = signal<PhaseResponse | null>(null);
   isLoading = signal(false);
   projectId = signal('');
@@ -64,7 +54,6 @@ export class Pmdt02Component implements OnInit {
   expandedWorkPackage = signal<string | null>(null);
   rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
 
-  // ===== Task Config =====
   taskConfig = computed<SicTaskConfig>(() => ({
     api: `${environment.apiBaseUrl}/api/pm/projects/${this.currentPhaseId()}/tasks`,
     id: 'id',
@@ -95,11 +84,9 @@ export class Pmdt02Component implements OnInit {
     },
   }));
 
-  // ===== Computed Gantt Tasks =====
   protected ganttTasks = computed<GanttTask[]>(() => {
     const p = this.phase();
     if (!p) return [];
-
     const tasks: GanttTask[] = [];
     p.milestones?.forEach((ms) => {
       ms.workPackages?.forEach((wp) => {
@@ -125,7 +112,6 @@ export class Pmdt02Component implements OnInit {
     return tasks;
   });
 
-  // ===== Lifecycle =====
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
       const phaseId = params.get('id');
@@ -144,17 +130,14 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== โหลดข้อมูลหลัก =====
   loadPhaseDetail(phaseId: string) {
     this.isLoading.set(true);
     this.phaseService.getPhaseById(phaseId).subscribe({
       next: (data) => {
         this.phase.set(data);
         if (data.milestones && data.milestones.length > 0) {
-          // ถ้ามี Milestone อยู่แล้ว ให้โหลด Work Packages ทันที
           this.loadWorkPackagesForMilestones(data.milestones);
         } else {
-          // ถ้าไม่มีให้โหลด Milestone ก่อน
           this.loadMilestones(phaseId);
         }
       },
@@ -176,7 +159,6 @@ export class Pmdt02Component implements OnInit {
         if (current) {
           current.milestones = milestones;
           this.phase.set({ ...current });
-          // ✅ โหลด Work Packages ของทุก Milestone ที่ได้
           this.loadWorkPackagesForMilestones(milestones);
         }
       },
@@ -184,10 +166,8 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== โหลด Work Packages สำหรับทุก Milestone =====
   private loadWorkPackagesForMilestones(milestones: MilestoneResponse[]) {
     if (!milestones || milestones.length === 0) return;
-
     milestones.forEach((ms) => {
       this.wpService.getWorkPackagesByMilestoneId(ms.id).subscribe({
         next: (workPackages) => {
@@ -196,7 +176,7 @@ export class Pmdt02Component implements OnInit {
             const target = current.milestones.find((m) => m.id === ms.id);
             if (target) {
               target.workPackages = workPackages;
-              this.phase.set({ ...current }); // trigger re-render
+              this.phase.set({ ...current });
             }
           }
         },
@@ -205,12 +185,9 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== โหลด Tasks สำหรับ Work Package (เมื่อคลิกขยาย) =====
   private loadTasksForWorkPackage(wpId: string) {
     const current = this.phase();
     if (!current) return;
-
-    // ค้นหา Work Package ที่มี id ตรงกัน
     let targetWp: WorkPackageResponse | null = null;
     for (const ms of current.milestones || []) {
       const found = ms.workPackages?.find((w) => w.id === wpId);
@@ -219,10 +196,7 @@ export class Pmdt02Component implements OnInit {
         break;
       }
     }
-
     if (!targetWp) return;
-
-    // ถ้ายังไม่มี tasks หรือเป็น null ให้โหลด
     if (!targetWp.tasks || targetWp.tasks.length === 0) {
       this.taskService.getTasksByWorkPackageId(wpId).subscribe({
         next: (tasks) => {
@@ -234,20 +208,17 @@ export class Pmdt02Component implements OnInit {
     }
   }
 
-  // ===== Toggle Expand =====
   toggleMilestone(msId: string) {
     this.expandedMilestone.set(this.expandedMilestone() === msId ? null : msId);
   }
 
   toggleWorkPackage(wpId: string) {
-    // ถ้ากำลังขยาย → โหลด Tasks
     if (this.expandedWorkPackage() !== wpId) {
       this.loadTasksForWorkPackage(wpId);
     }
     this.expandedWorkPackage.set(this.expandedWorkPackage() === wpId ? null : wpId);
   }
 
-  // ===== Helpers =====
   getTotalWorkPackages(phase: PhaseResponse): number {
     let count = 0;
     phase.milestones?.forEach((ms) => {
@@ -256,41 +227,19 @@ export class Pmdt02Component implements OnInit {
     return count;
   }
 
-  // ===== Milestone CRUD =====
+  // ===== Milestone CRUD (ใช้ Router) =====
   openCreateMilestone() {
     const phaseId = this.currentPhaseId();
     if (!phaseId) return;
-    this.drawerService.open({
-      component: Pmdt02AComponent,
-      title: 'สร้าง Milestone ใหม่',
-      inputs: {
-        phaseId: phaseId,
-        projectId: this.projectId(),
-        isEdit: false,
-      },
-      width: '560px',
-      onSaved: () => {
-        this.loadPhaseDetail(phaseId); // reload หลังจากบันทึก
-      },
+    this.router.navigate(['/feature/pm/milestone/new'], {
+      queryParams: { phaseId, projectId: this.projectId() },
     });
   }
 
   editMilestone(ms: MilestoneResponse, event: Event) {
     event.stopPropagation();
-    this.drawerService.open({
-      component: Pmdt02AComponent,
-      title: 'แก้ไข Milestone',
-      inputs: {
-        milestoneId: ms.id,
-        phaseId: this.currentPhaseId(),
-        projectId: this.projectId(),
-        isEdit: true,
-        data: ms,
-      },
-      width: '560px',
-      onSaved: () => {
-        this.loadPhaseDetail(this.currentPhaseId());
-      },
+    this.router.navigate(['/feature/pm/milestone', ms.id, 'edit'], {
+      queryParams: { projectId: this.projectId() },
     });
   }
 
@@ -312,20 +261,13 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== Work Package CRUD =====
+  // ===== Work Package CRUD (ใช้ Router) =====
   openCreateWorkPackage(milestoneId: string) {
-    this.drawerService.open({
-      component: Pmdt03Component,
-      title: 'สร้าง Work Package ใหม่',
-      inputs: {
-        milestoneId: milestoneId,
+    this.router.navigate(['/feature/pm/work-package/new'], {
+      queryParams: {
+        milestoneId,
         projectId: this.projectId(),
         phaseId: this.currentPhaseId(),
-        isEdit: false,
-      },
-      width: '560px',
-      onSaved: () => {
-        this.loadPhaseDetail(this.currentPhaseId());
       },
     });
   }
@@ -341,20 +283,11 @@ export class Pmdt02Component implements OnInit {
 
   editWorkPackage(wp: WorkPackageResponse, milestoneId: string, event: Event) {
     event.stopPropagation();
-    this.drawerService.open({
-      component: Pmdt03Component,
-      title: 'แก้ไข Work Package',
-      inputs: {
-        wpId: wp.id,
-        milestoneId: milestoneId,
+    this.router.navigate(['/feature/pm/work-package', wp.id, 'edit'], {
+      queryParams: {
+        milestoneId,
         projectId: this.projectId(),
         phaseId: this.currentPhaseId(),
-        isEdit: true,
-        data: wp,
-      },
-      width: '560px',
-      onSaved: () => {
-        this.loadPhaseDetail(this.currentPhaseId());
       },
     });
   }
@@ -380,41 +313,24 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== Task CRUD =====
+  // ===== Task CRUD (ใช้ Router) =====
   openCreateTask(workPackageId: string) {
-    this.drawerService.open({
-      component: Pmdt04Component,
-      title: 'สร้าง Task ใหม่',
-      inputs: {
-        workPackageId: workPackageId,
+    this.router.navigate(['/feature/pm/task/new'], {
+      queryParams: {
+        workPackageId,
         projectId: this.projectId(),
         phaseId: this.currentPhaseId(),
-        isEdit: false,
-      },
-      width: '600px',
-      onSaved: () => {
-        // reload ข้อมูลทั้งหมด เพื่อให้เห็น Task ใหม่
-        this.loadPhaseDetail(this.currentPhaseId());
       },
     });
   }
 
   editTask(task: TaskResponse, workPackageId: string, event: Event) {
     event.stopPropagation();
-    this.drawerService.open({
-      component: Pmdt04Component,
-      title: 'แก้ไข Task',
-      inputs: {
-        taskId: task.id,
-        workPackageId: workPackageId,
+    this.router.navigate(['/feature/pm/task', task.id, 'edit'], {
+      queryParams: {
+        workPackageId,
         projectId: this.projectId(),
         phaseId: this.currentPhaseId(),
-        isEdit: true,
-        data: task,
-      },
-      width: '600px',
-      onSaved: () => {
-        this.loadPhaseDetail(this.currentPhaseId());
       },
     });
   }
@@ -453,11 +369,9 @@ export class Pmdt02Component implements OnInit {
   onCalendarTasksChange(tasks: SicCalendarTask[]) {
     console.log('Tasks changed:', tasks);
   }
-
   onTaskAdded(task: SicCalendarTask) {
     console.log('Task added:', task);
   }
-
   onTaskRemoved(task: SicCalendarTask) {
     console.log('Task removed:', task);
   }

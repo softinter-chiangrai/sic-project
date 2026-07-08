@@ -1,28 +1,32 @@
-<!-- src/app/feature/pm/dt/pmdt03/pmdt03.component.html -->
-
-<!-- Breadcrumbs -->
+<!-- src/app/feature/pm/dt/pmdt02C/pmdt02C.component.html -->
 <div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
   <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
   <span>/</span>
   <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
   <span>/</span>
   @if (isEdit) {
-    <span>Edit Work Package</span>
+    <span>Edit Task</span>
   } @else {
-    <span>New Work Package</span>
+    <span>New Task</span>
   }
 </div>
 
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
-    {{ isEdit ? 'แก้ไข Work Package' : 'สร้าง Work Package ใหม่' }}
+    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
   </h2>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Work Package <span class="text-red-500">*</span></label>
-      <input type="text" formControlName="packageName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
     </div>
 
     <div>
@@ -30,7 +34,11 @@
       <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
     </div>
 
-    <!-- Start Date + Time -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">ผู้รับผิดชอบ</label>
+      <input type="text" formControlName="assignedTo" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    </div>
+
     <div class="grid grid-cols-2 gap-4">
       <div>
         <sic-datepicker
@@ -52,7 +60,6 @@
       </div>
     </div>
 
-    <!-- End Date + Time -->
     <div class="grid grid-cols-2 gap-4">
       <div>
         <sic-datepicker
@@ -71,6 +78,25 @@
           formControlName="endTime"
           placeholder="เลือกเวลา"
         ></sic-timepicker>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
+        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
+        }
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
+        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
+          <option value="Low">ต่ำ</option>
+          <option value="Medium">ปานกลาง</option>
+          <option value="High">สูง</option>
+          <option value="Critical">วิกฤต</option>
+        </select>
       </div>
     </div>
 

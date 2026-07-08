@@ -4,10 +4,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
 import type { PhaseResponse } from '../../../../core/model/phase.model';
 import { PhaseService } from '../../../../core/services/phase.service';
-import { Pmdt01AComponent } from './pmdt01A/pmdt01A.component';
 
 @Component({
   selector: 'app-pmdt01',
@@ -20,13 +18,10 @@ export class Pmdt01Component implements OnInit {
   private router = inject(Router);
   private phaseService = inject(PhaseService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
 
   projectId = signal<string>('');
   phases = signal<PhaseResponse[]>([]);
   isLoading = signal(false);
-
-  // Tab switching
   viewMode = signal<'list' | 'gantt'>('list');
 
   ngOnInit() {
@@ -59,32 +54,16 @@ export class Pmdt01Component implements OnInit {
     });
   }
 
-  // เปิด Drawer สำหรับสร้าง Phase
   openCreatePhase() {
-    this.drawerService.open({
-      component: Pmdt01AComponent,
-      title: 'สร้าง Phase ใหม่',
-      inputs: {
-        projectId: this.projectId(),
-        isEdit: false,
-      },
-      width: '600px',
+    this.router.navigate(['/feature/pm/phase/new'], {
+      queryParams: { projectId: this.projectId() },
     });
   }
 
-  // เปิด Drawer สำหรับแก้ไข Phase
   editPhase(phase: PhaseResponse, event: Event) {
     event.stopPropagation();
-    this.drawerService.open({
-      component: Pmdt01AComponent,
-      title: 'แก้ไข Phase',
-      inputs: {
-        phaseId: phase.id,
-        projectId: this.projectId(),
-        isEdit: true,
-        data: phase,
-      },
-      width: '600px',
+    this.router.navigate(['/feature/pm/phase', phase.id, 'edit'], {
+      queryParams: { projectId: this.projectId() },
     });
   }
 
@@ -102,7 +81,7 @@ export class Pmdt01Component implements OnInit {
       });
   }
 
-  // Utility
+  // ===== Utility Methods =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
       'Not Started': 'bg-gray-100 text-gray-600',
@@ -137,10 +116,7 @@ export class Pmdt01Component implements OnInit {
     }
   }
 
-  // Gantt helper (สำหรับแสดง Gantt View ง่ายๆ)
   getBarPosition(phase: PhaseResponse): { left: number; width: number } {
-    // สมมติว่าเรามี startDate และ endDate
-    // เราจะหา min/max ของทุก Phase
     const allDates = this.phases().flatMap((p) => [
       new Date(p.startDate).getTime(),
       new Date(p.endDate).getTime(),

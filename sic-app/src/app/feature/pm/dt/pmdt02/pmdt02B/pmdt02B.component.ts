@@ -1,19 +1,17 @@
-// src/app/feature/pm/dt/pmdt03/pmdt03.component.ts
+// src/app/feature/pm/dt/pmdt02B/pmdt02B.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-
-import { WorkPackageService } from '../../../../core/services/work-package.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
-import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../core/component/sic-timepicker/sic-timepicker.component';
-import type { WorkPackageRequest, WorkPackageResponse } from '../../../../core/model/phase.model';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { WorkPackageService } from '../../../../../core/services/work-package.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
 
 
 @Component({
-  selector: 'app-pmdt03',
+  selector: 'app-pmdt02B',
   standalone: true,
   imports: [
     CommonModule,
@@ -22,25 +20,21 @@ import type { WorkPackageRequest, WorkPackageResponse } from '../../../../core/m
     SicDatepickerComponent,
     SicTimepickerComponent,
   ],
-  templateUrl: './pmdt03.component.html',
+  templateUrl: './pmdt02B.component.html',
 })
-export class Pmdt03Component implements OnInit {
+export class Pmdt02BComponent implements OnInit {
   private fb = inject(FormBuilder);
   private wpService = inject(WorkPackageService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  @Input() milestoneId = '';
-  @Input() projectId = '';
-  @Input() phaseId = '';
-  @Input() wpId: string | null = null;
-  @Input() isEdit = false;
-  @Input() data: WorkPackageResponse | null = null;
-
-  @Output() saved = new EventEmitter<WorkPackageResponse>();
-  @Output() cancelled = new EventEmitter<void>();
+  milestoneId = '';
+  projectId = '';
+  phaseId = '';
+  wpId: string | null = null;
+  isEdit = false;
+  data: WorkPackageResponse | null = null;
 
   form = this.fb.group({
     packageName: ['', Validators.required],
@@ -52,17 +46,27 @@ export class Pmdt03Component implements OnInit {
   });
 
   ngOnInit() {
-    if (this.isEdit && !this.data && this.wpId) {
-      this.loadWorkPackage(this.wpId);
-    }
-    if (this.isEdit && this.data) {
-      this.patchForm(this.data);
-    }
+    this.route.paramMap.subscribe((params) => {
+      this.wpId = params.get('id');
+      this.isEdit = !!this.wpId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.milestoneId = qParams['milestoneId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      if (this.isEdit && this.wpId) {
+        this.loadWorkPackage(this.wpId);
+      }
+    });
   }
 
   loadWorkPackage(id: string) {
     this.wpService.getWorkPackageById(id).subscribe({
-      next: (data) => this.patchForm(data),
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
       error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
@@ -112,15 +116,17 @@ export class Pmdt03Component implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Work Package เรียบร้อย' : 'สร้าง Work Package เรียบร้อย');
-        this.saved.emit(res);
-        this.drawerService.close();
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
       },
       error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
 
   cancel() {
-    this.cancelled.emit();
-    this.drawerService.close();
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
   }
 }

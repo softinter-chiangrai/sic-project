@@ -1,20 +1,15 @@
 // src/app/app.component.ts
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-
-
 import { ThemeService } from './core/services/theme.service';
 import { LanguageService } from './core/services/language.service';
 import { DateTimeUtil } from './core/utils/datetime.util';
 import { SicNumberConfigService } from './core/component/sic-number/sic-number.config';
-import { DrawerComponent } from "./core/component/sic-drawer/drawer.component";
-
 
 @Component({
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    DrawerComponent
 ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

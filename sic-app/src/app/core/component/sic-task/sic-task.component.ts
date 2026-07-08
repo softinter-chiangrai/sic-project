@@ -1,3 +1,4 @@
+// src/app/core/component/sic-task/sic-task.component.ts
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
@@ -17,7 +18,6 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
 import { SicCalendarComponent, SicCalendarTask, SicCalendarViewRange } from '../sic-calendar/sic-calendar.component';
 import { environment } from '../../../../environments/environment';
-
 
 export type SicTaskPersistState = 4 | 3 | 2;
 
@@ -170,7 +170,6 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
         this.buildSavePayload(task, this.toPersistState(this.getTaskState(task)))
       );
 
-      // ✅ ใช้ full URL
       const saveUrl = this.buildFullUrl(this.config.saveApi);
       await firstValueFrom(
         this.http.request(this.config.saveMethod ?? 'POST', saveUrl, {
@@ -202,11 +201,9 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
   // ===== ตัวช่วยจัดการ URL =====
   private buildFullUrl(url: string): string {
     if (!url) return url;
-    // ถ้าเป็น full URL แล้ว (เริ่มต้นด้วย http:// หรือ https://) ให้ใช้ตรงนั้น
     if (/^https?:\/\//i.test(url)) {
       return url;
     }
-    // มิฉะนั้นต่อกับ apiBaseUrl
     return `${environment.apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
@@ -223,7 +220,6 @@ export class SicTaskComponent implements OnChanges, AfterViewInit {
     this.errorMessage = null;
     this.cdr.markForCheck();
 
-    // ✅ ใช้ full URL
     const fullUrl = this.buildFullUrl(this.config.api);
 
     this.http

@@ -1,3 +1,4 @@
+// src/app/core/component/sic-calendar/sic-calendar.component.ts
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -274,6 +275,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
     this.emitViewRangeChange();
   }
 
+  // ✅ ปรับ selectDate ให้เปิด Dialog ทันที
   selectDate(date: Dayjs): void {
     if (this.disabled || this.isDateDisabled(date)) {
       return;
@@ -289,6 +291,9 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
       this.generateCalendar();
       this.emitViewRangeChange();
     }
+
+    // ✅ เปิด dialog เพิ่ม task ทันที
+    this.openAddTaskDialog();
   }
 
   toggleYearView(): void {

@@ -1,19 +1,17 @@
-// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
+// src/app/feature/pm/dt/pmdt02C/pmdt02C.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-
-import { TaskService } from '../../../../core/services/task.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { DrawerService } from '../../../../core/component/sic-drawer/drawer.service';
-import type { TaskRequest, TaskResponse } from '../../../../core/model/phase.model';
-import { SicTimepickerComponent } from '../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { TaskService } from '../../../../../core/services/task.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
 
 
 @Component({
-  selector: 'app-pmdt04',
+  selector: 'app-pmdt02C',
   standalone: true,
   imports: [
     CommonModule,
@@ -22,23 +20,21 @@ import { SicDatepickerComponent } from '../../../../core/component/sic-datepicke
     SicDatepickerComponent,
     SicTimepickerComponent,
   ],
-  templateUrl: './pmdt04.component.html',
+  templateUrl: './pmdt02C.component.html',
 })
-export class Pmdt04Component implements OnInit {
+export class Pmdt02CComponent implements OnInit {
   private fb = inject(FormBuilder);
   private taskService = inject(TaskService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  @Input() workPackageId = '';
-  @Input() projectId = '';
-  @Input() phaseId = '';
-  @Input() taskId: string | null = null;
-  @Input() isEdit = false;
-  @Input() data: TaskResponse | null = null;
-
-  @Output() saved = new EventEmitter<TaskResponse>();
-  @Output() cancelled = new EventEmitter<void>();
+  workPackageId = '';
+  projectId = '';
+  phaseId = '';
+  taskId: string | null = null;
+  isEdit = false;
+  data: TaskResponse | null = null;
 
   form = this.fb.group({
     taskCode: ['', Validators.required],
@@ -54,17 +50,27 @@ export class Pmdt04Component implements OnInit {
   });
 
   ngOnInit() {
-    if (this.isEdit && !this.data && this.taskId) {
-      this.loadTask(this.taskId);
-    }
-    if (this.isEdit && this.data) {
-      this.patchForm(this.data);
-    }
+    this.route.paramMap.subscribe((params) => {
+      this.taskId = params.get('id');
+      this.isEdit = !!this.taskId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.workPackageId = qParams['workPackageId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      if (this.isEdit && this.taskId) {
+        this.loadTask(this.taskId);
+      }
+    });
   }
 
   loadTask(id: string) {
     this.taskService.getTaskById(id).subscribe({
-      next: (data) => this.patchForm(data),
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
       error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
@@ -122,15 +128,17 @@ export class Pmdt04Component implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
-        this.saved.emit(res);
-        this.drawerService.close();
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
       },
       error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
 
   cancel() {
-    this.cancelled.emit();
-    this.drawerService.close();
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
   }
 }

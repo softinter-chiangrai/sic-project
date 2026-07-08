@@ -1,3 +1,4 @@
+<!-- src/app/core/component/sic-task/sic-task.component.html -->
 <div class="sic-task" [attr.data-disabled]="disabled ? 'true' : null">
   @if (label) {
     <span class="sic-task__label">{{ label }}</span>
@@ -32,24 +33,24 @@
         <span class="sic-task__status">Loading...</span>
       }
 
+      <!-- ปุ่ม Reset -->
       <button
         type="button"
         class="sic-task__toolbar-button sic-task__toolbar-button--warning sic-task__toolbar-button--icon"
         [disabled]="!canResetChanges"
         aria-label="Reset changes"
-        (click)="resetChanges()"
-        (keydown.enter)="resetChanges()">
+        (click)="resetChanges()">
         <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
       </button>
 
+      <!-- ปุ่ม Save -->
       @if (config.saveApi) {
         <button
           type="button"
           class="sic-task__toolbar-button sic-task__toolbar-button--primary sic-task__toolbar-button--icon"
           [disabled]="!canSaveChanges"
           [attr.aria-label]="saving ? 'Saving' : 'Save'"
-          (click)="saveChanges()"
-          (keydown.enter)="saveChanges()">
+          (click)="saveChanges()">
           <svg class="sic-task__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 4h11l3 3v13H5z"></path>
             <path d="M8 4v6h8"></path>

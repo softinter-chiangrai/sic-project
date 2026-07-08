@@ -1,10 +1,9 @@
 // src/app/feature/pm/dt/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { DrawerService } from '../../../../../core/component/sic-drawer/drawer.service';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import type { PhaseRequest, PhaseResponse } from '../../../../../core/model/phase.model';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -26,15 +25,13 @@ export class Pmdt01AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private phaseService = inject(PhaseService);
   private dialog = inject(DialogService);
-  private drawerService = inject(DrawerService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  @Input() projectId = '';
-  @Input() phaseId: string | null = null;
-  @Input() isEdit = false;
-  @Input() data: PhaseResponse | null = null;
-
-  @Output() saved = new EventEmitter<PhaseResponse>();
-  @Output() cancelled = new EventEmitter<void>();
+  projectId = '';
+  phaseId: string | null = null;
+  isEdit = false;
+  data: PhaseResponse | null = null;
 
   form = this.fb.group({
     phaseName: ['', Validators.required],
@@ -48,24 +45,50 @@ export class Pmdt01AComponent implements OnInit {
   });
 
   ngOnInit() {
-    if (this.isEdit && this.data) {
-      const startDate = this.data.startDate ? this.data.startDate.split('T')[0] : '';
-      const startTime = this.data.startDate
-        ? this.data.startDate.split('T')[1]?.substring(0, 5)
-        : '';
-      const endDate = this.data.endDate ? this.data.endDate.split('T')[0] : '';
-      const endTime = this.data.endDate ? this.data.endDate.split('T')[1]?.substring(0, 5) : '';
-      this.form.patchValue({
-        phaseName: this.data.phaseName,
-        description: this.data.description,
-        startDate: startDate,
-        startTime: startTime,
-        endDate: endDate,
-        endTime: endTime,
-        owner: this.data.owner,
-        dependencyId: this.data.dependencyId || '',
-      });
-    }
+    // รับ projectId จาก queryParams
+    this.route.queryParams.subscribe((params) => {
+      this.projectId = params['projectId'] || '';
+    });
+
+    // ตรวจสอบว่าเป็น edit หรือไม่ โดยดูจาก param id
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.phaseId = id;
+        this.isEdit = true;
+        this.loadPhase(id);
+      } else {
+        this.isEdit = false;
+        this.phaseId = null;
+      }
+    });
+  }
+
+  loadPhase(id: string) {
+    this.phaseService.getPhaseById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: PhaseResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    this.form.patchValue({
+      phaseName: data.phaseName,
+      description: data.description,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      owner: data.owner,
+      dependencyId: data.dependencyId || '',
+    });
   }
 
   private buildISOString(date: any, time: string): string {
@@ -104,15 +127,18 @@ export class Pmdt01AComponent implements OnInit {
           'สำเร็จ',
           this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
         );
-        this.saved.emit(res);
-        this.drawerService.close(); // ปิด Drawer
+        // กลับไปที่หน้า Phase List พร้อม projectId
+        this.router.navigate(['/feature/pm/pmdt01'], {
+          queryParams: { projectId: this.projectId },
+        });
       },
       error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
 
   cancel() {
-    this.cancelled.emit();
-    this.drawerService.close();
+    this.router.navigate(['/feature/pm/pmdt01'], {
+      queryParams: { projectId: this.projectId },
+    });
   }
 }
