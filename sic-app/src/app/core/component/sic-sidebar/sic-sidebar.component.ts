@@ -43,7 +43,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
   readonly isMobileSidebarOpen = signal(false);
   readonly expandedMenus = signal<string[]>(
-    JSON.parse(localStorage.getItem('expandedMenus') || '[]'),
+    typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('expandedMenus') || '[]') : []
   );
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
@@ -63,7 +63,14 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     path: 'dashboard',
   };
 
-  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
+  private readonly BUDDY_ITEM: SidebarItem = {
+    code: 'buddy',
+    label: 'Buddy',
+    icon: 'bi-robot',
+    path: 'do/buddy',
+  };
+
+  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM, this.BUDDY_ITEM]);
 
   profile: ProfileInfoModel = {} as ProfileInfoModel;
   business: BusinessInfoModel = {} as BusinessInfoModel;
@@ -78,7 +85,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
   constructor() {
     effect(() => {
-      localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+      }
     });
   }
 
@@ -108,7 +117,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.service.getBusiness().subscribe((business) => (this.business = business));
 
     this.service.getMenu().subscribe((menu) => {
-      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
+      this.mainMenu.set([this.DASHBOARD_ITEM, this.BUDDY_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
       this.autoExpand();
       this.updateBreadcrumbs();
     });

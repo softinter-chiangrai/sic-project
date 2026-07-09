@@ -4,22 +4,21 @@ import { CanActivateFn } from '@angular/router';
 import { AuthService } from './auth.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
+  console.log('[DEBUG] authGuard evaluating navigation to:', state.url);
   const platformId = inject(PLATFORM_ID);
   const auth = inject(AuthService);
 
-  // SSR: อย่าพยายาม redirect ออกนอกเว็บบนฝั่ง server
   if (!isPlatformBrowser(platformId)) {
+    console.log('[DEBUG] authGuard: SSR detected, allowing navigation');
     return true;
   }
 
-  // Browser: ถ้า login แล้ว ให้ผ่าน
   if (auth.isLoggedIn()) {
+    console.log('[DEBUG] authGuard: User is logged in, allowing navigation');
     return true;
   }
 
-  // ยังไม่ login -> เด้งไป Keycloak พร้อม returnUrl เป็น URL ที่พยายามเข้า
-  auth.login(state.url || '/feture');
-
-  // cancel navigation (เพราะกำลังจะไป Keycloak)
+  console.log('[DEBUG] authGuard: User NOT logged in. Calling auth.login() to redirect to Keycloak...');
+  auth.login(state.url || '/feature');
   return false;
 };
