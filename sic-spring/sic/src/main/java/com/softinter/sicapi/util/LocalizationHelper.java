@@ -82,7 +82,7 @@ public class LocalizationHelper {
                 lastName = profile.getLastNameEn();
                 break;
         }
-        return joinNameParts(firstName, middleName, lastName);
+        return joinNameParts(firstName, lastName, middleName);
     }
 
     // ---- 2.4 SuBusiness ----
@@ -103,7 +103,7 @@ public class LocalizationHelper {
                 lastName = business.getLastNameEn();
                 break;
         }
-        return joinNameParts(firstName, middleName, lastName);
+         return joinNameParts(firstName, lastName, middleName);
     }
 
     // ---- 2.5 DbCountry ----

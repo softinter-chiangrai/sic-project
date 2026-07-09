@@ -3199,1008 +3199,6 @@ export class SicColorpickerComponent implements ControlValueAccessor, OnInit, Af
 }
 </file>
 
-<file path="sic-app/src/app/core/component/sic-combobox/sic-combobox.component.html">
-<div class="sic-combobox" [attr.data-disabled]="disabled ? 'true' : null" [attr.data-invalid]="showError ? 'true' : null" (focusout)="onFocusOut($event)">
-  @if (label) {
-    <span class="sic-combobox__label">
-      {{ label }}
-      @if (isRequired) {
-        <span class="sic-combobox__required">*</span>
-      }
-    </span>
-  }
-
-  <div class="sic-combobox__control">
-    <div
-      #fieldContainer
-      class="sic-combobox__field"
-      [attr.data-invalid]="showError ? 'true' : null">
-      <input
-        #fieldInput
-        class="sic-combobox__field-input"
-        type="text"
-        [value]="inputText"
-        [placeholder]="placeholder"
-        [disabled]="disabled"
-        [readonly]="readonly"
-        (focus)="onFieldFocus()"
-        (blur)="onFieldBlur()"
-        (click)="onFieldClick()"
-        (input)="onFieldInput(fieldInput.value)"
-        (keydown)="handleFieldKeydown($event)" />
-
-      <span class="sic-combobox__field-actions">
-        @if (clearable && value !== null && value !== undefined && !readonly && !disabled) {
-          <span
-            class="sic-combobox__clear"
-            role="button"
-            tabindex="-1"
-            (mousedown)="preventMouseDown($event)"
-            (click)="clearSelection($event)">
-            <i class="bi bi-x-lg"></i>
-          </span>
-        }
-
-        <span
-          class="sic-combobox__toggle"
-          role="button"
-          tabindex="-1"
-          (mousedown)="preventMouseDown($event)"
-          (click)="toggleFromIcon($event)">
-          @if (opened) {
-            <i class="bi bi-chevron-up"></i>
-          } @else {
-            <i class="bi bi-chevron-down"></i>
-          }
-        </span>
-      </span>
-    </div>
-
-    @if (opened) {
-      <button
-        type="button"
-        class="sic-combobox__backdrop"
-        tabindex="-1"
-        aria-hidden="true"
-        (click)="onBackdropClick()">
-      </button>
-
-      <div
-        #dropdownPanel
-        class="sic-combobox__dropdown"
-        [ngStyle]="dropdownPanelStyle">
-        <div #optionsPanel class="sic-combobox__options" tabindex="-1" (scroll)="onOptionsScroll($event)">
-          @if (showLoadingState) {
-            <div class="sic-combobox__state">Loading...</div>
-          } @else if (showEmptyState) {
-            <div class="sic-combobox__state">{{ emptyText }}</div>
-          } @else {
-            @for (item of options; track trackOption($index, item); let index = $index) {
-              <button
-                type="button"
-                class="sic-combobox__option"
-                tabindex="-1"
-                [attr.data-selected]="resolveValue(item) === value ? 'true' : null"
-                [attr.data-active]="isActiveOption(index) ? 'true' : null"
-                (mousedown)="preventMouseDown($event)"
-                (mouseup)="selectOption(item)">
-                @if (hasProjectedTemplate) {
-                  <ng-container
-                    *ngTemplateOutlet="optionTemplate?.template ?? null; context: { $implicit: item, item: item }">
-                  </ng-container>
-                } @else {
-                  <span class="sic-combobox__option-label">{{ resolveLabel(item) }}</span>
-                }
-              </button>
-            }
-          }
-        </div>
-      </div>
-    }
-  </div>
-
-  @if (showError && errorMessage) {
-    <span class="sic-combobox__error">{{ errorMessage }}</span>
-  } @else if (hint) {
-    <span class="sic-combobox__hint">{{ hint }}</span>
-  }
-</div>
-</file>
-
-<file path="sic-app/src/app/core/component/sic-combobox/sic-combobox.component.ts">
-import { CommonModule } from '@angular/common';
-import {
-  AfterContentInit,
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  ContentChild,
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostBinding,
-  HostListener,
-  Injector,
-  Input,
-  OnDestroy,
-  Output,
-  TemplateRef,
-  ViewChild,
-  forwardRef,
-} from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import {
-  ControlValueAccessor,
-  FormsModule,
-  NG_VALUE_ACCESSOR,
-  NgControl,
-} from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { SicValidator } from '../../validator/sic.validator';
-
-interface ComboboxPagingResponse<TItem> {
-  data?: TItem[];
-  pageable?: {
-    pageNumber?: number;
-    pageSize?: number;
-    totalElements?: number;
-    totalPages?: number;
-  };
-}
-
-@Directive({
-  selector: 'ng-template[sicComboboxOption]',
-  standalone: true,
-})
-export class SicComboboxOptionTemplate {
-  constructor(readonly template: TemplateRef<unknown>) {}
-}
-
-@Component({
-  selector: 'sic-combobox',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './sic-combobox.component.html',
-  styleUrl: './sic-combobox.component.css',
-  host: {
-    ngSkipHydration: 'true',
-  },
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => SicComboboxComponent),
-      multi: true,
-    },
-  ],
-})
-export class SicComboboxComponent implements ControlValueAccessor, AfterContentInit, AfterViewInit, OnDestroy {
-  @Input() label?: string;
-  @Input({ required: true }) apiUrl = '';
-  @Input() params: Record<string, any> = {};
-  @Input() paging = true;
-  @Input() pageSize = 10;
-  @Input() pageNumberParam = 'pageNumber';
-  @Input() pageSizeParam = 'pageSize';
-  @Input() keywordParam = 'keyword';
-  @Input() placeholder = 'Select option';
-  @Input() emptyText = 'No data found';
-  @Input() valueField = 'value';
-  @Input() textField = 'text';
-  @Input() disabled = false;
-  @Input() readonly = false;
-  @Input() clearable = true;
-  @Input() hint?: string;
-  @Input() errorMessages: Record<string, string> = {};
-
-  @Output() selectionChanged = new EventEmitter<any>();
-
-  @HostBinding('class.sic-combobox-host') readonly hostClass = true;
-
-  @ContentChild(SicComboboxOptionTemplate) optionTemplate?: SicComboboxOptionTemplate;
-  @ViewChild('fieldInput') fieldInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('fieldContainer') fieldContainer?: ElementRef<HTMLDivElement>;
-  @ViewChild('dropdownPanel') dropdownPanel?: ElementRef<HTMLDivElement>;
-  @ViewChild('optionsPanel') optionsPanel?: ElementRef<HTMLDivElement>;
-
-  ready = false;
-  opened = false;
-  loading = false;
-  hasProjectedTemplate = false;
-
-  inputText = '';
-  selectedText = '';
-  selectedItem: unknown = null;
-  value: any = null;
-  options: any[] = [];
-  activeIndex = -1;
-  pageNumber = 1;
-  totalPages = 1;
-  totalElements = 0;
-  touched = false;
-  dropdownPanelStyle: Record<string, string> = {};
-
-  private searchTerm = '';
-  private onChange: (value: any) => void = () => {};
-  private onTouched: () => void = () => {};
-  private ngControl: NgControl | null = null;
-  private searchDebounceHandle: ReturnType<typeof setTimeout> | null = null;
-  private loadSubscription: Subscription | null = null;
-  private closeDropdownHandle: ReturnType<typeof setTimeout> | null = null;
-  private readyHandle: ReturnType<typeof setTimeout> | null = null;
-  private positionDropdownHandle: ReturnType<typeof setTimeout> | null = null;
-  private languageChangeSubscription: Subscription | null = null;
-
-  constructor(
-    private readonly injector: Injector,
-    private readonly http: HttpClient,
-    private readonly cdr: ChangeDetectorRef,
-    private readonly elementRef: ElementRef<HTMLElement>,
-    private readonly translate: TranslateService,
-    private readonly validator: SicValidator,
-  ) {}
-
-  ngAfterContentInit(): void {
-    this.hasProjectedTemplate = !!this.optionTemplate;
-  }
-
-  ngAfterViewInit(): void {
-    this.ngControl = this.injector.get(NgControl, null);
-    if (this.ngControl) {
-      this.ngControl.valueAccessor = this;
-    }
-
-    this.readyHandle = setTimeout(() => {
-      this.ready = true;
-      this.readyHandle = null;
-    }, 0);
-
-    this.languageChangeSubscription = this.translate.onLangChange.subscribe(() => {
-      this.handleLanguageChange();
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this.readyHandle) {
-      clearTimeout(this.readyHandle);
-    }
-    if (this.searchDebounceHandle) {
-      clearTimeout(this.searchDebounceHandle);
-    }
-    if (this.closeDropdownHandle) {
-      clearTimeout(this.closeDropdownHandle);
-    }
-    if (this.positionDropdownHandle) {
-      clearTimeout(this.positionDropdownHandle);
-    }
-    this.languageChangeSubscription?.unsubscribe();
-    this.loadSubscription?.unsubscribe();
-  }
-
-  get control() {
-    return this.validator.getControl(this.ngControl);
-  }
-
-  get showError(): boolean {
-    return this.validator.shouldShowError(this.control, this.touched);
-  }
-
-  get errorMessage(): string | null {
-    return this.validator.getErrorMessage(this.control, this.errorMessages);
-  }
-
-  get isRequired(): boolean {
-    if (!this.control?.validator) {
-      return false;
-    }
-    // Check if the validator returns a 'required' error by testing with null value
-    const testControl = { value: null } as any;
-    const errorMap = this.control.validator(testControl);
-    return !!errorMap?.['required'];
-  }
-
-  get showLoadingState(): boolean {
-    return this.loading && this.options.length === 0;
-  }
-
-  get showEmptyState(): boolean {
-    return !this.loading && this.options.length === 0;
-  }
-
-  get canLoadMore(): boolean {
-    return this.paging && !this.loading && this.pageNumber < this.totalPages;
-  }
-
-  writeValue(value: any): void {
-    const normalizedValue = this.normalizeControlValue(value);
-    this.value = normalizedValue;
-
-    if (normalizedValue === null) {
-      this.selectedItem = null;
-      this.selectedText = '';
-      this.inputText = '';
-      this.activeIndex = -1;
-      return;
-    }
-
-    if (normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)) {
-      this.selectedItem = normalizedValue;
-      this.selectedText = this.resolveLabel(normalizedValue);
-      this.inputText = this.selectedText;
-      this.value = this.resolveValue(normalizedValue);
-      return;
-    }
-
-    const matched = this.options.find((item) => this.resolveValue(item) === normalizedValue);
-    if (matched) {
-      this.selectedItem = matched;
-      this.selectedText = this.resolveLabel(matched);
-      this.inputText = this.selectedText;
-    } else {
-      // Value not found in current options, fetch it
-      setTimeout(() => this.loadValueById(normalizedValue), 0);
-    }
-  }
-
-  registerOnChange(fn: (value: any) => void): void {
-    this.onChange = fn;
-  }
-
-  registerOnTouched(fn: () => void): void {
-    this.onTouched = fn;
-  }
-
-  setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
-  }
-
-  openDropdown(): void {
-    if (!this.ready || this.disabled || this.readonly || this.opened) {
-      return;
-    }
-
-    this.opened = true;
-    this.dropdownPanelStyle = {};
-    this.pageNumber = 1;
-    this.searchTerm = (this.selectedItem && this.inputText === this.selectedText)
-      ? ''
-      : this.inputText.trim();
-    this.loadOptions(true);
-    this.scheduleDropdownPositionUpdate();
-  }
-
-  closeDropdown(): void {
-    if (this.closeDropdownHandle) {
-      clearTimeout(this.closeDropdownHandle);
-      this.closeDropdownHandle = null;
-    }
-
-    this.closeDropdownHandle = setTimeout(() => {
-      this.clearSearchDebounce();
-      this.cancelPendingLoad();
-      this.opened = false;
-      this.loading = false;
-      this.activeIndex = -1;
-      this.inputText = this.selectedText;
-      this.searchTerm = '';
-      this.dropdownPanelStyle = {};
-      this.closeDropdownHandle = null;
-      this.cdr.markForCheck();
-    }, 0);
-  }
-
-  @HostListener('window:resize')
-  onWindowResize(): void {
-    if (this.opened) {
-      this.scheduleDropdownPositionUpdate();
-    }
-  }
-
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.onWindowResize();
-  }
-
-  onFieldFocus(): void {
-    this.openDropdown();
-  }
-
-  onFieldClick(): void {
-    this.openDropdown();
-  }
-
-  onFieldBlur(): void {
-    this.markTouched();
-  }
-
-  onFocusOut(event: FocusEvent): void {
-    const target = event.relatedTarget as HTMLElement | null;
-    if (!target || !this.elementRef.nativeElement.contains(target)) {
-      this.closeDropdown();
-    }
-  }
-
-  onFieldInput(term: string): void {
-    if (this.disabled || this.readonly) {
-      return;
-    }
-
-    this.inputText = term;
-    this.searchTerm = term.trim();
-    this.pageNumber = 1;
-    this.options = [];
-    this.totalElements = 0;
-    this.totalPages = 1;
-    this.activeIndex = -1;
-    this.opened = true;
-    this.loading = true;
-    this.cancelPendingLoad();
-    this.scheduleSearchLoad();
-  }
-
-  onBackdropClick(): void {
-    this.closeDropdown();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    if (!this.opened) {
-      return;
-    }
-
-    const target = event.target as HTMLElement | null;
-    if (!target || !this.elementRef.nativeElement.contains(target)) {
-      this.closeDropdown();
-    }
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  onDocumentKeydown(event: KeyboardEvent): void {
-    if (!this.opened || event.key !== 'Tab') {
-      return;
-    }
-
-    setTimeout(() => {
-      const activeElement = document.activeElement as HTMLElement | null;
-      if (!activeElement || !this.elementRef.nativeElement.contains(activeElement)) {
-        this.closeDropdown();
-      }
-    }, 0);
-  }
-
-  onOptionsScroll(event: Event): void {
-    if (!this.canLoadMore || this.loading) {
-      return;
-    }
-
-    const target = event.target as HTMLElement;
-    const threshold = 80;
-    if (target.scrollTop + target.clientHeight >= target.scrollHeight - threshold) {
-      this.loadMore();
-    }
-  }
-
-  handleFieldKeydown(event: KeyboardEvent): void {
-    if (this.disabled || this.readonly) {
-      return;
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      if (!this.opened) {
-        this.openDropdown();
-        return;
-      }
-      this.moveActive(1);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (!this.opened) {
-        this.openDropdown();
-        return;
-      }
-      this.moveActive(-1);
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (this.opened && this.activeIndex >= 0 && this.activeIndex < this.options.length) {
-        this.selectOption(this.options[this.activeIndex]);
-      }
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.closeDropdown();
-    }
-  }
-
-  loadMore(): void {
-    if (!this.canLoadMore) {
-      return;
-    }
-
-    this.pageNumber += 1;
-    this.loadOptions(false);
-  }
-
-  selectOption(item: any): void {
-    if (this.disabled || this.readonly) {
-      return;
-    }
-
-    this.selectedItem = item;
-    this.selectedText = this.resolveLabel(item);
-    this.inputText = this.selectedText;
-    this.value = this.resolveValue(item);
-    this.onChange(this.value);
-    this.selectionChanged.emit(item);
-    this.markTouched();
-
-    if (this.closeDropdownHandle) {
-      clearTimeout(this.closeDropdownHandle);
-      this.closeDropdownHandle = null;
-    }
-
-    this.opened = false;
-    this.clearSearchDebounce();
-    this.cancelPendingLoad();
-
-    this.closeDropdownHandle = setTimeout(() => {
-      this.loading = false;
-      this.activeIndex = -1;
-      this.searchTerm = '';
-      this.closeDropdownHandle = null;
-      this.cdr.markForCheck();
-    }, 0);
-  }
-
-  clearSelection(event?: MouseEvent): void {
-    event?.preventDefault();
-    event?.stopPropagation();
-
-    this.selectedItem = null;
-    this.selectedText = '';
-    this.inputText = '';
-    this.searchTerm = '';
-    this.value = null;
-    this.activeIndex = -1;
-    this.onChange(null);
-    this.selectionChanged.emit(null);
-    this.markTouched();
-  }
-
-  toggleFromIcon(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    if (this.opened) {
-      this.closeDropdown();
-    } else {
-      this.openDropdown();
-    }
-  }
-
-  preventMouseDown(event: MouseEvent): void {
-    event.preventDefault();
-  }
-
-  trackOption(index: number, item: any): any {
-    return this.resolveValue(item) ?? index;
-  }
-
-  isActiveOption(index: number): boolean {
-    return this.activeIndex === index;
-  }
-
-  resolveValue(item: any): any {
-    return item?.[this.valueField] ?? item?.value ?? item?.id ?? null;
-  }
-
-  resolveLabel(item: any): string {
-    const localizedLabel = this.resolveLocalizedLabel(item);
-    const configuredLabel =
-      this.textField === 'messageEn' || this.textField === 'messageLocal'
-        ? localizedLabel
-        : item?.[this.textField];
-
-    return String(
-      configuredLabel ??
-      item?.text ??
-      item?.label ??
-      item?.name ??
-      localizedLabel ??
-      '',
-    );
-  }
-
-  private moveActive(step: 1 | -1): void {
-    if (this.options.length === 0) {
-      return;
-    }
-
-    if (this.activeIndex < 0) {
-      this.activeIndex = step === 1 ? 0 : this.options.length - 1;
-    } else {
-      this.activeIndex = Math.max(0, Math.min(this.options.length - 1, this.activeIndex + step));
-    }
-
-    this.scrollActiveIntoView();
-  }
-
-  private scrollActiveIntoView(): void {
-    requestAnimationFrame(() => {
-      const panel = this.optionsPanel?.nativeElement;
-      if (!panel || this.activeIndex < 0) {
-        return;
-      }
-
-      const option = panel.querySelectorAll<HTMLElement>('.sic-combobox__option')[this.activeIndex];
-      option?.scrollIntoView({ block: 'nearest' });
-    });
-  }
-
-  private scheduleSearchLoad(): void {
-    this.clearSearchDebounce();
-    this.searchDebounceHandle = setTimeout(() => {
-      this.searchDebounceHandle = null;
-      this.loadOptions(true);
-    }, 250);
-  }
-
-  private loadOptions(reset: boolean): void {
-    if (!this.apiUrl) {
-      this.options = [];
-      this.totalElements = 0;
-      this.totalPages = 1;
-      this.loading = false;
-      return;
-    }
-
-    this.cancelPendingLoad();
-    this.loading = true;
-
-    const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
-      params: this.buildParams(),
-    }).subscribe({
-      next: (response) => {
-        if (this.loadSubscription !== subscription) {
-          return;
-        }
-
-        const items = Array.isArray(response) ? response : (response.data ?? []);
-        const pageable = Array.isArray(response) ? null : (response.pageable ?? null);
-
-        setTimeout(() => {
-          if (this.loadSubscription !== subscription) {
-            return;
-          }
-
-          this.options = reset ? items : [...this.options, ...items];
-          this.pageNumber = pageable?.pageNumber ?? this.pageNumber;
-          this.totalPages = Math.max(1, pageable?.totalPages ?? 1);
-          this.totalElements = pageable?.totalElements ?? items.length;
-          this.loading = false;
-          this.loadSubscription = null;
-
-          const selectedIndex = this.options.findIndex((item) => this.resolveValue(item) === this.value);
-          if (reset) {
-                let nextActiveIndex = -1;
-
-                if (selectedIndex >= 0) {
-                  nextActiveIndex = selectedIndex;
-                } else if (this.options.length > 0) {
-                  nextActiveIndex = 0;
-                }
-
-                this.activeIndex = nextActiveIndex;
-          }
-
-          this.syncSelectedDisplay();
-          if (reset || selectedIndex >= 0) {
-            this.scrollActiveIntoView();
-          }
-          this.scheduleDropdownPositionUpdate();
-          this.cdr.markForCheck();
-        }, 0);
-      },
-      error: () => {
-        if (this.loadSubscription !== subscription) {
-          return;
-        }
-
-        setTimeout(() => {
-          if (this.loadSubscription !== subscription) {
-            return;
-          }
-
-          this.options = [];
-          this.totalElements = 0;
-          this.totalPages = 1;
-          this.loading = false;
-          this.loadSubscription = null;
-          this.activeIndex = -1;
-          this.scheduleDropdownPositionUpdate();
-          this.cdr.markForCheck();
-        }, 0);
-      },
-    });
-
-    this.loadSubscription = subscription as any;
-  }
-
-  private syncSelectedDisplay(): void {
-    const matched = this.options.find((item) => this.resolveValue(item) === this.value);
-    if (!matched) {
-      if (!this.value) {
-        this.selectedItem = null;
-        this.selectedText = '';
-      }
-      return;
-    }
-
-    const previousSelectedText = this.selectedText;
-    this.selectedItem = matched;
-    this.selectedText = this.resolveLabel(matched);
-
-    if (!this.searchTerm || this.inputText === previousSelectedText) {
-      this.inputText = this.selectedText;
-    }
-  }
-
-  private loadValueById(value: any): void {
-    if (!this.apiUrl) {
-      return;
-    }
-
-    this.cancelPendingLoad();
-    this.loading = true;
-
-    const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
-      params: this.buildParamsWithValue(value),
-    }).subscribe({
-      next: (response) => {
-        if (this.loadSubscription !== subscription) {
-          return;
-        }
-
-        const items = Array.isArray(response) ? response : (response.data ?? []);
-        if (items.length > 0) {
-          const item = items[0];
-          setTimeout(() => {
-            this.selectedItem = item;
-            this.selectedText = this.resolveLabel(item);
-            this.inputText = this.selectedText;
-            this.loading = false;
-            this.cdr.markForCheck();
-          }, 0);
-        } else {
-          this.loading = false;
-        }
-        this.loadSubscription = null;
-      },
-      error: () => {
-        if (this.loadSubscription !== subscription) {
-          return;
-        }
-        this.loading = false;
-        this.loadSubscription = null;
-      },
-    });
-
-    this.loadSubscription = subscription as any;
-  }
-
-  private cancelPendingLoad(): void {
-    this.loadSubscription?.unsubscribe();
-    this.loadSubscription = null;
-  }
-
-  private clearSearchDebounce(): void {
-    if (!this.searchDebounceHandle) {
-      return;
-    }
-
-    clearTimeout(this.searchDebounceHandle);
-    this.searchDebounceHandle = null;
-  }
-
-  private buildParams(): HttpParams {
-    let httpParams = new HttpParams();
-
-    for (const [key, value] of Object.entries(this.params ?? {})) {
-      if (value !== null && value !== undefined && value !== '') {
-        httpParams = httpParams.set(key, String(value));
-      }
-    }
-
-    if (this.searchTerm) {
-      httpParams = httpParams.set(this.keywordParam, this.searchTerm);
-    }
-
-    if (this.paging) {
-      httpParams = httpParams.set(this.pageNumberParam, String(this.pageNumber));
-      httpParams = httpParams.set(this.pageSizeParam, String(this.pageSize));
-    }
-
-    return httpParams;
-  }
-
-  private buildParamsWithValue(value: any): HttpParams {
-    let httpParams = new HttpParams();
-
-    for (const [key, val] of Object.entries(this.params ?? {})) {
-      if (val !== null && val !== undefined && val !== '') {
-        httpParams = httpParams.set(key, String(val));
-      }
-    }
-
-    if (value !== null && value !== undefined && !(typeof value === 'string' && value.trim() === '')) {
-      httpParams = httpParams.set('value', String(value));
-    }
-
-    return httpParams;
-  }
-
-  private normalizeControlValue(value: any): any {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (typeof value === 'string' && value.trim() === '') {
-      return null;
-    }
-
-    return value;
-  }
-
-  private markTouched(): void {
-    if (this.touched) {
-      return;
-    }
-
-    this.touched = true;
-    this.onTouched();
-  }
-
-  private handleLanguageChange(): void {
-    const currentValue = this.value;
-    const currentSelectedItem = this.selectedItem;
-
-    this.clearSearchDebounce();
-    this.cancelPendingLoad();
-
-    if (this.closeDropdownHandle) {
-      clearTimeout(this.closeDropdownHandle);
-      this.closeDropdownHandle = null;
-    }
-
-    if (this.positionDropdownHandle) {
-      clearTimeout(this.positionDropdownHandle);
-      this.positionDropdownHandle = null;
-    }
-
-    this.options = [];
-    this.totalElements = 0;
-    this.totalPages = 1;
-    this.pageNumber = 1;
-    this.activeIndex = -1;
-    this.searchTerm = '';
-    this.dropdownPanelStyle = {};
-    this.opened = false;
-    this.loading = false;
-
-    if (currentSelectedItem) {
-      const refreshedDisplay = this.resolveLabel(currentSelectedItem);
-      this.selectedText = refreshedDisplay;
-      this.inputText = refreshedDisplay;
-    }
-
-    if (currentValue === null || currentValue === undefined) {
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.selectedItem = null;
-    this.selectedText = '';
-    this.inputText = '';
-    this.loading = true;
-    this.cdr.markForCheck();
-
-    setTimeout(() => {
-      if (this.value !== currentValue) {
-        this.loading = false;
-        this.cdr.markForCheck();
-        return;
-      }
-
-      this.loadValueById(currentValue);
-    }, 0);
-  }
-
-  private resolveLocalizedLabel(item: any): string | null {
-    const currentLanguage = this.translate.getCurrentLang() === 'th' ? 'th' : 'en';
-    const preferredKey = currentLanguage === 'th' ? 'messageLocal' : 'messageEn';
-    const fallbackKey = currentLanguage === 'th' ? 'messageEn' : 'messageLocal';
-    const preferredLabel = item?.[preferredKey];
-    const fallbackLabel = item?.[fallbackKey];
-
-    if (typeof preferredLabel === 'string' && preferredLabel.trim()) {
-      return preferredLabel;
-    }
-
-    if (typeof fallbackLabel === 'string' && fallbackLabel.trim()) {
-      return fallbackLabel;
-    }
-
-    return null;
-  }
-
-  private updateDropdownPosition(): void {
-    const anchorElement = this.fieldContainer?.nativeElement ?? this.fieldInput?.nativeElement;
-    const panelElement = this.dropdownPanel?.nativeElement;
-    if (!anchorElement || !panelElement) {
-      this.dropdownPanelStyle = {};
-      return;
-    }
-
-    const rect = anchorElement.getBoundingClientRect();
-    const panelRect = panelElement.getBoundingClientRect();
-    const panelHeight = panelRect.height || panelElement.offsetHeight || 320;
-    const gap = 8;
-    const viewportPadding = 8;
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-    const width = Math.min(rect.width, viewportWidth - viewportPadding * 2);
-    const spaceBelow = viewportHeight - rect.bottom - viewportPadding;
-    const spaceAbove = rect.top - viewportPadding;
-
-    let top = rect.bottom + gap;
-    if (spaceBelow < panelHeight && spaceAbove > spaceBelow) {
-      top = rect.top - panelHeight - gap;
-    }
-
-    top = Math.max(viewportPadding, Math.min(top, viewportHeight - panelHeight - viewportPadding));
-
-    let left = rect.left;
-    if (left + width > viewportWidth - viewportPadding) {
-      left = Math.max(viewportPadding, viewportWidth - width - viewportPadding);
-    }
-
-    this.dropdownPanelStyle = {
-      position: 'fixed',
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${width}px`,
-      minWidth: `${width}px`,
-    };
-  }
-
-  private scheduleDropdownPositionUpdate(): void {
-    if (this.positionDropdownHandle) {
-      clearTimeout(this.positionDropdownHandle);
-    }
-
-    this.positionDropdownHandle = setTimeout(() => {
-      this.positionDropdownHandle = null;
-      this.updateDropdownPosition();
-      this.cdr.markForCheck();
-      setTimeout(() => {
-        if (!this.opened) {
-          return;
-        }
-
-        this.updateDropdownPosition();
-        this.cdr.markForCheck();
-      }, 0);
-    }, 0);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/core/component/sic-container/sic-container.component.css">
 .sic-container {
   display: block;
@@ -48957,6 +47955,1022 @@ export const profileGuard: CanActivateFn = async (_route, _state) => {
 }
 </file>
 
+<file path="sic-app/src/app/core/component/sic-combobox/sic-combobox.component.html">
+<div class="sic-combobox" [attr.data-disabled]="disabled ? 'true' : null" [attr.data-invalid]="showError ? 'true' : null" (focusout)="onFocusOut($event)">
+  @if (label) {
+    <span class="sic-combobox__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-combobox__required">*</span>
+      }
+    </span>
+  }
+
+  <div class="sic-combobox__control">
+    <div
+      #fieldContainer
+      class="sic-combobox__field"
+      [attr.data-invalid]="showError ? 'true' : null">
+      <input
+        #fieldInput
+        class="sic-combobox__field-input"
+        type="text"
+        [value]="inputText"
+        [placeholder]="placeholder"
+        [disabled]="disabled"
+        [readonly]="readonly"
+        (focus)="onFieldFocus()"
+        (blur)="onFieldBlur()"
+        (click)="onFieldClick()"
+        (input)="onFieldInput(fieldInput.value)"
+        (keydown)="handleFieldKeydown($event)" />
+
+      <span class="sic-combobox__field-actions">
+        @if (clearable && value !== null && value !== undefined && !readonly && !disabled) {
+          <span
+            class="sic-combobox__clear"
+            role="button"
+            tabindex="-1"
+            (mousedown)="preventMouseDown($event)"
+            (click)="clearSelection($event)">
+            <i class="bi bi-x-lg"></i>
+          </span>
+        }
+
+        <span
+          class="sic-combobox__toggle"
+          role="button"
+          tabindex="-1"
+          (mousedown)="preventMouseDown($event)"
+          (click)="toggleFromIcon($event)">
+          @if (opened) {
+            <i class="bi bi-chevron-up"></i>
+          } @else {
+            <i class="bi bi-chevron-down"></i>
+          }
+        </span>
+      </span>
+    </div>
+
+    @if (opened) {
+      <button
+        type="button"
+        class="sic-combobox__backdrop"
+        tabindex="-1"
+        aria-hidden="true"
+        (click)="onBackdropClick()">
+      </button>
+
+      <div
+        #dropdownPanel
+        class="sic-combobox__dropdown"
+        [ngStyle]="dropdownPanelStyle">
+        <div #optionsPanel class="sic-combobox__options" tabindex="-1" (scroll)="onOptionsScroll($event)">
+          @if (showLoadingState) {
+            <div class="sic-combobox__state">Loading...</div>
+          } @else if (showEmptyState) {
+            <div class="sic-combobox__state">{{ emptyText }}</div>
+          } @else {
+            @for (item of filteredOptions; track trackOption($index, item); let index = $index) {
+              <button
+                type="button"
+                class="sic-combobox__option"
+                tabindex="-1"
+                [attr.data-selected]="resolveValue(item) === value ? 'true' : null"
+                [attr.data-active]="isActiveOption(index) ? 'true' : null"
+                (mousedown)="preventMouseDown($event)"
+                (mouseup)="selectOption(item)">
+                @if (hasProjectedTemplate) {
+                  <ng-container
+                    *ngTemplateOutlet="optionTemplate?.template ?? null; context: { $implicit: item, item: item }">
+                  </ng-container>
+                } @else {
+                  <span class="sic-combobox__option-label">{{ resolveLabel(item) }}</span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showError && errorMessage) {
+    <span class="sic-combobox__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-combobox__hint">{{ hint }}</span>
+  }
+</div>
+</file>
+
+<file path="sic-app/src/app/core/component/sic-combobox/sic-combobox.component.ts">
+import { CommonModule } from '@angular/common';
+import {
+  AfterContentInit,
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ContentChild,
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  Injector,
+  Input,
+  OnDestroy,
+  Output,
+  TemplateRef,
+  ViewChild,
+  forwardRef,
+} from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import {
+  ControlValueAccessor,
+  FormsModule,
+  NG_VALUE_ACCESSOR,
+  NgControl,
+} from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { SicValidator } from '../../validator/sic.validator';
+
+interface ComboboxPagingResponse<TItem> {
+  data?: TItem[];
+  pageable?: {
+    pageNumber?: number;
+    pageSize?: number;
+    totalElements?: number;
+    totalPages?: number;
+  };
+}
+
+@Directive({
+  selector: 'ng-template[sicComboboxOption]',
+  standalone: true,
+})
+export class SicComboboxOptionTemplate {
+  constructor(readonly template: TemplateRef<unknown>) {}
+}
+
+@Component({
+  selector: 'sic-combobox',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './sic-combobox.component.html',
+  styleUrl: './sic-combobox.component.css',
+  host: {
+    ngSkipHydration: 'true',
+  },
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => SicComboboxComponent),
+      multi: true,
+    },
+  ],
+})
+export class SicComboboxComponent implements ControlValueAccessor, AfterContentInit, AfterViewInit, OnDestroy {
+  @Input() label?: string;
+  @Input({ required: true }) apiUrl = '';
+  @Input() params: Record<string, any> = {};
+  @Input() paging = true;
+  @Input() pageSize = 10;
+  @Input() pageNumberParam = 'pageNumber';
+  @Input() pageSizeParam = 'pageSize';
+  @Input() keywordParam = 'keyword';
+  @Input() placeholder = 'Select option';
+  @Input() emptyText = 'No data found';
+  @Input() valueField = 'value';
+  @Input() textField = 'text';
+  @Input() disabled = false;
+  @Input() readonly = false;
+  @Input() clearable = true;
+  @Input() hint?: string;
+  @Input() errorMessages: Record<string, string> = {};
+  @Input() excludeValues: any[] = [];
+
+  get filteredOptions(): any[] {
+    if (!this.excludeValues || this.excludeValues.length === 0) {
+      return this.options;
+    }
+    return this.options.filter((item) => {
+      const itemVal = this.resolveValue(item);
+      if (itemVal === this.value) {
+        return true;
+      }
+      return !this.excludeValues.includes(itemVal);
+    });
+  }
+
+  @Output() selectionChanged = new EventEmitter<any>();
+
+  @HostBinding('class.sic-combobox-host') readonly hostClass = true;
+
+  @ContentChild(SicComboboxOptionTemplate) optionTemplate?: SicComboboxOptionTemplate;
+  @ViewChild('fieldInput') fieldInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('fieldContainer') fieldContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('dropdownPanel') dropdownPanel?: ElementRef<HTMLDivElement>;
+  @ViewChild('optionsPanel') optionsPanel?: ElementRef<HTMLDivElement>;
+
+  ready = false;
+  opened = false;
+  loading = false;
+  hasProjectedTemplate = false;
+
+  inputText = '';
+  selectedText = '';
+  selectedItem: unknown = null;
+  value: any = null;
+  options: any[] = [];
+  activeIndex = -1;
+  pageNumber = 1;
+  totalPages = 1;
+  totalElements = 0;
+  touched = false;
+  dropdownPanelStyle: Record<string, string> = {};
+
+  private searchTerm = '';
+  private onChange: (value: any) => void = () => {};
+  private onTouched: () => void = () => {};
+  private ngControl: NgControl | null = null;
+  private searchDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+  private loadSubscription: Subscription | null = null;
+  private closeDropdownHandle: ReturnType<typeof setTimeout> | null = null;
+  private readyHandle: ReturnType<typeof setTimeout> | null = null;
+  private positionDropdownHandle: ReturnType<typeof setTimeout> | null = null;
+  private languageChangeSubscription: Subscription | null = null;
+
+  constructor(
+    private readonly injector: Injector,
+    private readonly http: HttpClient,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly elementRef: ElementRef<HTMLElement>,
+    private readonly translate: TranslateService,
+    private readonly validator: SicValidator,
+  ) {}
+
+  ngAfterContentInit(): void {
+    this.hasProjectedTemplate = !!this.optionTemplate;
+  }
+
+  ngAfterViewInit(): void {
+    this.ngControl = this.injector.get(NgControl, null);
+    if (this.ngControl) {
+      this.ngControl.valueAccessor = this;
+    }
+
+    this.readyHandle = setTimeout(() => {
+      this.ready = true;
+      this.readyHandle = null;
+    }, 0);
+
+    this.languageChangeSubscription = this.translate.onLangChange.subscribe(() => {
+      this.handleLanguageChange();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.readyHandle) {
+      clearTimeout(this.readyHandle);
+    }
+    if (this.searchDebounceHandle) {
+      clearTimeout(this.searchDebounceHandle);
+    }
+    if (this.closeDropdownHandle) {
+      clearTimeout(this.closeDropdownHandle);
+    }
+    if (this.positionDropdownHandle) {
+      clearTimeout(this.positionDropdownHandle);
+    }
+    this.languageChangeSubscription?.unsubscribe();
+    this.loadSubscription?.unsubscribe();
+  }
+
+  get control() {
+    return this.validator.getControl(this.ngControl);
+  }
+
+  get showError(): boolean {
+    return this.validator.shouldShowError(this.control, this.touched);
+  }
+
+  get errorMessage(): string | null {
+    return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
+  }
+
+  get showLoadingState(): boolean {
+    return this.loading && this.filteredOptions.length === 0;
+  }
+
+  get showEmptyState(): boolean {
+    return !this.loading && this.filteredOptions.length === 0;
+  }
+
+  get canLoadMore(): boolean {
+    return this.paging && !this.loading && this.pageNumber < this.totalPages;
+  }
+
+  writeValue(value: any): void {
+    const normalizedValue = this.normalizeControlValue(value);
+    this.value = normalizedValue;
+
+    if (normalizedValue === null) {
+      this.selectedItem = null;
+      this.selectedText = '';
+      this.inputText = '';
+      this.activeIndex = -1;
+      return;
+    }
+
+    if (normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)) {
+      this.selectedItem = normalizedValue;
+      this.selectedText = this.resolveLabel(normalizedValue);
+      this.inputText = this.selectedText;
+      this.value = this.resolveValue(normalizedValue);
+      return;
+    }
+
+    const matched = this.options.find((item) => this.resolveValue(item) === normalizedValue);
+    if (matched) {
+      this.selectedItem = matched;
+      this.selectedText = this.resolveLabel(matched);
+      this.inputText = this.selectedText;
+    } else {
+      // Value not found in current options, fetch it
+      setTimeout(() => this.loadValueById(normalizedValue), 0);
+    }
+  }
+
+  registerOnChange(fn: (value: any) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+  }
+
+  openDropdown(): void {
+    if (!this.ready || this.disabled || this.readonly || this.opened) {
+      return;
+    }
+
+    this.opened = true;
+    this.dropdownPanelStyle = {};
+    this.pageNumber = 1;
+    this.searchTerm = (this.selectedItem && this.inputText === this.selectedText)
+      ? ''
+      : this.inputText.trim();
+    this.loadOptions(true);
+    this.scheduleDropdownPositionUpdate();
+  }
+
+  closeDropdown(): void {
+    if (this.closeDropdownHandle) {
+      clearTimeout(this.closeDropdownHandle);
+      this.closeDropdownHandle = null;
+    }
+
+    this.closeDropdownHandle = setTimeout(() => {
+      this.clearSearchDebounce();
+      this.cancelPendingLoad();
+      this.opened = false;
+      this.loading = false;
+      this.activeIndex = -1;
+      this.inputText = this.selectedText;
+      this.searchTerm = '';
+      this.dropdownPanelStyle = {};
+      this.closeDropdownHandle = null;
+      this.cdr.markForCheck();
+    }, 0);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.opened) {
+      this.scheduleDropdownPositionUpdate();
+    }
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.onWindowResize();
+  }
+
+  onFieldFocus(): void {
+    this.openDropdown();
+  }
+
+  onFieldClick(): void {
+    this.openDropdown();
+  }
+
+  onFieldBlur(): void {
+    this.markTouched();
+  }
+
+  onFocusOut(event: FocusEvent): void {
+    const target = event.relatedTarget as HTMLElement | null;
+    if (!target || !this.elementRef.nativeElement.contains(target)) {
+      this.closeDropdown();
+    }
+  }
+
+  onFieldInput(term: string): void {
+    if (this.disabled || this.readonly) {
+      return;
+    }
+
+    this.inputText = term;
+    this.searchTerm = term.trim();
+    this.pageNumber = 1;
+    this.options = [];
+    this.totalElements = 0;
+    this.totalPages = 1;
+    this.activeIndex = -1;
+    this.opened = true;
+    this.loading = true;
+    this.cancelPendingLoad();
+    this.scheduleSearchLoad();
+  }
+
+  onBackdropClick(): void {
+    this.closeDropdown();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (!this.opened) {
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (!target || !this.elementRef.nativeElement.contains(target)) {
+      this.closeDropdown();
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (!this.opened || event.key !== 'Tab') {
+      return;
+    }
+
+    setTimeout(() => {
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (!activeElement || !this.elementRef.nativeElement.contains(activeElement)) {
+        this.closeDropdown();
+      }
+    }, 0);
+  }
+
+  onOptionsScroll(event: Event): void {
+    if (!this.canLoadMore || this.loading) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    const threshold = 80;
+    if (target.scrollTop + target.clientHeight >= target.scrollHeight - threshold) {
+      this.loadMore();
+    }
+  }
+
+  handleFieldKeydown(event: KeyboardEvent): void {
+    if (this.disabled || this.readonly) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.opened) {
+        this.openDropdown();
+        return;
+      }
+      this.moveActive(1);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.opened) {
+        this.openDropdown();
+        return;
+      }
+      this.moveActive(-1);
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (this.opened && this.activeIndex >= 0 && this.activeIndex < this.filteredOptions.length) {
+        this.selectOption(this.filteredOptions[this.activeIndex]);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeDropdown();
+    }
+  }
+
+  loadMore(): void {
+    if (!this.canLoadMore) {
+      return;
+    }
+
+    this.pageNumber += 1;
+    this.loadOptions(false);
+  }
+
+  selectOption(item: any): void {
+    if (this.disabled || this.readonly) {
+      return;
+    }
+
+    this.selectedItem = item;
+    this.selectedText = this.resolveLabel(item);
+    this.inputText = this.selectedText;
+    this.value = this.resolveValue(item);
+    this.onChange(this.value);
+    this.selectionChanged.emit(item);
+    this.markTouched();
+
+    if (this.closeDropdownHandle) {
+      clearTimeout(this.closeDropdownHandle);
+      this.closeDropdownHandle = null;
+    }
+
+    this.opened = false;
+    this.clearSearchDebounce();
+    this.cancelPendingLoad();
+
+    this.closeDropdownHandle = setTimeout(() => {
+      this.loading = false;
+      this.activeIndex = -1;
+      this.searchTerm = '';
+      this.closeDropdownHandle = null;
+      this.cdr.markForCheck();
+    }, 0);
+  }
+
+  clearSelection(event?: MouseEvent): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    this.selectedItem = null;
+    this.selectedText = '';
+    this.inputText = '';
+    this.searchTerm = '';
+    this.value = null;
+    this.activeIndex = -1;
+    this.onChange(null);
+    this.selectionChanged.emit(null);
+    this.markTouched();
+  }
+
+  toggleFromIcon(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.opened) {
+      this.closeDropdown();
+    } else {
+      this.openDropdown();
+    }
+  }
+
+  preventMouseDown(event: MouseEvent): void {
+    event.preventDefault();
+  }
+
+  trackOption(index: number, item: any): any {
+    return this.resolveValue(item) ?? index;
+  }
+
+  isActiveOption(index: number): boolean {
+    return this.activeIndex === index;
+  }
+
+  resolveValue(item: any): any {
+    return item?.[this.valueField] ?? item?.value ?? item?.id ?? null;
+  }
+
+  resolveLabel(item: any): string {
+    const localizedLabel = this.resolveLocalizedLabel(item);
+    const configuredLabel =
+      this.textField === 'messageEn' || this.textField === 'messageLocal'
+        ? localizedLabel
+        : item?.[this.textField];
+
+    return String(
+      configuredLabel ??
+      item?.text ??
+      item?.label ??
+      item?.name ??
+      localizedLabel ??
+      '',
+    );
+  }
+
+  private moveActive(step: 1 | -1): void {
+    if (this.filteredOptions.length === 0) {
+      return;
+    }
+
+    if (this.activeIndex < 0) {
+      this.activeIndex = step === 1 ? 0 : this.filteredOptions.length - 1;
+    } else {
+      this.activeIndex = Math.max(0, Math.min(this.filteredOptions.length - 1, this.activeIndex + step));
+    }
+
+    this.scrollActiveIntoView();
+  }
+
+  private scrollActiveIntoView(): void {
+    requestAnimationFrame(() => {
+      const panel = this.optionsPanel?.nativeElement;
+      if (!panel || this.activeIndex < 0) {
+        return;
+      }
+
+      const option = panel.querySelectorAll<HTMLElement>('.sic-combobox__option')[this.activeIndex];
+      option?.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  private scheduleSearchLoad(): void {
+    this.clearSearchDebounce();
+    this.searchDebounceHandle = setTimeout(() => {
+      this.searchDebounceHandle = null;
+      this.loadOptions(true);
+    }, 250);
+  }
+
+  private loadOptions(reset: boolean): void {
+    if (!this.apiUrl) {
+      this.options = [];
+      this.totalElements = 0;
+      this.totalPages = 1;
+      this.loading = false;
+      return;
+    }
+
+    this.cancelPendingLoad();
+    this.loading = true;
+
+    const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
+      params: this.buildParams(),
+    }).subscribe({
+      next: (response) => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+
+        const items = Array.isArray(response) ? response : (response.data ?? []);
+        const pageable = Array.isArray(response) ? null : (response.pageable ?? null);
+
+        setTimeout(() => {
+          if (this.loadSubscription !== subscription) {
+            return;
+          }
+
+          this.options = reset ? items : [...this.options, ...items];
+          this.pageNumber = pageable?.pageNumber ?? this.pageNumber;
+          this.totalPages = Math.max(1, pageable?.totalPages ?? 1);
+          this.totalElements = pageable?.totalElements ?? items.length;
+          this.loading = false;
+          this.loadSubscription = null;
+
+          const selectedIndex = this.filteredOptions.findIndex((item) => this.resolveValue(item) === this.value);
+          if (reset) {
+                let nextActiveIndex = -1;
+
+                if (selectedIndex >= 0) {
+                  nextActiveIndex = selectedIndex;
+                } else if (this.filteredOptions.length > 0) {
+                  nextActiveIndex = 0;
+                }
+
+                this.activeIndex = nextActiveIndex;
+          }
+
+          this.syncSelectedDisplay();
+          if (reset || selectedIndex >= 0) {
+            this.scrollActiveIntoView();
+          }
+          this.scheduleDropdownPositionUpdate();
+          this.cdr.markForCheck();
+        }, 0);
+      },
+      error: () => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+
+        setTimeout(() => {
+          if (this.loadSubscription !== subscription) {
+            return;
+          }
+
+          this.options = [];
+          this.totalElements = 0;
+          this.totalPages = 1;
+          this.loading = false;
+          this.loadSubscription = null;
+          this.activeIndex = -1;
+          this.scheduleDropdownPositionUpdate();
+          this.cdr.markForCheck();
+        }, 0);
+      },
+    });
+
+    this.loadSubscription = subscription as any;
+  }
+
+  private syncSelectedDisplay(): void {
+    const matched = this.options.find((item) => this.resolveValue(item) === this.value);
+    if (!matched) {
+      if (!this.value) {
+        this.selectedItem = null;
+        this.selectedText = '';
+      }
+      return;
+    }
+
+    const previousSelectedText = this.selectedText;
+    this.selectedItem = matched;
+    this.selectedText = this.resolveLabel(matched);
+
+    if (!this.searchTerm || this.inputText === previousSelectedText) {
+      this.inputText = this.selectedText;
+    }
+  }
+
+  private loadValueById(value: any): void {
+    if (!this.apiUrl) {
+      return;
+    }
+
+    this.cancelPendingLoad();
+    this.loading = true;
+
+    const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
+      params: this.buildParamsWithValue(value),
+    }).subscribe({
+      next: (response) => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+
+        const items = Array.isArray(response) ? response : (response.data ?? []);
+        if (items.length > 0) {
+          const item = items[0];
+          setTimeout(() => {
+            this.selectedItem = item;
+            this.selectedText = this.resolveLabel(item);
+            this.inputText = this.selectedText;
+            this.loading = false;
+            this.cdr.markForCheck();
+          }, 0);
+        } else {
+          this.loading = false;
+        }
+        this.loadSubscription = null;
+      },
+      error: () => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+        this.loading = false;
+        this.loadSubscription = null;
+      },
+    });
+
+    this.loadSubscription = subscription as any;
+  }
+
+  private cancelPendingLoad(): void {
+    this.loadSubscription?.unsubscribe();
+    this.loadSubscription = null;
+  }
+
+  private clearSearchDebounce(): void {
+    if (!this.searchDebounceHandle) {
+      return;
+    }
+
+    clearTimeout(this.searchDebounceHandle);
+    this.searchDebounceHandle = null;
+  }
+
+  private buildParams(): HttpParams {
+    let httpParams = new HttpParams();
+
+    for (const [key, value] of Object.entries(this.params ?? {})) {
+      if (value !== null && value !== undefined && value !== '') {
+        httpParams = httpParams.set(key, String(value));
+      }
+    }
+
+    if (this.searchTerm) {
+      httpParams = httpParams.set(this.keywordParam, this.searchTerm);
+    }
+
+    if (this.paging) {
+      httpParams = httpParams.set(this.pageNumberParam, String(this.pageNumber));
+      httpParams = httpParams.set(this.pageSizeParam, String(this.pageSize));
+    }
+
+    return httpParams;
+  }
+
+  private buildParamsWithValue(value: any): HttpParams {
+    let httpParams = new HttpParams();
+
+    for (const [key, val] of Object.entries(this.params ?? {})) {
+      if (val !== null && val !== undefined && val !== '') {
+        httpParams = httpParams.set(key, String(val));
+      }
+    }
+
+    if (value !== null && value !== undefined && !(typeof value === 'string' && value.trim() === '')) {
+      httpParams = httpParams.set('value', String(value));
+    }
+
+    return httpParams;
+  }
+
+  private normalizeControlValue(value: any): any {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'string' && value.trim() === '') {
+      return null;
+    }
+
+    return value;
+  }
+
+  private markTouched(): void {
+    if (this.touched) {
+      return;
+    }
+
+    this.touched = true;
+    this.onTouched();
+  }
+
+  private handleLanguageChange(): void {
+    const currentValue = this.value;
+    const currentSelectedItem = this.selectedItem;
+
+    this.clearSearchDebounce();
+    this.cancelPendingLoad();
+
+    if (this.closeDropdownHandle) {
+      clearTimeout(this.closeDropdownHandle);
+      this.closeDropdownHandle = null;
+    }
+
+    if (this.positionDropdownHandle) {
+      clearTimeout(this.positionDropdownHandle);
+      this.positionDropdownHandle = null;
+    }
+
+    this.options = [];
+    this.totalElements = 0;
+    this.totalPages = 1;
+    this.pageNumber = 1;
+    this.activeIndex = -1;
+    this.searchTerm = '';
+    this.dropdownPanelStyle = {};
+    this.opened = false;
+    this.loading = false;
+
+    if (currentSelectedItem) {
+      const refreshedDisplay = this.resolveLabel(currentSelectedItem);
+      this.selectedText = refreshedDisplay;
+      this.inputText = refreshedDisplay;
+    }
+
+    if (currentValue === null || currentValue === undefined) {
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.selectedItem = null;
+    this.selectedText = '';
+    this.inputText = '';
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    setTimeout(() => {
+      if (this.value !== currentValue) {
+        this.loading = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      this.loadValueById(currentValue);
+    }, 0);
+  }
+
+  private resolveLocalizedLabel(item: any): string | null {
+    const currentLanguage = this.translate.getCurrentLang() === 'th' ? 'th' : 'en';
+    const preferredKey = currentLanguage === 'th' ? 'messageLocal' : 'messageEn';
+    const fallbackKey = currentLanguage === 'th' ? 'messageEn' : 'messageLocal';
+    const preferredLabel = item?.[preferredKey];
+    const fallbackLabel = item?.[fallbackKey];
+
+    if (typeof preferredLabel === 'string' && preferredLabel.trim()) {
+      return preferredLabel;
+    }
+
+    if (typeof fallbackLabel === 'string' && fallbackLabel.trim()) {
+      return fallbackLabel;
+    }
+
+    return null;
+  }
+
+  private updateDropdownPosition(): void {
+    const anchorElement = this.fieldContainer?.nativeElement ?? this.fieldInput?.nativeElement;
+    const panelElement = this.dropdownPanel?.nativeElement;
+    if (!anchorElement || !panelElement) {
+      this.dropdownPanelStyle = {};
+      return;
+    }
+
+    const rect = anchorElement.getBoundingClientRect();
+    const panelRect = panelElement.getBoundingClientRect();
+    const panelHeight = panelRect.height || panelElement.offsetHeight || 320;
+    const gap = 8;
+    const viewportPadding = 8;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const width = Math.min(rect.width, viewportWidth - viewportPadding * 2);
+    const spaceBelow = viewportHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+
+    let top = rect.bottom + gap;
+    if (spaceBelow < panelHeight && spaceAbove > spaceBelow) {
+      top = rect.top - panelHeight - gap;
+    }
+
+    top = Math.max(viewportPadding, Math.min(top, viewportHeight - panelHeight - viewportPadding));
+
+    let left = rect.left;
+    if (left + width > viewportWidth - viewportPadding) {
+      left = Math.max(viewportPadding, viewportWidth - width - viewportPadding);
+    }
+
+    this.dropdownPanelStyle = {
+      position: 'fixed',
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${width}px`,
+      minWidth: `${width}px`,
+    };
+  }
+
+  private scheduleDropdownPositionUpdate(): void {
+    if (this.positionDropdownHandle) {
+      clearTimeout(this.positionDropdownHandle);
+    }
+
+    this.positionDropdownHandle = setTimeout(() => {
+      this.positionDropdownHandle = null;
+      this.updateDropdownPosition();
+      this.cdr.markForCheck();
+      setTimeout(() => {
+        if (!this.opened) {
+          return;
+        }
+
+        this.updateDropdownPosition();
+        this.cdr.markForCheck();
+      }, 0);
+    }, 0);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/core/component/sic-datepicker/sic-datepicker.component.css">
 :host {
   display: block;
@@ -62247,374 +62261,6 @@ export class Pmdt02AComponent implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html">
-<!-- src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html -->
-
-<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
-  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
-  <span>/</span>
-  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
-  <span>/</span>
-  @if (isEdit) {
-    <span>Edit Task</span>
-  } @else {
-    <span>New Task</span>
-  }
-</div>
-
-<div class="max-w-2xl mx-auto">
-  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
-    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
-  </h2>
-
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-
-    <!-- Task Code & Name -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-      </div>
-    </div>
-
-    <!-- Description -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
-      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
-    </div>
-
-    <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบร่วม</label>
-      
-      <!-- Combobox เลือกทีละคน -->
-      <sic-combobox
-        #assigneeCombobox
-        [apiUrl]="assignedToApiUrl"
-        valueField="value"
-        textField="text"
-        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
-        [clearable]="true"
-        (selectionChanged)="onAssigneeSelect($event)"
-      ></sic-combobox>
-
-      <!-- แสดงรายชื่อที่เลือกเป็น Chips -->
-      <div class="mt-2 flex flex-wrap gap-2">
-        @for (userId of assigneeIds.value || []; track userId) {
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-            {{ getAssigneeName(userId) }}
-            <button type="button" (click)="removeAssignee(userId)" class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors" title="ลบ">
-              <i class="bi bi-x-lg text-xs"></i>
-            </button>
-          </span>
-        }
-        @if ((assigneeIds.value || []).length === 0) {
-          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีผู้รับผิดชอบร่วม</span>
-        }
-      </div>
-    </div>
-
-    <!-- Start Date + Time -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <sic-datepicker
-          label="วันที่เริ่ม"
-          formControlName="startDate"
-          [required]="true"
-          placeholder="เลือกวันที่เริ่ม"
-        ></sic-datepicker>
-        @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
-        }
-      </div>
-      <div>
-        <sic-timepicker
-          label="เวลาเริ่ม"
-          formControlName="startTime"
-          placeholder="เลือกเวลา"
-        ></sic-timepicker>
-      </div>
-    </div>
-
-    <!-- End Date + Time -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <sic-datepicker
-          label="วันที่สิ้นสุด"
-          formControlName="endDate"
-          [required]="true"
-          placeholder="เลือกวันที่สิ้นสุด"
-        ></sic-datepicker>
-        @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
-        }
-      </div>
-      <div>
-        <sic-timepicker
-          label="เวลาสิ้นสุด"
-          formControlName="endTime"
-          placeholder="เลือกเวลา"
-        ></sic-timepicker>
-      </div>
-    </div>
-
-    <!-- Estimate Manday & Priority -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
-        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
-        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
-        }
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
-        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
-          <option value="Low">ต่ำ</option>
-          <option value="Medium">ปานกลาง</option>
-          <option value="High">สูง</option>
-          <option value="Critical">วิกฤต</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Color Picker -->
-    <div>
-      <sic-colorpicker
-        label="เลือกสี Task"
-        formControlName="color"
-        placeholder="#2ECC71"
-      ></sic-colorpicker>
-    </div>
-
-    <!-- Buttons -->
-    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
-      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
-        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-      </button>
-      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
-        ยกเลิก
-      </button>
-    </div>
-
-  </form>
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
-
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { environment } from '../../../../../../environments/environment';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { TaskService } from '../../../../../core/services/task.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { BusinessService } from '../../../../../core/services/business.service';
-import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
-
-@Component({
-  selector: 'app-pmdt02C',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicComboboxComponent,
-    SicDatepickerComponent,
-    SicTimepickerComponent,
-    SicColorpickerComponent,
-  ],
-  templateUrl: './pmdt02C.component.html',
-})
-export class Pmdt02CComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private taskService = inject(TaskService);
-  private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private businessService = inject(BusinessService);
-
-  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
-
-  workPackageId = '';
-  projectId = '';
-  phaseId = '';
-  taskId: string | null = null;
-  isEdit = false;
-  data: TaskResponse | null = null;
-  assignedToApiUrl = '';
-
-  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
-  assigneeNames: Record<string, string> = {};
-
-  form = this.fb.group({
-    taskCode: ['', Validators.required],
-    taskName: ['', Validators.required],
-    description: [''],
-    assignedTo: [''], // คนหลัก (optional)
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
-    priority: ['Medium'],
-    color: [''],
-    assigneeIds: [[]], // ✅ array ของ userId
-  });
-
-  get assigneeIds(): FormControl {
-    return this.form.get('assigneeIds') as FormControl;
-  }
-
-  ngOnInit() {
-    const businessId = this.businessService.getCurrentBusinessId();
-    if (businessId) {
-      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/su-user-business/members/combobox?businessId=${businessId}`;
-    }
-
-    this.route.paramMap.subscribe((params) => {
-      this.taskId = params.get('id');
-      this.isEdit = !!this.taskId;
-    });
-
-    this.route.queryParams.subscribe((qParams) => {
-      this.workPackageId = qParams['workPackageId'] || '';
-      this.projectId = qParams['projectId'] || '';
-      this.phaseId = qParams['phaseId'] || '';
-      if (this.isEdit && this.taskId) {
-        this.loadTask(this.taskId);
-      }
-    });
-  }
-
-  loadTask(id: string) {
-    this.taskService.getTaskById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
-    });
-  }
-
-  patchForm(data: TaskResponse) {
-    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
-    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
-
-    this.form.patchValue({
-      taskCode: data.taskCode,
-      taskName: data.taskName,
-      description: data.description,
-      assignedTo: data.assignedTo,
-      startDate: startDate,
-      startTime: startTime,
-      endDate: endDate,
-      endTime: endTime,
-      estimateManday: data.estimateManday ?? null,
-      priority: data.priority,
-      color: data.color || '',
-    });
-
-    // ✅ โหลด assigneeIds และ assigneeNames
-    if (data.assigneeIds) {
-      this.assigneeIds.setValue(data.assigneeIds);
-    }
-    if (data.assigneeNames) {
-      this.assigneeNames = data.assigneeNames;
-    }
-  }
-
-  // ✅ เมื่อเลือกจาก combobox
-  onAssigneeSelect(item: any) {
-    if (!item) return;
-    const userId = item.value;
-    const current = this.assigneeIds.value || [];
-    if (current.includes(userId)) {
-      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
-      this.assigneeCombobox.clearSelection();
-      return;
-    }
-    this.assigneeNames[userId] = item.text;
-    this.assigneeIds.setValue([...current, userId]);
-    this.assigneeCombobox.clearSelection();
-  }
-
-  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
-  removeAssignee(userId: string) {
-    const current = this.assigneeIds.value || [];
-    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
-    delete this.assigneeNames[userId];
-  }
-
-  // ✅ ดูชื่อจาก userId
-  getAssigneeName(userId: string): string {
-    return this.assigneeNames[userId] || userId;
-  }
-
-  private buildISOString(date: any, time: string): string {
-    if (!date) return '';
-    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
-    if (!dateStr) return '';
-    const timeStr = time || '00:00';
-    return `${dateStr}T${timeStr}:00Z`;
-  }
-
-  onSubmit() {
-    if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const raw = this.form.value;
-    const data: TaskRequest = {
-      workPackageId: this.workPackageId,
-      taskCode: raw.taskCode!,
-      taskName: raw.taskName!,
-      description: raw.description || undefined,
-      assignedTo: raw.assignedTo || undefined,
-      startDate: this.buildISOString(raw.startDate, raw.startTime!),
-      endDate: this.buildISOString(raw.endDate, raw.endTime!),
-      estimateManday: raw.estimateManday!,
-      priority: raw.priority || 'Medium',
-      color: raw.color || undefined,
-      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
-    };
-
-    const request = this.isEdit && this.taskId
-      ? this.taskService.updateTask(this.taskId, data)
-      : this.taskService.createTask(data);
-
-    request.subscribe({
-      next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
-      },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
-    });
-  }
-
-  cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.form.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.form.ts
 
@@ -67477,6 +67123,375 @@ export class Pmdt01AComponent implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html">
+<!-- src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html -->
+
+<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
+  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
+  <span>/</span>
+  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
+  <span>/</span>
+  @if (isEdit) {
+    <span>Edit Task</span>
+  } @else {
+    <span>New Task</span>
+  }
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
+    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
+  </h2>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <!-- Task Code & Name -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)]">คำอธิบาย</label>
+      <textarea formControlName="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"></textarea>
+    </div>
+
+    <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบร่วม</label>
+      
+      <!-- Combobox เลือกทีละคน -->
+      <sic-combobox
+        #assigneeCombobox
+        [apiUrl]="assignedToApiUrl"
+        valueField="value"
+        textField="text"
+        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
+        [clearable]="true"
+        [excludeValues]="assigneeIds.value || []"
+        (selectionChanged)="onAssigneeSelect($event)"
+      ></sic-combobox>
+
+      <!-- แสดงรายชื่อที่เลือกเป็น Chips -->
+      <div class="mt-2 flex flex-wrap gap-2">
+        @for (userId of assigneeIds.value || []; track userId) {
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+            {{ getAssigneeName(userId) }}
+            <button type="button" (click)="removeAssignee(userId)" class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors" title="ลบ">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </span>
+        }
+        @if ((assigneeIds.value || []).length === 0) {
+          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีผู้รับผิดชอบร่วม</span>
+        }
+      </div>
+    </div>
+
+    <!-- Start Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่เริ่ม"
+          formControlName="startDate"
+          [required]="true"
+          placeholder="เลือกวันที่เริ่ม"
+        ></sic-datepicker>
+        @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาเริ่ม"
+          formControlName="startTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <!-- End Date + Time -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <sic-datepicker
+          label="วันที่สิ้นสุด"
+          formControlName="endDate"
+          [required]="true"
+          placeholder="เลือกวันที่สิ้นสุด"
+        ></sic-datepicker>
+        @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+        }
+      </div>
+      <div>
+        <sic-timepicker
+          label="เวลาสิ้นสุด"
+          formControlName="endTime"
+          placeholder="เลือกเวลา"
+        ></sic-timepicker>
+      </div>
+    </div>
+
+    <!-- Estimate Manday & Priority -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
+        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+        @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
+        }
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">ความสำคัญ</label>
+        <select formControlName="priority" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
+          <option value="Low">ต่ำ</option>
+          <option value="Medium">ปานกลาง</option>
+          <option value="High">สูง</option>
+          <option value="Critical">วิกฤต</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Color Picker -->
+    <div>
+      <sic-colorpicker
+        label="เลือกสี Task"
+        formControlName="color"
+        placeholder="#2ECC71"
+      ></sic-colorpicker>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
+        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+      </button>
+      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        ยกเลิก
+      </button>
+    </div>
+
+  </form>
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../../environments/environment';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { TaskService } from '../../../../../core/services/task.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
+import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
+
+@Component({
+  selector: 'app-pmdt02C',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicComboboxComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,
+  ],
+  templateUrl: './pmdt02C.component.html',
+})
+export class Pmdt02CComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private dialog = inject(DialogService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private businessService = inject(BusinessService);
+
+  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
+
+  workPackageId = '';
+  projectId = '';
+  phaseId = '';
+  taskId: string | null = null;
+  isEdit = false;
+  data: TaskResponse | null = null;
+  assignedToApiUrl = '';
+
+  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
+  assigneeNames: Record<string, string> = {};
+
+  form = this.fb.group({
+    taskCode: ['', Validators.required],
+    taskName: ['', Validators.required],
+    description: [''],
+    assignedTo: [''], // คนหลัก (optional)
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
+    priority: ['Medium'],
+    color: [''],
+    assigneeIds: [[]], // ✅ array ของ userId
+  });
+
+  get assigneeIds(): FormControl {
+    return this.form.get('assigneeIds') as FormControl;
+  }
+
+  ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
+    }
+
+    this.route.paramMap.subscribe((params) => {
+      this.taskId = params.get('id');
+      this.isEdit = !!this.taskId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.workPackageId = qParams['workPackageId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      if (this.isEdit && this.taskId) {
+        this.loadTask(this.taskId);
+      }
+    });
+  }
+
+  loadTask(id: string) {
+    this.taskService.getTaskById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: TaskResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
+    this.form.patchValue({
+      taskCode: data.taskCode,
+      taskName: data.taskName,
+      description: data.description,
+      assignedTo: data.assignedTo,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      estimateManday: data.estimateManday ?? null,
+      priority: data.priority,
+      color: data.color || '',
+    });
+
+    // ✅ โหลด assigneeIds และ assigneeNames
+    if (data.assigneeIds) {
+      this.assigneeIds.setValue(data.assigneeIds);
+    }
+    if (data.assigneeNames) {
+      this.assigneeNames = data.assigneeNames;
+    }
+  }
+
+  // ✅ เมื่อเลือกจาก combobox
+  onAssigneeSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const current = this.assigneeIds.value || [];
+    if (current.includes(userId)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      this.assigneeCombobox.clearSelection();
+      return;
+    }
+    this.assigneeNames[userId] = item.text;
+    this.assigneeIds.setValue([...current, userId]);
+    this.assigneeCombobox.clearSelection();
+  }
+
+  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
+  removeAssignee(userId: string) {
+    const current = this.assigneeIds.value || [];
+    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
+    delete this.assigneeNames[userId];
+  }
+
+  // ✅ ดูชื่อจาก userId
+  getAssigneeName(userId: string): string {
+    return this.assigneeNames[userId] || userId;
+  }
+
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    const raw = this.form.value;
+    const data: TaskRequest = {
+      workPackageId: this.workPackageId,
+      taskCode: raw.taskCode!,
+      taskName: raw.taskName!,
+      description: raw.description || undefined,
+      assignedTo: raw.assignedTo || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      estimateManday: raw.estimateManday!,
+      priority: raw.priority || 'Medium',
+      color: raw.color || undefined,
+      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
+    };
+
+    const request = this.isEdit && this.taskId
+      ? this.taskService.updateTask(this.taskId, data)
+      : this.taskService.createTask(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
+      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+    });
+  }
+
+  cancel() {
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.html">
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02.component.html -->
 <div class="space-y-5 p-0.5">
@@ -68239,168 +68254,6 @@ public class AuthController {
         response.setRoles(Collections.emptyList());
         return ResponseEntity.ok(response);
     }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ComboboxController.java">
-package com.softinter.sicapi.controller.basic;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.response.ComboboxResponse;
-import com.softinter.sicapi.dto.response.LovResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.service.BusinessInviteService;
-import com.softinter.sicapi.service.ComboboxService;
-import com.softinter.sicapi.service.SuUserBusinessMemberService;
-import com.softinter.sicapi.util.PaginationUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping({"/api/profile", "/api/business"})
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Combobox", description = "Combobox Data API (Titles, Countries, Provinces, Districts, SubDistricts)")
-public class ComboboxController {
-
-    private final ComboboxService comboboxService;
-    private final BusinessInviteService businessInviteService;
-    private final SuUserBusinessMemberService memberService;
-
-    @GetMapping("/combobox-title")
-    @Operation(summary = "Get titles (prefix names) with pagination")
-    public ResponseEntity<PaginationResponse<LovResponse>> getTitles(
-            @RequestParam(required = false) String personType,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
-
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null) {
-            LovResponse item = comboboxService.getTitleById(value, lang);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(comboboxService.getTitles(personType, keyword, zeroBasedPage, pageSize, lang));
-    }
-
-    @GetMapping("/combobox-country")
-    @Operation(summary = "Get countries with pagination")
-    public ResponseEntity<PaginationResponse<LovResponse>> getCountries(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
-
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null) {
-            LovResponse item = comboboxService.getCountryById(value, lang);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(comboboxService.getCountries(keyword, zeroBasedPage, pageSize, lang));
-    }
-
-    @GetMapping("/combobox-province")
-    @Operation(summary = "Get provinces by countryId with pagination")
-    public ResponseEntity<PaginationResponse<LovResponse>> getProvinces(
-            @RequestParam(required = false) UUID countryId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
-
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null) {
-            LovResponse item = comboboxService.getProvinceById(value, lang);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(comboboxService.getProvinces(countryId, keyword, zeroBasedPage, pageSize, lang));
-    }
-
-    @GetMapping("/combobox-district")
-    @Operation(summary = "Get districts by provinceId with pagination")
-    public ResponseEntity<PaginationResponse<LovResponse>> getDistricts(
-            @RequestParam(required = false) UUID provinceId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
-
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null) {
-            LovResponse item = comboboxService.getDistrictById(value, lang);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(comboboxService.getDistricts(provinceId, keyword, zeroBasedPage, pageSize, lang));
-    }
-
-    @GetMapping("/combobox-sub-district")
-    @Operation(summary = "Get sub-districts by districtId with pagination")
-    public ResponseEntity<PaginationResponse<LovResponse>> getSubDistricts(
-            @RequestParam UUID districtId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID value,
-            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
-
-        int zeroBasedPage = pageNumber - 1;
-
-        if (value != null) {
-            LovResponse item = comboboxService.getSubDistrictById(value, lang);
-            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-        }
-
-        return ResponseEntity.ok(comboboxService.getSubDistricts(districtId, keyword, zeroBasedPage, pageSize, lang));
-    }
-
-    @GetMapping("/combobox-role")
-    @Operation(summary = "Get business roles for combobox ")
-    public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
-        return ResponseEntity.ok(businessInviteService.getComboboxRoles());
-    }
-
-    @GetMapping("/combobox-members")
-    @Operation(summary = "Get business members for combobox ")
-    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
-        @RequestParam UUID businessId,
-        @RequestParam(required = false) String keyword,
-        @RequestParam(required = false) String value,
-        @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-    int zeroBasedPage = pageNumber - 1;
-
-    if (value != null && !value.isBlank()) {
-        LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
-        return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
-    }
-
-    return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
-}
 }
 </file>
 
@@ -72657,6 +72510,168 @@ export class Pmrt03Component implements OnInit {
 </div>
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ComboboxController.java">
+package com.softinter.sicapi.controller.basic;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.service.BusinessInviteService;
+import com.softinter.sicapi.service.ComboboxService;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.PaginationUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping({"/api/profile", "/api/business"})
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Combobox", description = "Combobox Data API (Titles, Countries, Provinces, Districts, SubDistricts)")
+public class ComboboxController {
+
+    private final ComboboxService comboboxService;
+    private final BusinessInviteService businessInviteService;
+    private final SuUserBusinessMemberService memberService;
+
+    @GetMapping("/combobox-title")
+    @Operation(summary = "Get titles (prefix names) with pagination")
+    public ResponseEntity<PaginationResponse<LovResponse>> getTitles(
+            @RequestParam(required = false) String personType,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
+
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null) {
+            LovResponse item = comboboxService.getTitleById(value, lang);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(comboboxService.getTitles(personType, keyword, zeroBasedPage, pageSize, lang));
+    }
+
+    @GetMapping("/combobox-country")
+    @Operation(summary = "Get countries with pagination")
+    public ResponseEntity<PaginationResponse<LovResponse>> getCountries(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
+
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null) {
+            LovResponse item = comboboxService.getCountryById(value, lang);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(comboboxService.getCountries(keyword, zeroBasedPage, pageSize, lang));
+    }
+
+    @GetMapping("/combobox-province")
+    @Operation(summary = "Get provinces by countryId with pagination")
+    public ResponseEntity<PaginationResponse<LovResponse>> getProvinces(
+            @RequestParam(required = false) UUID countryId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
+
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null) {
+            LovResponse item = comboboxService.getProvinceById(value, lang);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(comboboxService.getProvinces(countryId, keyword, zeroBasedPage, pageSize, lang));
+    }
+
+    @GetMapping("/combobox-district")
+    @Operation(summary = "Get districts by provinceId with pagination")
+    public ResponseEntity<PaginationResponse<LovResponse>> getDistricts(
+            @RequestParam(required = false) UUID provinceId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
+
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null) {
+            LovResponse item = comboboxService.getDistrictById(value, lang);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(comboboxService.getDistricts(provinceId, keyword, zeroBasedPage, pageSize, lang));
+    }
+
+    @GetMapping("/combobox-sub-district")
+    @Operation(summary = "Get sub-districts by districtId with pagination")
+    public ResponseEntity<PaginationResponse<LovResponse>> getSubDistricts(
+            @RequestParam UUID districtId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestHeader(value = "x-language-code", required = false, defaultValue = "en") String lang) {
+
+        int zeroBasedPage = pageNumber - 1;
+
+        if (value != null) {
+            LovResponse item = comboboxService.getSubDistrictById(value, lang);
+            return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+        }
+
+        return ResponseEntity.ok(comboboxService.getSubDistricts(districtId, keyword, zeroBasedPage, pageSize, lang));
+    }
+
+    @GetMapping("/combobox-role")
+    @Operation(summary = "Get business roles for combobox ")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxRoles() {
+        return ResponseEntity.ok(businessInviteService.getComboboxRoles());
+    }
+
+    @GetMapping("/combobox-members")
+    @Operation(summary = "Get business members for combobox ")
+    public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
+        @RequestParam UUID businessId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) String value,
+        @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
+        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+    int zeroBasedPage = pageNumber - 1;
+
+    if (value != null && !value.isBlank()) {
+        LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
+        return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
+    }
+
+    return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
+}
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ProfileController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -73211,87 +73226,6 @@ public class ChatController {
         response.setAttachmentId(log.getAttachmentId());
         response.setCreatedDate(log.getCreatedDate());
         return response;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessMemberController.java">
-package com.softinter.sicapi.controller.su;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.response.ComboboxResponse;
-import com.softinter.sicapi.dto.response.LovResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
-import com.softinter.sicapi.service.SuUserBusinessMemberService;
-import com.softinter.sicapi.util.PaginationUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping("/api/su-user-business/members")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "User Business Member", description = "จัดการสมาชิกในธุรกิจ")
-public class SuUserBusinessMemberController {
-
-    private final SuUserBusinessMemberService memberService;
-
-    @GetMapping
-    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
-    public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
-            @RequestParam UUID businessId,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
-    }
-
-    @PostMapping
-    @Operation(summary = "เพิ่มสมาชิกเข้าธุรกิจ")
-    public ResponseEntity<SuUserBusinessMemberResponse> addMember(
-            @RequestParam UUID businessId,
-            @RequestParam String userId,
-            @RequestParam(required = false) UUID roleId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(memberService.addMember(businessId, userId, roleId));
-    }
-
-    @PutMapping("/{userBusinessId}")
-public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
-        @PathVariable UUID userBusinessId,
-        @RequestParam(required = false) List<UUID> roleIds,  
-        @RequestParam(required = false) Boolean isActive) {
-    return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
-}
-
-    @DeleteMapping("/{userBusinessId}")
-    @Operation(summary = "ลบสมาชิกออกจากธุรกิจ (soft delete)")
-    public ResponseEntity<Void> removeMember(@PathVariable UUID userBusinessId) {
-        memberService.removeMember(userBusinessId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
-        return ResponseEntity.ok(memberService.getMemberById(id));
     }
 }
 </file>
@@ -75106,6 +75040,87 @@ public class SuProgramController {
             default:
                 return new boolean[]{false, false, false, false, false, false};
         }
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessMemberController.java">
+package com.softinter.sicapi.controller.su;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.SuUserBusinessMemberResponse;
+import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.util.PaginationUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/su-user-business/members")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "User Business Member", description = "จัดการสมาชิกในธุรกิจ")
+public class SuUserBusinessMemberController {
+
+    private final SuUserBusinessMemberService memberService;
+
+    @GetMapping
+    @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
+    public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
+            @RequestParam UUID businessId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
+    }
+
+    @PostMapping
+    @Operation(summary = "เพิ่มสมาชิกเข้าธุรกิจ")
+    public ResponseEntity<SuUserBusinessMemberResponse> addMember(
+            @RequestParam UUID businessId,
+            @RequestParam String userId,
+            @RequestParam(required = false) UUID roleId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(memberService.addMember(businessId, userId, roleId));
+    }
+
+    @PutMapping("/{userBusinessId}")
+public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
+        @PathVariable UUID userBusinessId,
+        @RequestParam(required = false) List<UUID> roleIds,  
+        @RequestParam(required = false) Boolean isActive) {
+    return ResponseEntity.ok(memberService.updateMember(userBusinessId, roleIds, isActive));
+}
+
+    @DeleteMapping("/{userBusinessId}")
+    @Operation(summary = "ลบสมาชิกออกจากธุรกิจ (soft delete)")
+    public ResponseEntity<Void> removeMember(@PathVariable UUID userBusinessId) {
+        memberService.removeMember(userBusinessId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
+        return ResponseEntity.ok(memberService.getMemberById(id));
     }
 }
 </file>

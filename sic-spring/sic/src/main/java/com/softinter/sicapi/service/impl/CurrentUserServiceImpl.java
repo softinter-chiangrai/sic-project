@@ -1,15 +1,20 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.service.CurrentUserService;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.UUID;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.service.CurrentUserService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -64,7 +69,6 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         return "system";
     }
 
-    // ✅ เพิ่ม method นี้
     @Override
     public String getEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -81,5 +85,10 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             return "unknown";
         }
         return "unknown";
+    }
+
+     @Override
+    public UUID getBusinessId() {
+        return BusinessContextHolder.getBusinessId();
     }
 }
