@@ -1,0 +1,267 @@
+<!-- src/app/core/component/sic-approval/sic-approval.component.html -->
+
+<div class="sic-approval space-y-4">
+
+    <!-- ===== LOADING ===== -->
+    @if (isLoading()) {
+        <div class="flex items-center justify-center py-8">
+            <div class="w-8 h-8 border-3 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <span class="ml-3 text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</span>
+        </div>
+    }
+
+    <!-- ===== NO DATA ===== -->
+    @if (!isLoading() && !approval()) {
+        <div class="text-center py-8">
+            <i class="bi bi-inbox text-4xl text-[var(--text-muted)] opacity-30"></i>
+            <p class="mt-2 text-sm text-[var(--text-muted)]">ไม่พบข้อมูลการอนุมัติ</p>
+            <button
+                (click)="loadApproval()"
+                class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+            >
+                <i class="bi bi-arrow-repeat"></i>
+                โหลดใหม่
+            </button>
+        </div>
+    }
+
+    <!-- ===== APPROVAL DATA ===== -->
+    @if (!isLoading() && approval(); as approvalData) {
+
+        <!-- Status Badge -->
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <span
+                    [class]="'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ' + getStatusClass(approvalData.status)"
+                >
+                    <i [class]="getStatusIcon(approvalData.status)"></i>
+                    {{ getStatusDisplay(approvalData.status) }}
+                </span>
+
+                @if (approvalData.documentCode) {
+                    <span class="text-sm font-mono text-[var(--text-muted)]">
+                        {{ approvalData.documentCode }}
+                        @if (approvalData.version) {
+                            <span class="ml-1">v{{ approvalData.version }}</span>
+                        }
+                    </span>
+                }
+            </div>
+
+            <div class="text-sm text-[var(--text-muted)]">
+                <span>ขอโดย: </span>
+                <span class="font-medium text-[var(--text-active)]">{{ approvalData.requestedByName }}</span>
+                <span class="mx-1">·</span>
+                <span>{{ approvalData.requestedDate | sicDate: null : 'DD/MM/YYYY HH:mm' }}</span>
+            </div>
+        </div>
+
+        <!-- Document Info -->
+        @if (approvalData.documentTitle) {
+            <div class="text-base font-medium text-[var(--text-active)]">
+                {{ approvalData.documentTitle }}
+            </div>
+        }
+
+        @if (approvalData.comment) {
+            <div class="text-sm text-[var(--text)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+                <span class="text-[var(--text-muted)]">หมายเหตุ: </span>
+                {{ approvalData.comment }}
+            </div>
+        }
+
+        <!-- ===== TIMELINE ===== -->
+        <div class="border-t border-[var(--border)] pt-4">
+            <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+                <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
+                ขั้นตอนการอนุมัติ
+            </h4>
+
+            <div class="space-y-0">
+                @for (step of steps(); track step.id) {
+                    <div
+                        class="relative flex gap-4 pb-4 last:pb-0"
+                        [class.opacity-50]="step.status === 'SKIPPED'"
+                    >
+                        <!-- Line -->
+                        @if (!$last) {
+                            <div class="absolute left-4 top-8 w-0.5 h-[calc(100%-1.5rem)] bg-[var(--border)]"></div>
+                        }
+
+                        <!-- Icon -->
+                        <div
+                            class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10"
+                            [class]="getStepStatusClass(step.status)"
+                        >
+                            <i [class]="getStepIcon(step.status)"></i>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-medium text-[var(--text-active)] text-sm">
+                                    {{ step.stepName }}
+                                </span>
+                                @if (step.isCurrent) {
+                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        ดำเนินการ
+                                    </span>
+                                }
+                                @if (step.status === 'SKIPPED') {
+                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                        ข้าม
+                                    </span>
+                                }
+                                @if (step.approverRole) {
+                                    <span class="text-xs text-[var(--text-muted)]">
+                                        ({{ step.approverRole }})
+                                    </span>
+                                }
+                            </div>
+
+                            @if (step.approverName) {
+                                <div class="text-sm text-[var(--text)]">
+                                    <span class="text-[var(--text-muted)]">ผู้ดำเนินการ: </span>
+                                    {{ step.approverName }}
+                                </div>
+                            }
+
+                            @if (step.comment) {
+                                <div class="text-sm text-[var(--text-muted)] mt-0.5 bg-[var(--bg)] p-2 rounded border border-[var(--border)]">
+                                    {{ step.comment }}
+                                </div>
+                            }
+
+                            @if (step.approvalDate) {
+                                <div class="text-xs text-[var(--text-muted)] mt-0.5">
+                                    {{ step.approvalDate | sicDate: null :'DD/MM/YYYY HH:mm' }}
+                                </div>
+                            }
+
+                            @if (step.timeoutDays) {
+                                <div class="text-xs text-[var(--text-muted)] mt-0.5">
+                                    <i class="bi bi-clock mr-1"></i>
+                                    กำหนดภายใน {{ step.timeoutDays }} วัน
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ===== ACTIONS ===== -->
+        @if (hasAction()) {
+            <div class="border-t border-[var(--border)] pt-4">
+                <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+                    <i class="bi bi-tools text-[var(--crm-primary)]"></i>
+                    ดำเนินการ
+                </h4>
+
+                <!-- Comment Input -->
+                <sic-input-area
+                    label="ความคิดเห็น (สำหรับปฏิเสธ/ขอแก้ไข)"
+                    [(ngModel)]="comment"
+                    [ngModelOptions]="{ standalone: true }"
+                    [rows]="2"
+                    placeholder="เพิ่มความคิดเห็น..."
+                    class="mb-3"
+                ></sic-input-area>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-2">
+                    @if (canApprove()) {
+                        <sic-button
+                            variant="success"
+                            size="sm"
+                            [disabled]="isSubmitting()"
+                            (click)="approve()"
+                        >
+                            <i class="bi bi-check2"></i>
+                            อนุมัติ
+                        </sic-button>
+                    }
+
+                    @if (canReject()) {
+                        <sic-button
+                            variant="danger"
+                            size="sm"
+                            [disabled]="isSubmitting()"
+                            (click)="reject()"
+                        >
+                            <i class="bi bi-x-lg"></i>
+                            ปฏิเสธ
+                        </sic-button>
+                    }
+
+                    @if (canRevise()) {
+                        <sic-button
+                            variant="secondary"
+                            size="sm"
+                            [disabled]="isSubmitting()"
+                            (click)="requestRevision()"
+                        >
+                            <i class="bi bi-pencil"></i>
+                            ขอแก้ไข
+                        </sic-button>
+                    }
+
+                    @if (canCancel()) {
+                        <sic-button
+                            variant="secondary"
+                            size="sm"
+                            [disabled]="isSubmitting()"
+                            (click)="cancel()"
+                        >
+                            <i class="bi bi-x-lg"></i>
+                            ยกเลิก
+                        </sic-button>
+                    }
+
+                    <sic-button
+                        variant="ghost"
+                        size="sm"
+                        [disabled]="isSubmitting()"
+                        (click)="refresh()"
+                    >
+                        <i class="bi bi-arrow-repeat"></i>
+                        รีเฟรช
+                    </sic-button>
+                </div>
+            </div>
+        }
+
+        <!-- ===== HISTORY LOG ===== -->
+        @if (logs().length > 0) {
+            <div class="border-t border-[var(--border)] pt-4">
+                <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+                    <i class="bi bi-list-ul text-[var(--crm-primary)]"></i>
+                    ประวัติการดำเนินการ
+                </h4>
+
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    @for (log of logs(); track log.id) {
+                        <div class="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm">
+                            <i [class]="'bi mt-0.5 ' + getActionIcon(log.action) + ' ' + getActionClass(log.action)"></i>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-medium text-[var(--text-active)]">{{ log.actorName }}</span>
+                                    <span class="text-xs text-[var(--text-muted)]">
+                                        {{ getActionLabel(log.action) }}
+                                    </span>
+                                    @if (log.comment) {
+                                        <span class="text-xs text-[var(--text-muted)]">-</span>
+                                        <span class="text-xs text-[var(--text)]">{{ log.comment }}</span>
+                                    }
+                                    <span class="text-xs text-[var(--text-muted)] ml-auto">
+                                        {{ log.createdDate | sicDate: null :'DD/MM/YYYY HH:mm' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

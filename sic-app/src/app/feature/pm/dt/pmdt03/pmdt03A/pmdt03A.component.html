@@ -1,0 +1,131 @@
+<!-- src/app/feature/pm/dt/pmdt03A/pmdt03A.component.html -->
+
+<div class="space-y-5 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="goBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-3">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          รายละเอียดการอนุมัติ
+        </h1>
+        <p class="text-sm text-[var(--text-muted)] mt-0.5">
+          @if (approval(); as a) {
+            <span class="font-mono">{{ a.documentCode }}</span>
+            <span class="mx-2">|</span>
+            <span>{{ getDocumentTypeDisplay(a.documentType) }}</span>
+            @if (a.version) {
+              <span class="mx-2">|</span>
+              <span>เวอร์ชัน {{ a.version }}</span>
+            }
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      @if (approval(); as a) {
+        <button
+          (click)="goToDocument()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+          [disabled]="!a.documentId"
+        >
+          <i class="bi bi-file-earmark-text"></i>
+          ดูเอกสารต้นฉบับ
+        </button>
+      }
+      <button
+        (click)="goBack()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+      >
+        <i class="bi bi-arrow-left"></i>
+        กลับ
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <div
+        class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลการอนุมัติ...</p>
+    </div>
+  }
+
+  <!-- ===== ERROR ===== -->
+  @if (error()) {
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <i class="bi bi-exclamation-triangle text-5xl text-[var(--crm-danger)]"></i>
+      <p class="text-lg font-medium text-[var(--text-active)]">{{ error() }}</p>
+      <button
+        (click)="goBack()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+      >
+        <i class="bi bi-arrow-left"></i>
+        กลับ
+      </button>
+    </div>
+  }
+
+  <!-- ===== APPROVAL DETAIL ===== -->
+  @if (!isLoading() && !error() && approval(); as a) {
+    <sic-card>
+      <div class="space-y-4">
+        <!-- Approval Header -->
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--border)]"
+        >
+          <div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <span
+                [class]="
+                  'inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ' +
+                  getStatusClass(a.status)
+                "
+              >
+                <i [class]="getStatusIcon(a.status)"></i>
+                {{ getStatusText(a.status) }}
+              </span>
+              <span class="text-sm text-[var(--text-muted)]">
+                <span class="font-medium">Flow:</span>
+                {{ a.flowName }}
+              </span>
+              <span class="text-sm text-[var(--text-muted)]">
+                <span class="font-medium">โหมด:</span>
+                {{ a.approvalMode }}
+              </span>
+            </div>
+          </div>
+          <div class="text-sm text-[var(--text-muted)] text-right">
+            <div>
+              ขอโดย:
+              <span class="font-medium text-[var(--text-active)]">{{ a.requestedByName }}</span>
+            </div>
+            {{ a.requestedDate | sicDate: null : 'DD/MM/YYYY HH:mm' }}
+          </div>
+        </div>
+
+        <!-- Approval Component -->
+        <sic-approval
+          [documentType]="a.documentType"
+          [documentId]="a.documentId"
+          [documentCode]="a.documentCode"
+          [documentTitle]="a.documentTitle"
+          [version]="a.version"
+          [autoLoad]="false"
+          (statusChange)="onStatusChange($event)"
+          (actionTaken)="onActionTaken($event)"
+        ></sic-approval>
+      </div>
+    </sic-card>
+  }
+</div>

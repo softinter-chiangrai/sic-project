@@ -90,13 +90,15 @@ export const PM_ROUTES: Routes = [
   // ---- Phase Form (Create) ----
   {
     path: 'phase/new',
-    loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   // ---- Phase Form (Edit) ----
   {
     path: 'phase/:id/edit',
-    loadComponent: () => import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   // ---- Phase Detail ----
@@ -109,36 +111,42 @@ export const PM_ROUTES: Routes = [
   // ---- Milestone Form (ใช้ Pmdt02AComponent) ----
   {
     path: 'milestone/new',
-    loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'milestone/:id/edit',
-    loadComponent: () => import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
     canActivate: [customerGuard, projectGuard],
   },
 
   // ---- WorkPackage Form (ใช้ Pmdt02BComponent) ----
   {
     path: 'work-package/new',
-    loadComponent: () => import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'work-package/:id/edit',
-    loadComponent: () => import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
     canActivate: [customerGuard, projectGuard],
   },
 
   // ---- Task Form (ใช้ Pmdt02CComponent) ----
   {
     path: 'task/new',
-    loadComponent: () => import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'task/:id/edit',
-    loadComponent: () => import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
+    loadComponent: () =>
+      import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
     canActivate: [customerGuard, projectGuard],
   },
 
@@ -252,7 +260,10 @@ export const PM_ROUTES: Routes = [
   // ===== Gantt =====
   {
     path: 'gantt',
-    loadComponent: () => import('../../core/component/sic-ganttchart/ganttchart.component').then((m) => m.SicGanttchartComponent),
+    loadComponent: () =>
+      import('../../core/component/sic-ganttchart/ganttchart.component').then(
+        (m) => m.SicGanttchartComponent,
+      ),
     canActivate: [customerGuard, projectGuard],
   },
   {
@@ -440,12 +451,12 @@ export const PM_ROUTES: Routes = [
   // ===== Approval Center =====
   {
     path: 'approval',
-    loadComponent: () => import('./rt/pmrt23/pmrt23.component').then((m) => m.Pmrt23Component),
+    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
     canActivate: [customerGuard],
   },
   {
     path: 'approval/:id',
-    loadComponent: () => import('./dt/pmdt23/pmdt23.component').then((m) => m.Pmdt23Component),
+    loadComponent: () => import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
     canActivate: [customerGuard],
   },
 

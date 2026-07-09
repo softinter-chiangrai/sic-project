@@ -1,0 +1,49 @@
+/* src/app/core/component/sic-approval/sic-approval.component.css */
+
+:host {
+    display: block;
+    width: 100%;
+}
+
+.sic-approval {
+    font-family: var(--font-sans);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 0.8s linear infinite;
+}
+
+/* Timeline line */
+.relative .absolute {
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for log items */
+.bg-\[var\(--bg\)\]:hover {
+    background: var(--sidebar-hover);
+}
+
+/* Scrollbar styling */
+.max-h-48::-webkit-scrollbar {
+    width: 4px;
+}
+
+.max-h-48::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.max-h-48::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+}
+
+.max-h-48::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
