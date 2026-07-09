@@ -1,0 +1,115 @@
+<div class="mgmt-page">
+  <div class="mgmt-header">
+    <div class="header-left">
+      <h2>Document Library</h2>
+      <p class="subtitle">Manage and Organize your document</p>
+    </div>
+    <div class="header-actions">
+      <button class="secondary-btn" (click)="createFolder()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Create Folder
+      </button>
+      <button class="upload-btn" [routerLink]="['upload']" [queryParams]="{ folderId: currentFolderId }">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Files
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Search documents and folders..." 
+      [(ngModel)]="searchTerm" 
+      (keyup.enter)="updateDisplayedItems()" />
+    <button class="search-btn" (click)="updateDisplayedItems()">Search</button>
+  </div>
+
+  <!-- Search Indicator -->
+  <div class="search-indicator" *ngIf="isSearching">
+    <span>Showing search results for "<strong>{{ searchTerm }}</strong>"</span>
+    <button class="clear-search-btn" (click)="clearSearch()">Clear Search</button>
+  </div>
+
+  <!-- Breadcrumbs -->
+  <div class="breadcrumbs-container" *ngIf="!isSearching">
+    <span *ngFor="let crumb of breadcrumbs; let last = last">
+      <a class="breadcrumb-link" (click)="navigateToBreadcrumb(crumb)">{{ crumb.name }}</a>
+      <span class="breadcrumb-separator" *ngIf="!last">/</span>
+    </span>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">Loading...</div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && displayedFolders.length === 0 && displayedDocuments.length === 0">
+    <div class="empty-icon">📂</div>
+    <p>{{ isSearching ? 'No matching documents or folders found.' : 'This folder is empty. Create a folder or upload files above!' }}</p>
+  </div>
+
+  <!-- Unified List Table -->
+  <div class="doc-table-wrapper" *ngIf="!isLoading && (displayedFolders.length > 0 || displayedDocuments.length > 0)">
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Update Date</th>
+          <th>Update By</th>
+          <th width="80"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Go Back / Up folder row -->
+        <tr *ngIf="currentFolderId" class="folder-row back-row" (click)="navigateUp()">
+          <td class="filename-cell">
+            <span class="doc-link text-success">
+              <svg class="folder-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              <strong>.. (Up one level)</strong>
+            </span>
+          </td>
+          <td>-</td>
+          <td>-</td>
+          <td></td>
+        </tr>
+
+        <!-- 1. FOLDERS -->
+        <tr *ngFor="let folder of displayedFolders" class="folder-row" (click)="navigateToFolder(folder)">
+          <td class="filename-cell">
+            <span class="doc-link">
+              <svg class="folder-svg" width="18" height="18" viewBox="0 0 24 24" fill="#ffc107" stroke="#e0a800" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <strong>{{ folder.name }}</strong>
+            </span>
+          </td>
+          <td>{{ formatDate(folder.updated_at) }}</td>
+          <td>Me</td>
+          <td>
+            <button class="delete-btn" (click)="deleteFolder(folder, $event)" title="Delete Folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </td>
+        </tr>
+
+        <!-- 2. DOCUMENTS -->
+        <tr *ngFor="let doc of displayedDocuments" class="file-row">
+          <td class="filename-cell">
+            <a [routerLink]="[doc.id]" class="doc-link">
+              <svg class="file-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007bff" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>{{ doc.file_name }}</span>
+              <span class="status-badge" [ngClass]="getStatusClass(doc.status)">{{ doc.status }}</span>
+            </a>
+          </td>
+          <td>{{ formatDate(doc.created_at) }}</td>
+          <td>{{ doc.owner || 'Me' }}</td>
+          <td>
+            <button class="delete-btn" (click)="deleteDocument(doc, $event)" title="Delete Document">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

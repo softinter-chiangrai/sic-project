@@ -1,0 +1,85 @@
+<div class="chat-page">
+  <!-- Context Settings Header Bar -->
+  <div class="chat-header">
+    <h2>Buddy Chat</h2>
+    <button class="context-btn" (click)="toggleContextPanel()" [class.context-active]="activeContextCount > 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Context
+      <span class="context-badge" *ngIf="activeContextCount > 0">{{ activeContextCount }}</span>
+    </button>
+  </div>
+
+  <!-- Context Drawer -->
+  <div class="context-drawer" [class.open]="showContextPanel">
+    <div class="context-drawer-inner">
+      <div class="context-drawer-header">
+        <span>Context Settings</span>
+        <button class="clear-btn" (click)="clearContext()" [disabled]="activeContextCount === 0">Clear All</button>
+      </div>
+
+      <div class="context-section">
+        <label class="context-label">📂 Folder</label>
+        <select class="context-select" [(ngModel)]="selectedFolderId">
+          <option value="">— No folder —</option>
+          <option *ngFor="let f of folders" [value]="f.id">{{ f.name }}</option>
+        </select>
+      </div>
+
+      <div class="context-section">
+        <label class="context-label">🏷️ Category</label>
+        <select class="context-select" [(ngModel)]="selectedCategoryId">
+          <option value="">— No category —</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="context-section">
+        <label class="context-label">🔖 Tags (multi-select)</label>
+        <div class="tag-pill-list">
+          <button
+            *ngFor="let t of tags"
+            class="tag-pill"
+            [class.selected]="isTagSelected(t.id)"
+            [style.border-color]="t.color_code"
+            [style.background-color]="isTagSelected(t.id) ? t.color_code : 'transparent'"
+            [style.color]="isTagSelected(t.id) ? '#fff' : '#333'"
+            (click)="toggleTagSelection(t.id)"
+          >{{ t.name }}</button>
+        </div>
+        <p class="no-data-hint" *ngIf="tags.length === 0">No tags found. Create them in the Tags view.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chat-container" #chatContainer>
+    <div
+      class="message"
+      *ngFor="let msg of messages"
+      [ngClass]="msg.role === 'user' ? 'user-message' : 'bot-message'"
+    >
+      <div class="message-bubble">
+        <p>{{ msg.content }}</p>
+      </div>
+    </div>
+
+    <div class="message bot-message" *ngIf="isProcessing && messages[messages.length-1].role === 'user'">
+      <div class="message-bubble typing-indicator"><span>...</span></div>
+    </div>
+  </div>
+
+  <!-- Input Bar -->
+  <div class="chat-input-area">
+    <input
+      type="text"
+      class="chat-input"
+      [(ngModel)]="userInput"
+      (keyup.enter)="sendMessage()"
+      placeholder="Chat with Buddy..."
+      [disabled]="isProcessing"
+    />
+    <button class="send-btn" (click)="sendMessage()" [disabled]="isProcessing || !userInput.trim()">
+      Send
+    </button>
+  </div>
+</div>

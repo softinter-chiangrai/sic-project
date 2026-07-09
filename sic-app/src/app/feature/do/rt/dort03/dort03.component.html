@@ -1,0 +1,63 @@
+<div class="split-page">
+  <div class="page-header" *ngIf="document">
+    <h2>Detail</h2>
+    <h3 class="doc-title">{{ document.file_name }}</h3>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">Loading document details...</div>
+  <div class="alert-error" *ngIf="error">{{ error }}</div>
+
+  <div class="split-layout" *ngIf="document && !isLoading">
+    <!-- Middle Part: PREVIEW -->
+    <div class="preview-panel">
+      <app-document-preview [documentId]="document.id" [fileName]="document.file_name"></app-document-preview>
+    </div>
+
+    <!-- Right Part: Document Info -->
+    <div class="info-panel">
+      <!-- Actions -->
+      <div class="action-buttons">
+        <button class="action-btn download-btn" (click)="onDownload()">Download</button>
+        <div class="action-row">
+          <button class="action-btn share-btn" (click)="onShare()">Share</button>
+          <button class="action-btn delete-btn" (click)="onDelete()">Delete</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3>Document Info</h3>
+      
+      <div class="info-group">
+        <label>Description</label>
+        <textarea 
+          rows="3" 
+          placeholder="Enter description..." 
+          [(ngModel)]="docDescription" 
+          (ngModelChange)="onDescriptionChange()">
+        </textarea>
+        <button 
+          *ngIf="isDescriptionDirty" 
+          class="save-desc-btn" 
+          (click)="onSaveDescription()">
+          Save Description
+        </button>
+      </div>
+
+      <div class="info-group">
+        <label>Category</label>
+        <div class="readonly-field">{{ document.category || 'No Category' }}</div>
+      </div>
+
+      <div class="info-group">
+        <label>Folder</label>
+        <div class="readonly-field" [innerHTML]="document.folder || 'No Folder'"></div>
+      </div>
+
+      <div class="info-group">
+        <label>Tags</label>
+        <div class="readonly-field">{{ document.tags || 'No Tags' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
