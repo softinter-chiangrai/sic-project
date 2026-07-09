@@ -1,0 +1,28 @@
+<div class="buddy-layout">
+  <!-- Sidebar -->
+  <div class="buddy-sidebar">
+    <div class="sidebar-logo">LOGO</div>
+    <ul class="sidebar-menu">
+      <li routerLink="chat" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <span class="menu-icon">💬</span> Buddy
+      </li>
+      <li routerLink="documents" routerLinkActive="active">
+        <span class="menu-icon">📄</span> Documents
+      </li>
+      <li routerLink="categories" routerLinkActive="active">
+        <span class="menu-icon">🏷️</span> Categories
+      </li>
+      <li routerLink="tags" routerLinkActive="active">
+        <span class="menu-icon">🔖</span> Tags
+      </li>
+      <li routerLink="context-management" routerLinkActive="active">
+        <span class="menu-icon">⚙️</span> Settings
+      </li>
+    </ul>
+  </div>
+
+  <!-- Dynamic content area -->
+  <div class="buddy-main">
+    <router-outlet></router-outlet>
+  </div>
+</div>
