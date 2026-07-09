@@ -16,4 +16,6 @@ public interface PmApprovalFlowStepRepository extends JpaRepository<PmApprovalFl
     List<PmApprovalFlowStep> findByFlowIdAndIsRequiredTrueOrderByStepOrderAsc(UUID flowId);
 
     List<PmApprovalFlowStep> findByFlowIdAndIsRequiredFalseOrderByStepOrderAsc(UUID flowId);
+
+    void deleteByFlowId(UUID flowId);
 }

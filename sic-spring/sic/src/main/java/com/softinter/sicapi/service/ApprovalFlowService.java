@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service;
 
+import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
 import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
 
 import java.util.List;
@@ -12,4 +13,7 @@ public interface ApprovalFlowService {
     List<ApprovalFlowResponse> getAllFlows();
     List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType);
     ApprovalFlowResponse getFlowByCode(String flowCode);
+    ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request);
+    ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request);
+    void deleteFlow(UUID id);
 }

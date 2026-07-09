@@ -1,0 +1,225 @@
+<!-- sic-app/src/app/feature/bu/rt/burt06/burt06A.component.html -->
+<div class="space-y-5 p-0.5">
+  <!-- Breadcrumb + Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+        <a [routerLink]="['/feature/bu/burt06']" class="hover:text-[var(--crm-primary)]">Approval Flow</a>
+        <span>/</span>
+        <span class="text-[var(--text-active)] font-medium">{{ isEdit ? 'แก้ไข' : 'สร้างใหม่' }}</span>
+      </div>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] mt-1">
+        {{ isEdit ? 'แก้ไข Approval Flow' : 'สร้าง Approval Flow ใหม่' }}
+      </h1>
+    </div>
+    <div class="flex gap-2">
+      <sic-button variant="secondary" size="sm" (click)="cancel()">
+        <i class="bi bi-arrow-left"></i> กลับ
+      </sic-button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading) {
+    <sic-card>
+      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <!-- === Basic Info === -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-input
+            label="รหัส Flow"
+            formControlName="flowCode"
+            [required]="true"
+            placeholder="REQ_APPROVAL"
+          ></sic-input>
+          <sic-input
+            label="ชื่อ Flow"
+            formControlName="flowName"
+            [required]="true"
+            placeholder="Requirement Approval"
+          ></sic-input>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Document Type - ใช้ select แทน combobox -->
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+              ประเภทเอกสาร <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="documentType"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+            >
+              <option value="">-- เลือก --</option>
+              @for (opt of documentTypeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.text }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Approval Mode - ใช้ select แทน combobox -->
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+              โหมดการอนุมัติ <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="approvalMode"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+            >
+              @for (opt of approvalModeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.text }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [rows]="2"
+          placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+        ></sic-input-area>
+
+        <div class="flex items-center gap-3">
+          <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+        </div>
+
+        <!-- === Steps === -->
+        <div class="border-t border-[var(--border)] pt-4">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-[var(--text-active)]">
+              <i class="bi bi-list-ol text-[var(--crm-primary)] mr-2"></i>
+              ขั้นตอนการอนุมัติ
+              <span class="text-sm font-normal text-[var(--text-muted)] ml-2">
+                ({{ steps.length }} ขั้นตอน)
+              </span>
+            </h4>
+            <button
+              type="button"
+              (click)="addStep()"
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-white bg-[var(--crm-primary)] rounded-lg hover:bg-[var(--crm-primary)]/80 transition-all"
+            >
+              <i class="bi bi-plus-lg"></i> เพิ่มขั้นตอน
+            </button>
+          </div>
+
+          <div formArrayName="steps" class="space-y-4" @listAnimation>
+           @for (step of steps.controls; track step; let i = $index) {
+              <div
+                [formGroupName]="i"
+                class="border border-[var(--border)] rounded-xl p-5 bg-[var(--sidebar)] shadow-sm"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-semibold text-sm">
+                      {{ i + 1 }}
+                    </span>
+                    <span class="text-sm font-medium text-[var(--text-muted)]">ขั้นตอนที่ {{ i + 1 }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <!-- ปุ่มเลื่อนขึ้น -->
+                    <button
+                      type="button"
+                      (click)="moveStepUp(i)"
+                      [disabled]="i === 0"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1"
+                      title="เลื่อนขึ้น"
+                    >
+                      <i class="bi bi-chevron-up text-lg"></i>
+                    </button>
+                    <!-- ปุ่มเลื่อนลง -->
+                    <button
+                      type="button"
+                      (click)="moveStepDown(i)"
+                      [disabled]="i === steps.length - 1"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1"
+                      title="เลื่อนลง"
+                    >
+                      <i class="bi bi-chevron-down text-lg"></i>
+                    </button>
+                    <!-- ปุ่มลบ -->
+                    <button
+                      type="button"
+                      (click)="removeStep(i)"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors p-1"
+                      title="ลบขั้นตอนนี้"
+                    >
+                      <i class="bi bi-trash text-lg"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <sic-input
+                    label="ชื่อขั้นตอน"
+                    formControlName="stepName"
+                    [required]="true"
+                    placeholder="BA Approve"
+                  ></sic-input>
+                  <sic-input
+                    label="บทบาทผู้ Approve"
+                    formControlName="approverRole"
+                    placeholder="BA, PM, FINANCE"
+                  ></sic-input>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <sic-input
+                    label="Timeout (วัน)"
+                    type="text"
+                    inputMode="numeric"
+                    formControlName="timeoutDays"
+                    placeholder="3"
+                  ></sic-input>
+                  <div class="flex items-center gap-4 pt-2">
+                    <sic-checkbox label="บังคับ" formControlName="isRequired"></sic-checkbox>
+                    <sic-checkbox label="ข้ามได้" formControlName="canSkip"></sic-checkbox>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (steps.length === 0) {
+              <div class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
+                <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
+                <p>ยังไม่มีขั้นตอน</p>
+                <p class="text-sm">คลิก "เพิ่มขั้นตอน" เพื่อเริ่มต้น</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- === Action Buttons === -->
+        <div class="flex gap-4 pt-4 border-t border-[var(--border)]">
+          <sic-button
+            type="button"
+            variant="secondary"
+            [fullWidth]="false"
+            (click)="cancel()"
+          >
+            <i class="bi bi-x-lg"></i> ยกเลิก
+          </sic-button>
+          <sic-button
+            type="submit"
+            variant="primary"
+            [fullWidth]="false"
+            [disabled]="form.invalid || isSaving"
+          >
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i> กำลังบันทึก...
+            } @else {
+              <i class="bi bi-floppy"></i> {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+            }
+          </sic-button>
+        </div>
+      </form>
+    </sic-card>
+  }
+</div>

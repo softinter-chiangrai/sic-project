@@ -8,6 +8,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { AuthService } from './core/auth/auth.service';
 import { LanguageService } from './core/services/language.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   APP_TRANSLATE_MODULE_CODE,
   APP_TRANSLATE_PROGRAM_CODE,
@@ -19,6 +20,7 @@ import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideAnimations(),
     provideRouter(routes),
     provideClientHydration(),
     provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),

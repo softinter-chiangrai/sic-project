@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { burt01Resolver } from './rt/burt01/burt01.resolver';
+import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 
 export const routes: Routes = [
   {
@@ -15,61 +16,74 @@ export const routes: Routes = [
 
   // ===== BURT02 - Permission Management =====
   {
-    path: 'burt02',                         // ✅ ไม่มี 'bu/'
+    path: 'burt02',                         
     loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component),
   },
   {
-    path: 'burt02/:id',                     // ✅ ไม่มี 'bu/'
+    path: 'burt02/:id',                     
     loadComponent: () =>
       import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
   },
 
   // ===== BURT03 - Role Management =====
   {
-    path: 'burt03',                         // ✅ ไม่มี 'bu/'
+    path: 'burt03',                         
     loadComponent: () => import('./rt/burt03/burt03.component').then((m) => m.Burt03Component),
   },
 
   // ===== BURT04 - Team Management =====
   {
-    path: 'burt04',                         // ✅ ไม่มี 'bu/'
+    path: 'burt04',                         
     loadComponent: () => import('./rt/burt04/burt04.component').then((m) => m.Burt04AComponent),
   },
   {
-    path: 'burt04/:id/edit',                // ✅ ไม่มี 'bu/'
+    path: 'burt04/:id/edit',                
     loadComponent: () =>
       import('./rt/burt04/burt04A/burt04A.component').then((m) => m.Burt04AComponent),
   },
   {
-    path: 'burt04/add',                     // ✅ ไม่มี 'bu/'
+    path: 'burt04/add',                     
     redirectTo: '/management/business/invite',
     pathMatch: 'full',
   },
 
   // ===== BURT05 - Program Management =====
   {
-    path: 'burt05',                         // ✅ ไม่มี 'bu/'
+    path: 'burt05',                         
     loadComponent: () => import('./rt/burt05/burt05.component').then((m) => m.Burt05Component),
   },
   {
-    path: 'burt05/new',                     // ✅ ไม่มี 'bu/'
+    path: 'burt05/new',                     
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
   },
   {
-    path: 'burt05/:id/edit',                // ✅ ไม่มี 'bu/'
+    path: 'burt05/:id/edit',                
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
   },
   {
-    path: 'burt05/:id/permissions',         // ✅ ไม่มี 'bu/'
+    path: 'burt05/:id/permissions',         
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
   },
+// sic-app/src/app/feature/bu/bu.routes.ts
+{
+  path: 'burt06',
+  loadComponent: () => import('./rt/burt06/burt06.component').then((m) => m.Burt06Component),
+},
+{
+  path: 'burt06/new',
+  loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
+},
+{
+  path: 'burt06/:id/edit',
+  loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
+},
 
   // ===== BURP01 - Activity Log =====
   {
-    path: 'burp01',                         // ✅ ไม่มี 'bu/'
+    path: 'burp01',                         
     loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
   },
 
