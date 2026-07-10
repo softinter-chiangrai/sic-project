@@ -4,9 +4,13 @@
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-        <a [routerLink]="['/feature/bu/burt06']" class="hover:text-[var(--crm-primary)]">Approval Flow</a>
+        <a [routerLink]="['/feature/bu/burt06']" class="hover:text-[var(--crm-primary)]"
+          >Approval Flow</a
+        >
         <span>/</span>
-        <span class="text-[var(--text-active)] font-medium">{{ isEdit ? 'แก้ไข' : 'สร้างใหม่' }}</span>
+        <span class="text-[var(--text-active)] font-medium">{{
+          isEdit ? 'แก้ไข' : 'สร้างใหม่'
+        }}</span>
       </div>
       <h1 class="text-2xl font-semibold text-[var(--text-active)] mt-1">
         {{ isEdit ? 'แก้ไข Approval Flow' : 'สร้าง Approval Flow ใหม่' }}
@@ -22,7 +26,9 @@
   <!-- Loading -->
   @if (isLoading) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
       <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
     </div>
   }
@@ -111,17 +117,21 @@
           </div>
 
           <div formArrayName="steps" class="space-y-4" @listAnimation>
-           @for (step of steps.controls; track step; let i = $index) {
+            @for (step of steps.controls; track step; let i = $index) {
               <div
                 [formGroupName]="i"
                 class="border border-[var(--border)] rounded-xl p-5 bg-[var(--sidebar)] shadow-sm"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-semibold text-sm">
+                    <span
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-semibold text-sm"
+                    >
                       {{ i + 1 }}
                     </span>
-                    <span class="text-sm font-medium text-[var(--text-muted)]">ขั้นตอนที่ {{ i + 1 }}</span>
+                    <span class="text-sm font-medium text-[var(--text-muted)]"
+                      >ขั้นตอนที่ {{ i + 1 }}</span
+                    >
                   </div>
                   <div class="flex items-center gap-1">
                     <!-- ปุ่มเลื่อนขึ้น -->
@@ -163,11 +173,15 @@
                     [required]="true"
                     placeholder="BA Approve"
                   ></sic-input>
-                  <sic-input
+                  <sic-combobox
                     label="บทบาทผู้ Approve"
                     formControlName="approverRole"
-                    placeholder="BA, PM, FINANCE"
-                  ></sic-input>
+                    [apiUrl]="roleApiUrl"
+                    valueField="roleCode"
+                    textField="roleName"
+                    placeholder="เลือกบทบาท..."
+                    [errorMessages]="{ required: 'กรุณาเลือกบทบาท' }"
+                  ></sic-combobox>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -187,7 +201,9 @@
             }
 
             @if (steps.length === 0) {
-              <div class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
+              <div
+                class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
+              >
                 <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
                 <p>ยังไม่มีขั้นตอน</p>
                 <p class="text-sm">คลิก "เพิ่มขั้นตอน" เพื่อเริ่มต้น</p>
@@ -198,12 +214,7 @@
 
         <!-- === Action Buttons === -->
         <div class="flex gap-4 pt-4 border-t border-[var(--border)]">
-          <sic-button
-            type="button"
-            variant="secondary"
-            [fullWidth]="false"
-            (click)="cancel()"
-          >
+          <sic-button type="button" variant="secondary" [fullWidth]="false" (click)="cancel()">
             <i class="bi bi-x-lg"></i> ยกเลิก
           </sic-button>
           <sic-button

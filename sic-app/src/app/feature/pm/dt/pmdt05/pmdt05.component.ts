@@ -1,5 +1,7 @@
+// src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
+
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -11,6 +13,10 @@ import { SicInputAreaComponent } from '../../../../core/component/sic-input-area
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { ApprovalService } from '../pmdt03/approval.service';
+import type { ApprovalFlow } from '../pmdt03/approval.model';
+
+
 
 // ===== Model =====
 export interface RequirementModel {
@@ -62,7 +68,7 @@ class Pmdt05Form {
   }
 }
 
-// ===== Service =====
+// ===== Service (Mock) =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt05Service {
   private mockRequirements: RequirementModel[] = [
@@ -151,19 +157,26 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt05Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly approvalService = inject(ApprovalService); 
 
   form!: FormGroup;
   isEdit = false;
   reqId: string | null = null;
   isLoading = false;
 
-  // ✅ sourceOptions ใช้กับ select ใน HTML
+  // ✅ สำหรับ Approval Flow
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
+
+  // ✅ ตัวแปรสำหรับแหล่งที่มา (คงเดิม)
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
     this.initForm();
+    this.loadFlows(); // โหลด approval flow
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -194,6 +207,61 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
         this.router.navigate(['/feature/pm/requirement']);
       },
     });
+  }
+
+  // ✅ โหลด Approval Flow ที่ใช้ได้
+  loadFlows() {
+    this.isLoadingFlows = true;
+    this.approvalService.getFlowsByDocumentType('REQUIREMENT').subscribe({
+      next: (flows) => {
+        this.flows = flows;
+        this.isLoadingFlows = false;
+        // ถ้ามี flow เดียว เลือกให้อัตโนมัติ
+        if (flows.length === 1) {
+          this.selectedFlowId = flows[0].id;
+        }
+      },
+      error: () => {
+        this.isLoadingFlows = false;
+        console.warn('ไม่สามารถโหลด Approval Flow ได้');
+      },
+    });
+  }
+
+  // ✅ ส่งขออนุมัติ
+  submitForApproval() {
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือก Approval Flow', 'ต้องเลือกกระบวนการอนุมัติก่อนส่ง');
+      return;
+    }
+
+    const data = this.form.value as RequirementModel;
+    if (!data.id) {
+      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
+      return;
+    }
+
+    this.approvalService
+      .submitForApproval({
+        documentType: 'REQUIREMENT',
+        documentId: data.id,
+        documentCode: data.requirementCode,
+        documentTitle: data.title,
+        version: data.version,
+        flowId: this.selectedFlowId,
+        comment: 'ส่งขออนุมัติ Requirement',
+      })
+      .subscribe({
+        next: () => {
+          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          // อัปเดตสถานะเอกสาร (ถ้าต้องการ)
+          this.form.patchValue({ status: 'Pending Approval' });
+          // อาจ redirect ไปยังหน้า approval detail
+        },
+        error: (err) => {
+          this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
   }
 
   onBack(): void {

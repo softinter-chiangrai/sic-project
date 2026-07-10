@@ -150,25 +150,28 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Requirement =====
+  // ===== Requirement (ใหม่ ใช้ pmdt04) =====
   {
-    path: 'requirement',
-    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then((m) => m.Pmrt05Component),
+    path: 'pmdt04',
+    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/new',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/new',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/:id/edit',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/:id/edit',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/:id/approval',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/:id/approval',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
 
@@ -456,7 +459,8 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'approval/:id',
-    loadComponent: () => import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
     canActivate: [customerGuard],
   },
 

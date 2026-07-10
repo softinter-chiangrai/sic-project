@@ -41,6 +41,7 @@ The content is organized as follows:
 
 <directory_structure>
 pmrt_route
+popup.zip
 .repomixignore
 sic-app/public/fonts/prompt/Prompt-BlackItalic.ttf
 sic-app/public/fonts/prompt/Prompt-Black.ttf
@@ -255,6 +256,14 @@ sic-app/src/app/feature/bu/rt/burt05/burt05.component.css
 sic-app/src/app/feature/bu/rt/burt05/burt05.component.html
 sic-app/src/app/feature/bu/rt/burt05/burt05.component.ts
 sic-app/src/app/feature/bu/rt/burt05/burt05.service.ts
+sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.css
+sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.html
+sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.ts
+sic-app/src/app/feature/bu/rt/burt06/burt06.component.css
+sic-app/src/app/feature/bu/rt/burt06/burt06.component.html
+sic-app/src/app/feature/bu/rt/burt06/burt06.component.ts
+sic-app/src/app/feature/bu/rt/burt06/burt06.service.ts
+sic-app/src/app/feature/bu/rt/burt06/list.animations.ts
 sic-app/src/app/feature/dashboard/dashboard.component.css
 sic-app/src/app/feature/dashboard/dashboard.component.html
 sic-app/src/app/feature/dashboard/dashboard.component.ts
@@ -290,6 +299,10 @@ sic-app/src/app/feature/pm/dt/pmdt03/pmdt03A/pmdt03A.component.ts
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.css
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.html
 sic-app/src/app/feature/pm/dt/pmdt03/pmdt03.component.ts
+sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html
+sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
+sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.html
+sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
 sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.css
 sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.html
 sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
@@ -549,6 +562,7 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/controller/HealthController.ja
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/MilestoneController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PhaseController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalController.java
+sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalFlowController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmCustomerContractController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmCustomerController.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmCustomerProjectController.java
@@ -594,6 +608,8 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmCustomerContract
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmCustomerProjectRequest.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmCustomerRequest.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/ProgramPageRequest.java
+sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowRequest.java
+sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowStepRequest.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRequest.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleProgramRequest.java
 sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleRequest.java
@@ -831,6 +847,424 @@ sic-spring/sic/src/main/java/com/softinter/sicapi/websocket/ChatWebSocketControl
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html">
+<!-- src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html -->
+
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+@if (!isLoading) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Requirement' : 'เพิ่มข้อมูล Requirement' }}
+        </h2>
+      </div>
+
+      <!-- Requirement Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Requirement"
+          formControlName="requirementCode"
+          [required]="true"
+          placeholder="REQ-001"
+        ></sic-input>
+        @if (form.get('requirementCode')?.touched && form.get('requirementCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Requirement</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อ Requirement"
+          formControlName="title"
+          [required]="true"
+          placeholder="ระบบ Login"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Requirement</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="รายละเอียด"
+          formControlName="description"
+          [required]="true"
+          [rows]="3"
+          placeholder="อธิบายความต้องการโดยละเอียด"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="projectApiUrl"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Requirement Type -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภท Requirement"
+          formControlName="requirementType"
+          [apiUrl]="typeApiUrl"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('requirementType')?.touched && form.get('requirementType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <!-- Source -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">แหล่งที่มา</label>
+        <select
+          formControlName="source"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+        >
+          <option value="">-- เลือก --</option>
+          @for (src of sourceOptions; track src) {
+            <option [value]="src">{{ src }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลำดับความสำคัญ"
+          formControlName="priority"
+          [apiUrl]="priorityApiUrl"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Business Value -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="คุณค่าทางธุรกิจ" formControlName="businessValue" placeholder="สูง / ปานกลาง / ต่ำ"></sic-input>
+      </div>
+
+      <!-- Acceptance Criteria -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="เงื่อนไขการยอมรับ"
+          formControlName="acceptanceCriteria"
+          [rows]="2"
+          placeholder="ระบุเงื่อนไขที่ต้องผ่าน"
+        ></sic-input-area>
+      </div>
+
+      <!-- Created By -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="ผู้สร้าง" formControlName="createdBy" placeholder="สมหญิง รักเรียน"></sic-input>
+      </div>
+
+      <!-- Version -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="เวอร์ชัน" formControlName="version" placeholder="v1.0"></sic-input>
+      </div>
+
+      <!-- Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="statusApiUrl"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Active -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input type="checkbox" formControlName="isActive" class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded" />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+        </label>
+      </div>
+
+      <!-- Approval Section -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i> การอนุมัติ
+        </div>
+        <div class="mb-3">
+          <sic-combobox
+            label="กระบวนการอนุมัติ"
+            [apiUrl]="'/api/pm/approvals/flows/document-type/REQUIREMENT'"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId = $event?.id"
+          ></sic-combobox>
+        </div>
+        <sic-button
+          variant="primary"
+          [fullWidth]="false"
+          [disabled]="!selectedFlowId || !form.get('id')?.value || isSaving"
+          (click)="submitForApproval()"
+        >
+          <i class="bi bi-send"></i> ส่งขออนุมัติ
+        </sic-button>
+        @if (!form.get('id')?.value) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาบันทึกก่อนส่งขออนุมัติ</p>
+        }
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+    </div>
+  </form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts">
+// src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { environment } from '../../../../../../environments/environment';
+
+
+interface Requirement {
+  id?: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  requirementType: string;
+  source: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName?: string;
+  createdBy: string;
+  baConfirmStatus: string;
+  customerConfirmStatus: string;
+  version: string;
+  status: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}
+
+@Component({
+  selector: 'app-pmdt04a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicComboboxComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+  ],
+  templateUrl: './pmdt04A.component.html',
+})
+export class Pmdt04AComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
+
+  form!: FormGroup;
+  isEdit = false;
+  reqId: string | null = null;
+  isLoading = false;
+  isSaving = false;
+
+  // Approval
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
+
+  // Combobox URLs
+  projectApiUrl = `${environment.apiBaseUrl}/api/requirement/combobox-project`;
+  typeApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-type`;
+  priorityApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-priority`;
+  statusApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-status`;
+
+  sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadFlows();
+
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.reqId = id;
+        this.loadRequirement(id);
+      }
+    });
+  }
+
+  initForm() {
+    this.form = this.fb.group({
+      id: [null],
+      requirementCode: [null, [Validators.required, Validators.maxLength(30)]],
+      title: [null, [Validators.required, Validators.maxLength(255)]],
+      description: [null, [Validators.required, Validators.maxLength(2000)]],
+      requirementType: [null, [Validators.required]],
+      source: [null],
+      priority: ['Must', [Validators.required]],
+      businessValue: [null],
+      acceptanceCriteria: [null],
+      projectId: [null, [Validators.required]],
+      projectName: [null],
+      createdBy: [null],
+      baConfirmStatus: ['Pending'],
+      customerConfirmStatus: ['Pending'],
+      version: ['v1.0'],
+      status: ['Draft', [Validators.required]],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
+    });
+  }
+
+  loadRequirement(id: string) {
+    this.isLoading = true;
+    this.http
+      .get<Requirement>(`${environment.apiBaseUrl}/api/requirement/${id}`)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          this.form.patchValue(data);
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
+          this.router.navigate(['/feature/pm/requirement']);
+        },
+      });
+  }
+
+  loadFlows() {
+    this.isLoadingFlows = true;
+    this.approvalService
+      .getFlowsByDocumentType('REQUIREMENT')
+      .pipe(finalize(() => (this.isLoadingFlows = false)))
+      .subscribe({
+        next: (flows) => {
+          this.flows = flows;
+          if (flows.length === 1) this.selectedFlowId = flows[0].id;
+        },
+        error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
+      });
+  }
+
+  submitForApproval() {
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือก Approval Flow', 'คุณต้องเลือกกระบวนการอนุมัติก่อนส่ง');
+      return;
+    }
+    const data = this.form.value as Requirement;
+    if (!data.id) {
+      this.dialog.warn('ยังไม่ได้บันทึก', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
+      return;
+    }
+
+    this.isSaving = true;
+    this.approvalService
+      .submitForApproval({
+        documentType: 'REQUIREMENT',
+        documentId: data.id,
+        documentCode: data.requirementCode,
+        documentTitle: data.title,
+        version: data.version,
+        flowId: this.selectedFlowId,
+        comment: 'ส่งขออนุมัติ',
+      })
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.form.patchValue({ status: 'In Review' });
+        },
+        error: (err) => this.dialog.error('ส่งไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด'),
+      });
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    this.isSaving = true;
+    const data = this.form.value;
+    const url = `${environment.apiBaseUrl}/api/requirement/save`;
+
+    this.http
+      .post(url, data)
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: (res: any) => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+          this.form.markAsPristine();
+          if (!this.isEdit && res.id) {
+            this.reqId = res.id;
+            this.form.patchValue({ id: res.id });
+            this.isEdit = true;
+          } else {
+            this.router.navigate(['/feature/pm/requirement']);
+          }
+        },
+        error: (err) => this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด'),
+      });
+  }
+
+  onBack() {
+    this.router.navigate(['/feature/pm/requirement']);
+  }
+}
+</file>
 
 <file path="pmrt_route">
 รหัสหน้า	ชื่อ	หน้าที่
@@ -21519,6 +21953,816 @@ export class burt05Service {
 }
 </file>
 
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.css">
+/* sic-app/src/app/feature/bu/rt/burt06/burt06A.component.css */
+:host {
+  display: block;
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.html">
+<!-- sic-app/src/app/feature/bu/rt/burt06/burt06A.component.html -->
+<div class="space-y-5 p-0.5">
+  <!-- Breadcrumb + Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+        <a [routerLink]="['/feature/bu/burt06']" class="hover:text-[var(--crm-primary)]"
+          >Approval Flow</a
+        >
+        <span>/</span>
+        <span class="text-[var(--text-active)] font-medium">{{
+          isEdit ? 'แก้ไข' : 'สร้างใหม่'
+        }}</span>
+      </div>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] mt-1">
+        {{ isEdit ? 'แก้ไข Approval Flow' : 'สร้าง Approval Flow ใหม่' }}
+      </h1>
+    </div>
+    <div class="flex gap-2">
+      <sic-button variant="secondary" size="sm" (click)="cancel()">
+        <i class="bi bi-arrow-left"></i> กลับ
+      </sic-button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading) {
+    <sic-card>
+      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <!-- === Basic Info === -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-input
+            label="รหัส Flow"
+            formControlName="flowCode"
+            [required]="true"
+            placeholder="REQ_APPROVAL"
+          ></sic-input>
+          <sic-input
+            label="ชื่อ Flow"
+            formControlName="flowName"
+            [required]="true"
+            placeholder="Requirement Approval"
+          ></sic-input>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Document Type - ใช้ select แทน combobox -->
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+              ประเภทเอกสาร <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="documentType"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+            >
+              <option value="">-- เลือก --</option>
+              @for (opt of documentTypeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.text }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Approval Mode - ใช้ select แทน combobox -->
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
+              โหมดการอนุมัติ <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="approvalMode"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+            >
+              @for (opt of approvalModeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.text }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <sic-input-area
+          label="คำอธิบาย"
+          formControlName="description"
+          [rows]="2"
+          placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+        ></sic-input-area>
+
+        <div class="flex items-center gap-3">
+          <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+        </div>
+
+        <!-- === Steps === -->
+        <div class="border-t border-[var(--border)] pt-4">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-[var(--text-active)]">
+              <i class="bi bi-list-ol text-[var(--crm-primary)] mr-2"></i>
+              ขั้นตอนการอนุมัติ
+              <span class="text-sm font-normal text-[var(--text-muted)] ml-2">
+                ({{ steps.length }} ขั้นตอน)
+              </span>
+            </h4>
+            <button
+              type="button"
+              (click)="addStep()"
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-white bg-[var(--crm-primary)] rounded-lg hover:bg-[var(--crm-primary)]/80 transition-all"
+            >
+              <i class="bi bi-plus-lg"></i> เพิ่มขั้นตอน
+            </button>
+          </div>
+
+          <div formArrayName="steps" class="space-y-4" @listAnimation>
+            @for (step of steps.controls; track step; let i = $index) {
+              <div
+                [formGroupName]="i"
+                class="border border-[var(--border)] rounded-xl p-5 bg-[var(--sidebar)] shadow-sm"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-semibold text-sm"
+                    >
+                      {{ i + 1 }}
+                    </span>
+                    <span class="text-sm font-medium text-[var(--text-muted)]"
+                      >ขั้นตอนที่ {{ i + 1 }}</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <!-- ปุ่มเลื่อนขึ้น -->
+                    <button
+                      type="button"
+                      (click)="moveStepUp(i)"
+                      [disabled]="i === 0"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1"
+                      title="เลื่อนขึ้น"
+                    >
+                      <i class="bi bi-chevron-up text-lg"></i>
+                    </button>
+                    <!-- ปุ่มเลื่อนลง -->
+                    <button
+                      type="button"
+                      (click)="moveStepDown(i)"
+                      [disabled]="i === steps.length - 1"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1"
+                      title="เลื่อนลง"
+                    >
+                      <i class="bi bi-chevron-down text-lg"></i>
+                    </button>
+                    <!-- ปุ่มลบ -->
+                    <button
+                      type="button"
+                      (click)="removeStep(i)"
+                      class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors p-1"
+                      title="ลบขั้นตอนนี้"
+                    >
+                      <i class="bi bi-trash text-lg"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <sic-input
+                    label="ชื่อขั้นตอน"
+                    formControlName="stepName"
+                    [required]="true"
+                    placeholder="BA Approve"
+                  ></sic-input>
+                  <sic-combobox
+                    label="บทบาทผู้ Approve"
+                    formControlName="approverRole"
+                    [apiUrl]="roleApiUrl"
+                    valueField="roleCode"
+                    textField="roleName"
+                    placeholder="เลือกบทบาท..."
+                    [errorMessages]="{ required: 'กรุณาเลือกบทบาท' }"
+                  ></sic-combobox>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <sic-input
+                    label="Timeout (วัน)"
+                    type="text"
+                    inputMode="numeric"
+                    formControlName="timeoutDays"
+                    placeholder="3"
+                  ></sic-input>
+                  <div class="flex items-center gap-4 pt-2">
+                    <sic-checkbox label="บังคับ" formControlName="isRequired"></sic-checkbox>
+                    <sic-checkbox label="ข้ามได้" formControlName="canSkip"></sic-checkbox>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (steps.length === 0) {
+              <div
+                class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
+              >
+                <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
+                <p>ยังไม่มีขั้นตอน</p>
+                <p class="text-sm">คลิก "เพิ่มขั้นตอน" เพื่อเริ่มต้น</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- === Action Buttons === -->
+        <div class="flex gap-4 pt-4 border-t border-[var(--border)]">
+          <sic-button type="button" variant="secondary" [fullWidth]="false" (click)="cancel()">
+            <i class="bi bi-x-lg"></i> ยกเลิก
+          </sic-button>
+          <sic-button
+            type="submit"
+            variant="primary"
+            [fullWidth]="false"
+            [disabled]="form.invalid || isSaving"
+          >
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i> กำลังบันทึก...
+            } @else {
+              <i class="bi bi-floppy"></i> {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+            }
+          </sic-button>
+        </div>
+      </form>
+    </sic-card>
+  }
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.component.ts">
+// sic-app/src/app/feature/bu/rt/burt06/burt06A.component.ts
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { BusinessService } from '../../../../../core/services/business.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt06.service';
+import { listAnimation } from '../list.animations';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+
+@Component({
+  selector: 'app-burt06a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+    SicCheckboxComponent,
+    SicCardComponent,
+    SicComboboxComponent,
+  ],
+  templateUrl: './burt06A.component.html',
+  styleUrl: './burt06A.component.css',
+  animations: [listAnimation],
+})
+export class Burt06AComponent implements OnInit, CanComponentDeactivate {
+  private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private service = inject(Burt06Service);
+  private dialog = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef);
+  private businessService = inject(BusinessService);
+
+  isEdit = false;
+  flowId: string | null = null;
+  isLoading = false;
+  isSaving = false;
+
+  documentTypeOptions = [
+    { value: 'REQUIREMENT', text: 'Requirement' },
+    { value: 'SPECIFICATION', text: 'Specification' },
+    { value: 'DFD', text: 'DFD' },
+    { value: 'ER', text: 'ER Diagram' },
+    { value: 'DELIVERY', text: 'Delivery' },
+    { value: 'INVOICE', text: 'Invoice' },
+    { value: 'MA_RENEWAL', text: 'MA Renewal' },
+    { value: 'CHANGE_REQUEST', text: 'Change Request' },
+    { value: 'TEST_PLAN', text: 'Test Plan' },
+    { value: 'UAT', text: 'UAT' },
+    { value: 'TASK', text: 'Task' },
+
+  ];
+
+  approvalModeOptions = [
+    { value: 'CHAIN', text: 'เรียงลำดับ (Chain)' },
+    { value: 'PARALLEL', text: 'พร้อมกัน (Parallel)' },
+    { value: 'ANY', text: 'ใครก็ได้ (Any)' },
+    { value: 'SINGLE', text: 'คนเดียว (Single)' },
+  ];
+
+  form = this.fb.group({
+    id: [null],
+    flowCode: ['', [Validators.required, Validators.maxLength(50)]],
+    flowName: ['', [Validators.required, Validators.maxLength(255)]],
+    documentType: ['', [Validators.required]],
+    approvalMode: ['CHAIN', [Validators.required]],
+    description: [''],
+    isActive: [true],
+    steps: this.fb.array<FormGroup>([]),
+    rowVersion: [null],
+  });
+
+  get steps() {
+    return this.form.get('steps') as FormArray;
+  }
+
+  pageDirty = () => this.form?.dirty ?? false;
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.params['id'];
+    if (id) {
+      this.isEdit = true;
+      this.flowId = id;
+      this.loadFlow(id);
+    } else {
+      this.addStep();
+    }
+  }
+
+  loadFlow(id: string): void {
+    this.isLoading = true;
+    this.service
+      .getFlow(id)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          this.form.patchValue(data as any);
+          this.steps.clear();
+          data.steps?.forEach((step) => {
+            this.steps.push(this.createStepForm(step));
+          });
+          this.reorderSteps();
+          this.cdr.detectChanges(); 
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Flow ที่ต้องการ');
+          this.router.navigate(['/feature/bu/burt06']);
+        },
+      });
+  }
+
+  createStepForm(step?: ApprovalFlowStep): FormGroup {
+    return this.fb.group({
+      id: [step?.id || null],
+      stepOrder: [
+        step?.stepOrder || this.steps.length + 1,
+        [Validators.required, Validators.min(1)],
+      ],
+      stepName: [step?.stepName || '', [Validators.required, Validators.maxLength(255)]],
+      approverRole: [step?.approverRole || ''],
+      isRequired: [step?.isRequired !== false],
+      timeoutDays: [step?.timeoutDays || null],
+      canSkip: [step?.canSkip || false],
+      rowVersion: [step?.rowVersion || null],
+    });
+  }
+
+  addStep(): void {
+    this.steps.push(this.createStepForm());
+    this.reorderSteps();
+    this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+  }
+
+  removeStep(index: number): void {
+    if (this.steps.length <= 1) {
+      this.dialog.warn('ไม่สามารถลบได้', 'ต้องมีอย่างน้อย 1 ขั้นตอน');
+      return;
+    }
+    this.steps.removeAt(index);
+    this.reorderSteps();
+    this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+  }
+
+  moveStepUp(index: number): void {
+    console.log('moveStepUp called with index:', index);
+    if (index <= 0) return;
+    const stepsArray = this.steps;
+    const stepGroup = stepsArray.at(index) as FormGroup;
+    stepsArray.removeAt(index);
+    stepsArray.insert(index - 1, stepGroup);
+    this.reorderSteps();
+    this.form.markAsDirty();
+    this.cdr.detectChanges();
+  }
+
+  moveStepDown(index: number): void {
+    console.log('moveStepDown called with index:', index);
+    if (index >= this.steps.length - 1) return;
+    const stepsArray = this.steps;
+    const stepGroup = stepsArray.at(index) as FormGroup;
+    stepsArray.removeAt(index);
+    stepsArray.insert(index + 1, stepGroup);
+    this.reorderSteps();
+    this.form.markAsDirty();
+    this.cdr.detectChanges(); 
+  }
+
+  private reorderSteps(): void {
+    this.steps.controls.forEach((ctrl, index) => {
+      ctrl.get('stepOrder')?.setValue(index + 1);
+    });
+  }
+
+  cancel(): void {
+    if (this.form.dirty) {
+      this.dialog
+        .confirm('ยืนยัน', 'คุณยังไม่ได้บันทึกข้อมูล ต้องการออกใช่หรือไม่?')
+        .then((confirmed) => {
+          if (confirmed) {
+            this.router.navigate(['/feature/bu/burt06']);
+          }
+        });
+    } else {
+      this.router.navigate(['/feature/bu/burt06']);
+    }
+  }
+
+  save(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    this.isSaving = true;
+    const data = this.form.value as ApprovalFlow;
+
+    // ตรวจสอบว่าทุก Step มีชื่อ
+    const hasEmptyStepName = data.steps?.some((s) => !s.stepName?.trim());
+    if (hasEmptyStepName) {
+      this.isSaving = false;
+      this.dialog.warn('ข้อมูลไม่สมบูรณ์', 'กรุณากรอกชื่อขั้นตอนให้ครบทุกขั้นตอน');
+      return;
+    }
+
+    const request =
+      this.isEdit && this.flowId
+        ? this.service.updateFlow(this.flowId, data)
+        : this.service.createFlow(data);
+
+    request.pipe(finalize(() => (this.isSaving = false))).subscribe({
+      next: () => {
+        this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
+        this.router.navigate(['/feature/bu/burt06']);
+      },
+      error: (err) => {
+        this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+      },
+    });
+  }
+  get roleApiUrl(): string {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (!businessId) return '';
+    return `${environment.apiBaseUrl}/api/su/business-roles?businessId=${businessId}`;
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06.component.css">
+
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06.component.html">
+<!-- sic-app/src/app/feature/bu/rt/burt06/burt06.component.html -->
+<div class="space-y-5 p-0.5">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+        จัดการ Approval Flow
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ flows().length }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="openCreateForm()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+    >
+      <i class="bi bi-plus-lg"></i>
+      สร้าง Approval Flow
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+              รหัส Flow
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[180px]">
+              ชื่อ Flow
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[130px]">
+              ประเภทเอกสาร
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              โหมด
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[60px]">
+              Steps
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (flow of flows(); track flow.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ flow.flowCode }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="font-medium text-[var(--text-active)]">{{ flow.flowName }}</span>
+                @if (flow.description) {
+                  <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ flow.description }}</div>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text)]">{{ getDocumentTypeText(flow.documentType) }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text-muted)] text-xs">{{ getApprovalModeText(flow.approvalMode) }}</span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-sm font-semibold">
+                  {{ flow.steps?.length || 0 }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(flow.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(flow.isActive) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    (click)="openEditForm(flow)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    (click)="deleteFlow(flow)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบ"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Approval Flow</p>
+                  <p class="text-sm text-[var(--text-muted)]">คลิก "สร้าง Approval Flow" เพื่อเริ่มต้น</p>
+                  <button
+                    (click)="openCreateForm()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    สร้าง Approval Flow
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06.component.ts">
+// sic-app/src/app/feature/bu/rt/burt06/burt06.component.ts
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { ApprovalFlow, Burt06Service } from './burt06.service';
+
+@Component({
+  selector: 'app-burt06',
+  standalone: true,
+  imports: [CommonModule, RouterModule, SicButtonComponent],
+  templateUrl: './burt06.component.html',
+  styleUrl: './burt06.component.css',
+})
+export class Burt06Component implements OnInit {
+  private service = inject(Burt06Service);
+  private dialog = inject(DialogService);
+  private router = inject(Router);
+
+  isLoading = signal(false);
+  flows = signal<ApprovalFlow[]>([]);
+
+  documentTypeMap: Record<string, string> = {
+    REQUIREMENT: 'Requirement',
+    SPECIFICATION: 'Specification',
+    DFD: 'DFD',
+    ER: 'ER Diagram',
+    DELIVERY: 'Delivery',
+    INVOICE: 'Invoice',
+    MA_RENEWAL: 'MA Renewal',
+    CHANGE_REQUEST: 'Change Request',
+    TEST_PLAN: 'Test Plan',
+    UAT: 'UAT',
+  };
+
+  ngOnInit(): void {
+    this.loadFlows();
+  }
+
+  loadFlows(): void {
+    this.isLoading.set(true);
+    this.service.getFlows()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => this.flows.set(data),
+        error: () => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Approval Flow'),
+      });
+  }
+
+  openCreateForm(): void {
+    this.router.navigate(['/feature/bu/burt06/new']);
+  }
+
+  openEditForm(flow: ApprovalFlow): void {
+    this.router.navigate(['/feature/bu/burt06', flow.id, 'edit']);
+  }
+
+  deleteFlow(flow: ApprovalFlow): void {
+    this.dialog.confirm(
+      'ยืนยันการลบ',
+      `คุณต้องการลบ Approval Flow "${flow.flowName}" (${flow.flowCode}) ใช่หรือไม่?`
+    ).then((confirmed) => {
+      if (confirmed && flow.id) {
+        this.isLoading.set(true);
+        this.service.deleteFlow(flow.id)
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.flows.update((list) => list.filter((f) => f.id !== flow.id));
+              this.dialog.success('ลบสำเร็จ', `ลบ Flow "${flow.flowName}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+      }
+    });
+  }
+
+  getApprovalModeText(mode: string): string {
+    const map: Record<string, string> = {
+      CHAIN: 'เรียงลำดับ',
+      PARALLEL: 'พร้อมกัน',
+      ANY: 'ใครก็ได้',
+      SINGLE: 'คนเดียว',
+    };
+    return map[mode] || mode;
+  }
+
+  getDocumentTypeText(type: string): string {
+    return this.documentTypeMap[type] || type;
+  }
+
+  getStatusClass(isActive: boolean): string {
+    return isActive
+      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+  }
+
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/burt06.service.ts">
+// sic-app/src/app/feature/bu/rt/burt06/burt06.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+
+export interface ApprovalFlow {
+  id?: string;
+  flowCode: string;
+  flowName: string;
+  documentType: string;
+  approvalMode: string;
+  description?: string;
+  isActive: boolean;
+  steps: ApprovalFlowStep[];
+  rowVersion?: number;
+}
+
+export interface ApprovalFlowStep {
+  id?: string;
+  stepOrder: number;
+  stepName: string;
+  approverRole?: string;
+  isRequired: boolean;
+  timeoutDays?: number;
+  canSkip: boolean;
+  rowVersion?: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class Burt06Service {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/pm/approval-flows';
+
+  getFlows(): Observable<ApprovalFlow[]> {
+    return this.http.get<ApprovalFlow[]>(this.baseUrl);
+  }
+
+  getFlow(id: string): Observable<ApprovalFlow> {
+    return this.http.get<ApprovalFlow>(`${this.baseUrl}/${id}`);
+  }
+
+  createFlow(data: ApprovalFlow): Observable<ApprovalFlow> {
+    return this.http.post<ApprovalFlow>(this.baseUrl, data);
+  }
+
+  updateFlow(id: string, data: ApprovalFlow): Observable<ApprovalFlow> {
+    return this.http.put<ApprovalFlow>(`${this.baseUrl}/${id}`, data);
+  }
+
+  deleteFlow(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt06/list.animations.ts">
+// sic-app/src/app/feature/bu/rt/burt06/list.animations.ts
+import { trigger, transition, style, animate, query } from '@angular/animations';
+
+export const listAnimation = trigger('listAnimation', [
+  transition('* => *', [
+    query(':enter', [
+      style({ opacity: 0, transform: 'translateY(-15px)' }),
+      animate('0.25s ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+    ], { optional: true }),
+    query(':leave', [
+      style({ opacity: 1, transform: 'translateY(0)' }),
+      animate('0.2s ease-in', style({ opacity: 0, transform: 'translateY(15px)' }))
+    ], { optional: true })
+  ])
+]);
+</file>
+
 <file path="sic-app/src/app/feature/dashboard/dashboard.component.css">
 
 </file>
@@ -22971,6 +24215,8 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.html">
+<!-- src/app/feature/pm/dt/pmdt05/pmdt05.component.html -->
+
 <!-- ===== LOADING ===== -->
 @if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
@@ -23057,7 +24303,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
         }
       </div>
 
-      <!-- ===== แหล่งที่มา (ใช้ select แทน sic-combobox) ===== -->
+      <!-- Source -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <label class="block text-sm font-medium text-[var(--text-active)] mb-1">แหล่งที่มา</label>
         <select
@@ -23071,7 +24317,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
         </select>
       </div>
 
-      <!-- ===== Priority (ใช้ sic-combobox อย่างเดียว ไม่มี options) ===== -->
+      <!-- Priority -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox
           label="ลำดับความสำคัญ"
@@ -23140,6 +24386,41 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
         </label>
       </div>
 
+      <!-- ✅ ส่วนของ Approval -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          การอนุมัติ
+        </div>
+        
+        <!-- เลือก Approval Flow -->
+        <div class="mb-3">
+          <sic-combobox
+            label="กระบวนการอนุมัติ"
+            [apiUrl]="'/api/pm/approvals/flows/document-type/REQUIREMENT'"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId = $event?.id"
+          ></sic-combobox>
+        </div>
+
+        <!-- ปุ่มส่งขออนุมัติ -->
+        <sic-button
+          variant="primary"
+          [fullWidth]="false"
+          [disabled]="!selectedFlowId || !form.get('id')?.value"
+          (click)="submitForApproval()"
+        >
+          <i class="bi bi-send"></i>
+          ส่งขออนุมัติ
+        </sic-button>
+        @if (!form.get('id')?.value) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ</p>
+        }
+      </div>
+
       <!-- Buttons -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
         <div class="flex-1">
@@ -23171,8 +24452,10 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.ts">
+// src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
+
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -23184,6 +24467,10 @@ import { SicInputAreaComponent } from '../../../../core/component/sic-input-area
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { ApprovalService } from '../pmdt03/approval.service';
+import type { ApprovalFlow } from '../pmdt03/approval.model';
+
+
 
 // ===== Model =====
 export interface RequirementModel {
@@ -23235,7 +24522,7 @@ class Pmdt05Form {
   }
 }
 
-// ===== Service =====
+// ===== Service (Mock) =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt05Service {
   private mockRequirements: RequirementModel[] = [
@@ -23324,19 +24611,26 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt05Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly approvalService = inject(ApprovalService); 
 
   form!: FormGroup;
   isEdit = false;
   reqId: string | null = null;
   isLoading = false;
 
-  // ✅ sourceOptions ใช้กับ select ใน HTML
+  // ✅ สำหรับ Approval Flow
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
+
+  // ✅ ตัวแปรสำหรับแหล่งที่มา (คงเดิม)
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
     this.initForm();
+    this.loadFlows(); // โหลด approval flow
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -23367,6 +24661,61 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
         this.router.navigate(['/feature/pm/requirement']);
       },
     });
+  }
+
+  // ✅ โหลด Approval Flow ที่ใช้ได้
+  loadFlows() {
+    this.isLoadingFlows = true;
+    this.approvalService.getFlowsByDocumentType('REQUIREMENT').subscribe({
+      next: (flows) => {
+        this.flows = flows;
+        this.isLoadingFlows = false;
+        // ถ้ามี flow เดียว เลือกให้อัตโนมัติ
+        if (flows.length === 1) {
+          this.selectedFlowId = flows[0].id;
+        }
+      },
+      error: () => {
+        this.isLoadingFlows = false;
+        console.warn('ไม่สามารถโหลด Approval Flow ได้');
+      },
+    });
+  }
+
+  // ✅ ส่งขออนุมัติ
+  submitForApproval() {
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือก Approval Flow', 'ต้องเลือกกระบวนการอนุมัติก่อนส่ง');
+      return;
+    }
+
+    const data = this.form.value as RequirementModel;
+    if (!data.id) {
+      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
+      return;
+    }
+
+    this.approvalService
+      .submitForApproval({
+        documentType: 'REQUIREMENT',
+        documentId: data.id,
+        documentCode: data.requirementCode,
+        documentTitle: data.title,
+        version: data.version,
+        flowId: this.selectedFlowId,
+        comment: 'ส่งขออนุมัติ Requirement',
+      })
+      .subscribe({
+        next: () => {
+          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          // อัปเดตสถานะเอกสาร (ถ้าต้องการ)
+          this.form.patchValue({ status: 'Pending Approval' });
+          // อาจ redirect ไปยังหน้า approval detail
+        },
+        error: (err) => {
+          this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
   }
 
   onBack(): void {
@@ -45596,6 +46945,70 @@ public class PmApprovalController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalFlowController.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalFlowController.java
+package com.softinter.sicapi.controller.pm;
+
+import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
+import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
+import com.softinter.sicapi.service.ApprovalFlowService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/pm/approval-flows")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Approval Flow", description = "Approval Flow Management API")
+public class PmApprovalFlowController {
+
+    private final ApprovalFlowService approvalFlowService;
+
+    @GetMapping
+    @Operation(summary = "Get all approval flows")
+    public ResponseEntity<List<ApprovalFlowResponse>> getAll() {
+        return ResponseEntity.ok(approvalFlowService.getAllFlows());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get approval flow by ID")
+    public ResponseEntity<ApprovalFlowResponse> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(approvalFlowService.getFlow(id));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create new approval flow")
+    public ResponseEntity<ApprovalFlowResponse> create(@Valid @RequestBody SaveApprovalFlowRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(approvalFlowService.createFlow(request));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update approval flow")
+    public ResponseEntity<ApprovalFlowResponse> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody SaveApprovalFlowRequest request) {
+        return ResponseEntity.ok(approvalFlowService.updateFlow(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete approval flow (soft delete)")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        approvalFlowService.deleteFlow(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmCustomerController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -46284,6 +47697,51 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ProgramPageRequest extends PageableRequest {
     private String keyword;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowRequest.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowRequest.java
+package com.softinter.sicapi.dto.request;
+
+import com.softinter.sicapi.entity.enums.ApprovalMode;
+import lombok.Data;
+
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class SaveApprovalFlowRequest {
+    private UUID id;
+    private String flowCode;
+    private String flowName;
+    private String documentType;
+    private ApprovalMode approvalMode;
+    private String description;
+    private Boolean isActive;
+    private Integer rowVersion;
+    private List<SaveApprovalFlowStepRequest> steps;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowStepRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import java.util.UUID;
+
+import lombok.Data;
+
+@Data
+public class SaveApprovalFlowStepRequest {
+    private UUID id;
+    private Integer stepOrder;
+    private String stepName;
+    private String approverRole;
+    private Boolean isRequired;
+    private Integer timeoutDays;
+    private Boolean canSkip;
+    private String conditionExpression;
+    private Integer rowVersion;
 }
 </file>
 
@@ -48073,28 +49531,6 @@ public interface PmApprovalFlowRepository extends JpaRepository<PmApprovalFlow, 
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmApprovalFlowStepRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface PmApprovalFlowStepRepository extends JpaRepository<PmApprovalFlowStep, UUID>, JpaSpecificationExecutor<PmApprovalFlowStep> {
-
-    List<PmApprovalFlowStep> findByFlowIdOrderByStepOrderAsc(UUID flowId);
-
-    List<PmApprovalFlowStep> findByFlowIdAndIsRequiredTrueOrderByStepOrderAsc(UUID flowId);
-
-    List<PmApprovalFlowStep> findByFlowIdAndIsRequiredFalseOrderByStepOrderAsc(UUID flowId);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmApprovalLogRepository.java">
 package com.softinter.sicapi.repository.pm;
 
@@ -48389,24 +49825,6 @@ public interface findByInviteTokenAndIsDeleteFalse extends JpaRepository<SuBusin
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ApprovalFlowService.java">
-package com.softinter.sicapi.service;
-
-import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
-
-import java.util.List;
-import java.util.UUID;
-
-public interface ApprovalFlowService {
-
-    ApprovalFlowResponse getFlow(UUID flowId);
-    ApprovalFlowResponse getFlowByDocumentType(String documentType);
-    List<ApprovalFlowResponse> getAllFlows();
-    List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType);
-    ApprovalFlowResponse getFlowByCode(String flowCode);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ApprovalNotificationService.java">
 package com.softinter.sicapi.service;
 
@@ -48482,121 +49900,6 @@ public interface BusinessInviteService {
     void deleteInvite(UUID id);
     List<ComboboxResponse> getComboboxRoles();
     JoinBusinessResponse joinBusiness(String token);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ApprovalFlowServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
-import com.softinter.sicapi.dto.response.ApprovalFlowStepResponse;
-import com.softinter.sicapi.entity.enums.DocumentType;
-import com.softinter.sicapi.entity.pm.PmApprovalFlow;
-import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
-import com.softinter.sicapi.exception.ResourceNotFoundException;
-import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
-import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
-import com.softinter.sicapi.service.ApprovalFlowService;
-
-import lombok.RequiredArgsConstructor;
-
-@Service
-@RequiredArgsConstructor
-public class ApprovalFlowServiceImpl implements ApprovalFlowService {
-
-    private final PmApprovalFlowRepository flowRepository;
-    private final PmApprovalFlowStepRepository stepRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ApprovalFlowResponse getFlow(UUID flowId) {
-        PmApprovalFlow flow = flowRepository.findById(flowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
-        return toResponse(flow);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ApprovalFlowResponse getFlowByDocumentType(String documentType) {
-        PmApprovalFlow flow = flowRepository.findByDocumentTypeAndIsActiveTrue(documentType)
-                .orElseThrow(() -> new ResourceNotFoundException("No approval flow defined for " + documentType));
-        return toResponse(flow);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ApprovalFlowResponse> getAllFlows() {
-        return flowRepository.findByIsActiveTrueOrderByFlowCode()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType) {
-        return flowRepository.findByDocumentTypeAndIsActiveTrueOrderByFlowCode(documentType)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ApprovalFlowResponse getFlowByCode(String flowCode) {
-        PmApprovalFlow flow = flowRepository.findByFlowCode(flowCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found: " + flowCode));
-        return toResponse(flow);
-    }
-
-    private ApprovalFlowResponse toResponse(PmApprovalFlow flow) {
-        ApprovalFlowResponse response = new ApprovalFlowResponse();
-        response.setId(flow.getId());
-        response.setFlowCode(flow.getFlowCode());
-        response.setFlowName(flow.getFlowName());
-        response.setDocumentType(flow.getDocumentType());
-        response.setApprovalMode(flow.getApprovalMode());
-        response.setApprovalModeDisplay(flow.getApprovalMode().getThaiName());
-        response.setDescription(flow.getDescription());
-        response.setActive(flow.getIsActive());
-
-        // Document type display
-        try {
-            DocumentType docType = DocumentType.valueOf(flow.getDocumentType());
-            response.setDocumentTypeDisplay(docType.getDisplayName());
-        } catch (IllegalArgumentException e) {
-            response.setDocumentTypeDisplay(flow.getDocumentType());
-        }
-
-        // Steps
-        List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdOrderByStepOrderAsc(flow.getId());
-        response.setSteps(steps.stream()
-                .map(this::toStepResponse)
-                .collect(Collectors.toList()));
-
-        return response;
-    }
-
-    private ApprovalFlowStepResponse toStepResponse(PmApprovalFlowStep step) {
-        ApprovalFlowStepResponse response = new ApprovalFlowStepResponse();
-        response.setId(step.getId());
-        response.setStepOrder(step.getStepOrder());
-        response.setStepName(step.getStepName());
-        response.setApproverRole(step.getApproverRole());
-        response.setApproverUserId(step.getApproverUserId());
-        response.setIsRequired(step.getIsRequired());
-        response.setTimeoutDays(step.getTimeoutDays());
-        response.setCanSkip(step.getCanSkip());
-        response.setConditionExpression(step.getConditionExpression());
-        return response;
-    }
 }
 </file>
 
@@ -57486,6 +58789,492 @@ export class Pmdt02BComponent implements OnInit {
 
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.html">
+<!-- src/app/feature/pm/dt/pmdt04/pmdt04.component.html -->
+
+<div class="space-y-5 p-0.5">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
+        รายการ Requirement
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
+    </button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      <option value="Draft">ร่าง</option>
+      <option value="In Review">อยู่ระหว่างตรวจสอบ</option>
+      <option value="Approved">อนุมัติแล้ว</option>
+      <option value="Changed">เปลี่ยนแปลง</option>
+      <option value="Cancelled">ยกเลิก</option>
+    </select>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th (click)="onSortChange('requirementCode')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
+              รหัส
+              @if (sortBy() === 'requirementCode') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('title')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]">
+              ชื่อ
+              @if (sortBy() === 'title') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('projectName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]">
+              โครงการ
+              @if (sortBy() === 'projectName') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('priority')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]">
+              Priority
+              @if (sortBy() === 'priority') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('status')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
+              สถานะ
+              @if (sortBy() === 'status') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+              อนุมัติ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px] hidden md:table-cell">
+              เวอร์ชัน
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[180px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (req of requirements(); track req.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ req.requirementCode }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div>
+                  <div class="font-medium text-[var(--text-active)]">{{ req.title }}</div>
+                  <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ req.description }}</div>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text)]">{{ req.projectName }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getPriorityClass(req.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ req.priority }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(req.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(req.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                @if (req.approvalStatus) {
+                  <span [class]="getApprovalStatusClass(req.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getApprovalStatusText(req.approvalStatus) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm hidden md:table-cell">
+                {{ req.version }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button (click)="goToView(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all" title="ดู">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  @if (req.status === 'In Review' || req.status === 'Draft') {
+                    <button (click)="goToApproval(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all" title="อนุมัติ">
+                      <i class="bi bi-check2-circle"></i>
+                    </button>
+                  }
+                  <button (click)="goToEdit(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all" title="แก้ไข">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button (click)="deleteRequirement(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="ลบ">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Requirement</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Requirement ใหม่</p>
+                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
+                    <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- PAGINATION -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        - <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
+      </div>
+      <div class="flex gap-1">
+        <button (click)="onPageChange(currentPage() - 1)" [disabled]="!hasPrevious()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (page of pageNumbers(); track page) {
+          <button (click)="onPageChange(page)" [class]="page === currentPage() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'">
+            {{ page }}
+          </button>
+        }
+        <button (click)="onPageChange(currentPage() + 1)" [disabled]="!hasNext()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts">
+// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { DialogService } from '../../../../core/services/dialog.service';
+import type { ApprovalStatus } from '../pmdt03/approval.model';
+import { ApprovalService } from '../pmdt03/approval.service';
+
+interface Requirement {
+  id: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  requirementType: string;
+  source: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName?: string;
+  createdBy: string;
+  baConfirmStatus: string;
+  customerConfirmStatus: string;
+  version: string;
+  status: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  rowVersion?: number;
+  approvalStatus?: ApprovalStatus | null;
+}
+
+@Component({
+  selector: 'app-pmdt04',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './pmdt04.component.html',
+})
+export class Pmdt04Component implements OnInit {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
+
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('requirementCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+  protected requirements = signal<Requirement[]>([]);
+  protected totalItems = signal(0);
+
+  // ===== Computed =====
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  protected Math = Math;
+
+  ngOnInit() {
+    this.loadRequirements();
+  }
+
+  // ===== โหลดข้อมูลจาก API จริง =====
+  loadRequirements() {
+    this.isLoading.set(true);
+
+    const params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString())
+      .set('keyword', this.searchTerm() || '')
+      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
+      .set('sortBy', this.sortBy())
+      .set('sortDir', this.sortDir());
+
+    this.http
+      .get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          const data = res.content || [];
+          this.requirements.set(data);
+          this.totalItems.set(res.totalElements || 0);
+          // โหลดสถานะอนุมัติของแต่ละรายการ
+          this.loadApprovalStatuses(data);
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
+          this.requirements.set([]);
+          this.totalItems.set(0);
+        },
+      });
+  }
+
+  // ===== โหลดสถานะอนุมัติของแต่ละ Requirement =====
+  loadApprovalStatuses(requirements: Requirement[]) {
+    requirements.forEach((req) => {
+      this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
+        next: (approval) => {
+          this.requirements.update((list) =>
+            list.map((item) =>
+              item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
+            ),
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
+        },
+      });
+    });
+  }
+
+  // ===== Event Handlers =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+    this.loadRequirements();
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadRequirements();
+  }
+
+  // ===== Navigation =====
+  goToAdd() {
+    this.router.navigate(['/feature/pm/requirement/new']);
+  }
+
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/requirement', id, 'edit']);
+  }
+
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/requirement', id, 'view']);
+  }
+
+  goToApproval(id: string) {
+    this.router.navigate(['/feature/pm/approval', id]);
+  }
+
+  deleteRequirement(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.http.delete(`${environment.apiBaseUrl}/api/requirement/${id}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
+            this.loadRequirements();
+          },
+          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
+        });
+      }
+    });
+  }
+
+  // ===== Utility =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || map['Draft'];
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      Approved: 'อนุมัติแล้ว',
+      Changed: 'เปลี่ยนแปลง',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return map[priority] || map["Won't"];
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.resolver.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.resolver.ts
 
@@ -60949,6 +62738,30 @@ public interface ExExampleRepository extends JpaRepository<ExExample, UUID>, Jpa
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmApprovalFlowStepRepository.java">
+package com.softinter.sicapi.repository.pm;
+
+import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface PmApprovalFlowStepRepository extends JpaRepository<PmApprovalFlowStep, UUID>, JpaSpecificationExecutor<PmApprovalFlowStep> {
+
+    List<PmApprovalFlowStep> findByFlowIdOrderByStepOrderAsc(UUID flowId);
+
+    List<PmApprovalFlowStep> findByFlowIdAndIsRequiredTrueOrderByStepOrderAsc(UUID flowId);
+
+    List<PmApprovalFlowStep> findByFlowIdAndIsRequiredFalseOrderByStepOrderAsc(UUID flowId);
+
+    void deleteByFlowId(UUID flowId);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmCustomerContractRepository.java">
 package com.softinter.sicapi.repository.pm;
 
@@ -61200,6 +63013,244 @@ public interface SuUserTaskRepository extends JpaRepository<SuUserTask, UUID>, J
     // ✅ หรือใช้ @Query ถ้าต้องการ join กับ task
     @Query("SELECT ut FROM SuUserTask ut WHERE ut.businessId = :businessId AND ut.isDelete = false")
     List<SuUserTask> findAllByBusinessId(@Param("businessId") UUID businessId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ApprovalFlowService.java">
+package com.softinter.sicapi.service;
+
+import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
+import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface ApprovalFlowService {
+
+    ApprovalFlowResponse getFlow(UUID flowId);
+    ApprovalFlowResponse getFlowByDocumentType(String documentType);
+    List<ApprovalFlowResponse> getAllFlows();
+    List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType);
+    ApprovalFlowResponse getFlowByCode(String flowCode);
+    ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request);
+    ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request);
+    void deleteFlow(UUID id);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ApprovalFlowServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
+import com.softinter.sicapi.dto.request.SaveApprovalFlowStepRequest;
+import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
+import com.softinter.sicapi.dto.response.ApprovalFlowStepResponse;
+import com.softinter.sicapi.entity.enums.ApprovalMode;
+import com.softinter.sicapi.entity.enums.DocumentType;
+import com.softinter.sicapi.entity.pm.PmApprovalFlow;
+import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
+import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
+import com.softinter.sicapi.service.ApprovalFlowService;
+import com.softinter.sicapi.service.CurrentUserService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ApprovalFlowServiceImpl implements ApprovalFlowService {
+
+    private final PmApprovalFlowRepository flowRepository;
+    private final PmApprovalFlowStepRepository stepRepository;
+    private final CurrentUserService currentUserService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApprovalFlowResponse getFlow(UUID flowId) {
+        PmApprovalFlow flow = flowRepository.findById(flowId)
+                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+        return toResponse(flow);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApprovalFlowResponse getFlowByDocumentType(String documentType) {
+        PmApprovalFlow flow = flowRepository.findByDocumentTypeAndIsActiveTrue(documentType)
+                .orElseThrow(() -> new ResourceNotFoundException("No approval flow defined for " + documentType));
+        return toResponse(flow);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApprovalFlowResponse> getAllFlows() {
+        return flowRepository.findByIsActiveTrueOrderByFlowCode()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType) {
+        return flowRepository.findByDocumentTypeAndIsActiveTrueOrderByFlowCode(documentType)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApprovalFlowResponse getFlowByCode(String flowCode) {
+        PmApprovalFlow flow = flowRepository.findByFlowCode(flowCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found: " + flowCode));
+        return toResponse(flow);
+    }
+    @Override
+@Transactional
+public ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request) {
+    // ตรวจสอบรหัสซ้ำ
+    if (flowRepository.findByFlowCode(request.getFlowCode()).isPresent()) {
+        throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
+    }
+
+    PmApprovalFlow flow = new PmApprovalFlow();
+    flow.setBusinessId(currentUserService.getBusinessId());
+    flow.setFlowCode(request.getFlowCode());
+    flow.setFlowName(request.getFlowName());
+    flow.setDocumentType(request.getDocumentType());
+    flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
+    flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+    flow.setDescription(request.getDescription());
+    flow.setCreatedBy(currentUserService.getUserId());
+
+    flow = flowRepository.save(flow);
+
+    // สร้าง Steps
+    if (request.getSteps() != null) {
+        for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
+            PmApprovalFlowStep step = new PmApprovalFlowStep();
+            step.setFlow(flow);
+            step.setStepOrder(stepReq.getStepOrder());
+            step.setStepName(stepReq.getStepName());
+            step.setApproverRole(stepReq.getApproverRole());
+            step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
+            step.setTimeoutDays(stepReq.getTimeoutDays());
+            step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
+            step.setConditionExpression(stepReq.getConditionExpression());
+            step.setCreatedBy(currentUserService.getUserId());
+            stepRepository.save(step);
+        }
+    }
+
+    return toResponse(flow);
+}
+
+@Override
+@Transactional
+public ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request) {
+    PmApprovalFlow flow = flowRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+
+    // ตรวจสอบรหัสซ้ำ (ยกเว้นตัวเอง)
+    flowRepository.findByFlowCode(request.getFlowCode())
+            .ifPresent(existing -> {
+                if (!existing.getId().equals(id)) {
+                    throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
+                }
+            });
+
+    flow.setFlowCode(request.getFlowCode());
+    flow.setFlowName(request.getFlowName());
+    flow.setDocumentType(request.getDocumentType());
+    flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
+    flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+    flow.setDescription(request.getDescription());
+    flow.setUpdatedBy(currentUserService.getUserId());
+
+    // จัดการ Steps: ลบเก่าแล้วสร้างใหม่ (ง่ายสุด)
+    stepRepository.deleteByFlowId(id);
+
+    if (request.getSteps() != null) {
+        for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
+            PmApprovalFlowStep step = new PmApprovalFlowStep();
+            step.setFlow(flow);
+            step.setStepOrder(stepReq.getStepOrder());
+            step.setStepName(stepReq.getStepName());
+            step.setApproverRole(stepReq.getApproverRole());
+            step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
+            step.setTimeoutDays(stepReq.getTimeoutDays());
+            step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
+            step.setConditionExpression(stepReq.getConditionExpression());
+            step.setCreatedBy(currentUserService.getUserId());
+            stepRepository.save(step);
+        }
+    }
+
+    return toResponse(flow);
+}
+
+@Override
+@Transactional
+public void deleteFlow(UUID id) {
+    PmApprovalFlow flow = flowRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+    flow.setIsDelete(true);
+    flow.setIsActive(false);
+    flow.setDeleteBy(currentUserService.getUserId());
+    flow.setDeleteDate(Instant.now());
+    flowRepository.save(flow);
+}
+
+    private ApprovalFlowResponse toResponse(PmApprovalFlow flow) {
+        ApprovalFlowResponse response = new ApprovalFlowResponse();
+        response.setId(flow.getId());
+        response.setFlowCode(flow.getFlowCode());
+        response.setFlowName(flow.getFlowName());
+        response.setDocumentType(flow.getDocumentType());
+        response.setApprovalMode(flow.getApprovalMode());
+        response.setApprovalModeDisplay(flow.getApprovalMode().getThaiName());
+        response.setDescription(flow.getDescription());
+        response.setActive(flow.getIsActive());
+
+        // Document type display
+        try {
+            DocumentType docType = DocumentType.valueOf(flow.getDocumentType());
+            response.setDocumentTypeDisplay(docType.getDisplayName());
+        } catch (IllegalArgumentException e) {
+            response.setDocumentTypeDisplay(flow.getDocumentType());
+        }
+
+        // Steps
+        List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdOrderByStepOrderAsc(flow.getId());
+        response.setSteps(steps.stream()
+                .map(this::toStepResponse)
+                .collect(Collectors.toList()));
+
+        return response;
+    }
+
+    private ApprovalFlowStepResponse toStepResponse(PmApprovalFlowStep step) {
+        ApprovalFlowStepResponse response = new ApprovalFlowStepResponse();
+        response.setId(step.getId());
+        response.setStepOrder(step.getStepOrder());
+        response.setStepName(step.getStepName());
+        response.setApproverRole(step.getApproverRole());
+        response.setApproverUserId(step.getApproverUserId());
+        response.setIsRequired(step.getIsRequired());
+        response.setTimeoutDays(step.getTimeoutDays());
+        response.setCanSkip(step.getCanSkip());
+        response.setConditionExpression(step.getConditionExpression());
+        return response;
+    }
 }
 </file>
 
@@ -61902,52 +63953,6 @@ public/images/
 **/bin/
 **/obj/
 **/node_modules/
-</file>
-
-<file path="sic-app/src/app/app.config.ts">
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
-import { provideOAuthClient } from 'angular-oauth2-oidc';
-import { provideEnvironmentNgxMask } from 'ngx-mask';
-import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { AuthService } from './core/auth/auth.service';
-import { LanguageService } from './core/services/language.service';
-import {
-  APP_TRANSLATE_MODULE_CODE,
-  APP_TRANSLATE_PROGRAM_CODE,
-  AppTranslateLoader
-} from './core/services/app-translate-loader.service';
-import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
-import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
-    provideClientHydration(),
-    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
-    provideEnvironmentNgxMask(),
-    provideSicNumberConfig({ decimal: 2 }),
-    provideOAuthClient(),
-    provideAppInitializer(() => inject(AuthService).initializeAuth()),
-    provideAppInitializer(() => inject(LanguageService).initLanguage()),
-    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
-    AppTranslateLoader,
-    provideTranslateService({
-      lang: 'th',
-      fallbackLang: 'en',
-      loader: {
-        provide: TranslateLoader,
-        useExisting: AppTranslateLoader
-      }
-    })
-  ]
-};
 </file>
 
 <file path="sic-app/src/app/core/component/sic-calendar/sic-calendar.component.ts">
@@ -69557,6 +71562,54 @@ export class AppComponent {
 }
 </file>
 
+<file path="sic-app/src/app/app.config.ts">
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
+import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { provideEnvironmentNgxMask } from 'ngx-mask';
+import { routes } from './app.routes';
+import { provideClientHydration } from '@angular/platform-browser';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { AuthService } from './core/auth/auth.service';
+import { LanguageService } from './core/services/language.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  APP_TRANSLATE_MODULE_CODE,
+  APP_TRANSLATE_PROGRAM_CODE,
+  AppTranslateLoader
+} from './core/services/app-translate-loader.service';
+import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
+import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideAnimations(),
+    provideRouter(routes),
+    provideClientHydration(),
+    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
+    provideEnvironmentNgxMask(),
+    provideSicNumberConfig({ decimal: 2 }),
+    provideOAuthClient(),
+    provideAppInitializer(() => inject(AuthService).initializeAuth()),
+    provideAppInitializer(() => inject(LanguageService).initLanguage()),
+    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
+    AppTranslateLoader,
+    provideTranslateService({
+      lang: 'th',
+      fallbackLang: 'en',
+      loader: {
+        provide: TranslateLoader,
+        useExisting: AppTranslateLoader
+      }
+    })
+  ]
+};
+</file>
+
 <file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.component.ts">
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
@@ -70293,93 +72346,6 @@ export class SicFromData<TModel extends object & SicStateModel> {
     return leftEntries.every(([key, value]) => this.isEqual(value, (right as Record<string, unknown>)[key]));
   }
 }
-</file>
-
-<file path="sic-app/src/app/feature/bu/bu.routes.ts">
-import { Routes } from '@angular/router';
-import { burt01Resolver } from './rt/burt01/burt01.resolver';
-
-export const routes: Routes = [
-  {
-    path: '',
-    redirectTo: '/feature',
-    pathMatch: 'full',
-  },
-   {
-    path: 'burt01',
-    loadComponent: () => import('./rt/burt01/burt01.component').then((m) => m.Burt01Component),
-    resolve: { form: burt01Resolver },
-  },
-
-  // ===== BURT02 - Permission Management =====
-  {
-    path: 'burt02',                         // ✅ ไม่มี 'bu/'
-    loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component),
-  },
-  {
-    path: 'burt02/:id',                     // ✅ ไม่มี 'bu/'
-    loadComponent: () =>
-      import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
-  },
-
-  // ===== BURT03 - Role Management =====
-  {
-    path: 'burt03',                         // ✅ ไม่มี 'bu/'
-    loadComponent: () => import('./rt/burt03/burt03.component').then((m) => m.Burt03Component),
-  },
-
-  // ===== BURT04 - Team Management =====
-  {
-    path: 'burt04',                         // ✅ ไม่มี 'bu/'
-    loadComponent: () => import('./rt/burt04/burt04.component').then((m) => m.Burt04AComponent),
-  },
-  {
-    path: 'burt04/:id/edit',                // ✅ ไม่มี 'bu/'
-    loadComponent: () =>
-      import('./rt/burt04/burt04A/burt04A.component').then((m) => m.Burt04AComponent),
-  },
-  {
-    path: 'burt04/add',                     // ✅ ไม่มี 'bu/'
-    redirectTo: '/management/business/invite',
-    pathMatch: 'full',
-  },
-
-  // ===== BURT05 - Program Management =====
-  {
-    path: 'burt05',                         // ✅ ไม่มี 'bu/'
-    loadComponent: () => import('./rt/burt05/burt05.component').then((m) => m.Burt05Component),
-  },
-  {
-    path: 'burt05/new',                     // ✅ ไม่มี 'bu/'
-    loadComponent: () =>
-      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
-  },
-  {
-    path: 'burt05/:id/edit',                // ✅ ไม่มี 'bu/'
-    loadComponent: () =>
-      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
-  },
-  {
-    path: 'burt05/:id/permissions',         // ✅ ไม่มี 'bu/'
-    loadComponent: () =>
-      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
-  },
-
-  // ===== BURP01 - Activity Log =====
-  {
-    path: 'burp01',                         // ✅ ไม่มี 'bu/'
-    loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
-  },
-
-  // ===== Business Invite (ภายนอก) =====
-  {
-    path: 'invite',                         // ✅ ใช้ได้ผ่าน /feature/bu/invite
-    loadComponent: () =>
-      import('../../management/business/business-invite/business-invite.component').then(
-        (m) => m.BusinessInviteComponent,
-      ),
-  },
-];
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts">
@@ -74045,6 +76011,107 @@ export class TreeNodeComponent {
     this.isExpanded.update((v) => !v);
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/bu/bu.routes.ts">
+import { Routes } from '@angular/router';
+import { burt01Resolver } from './rt/burt01/burt01.resolver';
+import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/feature',
+    pathMatch: 'full',
+  },
+   {
+    path: 'burt01',
+    loadComponent: () => import('./rt/burt01/burt01.component').then((m) => m.Burt01Component),
+    resolve: { form: burt01Resolver },
+  },
+
+  // ===== BURT02 - Permission Management =====
+  {
+    path: 'burt02',                         
+    loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component),
+  },
+  {
+    path: 'burt02/:id',                     
+    loadComponent: () =>
+      import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
+  },
+
+  // ===== BURT03 - Role Management =====
+  {
+    path: 'burt03',                         
+    loadComponent: () => import('./rt/burt03/burt03.component').then((m) => m.Burt03Component),
+  },
+
+  // ===== BURT04 - Team Management =====
+  {
+    path: 'burt04',                         
+    loadComponent: () => import('./rt/burt04/burt04.component').then((m) => m.Burt04AComponent),
+  },
+  {
+    path: 'burt04/:id/edit',                
+    loadComponent: () =>
+      import('./rt/burt04/burt04A/burt04A.component').then((m) => m.Burt04AComponent),
+  },
+  {
+    path: 'burt04/add',                     
+    redirectTo: '/management/business/invite',
+    pathMatch: 'full',
+  },
+
+  // ===== BURT05 - Program Management =====
+  {
+    path: 'burt05',                         
+    loadComponent: () => import('./rt/burt05/burt05.component').then((m) => m.Burt05Component),
+  },
+  {
+    path: 'burt05/new',                     
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+  {
+    path: 'burt05/:id/edit',                
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+  {
+    path: 'burt05/:id/permissions',         
+    loadComponent: () =>
+      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
+  },
+// sic-app/src/app/feature/bu/bu.routes.ts
+{
+  path: 'burt06',
+  loadComponent: () => import('./rt/burt06/burt06.component').then((m) => m.Burt06Component),
+},
+{
+  path: 'burt06/new',
+  loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
+},
+{
+  path: 'burt06/:id/edit',
+  loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
+},
+
+  // ===== BURP01 - Activity Log =====
+  {
+    path: 'burp01',                         
+    loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
+  },
+
+  // ===== Business Invite (ภายนอก) =====
+  {
+    path: 'invite',                         // ✅ ใช้ได้ผ่าน /feature/bu/invite
+    loadComponent: () =>
+      import('../../management/business/business-invite/business-invite.component').then(
+        (m) => m.BusinessInviteComponent,
+      ),
+  },
+];
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt01/pmdt01.component.ts">
@@ -83313,25 +85380,28 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Requirement =====
+  // ===== Requirement (ใหม่ ใช้ pmdt04) =====
   {
-    path: 'requirement',
-    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then((m) => m.Pmrt05Component),
+    path: 'pmdt04',
+    loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/new',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/new',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/:id/edit',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/:id/edit',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'requirement/:id/approval',
-    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    path: 'pmdt04/:id/approval',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
 
@@ -83619,7 +85689,8 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'approval/:id',
-    loadComponent: () => import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
+    loadComponent: () =>
+      import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
     canActivate: [customerGuard],
   },
 

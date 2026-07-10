@@ -4,15 +4,18 @@ import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt06.service';
 import { listAnimation } from '../list.animations';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-burt06a',
@@ -26,10 +29,11 @@ import { listAnimation } from '../list.animations';
     SicInputAreaComponent,
     SicCheckboxComponent,
     SicCardComponent,
+    SicComboboxComponent,
   ],
   templateUrl: './burt06A.component.html',
   styleUrl: './burt06A.component.css',
-  animations: [listAnimation]
+  animations: [listAnimation],
 })
 export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
@@ -37,7 +41,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private router = inject(Router);
   private service = inject(Burt06Service);
   private dialog = inject(DialogService);
-  private cdr = inject(ChangeDetectorRef); // ✅ เพิ่ม
+  private cdr = inject(ChangeDetectorRef);
+  private businessService = inject(BusinessService);
 
   isEdit = false;
   flowId: string | null = null;
@@ -55,6 +60,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     { value: 'CHANGE_REQUEST', text: 'Change Request' },
     { value: 'TEST_PLAN', text: 'Test Plan' },
     { value: 'UAT', text: 'UAT' },
+    { value: 'TASK', text: 'Task' },
+
   ];
 
   approvalModeOptions = [
@@ -106,7 +113,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
             this.steps.push(this.createStepForm(step));
           });
           this.reorderSteps();
-          this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+          this.cdr.detectChanges(); 
         },
         error: () => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Flow ที่ต้องการ');
@@ -156,10 +163,11 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     stepsArray.insert(index - 1, stepGroup);
     this.reorderSteps();
     this.form.markAsDirty();
-    this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+    this.cdr.detectChanges();
   }
 
   moveStepDown(index: number): void {
+    console.log('moveStepDown called with index:', index);
     if (index >= this.steps.length - 1) return;
     const stepsArray = this.steps;
     const stepGroup = stepsArray.at(index) as FormGroup;
@@ -167,7 +175,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     stepsArray.insert(index + 1, stepGroup);
     this.reorderSteps();
     this.form.markAsDirty();
-    this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+    this.cdr.detectChanges(); 
   }
 
   private reorderSteps(): void {
@@ -222,5 +230,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
     });
+  }
+  get roleApiUrl(): string {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (!businessId) return '';
+    return `${environment.apiBaseUrl}/api/su/business-roles?businessId=${businessId}`;
   }
 }
