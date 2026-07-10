@@ -6,11 +6,11 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 import type { ApprovalStatus } from '../pmdt03/approval.model';
 import { ApprovalService } from '../pmdt03/approval.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 interface Requirement {
   id: string;
@@ -101,13 +101,14 @@ export class Pmdt04Component implements OnInit {
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
       .set('sortBy', this.sortBy())
       .set('sortDir', this.sortDir())
-      .set('projectId', projectId);   
+      .set('projectId', projectId);
 
-    this.http.get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
+    this.http
+      .get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          const data = res.content || [];
+          const data = res.data || [];
           this.requirements.set(data);
           this.totalItems.set(res.totalElements || 0);
           // โหลดสถานะอนุมัติของแต่ละรายการ
@@ -177,20 +178,20 @@ export class Pmdt04Component implements OnInit {
   }
 
   goToAdd() {
-  this.navigation.navigate(['/feature/pm/requirement/new']);
-}
+    this.navigation.navigate(['/feature/pm/requirement/new']);
+  }
 
-goToEdit(id: string) {
-  this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
-}
+  goToEdit(id: string) {
+    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+  }
 
-goToView(id: string) {
-  this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
-}
+  goToView(id: string) {
+    this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
+  }
 
-goToApproval(id: string) {
-  this.navigation.navigate(['/feature/pm/approval', id]);
-}
+  goToApproval(id: string) {
+    this.navigation.navigate(['/feature/pm/approval', id]);
+  }
 
   deleteRequirement(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
