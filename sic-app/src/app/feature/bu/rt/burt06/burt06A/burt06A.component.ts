@@ -43,6 +43,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private businessService = inject(BusinessService);
+  readonly apiBaseUrl = environment.apiBaseUrl;
 
   isEdit = false;
   flowId: string | null = null;
@@ -141,7 +142,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   addStep(): void {
     this.steps.push(this.createStepForm());
     this.reorderSteps();
-    this.cdr.detectChanges(); // ✅ บังคับให้ View อัปเดต
+    this.cdr.detectChanges(); 
   }
 
   removeStep(index: number): void {
@@ -236,4 +237,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     if (!businessId) return '';
     return `${environment.apiBaseUrl}/api/su/business-roles?businessId=${businessId}`;
   }
+  get approvalModeComboboxConfig() {
+  return {
+    apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov`,
+    params: { group: 'PM', parameterCode: 'APPROVAL_MODE' }
+  };
+}
 }

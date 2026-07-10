@@ -9,6 +9,8 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import type { ApprovalStatus } from '../pmdt03/approval.model';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 interface Requirement {
   id: string;
@@ -45,6 +47,8 @@ export class Pmdt04Component implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
   private approvalService = inject(ApprovalService);
+  private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -82,18 +86,24 @@ export class Pmdt04Component implements OnInit {
 
   // ===== โหลดข้อมูลจาก API จริง =====
   loadRequirements() {
-    this.isLoading.set(true);
+    const projectId = this.customerState.getProjectId();
+    if (!projectId) {
+      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+      return;
+    }
 
+    this.isLoading.set(true);
     const params = new HttpParams()
       .set('page', (this.currentPage() - 1).toString())
       .set('size', this.pageSize().toString())
       .set('keyword', this.searchTerm() || '')
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
       .set('sortBy', this.sortBy())
-      .set('sortDir', this.sortDir());
+      .set('sortDir', this.sortDir())
+      .set('projectId', projectId);   
 
-    this.http
-      .get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
+    this.http.get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
@@ -166,22 +176,21 @@ export class Pmdt04Component implements OnInit {
     this.loadRequirements();
   }
 
-  // ===== Navigation =====
   goToAdd() {
-    this.router.navigate(['/feature/pm/requirement/new']);
-  }
+  this.navigation.navigate(['/feature/pm/requirement/new']);
+}
 
-  goToEdit(id: string) {
-    this.router.navigate(['/feature/pm/requirement', id, 'edit']);
-  }
+goToEdit(id: string) {
+  this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+}
 
-  goToView(id: string) {
-    this.router.navigate(['/feature/pm/requirement', id, 'view']);
-  }
+goToView(id: string) {
+  this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
+}
 
-  goToApproval(id: string) {
-    this.router.navigate(['/feature/pm/approval', id]);
-  }
+goToApproval(id: string) {
+  this.navigation.navigate(['/feature/pm/approval', id]);
+}
 
   deleteRequirement(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {

@@ -7,8 +7,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { delay, finalize } from 'rxjs/operators';
 
-import { DialogService } from '../../../../core/services/dialog.service';
 import { environment } from '../../../../../environments/environment';
+import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 
 // ===== Interfaces =====
@@ -142,7 +142,8 @@ export class Pmrt03Component implements OnInit {
       usedManday: 85,
       status: 'Development',
       priority: 'High',
-      description: 'พัฒนาระบบ CRM สำหรับบริหารจัดการข้อมูลลูกค้า ติดตามการขาย และการบริการหลังการขาย',
+      description:
+        'พัฒนาระบบ CRM สำหรับบริหารจัดการข้อมูลลูกค้า ติดตามการขาย และการบริการหลังการขาย',
       isActive: true,
       phaseCount: 5,
       taskCount: 23,
@@ -151,14 +152,56 @@ export class Pmrt03Component implements OnInit {
       bugCount: 8,
       bugOpenCount: 3,
       recentPhases: [
-        { id: 'p1', phaseCode: 'PH-001', phaseName: 'Requirement & Analysis', status: 'Done', progress: 100, endDate: '2024-02-28' },
-        { id: 'p2', phaseCode: 'PH-002', phaseName: 'System Design', status: 'In Progress', progress: 75, endDate: '2024-03-31' },
-        { id: 'p3', phaseCode: 'PH-003', phaseName: 'Development', status: 'Not Started', progress: 0, endDate: '2024-05-31' },
+        {
+          id: 'p1',
+          phaseCode: 'PH-001',
+          phaseName: 'Requirement & Analysis',
+          status: 'Done',
+          progress: 100,
+          endDate: '2024-02-28',
+        },
+        {
+          id: 'p2',
+          phaseCode: 'PH-002',
+          phaseName: 'System Design',
+          status: 'In Progress',
+          progress: 75,
+          endDate: '2024-03-31',
+        },
+        {
+          id: 'p3',
+          phaseCode: 'PH-003',
+          phaseName: 'Development',
+          status: 'Not Started',
+          progress: 0,
+          endDate: '2024-05-31',
+        },
       ],
       recentTasks: [
-        { id: 't1', taskCode: 'TASK-001', taskName: 'ออกแบบ Database Schema', assignedTo: 'วิชัย พัฒนาชัย', status: 'Done', priority: 'High' },
-        { id: 't2', taskCode: 'TASK-002', taskName: 'พัฒนา API Login', assignedTo: 'สมชาย ใจดี', status: 'In Progress', priority: 'High' },
-        { id: 't3', taskCode: 'TASK-003', taskName: 'พัฒนา UI Dashboard', assignedTo: 'มานี มีทรัพย์', status: 'Todo', priority: 'Medium' },
+        {
+          id: 't1',
+          taskCode: 'TASK-001',
+          taskName: 'ออกแบบ Database Schema',
+          assignedTo: 'วิชัย พัฒนาชัย',
+          status: 'Done',
+          priority: 'High',
+        },
+        {
+          id: 't2',
+          taskCode: 'TASK-002',
+          taskName: 'พัฒนา API Login',
+          assignedTo: 'สมชาย ใจดี',
+          status: 'In Progress',
+          priority: 'High',
+        },
+        {
+          id: 't3',
+          taskCode: 'TASK-003',
+          taskName: 'พัฒนา UI Dashboard',
+          assignedTo: 'มานี มีทรัพย์',
+          status: 'Todo',
+          priority: 'Medium',
+        },
       ],
     };
 
@@ -289,17 +332,21 @@ export class Pmrt03Component implements OnInit {
       Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       Development: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       Prospect: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'Contract Drafting': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'Contract Drafting':
+        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       'Contract Signed': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      'Requirement Gathering': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      'Requirement Approval': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Gathering':
+        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Requirement Approval':
+        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
       'System Analysis': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'DFD Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'ER Design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       'Specification Design': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       'Specification Approval': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
       Planning: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-      'Internal Testing': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'Internal Testing':
+        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       UAT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       'Bug Fixing': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       'Ready for Delivery': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',

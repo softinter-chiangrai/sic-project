@@ -15,6 +15,32 @@ import java.util.UUID;
 @Repository
 public interface PmRequirementRepository extends JpaRepository<PmRequirement, UUID>, JpaSpecificationExecutor<PmRequirement> {
 
+    // ===== ใหม่: รองรับ projectId =====
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false")
+    Page<PmRequirement> findAllByBusinessIdAndProjectId(@Param("businessId") UUID businessId,
+                                                         @Param("projectId") UUID projectId,
+                                                         Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeywordAndProject(@Param("businessId") UUID businessId,
+                                                   @Param("projectId") UUID projectId,
+                                                   @Param("keyword") String keyword,
+                                                   Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status")
+    Page<PmRequirement> findAllByStatusAndProject(@Param("businessId") UUID businessId,
+                                                   @Param("projectId") UUID projectId,
+                                                   @Param("status") String status,
+                                                   Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeywordAndStatusAndProject(@Param("businessId") UUID businessId,
+                                                            @Param("projectId") UUID projectId,
+                                                            @Param("keyword") String keyword,
+                                                            @Param("status") String status,
+                                                            Pageable pageable);
+
+    // ===== เก่า (ยังคงไว้เผื่อใช้ที่อื่น) =====
     @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false")
     Page<PmRequirement> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
 

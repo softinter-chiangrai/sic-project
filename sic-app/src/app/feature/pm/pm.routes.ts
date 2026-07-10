@@ -152,24 +152,24 @@ export const PM_ROUTES: Routes = [
 
   // ===== Requirement (ใหม่ ใช้ pmdt04) =====
   {
-    path: 'pmdt04',
+    path: 'requirement',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'pmdt04/new',
+    path: 'requirement/new',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'pmdt04/:id/edit',
+    path: 'requirement/:id/edit',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {
-    path: 'pmdt04/:id/approval',
+    path: 'requirement/:id/approval',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],

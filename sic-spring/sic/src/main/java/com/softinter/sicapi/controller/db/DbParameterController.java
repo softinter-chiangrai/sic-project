@@ -1,8 +1,9 @@
 package com.softinter.sicapi.controller.db;
 
 import com.softinter.sicapi.dto.response.LovResponse;
+import com.softinter.sicapi.entity.db.DbParameter;
 import com.softinter.sicapi.repository.db.DbParameterRepository;
-import com.softinter.sicapi.util.LocalizationHelper;  // ✅ เพิ่ม
+import com.softinter.sicapi.util.LocalizationHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,14 +24,18 @@ public class DbParameterController {
     private final DbParameterRepository parameterRepository;
 
     @GetMapping("/lov")
-    @Operation(summary = "Get parameter LOV by group")
-    public ResponseEntity<List<LovResponse>> getLov(@RequestParam(required = false, defaultValue = "COMMON") String group) {
-        List<LovResponse> lov = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group)
-                .stream()
-                .map(p -> new LovResponse(
-                        p.getParameterCode(),
-                        LocalizationHelper.getParameterName(p)  // ✅ แก้
-                ))
+    @Operation(summary = "Get parameter LOV by group and optional parameterCode")
+    public ResponseEntity<List<LovResponse>> getLov(
+            @RequestParam(required = false, defaultValue = "COMMON") String group,
+            @RequestParam(required = false) String parameterCode) {
+        List<DbParameter> params;
+        if (parameterCode != null && !parameterCode.isBlank()) {
+            params = parameterRepository.findByModuleCodeAndParameterCodeAndIsActiveTrueOrderBySortOrder(group, parameterCode);
+        } else {
+            params = parameterRepository.findByModuleCodeAndIsActiveTrueOrderBySortOrder(group);
+        }
+        List<LovResponse> lov = params.stream()
+                .map(p -> new LovResponse(p.getParameterValue(), LocalizationHelper.getParameterName(p)))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lov);
     }

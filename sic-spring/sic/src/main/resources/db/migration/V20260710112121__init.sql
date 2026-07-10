@@ -796,6 +796,7 @@ CREATE TABLE IF NOT EXISTS pm_requirement_change_request (
     created_date TIMESTAMPTZ NOT NULL,
     updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
     updated_date TIMESTAMPTZ NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
     is_delete BOOLEAN NOT NULL DEFAULT FALSE,
     delete_by VARCHAR(100),
     delete_date TIMESTAMPTZ,

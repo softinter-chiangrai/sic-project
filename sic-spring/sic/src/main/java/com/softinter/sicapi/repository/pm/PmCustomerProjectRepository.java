@@ -1,6 +1,9 @@
 package com.softinter.sicapi.repository.pm;
 
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
 
 @Repository
 public interface PmCustomerProjectRepository extends JpaRepository<PmCustomerProject, UUID>, JpaSpecificationExecutor<PmCustomerProject> {
@@ -37,5 +38,8 @@ Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("custom
                                                                   Pageable pageable);
 
     List<PmCustomerProject> findByContractIdAndIsDeleteFalse(UUID contractId);
+
+    @Query("SELECT p FROM PmCustomerProject p WHERE p.businessId = :businessId AND p.isDelete = false AND p.isActive = true")
+List<PmCustomerProject> findByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId);
 
 }

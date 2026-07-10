@@ -12,7 +12,7 @@
     "sic-app": {
       "projectType": "application",
       "schematics": {
-         "@schematics/angular:component": {
+        "@schematics/angular:component": {
           "type": "component",
           "skipTests": true
         },
@@ -21,7 +21,7 @@
           "skipTests": true
         },
         "@schematics/angular:resolver": {
-          "typeSeparator": "." ,
+          "typeSeparator": ".",
           "skipTests": true
         },
         "@schematics/angular:interface": {
@@ -47,21 +47,14 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": [
-              "dayjs",
-              "dayjs/locale/th"
-            ],
+            "allowedCommonJsDependencies": ["dayjs", "dayjs/locale/th"],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/material-theme.scss",
-              "src/styles.css",
-              "node_modules/bootstrap-icons/font/bootstrap-icons.css"
-            ],
+            "styles": ["src/styles.css", "node_modules/bootstrap-icons/font/bootstrap-icons.css"],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
