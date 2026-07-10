@@ -11,7 +11,7 @@ export interface ApprovalFlow {
   documentType: string;
   approvalMode: string;
   description?: string;
-  isActive: boolean;
+  active: boolean;
   steps: ApprovalFlowStep[];
   rowVersion?: number;
 }
