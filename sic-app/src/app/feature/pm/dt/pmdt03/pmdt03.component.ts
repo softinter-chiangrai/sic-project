@@ -3,16 +3,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { ApprovalService } from './approval.service';
-import type { Approval, ApprovalSearchParams } from './approval.model';
-import type { PaginationResponse } from '../../../../core/model/pagination.model';
 
+import { AuthService } from '../../../../core/auth/auth.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import type { PaginationResponse } from '../../../../core/model/pagination.model';
+import { ApprovalService } from './approval.service';
+import type { Approval } from './approval.model';
 
 // ===== Interface สำหรับแสดงในตาราง (map จาก Approval) =====
 interface ApprovalItem {
@@ -26,7 +29,7 @@ interface ApprovalItem {
   requestedDate: string;
   dueDate?: string;
   approver: string;
-  status: string; // ใช้ string เพื่อให้ getStatusClass ทำงาน
+  status: string;
   comment?: string;
   attachments?: string[];
   isActive: boolean;
@@ -42,6 +45,8 @@ interface ApprovalItem {
 export class Pmdt03Component implements OnInit {
   private router = inject(Router);
   private approvalService = inject(ApprovalService);
+  private dialog = inject(DialogService);
+  private authService = inject(AuthService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -53,6 +58,7 @@ export class Pmdt03Component implements OnInit {
   protected sortBy = signal('requestedDate');
   protected sortDir = signal<'asc' | 'desc'>('desc');
   protected isLoading = signal(false);
+  protected viewMode = signal<'pending' | 'myRequests'>('pending');
 
   // ===== Data =====
   protected approvals = signal<ApprovalItem[]>([]);
@@ -81,7 +87,7 @@ export class Pmdt03Component implements OnInit {
 
   protected Math = Math;
 
-  // ===== Options (คงเดิม) =====
+  // ===== Options =====
   documentTypes = [
     'REQUIREMENT',
     'DFD',
@@ -97,42 +103,58 @@ export class Pmdt03Component implements OnInit {
 
   statusOptions = ['PENDING', 'APPROVED', 'REJECTED', 'NEED_REVISION', 'CANCELLED'];
 
-  // projectOptions ควรโหลดจาก API จริง (แต่ถ้ายังไม่มีให้ใช้ mock หรือลบออก)
   projectOptions = [
     { id: '1', name: 'ระบบ CRM' },
     { id: '2', name: 'ระบบ HR' },
   ];
 
   // ===== Lifecycle =====
+  constructor() {
+    effect(() => {
+      this.viewMode(); // trigger เมื่อ viewMode เปลี่ยน
+      this.currentPage.set(1);
+      this.loadApprovals();
+    });
+  }
+
   ngOnInit(): void {
     this.loadApprovals();
   }
 
   // ===== Load Data =====
   loadApprovals(): void {
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      this.dialog.error('ไม่พบข้อมูลผู้ใช้', 'กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
+
     this.isLoading.set(true);
 
-    const params: ApprovalSearchParams = {
-      pageNumber: this.currentPage(),
-      pageSize: this.pageSize(),
-      keyword: this.searchTerm() || undefined,
-      documentType: this.filterType() === 'all' ? undefined : this.filterType(),
-      status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-      sorts: [{ field: this.sortBy(), descending: this.sortDir() === 'desc' }],
-    };
+    const page = this.currentPage() - 1; // backend ใช้ 0-based
+    const size = this.pageSize();
 
-    this.approvalService
-      .search(params)
+    let request$;
+    if (this.viewMode() === 'pending') {
+      // ✅ ใช้ getPending(page, size) ตามที่มีใน ApprovalService
+      request$ = this.approvalService.getPending(page, size);
+    } else {
+      // ✅ ใช้ getMyRequests(page, size) ตามที่มีใน ApprovalService
+      request$ = this.approvalService.getMyRequests(page, size);
+    }
+
+    request$
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response: PaginationResponse<Approval>) => {
           this.totalElements.set(response.pageable.totalElements);
           this.approvals.set(response.data.map((approval) => this.mapApprovalToItem(approval)));
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Load approvals error:', error);
           this.approvals.set([]);
           this.totalElements.set(0);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการอนุมัติได้');
         },
       });
   }
@@ -145,7 +167,7 @@ export class Pmdt03Component implements OnInit {
       documentCode: approval.documentCode,
       title: approval.documentTitle,
       projectId: '', // ยังไม่มีจาก API
-      projectName: '-', // ยังไม่มีจาก API
+      projectName: '-',
       requester: approval.requestedByName,
       requestedDate: approval.requestedDate,
       dueDate: approval.currentStep?.timeoutDays
@@ -159,7 +181,7 @@ export class Pmdt03Component implements OnInit {
     };
   }
 
-  // ===== Actions (ปรับให้เรียก loadApprovals) =====
+  // ===== Actions =====
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
@@ -191,8 +213,6 @@ export class Pmdt03Component implements OnInit {
     const select = event.target as HTMLSelectElement;
     this.filterProject.set(select.value);
     this.currentPage.set(1);
-    // ถ้าต้องการกรองตาม projectId ต้องเพิ่มใน params (backend ต้องรองรับ)
-    // ปัจจุบันยังไม่มีใน ApprovalSearchParams จึงยังไม่ทำงาน
     this.loadApprovals();
   }
 
@@ -217,7 +237,7 @@ export class Pmdt03Component implements OnInit {
     this.router.navigate(['/feature/pm/approval', id]);
   }
 
-  // ===== Utility (คงเดิม) =====
+  // ===== Utility =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
       PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -271,4 +291,3 @@ export class Pmdt03Component implements OnInit {
     return map[type] || 'bi-file-earmark';
   }
 }
-

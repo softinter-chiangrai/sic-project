@@ -1,3 +1,5 @@
+<!-- src/app/feature/pm/dt/pmdt03/pmdt03.component.html -->
+
 <div class="space-y-5 p-0.5">
 
   <!-- ===== HEADER ===== -->
@@ -20,6 +22,24 @@
         กรอง
       </button>
     </div>
+  </div>
+
+  <!-- ===== TAB SWITCHER ===== -->
+  <div class="flex gap-1 border-b border-[var(--border)]">
+    <button
+      (click)="viewMode.set('pending')"
+      class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+      [class]="viewMode() === 'pending' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+    >
+      <i class="bi bi-clock-history mr-1"></i> รอฉันอนุมัติ
+    </button>
+    <button
+      (click)="viewMode.set('myRequests')"
+      class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+      [class]="viewMode() === 'myRequests' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+    >
+      <i class="bi bi-send mr-1"></i> คำขอของฉัน
+    </button>
   </div>
 
   <!-- ===== FILTERS ===== -->
@@ -187,7 +207,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                @if (item.status === 'Pending') {
+                @if (item.status === 'PENDING') {
                   <button
                     (click)="goToApproval(item.id)"
                     class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"

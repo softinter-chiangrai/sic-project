@@ -42,6 +42,7 @@
     "bootstrap-icons": "^1.13.1",
     "dayjs": "^1.11.20",
     "express": "^5.1.0",
+    "mermaid": "^11.16.0",
     "ngx-mask": "^21.0.1",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.2.1",

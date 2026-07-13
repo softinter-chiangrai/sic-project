@@ -1,3 +1,5 @@
+// src/app/core/auth/auth.service.ts
+
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { OAuthEvent, OAuthService } from 'angular-oauth2-oidc';
@@ -58,6 +60,19 @@ export class AuthService {
 
     const token = this.oauth.getAccessToken();
     return token || null;
+  }
+
+  // ✅ เพิ่ม method นี้
+  getUserId(): string | null {
+    if (!this.isBrowser) return null;
+    const token = this.getAccessToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || null;
+    } catch {
+      return null;
+    }
   }
 
   login(returnUrl: string) {
