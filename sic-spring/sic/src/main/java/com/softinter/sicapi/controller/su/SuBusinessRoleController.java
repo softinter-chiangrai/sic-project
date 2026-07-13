@@ -8,8 +8,11 @@ import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ProgramAccessService;
 import com.softinter.sicapi.util.LocalizationHelper;
@@ -44,6 +47,8 @@ public class SuBusinessRoleController {
 
     private final SuBusinessRoleRepository businessRoleRepository;
     private final SuBusinessRepository businessRepository;
+    private final SuUserBusinessRoleRepository userBusinessRoleRepository;
+    private final SuProfileRepository profileRepository;
     private final ProgramAccessService programAccessService;
     private final CurrentUserService currentUserService;
 
@@ -264,4 +269,21 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
     response.setColor(role.getColor());
     return response;
 }
+    @GetMapping("/{businessId}/users-by-role")
+    @Operation(summary = "Get users in a business that have a specific role")
+    public ResponseEntity<List<LovResponse>> getUsersByRole(
+            @PathVariable UUID businessId,
+            @RequestParam String roleCode) {
+        List<String> userIds = userBusinessRoleRepository.findUserIdsByBusinessIdAndRoleCode(businessId, roleCode);
+        List<LovResponse> result = userIds.stream().map(uid -> {
+            String displayName = profileRepository.findByUserId(uid)
+                    .map(p -> {
+                        String name = LocalizationHelper.getFullName(p);
+                        return (name != null && !name.isBlank()) ? name : uid;
+                    })
+                    .orElse(uid);
+            return new LovResponse(uid, displayName);
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
 }

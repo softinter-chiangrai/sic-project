@@ -21,6 +21,7 @@ export interface ApprovalFlowStep {
   stepOrder: number;
   stepName: string;
   approverRole?: string;
+  approverUserId?: string;   // comma-separated user IDs
   isRequired: boolean;
   timeoutDays?: number;
   canSkip: boolean;

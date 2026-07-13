@@ -228,25 +228,13 @@ export class Pmdt04AComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: (res: any) => {
-          const id = res.id || res.data?.id;
+          const id = res.id || res.data?.id || data.id || this.reqId;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
           this.form.markAsPristine();
 
-          if (!this.isEdit && id) {
-            this.reqId = id;
-            this.form.patchValue({ id: id });
-            this.isEdit = true;
-
-            // ส่งขออนุมัติอัตโนมัติ
-            if (this.selectedFlowId) {
-              this.submitForApproval(id);
-            } else {
-              this.dialog.warn('ไม่พบ Approval Flow', 'ไม่สามารถส่งขออนุมัติได้ กรุณาติดต่อผู้ดูแลระบบ');
-              // ✅ ส่ง projectId กลับไป
-              this.navigateBackToRequirementList();
-            }
+          if (this.selectedFlowId) {
+            this.submitForApproval(id);
           } else {
-            // ✅ ส่ง projectId กลับไป
             this.navigateBackToRequirementList();
           }
         },

@@ -455,13 +455,11 @@ export const PM_ROUTES: Routes = [
   {
     path: 'approval',
     loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-    canActivate: [customerGuard],
   },
   {
     path: 'approval/:id',
     loadComponent: () =>
       import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
-    canActivate: [customerGuard],
   },
 
   // ===== Dashboard =====

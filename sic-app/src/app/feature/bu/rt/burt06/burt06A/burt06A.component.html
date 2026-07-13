@@ -175,9 +175,62 @@
                     valueField="roleCode"
                     textField="roleName"
                     placeholder="เลือกบทบาท..."
+                    (selectionChanged)="loadUsersForStep(i, $event?.roleCode)"
                     [errorMessages]="{ required: 'กรุณาเลือกบทบาท' }"
                   ></sic-combobox>
                 </div>
+
+                <!-- ===== User multi-select ===== -->
+                @if (step.get('approverRole')?.value) {
+                  <div class="mt-3">
+                    <p class="text-sm font-medium text-[var(--text-active)] mb-2">
+                      <i class="bi bi-people mr-1 text-[var(--crm-primary)]"></i>
+                      เลือกผู้อนุมัติ
+                      <span class="text-[var(--text-muted)] font-normal text-xs ml-1">
+                        (ถ้าไม่เลือกจะอนุมัติได้ทุกคนใน Role)
+                      </span>
+                    </p>
+
+                    @if (stepUsersLoading[i]) {
+                      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                        <div class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+                        กำลังโหลดรายชื่อ...
+                      </div>
+                    } @else if (stepUsersCache[i]?.length) {
+                      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1">
+                        @for (user of stepUsersCache[i]; track user.value) {
+                          <label
+                            class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors"
+                            [class]="isUserSelected(i, user.value)
+                              ? 'border-[var(--crm-primary)] bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]'
+                              : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] hover:border-[var(--crm-primary)]/50'"
+                            (click)="toggleUser(i, user.value)"
+                          >
+                            <i class="bi text-base"
+                              [class]="isUserSelected(i, user.value) ? 'bi-check-square-fill' : 'bi-square'"
+                            ></i>
+                            <span class="text-sm truncate">{{ user.text }}</span>
+                          </label>
+                        }
+                      </div>
+                      @if (step.get('selectedUserIds')?.value?.length) {
+                        <p class="text-xs text-[var(--crm-primary)] mt-1">
+                          เลือกแล้ว {{ step.get('selectedUserIds')?.value?.length }} คน
+                        </p>
+                      }
+                    } @else {
+                      <p class="text-sm text-[var(--text-muted)] italic">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        ไม่พบผู้ใช้งานใน Role นี้ หรือยังไม่ได้โหลด
+                        <button type="button"
+                          class="ml-2 text-[var(--crm-primary)] underline text-xs"
+                          (click)="loadUsersForStep(i, step.get('approverRole')?.value)">
+                          โหลดใหม่
+                        </button>
+                      </p>
+                    }
+                  </div>
+                }
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <sic-input

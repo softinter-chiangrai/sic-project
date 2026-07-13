@@ -28,16 +28,20 @@ import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.pm.PmApprovalLog;
 import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
+import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
 import com.softinter.sicapi.service.ApprovalNotificationService;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 
 import jakarta.persistence.criteria.Predicate;
@@ -54,6 +58,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmApprovalFlowStepRepository stepRepository;
     private final PmApprovalStepStatusRepository stepStatusRepository;
     private final PmApprovalLogRepository logRepository;
+    private final SuUserBusinessRoleRepository userBusinessRoleRepository;
+    private final SuProfileRepository profileRepository;
     private final CurrentUserService currentUserService;
     private final ApprovalFlowService flowService;
     private final ApprovalNotificationService notificationService;
@@ -120,19 +126,51 @@ public class ApprovalServiceImpl implements ApprovalService {
         // 6. Create step statuses
         List<PmApprovalStepStatus> stepStatuses = new ArrayList<>();
         for (PmApprovalFlowStep step : steps) {
-            PmApprovalStepStatus stepStatus = new PmApprovalStepStatus();
-            stepStatus.setApproval(approval);
-            stepStatus.setStep(step);
-            stepStatus.setStatus(ApprovalStatus.PENDING);
-            stepStatus.setIsCompleted(false);
-
-            // If step is not required and mode is CHAIN, it can be auto-skipped
-            if (Boolean.FALSE.equals(step.getIsRequired()) && flow.getApprovalMode() == ApprovalMode.CHAIN) {
-                stepStatus.setStatus(ApprovalStatus.APPROVED);
-                stepStatus.setIsCompleted(true);
+            List<String> targetUserIds = new ArrayList<>();
+            String approverUserIds = step.getApproverUserId();
+            if (approverUserIds != null && !approverUserIds.isBlank()) {
+                for (String uid : approverUserIds.split(",")) {
+                    uid = uid.trim();
+                    if (!uid.isEmpty()) {
+                        targetUserIds.add(uid);
+                    }
+                }
+            } else if (step.getApproverRole() != null && !step.getApproverRole().isBlank()) {
+                List<String> roleUserIds = userBusinessRoleRepository.findUserIdsByBusinessIdAndRoleCode(approval.getBusinessId(), step.getApproverRole());
+                if (roleUserIds != null) {
+                    targetUserIds.addAll(roleUserIds);
+                }
             }
 
-            stepStatuses.add(stepStatus);
+            if (targetUserIds.isEmpty()) {
+                PmApprovalStepStatus stepStatus = new PmApprovalStepStatus();
+                stepStatus.setApproval(approval);
+                stepStatus.setStep(step);
+                stepStatus.setStatus(ApprovalStatus.PENDING);
+                stepStatus.setIsCompleted(false);
+
+                if (Boolean.FALSE.equals(step.getIsRequired()) && flow.getApprovalMode() == ApprovalMode.CHAIN) {
+                    stepStatus.setStatus(ApprovalStatus.APPROVED);
+                    stepStatus.setIsCompleted(true);
+                }
+                stepStatuses.add(stepStatus);
+            } else {
+                for (String uid : targetUserIds) {
+                    PmApprovalStepStatus stepStatus = new PmApprovalStepStatus();
+                    stepStatus.setApproval(approval);
+                    stepStatus.setStep(step);
+                    stepStatus.setStatus(ApprovalStatus.PENDING);
+                    stepStatus.setIsCompleted(false);
+                    stepStatus.setApprover(uid);
+                    stepStatus.setApproverName(getUserName(uid));
+
+                    if (Boolean.FALSE.equals(step.getIsRequired()) && flow.getApprovalMode() == ApprovalMode.CHAIN) {
+                        stepStatus.setStatus(ApprovalStatus.APPROVED);
+                        stepStatus.setIsCompleted(true);
+                    }
+                    stepStatuses.add(stepStatus);
+                }
+            }
         }
 
         // Set first pending step as current
@@ -169,6 +207,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     // 2. Query
     // ============================================================
     @Override
+    @Transactional(readOnly = true)
+
     public ApprovalResponse getApproval(UUID id) {
         PmApproval approval = approvalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
@@ -176,6 +216,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+
     public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
@@ -186,6 +228,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+
     public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").ascending());
         Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
@@ -196,6 +240,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
@@ -206,6 +252,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+
     public PaginationResponse<ApprovalResponse> searchApprovals(ApprovalSearchRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
@@ -507,7 +555,10 @@ public class ApprovalServiceImpl implements ApprovalService {
         return approval.getStepStatuses().stream()
                 .anyMatch(ss -> ss.getStatus() == ApprovalStatus.PENDING
                         && !ss.getIsCompleted()
-                        && userId.equals(ss.getApprover()));
+                        && userId.equals(ss.getApprover())
+                        && (approval.getFlow().getApprovalMode() != ApprovalMode.CHAIN 
+                            || approval.getCurrentStep() == null 
+                            || ss.getStep().getId().equals(approval.getCurrentStep().getId())));
     }
 
     @Override
@@ -548,6 +599,13 @@ public class ApprovalServiceImpl implements ApprovalService {
         // TODO: Implement validation for each document type
         // Check if document exists, if document is in correct status, etc.
         log.info("Validating document: type={}, id={}", documentType, documentId);
+    }
+
+    private String getUserName(String userId) {
+        if (userId == null) return null;
+        return profileRepository.findByUserId(userId)
+                .map(LocalizationHelper::getFullName)
+                .orElse(userId);
     }
 
     // ============================================================

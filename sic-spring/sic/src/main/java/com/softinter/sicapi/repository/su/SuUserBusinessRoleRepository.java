@@ -45,4 +45,11 @@ public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusine
        "AND ubr.isActive = true " +
        "AND ubr.isDelete = false")
 List<SuUserBusinessRole> findByUserBusinessIdAndIsActiveTrue(@Param("userBusinessId") UUID userBusinessId);
+
+    @Query("SELECT DISTINCT ubr.userBusiness.userId FROM SuUserBusinessRole ubr " +
+           "WHERE ubr.isActive = true AND ubr.userBusiness.isActive = true " +
+           "AND ubr.userBusiness.business.id = :businessId " +
+           "AND ubr.businessRole.roleCode = :roleCode " +
+           "AND ubr.businessRole.isActive = true")
+    List<String> findUserIdsByBusinessIdAndRoleCode(@Param("businessId") UUID businessId, @Param("roleCode") String roleCode);
 }

@@ -101,6 +101,7 @@ public ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request) {
             step.setStepOrder(stepReq.getStepOrder());
             step.setStepName(stepReq.getStepName());
             step.setApproverRole(stepReq.getApproverRole());
+            step.setApproverUserId(stepReq.getApproverUserId());
             step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
             step.setTimeoutDays(stepReq.getTimeoutDays());
             step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
@@ -145,6 +146,7 @@ public ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request)
             step.setStepOrder(stepReq.getStepOrder());
             step.setStepName(stepReq.getStepName());
             step.setApproverRole(stepReq.getApproverRole());
+            step.setApproverUserId(stepReq.getApproverUserId());
             step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
             step.setTimeoutDays(stepReq.getTimeoutDays());
             step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);

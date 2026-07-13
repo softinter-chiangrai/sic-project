@@ -10,6 +10,7 @@ public class SaveApprovalFlowStepRequest {
     private Integer stepOrder;
     private String stepName;
     private String approverRole;
+    private String approverUserId;
     private Boolean isRequired;
     private Integer timeoutDays;
     private Boolean canSkip;
