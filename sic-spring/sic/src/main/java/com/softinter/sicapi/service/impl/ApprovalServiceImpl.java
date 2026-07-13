@@ -28,7 +28,6 @@ import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.pm.PmApprovalLog;
 import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
-import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
@@ -65,7 +64,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ApprovalNotificationService notificationService;
 
     // ============================================================
-    // 1. Submit for Approval
+    // 1. Submit for Approval (FIXED Optimistic Locking)
     // ============================================================
     @Override
     @Transactional
@@ -101,7 +100,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("Approval flow has no steps defined.");
         }
 
-        // 5. Create approval
+        // 5. Create approval (not saved yet)
         PmApproval approval = new PmApproval();
         approval.setBusinessId(currentUserService.getBusinessId());
         approval.setDocumentType(request.getDocumentType());
@@ -121,9 +120,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             // TODO: Load attachment
         }
 
-        approval = approvalRepository.save(approval);
-
-        // 6. Create step statuses
+        // 6. Create step statuses (not saved yet)
         List<PmApprovalStepStatus> stepStatuses = new ArrayList<>();
         for (PmApprovalFlowStep step : steps) {
             List<String> targetUserIds = new ArrayList<>();
@@ -173,14 +170,17 @@ public class ApprovalServiceImpl implements ApprovalService {
             }
         }
 
-        // Set first pending step as current
+        // 7. Set the step statuses into approval
+        approval.setStepStatuses(stepStatuses);
+
+        // 8. Determine current step and update approval status if needed
         PmApprovalFlowStep currentStep = null;
         for (PmApprovalStepStatus stepStatus : stepStatuses) {
-        if (stepStatus.getStatus() == ApprovalStatus.PENDING) {
-        currentStep = stepStatus.getStep();
-        break;
-    }
-}
+            if (stepStatus.getStatus() == ApprovalStatus.PENDING) {
+                currentStep = stepStatus.getStep();
+                break;
+            }
+        }
 
         if (currentStep == null) {
             // All steps are auto-approved (not required)
@@ -191,24 +191,23 @@ public class ApprovalServiceImpl implements ApprovalService {
             approval.setCurrentStep(currentStep);
         }
 
-        stepStatusRepository.saveAll(stepStatuses);
+        // 9. Save everything in one shot (cascade will persist stepStatuses)
         approval = approvalRepository.save(approval);
 
-        // 7. Log
+        // 10. Log (after save)
         createLog(approval, null, "SUBMIT", userId, userName, "Submitted for approval", null, ApprovalStatus.PENDING);
 
-        // 8. Notify
+        // 11. Notify
         notificationService.notifySubmitted(approval);
 
         return toResponse(approval);
     }
 
     // ============================================================
-    // 2. Query
+    // 2. Query (no changes)
     // ============================================================
     @Override
     @Transactional(readOnly = true)
-
     public ApprovalResponse getApproval(UUID id) {
         PmApproval approval = approvalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
@@ -217,7 +216,6 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-
     public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
@@ -229,7 +227,6 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-
     public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").ascending());
         Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
@@ -241,7 +238,6 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
@@ -253,7 +249,6 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-
     public PaginationResponse<ApprovalResponse> searchApprovals(ApprovalSearchRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
@@ -297,7 +292,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 3. Actions
+    // 3. Actions (no changes)
     // ============================================================
     @Override
     @Transactional
@@ -308,7 +303,6 @@ public class ApprovalServiceImpl implements ApprovalService {
         PmApproval approval = approvalRepository.findById(approvalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
 
-        // Check if can approve
         if (!canApprove(approvalId, userId)) {
             throw new IllegalStateException("You don't have permission to approve this document.");
         }
@@ -541,7 +535,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 4. Utility
+    // 4. Utility (no changes)
     // ============================================================
     @Override
     public boolean canApprove(UUID approvalId, String userId) {
@@ -609,7 +603,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 5. Private Helpers
+    // 5. Private Helpers (no changes)
     // ============================================================
     private void createLog(PmApproval approval, PmApprovalStepStatus stepStatus, String action,
                            String actor, String actorName, String comment,
@@ -632,7 +626,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 6. Response Mapping
+    // 6. Response Mapping (no changes)
     // ============================================================
     private ApprovalResponse toResponse(PmApproval approval) {
         ApprovalResponse response = new ApprovalResponse();
@@ -718,30 +712,29 @@ public class ApprovalServiceImpl implements ApprovalService {
         return response;
     }
 
-  
     private ApprovalStepResponse toStepResponse(PmApprovalStepStatus status, PmApproval approval) {
-    ApprovalStepResponse response = new ApprovalStepResponse();
-    response.setId(status.getId());
-    response.setStepId(status.getStep().getId());
-    response.setStepOrder(status.getStep().getStepOrder());
-    response.setStepName(status.getStep().getStepName());
-    response.setApproverRole(status.getStep().getApproverRole());
-    response.setApproverUserId(status.getStep().getApproverUserId());
-    response.setIsRequired(status.getStep().getIsRequired()); 
-    response.setTimeoutDays(status.getStep().getTimeoutDays());
-    response.setStatus(status.getStatus());
-    response.setStatusText(getStatusText(status.getStatus()));
-    response.setStatusColor(getStatusColor(status.getStatus()));
-    response.setApprovalDate(status.getApprovalDate());
-    response.setComment(status.getComment());
-    response.setApproverName(status.getApproverName());
-    response.setComplete(status.getIsCompleted());
+        ApprovalStepResponse response = new ApprovalStepResponse();
+        response.setId(status.getId());
+        response.setStepId(status.getStep().getId());
+        response.setStepOrder(status.getStep().getStepOrder());
+        response.setStepName(status.getStep().getStepName());
+        response.setApproverRole(status.getStep().getApproverRole());
+        response.setApproverUserId(status.getStep().getApproverUserId());
+        response.setIsRequired(status.getStep().getIsRequired()); 
+        response.setTimeoutDays(status.getStep().getTimeoutDays());
+        response.setStatus(status.getStatus());
+        response.setStatusText(getStatusText(status.getStatus()));
+        response.setStatusColor(getStatusColor(status.getStatus()));
+        response.setApprovalDate(status.getApprovalDate());
+        response.setComment(status.getComment());
+        response.setApproverName(status.getApproverName());
+        response.setComplete(status.getIsCompleted());
 
-    boolean isCurrent = status.getStatus() == ApprovalStatus.PENDING && !status.getIsCompleted();
-    response.setCurrent(isCurrent);
+        boolean isCurrent = status.getStatus() == ApprovalStatus.PENDING && !status.getIsCompleted();
+        response.setCurrent(isCurrent);
 
-    return response;
-}
+        return response;
+    }
 
     private ApprovalLogResponse toLogResponse(PmApprovalLog log) {
         ApprovalLogResponse response = new ApprovalLogResponse();
