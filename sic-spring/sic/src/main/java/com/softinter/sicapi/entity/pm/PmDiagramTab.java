@@ -1,24 +1,17 @@
+// File: sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java
 package com.softinter.sicapi.entity.pm;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -45,9 +38,10 @@ public class PmDiagramTab extends BaseEntity {
     @Column(name = "mermaid_script", columnDefinition = "TEXT")
     private String mermaidScript;
 
+    // เปลี่ยนจาก String เป็น Map เพื่อให้ Hibernate จัดการ JSONB โดยตรง
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSONB")
-    private String metadata;
+    private Map<String, Object> metadata;
 
     @Column(name = "sort_order")
     private Integer sortOrder = 0;

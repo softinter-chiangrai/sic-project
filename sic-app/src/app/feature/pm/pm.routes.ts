@@ -175,9 +175,16 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-    {
+    // ===== Diagram =====
+  {
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'diagram/new',
+    loadComponent: () =>
+      import('./dt/pmdt06/pmdt06E/pmdt06E.component').then((m) => m.Pmdt06EComponent), 
     canActivate: [customerGuard, projectGuard],
   },
 

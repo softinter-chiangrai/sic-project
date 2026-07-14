@@ -1,0 +1,12 @@
+/* src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.css */
+:host {
+  display: block;
+}
+
+.group:hover .bi {
+  transition: transform 0.2s ease;
+}
+
+.grid > div {
+  min-height: 180px;
+}
