@@ -1,6 +1,6 @@
-<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
 <div class="flex h-[calc(100vh-56px)]">
-  <!-- Left Sidebar: Tabs List -->
+  <!-- Left Sidebar -->
   <aside class="w-56 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col flex-shrink-0">
     <!-- Search -->
     <div class="p-3 border-b border-[var(--border)]">
@@ -10,6 +10,19 @@
         placeholder="Search diagrams..."
         class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
       />
+    </div>
+
+    <!-- Filter by Type -->
+    <div class="p-3 border-b border-[var(--border)]">
+      <select
+        [(ngModel)]="filterType"
+        class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      >
+        <option value="all">📂 ทุกประเภท</option>
+        @for (type of diagramTypeOptions; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
     </div>
 
     <!-- Tab List -->
@@ -38,7 +51,7 @@
       } @empty {
         <div class="text-center text-[var(--text-muted)] text-sm py-8">
           <i class="bi bi-inbox text-2xl block mb-2 opacity-30"></i>
-          No diagrams yet
+          No diagrams found
         </div>
       }
     </div>

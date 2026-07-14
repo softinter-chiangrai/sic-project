@@ -1,27 +1,29 @@
 package com.softinter.sicapi.service.impl;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.pm.PmDiagramProject;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
 import com.softinter.sicapi.entity.pm.PmDiagramVersion;
-import com.softinter.sicapi.repository.pm.PmDiagramProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,25 +31,28 @@ import java.util.stream.Collectors;
 public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private final PmDiagramTabRepository tabRepository;
-    private final PmDiagramProjectRepository projectRepository;
     private final PmDiagramVersionRepository versionRepository;
+    private final PmCustomerProjectRepository customerProjectRepository;
     private final CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
     public List<PmDiagramTabResponse> getTabs(UUID projectId) {
-        String userId = currentUserService.getUserId();
-
-        List<PmDiagramTab> tabs;
-        if (projectId != null) {
-            tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-        } else {
-            tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+        try {
+            String userId = currentUserService.getUserId();
+            List<PmDiagramTab> tabs;
+            if (projectId != null) {
+                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            } else {
+                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+            }
+            return tabs.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in getTabs for projectId: {}", projectId, e);
+            throw e;
         }
-
-        return tabs.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -64,10 +69,10 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         String userId = currentUserService.getUserId();
         UUID businessId = BusinessContextHolder.getBusinessId();
 
-        PmDiagramProject project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        if (!customerProjectRepository.existsById(request.getProjectId())) {
+            throw new RuntimeException("Project not found: " + request.getProjectId());
+        }
 
-        // Calculate next sort order
         List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
                 request.getProjectId()
         );
@@ -76,7 +81,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = new PmDiagramTab();
         tab.setUserId(userId);
         tab.setBusinessId(businessId);
-        tab.setProject(project);
+        tab.setProjectId(request.getProjectId());
         tab.setName(request.getName());
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript());
@@ -136,7 +141,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab duplicate = new PmDiagramTab();
         duplicate.setUserId(original.getUserId());
         duplicate.setBusinessId(original.getBusinessId());
-        duplicate.setProject(original.getProject());
+        duplicate.setProjectId(original.getProjectId());
         duplicate.setName(original.getName() + " (Copy)");
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
@@ -185,15 +190,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
-    // ------------------------------------------------------------------------
-    // Helper methods
-    // ------------------------------------------------------------------------
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
 
     private void createVersion(PmDiagramTab tab, String comment) {
         int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
         int nextVersion = versionCount + 1;
 
-        // Limit to 50 versions to prevent bloat
         if (versionCount >= 50) {
             List<PmDiagramVersion> oldestVersions = versionRepository
                     .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
@@ -214,23 +218,55 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     }
 
     private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
-        PmDiagramTabResponse dto = new PmDiagramTabResponse();
-        dto.setId(tab.getId());
-        dto.setName(tab.getName());
-        dto.setDiagramType(tab.getDiagramType());
-        dto.setMermaidScript(tab.getMermaidScript());
-        dto.setMetadata(tab.getMetadata());
-        dto.setProjectId(tab.getProject().getId());
-        dto.setProjectName(tab.getProject().getName());
-        dto.setSortOrder(tab.getSortOrder());
-        dto.setIsActive(tab.getIsActive());
-        dto.setCreatedDate(tab.getCreatedDate());
-        dto.setUpdatedDate(tab.getUpdatedDate());
+        try {
+            PmDiagramTabResponse dto = new PmDiagramTabResponse();
+            dto.setId(tab.getId());
+            dto.setName(tab.getName());
+            dto.setDiagramType(tab.getDiagramType());
+            dto.setMermaidScript(tab.getMermaidScript());
+            dto.setMetadata(tab.getMetadata());
+            dto.setProjectId(tab.getProjectId());
 
-        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
-        dto.setVersionCount(versionCount);
+            // ดึง projectName (ถ้ามี)
+            try {
+                customerProjectRepository.findById(tab.getProjectId())
+                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
+            } catch (Exception e) {
+                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
+                dto.setProjectName(null);
+            }
 
-        return dto;
+            dto.setSortOrder(tab.getSortOrder());
+            dto.setIsActive(tab.getIsActive());
+            dto.setCreatedDate(tab.getCreatedDate());
+            dto.setUpdatedDate(tab.getUpdatedDate());
+
+            // ดึง version count
+            try {
+                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
+            } catch (Exception e) {
+                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
+                dto.setVersionCount(0);
+            }
+
+            return dto;
+        } catch (Exception e) {
+            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
+            // Fallback: ส่ง response แบบ minimal (ไม่มี projectName, versionCount)
+            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
+            fallback.setId(tab.getId());
+            fallback.setName(tab.getName());
+            fallback.setDiagramType(tab.getDiagramType());
+            fallback.setMermaidScript(tab.getMermaidScript());
+            fallback.setMetadata(tab.getMetadata());
+            fallback.setProjectId(tab.getProjectId());
+            fallback.setSortOrder(tab.getSortOrder());
+            fallback.setIsActive(tab.getIsActive());
+            fallback.setCreatedDate(tab.getCreatedDate());
+            fallback.setUpdatedDate(tab.getUpdatedDate());
+            fallback.setVersionCount(0);
+            return fallback;
+        }
     }
 
     private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {

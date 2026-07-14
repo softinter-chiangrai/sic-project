@@ -1,74 +1,85 @@
-// src/app/features/pmdt06/pmdt06.component.ts
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
 
-import { Pmdt06AComponent } from './pmdt06A/pmdt06A.component';
-import { DiagramService } from './diagram.service';
-import { ThemeService } from '../../../../core/services/theme.service';
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 import type { DiagramProject } from './diagram.model';
+import { DiagramService } from './diagram.service';
+import { Pmdt06AComponent } from './pmdt06A/pmdt06A.component';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
   imports: [CommonModule, Pmdt06AComponent],
   templateUrl: './pmdt06.component.html',
-  styleUrls: ['./pmdt06.component.css']
+  styleUrls: ['./pmdt06.component.css'],
 })
 export class Pmdt06Component implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private diagramService = inject(DiagramService);
   private themeService = inject(ThemeService);
   private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
   private destroy$ = new Subject<void>();
 
   currentProject = signal<DiagramProject | null>(null);
   isDark = signal(false);
+  isLoading = signal(true);
+  projectId = signal<string | null>(null);
 
   ngOnInit() {
     this.isDark.set(this.themeService.isDark());
-    this.loadDefaultProject();
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      let projectId = params['projectId'] || this.customerState.getProjectId();
+      let projectName = params['projectName'] || this.customerState.getProjectName() || '';
+
+      if (!projectId) {
+        this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้').then(() => {
+          this.router.navigate(['/feature/pm/pmrt02']);
+        });
+        return;
+      }
+
+      this.projectId.set(projectId);
+      this.isLoading.set(true);
+
+      // โหลด tabs เพื่อเช็คว่า projectId นี้มีอยู่จริง
+      this.diagramService.getTabs(projectId).subscribe({
+        next: (tabs) => {
+          // ✅ ดึง projectName จาก response ถ้ามี
+          const projectNameFromApi = tabs.length > 0 ? tabs[0].projectName : null;
+          const finalProjectName = projectNameFromApi || projectName || 'โครงการ';
+
+          this.currentProject.set({
+            id: projectId,
+            name: finalProjectName, // ← ใช้ค่าจาก API
+            isFavorite: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          console.error('Load tabs error:', err);
+          const msg = err.error?.message || err.message || 'ไม่พบโครงการนี้ในระบบ';
+          this.dialog.error('ไม่พบโครงการ', msg).then(() => {
+            this.router.navigate(['/feature/pm/pmrt02']);
+          });
+        },
+      });
+    });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private loadDefaultProject() {
-    this.diagramService.getProjects()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (projects) => {
-          if (projects.length > 0) {
-            const defaultProject = projects.find(p => p.isFavorite) || projects[0];
-            this.currentProject.set(defaultProject);
-            this.diagramService.getTabs(defaultProject.id).subscribe();
-          } else {
-            this.createFirstProject();
-          }
-        },
-        error: () => {
-          // Handle error
-        }
-      });
-  }
-
-  private createFirstProject() {
-    this.dialog.confirm('Create Project', 'You don\'t have any project yet. Create one to get started?')
-      .then(confirmed => {
-        if (confirmed) {
-          this.diagramService.createProject('My First Project', 'AI Diagram Studio')
-            .subscribe({
-              next: (project) => {
-                this.currentProject.set(project);
-                this.diagramService.getTabs(project.id).subscribe();
-              }
-            });
-        }
-      });
   }
 
   toggleTheme() {
@@ -77,6 +88,11 @@ export class Pmdt06Component implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/feature/dashboard']);
+    const projectId = this.projectId();
+    if (projectId) {
+      this.router.navigate(['/feature/pm/pmrt03'], { queryParams: { projectId } });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt02']);
+    }
   }
 }

@@ -1,0 +1,2 @@
+ALTER TABLE pm_diagram_projects ADD COLUMN customer_project_id UUID;
+CREATE INDEX idx_diagram_projects_customer_project ON pm_diagram_projects (customer_project_id);

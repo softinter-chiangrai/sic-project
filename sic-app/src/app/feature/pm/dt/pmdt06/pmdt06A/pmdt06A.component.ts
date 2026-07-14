@@ -1,5 +1,14 @@
-// src/app/features/pmdt06/pmdt06A/pmdt06A.component.ts
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  OnDestroy,
+  Input,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -12,43 +21,63 @@ import { Pmdt06CComponent } from '../pmdt06C/pmdt06C.component';
 import { Pmdt06DComponent } from '../pmdt06D/pmdt06D.component';
 import { DiagramService } from '../diagram.service';
 import { DiagramModel, DiagramType, DIAGRAM_DEFAULTS, DIAGRAM_TYPES } from '../diagram.model';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
 
 @Component({
   selector: 'app-pmdt06A',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, Pmdt06BComponent, Pmdt06CComponent, Pmdt06DComponent, MatDialogModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DragDropModule,
+    Pmdt06BComponent,
+    Pmdt06CComponent,
+    Pmdt06DComponent,
+    MatDialogModule,
+  ],
   templateUrl: './pmdt06A.component.html',
-  styleUrls: ['./pmdt06A.component.css']
+  styleUrls: ['./pmdt06A.component.css'],
 })
 export class Pmdt06AComponent implements OnInit, OnDestroy {
+  // ทำให้ projectId เป็น required และไม่เป็น null
+  @Input({ required: true }) projectId!: string;
+
   private diagramService = inject(DiagramService);
   private dialog = inject(MatDialog);
+  private dialogService = inject(DialogService);
 
   private destroy$ = new Subject<void>();
   private autoSave$ = new Subject<DiagramModel>();
 
   tabs = signal<DiagramModel[]>([]);
   activeTabId = signal<string | null>(null);
+  filterType = signal<string>('all');
+  diagramTypeOptions = DIAGRAM_TYPES;
   searchQuery = signal('');
 
   activeTab = computed(() => {
     const id = this.activeTabId();
-    return this.tabs().find(t => t.id === id) || null;
+    return this.tabs().find((t) => t.id === id) || null;
   });
 
-  filteredTabs = computed(() => {
+  protected filteredTabs = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    if (!query) return this.tabs();
-    return this.tabs().filter(t =>
-      t.name.toLowerCase().includes(query) ||
-      t.diagramType.toLowerCase().includes(query)
-    );
+    const type = this.filterType();
+    return this.tabs().filter((t) => {
+      const matchQuery =
+        !query ||
+        t.name.toLowerCase().includes(query) ||
+        t.diagramType.toLowerCase().includes(query);
+      const matchType = type === 'all' || t.diagramType === type;
+      return matchQuery && matchType;
+    });
   });
 
   ngOnInit() {
     this.diagramService.tabs$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(tabs => {
+      .subscribe((tabs) => {
         this.tabs.set(tabs);
         if (tabs.length > 0 && !this.activeTabId()) {
           this.activeTabId.set(tabs[0].id);
@@ -57,7 +86,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
 
     this.autoSave$
       .pipe(debounceTime(1000), takeUntil(this.destroy$))
-      .subscribe(tab => {
+      .subscribe((tab) => {
         this.diagramService.updateTab(tab).subscribe();
       });
   }
@@ -73,19 +102,34 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
   }
 
   createTab() {
+    // projectId ถูกบังคับให้มีค่าแล้ว (required) แต่ยังเช็คไว้ป้องกัน
+    if (!this.projectId) {
+      this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อนสร้าง Diagram');
+      return;
+    }
+
     const dialogRef = this.dialog.open(CreateDiagramDialogComponent, {
       width: '450px',
-      data: { name: '', type: 'Flowchart' as DiagramType }
+      data: { name: '', type: 'Flowchart' as DiagramType },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         const { name, type } = result;
         const script = DIAGRAM_DEFAULTS[type as DiagramType] || '';
-        const projectId = this.diagramService['projectsSubject'].value[0]?.id || '';
-        this.diagramService.createTab(projectId, name, type, script)
-          .subscribe(tab => {
-            this.activeTabId.set(tab.id);
+        this.diagramService
+          .createTab(this.projectId!, name, type, script)
+          .subscribe({
+            next: (tab) => {
+              this.activeTabId.set(tab.id);
+              // ✅ เพิ่ม Toast แจ้งเตือนความสำเร็จ
+              this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              console.error('Create tab error:', err);
+              const msg = err.error?.message || err.message || 'เกิดข้อผิดพลาด';
+              this.dialogService.error('สร้าง Diagram ไม่สำเร็จ', msg);
+            },
           });
       }
     });
@@ -96,35 +140,44 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
     this.diagramService.deleteTab(id).subscribe(() => {
       const tabs = this.tabs();
       if (this.activeTabId() === id) {
-        const remaining = tabs.filter(t => t.id !== id);
+        const remaining = tabs.filter((t) => t.id !== id);
         this.activeTabId.set(remaining.length ? remaining[0].id : null);
       }
     });
   }
 
   updateDiagram(updated: DiagramModel) {
-    this.tabs.update(tabs => tabs.map(t => t.id === updated.id ? updated : t));
+    this.tabs.update((tabs) => tabs.map((t) => (t.id === updated.id ? updated : t)));
     this.autoSave$.next(updated);
   }
 
   drop(event: CdkDragDrop<DiagramModel[]>) {
     const tabs = this.tabs();
-    const reorder = tabs.map(t => ({ id: t.id, sortOrder: t.sortOrder }));
+    const reorder = tabs.map((t) => ({ id: t.id, sortOrder: t.sortOrder }));
     moveItemInArray(reorder, event.previousIndex, event.currentIndex);
     this.diagramService.reorderTabs(reorder).subscribe();
   }
 
   handleAiResponse(response: any) {
     if (response.action === 'create' && response.diagram) {
-      const projectId = this.diagramService['projectsSubject'].value[0]?.id || '';
-      this.diagramService.createTab(
-        projectId,
-        response.diagram.name || 'AI Generated',
-        response.diagram.type || 'Flowchart',
-        response.diagram.script
-      ).subscribe(tab => {
-        this.activeTabId.set(tab.id);
-      });
+      if (!this.projectId) {
+        this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อน');
+        return;
+      }
+      this.diagramService
+        .createTab(
+          this.projectId,
+          response.diagram.name || 'AI Generated',
+          response.diagram.type || 'Flowchart',
+          response.diagram.script,
+        )
+        .subscribe({
+          next: (tab) => {
+            this.activeTabId.set(tab.id);
+            this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${response.diagram.name}" เรียบร้อย`);
+          },
+          error: (err) => this.dialogService.error('สร้างไม่สำเร็จ', err.message),
+        });
     } else if (response.action === 'update' && response.diagram) {
       const current = this.activeTab();
       if (current) {
@@ -155,7 +208,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
   }
 }
 
-// Create Diagram Dialog Component
+// ===== Create Diagram Dialog (ไม่เปลี่ยนแปลง) =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,
@@ -182,13 +235,13 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
         </div>
       </div>
     </div>
-  `
+  `,
 })
 export class CreateDiagramDialogComponent {
   diagramTypes = DIAGRAM_TYPES;
   constructor(
     public dialogRef: MatDialogRef<CreateDiagramDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { name: string; type: DiagramType }
+    @Inject(MAT_DIALOG_DATA) public data: { name: string; type: DiagramType },
   ) {}
 
   confirm() {

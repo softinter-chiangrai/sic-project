@@ -16,6 +16,7 @@ export interface DiagramModel {
   mermaidScript: string;
   metadata: any;
   projectId: string;
+  projectName?: string;
   userId: string;
   sortOrder: number;
   isActive: boolean;

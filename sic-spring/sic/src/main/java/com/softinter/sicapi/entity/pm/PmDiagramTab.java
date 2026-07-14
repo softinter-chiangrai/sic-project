@@ -1,17 +1,23 @@
 // File: sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java
 package com.softinter.sicapi.entity.pm;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -25,9 +31,8 @@ public class PmDiagramTab extends BaseEntity {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private PmDiagramProject project;
+    @Column(name = "project_id", nullable = false)   
+    private UUID projectId;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -38,7 +43,6 @@ public class PmDiagramTab extends BaseEntity {
     @Column(name = "mermaid_script", columnDefinition = "TEXT")
     private String mermaidScript;
 
-    // เปลี่ยนจาก String เป็น Map เพื่อให้ Hibernate จัดการ JSONB โดยตรง
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSONB")
     private Map<String, Object> metadata;

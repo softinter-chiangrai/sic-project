@@ -387,6 +387,10 @@ sic-app/
                 pmdt06D.component.css
                 pmdt06D.component.html
                 pmdt06D.component.ts
+              pmdt06E/
+                pmdt06E.component.css
+                pmdt06E.component.html
+                pmdt06E.component.ts
               diagram.model.ts
               diagram.service.ts
               pmdt06.component.css
@@ -750,7 +754,6 @@ sic-spring/
                     PmCustomerController.java
                     PmCustomerProjectController.java
                     PmDiagramChatController.java
-                    PmDiagramProjectController.java
                     PmDiagramTabController.java
                     PmRequirementController.java
                     ProjectTaskController.java
@@ -799,7 +802,6 @@ sic-spring/
                     PmCustomerContractRequest.java
                     PmCustomerProjectRequest.java
                     PmCustomerRequest.java
-                    PmDiagramProjectRequest.java
                     PmDiagramReorderRequest.java
                     PmDiagramTabRequest.java
                     PmRequirementRequest.java
@@ -862,7 +864,6 @@ sic-spring/
                     PmCustomerContractResponse.java
                     PmCustomerProjectResponse.java
                     PmCustomerResponse.java
-                    PmDiagramProjectResponse.java
                     PmDiagramTabResponse.java
                     PmDiagramVersionResponse.java
                     PmRequirementResponse.java
@@ -919,7 +920,6 @@ sic-spring/
                     PmCustomer.java
                     PmCustomerProject.java
                     PmDiagramChat.java
-                    PmDiagramProject.java
                     PmDiagramTab.java
                     PmDiagramVersion.java
                     PmMilestone.java
@@ -977,7 +977,6 @@ sic-spring/
                     PmCustomerProjectRepository.java
                     PmCustomerRepository.java
                     PmDiagramChatRepository.java
-                    PmDiagramProjectRepository.java
                     PmDiagramTabRepository.java
                     PmDiagramVersionRepository.java
                     PmMilestoneRepository.java
@@ -1029,7 +1028,6 @@ sic-spring/
                     PmCustomerProjectServiceImpl.java
                     PmCustomerServiceImpl.java
                     PmDiagramChatServiceImpl.java
-                    PmDiagramProjectServiceImpl.java
                     PmDiagramTabServiceImpl.java
                     PmRequirementServiceImpl.java
                     ProfileServiceImpl.java
@@ -1062,7 +1060,6 @@ sic-spring/
                   PmCustomerProjectService.java
                   PmCustomerService.java
                   PmDiagramChatService.java
-                  PmDiagramProjectService.java
                   PmDiagramTabService.java
                   PmRequirementService.java
                   ProfileService.java
@@ -22039,9 +22036,9 @@ export class ApprovalService {
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
-<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
 <div class="flex h-[calc(100vh-56px)]">
-  <!-- Left Sidebar: Tabs List -->
+  <!-- Left Sidebar -->
   <aside class="w-56 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col flex-shrink-0">
     <!-- Search -->
     <div class="p-3 border-b border-[var(--border)]">
@@ -22051,6 +22048,19 @@ export class ApprovalService {
         placeholder="Search diagrams..."
         class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
       />
+    </div>
+
+    <!-- Filter by Type -->
+    <div class="p-3 border-b border-[var(--border)]">
+      <select
+        [(ngModel)]="filterType"
+        class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      >
+        <option value="all">📂 ทุกประเภท</option>
+        @for (type of diagramTypeOptions; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
     </div>
 
     <!-- Tab List -->
@@ -22079,7 +22089,7 @@ export class ApprovalService {
       } @empty {
         <div class="text-center text-[var(--text-muted)] text-sm py-8">
           <i class="bi bi-inbox text-2xl block mb-2 opacity-30"></i>
-          No diagrams yet
+          No diagrams found
         </div>
       }
     </div>
@@ -22132,8 +22142,17 @@ export class ApprovalService {
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
-// src/app/features/pmdt06/pmdt06A/pmdt06A.component.ts
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  OnDestroy,
+  Input,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -22146,43 +22165,63 @@ import { Pmdt06CComponent } from '../pmdt06C/pmdt06C.component';
 import { Pmdt06DComponent } from '../pmdt06D/pmdt06D.component';
 import { DiagramService } from '../diagram.service';
 import { DiagramModel, DiagramType, DIAGRAM_DEFAULTS, DIAGRAM_TYPES } from '../diagram.model';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
 
 @Component({
   selector: 'app-pmdt06A',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, Pmdt06BComponent, Pmdt06CComponent, Pmdt06DComponent, MatDialogModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DragDropModule,
+    Pmdt06BComponent,
+    Pmdt06CComponent,
+    Pmdt06DComponent,
+    MatDialogModule,
+  ],
   templateUrl: './pmdt06A.component.html',
-  styleUrls: ['./pmdt06A.component.css']
+  styleUrls: ['./pmdt06A.component.css'],
 })
 export class Pmdt06AComponent implements OnInit, OnDestroy {
+  // ทำให้ projectId เป็น required และไม่เป็น null
+  @Input({ required: true }) projectId!: string;
+
   private diagramService = inject(DiagramService);
   private dialog = inject(MatDialog);
+  private dialogService = inject(DialogService);
 
   private destroy$ = new Subject<void>();
   private autoSave$ = new Subject<DiagramModel>();
 
   tabs = signal<DiagramModel[]>([]);
   activeTabId = signal<string | null>(null);
+  filterType = signal<string>('all');
+  diagramTypeOptions = DIAGRAM_TYPES;
   searchQuery = signal('');
 
   activeTab = computed(() => {
     const id = this.activeTabId();
-    return this.tabs().find(t => t.id === id) || null;
+    return this.tabs().find((t) => t.id === id) || null;
   });
 
-  filteredTabs = computed(() => {
+  protected filteredTabs = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    if (!query) return this.tabs();
-    return this.tabs().filter(t =>
-      t.name.toLowerCase().includes(query) ||
-      t.diagramType.toLowerCase().includes(query)
-    );
+    const type = this.filterType();
+    return this.tabs().filter((t) => {
+      const matchQuery =
+        !query ||
+        t.name.toLowerCase().includes(query) ||
+        t.diagramType.toLowerCase().includes(query);
+      const matchType = type === 'all' || t.diagramType === type;
+      return matchQuery && matchType;
+    });
   });
 
   ngOnInit() {
     this.diagramService.tabs$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(tabs => {
+      .subscribe((tabs) => {
         this.tabs.set(tabs);
         if (tabs.length > 0 && !this.activeTabId()) {
           this.activeTabId.set(tabs[0].id);
@@ -22191,7 +22230,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
 
     this.autoSave$
       .pipe(debounceTime(1000), takeUntil(this.destroy$))
-      .subscribe(tab => {
+      .subscribe((tab) => {
         this.diagramService.updateTab(tab).subscribe();
       });
   }
@@ -22207,19 +22246,34 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
   }
 
   createTab() {
+    // projectId ถูกบังคับให้มีค่าแล้ว (required) แต่ยังเช็คไว้ป้องกัน
+    if (!this.projectId) {
+      this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อนสร้าง Diagram');
+      return;
+    }
+
     const dialogRef = this.dialog.open(CreateDiagramDialogComponent, {
       width: '450px',
-      data: { name: '', type: 'Flowchart' as DiagramType }
+      data: { name: '', type: 'Flowchart' as DiagramType },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         const { name, type } = result;
         const script = DIAGRAM_DEFAULTS[type as DiagramType] || '';
-        const projectId = this.diagramService['projectsSubject'].value[0]?.id || '';
-        this.diagramService.createTab(projectId, name, type, script)
-          .subscribe(tab => {
-            this.activeTabId.set(tab.id);
+        this.diagramService
+          .createTab(this.projectId!, name, type, script)
+          .subscribe({
+            next: (tab) => {
+              this.activeTabId.set(tab.id);
+              // ✅ เพิ่ม Toast แจ้งเตือนความสำเร็จ
+              this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              console.error('Create tab error:', err);
+              const msg = err.error?.message || err.message || 'เกิดข้อผิดพลาด';
+              this.dialogService.error('สร้าง Diagram ไม่สำเร็จ', msg);
+            },
           });
       }
     });
@@ -22230,35 +22284,44 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
     this.diagramService.deleteTab(id).subscribe(() => {
       const tabs = this.tabs();
       if (this.activeTabId() === id) {
-        const remaining = tabs.filter(t => t.id !== id);
+        const remaining = tabs.filter((t) => t.id !== id);
         this.activeTabId.set(remaining.length ? remaining[0].id : null);
       }
     });
   }
 
   updateDiagram(updated: DiagramModel) {
-    this.tabs.update(tabs => tabs.map(t => t.id === updated.id ? updated : t));
+    this.tabs.update((tabs) => tabs.map((t) => (t.id === updated.id ? updated : t)));
     this.autoSave$.next(updated);
   }
 
   drop(event: CdkDragDrop<DiagramModel[]>) {
     const tabs = this.tabs();
-    const reorder = tabs.map(t => ({ id: t.id, sortOrder: t.sortOrder }));
+    const reorder = tabs.map((t) => ({ id: t.id, sortOrder: t.sortOrder }));
     moveItemInArray(reorder, event.previousIndex, event.currentIndex);
     this.diagramService.reorderTabs(reorder).subscribe();
   }
 
   handleAiResponse(response: any) {
     if (response.action === 'create' && response.diagram) {
-      const projectId = this.diagramService['projectsSubject'].value[0]?.id || '';
-      this.diagramService.createTab(
-        projectId,
-        response.diagram.name || 'AI Generated',
-        response.diagram.type || 'Flowchart',
-        response.diagram.script
-      ).subscribe(tab => {
-        this.activeTabId.set(tab.id);
-      });
+      if (!this.projectId) {
+        this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อน');
+        return;
+      }
+      this.diagramService
+        .createTab(
+          this.projectId,
+          response.diagram.name || 'AI Generated',
+          response.diagram.type || 'Flowchart',
+          response.diagram.script,
+        )
+        .subscribe({
+          next: (tab) => {
+            this.activeTabId.set(tab.id);
+            this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${response.diagram.name}" เรียบร้อย`);
+          },
+          error: (err) => this.dialogService.error('สร้างไม่สำเร็จ', err.message),
+        });
     } else if (response.action === 'update' && response.diagram) {
       const current = this.activeTab();
       if (current) {
@@ -22289,7 +22352,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
   }
 }
 
-// Create Diagram Dialog Component
+// ===== Create Diagram Dialog (ไม่เปลี่ยนแปลง) =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,
@@ -22316,13 +22379,13 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
         </div>
       </div>
     </div>
-  `
+  `,
 })
 export class CreateDiagramDialogComponent {
   diagramTypes = DIAGRAM_TYPES;
   constructor(
     public dialogRef: MatDialogRef<CreateDiagramDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { name: string; type: DiagramType }
+    @Inject(MAT_DIALOG_DATA) public data: { name: string; type: DiagramType },
   ) {}
 
   confirm() {
@@ -22875,6 +22938,295 @@ export class Pmdt06DComponent implements OnChanges {
     } else {
       document.exitFullscreen();
     }
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.css">
+/* src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.css */
+:host {
+  display: block;
+}
+
+.group:hover .bi {
+  transition: transform 0.2s ease;
+}
+
+.grid > div {
+  min-height: 180px;
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.html">
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.html -->
+<div class="space-y-6 p-4">
+  <!-- HEADER -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center gap-3">
+        <button
+          (click)="goBack()"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </button>
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+          เลือกประเภท Diagram
+        </h1>
+      </div>
+      <p class="text-sm text-[var(--text-muted)] mt-1 ml-12">
+        เลือกประเภท Diagram ที่ต้องการสร้าง แล้วระบบจะพาคุณไปยังหน้าต่าง ๆ
+      </p>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  @if (isLoading()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div class="bg-[var(--bg)] rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <p class="text-[var(--text-active)] font-medium">กำลังสร้าง Diagram...</p>
+        <p class="text-sm text-[var(--text-muted)]">{{ selectedType() }} Diagram</p>
+      </div>
+    </div>
+  }
+
+  <!-- GRID -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    @for (typeInfo of diagramTypes; track typeInfo.type) {
+      <div
+        (click)="createDiagram(typeInfo.type)"
+        class="group relative bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm hover:shadow-md hover:border-[var(--crm-primary)] cursor-pointer transition-all hover:-translate-y-1"
+      >
+        <div class="flex flex-col items-center text-center gap-3">
+          <!-- Icon -->
+          <div
+            class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl transition-colors group-hover:scale-110"
+            [style.background]="typeInfo.color + '20'"
+            [style.color]="typeInfo.color"
+          >
+            <i class="bi" [class]="typeInfo.icon"></i>
+          </div>
+
+          <!-- Label -->
+          <h3 class="font-semibold text-[var(--text-active)] text-sm">{{ typeInfo.label }}</h3>
+          <p class="text-xs text-[var(--text-muted)] leading-relaxed">{{ typeInfo.description }}</p>
+
+          <!-- Hover indicator -->
+          <div class="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-[var(--crm-primary)] transition-colors pointer-events-none"></div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- FOOTER -->
+  <div class="flex justify-center text-sm text-[var(--text-muted)] border-t border-[var(--border)] pt-4">
+    <span>💡 คลิกเลือกประเภท Diagram เพื่อเริ่มสร้าง</span>
+  </div>
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06E/pmdt06E.component.ts
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
+import { DIAGRAM_DEFAULTS, type DiagramType } from '../diagram.model';
+import { DiagramService } from '../diagram.service';
+
+interface DiagramTypeInfo {
+  type: DiagramType;
+  label: string;
+  icon: string;
+  description: string;
+  color: string;
+}
+
+@Component({
+  selector: 'app-pmdt06e',
+  standalone: true,
+  imports: [CommonModule, RouterModule, SicButtonComponent],
+  templateUrl: './pmdt06E.component.html',
+  styleUrls: ['./pmdt06E.component.css'],
+})
+export class Pmdt06EComponent implements OnInit {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private diagramService = inject(DiagramService);
+  private customerState = inject(CustomerStateService);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+
+  projectId = signal<string | null>(null);
+  isLoading = signal(false);
+  selectedType = signal<DiagramType | null>(null);
+
+  diagramTypes: DiagramTypeInfo[] = [
+    {
+      type: 'Flowchart',
+      label: 'Flowchart',
+      icon: 'bi-diagram-2',
+      description: 'แผนภาพการไหลของกระบวนการ',
+      color: '#4A90D9',
+    },
+    {
+      type: 'Sequence',
+      label: 'Sequence Diagram',
+      icon: 'bi-arrow-left-right',
+      description: 'ลำดับการทำงานระหว่างวัตถุ',
+      color: '#2ECC71',
+    },
+    {
+      type: 'Class',
+      label: 'Class Diagram',
+      icon: 'bi-boxes',
+      description: 'โครงสร้างคลาสและความสัมพันธ์',
+      color: '#E67E22',
+    },
+    {
+      type: 'ER',
+      label: 'ER Diagram',
+      icon: 'bi-table',
+      description: 'ความสัมพันธ์ของข้อมูลในฐานข้อมูล',
+      color: '#9B59B6',
+    },
+    {
+      type: 'DFD',
+      label: 'DFD',
+      icon: 'bi-diagram-3',
+      description: 'แผนภาพกระแสข้อมูล',
+      color: '#1ABC9C',
+    },
+    {
+      type: 'State',
+      label: 'State Diagram',
+      icon: 'bi-circle',
+      description: 'สถานะและการเปลี่ยนแปลง',
+      color: '#E74C3C',
+    },
+    {
+      type: 'Journey',
+      label: 'User Journey',
+      icon: 'bi-map',
+      description: 'เส้นทางของผู้ใช้งาน',
+      color: '#F39C12',
+    },
+    {
+      type: 'Mindmap',
+      label: 'Mindmap',
+      icon: 'bi-diagram-3',
+      description: 'แผนภาพความคิด',
+      color: '#3498DB',
+    },
+    {
+      type: 'Timeline',
+      label: 'Timeline',
+      icon: 'bi-clock-history',
+      description: 'ลำดับเหตุการณ์ตามเวลา',
+      color: '#2C3E50',
+    },
+    {
+      type: 'Requirement',
+      label: 'Requirement Diagram',
+      icon: 'bi-clipboard-check',
+      description: 'ความต้องการและความสัมพันธ์',
+      color: '#16A085',
+    },
+    {
+      type: 'C4',
+      label: 'C4 Model',
+      icon: 'bi-layers',
+      description: 'สถาปัตยกรรมซอฟต์แวร์ 4 มุมมอง',
+      color: '#8E44AD',
+    },
+    {
+      type: 'Git Graph',
+      label: 'Git Graph',
+      icon: 'bi-git',
+      description: 'ประวัติการเปลี่ยนแปลง Git',
+      color: '#E67E22',
+    },
+    {
+      type: 'Pie',
+      label: 'Pie Chart',
+      icon: 'bi-pie-chart',
+      description: 'แผนภูมิวงกลม',
+      color: '#27AE60',
+    },
+    {
+      type: 'Gantt',
+      label: 'Gantt Chart',
+      icon: 'bi-bar-chart',
+      description: 'แผนภูมิกำหนดการโครงการ',
+      color: '#2980B9',
+    },
+  ];
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const projectId = params['projectId'] || this.customerState.getProjectId();
+      if (projectId) {
+        this.projectId.set(projectId);
+      } else {
+        this.dialog.warn('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อนสร้าง Diagram');
+        this.navigation.navigate(['/feature/pm/pmrt02']);
+      }
+    });
+  }
+
+  createDiagram(type: DiagramType): void {
+    const projectId = this.projectId();
+    if (!projectId) {
+      this.dialog.warn('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อน');
+      return;
+    }
+
+    this.selectedType.set(type);
+    this.isLoading.set(true);
+
+    const name = `${type} Diagram`;
+    const defaultScript = DIAGRAM_DEFAULTS[type] || 'graph TD\n  A[Start] --> B[Process]';
+
+    this.diagramService
+      .createTab(projectId, name, type, defaultScript)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (tab) => {
+          this.dialog.success('สร้าง Diagram สำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+          this.router.navigate(['/feature/pm/diagram'], {
+            queryParams: {
+              diagramId: tab.id,
+              projectId: projectId,
+            },
+          });
+        },
+        error: (err) => {
+          this.dialog.error('สร้าง Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  getIcon(type: DiagramType): string {
+    const found = this.diagramTypes.find((t) => t.type === type);
+    return found?.icon || 'bi-file-earmark';
+  }
+
+  getColor(type: DiagramType): string {
+    const found = this.diagramTypes.find((t) => t.type === type);
+    return found?.color || '#6C757D';
+  }
+
+  goBack(): void {
+    this.navigation.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.projectId() },
+    });
   }
 }
 </file>
@@ -46248,72 +46600,6 @@ public class PmDiagramChatController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmDiagramProjectController.java">
-package com.softinter.sicapi.controller.pm;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.request.PmDiagramProjectRequest;
-import com.softinter.sicapi.dto.response.PmDiagramProjectResponse;
-import com.softinter.sicapi.service.PmDiagramProjectService;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping("/api/diagram/projects")
-@RequiredArgsConstructor
-public class PmDiagramProjectController {
-
-    private final PmDiagramProjectService projectService;
-
-    @GetMapping
-    public ResponseEntity<List<PmDiagramProjectResponse>> getProjects() {
-        return ResponseEntity.ok(projectService.getProjects());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PmDiagramProjectResponse> getProject(@PathVariable UUID id) {
-        return ResponseEntity.ok(projectService.getProject(id));
-    }
-
-    @PostMapping
-    public ResponseEntity<PmDiagramProjectResponse> createProject(@Valid @RequestBody PmDiagramProjectRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(request));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<PmDiagramProjectResponse> updateProject(
-            @PathVariable UUID id,
-            @Valid @RequestBody PmDiagramProjectRequest request) {
-        return ResponseEntity.ok(projectService.updateProject(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
-        projectService.deleteProject(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/favorite")
-    public ResponseEntity<PmDiagramProjectResponse> toggleFavorite(@PathVariable UUID id) {
-        return ResponseEntity.ok(projectService.toggleFavorite(id));
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmDiagramTabController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -47017,26 +47303,6 @@ public class PmChatRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramProjectRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class PmDiagramProjectRequest {
-    private UUID id;
-
-    @NotBlank(message = "Project name is required")
-    private String name;
-
-    private String description;
-    private Boolean isFavorite;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramReorderRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -47054,40 +47320,6 @@ public class PmDiagramReorderRequest {
         private UUID id;
         private Integer sortOrder;
     }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java">
-// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java
-package com.softinter.sicapi.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class PmDiagramTabRequest {
-    private UUID id;
-
-    @NotBlank(message = "Diagram name is required")
-    private String name;
-
-    @NotBlank(message = "Diagram type is required")
-    private String diagramType;
-
-    private String mermaidScript;
-
-    @NotNull(message = "Project ID is required")
-    private UUID projectId;
-
-    // เปลี่ยนจาก String เป็น Map<String, Object> เพื่อรองรับ JSONB ได้โดยตรง
-    private Map<String, Object> metadata;
-
-    private Integer sortOrder;
-    private Boolean isActive;
 }
 </file>
 
@@ -47691,59 +47923,6 @@ public class PmChatResponse {
     private String contextData;
     private String createdBy;
     private Instant createdDate;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramProjectResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-@Data
-public class PmDiagramProjectResponse {
-    private UUID id;
-    private String name;
-    private String description;
-    private Boolean isFavorite;
-    private Instant lastOpened;
-    private Instant createdDate;
-    private Instant updatedDate;
-    private Integer tabCount;
-    private List<PmDiagramTabResponse> tabs;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java">
-// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class PmDiagramTabResponse {
-    private UUID id;
-    private String name;
-    private String diagramType;
-    private String mermaidScript;
-
-    // เปลี่ยนจาก String เป็น Map เพื่อให้ Frontend รับ Object ได้สะดวก
-    private Map<String, Object> metadata;
-
-    private UUID projectId;
-    private String projectName;
-    private Integer sortOrder;
-    private Boolean isActive;
-    private Instant createdDate;
-    private Instant updatedDate;
-    private Integer versionCount;
 }
 </file>
 
@@ -48771,113 +48950,6 @@ public class PmDiagramChat extends BaseEntity {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramProject.java">
-package com.softinter.sicapi.entity.pm;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "pm_diagram_projects")
-public class PmDiagramProject extends BaseEntity {
-
-    @Column(name = "business_id")
-    private UUID businessId;
-
-    @Column(name = "user_id", nullable = false)
-    private String userId;
-
-    @Column(nullable = false, length = 255)
-    private String name;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "is_favorite")
-    private Boolean isFavorite = false;
-
-    @Column(name = "last_opened")
-    private Instant lastOpened;
-
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmDiagramTab> tabs = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java">
-// File: sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java
-package com.softinter.sicapi.entity.pm;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "pm_diagram")
-public class PmDiagramTab extends BaseEntity {
-
-    @Column(name = "business_id")
-    private UUID businessId;
-
-    @Column(name = "user_id", nullable = false)
-    private String userId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private PmDiagramProject project;
-
-    @Column(nullable = false, length = 255)
-    private String name;
-
-    @Column(name = "diagram_type", nullable = false, length = 50)
-    private String diagramType;
-
-    @Column(name = "mermaid_script", columnDefinition = "TEXT")
-    private String mermaidScript;
-
-    // เปลี่ยนจาก String เป็น Map เพื่อให้ Hibernate จัดการ JSONB โดยตรง
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "JSONB")
-    private Map<String, Object> metadata;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
-
-    @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmDiagramVersion> versions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmDiagramChat> chatMessages = new ArrayList<>();
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramVersion.java">
 package com.softinter.sicapi.entity.pm;
 
@@ -49585,32 +49657,6 @@ public interface PmDiagramChatRepository extends JpaRepository<PmDiagramChat, UU
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmDiagramProjectRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmDiagramProject;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface PmDiagramProjectRepository extends JpaRepository<PmDiagramProject, UUID> {
-
-    List<PmDiagramProject> findByUserIdAndIsDeleteFalseOrderByLastOpenedDesc(String userId);
-
-    List<PmDiagramProject> findByUserIdAndIsFavoriteTrueAndIsDeleteFalseOrderByName(String userId);
-
-    @Query("SELECT p FROM PmDiagramProject p WHERE p.userId = :userId AND p.isDelete = false AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<PmDiagramProject> searchByUserIdAndKeyword(@Param("userId") String userId, @Param("keyword") String keyword);
-
-    boolean existsByUserIdAndNameAndIsDeleteFalse(String userId, String name);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmDiagramTabRepository.java">
 package com.softinter.sicapi.repository.pm;
 
@@ -50126,7 +50172,7 @@ public class PmDiagramChatServiceImpl implements PmDiagramChatService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramProjectServiceImpl.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
@@ -50136,150 +50182,23 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.config.BusinessContextHolder;
-import com.softinter.sicapi.dto.request.PmDiagramProjectRequest;
-import com.softinter.sicapi.dto.response.PmDiagramProjectResponse;
-import com.softinter.sicapi.entity.pm.PmDiagramProject;
-import com.softinter.sicapi.repository.pm.PmDiagramProjectRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.PmDiagramProjectService;
-
-import lombok.RequiredArgsConstructor;
-
-@Service
-@RequiredArgsConstructor
-public class PmDiagramProjectServiceImpl implements PmDiagramProjectService {
-
-    private final PmDiagramProjectRepository projectRepository;
-    private final PmDiagramTabRepository tabRepository;
-    private final CurrentUserService currentUserService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramProjectResponse> getProjects() {
-        String userId = currentUserService.getUserId();
-        return projectRepository.findByUserIdAndIsDeleteFalseOrderByLastOpenedDesc(userId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDiagramProjectResponse getProject(UUID id) {
-        PmDiagramProject project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-        return toResponse(project);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramProjectResponse createProject(PmDiagramProjectRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID businessId = BusinessContextHolder.getBusinessId();
-
-        if (projectRepository.existsByUserIdAndNameAndIsDeleteFalse(userId, request.getName())) {
-            throw new RuntimeException("Project name already exists");
-        }
-
-        PmDiagramProject project = new PmDiagramProject();
-        project.setUserId(userId);
-        project.setBusinessId(businessId);
-        project.setName(request.getName());
-        project.setDescription(request.getDescription());
-        project.setIsFavorite(request.getIsFavorite() != null ? request.getIsFavorite() : false);
-        project.setLastOpened(Instant.now());
-
-        PmDiagramProject saved = projectRepository.save(project);
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramProjectResponse updateProject(UUID id, PmDiagramProjectRequest request) {
-        PmDiagramProject project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        if (request.getName() != null) {
-            project.setName(request.getName());
-        }
-        if (request.getDescription() != null) {
-            project.setDescription(request.getDescription());
-        }
-        if (request.getIsFavorite() != null) {
-            project.setIsFavorite(request.getIsFavorite());
-        }
-        project.setLastOpened(Instant.now());
-
-        PmDiagramProject saved = projectRepository.save(project);
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void deleteProject(UUID id) {
-        PmDiagramProject project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-        project.setIsDelete(true);
-        project.setDeleteDate(Instant.now());
-        projectRepository.save(project);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramProjectResponse toggleFavorite(UUID id) {
-        PmDiagramProject project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-        project.setIsFavorite(!project.getIsFavorite());
-        project.setLastOpened(Instant.now());
-        return toResponse(projectRepository.save(project));
-    }
-
-    private PmDiagramProjectResponse toResponse(PmDiagramProject project) {
-        PmDiagramProjectResponse dto = new PmDiagramProjectResponse();
-        dto.setId(project.getId());
-        dto.setName(project.getName());
-        dto.setDescription(project.getDescription());
-        dto.setIsFavorite(project.getIsFavorite());
-        dto.setLastOpened(project.getLastOpened());
-        dto.setCreatedDate(project.getCreatedDate());
-        dto.setUpdatedDate(project.getUpdatedDate());
-
-        int tabCount = tabRepository.countByProjectIdAndIsDeleteFalse(project.getId());
-        dto.setTabCount(tabCount);
-
-        return dto;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
-package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.pm.PmDiagramProject;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
 import com.softinter.sicapi.entity.pm.PmDiagramVersion;
-import com.softinter.sicapi.repository.pm.PmDiagramProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -50287,10 +50206,13 @@ import java.util.stream.Collectors;
 public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private final PmDiagramTabRepository tabRepository;
-    private final PmDiagramProjectRepository projectRepository;
     private final PmDiagramVersionRepository versionRepository;
+    private final PmCustomerProjectRepository customerProjectRepository;
     private final CurrentUserService currentUserService;
 
+    // ============================================================
+    // GET TABS (ใช้ projectId โดยตรง)
+    // ============================================================
     @Override
     @Transactional(readOnly = true)
     public List<PmDiagramTabResponse> getTabs(UUID projectId) {
@@ -50298,6 +50220,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         List<PmDiagramTab> tabs;
         if (projectId != null) {
+            // ✅ ค้นหาโดย projectId โดยตรง ไม่ต้องผ่าน DiagramProject
             tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
         } else {
             tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
@@ -50308,6 +50231,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 .collect(Collectors.toList());
     }
 
+    // ============================================================
+    // GET TAB BY ID
+    // ============================================================
     @Override
     @Transactional(readOnly = true)
     public PmDiagramTabResponse getTab(UUID id) {
@@ -50316,14 +50242,19 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(tab);
     }
 
+    // ============================================================
+    // CREATE TAB
+    // ============================================================
     @Override
     @Transactional
     public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
         String userId = currentUserService.getUserId();
         UUID businessId = BusinessContextHolder.getBusinessId();
 
-        PmDiagramProject project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        // ✅ ตรวจสอบว่า projectId มีอยู่จริงใน PmCustomerProject
+        if (!customerProjectRepository.existsById(request.getProjectId())) {
+            throw new RuntimeException("Project not found: " + request.getProjectId());
+        }
 
         // Calculate next sort order
         List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
@@ -50334,7 +50265,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = new PmDiagramTab();
         tab.setUserId(userId);
         tab.setBusinessId(businessId);
-        tab.setProject(project);
+        tab.setProjectId(request.getProjectId());   // ✅ เก็บ projectId โดยตรง
         tab.setName(request.getName());
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript());
@@ -50348,6 +50279,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
+    // ============================================================
+    // UPDATE TAB
+    // ============================================================
     @Override
     @Transactional
     public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
@@ -50375,6 +50309,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
+    // ============================================================
+    // DELETE TAB
+    // ============================================================
     @Override
     @Transactional
     public void deleteTab(UUID id) {
@@ -50385,6 +50322,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tabRepository.save(tab);
     }
 
+    // ============================================================
+    // DUPLICATE TAB
+    // ============================================================
     @Override
     @Transactional
     public PmDiagramTabResponse duplicateTab(UUID id) {
@@ -50394,7 +50334,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab duplicate = new PmDiagramTab();
         duplicate.setUserId(original.getUserId());
         duplicate.setBusinessId(original.getBusinessId());
-        duplicate.setProject(original.getProject());
+        duplicate.setProjectId(original.getProjectId());   // ✅ ใช้ projectId โดยตรง
         duplicate.setName(original.getName() + " (Copy)");
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
@@ -50408,6 +50348,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
+    // ============================================================
+    // REORDER TABS
+    // ============================================================
     @Override
     @Transactional
     public void reorderTabs(PmDiagramReorderRequest request) {
@@ -50419,6 +50362,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         }
     }
 
+    // ============================================================
+    // VERSIONS
+    // ============================================================
     @Override
     @Transactional(readOnly = true)
     public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
@@ -50443,9 +50389,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
-    // ------------------------------------------------------------------------
-    // Helper methods
-    // ------------------------------------------------------------------------
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
 
     private void createVersion(PmDiagramTab tab, String comment) {
         int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
@@ -50478,8 +50424,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         dto.setDiagramType(tab.getDiagramType());
         dto.setMermaidScript(tab.getMermaidScript());
         dto.setMetadata(tab.getMetadata());
-        dto.setProjectId(tab.getProject().getId());
-        dto.setProjectName(tab.getProject().getName());
+        dto.setProjectId(tab.getProjectId());   // ✅ ส่ง projectId ตรง ๆ
+
+        // ✅ หา projectName จาก PmCustomerProject
+        String projectName = customerProjectRepository.findById(tab.getProjectId())
+                .map(PmCustomerProject::getProjectName)
+                .orElse(null);
+        dto.setProjectName(projectName);
+
         dto.setSortOrder(tab.getSortOrder());
         dto.setIsActive(tab.getIsActive());
         dto.setCreatedDate(tab.getCreatedDate());
@@ -51161,31 +51113,6 @@ public interface PmDiagramChatService {
     void clearChatHistory(UUID diagramId);
 
     PmChatResponse sendMessage(PmChatRequest request);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/PmDiagramProjectService.java">
-package com.softinter.sicapi.service;
-
-import com.softinter.sicapi.dto.request.PmDiagramProjectRequest;
-import com.softinter.sicapi.dto.response.PmDiagramProjectResponse;
-
-import java.util.List;
-import java.util.UUID;
-
-public interface PmDiagramProjectService {
-
-    List<PmDiagramProjectResponse> getProjects();
-
-    PmDiagramProjectResponse getProject(UUID id);
-
-    PmDiagramProjectResponse createProject(PmDiagramProjectRequest request);
-
-    PmDiagramProjectResponse updateProject(UUID id, PmDiagramProjectRequest request);
-
-    void deleteProject(UUID id);
-
-    PmDiagramProjectResponse toggleFavorite(UUID id);
 }
 </file>
 
@@ -60154,7 +60081,7 @@ export default Pmdt05Component;
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">
-<!-- src/app/features/pmdt06/pmdt06.component.html -->
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06.component.html -->
 <div class="h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
   <!-- Top Navbar -->
   <header class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
@@ -60175,7 +60102,6 @@ export default Pmdt05Component;
         <span class="font-medium">{{ currentProject()?.name || 'Select Project' }}</span>
       </div>
 
-      <!-- Theme Toggle -->
       <button (click)="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--sidebar-hover)] transition-colors" title="Toggle theme">
         <i class="bi text-lg" [class.bi-moon]="!isDark()" [class.bi-sun]="isDark()"></i>
       </button>
@@ -60183,21 +60109,31 @@ export default Pmdt05Component;
   </header>
 
   <!-- Workspace -->
-  <app-pmdt06A />
+  @if (!isLoading() && currentProject()) {
+    <app-pmdt06A [projectId]="projectId()!" />
+  } @else {
+    <div class="flex-1 flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <p class="text-sm text-[var(--text-muted)]">กำลังโหลด...</p>
+      </div>
+    </div>
+  }
 </div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
-// src/app/features/pmdt06/pmdt06.component.ts
+// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
+
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-
 import { Pmdt06AComponent } from './pmdt06A/pmdt06A.component';
 import { DiagramService } from './diagram.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import type { DiagramProject } from './diagram.model';
 
 @Component({
@@ -60209,56 +60145,64 @@ import type { DiagramProject } from './diagram.model';
 })
 export class Pmdt06Component implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private diagramService = inject(DiagramService);
   private themeService = inject(ThemeService);
   private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
   private destroy$ = new Subject<void>();
 
   currentProject = signal<DiagramProject | null>(null);
   isDark = signal(false);
+  isLoading = signal(true);
+  projectId = signal<string | null>(null);
 
   ngOnInit() {
     this.isDark.set(this.themeService.isDark());
-    this.loadDefaultProject();
+
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        let projectId = params['projectId'] || this.customerState.getProjectId();
+        let projectName = params['projectName'] || this.customerState.getProjectName() || '';
+
+        if (!projectId) {
+          this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้').then(() => {
+            this.router.navigate(['/feature/pm/pmrt02']);
+          });
+          return;
+        }
+
+        this.projectId.set(projectId);
+        this.isLoading.set(true);
+
+        // โหลด tabs เพื่อเช็คว่า projectId นี้มีอยู่จริง
+        this.diagramService.getTabs(projectId).subscribe({
+          next: (tabs) => {
+            this.currentProject.set({
+              id: projectId,
+              name: projectName || 'โครงการ',
+              isFavorite: false,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
+            this.isLoading.set(false);
+          },
+          error: (err) => {
+            this.isLoading.set(false);
+            console.error('Load tabs error:', err);
+            const msg = err.error?.message || err.message || 'ไม่พบโครงการนี้ในระบบ';
+            this.dialog.error('ไม่พบโครงการ', msg).then(() => {
+              this.router.navigate(['/feature/pm/pmrt02']);
+            });
+          }
+        });
+      });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private loadDefaultProject() {
-    this.diagramService.getProjects()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (projects) => {
-          if (projects.length > 0) {
-            const defaultProject = projects.find(p => p.isFavorite) || projects[0];
-            this.currentProject.set(defaultProject);
-            this.diagramService.getTabs(defaultProject.id).subscribe();
-          } else {
-            this.createFirstProject();
-          }
-        },
-        error: () => {
-          // Handle error
-        }
-      });
-  }
-
-  private createFirstProject() {
-    this.dialog.confirm('Create Project', 'You don\'t have any project yet. Create one to get started?')
-      .then(confirmed => {
-        if (confirmed) {
-          this.diagramService.createProject('My First Project', 'AI Diagram Studio')
-            .subscribe({
-              next: (project) => {
-                this.currentProject.set(project);
-                this.diagramService.getTabs(project.id).subscribe();
-              }
-            });
-        }
-      });
   }
 
   toggleTheme() {
@@ -60267,7 +60211,12 @@ export class Pmdt06Component implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/feature/dashboard']);
+    const projectId = this.projectId();
+    if (projectId) {
+      this.router.navigate(['/feature/pm/pmrt03'], { queryParams: { projectId } });
+    } else {
+      this.router.navigate(['/feature/pm/pmrt02']);
+    }
   }
 }
 </file>
@@ -62731,6 +62680,40 @@ public class PmCustomerRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java">
+// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java
+package com.softinter.sicapi.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class PmDiagramTabRequest {
+    private UUID id;
+
+    @NotBlank(message = "Diagram name is required")
+    private String name;
+
+    @NotBlank(message = "Diagram type is required")
+    private String diagramType;
+
+    private String mermaidScript;
+
+    @NotNull(message = "Project ID is required")
+    private UUID projectId;
+
+    // เปลี่ยนจาก String เป็น Map<String, Object> เพื่อรองรับ JSONB ได้โดยตรง
+    private Map<String, Object> metadata;
+
+    private Integer sortOrder;
+    private Boolean isActive;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowStepRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -63139,6 +63122,36 @@ public class PmCustomerResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java">
+// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class PmDiagramTabResponse {
+    private UUID id;
+    private String name;
+    private String diagramType;
+    private String mermaidScript;
+
+    // เปลี่ยนจาก String เป็น Map เพื่อให้ Frontend รับ Object ได้สะดวก
+    private Map<String, Object> metadata;
+
+    private UUID projectId;
+    private String projectName;
+    private Integer sortOrder;
+    private Boolean isActive;
+    private Instant createdDate;
+    private Instant updatedDate;
+    private Integer versionCount;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/SuUserBusinessMemberResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -63482,6 +63495,70 @@ public class PmCustomerProject extends BaseBusinessEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java">
+// File: sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmDiagramTab.java
+package com.softinter.sicapi.entity.pm;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = "pm_diagram")
+public class PmDiagramTab extends BaseEntity {
+
+    @Column(name = "business_id")
+    private UUID businessId;
+
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    @Column(name = "project_id", nullable = false)   
+    private UUID projectId;
+
+    @Column(nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "diagram_type", nullable = false, length = 50)
+    private String diagramType;
+
+    @Column(name = "mermaid_script", columnDefinition = "TEXT")
+    private String mermaidScript;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "JSONB")
+    private Map<String, Object> metadata;
+
+    @Column(name = "sort_order")
+    private Integer sortOrder = 0;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmDiagramVersion> versions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmDiagramChat> chatMessages = new ArrayList<>();
 }
 </file>
 
@@ -89300,9 +89377,16 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-    {
+    // ===== Diagram =====
+  {
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'diagram/new',
+    loadComponent: () =>
+      import('./dt/pmdt06/pmdt06E/pmdt06E.component').then((m) => m.Pmdt06EComponent), 
     canActivate: [customerGuard, projectGuard],
   },
 

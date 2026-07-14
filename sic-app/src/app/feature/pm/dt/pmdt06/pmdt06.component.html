@@ -1,4 +1,4 @@
-<!-- src/app/features/pmdt06/pmdt06.component.html -->
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06.component.html -->
 <div class="h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
   <!-- Top Navbar -->
   <header class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
@@ -19,7 +19,6 @@
         <span class="font-medium">{{ currentProject()?.name || 'Select Project' }}</span>
       </div>
 
-      <!-- Theme Toggle -->
       <button (click)="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--sidebar-hover)] transition-colors" title="Toggle theme">
         <i class="bi text-lg" [class.bi-moon]="!isDark()" [class.bi-sun]="isDark()"></i>
       </button>
@@ -27,5 +26,14 @@
   </header>
 
   <!-- Workspace -->
-  <app-pmdt06A />
+  @if (!isLoading() && currentProject()) {
+    <app-pmdt06A [projectId]="projectId()!" />
+  } @else {
+    <div class="flex-1 flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <p class="text-sm text-[var(--text-muted)]">กำลังโหลด...</p>
+      </div>
+    </div>
+  }
 </div>

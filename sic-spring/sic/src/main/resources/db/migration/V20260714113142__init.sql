@@ -1854,9 +1854,23 @@ CREATE INDEX IF NOT EXISTS idx_project_business ON pm_diagram_projects (business
 -- ส่วนที่ 16: ข้อมูลเริ่มต้นใน db_parameter (Enum/Lookup)
 -- ============================================================
 
-INSERT INTO db_parameter (id, module_code, parameter_code, parameter_value, parameter_name_en, parameter_name_local, is_active, sort_order, created_by, created_date, updated_by, updated_date, is_delete)
+INSERT INTO db_parameter (
+    id,
+    module_code,
+    parameter_code,
+    parameter_value,
+    parameter_name_en,
+    parameter_name_local,
+    is_active,
+    sort_order,
+    created_by,
+    created_date,
+    updated_by,
+    updated_date,
+    is_delete
+)
 VALUES
-    -- 1.1 สถานะเอกสาร (DOC_STATUS)
+    -- สถานะเอกสาร (DOC_STATUS)
     (gen_random_uuid(), 'COMMON', 'DOC_STATUS', 'DRAFT', 'Draft', 'ร่าง', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'DOC_STATUS', 'IN_REVIEW', 'In Review', 'กำลังตรวจสอบ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'DOC_STATUS', 'APPROVED', 'Approved', 'อนุมัติแล้ว', true, 3, 'system', NOW(), 'system', NOW(), false),
@@ -1865,14 +1879,14 @@ VALUES
     (gen_random_uuid(), 'COMMON', 'DOC_STATUS', 'CANCELLED', 'Cancelled', 'ยกเลิก', true, 6, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'DOC_STATUS', 'CHANGED', 'Changed', 'เปลี่ยนแปลงแล้ว', true, 7, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.2 สถานะความคืบหน้า (PROGRESS_STATUS)
+    -- สถานะความคืบหน้า (PROGRESS_STATUS)
     (gen_random_uuid(), 'COMMON', 'PROGRESS_STATUS', 'NOT_STARTED', 'Not Started', 'ยังไม่เริ่ม', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PROGRESS_STATUS', 'IN_PROGRESS', 'In Progress', 'กำลังดำเนินการ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PROGRESS_STATUS', 'DONE', 'Done', 'เสร็จสิ้น', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PROGRESS_STATUS', 'DELAYED', 'Delayed', 'ล่าช้า', true, 4, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PROGRESS_STATUS', 'BLOCKED', 'Blocked', 'ติดปัญหา', true, 5, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.3 สถานะงานเฉพาะ (TASK_STATUS)
+    -- สถานะงานเฉพาะ (TASK_STATUS)
     (gen_random_uuid(), 'PM', 'TASK_STATUS', 'TODO', 'Todo', 'ยังไม่เริ่ม', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'TASK_STATUS', 'IN_PROGRESS', 'In Progress', 'กำลังทำ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'TASK_STATUS', 'WAITING_REVIEW', 'Waiting Review', 'รอตรวจสอบ', true, 3, 'system', NOW(), 'system', NOW(), false),
@@ -1882,7 +1896,7 @@ VALUES
     (gen_random_uuid(), 'PM', 'TASK_STATUS', 'BLOCKED', 'Blocked', 'ติดปัญหา', true, 7, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'TASK_STATUS', 'CANCELLED', 'Cancelled', 'ยกเลิก', true, 8, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.4 สถานะปัญหาและข้อบกพร่อง (ISSUE_STATUS)
+    -- สถานะปัญหาและข้อบกพร่อง (ISSUE_STATUS)
     (gen_random_uuid(), 'COMMON', 'ISSUE_STATUS', 'OPEN', 'Open', 'เปิดอยู่', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'ISSUE_STATUS', 'IN_PROGRESS', 'In Progress', 'กำลังดำเนินการ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'ISSUE_STATUS', 'WAITING_CUSTOMER', 'Waiting Customer', 'รอลูกค้ายืนยัน', true, 3, 'system', NOW(), 'system', NOW(), false),
@@ -1892,30 +1906,30 @@ VALUES
     (gen_random_uuid(), 'COMMON', 'ISSUE_STATUS', 'FIXED', 'Fixed', 'แก้ไขเสร็จ', true, 8, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'ISSUE_STATUS', 'RETEST', 'Retest', 'ทดสอบซ้ำ', true, 9, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.5 ระดับความสำคัญทั่วไป (PRIORITY)
+    -- ระดับความสำคัญทั่วไป (PRIORITY)
     (gen_random_uuid(), 'COMMON', 'PRIORITY', 'LOW', 'Low', 'ต่ำ', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PRIORITY', 'MEDIUM', 'Medium', 'ปานกลาง', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PRIORITY', 'HIGH', 'High', 'สูง', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PRIORITY', 'CRITICAL', 'Critical', 'วิกฤต', true, 4, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'COMMON', 'PRIORITY', 'URGENT', 'Urgent', 'ด่วน', true, 5, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.6 คุณค่าทางธุรกิจ (BUSINESS_VALUE)
+    -- คุณค่าทางธุรกิจ (BUSINESS_VALUE)
     (gen_random_uuid(), 'PM', 'BUSINESS_VALUE', 'HIGH', 'High', 'สูง', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'BUSINESS_VALUE', 'MEDIUM', 'Medium', 'ปานกลาง', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'BUSINESS_VALUE', 'LOW', 'Low', 'ต่ำ', true, 3, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.7 สถานะการลงนาม (SIGN_STATUS)
+    -- สถานะการลงนาม (SIGN_STATUS)
     (gen_random_uuid(), 'PM', 'SIGN_STATUS', 'DRAFT', 'Draft', 'ร่าง', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'SIGN_STATUS', 'SENT', 'Sent', 'ส่งแล้ว', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'SIGN_STATUS', 'SIGNED', 'Signed', 'ลงนามแล้ว', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'SIGN_STATUS', 'EXPIRED', 'Expired', 'หมดอายุ', true, 4, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.8 สถานะการต่ออายุ (RENEWAL_STATUS)
+    -- สถานะการต่ออายุ (RENEWAL_STATUS)
     (gen_random_uuid(), 'PM', 'RENEWAL_STATUS', 'NOT_RENEWED', 'Not Renewed', 'ยังไม่ต่อ', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'RENEWAL_STATUS', 'PENDING', 'Pending Renewal', 'รอต่อ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'RENEWAL_STATUS', 'RENEWED', 'Renewed', 'ต่อแล้ว', true, 3, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.9 สถานะโครงการ (PROJECT_STATUS) - SDLC 20 สถานะ
+    -- สถานะโครงการ (PROJECT_STATUS) 21 สถานะ
     (gen_random_uuid(), 'PM', 'PROJECT_STATUS', 'PROSPECT', 'Prospect', 'อยู่ระหว่างคุยงานกับลูกค้า', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PROJECT_STATUS', 'CONTRACT_DRAFTING', 'Contract Drafting', 'อยู่ระหว่างจัดทำสัญญา', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PROJECT_STATUS', 'CONTRACT_SIGNED', 'Contract Signed', 'ลงนามสัญญาแล้ว', true, 3, 'system', NOW(), 'system', NOW(), false),
@@ -1938,29 +1952,29 @@ VALUES
     (gen_random_uuid(), 'PM', 'PROJECT_STATUS', 'CLOSED', 'Closed', 'ปิดโครงการ', true, 20, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PROJECT_STATUS', 'MA_ACTIVE', 'MA Active', 'อยู่ในระยะ MA', true, 21, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.10 ลำดับความสำคัญของ Requirement (REQ_PRIORITY - MoSCoW)
+    -- ลำดับความสำคัญของ Requirement (REQ_PRIORITY - MoSCoW)
     (gen_random_uuid(), 'PM', 'REQ_PRIORITY', 'MUST', 'Must Have', 'ต้องมี', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'REQ_PRIORITY', 'SHOULD', 'Should Have', 'ควรมี', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'REQ_PRIORITY', 'COULD', 'Could Have', 'มีก็ได้', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'REQ_PRIORITY', 'WONT', 'Wont Have', 'ไม่มีก็ได้', true, 4, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.11 สถานะการทดสอบ (TEST_STATUS)
+    -- สถานะการทดสอบ (TEST_STATUS)
     (gen_random_uuid(), 'PM', 'TEST_STATUS', 'PASS', 'Pass', 'ผ่าน', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'TEST_STATUS', 'FAIL', 'Fail', 'ไม่ผ่าน', true, 2, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.12 สถานะการชำระเงิน (PAYMENT_STATUS)
+    -- สถานะการชำระเงิน (PAYMENT_STATUS)
     (gen_random_uuid(), 'PM', 'PAYMENT_STATUS', 'UNPAID', 'Unpaid', 'ค้างชำระ', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PAYMENT_STATUS', 'PARTIAL', 'Partial', 'ชำระบางส่วน', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PAYMENT_STATUS', 'PAID', 'Paid', 'ชำระแล้ว', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'PAYMENT_STATUS', 'OVERDUE', 'Overdue', 'เกินกำหนด', true, 4, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.13 โหมดการอนุมัติ (APPROVAL_MODE)
+    -- โหมดการอนุมัติ (APPROVAL_MODE)
     (gen_random_uuid(), 'PM', 'APPROVAL_MODE', 'CHAIN', 'Chain', 'เรียงลำดับ', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'APPROVAL_MODE', 'PARALLEL', 'Parallel', 'พร้อมกัน', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'APPROVAL_MODE', 'ANY', 'Any', 'ใครก็ได้', true, 3, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'APPROVAL_MODE', 'SINGLE', 'Single', 'คนเดียว', true, 4, 'system', NOW(), 'system', NOW(), false),
 
-    -- 1.14 ประเภทเอกสาร (DOCUMENT_TYPE)
+    -- ประเภทเอกสาร (DOCUMENT_TYPE)
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'REQUIREMENT', 'Requirement', 'เอกสารความต้องการ', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'SPECIFICATION', 'Specification', 'เอกสารกำหนดคุณลักษณะ', true, 2, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'DFD', 'DFD', 'แผนภาพกระแสข้อมูล', true, 3, 'system', NOW(), 'system', NOW(), false),
@@ -1971,7 +1985,8 @@ VALUES
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'CHANGE_REQUEST', 'Change Request', 'คำขอเปลี่ยนแปลง', true, 8, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'TEST_PLAN', 'Test Plan', 'แผนการทดสอบ', true, 9, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'UAT', 'UAT', 'การทดสอบกับผู้ใช้', true, 10, 'system', NOW(), 'system', NOW(), false),
-    (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'TASK', 'Task', 'งาน', true, 11, 'system', NOW(), 'system', NOW(), false);
+    (gen_random_uuid(), 'PM', 'DOCUMENT_TYPE', 'TASK', 'Task', 'งาน', true, 11, 'system', NOW(), 'system', NOW(), false)
+ON CONFLICT (module_code, parameter_code, parameter_value) DO NOTHING;
 
 -- ============================================================
 -- ส่วนที่ 17: การปรับแต่งเพิ่มเติม
