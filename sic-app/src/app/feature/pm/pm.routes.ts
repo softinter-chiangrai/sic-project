@@ -175,22 +175,28 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Change Request =====
-  {
-    path: 'change-request',
-    loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'change-request/new',
+    {
+    path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
     canActivate: [customerGuard, projectGuard],
   },
-  {
-    path: 'change-request/:id/edit',
-    loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard, projectGuard],
-  },
+
+  // // ===== Change Request =====
+  // {
+  //   path: 'change-request',
+  //   loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
+  //   canActivate: [customerGuard, projectGuard],
+  // },
+  // {
+  //   path: 'change-request/new',
+  //   loadComponent: () => import('./dt/pmdt066/pmdt066.component').then((m) => m.Pmdt06Component),
+  //   canActivate: [customerGuard, projectGuard],
+  // },
+  // {
+  //   path: 'change-request/:id/edit',
+  //   loadComponent: () => import('./dt/pmdt066/pmdt066.component').then((m) => m.Pmdt06Component),
+  //   canActivate: [customerGuard, projectGuard],
+  // },
 
   // ===== Specification =====
   {
@@ -208,6 +214,8 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
     canActivate: [customerGuard, projectGuard],
   },
+
+ 
 
   // ===== Design Review =====
   {

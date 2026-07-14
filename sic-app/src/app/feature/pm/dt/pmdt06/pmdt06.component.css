@@ -1,0 +1,5 @@
+/* src/app/features/pmdt06/pmdt06.component.css */
+:host {
+  display: block;
+  height: 100vh;
+}

@@ -3,7 +3,9 @@
 <!-- ===== LOADING ===== -->
 @if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-20 gap-4">
-    <div class="w-14 h-14 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <div
+      class="w-14 h-14 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+    ></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
   </div>
 }
@@ -26,7 +28,6 @@
 <!-- ===== DASHBOARD ===== -->
 @if (project(); as p) {
   <div class="space-y-6 p-0.5">
-
     <!-- ===== HEADER ===== -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-4">
@@ -40,14 +41,23 @@
         <div>
           <div class="flex items-center gap-3 flex-wrap">
             <h1 class="text-2xl font-bold text-[var(--text-active)]">{{ p.projectName }}</h1>
-            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+            <span
+              class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
+            >
               {{ p.projectCode }}
             </span>
-            <span [class]="getStatusClass(p.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            <span
+              [class]="
+                getStatusClass(p.status) +
+                ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+              "
+            >
               {{ getStatusText(p.status) }}
             </span>
             @if (!p.isActive) {
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <span
+                class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              >
                 ปิดใช้งาน
               </span>
             }
@@ -56,7 +66,10 @@
             <span><i class="bi bi-person"></i> {{ p.customerName }}</span>
             <span><i class="bi bi-file-earmark-text"></i> สัญญา: {{ p.contractNo }}</span>
             <span><i class="bi bi-person-badge"></i> PM: {{ p.projectManager }}</span>
-            <span><i class="bi bi-calendar"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.plannedEndDate) }}</span>
+            <span
+              ><i class="bi bi-calendar"></i> {{ formatDate(p.startDate) }} -
+              {{ formatDate(p.plannedEndDate) }}</span
+            >
           </div>
         </div>
       </div>
@@ -88,7 +101,9 @@
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
         <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Tasks</p>
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.taskCount }}</p>
-        <p class="text-xs text-[var(--text-muted)]">เสร็จ {{ p.taskCompletedCount }} / {{ p.taskCount }}</p>
+        <p class="text-xs text-[var(--text-muted)]">
+          เสร็จ {{ p.taskCompletedCount }} / {{ p.taskCount }}
+        </p>
       </div>
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
         <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Requirements</p>
@@ -99,18 +114,28 @@
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.bugCount }}</p>
         <p class="text-xs text-[var(--text-muted)]">เปิด {{ p.bugOpenCount }} / {{ p.bugCount }}</p>
       </div>
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm col-span-2">
+      <div
+        class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm col-span-2"
+      >
         <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Manday</p>
         <div class="flex items-center gap-3">
           <span class="text-2xl font-bold text-[var(--text-active)]">{{ p.usedManday }}</span>
           <span class="text-sm text-[var(--text-muted)]">/ {{ p.budgetManday }}</span>
-          <span class="text-sm font-medium text-[var(--text-active)] ml-auto">{{ getMandayProgress() }}%</span>
+          <span class="text-sm font-medium text-[var(--text-active)] ml-auto"
+            >{{ getMandayProgress() }}%</span
+          >
         </div>
         <div class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden mt-1">
           <div
             class="h-full rounded-full transition-all"
             [style.width.%]="getMandayProgress()"
-            [style.background]="getMandayProgress() > 80 ? 'var(--crm-danger)' : getMandayProgress() > 50 ? 'var(--crm-warning)' : 'var(--crm-success)'"
+            [style.background]="
+              getMandayProgress() > 80
+                ? 'var(--crm-danger)'
+                : getMandayProgress() > 50
+                  ? 'var(--crm-warning)'
+                  : 'var(--crm-success)'
+            "
           ></div>
         </div>
       </div>
@@ -129,7 +154,9 @@
         <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
         เมนูด่วน
       </h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+      <div
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2"
+      >
         <!-- Phase -->
         <button
           (click)="goToPhases()"
@@ -161,6 +188,13 @@
         >
           <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
           <span>Specification</span>
+        </button>
+        <button
+          (click)="goToDiagram()"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+        >
+          <i class="bi bi-diagram-2 text-xl text-[var(--crm-primary)]"></i>
+          <span>Diagram</span>
         </button>
         <!-- Design Review -->
         <button
@@ -287,18 +321,16 @@
 
     <!-- ===== RECENT PHASES & TASKS ===== -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
       <!-- Recent Phases -->
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
+      <div
+        class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden"
+      >
         <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
           <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-layers text-[var(--crm-primary)]"></i>
             Phase ล่าสุด
           </h3>
-          <button
-            (click)="goToPhases()"
-            class="text-xs text-[var(--crm-primary)] hover:underline"
-          >
+          <button (click)="goToPhases()" class="text-xs text-[var(--crm-primary)] hover:underline">
             ดูทั้งหมด →
           </button>
         </div>
@@ -309,11 +341,20 @@
               (click)="goToPhaseDetail(phase.id)"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ phase.phaseName }}</p>
-                <p class="text-xs text-[var(--text-muted)]">{{ phase.phaseCode }} · {{ formatDate(phase.endDate) }}</p>
+                <p class="text-sm font-medium text-[var(--text-active)] truncate">
+                  {{ phase.phaseName }}
+                </p>
+                <p class="text-xs text-[var(--text-muted)]">
+                  {{ phase.phaseCode }} · {{ formatDate(phase.endDate) }}
+                </p>
               </div>
               <div class="flex items-center gap-3">
-                <span [class]="getStatusClass(phase.status) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                <span
+                  [class]="
+                    getStatusClass(phase.status) +
+                    ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'
+                  "
+                >
                   {{ getStatusText(phase.status) }}
                 </span>
                 <span class="text-xs font-mono text-[var(--text-muted)] min-w-[2.5rem] text-right">
@@ -329,24 +370,21 @@
               </div>
             </div>
           } @empty {
-            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">
-              ไม่มี Phase
-            </div>
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">ไม่มี Phase</div>
           }
         </div>
       </div>
 
       <!-- Recent Tasks -->
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden">
+      <div
+        class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-sm overflow-hidden"
+      >
         <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
           <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
             งานล่าสุด
           </h3>
-          <button
-            (click)="goToTasks()"
-            class="text-xs text-[var(--crm-primary)] hover:underline"
-          >
+          <button (click)="goToTasks()" class="text-xs text-[var(--crm-primary)] hover:underline">
             ดูทั้งหมด →
           </button>
         </div>
@@ -357,27 +395,37 @@
               (click)="goToTaskDetail(task.id)"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ task.taskName }}</p>
-                <p class="text-xs text-[var(--text-muted)]">{{ task.taskCode }} · {{ task.assignedTo }}</p>
+                <p class="text-sm font-medium text-[var(--text-active)] truncate">
+                  {{ task.taskName }}
+                </p>
+                <p class="text-xs text-[var(--text-muted)]">
+                  {{ task.taskCode }} · {{ task.assignedTo }}
+                </p>
               </div>
               <div class="flex items-center gap-2">
-                <span [class]="getPriorityClass(task.priority) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                <span
+                  [class]="
+                    getPriorityClass(task.priority) +
+                    ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'
+                  "
+                >
                   {{ getPriorityText(task.priority) }}
                 </span>
-                <span [class]="getStatusClass(task.status) + ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'">
+                <span
+                  [class]="
+                    getStatusClass(task.status) +
+                    ' inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-medium'
+                  "
+                >
                   {{ getStatusText(task.status) }}
                 </span>
               </div>
             </div>
           } @empty {
-            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">
-              ไม่มีงาน
-            </div>
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">ไม่มีงาน</div>
           }
         </div>
       </div>
-
     </div>
-
   </div>
 }

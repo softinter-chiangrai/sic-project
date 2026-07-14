@@ -55,3 +55,12 @@ ren "pmrt01A\pmrt04-c.component.css" "pmrt01A.component.css"
 
 ng g c feature/pm/rt/pmrt01A
 ng g c feature/pm/dt/pmdt02/pmdt02A
+
+ren "src\app\feature\pm\dt\pmdt06\pmdt06-a" "pmdt06A"
+ren "src\app\feature\pm\dt\pmdt06\pmdt06-b" "pmdt06B"
+ren "src\app\feature\pm\dt\pmdt06\pmdt06-c" "pmdt06C"
+ren "src\app\feature\pm\dt\pmdt06\pmdt06-d" "pmdt06D"
+
+ren "src\app\feature\pm\dt\pmdt06\pmdt06D\pmdt06-d.component.ts" "pmdt06D.component.ts"
+ren "src\app\feature\pm\dt\pmdt06\pmdt06D\pmdt06-d.component.html" "pmdt06D.component.html"
+ren "src\app\feature\pm\dt\pmdt06\pmdt06D\pmdt06-d.component.css" "pmdt06D.component.css"

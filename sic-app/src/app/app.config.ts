@@ -16,6 +16,7 @@ import {
 } from './core/services/app-translate-loader.service';
 import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+import { provideMarkdown } from 'ngx-markdown';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,6 +41,7 @@ export const appConfig: ApplicationConfig = {
         provide: TranslateLoader,
         useExisting: AppTranslateLoader
       }
-    })
+    }),
+     provideMarkdown(),
   ]
 };

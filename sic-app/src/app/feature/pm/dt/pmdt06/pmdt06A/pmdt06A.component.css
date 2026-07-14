@@ -1,0 +1,20 @@
+/* src/app/features/pmdt06/pmdt06A/pmdt06A.component.css */
+:host {
+  display: block;
+  height: 100%;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

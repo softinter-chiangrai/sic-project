@@ -1,0 +1,90 @@
+<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<div class="flex h-[calc(100vh-56px)]">
+  <!-- Left Sidebar: Tabs List -->
+  <aside class="w-56 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col flex-shrink-0">
+    <!-- Search -->
+    <div class="p-3 border-b border-[var(--border)]">
+      <input
+        [(ngModel)]="searchQuery"
+        type="text"
+        placeholder="Search diagrams..."
+        class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      />
+    </div>
+
+    <!-- Tab List -->
+    <div class="flex-1 overflow-y-auto p-2 space-y-1" cdkDropList (cdkDropListDropped)="drop($event)">
+      @for (tab of filteredTabs(); track tab.id) {
+        <div
+          class="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all group"
+          [class]="activeTabId() === tab.id ? 'bg-[var(--crm-primary)] text-white' : 'hover:bg-[var(--sidebar-hover)]'"
+          (click)="selectTab(tab.id)"
+          cdkDrag
+        >
+          <i class="bi text-sm" [class]="getIcon(tab.diagramType)"></i>
+          <span class="flex-1 truncate text-sm">{{ tab.name }}</span>
+          <span class="text-[0.55rem] px-1.5 py-0.5 rounded bg-opacity-20"
+                [class]="activeTabId() === tab.id ? 'bg-white/20 text-white' : 'bg-[var(--border)]/20 text-[var(--text-muted)]'">
+            {{ tab.diagramType }}
+          </span>
+          <button
+            (click)="closeTab(tab.id, $event)"
+            class="opacity-0 group-hover:opacity-100 hover:text-[var(--crm-danger)] transition-all"
+            [class.text-white/70]="activeTabId() === tab.id"
+          >
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      } @empty {
+        <div class="text-center text-[var(--text-muted)] text-sm py-8">
+          <i class="bi bi-inbox text-2xl block mb-2 opacity-30"></i>
+          No diagrams yet
+        </div>
+      }
+    </div>
+
+    <!-- Create Button -->
+    <div class="p-3 border-t border-[var(--border)]">
+      <button (click)="createTab()" class="w-full py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
+        <i class="bi bi-plus-lg mr-1"></i> New Diagram
+      </button>
+    </div>
+  </aside>
+
+  <!-- Center: Editor + Chat -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Tabs header (horizontal) -->
+    <div class="flex items-center gap-0.5 px-2 border-b border-[var(--border)] bg-[var(--sidebar)] overflow-x-auto flex-shrink-0">
+      @for (tab of filteredTabs(); track tab.id) {
+        <div
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-b-2 cursor-pointer whitespace-nowrap transition-colors"
+          [class.border-[var(--crm-primary)]]="activeTabId() === tab.id"
+          [class.text-[var(--text-active)]]="activeTabId() === tab.id"
+          [class.text-[var(--text-muted)]]="activeTabId() !== tab.id"
+          (click)="selectTab(tab.id)"
+        >
+          <i class="bi text-xs" [class]="getIcon(tab.diagramType)"></i>
+          <span>{{ tab.name }}</span>
+          <button (click)="closeTab(tab.id, $event)" class="text-xs hover:text-[var(--crm-danger)] ml-0.5">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Split: Editor (60%) + Chat (40%) -->
+    <div class="flex-1 flex flex-col min-h-0">
+      <div class="flex-1 min-h-0 border-b border-[var(--border)]">
+        <app-pmdt06B [diagram]="activeTab()" (diagramChange)="updateDiagram($event)" />
+      </div>
+      <div class="h-[35%] min-h-[150px]">
+        <app-pmdt06C [diagramId]="activeTabId()" (aiResponse)="handleAiResponse($event)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Live Preview -->
+  <aside class="w-[45%] border-l border-[var(--border)] bg-[var(--bg)] flex-shrink-0">
+    <app-pmdt06D [script]="activeTab()?.mermaidScript || ''" />
+  </aside>
+</div>
