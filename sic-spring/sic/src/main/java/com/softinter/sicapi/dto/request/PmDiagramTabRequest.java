@@ -26,6 +26,8 @@ public class PmDiagramTabRequest {
     // เปลี่ยนจาก String เป็น Map<String, Object> เพื่อรองรับ JSONB ได้โดยตรง
     private Map<String, Object> metadata;
 
+    private Map<String, Object> graphData;
+
     private Integer sortOrder;
     private Boolean isActive;
 }

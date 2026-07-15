@@ -86,6 +86,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript());
         tab.setMetadata(request.getMetadata());
+        tab.setGraphData(request.getGraphData());
         tab.setSortOrder(maxSort + 1);
         tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -113,6 +114,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         }
         if (request.getMetadata() != null) {
             tab.setMetadata(request.getMetadata());
+        }
+        if (request.getGraphData() != null) {
+            tab.setGraphData(request.getGraphData());
         }
         if (request.getIsActive() != null) {
             tab.setIsActive(request.getIsActive());
@@ -146,6 +150,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
         duplicate.setMetadata(original.getMetadata());
+        duplicate.setGraphData(original.getGraphData());
         duplicate.setSortOrder(original.getSortOrder() + 1);
         duplicate.setIsActive(true);
 
@@ -225,6 +230,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             dto.setDiagramType(tab.getDiagramType());
             dto.setMermaidScript(tab.getMermaidScript());
             dto.setMetadata(tab.getMetadata());
+            dto.setGraphData(tab.getGraphData());
             dto.setProjectId(tab.getProjectId());
 
             // ดึง projectName (ถ้ามี)
@@ -259,6 +265,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             fallback.setDiagramType(tab.getDiagramType());
             fallback.setMermaidScript(tab.getMermaidScript());
             fallback.setMetadata(tab.getMetadata());
+            fallback.setGraphData(tab.getGraphData());
             fallback.setProjectId(tab.getProjectId());
             fallback.setSortOrder(tab.getSortOrder());
             fallback.setIsActive(tab.getIsActive());

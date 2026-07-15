@@ -1,17 +1,6 @@
-// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
-
 import {
-  Component,
-  inject,
-  signal,
-  computed,
-  OnInit,
-  OnDestroy,
-  Input,
-  ViewChild,
-  ElementRef,
-  AfterViewInit,
-  HostListener,
+  Component, inject, signal, computed, OnInit, OnDestroy,
+  Input, ViewChild, ElementRef, AfterViewInit, HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,6 +12,8 @@ import { Inject } from '@angular/core';
 import { Pmdt06BComponent } from '../pmdt06B/pmdt06B.component';
 import { Pmdt06CComponent } from '../pmdt06C/pmdt06C.component';
 import { Pmdt06DComponent } from '../pmdt06D/pmdt06D.component';
+import { Pmdt06FComponent } from '../pmdt06F/pmdt06F.component';
+import { Pmdt06GComponent } from '../pmdt06G/pmdt06G.component';
 import { DiagramService } from '../diagram.service';
 import { DiagramModel, DiagramType, DIAGRAM_DEFAULTS, DIAGRAM_TYPES } from '../diagram.model';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -31,19 +22,15 @@ import { DialogService } from '../../../../../core/services/dialog.service';
   selector: 'app-pmdt06A',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    DragDropModule,
-    Pmdt06BComponent,
-    Pmdt06CComponent,
-    Pmdt06DComponent,
+    CommonModule, FormsModule, DragDropModule,
+    Pmdt06BComponent, Pmdt06CComponent, Pmdt06DComponent,
+    Pmdt06FComponent, Pmdt06GComponent,
     MatDialogModule,
   ],
   templateUrl: './pmdt06A.component.html',
   styleUrls: ['./pmdt06A.component.css'],
 })
 export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
-  // ทำให้ projectId เป็น required และไม่เป็น null
   @Input({ required: true }) projectId!: string;
 
   private diagramService = inject(DiagramService);
@@ -68,19 +55,24 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     const query = this.searchQuery().toLowerCase().trim();
     const type = this.filterType();
     return this.tabs().filter((t) => {
-      const matchQuery =
-        !query ||
-        t.name.toLowerCase().includes(query) ||
-        t.diagramType.toLowerCase().includes(query);
+      const matchQuery = !query || t.name.toLowerCase().includes(query) || t.diagramType.toLowerCase().includes(query);
       const matchType = type === 'all' || t.diagramType === type;
       return matchQuery && matchType;
     });
   });
 
-  // ===== Resizing =====
+  editorMode = signal<'visual' | 'text'>('visual');
+
+  visualTypes = new Set(['Flowchart', 'DFD', 'ER', 'Use Case', 'Sequence']);
+
+  isVisualType = computed(() => {
+    const tab = this.activeTab();
+    return tab ? this.visualTypes.has(tab.diagramType) : false;
+  });
+
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
-  sidebarWidth = signal(224); // default 56*4
+  sidebarWidth = signal(224);
   previewWidth = signal<number>(0);
   isResizingSidebar = signal(false);
   isResizingPreview = signal(false);
@@ -114,10 +106,8 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // ใช้ setTimeout ให้ DOM พร้อม
     setTimeout(() => {
       this.containerWidth = this.containerRef.nativeElement.clientWidth;
-      // คำนวณ preview width เริ่มต้นเป็น 45% ของ container
       const initialPreview = this.containerWidth * 0.45;
       this.previewWidth.set(Math.max(300, Math.min(initialPreview, this.containerWidth - this.sidebarWidth() - 200)));
     }, 0);
@@ -129,9 +119,8 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   createTab() {
-    // projectId ถูกบังคับให้มีค่าแล้ว (required) แต่ยังเช็คไว้ป้องกัน
     if (!this.projectId) {
-      this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อนสร้าง Diagram');
+      this.dialogService.error('No project found', 'Please select a project first');
       return;
     }
 
@@ -144,19 +133,16 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
       if (result) {
         const { name, type } = result;
         const script = DIAGRAM_DEFAULTS[type as DiagramType] || '';
-        this.diagramService
-          .createTab(this.projectId!, name, type, script)
-          .subscribe({
-            next: (tab) => {
-              this.activeTabId.set(tab.id);
-              this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${name}" เรียบร้อย`);
-            },
-            error: (err) => {
-              console.error('Create tab error:', err);
-              const msg = err.error?.message || err.message || 'เกิดข้อผิดพลาด';
-              this.dialogService.error('สร้าง Diagram ไม่สำเร็จ', msg);
-            },
-          });
+        this.diagramService.createTab(this.projectId!, name, type, script).subscribe({
+          next: (tab) => {
+            this.activeTabId.set(tab.id);
+            this.dialogService.success('Diagram created', `"${name}" created`);
+          },
+          error: (err) => {
+            const msg = err.error?.message || err.message || 'Error';
+            this.dialogService.error('Create failed', msg);
+          },
+        });
       }
     });
   }
@@ -177,6 +163,14 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     this.autoSave$.next(updated);
   }
 
+  onGraphDataChange(data: any) {
+    const tab = this.activeTab();
+    if (tab) {
+      const updated = { ...tab, graphData: data };
+      this.updateDiagram(updated);
+    }
+  }
+
   drop(event: CdkDragDrop<DiagramModel[]>) {
     const tabs = this.tabs();
     const reorder = tabs.map((t) => ({ id: t.id, sortOrder: t.sortOrder }));
@@ -187,53 +181,47 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   handleAiResponse(response: any) {
     if (response.action === 'create' && response.diagram) {
       if (!this.projectId) {
-        this.dialogService.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อน');
+        this.dialogService.error('No project', 'Please select a project');
         return;
       }
-      this.diagramService
-        .createTab(
-          this.projectId,
-          response.diagram.name || 'AI Generated',
-          response.diagram.type || 'Flowchart',
-          response.diagram.script,
-        )
-        .subscribe({
-          next: (tab) => {
-            this.activeTabId.set(tab.id);
-            this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${response.diagram.name}" เรียบร้อย`);
-          },
-          error: (err) => this.dialogService.error('สร้างไม่สำเร็จ', err.message),
-        });
+      this.diagramService.createTab(
+        this.projectId,
+        response.diagram.name || 'AI Generated',
+        response.diagram.type || 'Flowchart',
+        response.diagram.script,
+      ).subscribe({
+        next: (tab) => {
+          this.activeTabId.set(tab.id);
+          this.dialogService.success('Diagram created', `"${response.diagram.name}" created`);
+        },
+        error: (err) => this.dialogService.error('Create failed', err.message),
+      });
     } else if (response.action === 'update' && response.diagram) {
       const current = this.activeTab();
       if (current) {
         const updated = { ...current, mermaidScript: response.diagram.script };
         this.updateDiagram(updated);
+        if (this.isVisualType()) {
+          this.editorMode.set('visual');
+        }
       }
     }
   }
 
+  toggleEditorMode() {
+    this.editorMode.update((m) => (m === 'visual' ? 'text' : 'visual'));
+  }
+
   getIcon(type: string): string {
     const icons: Record<string, string> = {
-      Flowchart: 'bi-diagram-2',
-      Sequence: 'bi-arrow-left-right',
-      Class: 'bi-boxes',
-      ER: 'bi-table',
-      DFD: 'bi-diagram-3',
-      State: 'bi-circle',
-      Journey: 'bi-map',
-      Mindmap: 'bi-diagram-3',
-      Timeline: 'bi-clock-history',
-      Requirement: 'bi-clipboard-check',
-      C4: 'bi-layers',
-      'Git Graph': 'bi-git',
-      Pie: 'bi-pie-chart',
-      Gantt: 'bi-bar-chart',
+      Flowchart: 'bi-diagram-2', Sequence: 'bi-arrow-left-right', Class: 'bi-boxes',
+      ER: 'bi-table', DFD: 'bi-diagram-3', State: 'bi-circle', Journey: 'bi-map',
+      Mindmap: 'bi-diagram-3', Timeline: 'bi-clock-history', Requirement: 'bi-clipboard-check',
+      C4: 'bi-layers', 'Git Graph': 'bi-git', Pie: 'bi-pie-chart', Gantt: 'bi-bar-chart',
     };
     return icons[type] || 'bi-file-earmark';
   }
 
-  // ===== Resize Handlers =====
   startResizeSidebar(event: MouseEvent) {
     event.preventDefault();
     this.isResizingSidebar.set(true);
@@ -255,22 +243,14 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     if (!this.isResizingSidebar() && !this.isResizingPreview()) return;
-
     const deltaX = event.clientX - this.startX;
-
     if (this.isResizingSidebar()) {
       const newWidth = this.startSidebarWidth + deltaX;
-      const minWidth = 200;
-      const maxWidth = Math.min(400, this.containerWidth - 300); // เหลือพื้นที่ให้ center + preview
-      this.sidebarWidth.set(Math.min(Math.max(newWidth, minWidth), maxWidth));
+      this.sidebarWidth.set(Math.min(Math.max(newWidth, 200), Math.min(400, this.containerWidth - 300)));
     }
-
     if (this.isResizingPreview()) {
-      // ลากไปทางซ้าย = preview กว้างขึ้น (deltaX negative) ดังนั้น newWidth = startWidth - deltaX
       const newWidth = this.startPreviewWidth - deltaX;
-      const minWidth = 250;
-      const maxWidth = this.containerWidth - this.sidebarWidth() - 200; // เหลือ center อย่างน้อย 200px
-      this.previewWidth.set(Math.min(Math.max(newWidth, minWidth), maxWidth));
+      this.previewWidth.set(Math.min(Math.max(newWidth, 250), this.containerWidth - this.sidebarWidth() - 200));
     }
   }
 
@@ -286,9 +266,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('window:resize')
   onWindowResize() {
-    // เมื่อ resize หน้าต่าง ให้ปรับ containerWidth เพื่อใช้ในการจำกัด max/min
     this.containerWidth = this.containerRef?.nativeElement?.clientWidth || this.containerWidth;
-    // ปรับ preview max ตาม container ใหม่
     const maxPreview = this.containerWidth - this.sidebarWidth() - 200;
     if (this.previewWidth() > maxPreview) {
       this.previewWidth.set(Math.max(250, maxPreview));
@@ -296,7 +274,6 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 }
 
-// ===== Create Diagram Dialog =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,

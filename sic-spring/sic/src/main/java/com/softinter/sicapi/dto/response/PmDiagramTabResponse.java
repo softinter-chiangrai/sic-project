@@ -17,6 +17,8 @@ public class PmDiagramTabResponse {
     // เปลี่ยนจาก String เป็น Map เพื่อให้ Frontend รับ Object ได้สะดวก
     private Map<String, Object> metadata;
 
+    private Map<String, Object> graphData;
+
     private UUID projectId;
     private String projectName;
     private Integer sortOrder;

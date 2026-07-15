@@ -47,6 +47,10 @@ public class PmDiagramTab extends BaseEntity {
     @Column(columnDefinition = "JSONB")
     private Map<String, Object> metadata;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "graph_data", columnDefinition = "JSONB")
+    private Map<String, Object> graphData;
+
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 

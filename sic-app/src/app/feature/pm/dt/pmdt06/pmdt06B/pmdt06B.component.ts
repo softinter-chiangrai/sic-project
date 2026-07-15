@@ -6,7 +6,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import type { DiagramModel } from '../diagram.model';
 
 @Component({
-  selector: 'app-pmdt06B',
+  selector: 'app-pmdt06b',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './pmdt06B.component.html',

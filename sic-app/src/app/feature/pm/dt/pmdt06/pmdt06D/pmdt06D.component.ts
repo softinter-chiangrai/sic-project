@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import mermaid from 'mermaid';
 
 @Component({
-  selector: 'app-pmdt06D',
+  selector: 'app-pmdt06d',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pmdt06D.component.html',

@@ -8,7 +8,7 @@ import type { ChatMessage } from '../diagram.model';
 import { DiagramService } from '../diagram.service';
 
 @Component({
-  selector: 'app-pmdt06C',
+  selector: 'app-pmdt06c',
   standalone: true,
   imports: [CommonModule, FormsModule, MarkdownModule],
   templateUrl: './pmdt06C.component.html',

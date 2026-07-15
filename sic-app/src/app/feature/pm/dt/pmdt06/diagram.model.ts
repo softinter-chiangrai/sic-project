@@ -15,6 +15,7 @@ export interface DiagramModel {
   diagramType: string;
   mermaidScript: string;
   metadata: any;
+  graphData: any;
   projectId: string;
   projectName?: string;
   userId: string;
@@ -57,12 +58,13 @@ export type DiagramType =
   | 'C4'
   | 'Git Graph'
   | 'Pie'
-  | 'Gantt';
+  | 'Gantt'
+  | 'Use Case';
 
 export const DIAGRAM_TYPES: DiagramType[] = [
   'Flowchart', 'Sequence', 'Class', 'ER', 'DFD', 'State',
   'Journey', 'Mindmap', 'Timeline', 'Requirement',
-  'C4', 'Git Graph', 'Pie', 'Gantt'
+  'C4', 'Git Graph', 'Pie', 'Gantt', 'Use Case'
 ];
 
 export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
@@ -80,4 +82,5 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
   'Git Graph': 'gitGraph\n  commit\n  branch develop\n  checkout develop\n  commit\n  checkout main\n  merge develop',
   Pie: 'pie\n  "Development" : 45\n  "Testing" : 25\n  "Design" : 20\n  "Planning" : 10',
   Gantt: 'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
+  'Use Case': 'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
 };

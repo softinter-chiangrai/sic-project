@@ -45,6 +45,7 @@
     "d3": "^7.9.0",
     "dayjs": "^1.11.20",
     "express": "^5.1.0",
+    "headroom-ai": "^0.22.4",
     "mermaid": "^11.16.0",
     "ngx-markdown": "^21.3.0",
     "ngx-mask": "^21.0.1",
