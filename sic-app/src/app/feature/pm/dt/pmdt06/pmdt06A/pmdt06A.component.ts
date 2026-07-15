@@ -8,6 +8,10 @@ import {
   OnInit,
   OnDestroy,
   Input,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +26,6 @@ import { Pmdt06DComponent } from '../pmdt06D/pmdt06D.component';
 import { DiagramService } from '../diagram.service';
 import { DiagramModel, DiagramType, DIAGRAM_DEFAULTS, DIAGRAM_TYPES } from '../diagram.model';
 import { DialogService } from '../../../../../core/services/dialog.service';
-
 
 @Component({
   selector: 'app-pmdt06A',
@@ -39,7 +42,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
   templateUrl: './pmdt06A.component.html',
   styleUrls: ['./pmdt06A.component.css'],
 })
-export class Pmdt06AComponent implements OnInit, OnDestroy {
+export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   // ทำให้ projectId เป็น required และไม่เป็น null
   @Input({ required: true }) projectId!: string;
 
@@ -74,6 +77,20 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
     });
   });
 
+  // ===== Resizing =====
+  @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
+
+  sidebarWidth = signal(224); // default 56*4
+  previewWidth = signal<number>(0);
+  isResizingSidebar = signal(false);
+  isResizingPreview = signal(false);
+  isResizing = signal(false);
+
+  private startX = 0;
+  private startSidebarWidth = 0;
+  private startPreviewWidth = 0;
+  private containerWidth = 0;
+
   ngOnInit() {
     this.diagramService.tabs$
       .pipe(takeUntil(this.destroy$))
@@ -94,6 +111,16 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewInit() {
+    // ใช้ setTimeout ให้ DOM พร้อม
+    setTimeout(() => {
+      this.containerWidth = this.containerRef.nativeElement.clientWidth;
+      // คำนวณ preview width เริ่มต้นเป็น 45% ของ container
+      const initialPreview = this.containerWidth * 0.45;
+      this.previewWidth.set(Math.max(300, Math.min(initialPreview, this.containerWidth - this.sidebarWidth() - 200)));
+    }, 0);
   }
 
   selectTab(id: string) {
@@ -122,7 +149,6 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
           .subscribe({
             next: (tab) => {
               this.activeTabId.set(tab.id);
-              // ✅ เพิ่ม Toast แจ้งเตือนความสำเร็จ
               this.dialogService.success('สร้าง Diagram สำเร็จ', `สร้าง "${name}" เรียบร้อย`);
             },
             error: (err) => {
@@ -206,9 +232,71 @@ export class Pmdt06AComponent implements OnInit, OnDestroy {
     };
     return icons[type] || 'bi-file-earmark';
   }
+
+  // ===== Resize Handlers =====
+  startResizeSidebar(event: MouseEvent) {
+    event.preventDefault();
+    this.isResizingSidebar.set(true);
+    this.isResizing.set(true);
+    this.startX = event.clientX;
+    this.startSidebarWidth = this.sidebarWidth();
+    document.body.style.cursor = 'col-resize';
+  }
+
+  startResizePreview(event: MouseEvent) {
+    event.preventDefault();
+    this.isResizingPreview.set(true);
+    this.isResizing.set(true);
+    this.startX = event.clientX;
+    this.startPreviewWidth = this.previewWidth();
+    document.body.style.cursor = 'col-resize';
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (!this.isResizingSidebar() && !this.isResizingPreview()) return;
+
+    const deltaX = event.clientX - this.startX;
+
+    if (this.isResizingSidebar()) {
+      const newWidth = this.startSidebarWidth + deltaX;
+      const minWidth = 200;
+      const maxWidth = Math.min(400, this.containerWidth - 300); // เหลือพื้นที่ให้ center + preview
+      this.sidebarWidth.set(Math.min(Math.max(newWidth, minWidth), maxWidth));
+    }
+
+    if (this.isResizingPreview()) {
+      // ลากไปทางซ้าย = preview กว้างขึ้น (deltaX negative) ดังนั้น newWidth = startWidth - deltaX
+      const newWidth = this.startPreviewWidth - deltaX;
+      const minWidth = 250;
+      const maxWidth = this.containerWidth - this.sidebarWidth() - 200; // เหลือ center อย่างน้อย 200px
+      this.previewWidth.set(Math.min(Math.max(newWidth, minWidth), maxWidth));
+    }
+  }
+
+  @HostListener('document:mouseup')
+  onMouseUp() {
+    if (this.isResizingSidebar() || this.isResizingPreview()) {
+      this.isResizingSidebar.set(false);
+      this.isResizingPreview.set(false);
+      this.isResizing.set(false);
+      document.body.style.cursor = '';
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    // เมื่อ resize หน้าต่าง ให้ปรับ containerWidth เพื่อใช้ในการจำกัด max/min
+    this.containerWidth = this.containerRef?.nativeElement?.clientWidth || this.containerWidth;
+    // ปรับ preview max ตาม container ใหม่
+    const maxPreview = this.containerWidth - this.sidebarWidth() - 200;
+    if (this.previewWidth() > maxPreview) {
+      this.previewWidth.set(Math.max(250, maxPreview));
+    }
+  }
 }
 
-// ===== Create Diagram Dialog (ไม่เปลี่ยนแปลง) =====
+// ===== Create Diagram Dialog =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,

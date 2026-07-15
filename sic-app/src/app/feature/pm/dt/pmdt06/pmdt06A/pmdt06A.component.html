@@ -1,7 +1,14 @@
 <!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
-<div class="flex h-[calc(100vh-56px)]">
+<div
+  #container
+  class="flex h-[calc(100vh-56px)] select-none"
+  [class.resizing]="isResizing()"
+>
   <!-- Left Sidebar -->
-  <aside class="w-56 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col flex-shrink-0">
+  <aside
+    class="flex-shrink-0 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col"
+    [style.width.px]="sidebarWidth()"
+  >
     <!-- Search -->
     <div class="p-3 border-b border-[var(--border)]">
       <input
@@ -36,8 +43,10 @@
         >
           <i class="bi text-sm" [class]="getIcon(tab.diagramType)"></i>
           <span class="flex-1 truncate text-sm">{{ tab.name }}</span>
-          <span class="text-[0.55rem] px-1.5 py-0.5 rounded bg-opacity-20"
-                [class]="activeTabId() === tab.id ? 'bg-white/20 text-white' : 'bg-[var(--border)]/20 text-[var(--text-muted)]'">
+          <span
+            class="text-[0.55rem] px-1.5 py-0.5 rounded bg-opacity-20"
+            [class]="activeTabId() === tab.id ? 'bg-white/20 text-white' : 'bg-[var(--border)]/20 text-[var(--text-muted)]'"
+          >
             {{ tab.diagramType }}
           </span>
           <button
@@ -58,11 +67,21 @@
 
     <!-- Create Button -->
     <div class="p-3 border-t border-[var(--border)]">
-      <button (click)="createTab()" class="w-full py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
+      <button
+        (click)="createTab()"
+        class="w-full py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+      >
         <i class="bi bi-plus-lg mr-1"></i> New Diagram
       </button>
     </div>
   </aside>
+
+  <!-- Handle 1: Sidebar ↔ Center -->
+  <div
+    class="resize-handle"
+    [class.active]="isResizingSidebar()"
+    (mousedown)="startResizeSidebar($event)"
+  ></div>
 
   <!-- Center: Editor + Chat -->
   <div class="flex-1 flex flex-col min-w-0">
@@ -96,8 +115,18 @@
     </div>
   </div>
 
+  <!-- Handle 2: Center ↔ Preview -->
+  <div
+    class="resize-handle"
+    [class.active]="isResizingPreview()"
+    (mousedown)="startResizePreview($event)"
+  ></div>
+
   <!-- Right: Live Preview -->
-  <aside class="w-[45%] border-l border-[var(--border)] bg-[var(--bg)] flex-shrink-0">
+  <aside
+    class="flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg)]"
+    [style.width.px]="previewWidth()"
+  >
     <app-pmdt06D [script]="activeTab()?.mermaidScript || ''" />
   </aside>
 </div>
