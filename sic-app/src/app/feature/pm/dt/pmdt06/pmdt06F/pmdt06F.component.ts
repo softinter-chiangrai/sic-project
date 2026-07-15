@@ -24,6 +24,7 @@ import { MaxgraphEditorService } from '../services/maxgraph-editor.service';
 import { MaxgraphExportService } from '../services/maxgraph-export.service';
 import { MaxgraphToolboxService } from '../services/maxgraph-toolbox.service';
 import { MermaidToMaxgraphService } from '../services/mermaid-to-maxgraph.service';
+import { parseStyleString } from '../services/style-utils';
 
 import type { DiagramModel } from '../diagram.model';
 
@@ -60,6 +61,10 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   keyHandler: KeyHandler | null = null;
   undoManager: UndoManager | null = null;
 
+  // Event listeners สำหรับ Drag & Drop
+  private dragOverHandler: ((e: DragEvent) => void) | null = null;
+  private dropHandler: ((e: DragEvent) => void) | null = null;
+
   zoomLevel = signal(100);
   activeEdgeStyle = signal<'straight' | 'orthogonal' | 'elbow' | 'curved'>('orthogonal');
   showExport = signal(false);
@@ -77,6 +82,23 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
 
     this.initGraph();
+
+    // ========== ผูก Drag & Drop Events ==========
+    const containerEl = this.graphContainer.nativeElement;
+    this.dragOverHandler = this.onDragOver.bind(this);
+    this.dropHandler = this.onDrop.bind(this);
+    containerEl.addEventListener('dragover', this.dragOverHandler);
+    containerEl.addEventListener('drop', this.dropHandler);
+
+    // ========== ปรับพื้นหลังให้มองเห็น ==========
+    if (this.graph) {
+      const isDark = document.documentElement.classList.contains('dark');
+      this.graph.container!.style.background = isDark ? '#2d2d2d' : '#f5f5f5';
+      this.graph.container!.style.backgroundImage = `
+        radial-gradient(circle, var(--border) 1px, transparent 1px)
+      `;
+      this.graph.container!.style.backgroundSize = '20px 20px';
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -93,15 +115,25 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.destroy$.complete();
     this.change$.complete();
     this.cleanupGraph();
+
+    // ลบ Drag & Drop listeners
+    if (this.dragOverHandler) {
+      this.graphContainer?.nativeElement.removeEventListener('dragover', this.dragOverHandler);
+    }
+    if (this.dropHandler) {
+      this.graphContainer?.nativeElement.removeEventListener('drop', this.dropHandler);
+    }
   }
 
   private initGraph(): void {
     const container = this.graphContainer.nativeElement;
     const graph = new Graph(container);
 
+    // ตั้งค่าการทำงานพื้นฐาน
     graph.setPanning(true);
     graph.setConnectable(true);
     graph.setDropEnabled(true);
+    graph.setEnabled(true);                     // ✅ เปิดใช้งานกราฟ (default true)
     graph.allowDanglingEdges = false;
     graph.setMultigraph(false);
     graph.cellsDisconnectable = true;
@@ -115,11 +147,12 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.vertexLabelsMovable = true;
     graph.edgeLabelsMovable = true;
 
-    // ตั้งค่า default edge style ผ่าน stylesheet
+    // ตั้งค่า default edge style
     const sheet = graph.getStylesheet();
     const defaultEdge = sheet.getDefaultEdgeStyle();
     defaultEdge['edgeStyle'] = 'orthogonalEdgeStyle';
 
+    // UndoManager
     this.undoManager = new UndoManager();
     const undoListener = (_sender: any, evt: any) => {
       this.undoManager!.undoableEditHappened(evt.getProperty('edit'));
@@ -127,14 +160,12 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.getDataModel().addListener(InternalEvent.UNDO, undoListener);
     graph.getView().addListener(InternalEvent.UNDO, undoListener);
 
+    // Keyboard shortcuts
     this.keyHandler = new KeyHandler(graph);
-    this.keyHandler.bindControlKey(90, () => {
-      this.undo();
-    });
-    this.keyHandler.bindControlKey(89, () => {
-      this.redo();
-    });
+    this.keyHandler.bindControlKey(90, () => this.undo());
+    this.keyHandler.bindControlKey(89, () => this.redo());
 
+    // Selection change
     graph.getSelectionModel().addListener(InternalEvent.CHANGE, () => {
       const cells = graph.getSelectionCells();
       if (cells.length > 0) {
@@ -142,11 +173,13 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
+    // Data model change -> emit update
     graph.getDataModel().addListener(InternalEvent.CHANGE, () => {
       this.zoomLevel.set(Math.round(graph.getView().getScale() * 100));
       this.change$.next();
     });
 
+    // Click -> select
     graph.addListener(InternalEvent.CLICK, (_sender: any, evt: any) => {
       const cell = evt.getProperty('cell');
       if (cell) {
@@ -154,6 +187,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
+    // Double click -> edit label
     graph.addListener(InternalEvent.DOUBLE_CLICK, (_sender: any, evt: any) => {
       const cell = evt.getProperty('cell');
       if (cell) {
@@ -161,25 +195,19 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
-    graph.addListener(InternalEvent.MOVE_CELLS, () => {
-      this.change$.next();
-    });
+    // Move/Resize/Connect -> emit change
+    graph.addListener(InternalEvent.MOVE_CELLS, () => this.change$.next());
+    graph.addListener(InternalEvent.RESIZE_CELLS, () => this.change$.next());
+    graph.addListener(InternalEvent.CONNECT_CELL, () => this.change$.next());
 
-    graph.addListener(InternalEvent.RESIZE_CELLS, () => {
-      this.change$.next();
-    });
+    // ตั้งค่าพื้นหลังเริ่มต้น (จะปรับอีกครั้งใน ngAfterViewInit)
+    graph.container!.style.background = '#f5f5f5';
+    graph.container!.style.backgroundImage = `
+      radial-gradient(circle, #d0d0d0 1px, transparent 1px)
+    `;
+    graph.container!.style.backgroundSize = '20px 20px';
 
-    graph.addListener(InternalEvent.CONNECT_CELL, () => {
-      this.change$.next();
-    });
-
-    graph.container!.style.background = 'var(--bg)';
-
-    const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
-      graph.container!.style.background = '#1e1e1e';
-    }
-
+    // Default vertex style
     const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
     vertexStyle['fontColor'] = 'var(--text-active)';
     vertexStyle['fillColor'] = 'var(--sidebar)';
@@ -187,6 +215,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     vertexStyle['rounded'] = true;
     vertexStyle['shadow'] = false;
 
+    // Default edge style
     const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
     edgeStyle['strokeColor'] = 'var(--text-muted)';
     edgeStyle['fontColor'] = 'var(--text-muted)';
@@ -268,9 +297,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       const data = this.mermaidService.parse(script, graph);
       if (!data || data.cells.length === 0) return;
 
-      // โหลดข้อมูลลงกราฟ
       this.editorService.loadGraphData(data);
-      // หลังจากโหลดแล้ว emit การเปลี่ยนแปลง
       this.graphDataChange.emit({ xml: this.editorService.toXML() });
       this.change$.next();
     } catch (err) {
@@ -298,6 +325,57 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.loadMermaidScript(script);
   }
 
+  // ========== Drag & Drop Methods ==========
+  private onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+
+  private onDrop(event: DragEvent): void {
+    event.preventDefault();
+    const graph = this.graph;
+    if (!graph) return;
+
+    const rawData = event.dataTransfer?.getData('application/x-maxgraph-shape');
+    if (!rawData) return;
+
+    try {
+      const shape = JSON.parse(rawData);
+      const containerRect = this.graphContainer.nativeElement.getBoundingClientRect();
+      const view = graph.getView();
+      const scale = view.getScale();
+      const translate = view.getTranslate();
+
+      // คำนวณพิกัดในระบบของ Graph
+      const x = (event.clientX - containerRect.left) / scale - translate.x;
+      const y = (event.clientY - containerRect.top) / scale - translate.y;
+
+      const parent = graph.getDefaultParent();
+      const styleObj = parseStyleString(shape.style);
+
+      graph.batchUpdate(() => {
+        graph.insertVertex(
+          parent,
+          null,
+          shape.name,
+          x - shape.width / 2,
+          y - shape.height / 2,
+          shape.width,
+          shape.height,
+          styleObj
+        );
+      });
+
+      this.change$.next();
+
+    } catch (err) {
+      console.error('Drop failed:', err);
+    }
+  }
+
+  // ========== Zoom & Tools ==========
   zoomIn(): void {
     const graph = this.graph;
     if (!graph) return;
@@ -400,7 +478,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
             } else {
               delete newStyle['curved'];
             }
-            // ส่ง object style โดยตรง (ไม่แปลงเป็น string)
             graph.getDataModel().setStyle(cell, newStyle);
           }
         }
