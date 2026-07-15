@@ -1,9 +1,9 @@
 // src/app/feature/pm/dt/pmdt06/services/mermaid-to-maxgraph.service.ts
 import { Injectable } from '@angular/core';
-import { Graph, Cell } from '@maxgraph/core';
+import { Cell, Graph } from '@maxgraph/core';
 import type { DiagramType } from '../diagram.model';
-import type { GraphData } from './maxgraph-editor.service';
 import { parseStyleString, stringifyStyleObject } from '../services/style-utils';
+import type { GraphData } from './maxgraph-editor.service';
 
 interface MermaidNode {
   id: string;
@@ -20,7 +20,6 @@ interface MermaidEdge {
 
 @Injectable({ providedIn: 'root' })
 export class MermaidToMaxgraphService {
-
   parse(script: string, graph: Graph): GraphData {
     const type = this.detectType(script);
     const model = graph.getDataModel();
@@ -75,52 +74,91 @@ export class MermaidToMaxgraphService {
   private parseFlowchart(
     script: string,
     graph: Graph,
-    model: any, // เปลี่ยนจาก GraphDataModel
+    model: any,
     cellMap: Map<string, Cell>,
-    cells: GraphData['cells']
+    cells: GraphData['cells'],
   ): void {
-    const lines = script.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = script
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     const nodes = new Map<string, MermaidNode>();
     const edges: MermaidEdge[] = [];
     const direction = script.includes('LR') ? 'LR' : 'TD';
     const parent = graph.getDefaultParent();
 
+    // ✅ Helper แยกโหนดจากข้อความ (รองรับ [], (), {})
+    const parseNodeDef = (str: string): MermaidNode | null => {
+      str = str.trim();
+      let match = str.match(/^(\w[\w\d]*)\s*\[([^\]]*)\]/);
+      if (match) {
+        return { id: match[1], label: match[2] || match[1], shape: 'rectangle' };
+      }
+      match = str.match(/^(\w[\w\d]*)\s*\(([^)]*)\)/);
+      if (match) {
+        return { id: match[1], label: match[2] || match[1], shape: 'rounded' };
+      }
+      match = str.match(/^(\w[\w\d]*)\s*\{([^}]*)\}/);
+      if (match) {
+        return { id: match[1], label: match[2] || match[1], shape: 'diamond' };
+      }
+      match = str.match(/^(\w[\w\d]*)/);
+      if (match) {
+        return { id: match[1], label: match[1], shape: 'rectangle' };
+      }
+      return null;
+    };
+
     for (const line of lines) {
+      // ข้ามบรรทัดแรกที่ระบุประเภทกราฟ
       if (/^(graph|flowchart)\s+(TD|LR|BT|RL)/i.test(line)) continue;
 
-      const nodeMatch = line.match(/^(\w[\w\d]*)\s*\[([^\]]*)\]/);
-      if (nodeMatch) { nodes.set(nodeMatch[1], { id: nodeMatch[1], label: nodeMatch[2], shape: 'rectangle' }); continue; }
+      // ✅ ตรวจสอบว่ามีลูกศร (edge) หรือไม่
+      const arrowMatch = line.match(/(-->|==>|-.->|=>)/);
+      if (arrowMatch) {
+        const arrow = arrowMatch[1];
+        const parts = line.split(arrow);
+        if (parts.length === 2) {
+          let leftStr = parts[0].trim();
+          let rightStr = parts[1].trim();
+          let edgeLabel = '';
 
-      const nodeRoundMatch = line.match(/^(\w[\w\d]*)\s*\(([^)]*)\)/);
-      if (nodeRoundMatch) { nodes.set(nodeRoundMatch[1], { id: nodeRoundMatch[1], label: nodeRoundMatch[2], shape: 'rounded' }); continue; }
+          // ✅ ตรวจสอบป้ายชื่อกลาง Edge (เช่น -->|label|)
+          const labelMatch = rightStr.match(/^\s*\|([^|]*)\|\s*(.+)/);
+          if (labelMatch) {
+            edgeLabel = labelMatch[1];
+            rightStr = labelMatch[2].trim();
+          }
 
-      const nodeDiamondMatch = line.match(/^(\w[\w\d]*)\s*\{([^}]*)\}/);
-      if (nodeDiamondMatch) { nodes.set(nodeDiamondMatch[1], { id: nodeDiamondMatch[1], label: nodeDiamondMatch[2], shape: 'diamond' }); continue; }
+          const sourceNode = parseNodeDef(leftStr);
+          const targetNode = parseNodeDef(rightStr);
 
-      const edgeWithLabel = line.match(/^(\w[\w\d]*)\s*(-->|==>|-.->|==>)\s*\|([^|]*)\|\s*(\w[\w\d]*)/);
-      if (edgeWithLabel) {
-        if (!nodes.has(edgeWithLabel[1])) nodes.set(edgeWithLabel[1], { id: edgeWithLabel[1], label: edgeWithLabel[1], shape: 'rectangle' });
-        if (!nodes.has(edgeWithLabel[4])) nodes.set(edgeWithLabel[4], { id: edgeWithLabel[4], label: edgeWithLabel[4], shape: 'rectangle' });
-        edges.push({ from: edgeWithLabel[1], to: edgeWithLabel[4], label: edgeWithLabel[3], style: 'orthogonalEdgeStyle' });
-        continue;
+          if (sourceNode && targetNode) {
+            if (!nodes.has(sourceNode.id)) {
+              nodes.set(sourceNode.id, sourceNode);
+            }
+            if (!nodes.has(targetNode.id)) {
+              nodes.set(targetNode.id, targetNode);
+            }
+            edges.push({
+              from: sourceNode.id,
+              to: targetNode.id,
+              label: edgeLabel,
+              style: 'orthogonalEdgeStyle',
+            });
+          }
+          continue;
+        }
       }
 
-      const edgeSimple = line.match(/^(\w[\w\d]*)\s*(-->|==>|-.->)\s*(\w[\w\d]*)/);
-      if (edgeSimple) {
-        if (!nodes.has(edgeSimple[1])) nodes.set(edgeSimple[1], { id: edgeSimple[1], label: edgeSimple[1], shape: 'rectangle' });
-        if (!nodes.has(edgeSimple[3])) nodes.set(edgeSimple[3], { id: edgeSimple[3], label: edgeSimple[3], shape: 'rectangle' });
-        edges.push({ from: edgeSimple[1], to: edgeSimple[3], label: '', style: 'orthogonalEdgeStyle' });
-        continue;
-      }
-
-      const edgeWithLabelArrow = line.match(/^(\w[\w\d]*)\s*(-+>|=>)\s*\|\s*([^|]*)\s*\|\s*(\w[\w\d]*)/);
-      if (edgeWithLabelArrow) {
-        if (!nodes.has(edgeWithLabelArrow[1])) nodes.set(edgeWithLabelArrow[1], { id: edgeWithLabelArrow[1], label: edgeWithLabelArrow[1], shape: 'rectangle' });
-        if (!nodes.has(edgeWithLabelArrow[4])) nodes.set(edgeWithLabelArrow[4], { id: edgeWithLabelArrow[4], label: edgeWithLabelArrow[4], shape: 'rectangle' });
-        edges.push({ from: edgeWithLabelArrow[1], to: edgeWithLabelArrow[4], label: edgeWithLabelArrow[3], style: 'orthogonalEdgeStyle' });
+      // ✅ ถ้าไม่ใช่ Edge ให้ลองอ่านเป็นโหนดเดี่ยว (ไว้รองรับกรณีที่แยกบรรทัด)
+      const nodeDef = parseNodeDef(line);
+      if (nodeDef && !nodes.has(nodeDef.id)) {
+        nodes.set(nodeDef.id, nodeDef);
       }
     }
 
+    // ---------- ส่วนวาดโหนดและเส้นเชื่อม (ไม่ต้องแก้) ----------
     const nodeArray = Array.from(nodes.values());
     const spacingX = 180;
     const spacingY = 100;
@@ -138,8 +176,10 @@ export class MermaidToMaxgraphService {
           style = 'rounded=1;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;';
           break;
         case 'diamond':
-          style = 'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;';
-          w = 100; h = 80;
+          style =
+            'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;';
+          w = 100;
+          h = 80;
           break;
         default:
           style = 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;';
@@ -152,7 +192,13 @@ export class MermaidToMaxgraphService {
       const styleObj = parseStyleString(style);
       const cell = graph.insertVertex(parent, node.id, node.label, x, y, w, h, styleObj);
       cellMap.set(node.id, cell);
-      cells.push({ id: node.id, label: node.label, style: stringifyStyleObject(styleObj), geometry: { x, y, width: w, height: h }, type: 'vertex' });
+      cells.push({
+        id: node.id,
+        label: node.label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x, y, width: w, height: h },
+        type: 'vertex',
+      });
     }
 
     for (const edge of edges) {
@@ -164,7 +210,15 @@ export class MermaidToMaxgraphService {
       const edgeId = `edge_${edge.from}_${edge.to}_${Date.now()}_${Math.random()}`;
       const edgeCell = graph.insertEdge(parent, edgeId, edge.label, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
-      cells.push({ id: edgeId, label: edge.label, style: stringifyStyleObject(styleObj), geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge', source: edge.from, target: edge.to });
+      cells.push({
+        id: edgeId,
+        label: edge.label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x: 0, y: 0, width: 80, height: 40 },
+        type: 'edge',
+        source: edge.from,
+        target: edge.to,
+      });
     }
   }
 
@@ -173,23 +227,35 @@ export class MermaidToMaxgraphService {
     graph: Graph,
     model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
-    cells: GraphData['cells']
+    cells: GraphData['cells'],
   ): void {
-    const lines = script.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = script
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     const participants: string[] = [];
     const messages: { from: string; to: string; label: string; dashed: boolean }[] = [];
     let seqStarted = false;
     const parent = graph.getDefaultParent();
 
     for (const line of lines) {
-      if (/^sequenceDiagram/i.test(line)) { seqStarted = true; continue; }
+      if (/^sequenceDiagram/i.test(line)) {
+        seqStarted = true;
+        continue;
+      }
       if (!seqStarted) continue;
 
       const participantMatch = line.match(/^participant\s+(\w[\w\d]*)/i);
-      if (participantMatch) { participants.push(participantMatch[1]); continue; }
+      if (participantMatch) {
+        participants.push(participantMatch[1]);
+        continue;
+      }
 
       const actorMatch = line.match(/^actor\s+(\w[\w\d]*)/i);
-      if (actorMatch) { participants.push(actorMatch[1]); continue; }
+      if (actorMatch) {
+        participants.push(actorMatch[1]);
+        continue;
+      }
 
       const msgSolid = line.match(/^(\w[\w\d]*)\s*->>\s*(\w[\w\d]*)\s*:\s*(.+)/);
       if (msgSolid) {
@@ -211,7 +277,12 @@ export class MermaidToMaxgraphService {
       if (msgNoLabel) {
         if (!participants.includes(msgNoLabel[1])) participants.push(msgNoLabel[1]);
         if (!participants.includes(msgNoLabel[3])) participants.push(msgNoLabel[3]);
-        messages.push({ from: msgNoLabel[1], to: msgNoLabel[3], label: '', dashed: msgNoLabel[2].startsWith('--') });
+        messages.push({
+          from: msgNoLabel[1],
+          to: msgNoLabel[3],
+          label: '',
+          dashed: msgNoLabel[2].startsWith('--'),
+        });
       }
     }
 
@@ -223,15 +294,49 @@ export class MermaidToMaxgraphService {
     for (let i = 0; i < participants.length; i++) {
       const x = actorX + i * spacingX;
 
-      const actorStyleObj = parseStyleString('shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;');
-      const actorCell = graph.insertVertex(parent, `actor_${participants[i]}`, participants[i], x, actorY, 40, 60, actorStyleObj);
+      const actorStyleObj = parseStyleString(
+        'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+      );
+      const actorCell = graph.insertVertex(
+        parent,
+        `actor_${participants[i]}`,
+        participants[i],
+        x,
+        actorY,
+        40,
+        60,
+        actorStyleObj,
+      );
       cellMap.set(`actor_${participants[i]}`, actorCell);
-      cells.push({ id: `actor_${participants[i]}`, label: participants[i], style: stringifyStyleObject(actorStyleObj), geometry: { x, y: actorY, width: 40, height: 60 }, type: 'vertex' });
+      cells.push({
+        id: `actor_${participants[i]}`,
+        label: participants[i],
+        style: stringifyStyleObject(actorStyleObj),
+        geometry: { x, y: actorY, width: 40, height: 60 },
+        type: 'vertex',
+      });
 
-      const lfStyleObj = parseStyleString('shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;');
-      const lifelineCell = graph.insertVertex(parent, `lifeline_${participants[i]}`, '', x + 10, actorY + 70, 20, lifelineHeight, lfStyleObj);
+      const lfStyleObj = parseStyleString(
+        'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;',
+      );
+      const lifelineCell = graph.insertVertex(
+        parent,
+        `lifeline_${participants[i]}`,
+        '',
+        x + 10,
+        actorY + 70,
+        20,
+        lifelineHeight,
+        lfStyleObj,
+      );
       cellMap.set(`lifeline_${participants[i]}`, lifelineCell);
-      cells.push({ id: `lifeline_${participants[i]}`, label: '', style: stringifyStyleObject(lfStyleObj), geometry: { x: x + 10, y: actorY + 70, width: 20, height: lifelineHeight }, type: 'vertex' });
+      cells.push({
+        id: `lifeline_${participants[i]}`,
+        label: '',
+        style: stringifyStyleObject(lfStyleObj),
+        geometry: { x: x + 10, y: actorY + 70, width: 20, height: lifelineHeight },
+        type: 'vertex',
+      });
     }
 
     for (let i = 0; i < messages.length; i++) {
@@ -239,12 +344,22 @@ export class MermaidToMaxgraphService {
       const source = cellMap.get(`actor_${msg.from}`);
       const target = cellMap.get(`actor_${msg.to}`);
       if (!source || !target) continue;
-      const edgeStyle = msg.dashed ? 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;' : 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
+      const edgeStyle = msg.dashed
+        ? 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;'
+        : 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
       const styleObj = parseStyleString(edgeStyle);
       const edgeId = `msg_${msg.from}_${msg.to}_${i}`;
       const edgeCell = graph.insertEdge(parent, edgeId, msg.label, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
-      cells.push({ id: edgeId, label: msg.label, style: stringifyStyleObject(styleObj), geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge', source: `actor_${msg.from}`, target: `actor_${msg.to}` });
+      cells.push({
+        id: edgeId,
+        label: msg.label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x: 0, y: 0, width: 80, height: 40 },
+        type: 'edge',
+        source: `actor_${msg.from}`,
+        target: `actor_${msg.to}`,
+      });
     }
   }
 
@@ -253,18 +368,30 @@ export class MermaidToMaxgraphService {
     graph: Graph,
     model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
-    cells: GraphData['cells']
+    cells: GraphData['cells'],
   ): void {
-    const lines = script.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = script
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     const entities: { name: string; attrs: string[] }[] = [];
-    const relations: { from: string; to: string; fromCard: string; toCard: string; label: string }[] = [];
+    const relations: {
+      from: string;
+      to: string;
+      fromCard: string;
+      toCard: string;
+      label: string;
+    }[] = [];
     let erStarted = false;
     let currentEntity: string | null = null;
     let currentAttrs: string[] = [];
     const parent = graph.getDefaultParent();
 
     for (const line of lines) {
-      if (/^erDiagram/i.test(line)) { erStarted = true; continue; }
+      if (/^erDiagram/i.test(line)) {
+        erStarted = true;
+        continue;
+      }
       if (!erStarted) continue;
 
       if (line.includes('{')) {
@@ -278,7 +405,11 @@ export class MermaidToMaxgraphService {
       }
 
       if (line === '}') {
-        if (currentEntity) { entities.push({ name: currentEntity, attrs: currentAttrs }); currentEntity = null; currentAttrs = []; }
+        if (currentEntity) {
+          entities.push({ name: currentEntity, attrs: currentAttrs });
+          currentEntity = null;
+          currentAttrs = [];
+        }
         continue;
       }
 
@@ -288,15 +419,40 @@ export class MermaidToMaxgraphService {
         continue;
       }
 
-      const relMatch = line.match(/^(\w[\w\d_]*)\s+(\|\||[|}]o|\|[|}]|o[{|]|\{o|o\|)\s*--\s*(o\{|\|\||o\|)\s+(\w[\w\d_]*)\s*:\s*(.+)/);
+      const relMatch = line.match(
+        /^(\w[\w\d_]*)\s+(\|\||[|}]o|\|[|}]|o[{|]|\{o|o\|)\s*--\s*(o\{|\|\||o\|)\s+(\w[\w\d_]*)\s*:\s*(.+)/,
+      );
       if (relMatch) {
-        const cardMap: Record<string, string> = { '||': '1', '|o': '0..1', 'o|': '0..1', 'o{': '0..*', '|{': '1..*', '}o': '0..*', '{o': '0..*' };
-        relations.push({ from: relMatch[1], to: relMatch[4], fromCard: cardMap[relMatch[2]] || relMatch[2], toCard: cardMap[relMatch[3]] || relMatch[3], label: relMatch[5] });
+        const cardMap: Record<string, string> = {
+          '||': '1',
+          '|o': '0..1',
+          'o|': '0..1',
+          'o{': '0..*',
+          '|{': '1..*',
+          '}o': '0..*',
+          '{o': '0..*',
+        };
+        relations.push({
+          from: relMatch[1],
+          to: relMatch[4],
+          fromCard: cardMap[relMatch[2]] || relMatch[2],
+          toCard: cardMap[relMatch[3]] || relMatch[3],
+          label: relMatch[5],
+        });
         continue;
       }
 
-      const relSimple = line.match(/^(\w[\w\d_]*)\s+(\|[\|{o}]|o[\|{])\s*--\s*(\|[\|{o}]|o[\|{])\s+(\w[\w\d_]*)\s*:\s*(.*)/);
-      if (relSimple) relations.push({ from: relSimple[1], to: relSimple[4], fromCard: relSimple[2], toCard: relSimple[3], label: relSimple[5] ?? '' });
+      const relSimple = line.match(
+        /^(\w[\w\d_]*)\s+(\|[\|{o}]|o[\|{])\s*--\s*(\|[\|{o}]|o[\|{])\s+(\w[\w\d_]*)\s*:\s*(.*)/,
+      );
+      if (relSimple)
+        relations.push({
+          from: relSimple[1],
+          to: relSimple[4],
+          fromCard: relSimple[2],
+          toCard: relSimple[3],
+          label: relSimple[5] ?? '',
+        });
     }
 
     if (currentEntity) entities.push({ name: currentEntity, attrs: currentAttrs });
@@ -312,10 +468,18 @@ export class MermaidToMaxgraphService {
       const y = startY + Math.floor(i / 3) * spacingY;
       const label = ent.attrs.length > 0 ? `${ent.name}\n${ent.attrs.join('\n')}` : ent.name;
       const h = Math.max(50, 30 + ent.attrs.length * 20);
-      const styleObj = parseStyleString('rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;');
+      const styleObj = parseStyleString(
+        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+      );
       const cell = graph.insertVertex(parent, `entity_${ent.name}`, label, x, y, 140, h, styleObj);
       cellMap.set(`entity_${ent.name}`, cell);
-      cells.push({ id: `entity_${ent.name}`, label, style: stringifyStyleObject(styleObj), geometry: { x, y, width: 140, height: h }, type: 'vertex' });
+      cells.push({
+        id: `entity_${ent.name}`,
+        label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x, y, width: 140, height: h },
+        type: 'vertex',
+      });
     }
 
     for (const rel of relations) {
@@ -327,7 +491,15 @@ export class MermaidToMaxgraphService {
       const edgeId = `rel_${rel.from}_${rel.to}_${Date.now()}`;
       const edgeCell = graph.insertEdge(parent, edgeId, edgeLabel, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
-      cells.push({ id: edgeId, label: edgeLabel, style: stringifyStyleObject(styleObj), geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge', source: `entity_${rel.from}`, target: `entity_${rel.to}` });
+      cells.push({
+        id: edgeId,
+        label: edgeLabel,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x: 0, y: 0, width: 80, height: 40 },
+        type: 'edge',
+        source: `entity_${rel.from}`,
+        target: `entity_${rel.to}`,
+      });
     }
   }
 
@@ -336,9 +508,12 @@ export class MermaidToMaxgraphService {
     graph: Graph,
     model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
-    cells: GraphData['cells']
+    cells: GraphData['cells'],
   ): void {
-    const lines = script.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = script
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     const classes: { name: string; members: string[] }[] = [];
     const relations: { from: string; to: string; type: string; label: string }[] = [];
     let classStarted = false;
@@ -347,7 +522,10 @@ export class MermaidToMaxgraphService {
     const parent = graph.getDefaultParent();
 
     for (const line of lines) {
-      if (/^classDiagram/i.test(line)) { classStarted = true; continue; }
+      if (/^classDiagram/i.test(line)) {
+        classStarted = true;
+        continue;
+      }
       if (!classStarted) continue;
 
       const classDef = line.match(/^class\s+(\w[\w\d]*)(\s*\{)?/);
@@ -355,37 +533,66 @@ export class MermaidToMaxgraphService {
         if (currentClass) classes.push({ name: currentClass, members: currentMembers });
         currentClass = classDef[1];
         currentMembers = [];
-        if (!classDef[2]) { classes.push({ name: currentClass, members: currentMembers }); currentClass = null; currentMembers = []; }
+        if (!classDef[2]) {
+          classes.push({ name: currentClass, members: currentMembers });
+          currentClass = null;
+          currentMembers = [];
+        }
         continue;
       }
 
       if (line === '}') {
-        if (currentClass) { classes.push({ name: currentClass, members: currentMembers }); currentClass = null; currentMembers = []; }
+        if (currentClass) {
+          classes.push({ name: currentClass, members: currentMembers });
+          currentClass = null;
+          currentMembers = [];
+        }
         continue;
       }
 
       if (currentClass) {
-        const memberMatch = line.match(/^[+#~-]?\s*(\w[\w\d<>[\], ]*)\s+(\w[\w\d]*)\s*\(([^)]*)\)\s*$/);
-        if (memberMatch) { currentMembers.push(`+ ${memberMatch[2]}(${memberMatch[3]}): ${memberMatch[1]}`); continue; }
+        const memberMatch = line.match(
+          /^[+#~-]?\s*(\w[\w\d<>[\], ]*)\s+(\w[\w\d]*)\s*\(([^)]*)\)\s*$/,
+        );
+        if (memberMatch) {
+          currentMembers.push(`+ ${memberMatch[2]}(${memberMatch[3]}): ${memberMatch[1]}`);
+          continue;
+        }
         const attrMatch = line.match(/^[+#~-]?\s*(\w[\w\d<>[\], ]+)\s+(\w[\w\d]*)\s*$/);
-        if (attrMatch) { currentMembers.push(`+ ${attrMatch[2]}: ${attrMatch[1]}`); continue; }
+        if (attrMatch) {
+          currentMembers.push(`+ ${attrMatch[2]}: ${attrMatch[1]}`);
+          continue;
+        }
         currentMembers.push(line);
         continue;
       }
 
-      const relMatch = line.match(/^(\w[\w\d]*)\s*(<\|--|--\|>|\*--|o--|<\.\.|\.\.|--|--\|)\s*(\w[\w\d]*)\s*:\s*(.*)/);
+      const relMatch = line.match(
+        /^(\w[\w\d]*)\s*(<\|--|--\|>|\*--|o--|<\.\.|\.\.|--|--\|)\s*(\w[\w\d]*)\s*:\s*(.*)/,
+      );
       if (relMatch) {
-        relations.push({ from: relMatch[1], to: relMatch[3], type: relMatch[2], label: relMatch[4] ?? '' });
-        if (!classes.find(c => c.name === relMatch[1])) classes.push({ name: relMatch[1], members: [] });
-        if (!classes.find(c => c.name === relMatch[3])) classes.push({ name: relMatch[3], members: [] });
+        relations.push({
+          from: relMatch[1],
+          to: relMatch[3],
+          type: relMatch[2],
+          label: relMatch[4] ?? '',
+        });
+        if (!classes.find((c) => c.name === relMatch[1]))
+          classes.push({ name: relMatch[1], members: [] });
+        if (!classes.find((c) => c.name === relMatch[3]))
+          classes.push({ name: relMatch[3], members: [] });
         continue;
       }
 
-      const relSimple = line.match(/^(\w[\w\d]*)\s*(<\|--|--\|>|\*--|o--|<\.\.|\.\.|--|--\|)\s*(\w[\w\d]*)/);
+      const relSimple = line.match(
+        /^(\w[\w\d]*)\s*(<\|--|--\|>|\*--|o--|<\.\.|\.\.|--|--\|)\s*(\w[\w\d]*)/,
+      );
       if (relSimple) {
         relations.push({ from: relSimple[1], to: relSimple[3], type: relSimple[2], label: '' });
-        if (!classes.find(c => c.name === relSimple[1])) classes.push({ name: relSimple[1], members: [] });
-        if (!classes.find(c => c.name === relSimple[3])) classes.push({ name: relSimple[3], members: [] });
+        if (!classes.find((c) => c.name === relSimple[1]))
+          classes.push({ name: relSimple[1], members: [] });
+        if (!classes.find((c) => c.name === relSimple[3]))
+          classes.push({ name: relSimple[3], members: [] });
       }
     }
 
@@ -405,10 +612,18 @@ export class MermaidToMaxgraphService {
       const body = cls.members.length > 0 ? cls.members.join('\n') : '';
       const label = body ? `${header}\n${divider}\n${body}` : header;
       const h = Math.max(50, 40 + cls.members.length * 20);
-      const styleObj = parseStyleString('rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;');
+      const styleObj = parseStyleString(
+        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+      );
       const cell = graph.insertVertex(parent, `class_${cls.name}`, label, x, y, 160, h, styleObj);
       cellMap.set(`class_${cls.name}`, cell);
-      cells.push({ id: `class_${cls.name}`, label, style: stringifyStyleObject(styleObj), geometry: { x, y, width: 160, height: h }, type: 'vertex' });
+      cells.push({
+        id: `class_${cls.name}`,
+        label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x, y, width: 160, height: h },
+        type: 'vertex',
+      });
     }
 
     for (const rel of relations) {
@@ -417,7 +632,8 @@ export class MermaidToMaxgraphService {
       if (!source || !target) continue;
 
       let edgeStyle = 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
-      if (rel.type.includes('..')) edgeStyle = 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;';
+      if (rel.type.includes('..'))
+        edgeStyle = 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;';
       if (rel.type.includes('*')) edgeStyle += 'endArrow=openThin;';
       if (rel.type.includes('o')) edgeStyle += 'endFill=0;startFill=0;';
 
@@ -425,7 +641,15 @@ export class MermaidToMaxgraphService {
       const edgeId = `rel_${rel.from}_${rel.to}_${Date.now()}`;
       const edgeCell = graph.insertEdge(parent, edgeId, rel.label, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
-      cells.push({ id: edgeId, label: rel.label, style: stringifyStyleObject(styleObj), geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge', source: `class_${rel.from}`, target: `class_${rel.to}` });
+      cells.push({
+        id: edgeId,
+        label: rel.label,
+        style: stringifyStyleObject(styleObj),
+        geometry: { x: 0, y: 0, width: 80, height: 40 },
+        type: 'edge',
+        source: `class_${rel.from}`,
+        target: `class_${rel.to}`,
+      });
     }
   }
 }
