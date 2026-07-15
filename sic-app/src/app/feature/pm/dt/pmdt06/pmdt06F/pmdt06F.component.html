@@ -3,6 +3,9 @@
   <div class="flex items-center justify-between px-2 py-1 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
     <div class="flex items-center gap-1">
       <!-- File actions -->
+      <button (click)="importMermaid()" class="p-1.5 rounded hover:bg-[var(--sidebar-hover)] text-[var(--text-muted)] hover:text-[var(--text-active)]" title="Import from Mermaid (overwrite current diagram)">
+        <i class="bi bi-arrow-repeat text-sm"></i>
+      </button>
       <button (click)="importMermaid()" class="p-1.5 rounded hover:bg-[var(--sidebar-hover)] text-[var(--text-muted)] hover:text-[var(--text-active)]" title="Import Mermaid">
         <i class="bi bi-file-text text-sm"></i>
       </button>
@@ -67,6 +70,16 @@
 
   <!-- Canvas -->
   <div class="flex-1 min-h-0 relative">
+    <!-- ✅ ข้อความแสดงเมื่อไม่มีข้อมูล -->
+    @if (!graphData && !mermaidScript) {
+      <div class="absolute inset-0 flex items-center justify-center text-[var(--text-muted)]">
+        <div class="text-center">
+          <i class="bi bi-diagram-3 text-4xl block mb-2 opacity-30"></i>
+          <p>No diagram loaded</p>
+          <p class="text-sm">Click <i class="bi bi-arrow-repeat"></i> to import from Mermaid</p>
+        </div>
+      </div>
+    }
     <div #graphContainer class="absolute inset-0 overflow-hidden"></div>
   </div>
 </div>

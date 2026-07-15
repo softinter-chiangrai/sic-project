@@ -75,7 +75,7 @@ export class MermaidToMaxgraphService {
   private parseFlowchart(
     script: string,
     graph: Graph,
-    model: GraphDataModel,
+    model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
     cells: GraphData['cells']
   ): void {
@@ -171,7 +171,7 @@ export class MermaidToMaxgraphService {
   private parseSequence(
     script: string,
     graph: Graph,
-    model: GraphDataModel,
+    model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
     cells: GraphData['cells']
   ): void {
@@ -251,7 +251,7 @@ export class MermaidToMaxgraphService {
   private parseER(
     script: string,
     graph: Graph,
-    model: GraphDataModel,
+    model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
     cells: GraphData['cells']
   ): void {
@@ -334,7 +334,7 @@ export class MermaidToMaxgraphService {
   private parseClass(
     script: string,
     graph: Graph,
-    model: GraphDataModel,
+    model: any, // เปลี่ยนจาก GraphDataModel
     cellMap: Map<string, Cell>,
     cells: GraphData['cells']
   ): void {

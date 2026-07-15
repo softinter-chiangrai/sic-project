@@ -43,9 +43,10 @@ interface EdgeStyleOption {
 export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input({ required: true }) diagram: DiagramModel | null = null;
   @Input() graphData: any = null;
+  @Input() mermaidScript: string = '';   // ✅ รับ Mermaid Script จาก Parent
 
   @Output() graphDataChange = new EventEmitter<any>();
-  @Output() editorReady = new EventEmitter<Graph>();
+  @Output() editorReady = new EventEmitter<Pmdt06FComponent>();
 
   @ViewChild('graphContainer') graphContainer!: ElementRef<HTMLDivElement>;
 
@@ -111,25 +112,8 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       );
       if (hasXml) {
         this.loadGraphData(current);
-      } else if (this.diagram?.mermaidScript) {
-        // graphData was cleared (text mode edit) – re-import from mermaid
-        setTimeout(() => this.importMermaid(), 0);
       }
-    }
-
-    // ---- Handle diagram first change – graph is now ready ----
-    if (changes['diagram'] && this.graph) {
-      const diagram: DiagramModel | null = changes['diagram'].currentValue;
-      if (!diagram) return;
-
-      const hasXml = this.graphData && (
-        (typeof this.graphData === 'string' && this.graphData.trim().length > 0) ||
-        (this.graphData.xml && typeof this.graphData.xml === 'string' && this.graphData.xml.trim().length > 0)
-      );
-
-      if (!hasXml && diagram.mermaidScript) {
-        setTimeout(() => this.importMermaid(), 0);
-      }
+      // ✅ ไม่โหลด Mermaid อัตโนมัติ
     }
   }
 
@@ -139,7 +123,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.change$.complete();
     this.cleanupGraph();
 
-    // ลบ Drag & Drop listeners
     if (this.dragOverHandler) {
       this.graphContainer?.nativeElement.removeEventListener('dragover', this.dragOverHandler);
     }
@@ -152,11 +135,10 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     const container = this.graphContainer.nativeElement;
     const graph = new Graph(container);
 
-    // ตั้งค่าการทำงานพื้นฐาน
     graph.setPanning(true);
     graph.setConnectable(true);
     graph.setDropEnabled(true);
-    graph.setEnabled(true);                     // ✅ เปิดใช้งานกราฟ (default true)
+    graph.setEnabled(true);
     graph.allowDanglingEdges = false;
     graph.setMultigraph(false);
     graph.cellsDisconnectable = true;
@@ -223,7 +205,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.addListener(InternalEvent.RESIZE_CELLS, () => this.change$.next());
     graph.addListener(InternalEvent.CONNECT_CELL, () => this.change$.next());
 
-    // ตั้งค่าพื้นหลังเริ่มต้น (จะปรับอีกครั้งใน ngAfterViewInit)
     graph.container!.style.background = '#f5f5f5';
     graph.container!.style.backgroundImage = `
       radial-gradient(circle, #d0d0d0 1px, transparent 1px)
@@ -248,6 +229,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.graph = graph;
 
+    // ✅ โหลด graphData ถ้ามี (ไม่โหลด Mermaid อัตโนมัติ)
     const hasXml = this.graphData && (
       (typeof this.graphData === 'string' && this.graphData.trim().length > 0) ||
       (this.graphData.xml && typeof this.graphData.xml === 'string' && this.graphData.xml.trim().length > 0)
@@ -255,11 +237,10 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     if (hasXml) {
       this.loadGraphData(this.graphData);
-    } else if (this.diagram && this.diagram.mermaidScript) {
-      setTimeout(() => this.importMermaid(), 50);
     }
 
-    this.editorReady.emit(graph);
+
+    this.editorReady.emit(this);
     this.editorService.setGraph(graph);
 
     graph.batchUpdate(() => {
@@ -288,9 +269,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     try {
       const xml = typeof data === 'string' ? data : data.xml || data;
-
       graph.getDataModel().clear();
-
       if (xml) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(xml, 'text/xml');
@@ -319,47 +298,35 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
+  // ✅ ฟังก์ชันโหลด Mermaid Script (วางทับ)
   loadMermaidScript(script: string): void {
     const graph = this.graph;
     if (!graph) return;
+    if (!script || !script.trim()) {
+      console.warn('No Mermaid script to import');
+      return;
+    }
+
+    // ✅ ล้างข้อมูลเก่าทั้งหมด
+    graph.getDataModel().clear();
 
     try {
-      const data = this.mermaidService.parse(script, graph);
-      if (!data || data.cells.length === 0) return;
-
-      // mermaidService.parse() already drew nodes/edges onto `graph` directly.
-      // Encode the result and emit so the parent can persist it.
-      const codec = new Codec();
-      const node = codec.encode(graph.getDataModel());
-      if (node) {
-        const serializer = new XMLSerializer();
-        const xml = serializer.serializeToString(node);
-        this.graphDataChange.emit({ xml });
-      }
-      this.change$.next();
+      // นำเข้า Mermaid ลง graph
+      this.mermaidService.parse(script, graph);
+      // emit graphData ใหม่
+      this.emitGraphData();
     } catch (err) {
       console.error('Failed to import mermaid script:', err);
     }
   }
 
+  // ✅ ฟังก์ชันเรียกจากปุ่ม Import
   importMermaid(): void {
-    const graph = this.graph;
-    if (!graph || !this.diagram) return;
-
-    const script = this.diagram.mermaidScript;
-    if (!script || !script.trim()) return;
-
-    this.loadMermaidScript(script);
-  }
-
-  handleAiResponse(response: any): void {
-    const graph = this.graph;
-    if (!graph) return;
-
-    const script = response?.diagram?.script || response?.script || '';
-    if (!script.trim()) return;
-
-    this.loadMermaidScript(script);
+    if (this.mermaidScript) {
+      this.loadMermaidScript(this.mermaidScript);
+    } else {
+      console.warn('No Mermaid script available to import');
+    }
   }
 
   // ========== Drag & Drop Methods ==========
@@ -385,7 +352,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       const scale = view.getScale();
       const translate = view.getTranslate();
 
-      // คำนวณพิกัดในระบบของ Graph
       const x = (event.clientX - containerRect.left) / scale - translate.x;
       const y = (event.clientY - containerRect.top) / scale - translate.y;
 
@@ -406,7 +372,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
 
       this.change$.next();
-
     } catch (err) {
       console.error('Drop failed:', err);
     }

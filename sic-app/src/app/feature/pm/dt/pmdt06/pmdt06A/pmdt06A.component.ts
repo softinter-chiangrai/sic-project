@@ -83,6 +83,9 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   private startPreviewWidth = 0;
   private containerWidth = 0;
 
+  // เก็บ reference ไปยัง Visual Editor
+  private visualEditor?: Pmdt06FComponent;
+
   ngOnInit() {
     this.diagramService.tabs$
       .pipe(takeUntil(this.destroy$))
@@ -163,17 +166,30 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     this.autoSave$.next(updated);
   }
 
+  // ✅ Text Mode แก้ไข: อัปเดต mermaidScript โดยไม่ลบ graphData
   onTextDiagramChange(updated: DiagramModel) {
-    const diagramWithClearedGraph = { ...updated, graphData: null };
-    this.updateDiagram(diagramWithClearedGraph);
+    // ไม่ต้องลบ graphData เพื่อให้ Visual คงภาพเดิมไว้
+    this.updateDiagram(updated);
   }
 
+  // ✅ Visual Mode แก้ไข: อัปเดตเฉพาะ graphData
   onGraphDataChange(data: any) {
     const tab = this.activeTab();
     if (tab) {
       const updated = { ...tab, graphData: data };
       this.updateDiagram(updated);
     }
+  }
+
+  // ✅ เมื่อ Visual Editor พร้อมใช้งาน
+  onVisualEditorReady(editor: Pmdt06FComponent) {
+    this.visualEditor = editor;
+    // ไม่โหลด Mermaid อัตโนมัติ – รอให้ผู้ใช้กดปุ่ม Import
+  }
+
+  // ✅ สลับโหมด Visual/Text โดยไม่โหลดอัตโนมัติ
+  toggleEditorMode() {
+    this.editorMode.update(m => m === 'visual' ? 'text' : 'visual');
   }
 
   drop(event: CdkDragDrop<DiagramModel[]>) {
@@ -211,10 +227,6 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
     }
-  }
-
-  toggleEditorMode() {
-    this.editorMode.update((m) => (m === 'visual' ? 'text' : 'visual'));
   }
 
   getIcon(type: string): string {
@@ -279,6 +291,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 }
 
+// ===== Dialog Component (ไม่มีการเปลี่ยนแปลง) =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,
