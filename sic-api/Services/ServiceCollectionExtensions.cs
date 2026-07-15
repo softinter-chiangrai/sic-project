@@ -68,6 +68,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVerifyService, VerifyService>();
         services.AddHostedService<TemporaryUploadCleanupService>();
         services.AddHostedService<MailQueueProcessorService>();
+        services.AddHttpClient(); // Registers IHttpClientFactory for BuddyController proxy
 
         return services;
     }

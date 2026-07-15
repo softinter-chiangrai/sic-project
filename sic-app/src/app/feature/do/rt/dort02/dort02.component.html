@@ -1,0 +1,68 @@
+<div class="split-page">
+  <div class="page-header">
+    <h2>Upload</h2>
+    <div class="upload-bar">
+      <div class="file-input-wrapper">
+        <label class="browse-btn" [class.disabled]="isUploading">
+          Browse...
+          <input type="file" (change)="onFileSelected($event)" [disabled]="isUploading" hidden accept=".pdf,.txt,.md,.csv,.docx,.pptx,.xlsx,.png,.jpg,.jpeg"/>
+        </label>
+        <span class="file-name">{{ selectedFile ? selectedFile.name : 'No file selected' }}</span>
+      </div>
+      <button class="primary-btn" (click)="doUpload()" [disabled]="!selectedFile || isUploading">
+        {{ isUploading ? 'Uploading...' : 'Upload' }}
+      </button>
+    </div>
+    
+    <div class="alert-success" *ngIf="uploadMessage">{{ uploadMessage }}</div>
+    <div class="alert-error" *ngIf="uploadError">{{ uploadError }}</div>
+  </div>
+
+  <div class="split-layout">
+    <!-- Middle Part: PREVIEW -->
+    <div class="preview-panel">
+      <app-document-preview [file]="selectedFile"></app-document-preview>
+    </div>
+
+    <!-- Right Part: Document Info -->
+    <div class="info-panel">
+      <h3>Document Info</h3>
+      
+      <div class="info-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="description" rows="3" placeholder="Enter description..."></textarea>
+      </div>
+
+      <div class="info-group">
+        <label>Category</label>
+        <select [(ngModel)]="uploadCategoryId" class="form-select">
+          <option value="">Select Category</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="info-group">
+        <label>Folder</label>
+        <select [(ngModel)]="uploadFolderId" class="form-select">
+          <option value="">Select Folder</option>
+          <option *ngFor="let f of folders" [value]="f.id">{{ f.name }}</option>
+        </select>
+      </div>
+
+      <div class="info-group">
+        <label>Tags</label>
+        <div class="tag-pills">
+          <button
+            *ngFor="let t of tags"
+            class="tag-pill"
+            [class.selected]="isTagUploadSelected(t.id)"
+            [style.border-color]="t.color_code"
+            [style.background-color]="isTagUploadSelected(t.id) ? t.color_code : 'transparent'"
+            [style.color]="isTagUploadSelected(t.id) ? '#fff' : '#555'"
+            (click)="toggleTagUpload(t.id)"
+          >{{ t.name }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

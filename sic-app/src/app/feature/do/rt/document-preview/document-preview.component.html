@@ -1,0 +1,50 @@
+<div class="preview-container">
+  <div class="loading-overlay" *ngIf="isLoading">
+    <span>Loading preview...</span>
+  </div>
+
+  <div class="error-overlay" *ngIf="error">
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Image Preview -->
+  <img 
+    *ngIf="fileCategory === 'image' && previewUrl && !isLoading" 
+    [src]="previewUrl" 
+    class="image-preview" 
+    alt="Document Preview" />
+
+  <!-- PDF Preview -->
+  <iframe 
+    *ngIf="fileCategory === 'pdf' && previewUrl && !isLoading" 
+    [src]="previewUrl" 
+    class="pdf-preview" 
+    title="PDF Preview">
+  </iframe>
+
+  <!-- Text Preview -->
+  <div class="text-preview-container" *ngIf="fileCategory === 'text' && textContent && !isLoading">
+    <pre class="text-preview">{{ textContent }}</pre>
+  </div>
+
+  <!-- HTML Preview (for Word / Excel) -->
+  <div class="html-preview-container" *ngIf="(fileCategory === 'word' || fileCategory === 'excel') && htmlContent && !isLoading">
+    <div class="html-preview" [innerHTML]="htmlContent"></div>
+  </div>
+
+  <!-- Unsupported Preview -->
+  <div class="unsupported-preview" *ngIf="fileCategory === 'unknown' && !isLoading && (file || documentId)">
+    <div class="unsupported-icon">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <h3>File Type Not Supported</h3>
+    <p>Preview is not available for this file format.</p>
+    <p class="hint">You can download the file to view its contents.</p>
+  </div>
+
+  <!-- Empty State (No file passed in) -->
+  <div class="empty-preview" *ngIf="!file && !documentId && !isLoading">
+    <span class="preview-text">PREVIEW</span>
+    <span class="preview-subtext">No file selected</span>
+  </div>
+</div>

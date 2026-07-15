@@ -33,7 +33,16 @@ export class Index {
   }
 
   login(): void {
-    void this.router.navigate(['feature']);
+    console.log('[DEBUG] "Sign In" button clicked!');
+    const token = localStorage.getItem('access_token');
+    console.log('[DEBUG] Current access token in storage:', token ? 'EXISTS' : 'NULL');
+    console.log('[DEBUG] Attempting to navigate to /feature ...');
+    
+    this.router.navigate(['feature']).then(success => {
+      console.log('[DEBUG] Navigation to /feature result:', success);
+    }).catch(err => {
+      console.error('[DEBUG] Navigation error:', err);
+    });
   }
   
 }

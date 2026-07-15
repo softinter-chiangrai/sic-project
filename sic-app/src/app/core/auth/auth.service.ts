@@ -35,7 +35,12 @@ export class AuthService {
 
     this.initialized = true;
 
-    await this.oauth.loadDiscoveryDocumentAndTryLogin();
+    try {
+      await this.oauth.loadDiscoveryDocumentAndTryLogin();
+    } catch (error) {
+      console.error('Failed to load Keycloak discovery document:', error);
+      return false;
+    }
 
     if (this.oauth.hasValidAccessToken()) {
       return true;
@@ -60,13 +65,48 @@ export class AuthService {
     return token || null;
   }
 
+  getIdentityClaims(): any {
+    if (!this.isBrowser) return null;
+    return this.oauth.getIdentityClaims();
+  }
+
+  isAdmin(): boolean {
+    if (!this.isBrowser) return false;
+    const claims = this.getIdentityClaims();
+    if (!claims) return false;
+    
+    // Check keycloak realm roles
+    const roles = claims.realm_access?.roles || [];
+    const isKeycloakAdmin = roles.includes('ADMIN') || roles.includes('admin');
+    
+    // Fallback/direct check for admin email
+    const isEmailAdmin = claims.email === 'supachaiinchaitap@gmail.com';
+    
+    return isKeycloakAdmin || isEmailAdmin;
+  }
+
   login(returnUrl: string) {
     if (!this.isBrowser) return;
-    this.oauth.initCodeFlow(returnUrl);
+    console.log('[DEBUG] auth.login called with returnUrl:', returnUrl);
+    console.log('[DEBUG] loginUrl from discovery:', this.oauth.loginUrl);
+    try {
+      this.oauth.initCodeFlow(returnUrl);
+    } catch (err) {
+      console.error('[DEBUG] initCodeFlow crashed!', err);
+    }
   }
 
   logout(): void {
     if (!this.isBrowser) return;
+    
+    // Prevent Keycloak "Missing id_token_hint" error by performing a local logout
+    // if the user doesn't actually have an active ID token to send to the server.
+    if (!this.oauth.getIdToken()) {
+      this.oauth.logOut(true);
+      window.location.href = '/';
+      return;
+    }
+    
     this.oauth.logOut();
   }
 
