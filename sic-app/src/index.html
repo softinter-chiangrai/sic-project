@@ -9,8 +9,7 @@
   <script>
   (() => {
     const saved = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldDark = saved === 'dark' || (saved !== 'light' && prefersDark);
+    const shouldDark = saved === 'dark';
 
     document.documentElement.classList.toggle('dark', shouldDark);
   })();

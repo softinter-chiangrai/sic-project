@@ -63,14 +63,58 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     path: 'dashboard',
   };
 
-  private readonly BUDDY_ITEM: SidebarItem = {
-    code: 'buddy',
-    label: 'Buddy',
-    icon: 'bi-robot',
-    path: 'do/buddy',
-  };
+  private getBuddyItem(): SidebarItem {
+    const children: SidebarItem[] = [
+      {
+        code: 'buddy-chat',
+        label: 'Chat',
+        icon: 'bi-chat-dots',
+        path: 'do/buddy/chat',
+      },
+      {
+        code: 'buddy-documents',
+        label: 'Documents',
+        icon: 'bi-file-earmark-text',
+        path: 'do/buddy/documents',
+      },
+      {
+        code: 'buddy-categories',
+        label: 'Categories',
+        icon: 'bi-tag',
+        path: 'do/buddy/categories',
+      },
+      {
+        code: 'buddy-tags',
+        label: 'Tags',
+        icon: 'bi-bookmark',
+        path: 'do/buddy/tags',
+      },
+      {
+        code: 'buddy-context-management',
+        label: 'Settings',
+        icon: 'bi-gear',
+        path: 'do/buddy/context-management',
+      },
+    ];
 
-  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM, this.BUDDY_ITEM]);
+    if (this.authService.isAdmin()) {
+      children.push({
+        code: 'buddy-admin',
+        label: 'Admin',
+        icon: 'bi-shield-lock',
+        path: 'do/buddy/admin',
+      });
+    }
+
+    return {
+      code: 'buddy',
+      label: 'Buddy',
+      icon: 'bi-robot',
+      children: children,
+    };
+  }
+
+  readonly mainMenu = signal<SidebarItem[]>([]);
 
   profile: ProfileInfoModel = {} as ProfileInfoModel;
   business: BusinessInfoModel = {} as BusinessInfoModel;
@@ -95,6 +139,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) return;
 
     this.currentUrl.set(this.router.url);
+    this.mainMenu.set([this.DASHBOARD_ITEM, this.getBuddyItem()]);
     this.loadInfomations();
 
     this.routerSubscription = this.router.events
@@ -117,7 +162,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.service.getBusiness().subscribe((business) => (this.business = business));
 
     this.service.getMenu().subscribe((menu) => {
-      this.mainMenu.set([this.DASHBOARD_ITEM, this.BUDDY_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
+      this.mainMenu.set([this.DASHBOARD_ITEM, this.getBuddyItem(), ...menu.map((item) => this.mapMenuItem(item))]);
       this.autoExpand();
       this.updateBreadcrumbs();
     });

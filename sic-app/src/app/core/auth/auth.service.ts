@@ -80,7 +80,7 @@ export class AuthService {
     const isKeycloakAdmin = roles.includes('ADMIN') || roles.includes('admin');
     
     // Fallback/direct check for admin email
-    const isEmailAdmin = claims.email === 'admin@docbuddy.com';
+    const isEmailAdmin = claims.email === 'supachaiinchaitap@gmail.com';
     
     return isKeycloakAdmin || isEmailAdmin;
   }

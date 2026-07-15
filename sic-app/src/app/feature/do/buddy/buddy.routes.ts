@@ -33,5 +33,9 @@ export const BUDDY_ROUTES: Routes = [
   {
     path: 'context-management',
     loadComponent: () => import('./context-management/context-management.component').then(m => m.ContextManagementComponent),
+  },
+  {
+    path: 'admin',
+    loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent),
   }
 ];

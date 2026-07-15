@@ -122,7 +122,7 @@ export class Dort03Component implements OnInit {
     
     this.documentService.deleteDocument(this.documentId).subscribe({
       next: () => {
-        this.router.navigate(['/feature/buddy/documents']);
+        this.router.navigate(['/feature/do/buddy/documents']);
       },
       error: (err) => {
         alert('Delete failed: ' + err.message);

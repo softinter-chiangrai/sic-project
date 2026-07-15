@@ -80,6 +80,16 @@ export class BuddyChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.selectedFolderId = '';
   }
 
+  clearChat(): void {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+      this.messages = [{
+        role: 'assistant',
+        content: 'Hello! I am Buddy, your AI assistant. Use the context panel to select folders, categories, or tags to focus my knowledge. How can I help you today?'
+      }];
+      this.cdr.detectChanges();
+    }
+  }
+
   get activeContextCount(): number {
     let count = this.selectedTagIds.length;
     if (this.selectedCategoryId) count++;

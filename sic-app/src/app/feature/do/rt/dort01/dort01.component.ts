@@ -21,6 +21,8 @@ import { RouterModule } from '@angular/router';
 export class Dort01Component implements OnInit {
   documents: DocumentItem[] = [];
   folders: Folder[] = [];
+  tags: Tag[] = [];
+  categories: Category[] = [];
   
   // Navigation State
   currentFolderId: string | null = null;
@@ -30,8 +32,10 @@ export class Dort01Component implements OnInit {
   displayedFolders: Folder[] = [];
   displayedDocuments: DocumentItem[] = [];
   
-  // Search
+  // Search & Filter State
   searchTerm = '';
+  selectedCategoryName: string | null = null;
+  selectedTagName: string | null = null;
   isSearching = false;
 
   isLoading = false;
@@ -50,16 +54,36 @@ export class Dort01Component implements OnInit {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    // Fetch both documents and folders
+    // Fetch documents, folders, tags, and categories
     this.documentService.getDocuments().subscribe({
       next: (docRes) => {
         this.documents = docRes.documents;
         this.orgService.getFolders().subscribe({
           next: (folderRes) => {
             this.folders = folderRes;
-            this.isLoading = false;
-            this.updateDisplayedItems();
-            this.cdr.detectChanges();
+            
+            this.orgService.getTags().subscribe({
+              next: (tagRes) => {
+                this.tags = tagRes;
+                
+                this.orgService.getCategories().subscribe({
+                  next: (catRes) => {
+                    this.categories = catRes;
+                    this.isLoading = false;
+                    this.updateDisplayedItems();
+                    this.cdr.detectChanges();
+                  },
+                  error: () => {
+                    this.isLoading = false;
+                    this.cdr.detectChanges();
+                  }
+                });
+              },
+              error: () => {
+                this.isLoading = false;
+                this.cdr.detectChanges();
+              }
+            });
           },
           error: () => {
             this.isLoading = false;
@@ -76,12 +100,35 @@ export class Dort01Component implements OnInit {
 
   updateDisplayedItems(): void {
     const term = this.searchTerm.trim().toLowerCase();
+    const isFilteringActive = term !== '' || this.selectedCategoryName !== null || this.selectedTagName !== null;
     
-    if (term !== '') {
+    if (isFilteringActive) {
       this.isSearching = true;
-      // Global Flat Search
-      this.displayedFolders = this.folders.filter(f => f.name.toLowerCase().includes(term));
-      this.displayedDocuments = this.documents.filter(d => d.file_name.toLowerCase().includes(term));
+      // Global flat search: folders match name term only (folders don't have tags or categories)
+      if (term !== '') {
+        this.displayedFolders = this.folders.filter(f => f.name.toLowerCase().includes(term));
+      } else {
+        this.displayedFolders = [];
+      }
+      
+      this.displayedDocuments = this.documents.filter(d => {
+        if (term !== '' && !d.file_name.toLowerCase().includes(term)) {
+          return false;
+        }
+        if (this.selectedCategoryName !== null) {
+          const plainCategories = this.extractSpans(d.category);
+          if (!plainCategories.includes(this.selectedCategoryName)) {
+            return false;
+          }
+        }
+        if (this.selectedTagName !== null) {
+          const plainTags = this.extractSpans(d.tags);
+          if (!plainTags.includes(this.selectedTagName)) {
+            return false;
+          }
+        }
+        return true;
+      });
     } else {
       this.isSearching = false;
       
@@ -111,6 +158,8 @@ export class Dort01Component implements OnInit {
   navigateToFolder(folder: Folder): void {
     this.currentFolderId = folder.id;
     this.searchTerm = ''; // Clear search when navigating
+    this.selectedCategoryName = null;
+    this.selectedTagName = null;
     this.buildBreadcrumbs();
     this.updateDisplayedItems();
     this.cdr.detectChanges();
@@ -119,6 +168,8 @@ export class Dort01Component implements OnInit {
   navigateToBreadcrumb(crumb: { id: string | null; name: string }): void {
     this.currentFolderId = crumb.id;
     this.searchTerm = '';
+    this.selectedCategoryName = null;
+    this.selectedTagName = null;
     this.buildBreadcrumbs();
     this.updateDisplayedItems();
     this.cdr.detectChanges();
@@ -232,8 +283,33 @@ export class Dort01Component implements OnInit {
 
   clearSearch(): void {
     this.searchTerm = '';
+    this.selectedCategoryName = null;
+    this.selectedTagName = null;
     this.updateDisplayedItems();
     this.cdr.detectChanges();
+  }
+
+  selectCategory(categoryName: string | null): void {
+    this.selectedCategoryName = categoryName;
+    this.updateDisplayedItems();
+    this.cdr.detectChanges();
+  }
+
+  selectTag(tagName: string | null): void {
+    this.selectedTagName = tagName;
+    this.updateDisplayedItems();
+    this.cdr.detectChanges();
+  }
+
+  extractSpans(html: string | undefined): string[] {
+    if (!html) return [];
+    const results: string[] = [];
+    const regex = /<span[^>]*>([^<]+)<\/span>/g;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+      results.push(match[1].trim());
+    }
+    return results;
   }
 
   getStatusClass(status: string): string {
