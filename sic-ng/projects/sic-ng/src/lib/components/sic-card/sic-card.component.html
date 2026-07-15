@@ -1,0 +1,14 @@
+<div class="sic-card__header">
+  @if (title) {
+    <h3 class="sic-card__title">{{ title }}</h3>
+  }
+  <ng-content select="[sicCardHeader]"></ng-content>
+</div>
+
+<div class="sic-card__content">
+  <ng-content></ng-content>
+</div>
+
+<div class="sic-card__footer">
+  <ng-content select="[sicCardFooter]"></ng-content>
+</div>

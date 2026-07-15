@@ -14,6 +14,8 @@ using sic_api.Middleware;
 using sic_api.Hubs;
 using sic_api.Services;
 using sic_api.Services.Interfaces;
+using sic_api.Services.Dynamic;
+using sic_api.Services.Marketplace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,6 +90,15 @@ builder.Services.AddCors(options =>
             .AllowCredentials(); // required for SignalR WebSocket
     });
 });
+
+builder.Services.AddScoped<IMarketplaceImportService, MarketplaceImportService>();
+builder.Services.AddScoped<IMarketplaceInstallService, MarketplaceInstallService>();
+builder.Services.AddScoped<IDynamicSchemaService, DynamicSchemaService>();
+builder.Services.AddScoped<IDynamicDataService, DynamicDataService>();
+builder.Services.AddScoped<IMarketplaceUninstallService, MarketplaceUninstallService>();
+builder.Services.AddScoped<IAutoRunningService, AutoRunningService>();
+builder.Services.AddScoped<DynamicTableGeneratorService>();
+builder.Services.AddScoped<DynamicInitialDataService>();
 
 builder.Services.AddKeycloakWebApiAuthentication(
     builder.Configuration,

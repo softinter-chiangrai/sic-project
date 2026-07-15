@@ -1,0 +1,43 @@
+@import '../../tokens/_field.css';
+@import '../../tokens/_control-field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-colorpicker__wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sic-space-2);
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-md);
+  padding: var(--sic-space-1);
+  transition: border-color var(--sic-transition-fast), box-shadow var(--sic-transition-fast);
+}
+
+.sic-colorpicker__wrap:focus-within {
+  border-color: color-mix(in srgb, var(--sic-color-primary) 45%, var(--sic-color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sic-color-primary) 14%, transparent);
+}
+
+.sic-colorpicker__swatch {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: var(--sic-radius-sm);
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sic-colorpicker__hex {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--sic-color-text-active);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-md);
+}

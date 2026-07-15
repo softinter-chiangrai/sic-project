@@ -13,7 +13,6 @@ using sic_api.Model.Storage;
 namespace sic_api.Entities.Su;
 
 
-[Index(nameof(UserId), IsUnique = true)]
 [Table("su_profile")]
 public class SuProfile : BaseEntity
 {

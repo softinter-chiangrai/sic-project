@@ -1,0 +1,39 @@
+<div class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">{{ label }}</span>
+  }
+
+  <div class="sic-range__wrap">
+    <input
+      type="range"
+      class="sic-range__input"
+      [min]="min"
+      [max]="max"
+      [step]="step"
+      [disabled]="disabled"
+      [value]="low"
+      (input)="handleLowChange($event)"
+      (blur)="handleBlur()"
+    />
+    @if (dual) {
+      <input
+        type="range"
+        class="sic-range__input"
+        [min]="min"
+        [max]="max"
+        [step]="step"
+        [disabled]="disabled"
+        [value]="high"
+        (input)="handleHighChange($event)"
+        (blur)="handleBlur()"
+      />
+    }
+    <span class="sic-range__value">{{ dual ? low + ' – ' + high : low }}</span>
+  </div>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</div>

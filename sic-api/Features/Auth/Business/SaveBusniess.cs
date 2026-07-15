@@ -217,14 +217,20 @@ public static class SaveBusiness
 
         public async Task SetMenuBuModule(Guid? id,SuBusinessRole businessRole, CancellationToken cancellationToken)
         {
-            List<SuProgram> childPrograms = await dbContext.SuPrograms.Where(x => x.ParentProgramId == id && x.ProgramCode.StartsWith("BU") && x.IsActive).ToListAsync(cancellationToken);
+            List<SuProgram> childPrograms = await dbContext.SuPrograms.Where(x => x.ParentProgramId == id && (x.ProgramCode.StartsWith("BU") || x.ProgramCode.StartsWith("MP") ) && x.IsActive).ToListAsync(cancellationToken);
             foreach (var childProgram in childPrograms)
             {
                 var SuBusinessRoleChildProgram = new SuBusinessRoleProgram
                 {
                     BusinessRole = businessRole,
                     Program = childProgram,
-                    IsActive = true
+                    IsActive = true,
+                    RoleAdd = childProgram.RoleAdd,
+                    RoleBack = childProgram.RoleBack,
+                    RolePrint = childProgram.RolePrint,
+                    RoleDelete = childProgram.RoleDelete,
+                    RoleSave = childProgram.RoleSave,
+                    RoleSearch = childProgram.RoleSearch
                 };
                 dbContext.SuBusinessRolePrograms.Add(SuBusinessRoleChildProgram);
                 await SetMenuBuModule(childProgram.Id,businessRole, cancellationToken);

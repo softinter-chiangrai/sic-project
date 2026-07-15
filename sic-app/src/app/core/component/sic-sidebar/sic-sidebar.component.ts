@@ -7,10 +7,12 @@ import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogService } from '../../services/dialog.service';
-import { SicSidebarService } from './sic-sidebar.service';
-import { BusinessInfoModel, MenuItemModel, ProfileInfoModel, SidebarItem } from './sic-sidebar.model';
+import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
+import { BusinessInfoModel, MenuItemModel, MenuActionFlags, ProfileInfoModel, SidebarItem } from './sic-sidebar.model';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
+import { SicCardComponent } from "../sic-card/sic-card.component";
+import { FormsModule } from "@angular/forms";
 
 interface BreadcrumbItem {
   label: string;
@@ -22,7 +24,7 @@ interface BreadcrumbItem {
 @Component({
   selector: 'sic-sidebar',
   standalone: true,
-  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet],
+  imports: [TooltipDirective, TranslateModule, RouterLink, NgTemplateOutlet, SicCardComponent, FormsModule],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
   host: {
@@ -40,6 +42,15 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
   private clockTimer?: ReturnType<typeof setInterval>;
   private routerSubscription?: Subscription;
+
+  RoleBack:boolean = false;
+  RoleSearch:boolean = false; 
+  RoleAdd:boolean = false;
+  RoleSave:boolean = false;
+  RolePrint:boolean = false;
+
+  /** Raw menu items from API — kept so we can look up flags on route change */
+  private rawMenuItems: MenuItemModel[] = [];
 
   readonly isMobileSidebarOpen = signal(false);
   readonly expandedMenus = signal<string[]>(
@@ -149,6 +160,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
         this.currentUrl.set(url);
         this.autoExpand();
         this.updateBreadcrumbs();
+        this.updateActionFlags();
       });
 
     setTimeout(() => {
@@ -163,9 +175,38 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
     this.service.getMenu().subscribe((menu) => {
       this.mainMenu.set([this.DASHBOARD_ITEM, this.getBuddyItem(), ...menu.map((item) => this.mapMenuItem(item))]);
+      this.rawMenuItems = menu;
+      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
       this.autoExpand();
       this.updateBreadcrumbs();
+      this.updateActionFlags();
     });
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Action-button flag sync
+  // ────────────────────────────────────────────────────────────────
+
+  /**
+   * Derive which header action-buttons to show from the active menu item.
+   * Matches /feature/<path> URL to the item.path stored in the menu JSON.
+   */
+  private updateActionFlags(): void {
+    const url = this.currentUrl();
+    // Extract the path segment after /feature/  e.g. "bu/burt01"
+    const match = url.match(/^\/feature\/(.+?)(\?.*)?$/);
+    const pathSegment = match ? match[1] : null;
+
+    const flags = pathSegment
+      ? this.service.getActionFlagsForPath(this.rawMenuItems, pathSegment)
+      : null;
+
+    const f = flags ?? this.service.DEFAULT_FLAGS;
+    this.RoleBack   = f.RoleBack;
+    this.RoleSearch = f.RoleSearch;
+    this.RoleAdd    = f.RoleAdd;
+    this.RoleSave   = f.RoleSave;
+    this.RolePrint  = f.RolePrint;
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -339,5 +380,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.clockTimer) clearInterval(this.clockTimer);
     if (this.routerSubscription) this.routerSubscription.unsubscribe();
+  }
+
+  onActionClick(action: SidebarAction) {
+    this.service.triggerAction(action);
   }
 }

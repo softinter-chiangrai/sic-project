@@ -1,0 +1,20 @@
+<div class="sic-tabs__list" role="tablist">
+  @for (tab of tabs; track tab.id; let i = $index) {
+    <button
+      type="button"
+      role="tab"
+      class="sic-tabs__tab"
+      [class.sic-tabs__tab--active]="tab.id === activeId"
+      [disabled]="tab.disabled"
+      [attr.aria-selected]="tab.id === activeId"
+      (click)="selectTab(tab)"
+      (keydown)="handleKeydown($event, i)"
+    >
+      {{ tab.label }}
+    </button>
+  }
+</div>
+
+<div class="sic-tabs__panel">
+  <ng-content></ng-content>
+</div>

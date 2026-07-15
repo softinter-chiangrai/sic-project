@@ -65,6 +65,10 @@ export const routes: Routes = [
       {
         path: 'do',
         loadChildren: () => import('./feature/do/do.routes').then((m) => m.routes)
+      },
+      {
+        path: 'mp',
+        loadChildren: () => import('./feature/mp/mp.routes').then((m) => m.routes)
       }
     ],
   },

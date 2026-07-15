@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace sic_api.Entities.Su;
 
-[Index(nameof(ModuleCode),nameof(ProgramCode),nameof(MessageCode), IsUnique = true)]
 [Table("su_message")]
 public class SuMessage : BaseEntity
 {

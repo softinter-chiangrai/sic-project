@@ -5,7 +5,22 @@ export interface MenuItemModel {
   icon?: string;
   path?: string;
   code: string;
+  RoleBack: boolean;
+  RoleSearch: boolean;
+  RoleAdd: boolean;
+  RoleSave: boolean;
+  RoleDelete: boolean;
+  RolePrint: boolean;
   children: MenuItemModel[];
+}
+
+export interface MenuActionFlags {
+  RoleBack: boolean;
+  RoleSearch: boolean;
+  RoleAdd: boolean;
+  RoleSave: boolean;
+  RoleDelete: boolean;
+  RolePrint: boolean;
 }
 
 export interface ProfileInfoModel {
@@ -32,4 +47,12 @@ export interface SidebarItem {
   badge?: string;
   notification?: boolean;
   children?: SidebarItem[];
+}
+
+export interface ISidebarAction {
+  onBack?(): void;
+  onSearch?(): void;
+  onAdd?(): void;
+  onSave?(): void;
+  onPrint?(): void;
 }

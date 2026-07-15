@@ -43,7 +43,7 @@
   height: 1.5rem;
   border: 1.5px solid var(--border);
   border-radius: 0.4rem;
-  background: var(--bg);
+  background: transparent;
   color: white;
   transition: border-color 0.18s ease, background-color 0.18s ease;
 }

@@ -1,0 +1,44 @@
+<label class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-field__required">*</span>
+      }
+    </span>
+  }
+
+  <span class="sic-input-number__wrap">
+    @if (prefix) {
+      <span class="sic-input-number__affix">{{ prefix }}</span>
+    }
+    <input
+      class="sic-input-number__field"
+      [class.sic-input-number__field--invalid]="showError"
+      type="number"
+      [name]="name"
+      [placeholder]="placeholder"
+      [min]="min ?? null"
+      [max]="max ?? null"
+      [step]="step"
+      [readOnly]="readonly"
+      [disabled]="disabled"
+      [value]="value"
+      (input)="handleInput($event)"
+      (blur)="handleBlur()"
+    />
+    @if (suffix) {
+      <span class="sic-input-number__affix">{{ suffix }}</span>
+    }
+    <span class="sic-input-number__stepper">
+      <button type="button" [disabled]="disabled || readonly" (click)="adjust(1)" aria-label="Increase">+</button>
+      <button type="button" [disabled]="disabled || readonly" (click)="adjust(-1)" aria-label="Decrease">−</button>
+    </span>
+  </span>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</label>

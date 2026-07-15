@@ -5,6 +5,11 @@ export interface MenuItemModel {
   icon?: string;
   path?: string;
   code: string;
+  RoleBack:boolean;
+  RoleSearch:boolean;
+  RoleAdd:boolean;
+  RoleSave:boolean;
+  RolePrint:boolean;
   children: MenuItemModel[];
 }
 

@@ -1,0 +1,171 @@
+<sic-container>
+  <div class="space-y-4 bg-[var(--bg)] text-[var(--text)]">
+    <sic-card>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--crm-primary)] text-white">
+              <i class="bi bi-shop text-lg"></i>
+            </div>
+
+            <div>
+              <h1 class="m-0 text-xl font-semibold text-[var(--text-active)]">
+                Marketplace
+              </h1>
+              <p class="mt-1 text-sm text-[var(--text-muted)]">
+                เลือกโปรแกรมที่ต้องการติดตั้งให้ Business ปัจจุบัน
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-[var(--border)] bg-[var(--sidebar-hover)] px-3 py-1 text-[var(--text)]">
+              ทั้งหมด {{ items().length }} รายการ
+            </span>
+
+            <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-500">
+              ติดตั้งแล้ว {{ installedCount() }} รายการ
+            </span>
+
+            <span class="rounded-full bg-amber-500/10 px-3 py-1 text-amber-500">
+              ยังไม่ติดตั้ง {{ notInstalledCount() }} รายการ
+            </span>
+          </div>
+        </div>
+
+        <div class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+          <div class="w-full sm:w-80">
+            <sic-input
+              label="ค้นหา Marketplace"
+              placeholder="ค้นหา app code หรือ app name..."
+              type="search"
+              [(ngModel)]="keyword"
+              (keyup.enter)="search()">
+            </sic-input>
+          </div>
+
+          <div class="flex gap-2 sm:items-end">
+            <sic-button
+              variant="primary"
+              [disabled]="loading()"
+              (click)="search()">
+              <i class="bi bi-search mr-1"></i>
+              Search
+            </sic-button>
+
+            <sic-button
+              variant="outline"
+              [disabled]="loading()"
+              (click)="clearSearch()">
+              Clear
+            </sic-button>
+          </div>
+        </div>
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="errorMessage()"
+      class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+      {{ errorMessage() }}
+    </div>
+
+    <sic-card *ngIf="loading()">
+      <div class="flex items-center justify-center gap-3 py-8 text-sm text-[var(--text-muted)]">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--crm-primary)]"></span>
+        กำลังโหลด Marketplace...
+      </div>
+    </sic-card>
+
+    <sic-card *ngIf="!loading() && items().length === 0">
+      <div class="py-10 text-center">
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--sidebar-hover)] text-[var(--text-muted)]">
+          <i class="bi bi-inbox text-2xl"></i>
+        </div>
+        <p class="mt-3 text-sm text-[var(--text-muted)]">
+          ไม่พบ Marketplace
+        </p>
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="!loading() && items().length > 0"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <button
+        type="button"
+        *ngFor="let item of items(); trackBy: trackById"
+        class="group rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--sidebar-hover)] hover:shadow-md"
+        (click)="openDetail(item)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <div class="grid h-9 w-9 place-items-center rounded-xl bg-[var(--sidebar-hover)] text-[var(--text-active)]">
+                <i class="bi bi-box-seam"></i>
+              </div>
+
+              <div class="min-w-0">
+                <div class="truncate text-base font-semibold text-[var(--text-active)]">
+                  {{ item.appName }}
+                </div>
+                <div class="mt-0.5 font-mono text-xs text-[var(--text-muted)]">
+                  {{ item.appCode }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <span
+            class="shrink-0 rounded-full px-3 py-1 text-xs font-medium"
+            [class.bg-emerald-500/10]="item.installed"
+            [class.text-emerald-500]="item.installed"
+            [class.bg-[var(--sidebar-hover)]]="!item.installed"
+            [class.text-[var(--text-muted)]]="!item.installed">
+            {{ item.installed ? 'Installed' : 'Not installed' }}
+          </span>
+        </div>
+
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3">
+            <div class="text-xs text-[var(--text-muted)]">
+              Entities
+            </div>
+            <div class="mt-1 text-xl font-semibold text-[var(--text-active)]">
+              {{ item.entityCount }}
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3">
+            <div class="text-xs text-[var(--text-muted)]">
+              Programs
+            </div>
+            <div class="mt-1 text-xl font-semibold text-[var(--text-active)]">
+              {{ item.programCount }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-xs">
+          <span class="text-[var(--text-muted)]">
+            {{ item.installStatus }}
+          </span>
+
+          <span class="font-medium text-[var(--text)] group-hover:text-[var(--text-active)]">
+            View detail
+            <i class="bi bi-arrow-right ml-1"></i>
+          </span>
+        </div>
+      </button>
+    </div>
+
+    <!-- <sic-card padding="1rem">
+      <div class="space-y-2">
+        <div class="text-sm font-semibold text-[var(--text-active)]">
+          Debug API
+        </div>
+        <div class="break-all rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3 font-mono text-xs text-[var(--text-muted)]">
+          GET {{ apiUrl() }}
+        </div>
+      </div>
+    </sic-card> -->
+  </div>
+</sic-container>

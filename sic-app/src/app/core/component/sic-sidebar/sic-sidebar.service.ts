@@ -1,13 +1,20 @@
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { BusinessInfoModel, MenuItemModel, ProfileInfoModel } from './sic-sidebar.model';
+import { Observable, Subject } from 'rxjs';
+import { BusinessInfoModel, MenuActionFlags, MenuItemModel, ProfileInfoModel } from './sic-sidebar.model';
+
+export type SidebarAction = 'back' | 'search' | 'add' | 'save' | 'print'  | null;
 
 @Injectable({
   providedIn: 'root',
 })
 export class SicSidebarService {
+
+
+  actionSubject = new Subject<SidebarAction>();
+  action$ = this.actionSubject.asObservable();
+
   private readonly http = inject(HttpClient);
 
   apiProfile = environment.apiBaseUrl + '/api/profile';
@@ -24,6 +31,40 @@ export class SicSidebarService {
 
   getMenu(): Observable<MenuItemModel[]> {
     return this.http.get<MenuItemModel[]>(this.apiMenu);
+  }
+
+  triggerAction(action: SidebarAction) {
+    this.actionSubject.next(action);
+  }
+
+  readonly DEFAULT_FLAGS: MenuActionFlags = {
+    RoleBack: false, RoleSearch: false, RoleAdd: false,
+    RoleSave: false, RoleDelete: false, RolePrint: false,
+  };
+
+  /**
+   * Recursively search menu items and return action flags
+   * for the item whose path matches the given route path segment.
+   * e.g. path = 'bu/burt01'
+   */
+  getActionFlagsForPath(items: MenuItemModel[], path: string): MenuActionFlags | null {
+    for (const item of items) {
+      if (item.path === path) {
+        return {
+          RoleBack: item.RoleBack,
+          RoleSearch: item.RoleSearch,
+          RoleAdd: item.RoleAdd,
+          RoleSave: item.RoleSave,
+          RoleDelete: item.RoleDelete,
+          RolePrint: item.RolePrint,
+        };
+      }
+      if (item.children?.length) {
+        const found = this.getActionFlagsForPath(item.children, path);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
 }

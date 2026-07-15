@@ -1,0 +1,61 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-input__field {
+  width: 100%;
+  min-height: var(--sic-control-height-md);
+  padding: 0 var(--sic-space-3);
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-md);
+  background: var(--sic-color-bg);
+  color: var(--sic-color-text-active);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-md);
+  transition:
+    border-color var(--sic-transition-fast),
+    box-shadow var(--sic-transition-fast);
+}
+
+:host(.sic-size-sm) .sic-input__field {
+  min-height: var(--sic-control-height-sm);
+  font-size: var(--sic-font-size-sm);
+}
+
+:host(.sic-size-lg) .sic-input__field {
+  min-height: var(--sic-control-height-lg);
+  font-size: var(--sic-font-size-lg);
+}
+
+.sic-input__field::placeholder {
+  color: var(--sic-color-text-muted);
+}
+
+.sic-input__field:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--sic-color-primary) 22%, var(--sic-color-border));
+}
+
+.sic-input__field:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--sic-color-primary) 45%, var(--sic-color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sic-color-primary) 14%, transparent);
+}
+
+.sic-input__field:read-only {
+  background: var(--sic-color-surface);
+}
+
+.sic-input__field:disabled {
+  cursor: not-allowed;
+  background: var(--sic-color-surface);
+  color: var(--sic-color-text-muted);
+}
+
+.sic-input__field--invalid,
+.sic-input__field--invalid:focus {
+  border-color: color-mix(in srgb, var(--sic-color-danger) 46%, var(--sic-color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sic-color-danger) 12%, transparent);
+}

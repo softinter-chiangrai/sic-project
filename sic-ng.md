@@ -1,0 +1,61 @@
+# sic-ng 
+- create angular librabry name **sic-ng**
+- librabry for angular 22
+- librabry version same angular version
+- all component start with sic-*
+- support light mode and dark mode
+- support change style.css
+    - size small , middle , large
+    - color background, boder,etc
+    - change font style
+    - rounded corner
+- create default theme
+
+# create component
+component support formcontrol with same to /sic-app/src/app/core/component
+
+- Data Entry / Inputs
+    - sic-input 
+    - sic-input-password 
+    - sic-input-number
+    - sic-input-area 
+    - sic-input-phone 
+    - sic-combobox 
+    - sic-checkbox
+    - sic-radio 
+    - sic-switch 
+    - sic-range 
+    - sic-datepicker
+    - sic-timepicker 
+    - sic-colorpicker 
+    - sic-upload
+    - sic-rating
+- General / Buttons
+    - sic-flex
+    - sic-grid
+    - sic-card
+    - sic-button
+    - sic-button-group
+- Navigation
+    - sic-navbar
+    - sic-sidebar
+    - sic-tabs
+    - sic-breadcrumb
+- Data Display & Media
+    - sic-gridpanel
+    - sic-calendar
+    - sic-image
+    - sic-video-player
+    - sic-badge
+    - sic-tag
+    - sic-avatar
+    - sic-accordion
+    - sic-collapse
+- Overlays & Feedback
+    - sic-dialog
+    - sic-toast
+    - sic-tooltip
+- Loading / Indicators
+    - sic-spinner
+    - sic-skeleton
+    - sic-progress-bar

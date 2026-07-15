@@ -3,14 +3,14 @@
 }
 
 .sic-card {
-  background: var(--bg);
+  background: var(--sidebar);
   color: var(--text);
   width: 100%;
   box-sizing: border-box;
   transition: box-shadow 0.2s;
 }
 .sic-card--shadow {
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08), 0 1.5px 4px 0 rgba(0,0,0,0.04);
+  box-shadow: 0 0px 5px 0 var(--text-muted), 0 0px 1px 0 var(--text-muted);
 }
 .sic-card--rounded {
   border-radius: 1rem;

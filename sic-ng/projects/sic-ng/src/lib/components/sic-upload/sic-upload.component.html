@@ -1,0 +1,43 @@
+<div class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">{{ label }}</span>
+  }
+
+  <div
+    class="sic-upload__dropzone"
+    [class.sic-upload__dropzone--over]="dragOver"
+    [class.sic-upload__dropzone--disabled]="disabled"
+    (click)="openPicker()"
+    (drop)="handleDrop($event)"
+    (dragover)="handleDragOver($event)"
+    (dragleave)="handleDragLeave()"
+  >
+    <input
+      #fileInput
+      type="file"
+      class="sic-upload__input"
+      [accept]="accept"
+      [multiple]="multiple"
+      [disabled]="disabled"
+      (change)="handleFileInput($event)"
+    />
+    <span class="sic-upload__hint-text">Drag & drop files here, or click to browse</span>
+  </div>
+
+  @if (value.length) {
+    <ul class="sic-upload__list">
+      @for (file of value; track file) {
+        <li class="sic-upload__item">
+          <span class="sic-upload__item-name">{{ file.name }}</span>
+          <button type="button" class="sic-upload__item-remove" (click)="removeFile(file)">✕</button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</div>
