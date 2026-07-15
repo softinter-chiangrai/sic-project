@@ -84,7 +84,7 @@
         @if (isVisualType() && editorMode() === 'visual') {
           <app-pmdt06f [diagram]="activeTab()" [graphData]="activeTab()?.graphData" (graphDataChange)="onGraphDataChange($event)" />
         } @else {
-          <app-pmdt06b [diagram]="activeTab()" (diagramChange)="updateDiagram($event)" />
+          <app-pmdt06b [diagram]="activeTab()" (diagramChange)="onTextDiagramChange($event)" />
         }
       </div>
       <div class="h-[35%] min-h-[150px]">

@@ -163,6 +163,11 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     this.autoSave$.next(updated);
   }
 
+  onTextDiagramChange(updated: DiagramModel) {
+    const diagramWithClearedGraph = { ...updated, graphData: null };
+    this.updateDiagram(diagramWithClearedGraph);
+  }
+
   onGraphDataChange(data: any) {
     const tab = this.activeTab();
     if (tab) {
@@ -199,7 +204,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     } else if (response.action === 'update' && response.diagram) {
       const current = this.activeTab();
       if (current) {
-        const updated = { ...current, mermaidScript: response.diagram.script };
+        const updated = { ...current, mermaidScript: response.diagram.script, graphData: null };
         this.updateDiagram(updated);
         if (this.isVisualType()) {
           this.editorMode.set('visual');

@@ -102,10 +102,33 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // ---- Handle graphData change ----
     if (changes['graphData'] && !changes['graphData'].firstChange && this.graph) {
       const current = changes['graphData'].currentValue;
-      if (current != null) {
+      const hasXml = current && (
+        (typeof current === 'string' && current.trim().length > 0) ||
+        (current.xml && typeof current.xml === 'string' && current.xml.trim().length > 0)
+      );
+      if (hasXml) {
         this.loadGraphData(current);
+      } else if (this.diagram?.mermaidScript) {
+        // graphData was cleared (text mode edit) – re-import from mermaid
+        setTimeout(() => this.importMermaid(), 0);
+      }
+    }
+
+    // ---- Handle diagram first change – graph is now ready ----
+    if (changes['diagram'] && this.graph) {
+      const diagram: DiagramModel | null = changes['diagram'].currentValue;
+      if (!diagram) return;
+
+      const hasXml = this.graphData && (
+        (typeof this.graphData === 'string' && this.graphData.trim().length > 0) ||
+        (this.graphData.xml && typeof this.graphData.xml === 'string' && this.graphData.xml.trim().length > 0)
+      );
+
+      if (!hasXml && diagram.mermaidScript) {
+        setTimeout(() => this.importMermaid(), 0);
       }
     }
   }
@@ -225,8 +248,15 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.graph = graph;
 
-    if (this.graphData) {
+    const hasXml = this.graphData && (
+      (typeof this.graphData === 'string' && this.graphData.trim().length > 0) ||
+      (this.graphData.xml && typeof this.graphData.xml === 'string' && this.graphData.xml.trim().length > 0)
+    );
+
+    if (hasXml) {
       this.loadGraphData(this.graphData);
+    } else if (this.diagram && this.diagram.mermaidScript) {
+      setTimeout(() => this.importMermaid(), 50);
     }
 
     this.editorReady.emit(graph);
@@ -297,8 +327,15 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       const data = this.mermaidService.parse(script, graph);
       if (!data || data.cells.length === 0) return;
 
-      this.editorService.loadGraphData(data);
-      this.graphDataChange.emit({ xml: this.editorService.toXML() });
+      // mermaidService.parse() already drew nodes/edges onto `graph` directly.
+      // Encode the result and emit so the parent can persist it.
+      const codec = new Codec();
+      const node = codec.encode(graph.getDataModel());
+      if (node) {
+        const serializer = new XMLSerializer();
+        const xml = serializer.serializeToString(node);
+        this.graphDataChange.emit({ xml });
+      }
       this.change$.next();
     } catch (err) {
       console.error('Failed to import mermaid script:', err);
