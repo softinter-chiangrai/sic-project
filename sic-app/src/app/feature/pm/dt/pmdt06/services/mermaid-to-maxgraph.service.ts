@@ -1,7 +1,9 @@
+// src/app/feature/pm/dt/pmdt06/services/mermaid-to-maxgraph.service.ts
 import { Injectable } from '@angular/core';
 import { Graph, Cell, Geometry, GraphDataModel } from '@maxgraph/core';
 import type { DiagramType } from '../diagram.model';
 import type { GraphData } from './maxgraph-editor.service';
+import { parseStyleString, stringifyStyleObject } from '../services/style-utils';
 
 interface MermaidNode {
   id: string;
@@ -26,7 +28,17 @@ export class MermaidToMaxgraphService {
     const cells: GraphData['cells'] = [];
 
     graph.batchUpdate(() => {
-      graph.removeCells(model.getChildren(model.getRoot()));
+      // ลบ cells ทั้งหมดใน root
+      const root = model.getRoot();
+      if (root) {
+        const childCount = root.getChildCount ? root.getChildCount() : 0;
+        const children: Cell[] = [];
+        for (let i = 0; i < childCount; i++) {
+          const child = root.getChildAt ? root.getChildAt(i) : null;
+          if (child) children.push(child);
+        }
+        graph.removeCells(children);
+      }
 
       switch (type) {
         case 'Flowchart':
@@ -71,11 +83,9 @@ export class MermaidToMaxgraphService {
     const nodes = new Map<string, MermaidNode>();
     const edges: MermaidEdge[] = [];
     const direction = script.includes('LR') ? 'LR' : 'TD';
-    let isGraphDirective = false;
 
     for (const line of lines) {
       if (/^(graph|flowchart)\s+(TD|LR|BT|RL)/i.test(line)) {
-        isGraphDirective = true;
         continue;
       }
 
@@ -201,16 +211,17 @@ export class MermaidToMaxgraphService {
       }
 
       const geo = new Geometry(x, y, w, h);
-      const cell = new Cell(node.label, geo, style);
+      const styleObj = parseStyleString(style);
+      const cell = new Cell(node.label, geo, styleObj);
       cell.setVertex(true);
-      cell.id = node.id;
+      cell.id = node.id; // ใช้ id จาก node โดยตรง
       model.add(cell, model.getRoot());
       cellMap.set(cell.id, cell);
 
       cells.push({
         id: cell.id,
         label: node.label,
-        style,
+        style: stringifyStyleObject(styleObj),
         geometry: { x, y, width: w, height: h },
         type: 'vertex',
       });
@@ -224,9 +235,12 @@ export class MermaidToMaxgraphService {
       const edgeStyle = `edgeStyle=${edge.style};fontSize=11;`;
       const edgeGeo = new Geometry();
       edgeGeo.relative = true;
-      const edgeCell = new Cell(edge.label, edgeGeo, edgeStyle);
+      const styleObj = parseStyleString(edgeStyle);
+      const edgeCell = new Cell(edge.label, edgeGeo, styleObj);
       edgeCell.setEdge(true);
       edgeCell.geometry!.relative = true;
+      // สร้าง id สำหรับ edge
+      edgeCell.id = `edge_${edge.from}_${edge.to}_${Date.now()}_${Math.random()}`;
       model.add(edgeCell, model.getRoot());
       model.setTerminal(edgeCell, source, true);
       model.setTerminal(edgeCell, target, false);
@@ -235,7 +249,7 @@ export class MermaidToMaxgraphService {
       cells.push({
         id: edgeCell.id,
         label: edge.label,
-        style: edgeStyle,
+        style: stringifyStyleObject(styleObj),
         geometry: { x: 0, y: 0, width: 80, height: 40 },
         type: 'edge',
         source: edge.from,
@@ -309,25 +323,27 @@ export class MermaidToMaxgraphService {
 
       const actorStyle = 'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;';
       const actorGeo = new Geometry(x, actorY, 40, 60);
-      const actorCell = new Cell(participants[i], actorGeo, actorStyle);
+      const styleObj = parseStyleString(actorStyle);
+      const actorCell = new Cell(participants[i], actorGeo, styleObj);
       actorCell.setVertex(true);
       actorCell.id = `actor_${participants[i]}`;
       model.add(actorCell, model.getRoot());
       cellMap.set(actorCell.id, actorCell);
       cells.push({
-        id: actorCell.id, label: participants[i], style: actorStyle,
+        id: actorCell.id, label: participants[i], style: stringifyStyleObject(styleObj),
         geometry: { x, y: actorY, width: 40, height: 60 }, type: 'vertex',
       });
 
       const lifelineStyle = 'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;';
       const lifelineGeo = new Geometry(x + 10, actorY + 70, 20, lifelineHeight);
-      const lifelineCell = new Cell('', lifelineGeo, lifelineStyle);
+      const lfStyleObj = parseStyleString(lifelineStyle);
+      const lifelineCell = new Cell('', lifelineGeo, lfStyleObj);
       lifelineCell.setVertex(true);
       lifelineCell.id = `lifeline_${participants[i]}`;
       model.add(lifelineCell, model.getRoot());
       cellMap.set(lifelineCell.id, lifelineCell);
       cells.push({
-        id: lifelineCell.id, label: '', style: lifelineStyle,
+        id: lifelineCell.id, label: '', style: stringifyStyleObject(lfStyleObj),
         geometry: { x: x + 10, y: actorY + 70, width: 20, height: lifelineHeight }, type: 'vertex',
       });
     }
@@ -338,17 +354,14 @@ export class MermaidToMaxgraphService {
       const toIdx = participants.indexOf(msg.to);
       if (fromIdx === -1 || toIdx === -1) continue;
 
-      const fromX = actorX + fromIdx * spacingX + 40;
-      const toX = actorX + toIdx * spacingX;
-      const y = actorY + 80 + i * 40;
-
       const edgeStyle = msg.dashed
         ? 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;'
         : 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
 
       const edgeGeo = new Geometry();
       edgeGeo.relative = true;
-      const edgeCell = new Cell(msg.label, edgeGeo, edgeStyle);
+      const styleObj = parseStyleString(edgeStyle);
+      const edgeCell = new Cell(msg.label, edgeGeo, styleObj);
       edgeCell.setEdge(true);
       edgeCell.geometry!.relative = true;
       const sourceId = `actor_${msg.from}`;
@@ -356,12 +369,13 @@ export class MermaidToMaxgraphService {
       const source = cellMap.get(sourceId);
       const target = cellMap.get(targetId);
       if (source && target) {
+        edgeCell.id = `msg_${msg.from}_${msg.to}_${i}`;
         model.add(edgeCell, model.getRoot());
         model.setTerminal(edgeCell, source, true);
         model.setTerminal(edgeCell, target, false);
         cellMap.set(edgeCell.id, edgeCell);
         cells.push({
-          id: edgeCell.id, label: msg.label, style: edgeStyle,
+          id: edgeCell.id, label: msg.label, style: stringifyStyleObject(styleObj),
           geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge',
           source: sourceId, target: targetId,
         });
@@ -476,37 +490,40 @@ export class MermaidToMaxgraphService {
       const style = 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;';
       const h = Math.max(50, 30 + ent.attrs.length * 20);
       const geo = new Geometry(x, y, 140, h);
-      const cell = new Cell(label, geo, style);
+      const styleObj = parseStyleString(style);
+      const cell = new Cell(label, geo, styleObj);
       cell.setVertex(true);
-      cell.id = ent.name;
+      cell.id = `entity_${ent.name}`;
       model.add(cell, model.getRoot());
       cellMap.set(cell.id, cell);
       cells.push({
-        id: cell.id, label, style,
+        id: cell.id, label, style: stringifyStyleObject(styleObj),
         geometry: { x, y, width: 140, height: h }, type: 'vertex',
       });
     }
 
     for (const rel of relations) {
-      const source = cellMap.get(rel.from);
-      const target = cellMap.get(rel.to);
+      const source = cellMap.get(`entity_${rel.from}`);
+      const target = cellMap.get(`entity_${rel.to}`);
       if (!source || !target) continue;
 
       const edgeLabel = `${rel.fromCard}--${rel.label}--${rel.toCard}`;
       const edgeStyle = 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
       const edgeGeo = new Geometry();
       edgeGeo.relative = true;
-      const edgeCell = new Cell(edgeLabel, edgeGeo, edgeStyle);
+      const styleObj = parseStyleString(edgeStyle);
+      const edgeCell = new Cell(edgeLabel, edgeGeo, styleObj);
       edgeCell.setEdge(true);
       edgeCell.geometry!.relative = true;
+      edgeCell.id = `rel_${rel.from}_${rel.to}_${Date.now()}`;
       model.add(edgeCell, model.getRoot());
       model.setTerminal(edgeCell, source, true);
       model.setTerminal(edgeCell, target, false);
       cellMap.set(edgeCell.id, edgeCell);
       cells.push({
-        id: edgeCell.id, label: edgeLabel, style: edgeStyle,
+        id: edgeCell.id, label: edgeLabel, style: stringifyStyleObject(styleObj),
         geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge',
-        source: rel.from, target: rel.to,
+        source: `entity_${rel.from}`, target: `entity_${rel.to}`,
       });
     }
   }
@@ -618,20 +635,21 @@ export class MermaidToMaxgraphService {
       const style = 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;';
       const h = Math.max(50, 40 + cls.members.length * 20);
       const geo = new Geometry(x, y, 160, h);
-      const cell = new Cell(label, geo, style);
+      const styleObj = parseStyleString(style);
+      const cell = new Cell(label, geo, styleObj);
       cell.setVertex(true);
-      cell.id = cls.name;
+      cell.id = `class_${cls.name}`;
       model.add(cell, model.getRoot());
       cellMap.set(cell.id, cell);
       cells.push({
-        id: cell.id, label, style,
+        id: cell.id, label, style: stringifyStyleObject(styleObj),
         geometry: { x, y, width: 160, height: h }, type: 'vertex',
       });
     }
 
     for (const rel of relations) {
-      const source = cellMap.get(rel.from);
-      const target = cellMap.get(rel.to);
+      const source = cellMap.get(`class_${rel.from}`);
+      const target = cellMap.get(`class_${rel.to}`);
       if (!source || !target) continue;
 
       let edgeStyle = 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
@@ -647,17 +665,19 @@ export class MermaidToMaxgraphService {
 
       const edgeGeo = new Geometry();
       edgeGeo.relative = true;
-      const edgeCell = new Cell(rel.label, edgeGeo, edgeStyle);
+      const styleObj = parseStyleString(edgeStyle);
+      const edgeCell = new Cell(rel.label, edgeGeo, styleObj);
       edgeCell.setEdge(true);
       edgeCell.geometry!.relative = true;
+      edgeCell.id = `rel_${rel.from}_${rel.to}_${Date.now()}`;
       model.add(edgeCell, model.getRoot());
       model.setTerminal(edgeCell, source, true);
       model.setTerminal(edgeCell, target, false);
       cellMap.set(edgeCell.id, edgeCell);
       cells.push({
-        id: edgeCell.id, label: rel.label, style: edgeStyle,
+        id: edgeCell.id, label: rel.label, style: stringifyStyleObject(styleObj),
         geometry: { x: 0, y: 0, width: 80, height: 40 }, type: 'edge',
-        source: rel.from, target: rel.to,
+        source: `class_${rel.from}`, target: `class_${rel.to}`,
       });
     }
   }

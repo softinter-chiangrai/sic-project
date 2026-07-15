@@ -1,32 +1,30 @@
+// src/app/feature/pm/dt/pmdt06/pmdt06F/pmdt06F.component.ts
+import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
   inject,
   Input,
-  Output,
-  EventEmitter,
-  signal,
-  ViewChild,
-  ElementRef,
-  AfterViewInit,
   OnChanges,
   OnDestroy,
+  Output,
+  signal,
   SimpleChanges,
-  HostListener,
+  ViewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, takeUntil } from 'rxjs';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 
-import {
-  Graph, Cell, Geometry, InternalEvent, KeyHandler, UndoManager, Codec,
-  Point, Rectangle, Stylesheet, constants
-} from '@maxgraph/core';
-import * as xmlUtils from '@maxgraph/core';
+import { Cell, Codec, Graph, InternalEvent, KeyHandler, UndoManager } from '@maxgraph/core';
 
 import { MaxgraphEditorService } from '../services/maxgraph-editor.service';
-import { MaxgraphToolboxService } from '../services/maxgraph-toolbox.service';
 import { MaxgraphExportService } from '../services/maxgraph-export.service';
+import { MaxgraphToolboxService } from '../services/maxgraph-toolbox.service';
 import { MermaidToMaxgraphService } from '../services/mermaid-to-maxgraph.service';
+
 import type { DiagramModel } from '../diagram.model';
 
 interface EdgeStyleOption {
@@ -117,9 +115,10 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.vertexLabelsMovable = true;
     graph.edgeLabelsMovable = true;
 
-    constants.DEFAULT_HOTSPOT = 0.3;
-    constants.VERTEX_SELECTION_COLOR = '#4A90D9';
-    constants.EDGE_SELECTION_COLOR = '#4A90D9';
+    // ตั้งค่า default edge style ผ่าน stylesheet
+    const sheet = graph.getStylesheet();
+    const defaultEdge = sheet.getDefaultEdgeStyle();
+    defaultEdge['edgeStyle'] = 'orthogonalEdgeStyle';
 
     this.undoManager = new UndoManager();
     const undoListener = (_sender: any, evt: any) => {
@@ -129,8 +128,12 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.getView().addListener(InternalEvent.UNDO, undoListener);
 
     this.keyHandler = new KeyHandler(graph);
-    this.keyHandler.bindControlKey(90, () => { this.undo(); });
-    this.keyHandler.bindControlKey(89, () => { this.redo(); });
+    this.keyHandler.bindControlKey(90, () => {
+      this.undo();
+    });
+    this.keyHandler.bindControlKey(89, () => {
+      this.redo();
+    });
 
     graph.getSelectionModel().addListener(InternalEvent.CHANGE, () => {
       const cells = graph.getSelectionCells();
@@ -207,7 +210,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private cleanupGraph(): void {
     if (this.keyHandler) {
-      this.keyHandler.destroy();
+      this.keyHandler.onDestroy();
       this.keyHandler = null;
     }
     if (this.undoManager) {
@@ -221,16 +224,17 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private loadGraphData(data: any): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     try {
-      const graph = this.graph;
       const xml = typeof data === 'string' ? data : data.xml || data;
 
       graph.getDataModel().clear();
 
       if (xml) {
-        const doc = xmlUtils.parseXml(xml);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, 'text/xml');
         const codec = new Codec(doc);
         codec.decode(doc.documentElement, graph.getDataModel());
       }
@@ -240,25 +244,33 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private emitGraphData(): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     try {
       const codec = new Codec();
-      const node = codec.encode(this.graph.getDataModel());
-      const xml = xmlUtils.getXml(node);
-      this.graphDataChange.emit({ xml });
+      const node = codec.encode(graph.getDataModel());
+      if (node) {
+        const serializer = new XMLSerializer();
+        const xml = serializer.serializeToString(node);
+        this.graphDataChange.emit({ xml });
+      }
     } catch (err) {
       console.error('Failed to encode graph data:', err);
     }
   }
 
   loadMermaidScript(script: string): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     try {
-      const data = this.mermaidService.parse(script, this.graph);
+      const data = this.mermaidService.parse(script, graph);
       if (!data || data.cells.length === 0) return;
 
+      // โหลดข้อมูลลงกราฟ
+      this.editorService.loadGraphData(data);
+      // หลังจากโหลดแล้ว emit การเปลี่ยนแปลง
       this.graphDataChange.emit({ xml: this.editorService.toXML() });
       this.change$.next();
     } catch (err) {
@@ -267,7 +279,8 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   importMermaid(): void {
-    if (!this.graph || !this.diagram) return;
+    const graph = this.graph;
+    if (!graph || !this.diagram) return;
 
     const script = this.diagram.mermaidScript;
     if (!script || !script.trim()) return;
@@ -276,7 +289,8 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   handleAiResponse(response: any): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     const script = response?.diagram?.script || response?.script || '';
     if (!script.trim()) return;
@@ -285,33 +299,36 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   zoomIn(): void {
-    if (!this.graph) return;
-    const scale = Math.min(4, this.graph.getView().getScale() + 0.1);
-    this.graph.zoomTo(scale);
+    const graph = this.graph;
+    if (!graph) return;
+    const scale = Math.min(4, graph.getView().getScale() + 0.1);
+    graph.zoomTo(scale);
     this.zoomLevel.set(Math.round(scale * 100));
   }
 
   zoomOut(): void {
-    if (!this.graph) return;
-    const scale = Math.max(0.2, this.graph.getView().getScale() - 0.1);
-    this.graph.zoomTo(scale);
+    const graph = this.graph;
+    if (!graph) return;
+    const scale = Math.max(0.2, graph.getView().getScale() - 0.1);
+    graph.zoomTo(scale);
     this.zoomLevel.set(Math.round(scale * 100));
   }
 
   zoomToFit(): void {
-    if (!this.graph) return;
-    const b = this.graph.getGraphBounds();
+    const graph = this.graph;
+    if (!graph) return;
+    const b = graph.getGraphBounds();
     if (b) {
-      const vb = this.graph.getView().getBounds();
-      const scale = Math.min(
-        vb.width / b.width,
-        vb.height / b.height,
-        1
-      ) * 0.9;
-      this.graph.zoomTo(scale);
-      this.graph.center();
+      const parent = graph.getDefaultParent();
+      const children = parent.getChildren ? parent.getChildren() : [];
+      const vb = graph.getView().getBounds(children);
+      if (vb) {
+        const scale = Math.min(vb.width / b.width, vb.height / b.height, 1) * 0.9;
+        graph.zoomTo(scale);
+        graph.center();
+      }
     }
-    this.zoomLevel.set(Math.round(this.graph.getView().getScale() * 100));
+    this.zoomLevel.set(Math.round(graph.getView().getScale() * 100));
   }
 
   undo(): void {
@@ -329,22 +346,25 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   deleteSelected(): void {
-    if (!this.graph) return;
-    const cells = this.graph.getSelectionCells();
+    const graph = this.graph;
+    if (!graph) return;
+    const cells = graph.getSelectionCells();
     if (cells.length > 0) {
-      this.graph.removeCells(cells);
+      graph.removeCells(cells);
       this.change$.next();
     }
   }
 
   setEdgeStyle(style: 'straight' | 'orthogonal' | 'elbow' | 'curved'): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
     this.activeEdgeStyle.set(style);
     this.setDefaultEdgeStyle(style);
   }
 
   private setDefaultEdgeStyle(style: 'straight' | 'orthogonal' | 'elbow' | 'curved'): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     const styleMap: Record<string, string> = {
       straight: 'straight',
@@ -355,7 +375,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     const edgeStyleName = styleMap[style] || 'orthogonalEdgeStyle';
 
-    const sheet = this.graph.getStylesheet();
+    const sheet = graph.getStylesheet();
     const defaultEdge = sheet.getDefaultEdgeStyle();
     defaultEdge['edgeStyle'] = edgeStyleName;
 
@@ -365,15 +385,23 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       delete defaultEdge['curved'];
     }
 
-    const parent = this.graph.getDefaultParent();
-    const allChildren = this.graph.getDataModel().getChildren(parent);
+    const parent = graph.getDefaultParent();
+    const allChildren = parent.getChildren ? parent.getChildren() : [];
     const cells = allChildren.filter((c: Cell) => c.isEdge());
 
     if (cells.length > 0) {
-      this.graph.batchUpdate(() => {
+      graph.batchUpdate(() => {
         for (const cell of cells) {
           if (cell.isEdge()) {
-            this.graph.getDataModel().setStyle(cell, cell.getStyle());
+            const currentStyle = cell.style || {};
+            const newStyle = { ...currentStyle, edgeStyle: edgeStyleName };
+            if (style === 'curved') {
+              newStyle['curved'] = true;
+            } else {
+              delete newStyle['curved'];
+            }
+            // ส่ง object style โดยตรง (ไม่แปลงเป็น string)
+            graph.getDataModel().setStyle(cell, newStyle);
           }
         }
       });
@@ -381,27 +409,30 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   exportPNG(): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
     try {
-      this.exportService.exportPNG(this.graph);
+      this.exportService.exportPNG(graph);
     } catch (err) {
       console.error('PNG export failed:', err);
     }
   }
 
   exportSVG(): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
     try {
-      this.exportService.exportSVG(this.graph);
+      this.exportService.exportSVG(graph);
     } catch (err) {
       console.error('SVG export failed:', err);
     }
   }
 
   exportPDF(): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
     try {
-      this.exportService.exportPDF(this.graph);
+      this.exportService.exportPDF(graph);
     } catch (err) {
       console.error('PDF export failed:', err);
     }
@@ -409,24 +440,31 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboard(event: KeyboardEvent): void {
-    if (!this.graph) return;
+    const graph = this.graph;
+    if (!graph) return;
 
     if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
       this.undo();
     }
 
-    if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      (event.key === 'y' || (event.key === 'z' && event.shiftKey))
+    ) {
       event.preventDefault();
       this.redo();
     }
 
     if (event.key === 'Delete' || event.key === 'Backspace') {
       const target = event.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
         return;
       }
-      const cells = this.graph.getSelectionCells();
+      const cells = graph.getSelectionCells();
       if (cells.length > 0) {
         event.preventDefault();
         this.deleteSelected();

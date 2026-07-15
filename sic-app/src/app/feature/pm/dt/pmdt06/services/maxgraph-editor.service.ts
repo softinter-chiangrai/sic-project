@@ -1,11 +1,12 @@
+// src/app/feature/pm/dt/pmdt06/services/maxgraph-editor.service.ts
 import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
   Graph, Cell, Geometry, InternalEvent, KeyHandler, UndoManager, UndoableEdit,
   Codec, Point, Rectangle, Stylesheet
 } from '@maxgraph/core';
-import * as xmlUtils from '@maxgraph/core';
 import type { DiagramType } from '../diagram.model';
+import { parseStyleString, stringifyStyleObject, type CellStyleObject } from '../services/style-utils';
 
 export interface DiagramCellData {
   id: string;
@@ -74,6 +75,7 @@ export class MaxgraphEditorService {
 
   destroy(): void {
     if (this.keyHandler) {
+      this.keyHandler.onDestroy();
       this.keyHandler = null;
     }
     if (this.undoManager) {
@@ -114,14 +116,18 @@ export class MaxgraphEditorService {
     if (graph) {
       const b = graph.getGraphBounds();
       if (b) {
-        const vb = graph.getView().getBounds();
-        const scale = Math.min(
-          vb.width / b.width,
-          vb.height / b.height,
-          1
-        ) * 0.9;
-        graph.zoomTo(scale);
-        graph.center();
+        const parent = graph.getDefaultParent();
+        const children = parent.getChildren ? parent.getChildren() : [];
+        const vb = graph.getView().getBounds(children);
+        if (vb) {
+          const scale = Math.min(
+            vb.width / b.width,
+            vb.height / b.height,
+            1
+          ) * 0.9;
+          graph.zoomTo(scale);
+          graph.center();
+        }
       }
     }
   }
@@ -168,7 +174,8 @@ export class MaxgraphEditorService {
   ): Cell | null {
     const graph = this.graph;
     if (!graph) return null;
-    return graph.insertVertex(parent, '', label, x, y, width, height, style);
+    const styleObj = parseStyleString(style);
+    return graph.insertVertex(parent, '', label, x, y, width, height, styleObj);
   }
 
   addEdge(
@@ -180,7 +187,8 @@ export class MaxgraphEditorService {
   ): Cell | null {
     const graph = this.graph;
     if (!graph) return null;
-    return graph.insertEdge(parent, '', label, source, target, style);
+    const styleObj = parseStyleString(style);
+    return graph.insertEdge(parent, '', label, source, target, styleObj);
   }
 
   removeCell(cell: Cell): void {
@@ -208,12 +216,19 @@ export class MaxgraphEditorService {
     });
   }
 
-  updateCellStyle(cell: Cell, style: string): void {
+  updateCellStyle(cell: Cell, style: CellStyleObject | string): void {
     const graph = this.graph;
     if (!graph) return;
     const model = graph.getDataModel();
+    // แปลงเป็น object style
+    let styleObj: CellStyleObject;
+    if (typeof style === 'string') {
+      styleObj = parseStyleString(style);
+    } else {
+      styleObj = style;
+    }
     graph.batchUpdate(() => {
-      model.setStyle(cell, style);
+      model.setStyle(cell, styleObj);
     });
   }
 
@@ -247,9 +262,8 @@ export class MaxgraphEditorService {
       curved: 'curvedEdgeStyle',
     };
     const edgeStyle = styleMap[style] || 'orthogonalEdgeStyle';
-    const current = cell.style || '';
-    const updated = current.replace(/edgeStyle=[^;]+;?/, '').trim();
-    const newStyle = updated ? `${updated};edgeStyle=${edgeStyle}` : `edgeStyle=${edgeStyle}`;
+    // สร้าง style object ที่มีเฉพาะ edgeStyle
+    const newStyle: CellStyleObject = { edgeStyle };
     this.updateCellStyle(cell, newStyle);
   }
 
@@ -258,8 +272,16 @@ export class MaxgraphEditorService {
     if (!graph) return;
     const model = graph.getDataModel();
     const root = model.getRoot();
+    if (!root) return;
     graph.batchUpdate(() => {
-      graph.removeCells(model.getChildren(root));
+      // ใช้ root.getChildCount และ root.getChildAt
+      const childCount = root.getChildCount ? root.getChildCount() : 0;
+      const children: Cell[] = [];
+      for (let i = 0; i < childCount; i++) {
+        const child = root.getChildAt ? root.getChildAt(i) : null;
+        if (child) children.push(child);
+      }
+      graph.removeCells(children);
     });
   }
 
@@ -270,16 +292,20 @@ export class MaxgraphEditorService {
 
     const model = graph.getDataModel();
     const root = model.getRoot();
-    const childCount = model.getChildCount(root);
+    if (!root) return { cells, diagramType: 'Flowchart' };
+
+    const childCount = root.getChildCount ? root.getChildCount() : 0;
 
     for (let i = 0; i < childCount; i++) {
-      const cell = model.getChildAt(root, i) as Cell;
+      const cell = root.getChildAt ? root.getChildAt(i) : null;
       if (!cell) continue;
       const geo = cell.geometry;
+      const styleObj = cell.style || {};
+      const styleStr = stringifyStyleObject(styleObj);
       const cellData: DiagramCellData = {
-        id: cell.id,
-        label: model.getValue(cell) as string ?? '',
-        style: cell.style ?? '',
+        id: cell.id || '',
+        label: cell.value ? String(cell.value) : '',
+        style: styleStr,
         geometry: {
           x: geo?.x ?? 0,
           y: geo?.y ?? 0,
@@ -315,7 +341,8 @@ export class MaxgraphEditorService {
           cellData.geometry.width,
           cellData.geometry.height
         );
-        const cell = new Cell(cellData.label, geo, cellData.style);
+        const styleObj = parseStyleString(cellData.style);
+        const cell = new Cell(cellData.label, geo, styleObj);
         cell.id = cellData.id;
         if (cellData.type === 'vertex') {
           cell.setVertex(true);
@@ -346,13 +373,16 @@ export class MaxgraphEditorService {
     if (!graph) return '';
     const codec = new Codec();
     const node = codec.encode(graph.getDataModel());
-    return xmlUtils.getXml(node);
+    if (!node) return '';
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(node);
   }
 
   fromXML(xml: string): void {
     const graph = this.graph;
     if (!graph) return;
-    const doc = xmlUtils.parseXml(xml);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xml, 'text/xml');
     const codec = new Codec(doc);
     const model = graph.getDataModel();
     graph.batchUpdate(() => {
@@ -438,7 +468,7 @@ export class MaxgraphEditorService {
     const model = graph.getDataModel();
     const listener = (_sender: any, evt: any) => {
       const edit = evt.getProperty('edit') as UndoableEdit;
-      if (edit && !edit.isIgnored()) {
+      if (edit) {
         undoManager.undoableEditHappened(edit);
       }
     };
@@ -451,9 +481,9 @@ export class MaxgraphEditorService {
 
     keyHandler.bindControlKey(90, () => { this.undo(); });
     keyHandler.bindControlKey(89, () => { this.redo(); });
-    keyHandler.bindControlKey(67, () => { graph.copySelection(); });
-    keyHandler.bindControlKey(86, () => { graph.pasteSelection(); });
-    keyHandler.bindControlKey(88, () => { graph.cutSelection(); });
+    keyHandler.bindControlKey(67, () => { /* graph.copySelection(); */ });
+    keyHandler.bindControlKey(86, () => { /* graph.pasteSelection(); */ });
+    keyHandler.bindControlKey(88, () => { /* graph.cutSelection(); */ });
     keyHandler.bindControlKey(65, () => { graph.selectAll(); });
 
     keyHandler.bindKey(46, () => {
