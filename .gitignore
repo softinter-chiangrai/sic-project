@@ -1,3 +1,5 @@
 ﻿sic-api/bin
 sic-api/obj
 Migrations/
+
+*.txt

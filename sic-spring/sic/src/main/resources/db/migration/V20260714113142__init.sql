@@ -1756,23 +1756,15 @@ CREATE INDEX IF NOT EXISTS idx_reminder_recipient ON pm_approval_reminder (recip
 -- ส่วนที่ 15: Diagram (แทนที่ DFD/ER เดิม)
 -- ============================================================
 
--- 0. pm_diagram_projects (โปรเจกต์สำหรับจัดกลุ่ม Diagram)
-CREATE TABLE IF NOT EXISTS pm_diagram_projects (
-    id UUID PRIMARY KEY,
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMPTZ,
-    business_id UUID,
-    user_id VARCHAR(100) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    is_favorite BOOLEAN DEFAULT FALSE,
-    last_opened TIMESTAMPTZ
-);
+-- ============================================================
+-- ส่วนที่ 15: Diagram (แทนที่ DFD/ER เดิม)
+-- ============================================================
+
+-- ลบตารางเก่าทั้งหมดที่เกี่ยวข้อง (ถ้ามี)
+DROP TABLE IF EXISTS pm_diagram CASCADE;
+DROP TABLE IF EXISTS pm_diagram_versions CASCADE;
+DROP TABLE IF EXISTS pm_diagram_chat CASCADE;
+
 
 -- 1. pm_diagram (เก็บ Diagram ทั้งหมด แยกตามประเภท)
 CREATE TABLE IF NOT EXISTS pm_diagram (
@@ -1785,16 +1777,14 @@ CREATE TABLE IF NOT EXISTS pm_diagram (
     delete_by VARCHAR(100),
     delete_date TIMESTAMPTZ,
     business_id UUID,
-    project_id UUID NOT NULL,
+    project_id VARCHAR(100) NOT NULL,  -- เก็บเป็นข้อความ รองรับการเชื่อมต่อกับระบบอื่น
     user_id VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     diagram_type VARCHAR(50) NOT NULL,
     mermaid_script TEXT,
     metadata JSONB DEFAULT '{}'::jsonb,
     sort_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    CONSTRAINT fk_diagram_project FOREIGN KEY (project_id) 
-        REFERENCES pm_diagram_projects(id) ON DELETE CASCADE
+    is_active BOOLEAN DEFAULT TRUE
 );
 
 -- 2. pm_diagram_versions (ประวัติเวอร์ชัน)
@@ -1846,9 +1836,6 @@ CREATE INDEX IF NOT EXISTS idx_diagram_metadata ON pm_diagram USING GIN (metadat
 CREATE INDEX IF NOT EXISTS idx_version_diagram ON pm_diagram_versions (diagram_id);
 CREATE INDEX IF NOT EXISTS idx_chat_diagram ON pm_diagram_chat (diagram_id);
 CREATE INDEX IF NOT EXISTS idx_chat_user ON pm_diagram_chat (user_id);
-
-CREATE INDEX IF NOT EXISTS idx_project_user ON pm_diagram_projects (user_id);
-CREATE INDEX IF NOT EXISTS idx_project_business ON pm_diagram_projects (business_id);
 
 -- ============================================================
 -- ส่วนที่ 16: ข้อมูลเริ่มต้นใน db_parameter (Enum/Lookup)
