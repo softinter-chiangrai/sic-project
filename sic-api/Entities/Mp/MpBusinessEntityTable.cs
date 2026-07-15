@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace sic_api.Entities.Mp;
 
-[Table("MP_BUSINESS_ENTITY_TABLE")]
+[Table("mp_business_entity_table")]
 [Index(nameof(BusinessId), nameof(EntityId))]
 [Index(nameof(TableName))]
 public class MpBusinessEntityTable : BaseBusinessEntity

@@ -1,0 +1,58 @@
+<div class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-field__required">*</span>
+      }
+    </span>
+  }
+
+  <div class="sic-combobox">
+    <button
+      type="button"
+      class="sic-control-field sic-combobox__trigger"
+      [class.sic-control-field--invalid]="showError"
+      [disabled]="disabled"
+      (click)="toggleOpen()"
+    >
+      <span class="sic-combobox__value" [class.sic-combobox__value--placeholder]="!selectedLabel">
+        {{ selectedLabel || placeholder }}
+      </span>
+      <span class="sic-combobox__caret" [class.sic-combobox__caret--open]="open">▾</span>
+    </button>
+
+    @if (open) {
+      <div class="sic-combobox__panel">
+        @if (searchable) {
+          <input
+            class="sic-combobox__search"
+            type="text"
+            placeholder="Search…"
+            [value]="query"
+            (input)="handleQuery($event)"
+          />
+        }
+        <ul class="sic-combobox__options">
+          @for (option of filteredOptions; track $index) {
+            <li
+              class="sic-combobox__option"
+              [class.sic-combobox__option--selected]="isSelected(option)"
+              (click)="selectOption(option)"
+            >
+              {{ labelFor(option) }}
+            </li>
+          } @empty {
+            <li class="sic-combobox__empty">No options</li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</div>

@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  gap: var(--sic-space-2);
+}
+
+:host(.sic-button-group--column) {
+  flex-direction: column;
+}
+
+:host(.sic-button-group--attached) {
+  gap: 0;
+}
+
+:host(.sic-button-group--attached) ::ng-deep sic-button:not(:first-child) .sic-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-inline-start: -1px;
+}
+
+:host(.sic-button-group--attached) ::ng-deep sic-button:not(:last-child) .sic-button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}

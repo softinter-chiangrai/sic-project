@@ -20,7 +20,7 @@ public class DynamicDataService(SicDbContext dbContext, IAutoRunningService auto
     {
         var context = await GetDynamicContextAsync(
             businessId,
-            request.ProgramCode,
+            request.ProgramCode!,
             cancellationToken);
 
         var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
@@ -130,7 +130,7 @@ public class DynamicDataService(SicDbContext dbContext, IAutoRunningService auto
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 TotalElements = totalElements,
-                Sorts = request.Sorts
+                Sorts = request.Sorts!
             }
         };
     }

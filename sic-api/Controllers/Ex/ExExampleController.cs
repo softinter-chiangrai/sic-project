@@ -7,7 +7,7 @@ namespace sic_api.Controllers.Ex;
 
 [Route("api/ex/examples")]
 [Authorize]
-// [ProgramAuthorize("EX_EXAMPLE")]
+[ProgramAuthorize("EX_EXAMPLE")]
 public class ExExampleController : BaseController
 {
 

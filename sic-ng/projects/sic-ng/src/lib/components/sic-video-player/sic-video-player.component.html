@@ -1,0 +1,14 @@
+<div class="sic-video-player__wrap">
+  <video
+    #video
+    class="sic-video-player__video"
+    [src]="src"
+    [poster]="poster"
+    [autoplay]="autoplay"
+    [loop]="loop"
+    [muted]="muted"
+    controls
+    (play)="playing = true"
+    (pause)="playing = false"
+  ></video>
+</div>

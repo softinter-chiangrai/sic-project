@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace sic_api.Entities.Mp;
 
-[Table("MP_ENTITY_FIELD")]
+[Table("mp_entity_field")]
 [Index(nameof(EntityId), nameof(Name), IsUnique = true)]
 [Index(nameof(EntityId), nameof(Field), IsUnique = true)]
 public class MpEntityField : BaseBusinessEntity

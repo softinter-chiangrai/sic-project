@@ -5,11 +5,11 @@ export interface MenuItemModel {
   icon?: string;
   path?: string;
   code: string;
-  isBack:boolean;
-  isSearch:boolean;
-  isAdd:boolean;
-  isSave:boolean;
-  isPrint:boolean;
+  RoleBack:boolean;
+  RoleSearch:boolean;
+  RoleAdd:boolean;
+  RoleSave:boolean;
+  RolePrint:boolean;
   children: MenuItemModel[];
 }
 

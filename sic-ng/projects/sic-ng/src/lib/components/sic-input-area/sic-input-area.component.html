@@ -1,0 +1,30 @@
+<label class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-field__required">*</span>
+      }
+    </span>
+  }
+
+  <textarea
+    class="sic-input-area__field"
+    [class.sic-input-area__field--invalid]="showError"
+    [name]="name"
+    [placeholder]="placeholder"
+    [rows]="rows"
+    [attr.maxlength]="maxlength ?? null"
+    [readOnly]="readonly"
+    [disabled]="disabled"
+    [value]="value"
+    (input)="handleInput($event)"
+    (blur)="handleBlur()"
+  ></textarea>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</label>

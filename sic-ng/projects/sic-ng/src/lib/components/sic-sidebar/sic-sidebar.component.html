@@ -1,0 +1,34 @@
+<button type="button" class="sic-sidebar__toggle" (click)="toggleCollapsed()" aria-label="Toggle sidebar">
+  {{ collapsed ? '»' : '«' }}
+</button>
+
+<nav class="sic-sidebar__nav">
+  <ng-container *ngTemplateOutlet="itemList; context: { $implicit: items }"></ng-container>
+</nav>
+
+<ng-template #itemList let-list>
+  <ul class="sic-sidebar__list">
+    @for (item of list; track item.label) {
+      <li>
+        <a
+          class="sic-sidebar__link"
+          [class.sic-sidebar__link--active]="item.link && item.link === activeLink"
+          (click)="selectItem(item)"
+        >
+          @if (item.icon) {
+            <span class="sic-sidebar__icon">{{ item.icon }}</span>
+          }
+          <span class="sic-sidebar__label">{{ item.label }}</span>
+          @if (item.children?.length) {
+            <span class="sic-sidebar__caret">{{ isExpanded(item) ? '▾' : '▸' }}</span>
+          }
+        </a>
+        @if (item.children?.length && isExpanded(item)) {
+          <div class="sic-sidebar__children">
+            <ng-container *ngTemplateOutlet="itemList; context: { $implicit: item.children }"></ng-container>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+</ng-template>

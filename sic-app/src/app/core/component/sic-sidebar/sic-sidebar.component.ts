@@ -43,11 +43,11 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private clockTimer?: ReturnType<typeof setInterval>;
   private routerSubscription?: Subscription;
 
-  isBack:boolean = false;
-  isSearch:boolean = false; 
-  isAdd:boolean = false;
-  isSave:boolean = false;
-  isPrint:boolean = false;
+  RoleBack:boolean = false;
+  RoleSearch:boolean = false; 
+  RoleAdd:boolean = false;
+  RoleSave:boolean = false;
+  RolePrint:boolean = false;
 
   /** Raw menu items from API — kept so we can look up flags on route change */
   private rawMenuItems: MenuItemModel[] = [];
@@ -147,11 +147,11 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       : null;
 
     const f = flags ?? this.service.DEFAULT_FLAGS;
-    this.isBack   = f.isBack;
-    this.isSearch = f.isSearch;
-    this.isAdd    = f.isAdd;
-    this.isSave   = f.isSave;
-    this.isPrint  = f.isPrint;
+    this.RoleBack   = f.RoleBack;
+    this.RoleSearch = f.RoleSearch;
+    this.RoleAdd    = f.RoleAdd;
+    this.RoleSave   = f.RoleSave;
+    this.RolePrint  = f.RolePrint;
   }
 
   // ────────────────────────────────────────────────────────────────

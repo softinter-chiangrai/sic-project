@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-md);
+  font-family: var(--sic-font-sans);
+  overflow: hidden;
+}
+
+.sic-collapse__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--sic-space-3);
+  border: none;
+  background: var(--sic-color-surface);
+  color: var(--sic-color-text-active);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sic-collapse__caret {
+  color: var(--sic-color-text-muted);
+  transition: transform var(--sic-transition-fast);
+}
+
+.sic-collapse__caret--open {
+  transform: rotate(180deg);
+}
+
+.sic-collapse__body {
+  padding: var(--sic-space-3);
+  color: var(--sic-color-text);
+}

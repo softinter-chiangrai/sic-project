@@ -1,0 +1,36 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: inline-block;
+}
+
+.sic-rating {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.sic-rating__star {
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--sic-color-border);
+}
+
+:host(.sic-size-sm) .sic-rating__star {
+  font-size: 1.1rem;
+}
+
+:host(.sic-size-lg) .sic-rating__star {
+  font-size: 1.8rem;
+}
+
+.sic-rating__star--full {
+  color: var(--sic-color-warning);
+}
+
+.sic-rating__star--half {
+  background: linear-gradient(90deg, var(--sic-color-warning) 50%, var(--sic-color-border) 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

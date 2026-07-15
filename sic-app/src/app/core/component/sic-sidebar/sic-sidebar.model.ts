@@ -5,22 +5,22 @@ export interface MenuItemModel {
   icon?: string;
   path?: string;
   code: string;
-  isBack: boolean;
-  isSearch: boolean;
-  isAdd: boolean;
-  isSave: boolean;
-  isRemove: boolean;
-  isPrint: boolean;
+  RoleBack: boolean;
+  RoleSearch: boolean;
+  RoleAdd: boolean;
+  RoleSave: boolean;
+  RoleDelete: boolean;
+  RolePrint: boolean;
   children: MenuItemModel[];
 }
 
 export interface MenuActionFlags {
-  isBack: boolean;
-  isSearch: boolean;
-  isAdd: boolean;
-  isSave: boolean;
-  isRemove: boolean;
-  isPrint: boolean;
+  RoleBack: boolean;
+  RoleSearch: boolean;
+  RoleAdd: boolean;
+  RoleSave: boolean;
+  RoleDelete: boolean;
+  RolePrint: boolean;
 }
 
 export interface ProfileInfoModel {

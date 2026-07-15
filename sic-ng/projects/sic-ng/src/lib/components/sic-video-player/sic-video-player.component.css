@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-video-player__wrap {
+  border-radius: var(--sic-radius-lg);
+  overflow: hidden;
+  background: #000;
+}
+
+.sic-video-player__video {
+  display: block;
+  width: 100%;
+  height: auto;
+}

@@ -998,6 +998,754 @@ namespace sic_api.Migrations
                     b.ToTable("ex_example");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Mp.MpBusinessEntityTable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TableName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("table_name");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("TableName");
+
+                    b.HasIndex("BusinessId", "EntityId");
+
+                    b.ToTable("mp_business_entity_table");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpBusinessMarketplace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<string>("InstallStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("install_status");
+
+                    b.Property<DateTime>("InstalledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("installed_date");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<Guid>("MarketplaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("marketplace_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MarketplaceId");
+
+                    b.HasIndex("BusinessId", "MarketplaceId");
+
+                    b.ToTable("mp_business_marketplace");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<string>("LabelEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_en");
+
+                    b.Property<string>("LabelLocal")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_local");
+
+                    b.Property<Guid>("MarketplaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("marketplace_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MarketplaceId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("mp_entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityBilingual", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("KeyEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_en");
+
+                    b.Property<string>("KeyLocal")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_local");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("mp_entity_bilingual");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityConstraint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("ConstraintType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("constraint_type");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("FieldsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("fields_json");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("mp_entity_constraint");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Field")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("field");
+
+                    b.Property<string>("Format")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("format");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<string>("LabelEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_en");
+
+                    b.Property<string>("LabelLocal")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_local");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("ReferenceEntity")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("reference_entity");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("SeqNo")
+                        .HasColumnType("integer")
+                        .HasColumnName("seq_no");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId", "Field")
+                        .IsUnique();
+
+                    b.HasIndex("EntityId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("mp_entity_field");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityInitial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("data_json");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("SeqNo")
+                        .HasColumnType("integer")
+                        .HasColumnName("seq_no");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("mp_entity_initial");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpMarketplace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AppCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("app_code");
+
+                    b.Property<string>("AppName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("app_name");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppCode")
+                        .IsUnique();
+
+                    b.ToTable("mp_marketplace");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpProgram", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("icon");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<Guid>("MarketplaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("marketplace_id");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameLocal")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_local");
+
+                    b.Property<string>("ProgramCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("program_code");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Template")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("template");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("MarketplaceId", "ProgramCode")
+                        .IsUnique();
+
+                    b.ToTable("mp_program");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuBusiness", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1014,6 +1762,17 @@ namespace sic_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("address_local");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("branch_code");
+
+                    b.Property<string>("BusinessCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("business_code");
 
                     b.Property<Guid>("CountryId")
                         .HasColumnType("uuid")
@@ -1151,6 +1910,10 @@ namespace sic_api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessCode")
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
+
                     b.HasIndex("CountryId");
 
                     b.HasIndex("DistrictId");
@@ -1172,7 +1935,6 @@ namespace sic_api.Migrations
                         .HasColumnName("id");
 
                     b.Property<Guid>("BusinessId")
-                        .HasMaxLength(50)
                         .HasColumnType("uuid")
                         .HasColumnName("business_id");
 
@@ -1200,15 +1962,13 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("delete_date");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
@@ -1221,6 +1981,12 @@ namespace sic_api.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("session_id");
+
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1231,12 +1997,20 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.Property<string>("Username")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
 
                     b.ToTable("su_business_audit");
                 });
@@ -1290,6 +2064,10 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_uses");
+
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("role_id");
@@ -1309,6 +2087,10 @@ namespace sic_api.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
+
+                    b.Property<int>("UseCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("use_count");
 
                     b.HasKey("Id");
 
@@ -1407,7 +2189,8 @@ namespace sic_api.Migrations
                     b.HasIndex("ParentRoleId");
 
                     b.HasIndex("BusinessId", "RoleCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_business_role");
                 });
@@ -1446,9 +2229,33 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("RoleAdd")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_add");
+
+                    b.Property<bool>("RoleBack")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_back");
+
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
+
+                    b.Property<bool>("RolePrint")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_print");
+
+                    b.Property<bool>("RoleDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_delete");
+
+                    b.Property<bool>("RoleSave")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_save");
+
+                    b.Property<bool>("RoleSearch")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_search");
 
                     b.Property<Guid>("ProgramId")
                         .HasColumnType("uuid")
@@ -1475,9 +2282,415 @@ namespace sic_api.Migrations
                     b.HasIndex("ProgramId");
 
                     b.HasIndex("BusinessRoleId", "ProgramId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_business_role_program");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("su_chat_group");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupCallParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<Guid>("LogId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("log_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LogId");
+
+                    b.ToTable("su_chat_group_call_participant");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AttachmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attachment_id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<bool?>("CallAccepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("call_accepted");
+
+                    b.Property<int?>("CallDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("call_duration_seconds");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<string>("CancelledBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("cancelled_by");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cancelled");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("message");
+
+                    b.Property<int>("MessageType")
+                        .HasColumnType("integer")
+                        .HasColumnName("message_type");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sender_id");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttachmentId");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("su_chat_group_log");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("su_chat_group_member");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AttachmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attachment_id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<bool?>("CallAccepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("call_accepted");
+
+                    b.Property<int?>("CallDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("call_duration_seconds");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<string>("CancelledBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("cancelled_by");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DeleteBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("delete_by");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delete_date");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cancelled");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_delete");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("message");
+
+                    b.Property<int>("MessageType")
+                        .HasColumnType("integer")
+                        .HasColumnName("message_type");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("receiver_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sender_id");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttachmentId");
+
+                    b.HasIndex("BusinessId", "SenderId", "ReceiverId");
+
+                    b.ToTable("su_chat_log");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuMessage", b =>
@@ -1559,7 +2772,8 @@ namespace sic_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleCode", "ProgramCode", "MessageCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_message");
                 });
@@ -1630,12 +2844,6 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
-
                     b.Property<string>("LastNameEn")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -1702,6 +2910,12 @@ namespace sic_api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("upload_group_id");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.Property<string>("ZipCode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
@@ -1713,14 +2927,15 @@ namespace sic_api.Migrations
 
                     b.HasIndex("DistrictId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
                     b.HasIndex("ProvinceId");
 
                     b.HasIndex("SubDistrictId");
 
                     b.HasIndex("TitleId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_profile");
                 });
@@ -1760,9 +2975,33 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("RoleAdd")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_add");
+
+                    b.Property<bool>("RoleBack")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_back");
+
                     b.Property<bool>("IsDelete")
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
+
+                    b.Property<bool>("RolePrint")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_print");
+
+                    b.Property<bool>("RoleDelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_delete");
+
+                    b.Property<bool>("RoleSave")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_save");
+
+                    b.Property<bool>("RoleSearch")
+                        .HasColumnType("boolean")
+                        .HasColumnName("role_search");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
@@ -1816,7 +3055,8 @@ namespace sic_api.Migrations
                     b.HasIndex("ParentProgramId");
 
                     b.HasIndex("ProgramCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_program");
                 });
@@ -2064,12 +3304,6 @@ namespace sic_api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_delete");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("keycloak_user_id");
-
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -2086,12 +3320,19 @@ namespace sic_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
 
                     b.HasIndex("UserId", "BusinessId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_user_business");
                 });
@@ -2163,7 +3404,8 @@ namespace sic_api.Migrations
                     b.HasIndex("BusinessRoleId");
 
                     b.HasIndex("UserBusinessId", "BusinessRoleId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("is_delete = false");
 
                     b.ToTable("su_user_business_role");
                 });
@@ -2385,6 +3627,102 @@ namespace sic_api.Migrations
                     b.Navigation("District");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Mp.MpBusinessEntityTable", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpBusinessMarketplace", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpMarketplace", "Marketplace")
+                        .WithMany()
+                        .HasForeignKey("MarketplaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Marketplace");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntity", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpMarketplace", "Marketplace")
+                        .WithMany("Entities")
+                        .HasForeignKey("MarketplaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Marketplace");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityBilingual", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany("Bilinguals")
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityConstraint", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany("Constraints")
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityField", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany("Fields")
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntityInitial", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany("Initials")
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpProgram", b =>
+                {
+                    b.HasOne("sic_api.Entities.Mp.MpEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("sic_api.Entities.Mp.MpMarketplace", "Marketplace")
+                        .WithMany("Programs")
+                        .HasForeignKey("MarketplaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Marketplace");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuBusiness", b =>
                 {
                     b.HasOne("sic_api.Entities.Db.DbCountry", "Country")
@@ -2420,6 +3758,17 @@ namespace sic_api.Migrations
                     b.Navigation("SubDistrict");
 
                     b.Navigation("Title");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuBusinessAudit", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuBusiness", "Business")
+                        .WithMany("BusinessAudits")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuBusinessInvite", b =>
@@ -2470,6 +3819,56 @@ namespace sic_api.Migrations
                     b.Navigation("Program");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupCallParticipant", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuChatGroupLog", "Log")
+                        .WithMany("CallParticipants")
+                        .HasForeignKey("LogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Log");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuUpload", "Attachment")
+                        .WithMany()
+                        .HasForeignKey("AttachmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("sic_api.Entities.Su.SuChatGroup", "Group")
+                        .WithMany("Messages")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attachment");
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupMember", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuChatGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatLog", b =>
+                {
+                    b.HasOne("sic_api.Entities.Su.SuUpload", "Attachment")
+                        .WithMany()
+                        .HasForeignKey("AttachmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Attachment");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuProfile", b =>
                 {
                     b.HasOne("sic_api.Entities.Db.DbCountry", "Country")
@@ -2518,7 +3917,7 @@ namespace sic_api.Migrations
             modelBuilder.Entity("sic_api.Entities.Su.SuUserBusiness", b =>
                 {
                     b.HasOne("sic_api.Entities.Su.SuBusiness", "Business")
-                        .WithMany("UserCompanies")
+                        .WithMany("UserBusinesses")
                         .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -2581,11 +3980,31 @@ namespace sic_api.Migrations
                     b.Navigation("Districts");
                 });
 
+            modelBuilder.Entity("sic_api.Entities.Mp.MpEntity", b =>
+                {
+                    b.Navigation("Bilinguals");
+
+                    b.Navigation("Constraints");
+
+                    b.Navigation("Fields");
+
+                    b.Navigation("Initials");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Mp.MpMarketplace", b =>
+                {
+                    b.Navigation("Entities");
+
+                    b.Navigation("Programs");
+                });
+
             modelBuilder.Entity("sic_api.Entities.Su.SuBusiness", b =>
                 {
+                    b.Navigation("BusinessAudits");
+
                     b.Navigation("BusinessRoles");
 
-                    b.Navigation("UserCompanies");
+                    b.Navigation("UserBusinesses");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuBusinessRole", b =>
@@ -2597,6 +4016,18 @@ namespace sic_api.Migrations
                     b.Navigation("RolePrograms");
 
                     b.Navigation("UserBusinessRoles");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroup", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("sic_api.Entities.Su.SuChatGroupLog", b =>
+                {
+                    b.Navigation("CallParticipants");
                 });
 
             modelBuilder.Entity("sic_api.Entities.Su.SuProgram", b =>

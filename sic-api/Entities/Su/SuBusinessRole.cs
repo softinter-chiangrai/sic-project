@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace sic_api.Entities.Su;
 
-[Index(nameof(BusinessId), nameof(RoleCode), IsUnique = true)]
 [Table("su_business_role")]
 public class SuBusinessRole : BaseEntity
 {

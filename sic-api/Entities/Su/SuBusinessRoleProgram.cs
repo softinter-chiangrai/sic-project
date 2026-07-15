@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace sic_api.Entities.Su;
 
-[Index(nameof(BusinessRoleId), nameof(ProgramId), IsUnique = true)]
 [Table("su_business_role_program")]
 public class SuBusinessRoleProgram : BaseEntity
 {
@@ -23,23 +22,23 @@ public class SuBusinessRoleProgram : BaseEntity
     [Column("is_active")]
     public bool IsActive { get; set; } = false;
 
-    [Column("is_back")]
-    public bool IsBack { get; set; } = false;
+    [Column("role_back")]
+    public bool RoleBack { get; set; } = false;
 
-    [Column("is_search")]
-    public bool IsSearch { get; set; } = false;
+    [Column("role_search")]
+    public bool RoleSearch { get; set; } = false;
 
-    [Column("is_add")]
-    public bool IsAdd { get; set; } = false;
+    [Column("role_add")]
+    public bool RoleAdd { get; set; } = false;
 
-    [Column("is_save")]
-    public bool IsSave { get; set; } = false;
+    [Column("role_save")]
+    public bool RoleSave { get; set; } = false;
 
-    [Column("is_remove")]
-    public bool IsRemove { get; set; } = false;
+    [Column("role_delete")]
+    public bool RoleDelete { get; set; } = false;
 
-    [Column("is_print")]
-    public bool IsPrint { get; set; } = false;
+    [Column("role_print")]
+    public bool RolePrint { get; set; } = false;
 
     
 }

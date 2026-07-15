@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace sic_api.Entities.Mp;
 
-[Table("MP_ENTITY_INITIAL")]
+[Table("mp_entity_initial")]
 public class MpEntityInitial : BaseBusinessEntity
 {
     [Required]

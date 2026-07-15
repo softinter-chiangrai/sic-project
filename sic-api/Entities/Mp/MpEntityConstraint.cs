@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace sic_api.Entities.Mp;
 
-[Table("MP_ENTITY_CONSTRAINT")]
+[Table("mp_entity_constraint")]
 public class MpEntityConstraint : BaseBusinessEntity
 {
     [Required]

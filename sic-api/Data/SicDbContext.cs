@@ -27,6 +27,8 @@ public partial class SicDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(SicDbContext).Assembly);
+
         ConfigureDbModule(modelBuilder);
         ConfigureExModule(modelBuilder);
         ConfigureSuModule(modelBuilder);

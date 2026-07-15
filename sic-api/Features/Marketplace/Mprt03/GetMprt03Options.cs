@@ -314,7 +314,7 @@ public static class GetMprt03Options
             {
                 data.Add(new LovBase
                 {
-                    Value = reader.IsDBNull(0) ? null : reader.GetGuid(0),
+                    Value = reader.IsDBNull(0) ? "" : reader.GetGuid(0),
                     Text = reader.IsDBNull(1) ? "" : reader.GetString(1)
                 });
             }

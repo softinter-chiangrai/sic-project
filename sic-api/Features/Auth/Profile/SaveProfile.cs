@@ -108,10 +108,10 @@ public static class SaveProfile
 
         private async Task ValidateEmailModification(Command command, ValidationContext<Command> context, CancellationToken cancellationToken)
         {
-            bool isAdded = command.State == EntityState.Added;
+            bool RoleAdded = command.State == EntityState.Added;
             bool isModified = command.State == EntityState.Modified;
 
-            if (!isAdded && !isModified) return;
+            if (!RoleAdded && !isModified) return;
 
             if (isModified)
             {

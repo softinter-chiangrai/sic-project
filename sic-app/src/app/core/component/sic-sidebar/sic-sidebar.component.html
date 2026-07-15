@@ -264,35 +264,35 @@
         </nav>
 
         <div class="flex items-center gap-2 text-[var(--text-muted)]">
-          @if (isBack) {
+          @if (RoleBack) {
             <button type="button" tooltip="ย้อนกลับ" (click)="onActionClick('back')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
               title="Back">
               <i class="bi bi-arrow-left-circle text-xl"></i>
             </button>
           }
-          @if (isSearch) {
+          @if (RoleSearch) {
             <button type="button" tooltip="ค้นหา" (click)="onActionClick('search')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
               title="Search">
               <i class="bi bi-search text-lg"></i>
             </button>
           }
-          @if (isAdd) {
+          @if (RoleAdd) {
             <button type="button" tooltip="เพิ่ม" (click)="onActionClick('add')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
               title="Search">
               <i class="bi bi-plus-circle-fill"></i>
             </button>
           }
-          @if (isSave) {
+          @if (RoleSave) {
             <button type="button" tooltip="บันทึก" (click)="onActionClick('save')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
               title="Save">
               <i class="bi bi-floppy2 text-lg"></i>
             </button>
           }
-          @if (isPrint) {
+          @if (RolePrint) {
             <button type="button" tooltip="พิมพ์" (click)="onActionClick('print')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
               title="Print">

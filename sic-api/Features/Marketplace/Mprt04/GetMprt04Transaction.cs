@@ -94,7 +94,7 @@ public static class GetMprt04Transaction
             return new Response
             {
                 Id = request.Id,
-                Header = header,
+                Header = header!,
                 Details = details.Select(x => new DetailRow
                 {
                     Id = GetGuid(x, "id"),

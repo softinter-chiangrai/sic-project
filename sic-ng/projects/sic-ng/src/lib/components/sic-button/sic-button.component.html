@@ -1,0 +1,14 @@
+<button
+  class="sic-button sic-button--{{ variant }} sic-button--{{ color }} sic-button--{{ size }}"
+  [class.sic-button--loading]="loading"
+  [type]="type"
+  [disabled]="disabled || loading"
+>
+  @if (loading) {
+    <span class="sic-button__spinner" aria-hidden="true"></span>
+  } @else {
+    <ng-content select="[sicIconLeft]"></ng-content>
+  }
+  <span class="sic-button__label"><ng-content></ng-content></span>
+  <ng-content select="[sicIconRight]"></ng-content>
+</button>

@@ -19,17 +19,17 @@ public static class GetMenu
         public string? Path { get; set; } = default;
         public string? Code { get; set; } = default;
 
-        public bool IsBack { get; set; } = false;
+        public bool RoleBack { get; set; } = false;
 
-        public bool IsSearch { get; set; } = false;
+        public bool RoleSearch { get; set; } = false;
 
-        public bool IsAdd { get; set; } = false;
+        public bool RoleAdd { get; set; } = false;
 
-        public bool IsSave { get; set; } = false;
+        public bool RoleSave { get; set; } = false;
 
-        public bool IsRemove { get; set; } = false;
+        public bool RoleDelete { get; set; } = false;
 
-    public bool IsPrint { get; set; } = false;
+    public bool RolePrint { get; set; } = false;
         public List<Response> Children { get; set; } = new List<Response>();
     }
 
@@ -62,12 +62,12 @@ public static class GetMenu
                     Path = r.RoutePath,
                     Code = r.ProgramCode,
                     r.SortOrder,
-                    IsBack = r.IsBack && r.SuBusinessRolePrograms!.Any(x => x.IsBack),
-                    IsSearch = r.IsSearch && r.SuBusinessRolePrograms!.Any(x => x.IsSearch),
-                    IsAdd = r.IsAdd && r.SuBusinessRolePrograms!.Any(x => x.IsAdd),
-                    IsSave = r.IsSave && r.SuBusinessRolePrograms!.Any(x => x.IsSave),
-                    IsRemove = r.IsRemove && r.SuBusinessRolePrograms!.Any(x => x.IsRemove),
-                    IsPrint = r.IsPrint && r.SuBusinessRolePrograms!.Any(x => x.IsPrint)
+                    RoleBack = r.RoleBack && r.SuBusinessRolePrograms!.Any(x => x.RoleBack),
+                    RoleSearch = r.RoleSearch && r.SuBusinessRolePrograms!.Any(x => x.RoleSearch),
+                    RoleAdd = r.RoleAdd && r.SuBusinessRolePrograms!.Any(x => x.RoleAdd),
+                    RoleSave = r.RoleSave && r.SuBusinessRolePrograms!.Any(x => x.RoleSave),
+                    RoleDelete = r.RoleDelete && r.SuBusinessRolePrograms!.Any(x => x.RoleDelete),
+                    RolePrint = r.RolePrint && r.SuBusinessRolePrograms!.Any(x => x.RolePrint)
                 })
                 .ToListAsync(cancellationToken);
 
@@ -82,12 +82,12 @@ public static class GetMenu
                     Icon = item.Icon,
                     Path = item.Path,
                     Code = item.Code,
-                    IsBack = item.IsBack,
-                    IsSearch = item.IsSearch,
-                    IsAdd = item.IsAdd,
-                    IsSave = item.IsSave,
-                    IsRemove = item.IsRemove,
-                    IsPrint = item.IsPrint,
+                    RoleBack = item.RoleBack,
+                    RoleSearch = item.RoleSearch,
+                    RoleAdd = item.RoleAdd,
+                    RoleSave = item.RoleSave,
+                    RoleDelete = item.RoleDelete,
+                    RolePrint = item.RolePrint,
                     Children = lookup[id]
                         .OrderBy(p => p.SortOrder).ThenBy(p=>p.ProgramCode)
                         .Select(p => BuildNode(p.Id))

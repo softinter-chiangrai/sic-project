@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace sic_api.Entities.Mp;
-[Table("MP_ENTITY")]
+[Table("mp_entity")]
 [Index(nameof(MarketplaceId), nameof(Name), IsUnique = true)]
 public class MpEntity : BaseBusinessEntity
 {

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace sic_api.Entities.Mp;
 
-[Table("MP_MARKETPLACE")]
+[Table("mp_marketplace")]
 [Index(nameof(AppCode), IsUnique = true)]
 public class MpMarketplace : BaseBusinessEntity
 {

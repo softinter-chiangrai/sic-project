@@ -1,0 +1,39 @@
+:host {
+  display: inline-block;
+}
+
+.sic-badge__anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.sic-badge__dot {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: var(--sic-radius-full);
+  border: 2px solid var(--sic-color-bg);
+}
+
+.sic-badge__count {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  min-width: 1.2rem;
+  padding: 0 0.3rem;
+  border-radius: var(--sic-radius-full);
+  border: 2px solid var(--sic-color-bg);
+  color: #fff;
+  font-family: var(--sic-font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+.sic-badge__dot--primary, .sic-badge__count--primary { background: var(--sic-color-primary); }
+.sic-badge__dot--success, .sic-badge__count--success { background: var(--sic-color-success); }
+.sic-badge__dot--danger, .sic-badge__count--danger { background: var(--sic-color-danger); }
+.sic-badge__dot--warning, .sic-badge__count--warning { background: var(--sic-color-warning); }

@@ -1,0 +1,62 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-input-phone__wrap {
+  display: flex;
+  width: 100%;
+  min-height: var(--sic-control-height-md);
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-md);
+  background: var(--sic-color-bg);
+  overflow: hidden;
+  transition: border-color var(--sic-transition-fast), box-shadow var(--sic-transition-fast);
+}
+
+:host(.sic-size-sm) .sic-input-phone__wrap {
+  min-height: var(--sic-control-height-sm);
+}
+
+:host(.sic-size-lg) .sic-input-phone__wrap {
+  min-height: var(--sic-control-height-lg);
+}
+
+.sic-input-phone__wrap:focus-within {
+  border-color: color-mix(in srgb, var(--sic-color-primary) 45%, var(--sic-color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sic-color-primary) 14%, transparent);
+}
+
+.sic-input-phone__wrap--invalid {
+  border-color: color-mix(in srgb, var(--sic-color-danger) 46%, var(--sic-color-border));
+}
+
+.sic-input-phone__dial {
+  border: none;
+  border-right: 1px solid var(--sic-color-border);
+  background: var(--sic-color-surface);
+  color: var(--sic-color-text-active);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-sm);
+  padding: 0 var(--sic-space-2);
+}
+
+.sic-input-phone__field {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--sic-color-text-active);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-md);
+  padding: 0 var(--sic-space-3);
+}
+
+.sic-input-phone__field:disabled,
+.sic-input-phone__dial:disabled {
+  cursor: not-allowed;
+  color: var(--sic-color-text-muted);
+}

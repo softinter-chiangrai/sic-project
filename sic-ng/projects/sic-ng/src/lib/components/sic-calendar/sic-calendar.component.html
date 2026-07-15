@@ -1,0 +1,26 @@
+<div class="sic-calendar__header">
+  <button type="button" (click)="prevMonth()" aria-label="Previous month">‹</button>
+  <span class="sic-calendar__title">{{ monthLabel }}</span>
+  <button type="button" (click)="nextMonth()" aria-label="Next month">›</button>
+</div>
+
+<div class="sic-calendar__weekdays">
+  @for (day of orderedWeekdayLabels; track day) {
+    <span>{{ day }}</span>
+  }
+</div>
+
+<div class="sic-calendar__grid">
+  @for (cell of cells; track cell.date.getTime()) {
+    <button
+      type="button"
+      class="sic-calendar__cell"
+      [class.sic-calendar__cell--muted]="!cell.inMonth"
+      [class.sic-calendar__cell--today]="cell.isToday"
+      [class.sic-calendar__cell--selected]="isSelected(cell)"
+      (click)="selectDate(cell)"
+    >
+      {{ cell.date.getDate() }}
+    </button>
+  }
+</div>
