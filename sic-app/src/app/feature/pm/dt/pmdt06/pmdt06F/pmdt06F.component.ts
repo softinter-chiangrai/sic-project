@@ -43,7 +43,7 @@ interface EdgeStyleOption {
 export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input({ required: true }) diagram: DiagramModel | null = null;
   @Input() graphData: any = null;
-  @Input() mermaidScript: string = '';   // ✅ รับ Mermaid Script จาก Parent
+  @Input() mermaidScript: string = '';
 
   @Output() graphDataChange = new EventEmitter<any>();
   @Output() editorReady = new EventEmitter<Pmdt06FComponent>();
@@ -62,7 +62,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   keyHandler: KeyHandler | null = null;
   undoManager: UndoManager | null = null;
 
-  // Event listeners สำหรับ Drag & Drop
   private dragOverHandler: ((e: DragEvent) => void) | null = null;
   private dropHandler: ((e: DragEvent) => void) | null = null;
 
@@ -84,14 +83,12 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.initGraph();
 
-    // ========== ผูก Drag & Drop Events ==========
     const containerEl = this.graphContainer.nativeElement;
     this.dragOverHandler = this.onDragOver.bind(this);
     this.dropHandler = this.onDrop.bind(this);
     containerEl.addEventListener('dragover', this.dragOverHandler);
     containerEl.addEventListener('drop', this.dropHandler);
 
-    // ========== ปรับพื้นหลังให้มองเห็น ==========
     if (this.graph) {
       const isDark = document.documentElement.classList.contains('dark');
       this.graph.container!.style.background = isDark ? '#2d2d2d' : '#f5f5f5';
@@ -103,7 +100,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // ---- Handle graphData change ----
+    // graphData มี priority สูงสุด
     if (changes['graphData'] && !changes['graphData'].firstChange && this.graph) {
       const current = changes['graphData'].currentValue;
       const hasXml = current && (
@@ -112,9 +109,11 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       );
       if (hasXml) {
         this.loadGraphData(current);
+        return;
       }
-      // ✅ ไม่โหลด Mermaid อัตโนมัติ
     }
+
+    // ไม่โหลด mermaidScript อัตโนมัติ (รอให้ผู้ใช้กด import)
   }
 
   ngOnDestroy(): void {
@@ -152,7 +151,7 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.vertexLabelsMovable = true;
     graph.edgeLabelsMovable = true;
 
-    // ตั้งค่า default edge style
+    // default edge style
     const sheet = graph.getStylesheet();
     const defaultEdge = sheet.getDefaultEdgeStyle();
     defaultEdge['edgeStyle'] = 'orthogonalEdgeStyle';
@@ -165,12 +164,10 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     graph.getDataModel().addListener(InternalEvent.UNDO, undoListener);
     graph.getView().addListener(InternalEvent.UNDO, undoListener);
 
-    // Keyboard shortcuts
     this.keyHandler = new KeyHandler(graph);
     this.keyHandler.bindControlKey(90, () => this.undo());
     this.keyHandler.bindControlKey(89, () => this.redo());
 
-    // Selection change
     graph.getSelectionModel().addListener(InternalEvent.CHANGE, () => {
       const cells = graph.getSelectionCells();
       if (cells.length > 0) {
@@ -178,13 +175,11 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
-    // Data model change -> emit update
     graph.getDataModel().addListener(InternalEvent.CHANGE, () => {
       this.zoomLevel.set(Math.round(graph.getView().getScale() * 100));
       this.change$.next();
     });
 
-    // Click -> select
     graph.addListener(InternalEvent.CLICK, (_sender: any, evt: any) => {
       const cell = evt.getProperty('cell');
       if (cell) {
@@ -192,7 +187,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
-    // Double click -> edit label
     graph.addListener(InternalEvent.DOUBLE_CLICK, (_sender: any, evt: any) => {
       const cell = evt.getProperty('cell');
       if (cell) {
@@ -200,7 +194,6 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
-    // Move/Resize/Connect -> emit change
     graph.addListener(InternalEvent.MOVE_CELLS, () => this.change$.next());
     graph.addListener(InternalEvent.RESIZE_CELLS, () => this.change$.next());
     graph.addListener(InternalEvent.CONNECT_CELL, () => this.change$.next());
@@ -211,34 +204,32 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     `;
     graph.container!.style.backgroundSize = '20px 20px';
 
-    // Default vertex style
+    // Vertex style
     const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
-    vertexStyle['fontColor'] = 'var(--text-active)';
+    vertexStyle['fontColor'] = '#000000';
     vertexStyle['fillColor'] = 'var(--sidebar)';
     vertexStyle['strokeColor'] = 'var(--border)';
     vertexStyle['rounded'] = true;
     vertexStyle['shadow'] = false;
 
-    // Default edge style
+    // Edge style
     const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
+    edgeStyle['fontColor'] = '#000000';
     edgeStyle['strokeColor'] = 'var(--text-muted)';
-    edgeStyle['fontColor'] = 'var(--text-muted)';
     edgeStyle['endArrow'] = 'classic';
     edgeStyle['rounded'] = true;
     edgeStyle['edgeStyle'] = 'orthogonalEdgeStyle';
 
     this.graph = graph;
 
-    // ✅ โหลด graphData ถ้ามี (ไม่โหลด Mermaid อัตโนมัติ)
+    // โหลด graphData ถ้ามี
     const hasXml = this.graphData && (
       (typeof this.graphData === 'string' && this.graphData.trim().length > 0) ||
       (this.graphData.xml && typeof this.graphData.xml === 'string' && this.graphData.xml.trim().length > 0)
     );
-
     if (hasXml) {
       this.loadGraphData(this.graphData);
     }
-
 
     this.editorReady.emit(this);
     this.editorService.setGraph(graph);
@@ -298,8 +289,22 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
-  // ✅ ฟังก์ชันโหลด Mermaid Script (วางทับ)
-  loadMermaidScript(script: string): void {
+  private toXML(): string {
+    const graph = this.graph;
+    if (!graph) return '';
+    try {
+      const codec = new Codec();
+      const node = codec.encode(graph.getDataModel());
+      if (!node) return '';
+      const serializer = new XMLSerializer();
+      return serializer.serializeToString(node);
+    } catch {
+      return '';
+    }
+  }
+
+  // ========== Mermaid Import (async) ==========
+  async loadMermaidScript(script: string): Promise<void> {
     const graph = this.graph;
     if (!graph) return;
     if (!script || !script.trim()) {
@@ -307,29 +312,25 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
       return;
     }
 
-    // ✅ ล้างข้อมูลเก่าทั้งหมด
-    graph.getDataModel().clear();
-
     try {
-      // นำเข้า Mermaid ลง graph
-      this.mermaidService.parse(script, graph);
-      // emit graphData ใหม่
-      this.emitGraphData();
+      const result = await this.mermaidService.parse(script, graph);
+      // emit graphData
+      this.graphDataChange.emit({ xml: this.toXML() });
     } catch (err) {
       console.error('Failed to import mermaid script:', err);
+      // show error to user (optional)
     }
   }
 
-  // ✅ ฟังก์ชันเรียกจากปุ่ม Import
-  importMermaid(): void {
+  async importMermaid(): Promise<void> {
     if (this.mermaidScript) {
-      this.loadMermaidScript(this.mermaidScript);
+      await this.loadMermaidScript(this.mermaidScript);
     } else {
       console.warn('No Mermaid script available to import');
     }
   }
 
-  // ========== Drag & Drop Methods ==========
+  // ========== Drag & Drop ==========
   private onDragOver(event: DragEvent): void {
     event.preventDefault();
     if (event.dataTransfer) {

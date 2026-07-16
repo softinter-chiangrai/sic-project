@@ -1,6 +1,7 @@
 // src/app/feature/pm/dt/pmdt06/services/mermaid-to-maxgraph.service.ts
 import { Injectable } from '@angular/core';
 import { Cell, Graph } from '@maxgraph/core';
+import * as dagre from '@dagrejs/dagre';
 import type { DiagramType } from '../diagram.model';
 import { parseStyleString, stringifyStyleObject } from '../services/style-utils';
 import type { GraphData } from './maxgraph-editor.service';
@@ -9,6 +10,8 @@ interface MermaidNode {
   id: string;
   label: string;
   shape: string;
+  width?: number;
+  height?: number;
 }
 
 interface MermaidEdge {
@@ -27,7 +30,7 @@ export class MermaidToMaxgraphService {
     const cells: GraphData['cells'] = [];
 
     graph.batchUpdate(() => {
-      // ลบเฉพาะ vertex/edge ใน default layer – ไม่ลบ layer ตัวเอง
+      // ลบเซลล์ทั้งหมดใน default layer
       const parent = graph.getDefaultParent();
       const childCount = parent.getChildCount ? parent.getChildCount() : 0;
       const children: Cell[] = [];
@@ -63,14 +66,14 @@ export class MermaidToMaxgraphService {
 
   private detectType(script: string): DiagramType {
     const firstLine = script.trim().split('\n')[0]?.trim() ?? '';
-    if (/^graph\s+(TD|LR|BT|RL)/i.test(firstLine)) return 'Flowchart';
+    if (/^(graph|flowchart)\s+(TD|LR|BT|RL)/i.test(firstLine)) return 'Flowchart';
     if (/^sequenceDiagram/i.test(firstLine)) return 'Sequence';
     if (/^erDiagram/i.test(firstLine)) return 'ER';
     if (/^classDiagram/i.test(firstLine)) return 'Class';
-    if (/^flowchart\s+(TD|LR|BT|RL)/i.test(firstLine)) return 'Flowchart';
     return 'Flowchart';
   }
 
+  // ==================== FLOWCHART (ใช้ Dagre) ====================
   private parseFlowchart(
     script: string,
     graph: Graph,
@@ -78,16 +81,21 @@ export class MermaidToMaxgraphService {
     cellMap: Map<string, Cell>,
     cells: GraphData['cells'],
   ): void {
+    // 1. อ่านทิศทางจากบรรทัดแรก
+    const firstLine = script.trim().split('\n')[0]?.trim() ?? '';
+    const dirMatch = firstLine.match(/(?:graph|flowchart)\s+(TD|LR|BT|RL)/i);
+    const direction = dirMatch ? dirMatch[1].toUpperCase() : 'TD';
+
+    // 2. แยกบรรทัด
     const lines = script
       .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
     const nodes = new Map<string, MermaidNode>();
     const edges: MermaidEdge[] = [];
-    const direction = script.includes('LR') ? 'LR' : 'TD';
-    const parent = graph.getDefaultParent();
 
-    // ✅ Helper แยกโหนดจากข้อความ (รองรับ [], (), {})
+    // 3. Parser
     const parseNodeDef = (str: string): MermaidNode | null => {
       str = str.trim();
       let match = str.match(/^(\w[\w\d]*)\s*\[([^\]]*)\]/);
@@ -110,10 +118,8 @@ export class MermaidToMaxgraphService {
     };
 
     for (const line of lines) {
-      // ข้ามบรรทัดแรกที่ระบุประเภทกราฟ
       if (/^(graph|flowchart)\s+(TD|LR|BT|RL)/i.test(line)) continue;
 
-      // ✅ ตรวจสอบว่ามีลูกศร (edge) หรือไม่
       const arrowMatch = line.match(/(-->|==>|-.->|=>)/);
       if (arrowMatch) {
         const arrow = arrowMatch[1];
@@ -123,7 +129,6 @@ export class MermaidToMaxgraphService {
           let rightStr = parts[1].trim();
           let edgeLabel = '';
 
-          // ✅ ตรวจสอบป้ายชื่อกลาง Edge (เช่น -->|label|)
           const labelMatch = rightStr.match(/^\s*\|([^|]*)\|\s*(.+)/);
           if (labelMatch) {
             edgeLabel = labelMatch[1];
@@ -134,101 +139,121 @@ export class MermaidToMaxgraphService {
           const targetNode = parseNodeDef(rightStr);
 
           if (sourceNode && targetNode) {
-            if (!nodes.has(sourceNode.id)) {
-              nodes.set(sourceNode.id, sourceNode);
-            }
-            if (!nodes.has(targetNode.id)) {
-              nodes.set(targetNode.id, targetNode);
-            }
+            if (!nodes.has(sourceNode.id)) nodes.set(sourceNode.id, sourceNode);
+            if (!nodes.has(targetNode.id)) nodes.set(targetNode.id, targetNode);
             edges.push({
               from: sourceNode.id,
               to: targetNode.id,
               label: edgeLabel,
-              style: 'orthogonalEdgeStyle',
+              style: 'orthogonalEdgeStyle'
             });
           }
           continue;
         }
       }
 
-      // ✅ ถ้าไม่ใช่ Edge ให้ลองอ่านเป็นโหนดเดี่ยว (ไว้รองรับกรณีที่แยกบรรทัด)
+      // ถ้าไม่ใช่ edge ให้ลอง parse เป็น node เดี่ยว
       const nodeDef = parseNodeDef(line);
       if (nodeDef && !nodes.has(nodeDef.id)) {
         nodes.set(nodeDef.id, nodeDef);
       }
     }
 
-    // ---------- ส่วนวาดโหนดและเส้นเชื่อม (ไม่ต้องแก้) ----------
+    // 4. กำหนดขนาดของแต่ละโหนด (สำหรับ Dagre)
     const nodeArray = Array.from(nodes.values());
-    const spacingX = 180;
-    const spacingY = 100;
-    const startX = 50;
-    const startY = 50;
+    for (const n of nodeArray) {
+      let w = 120, h = 50;
+      if (n.shape === 'diamond') { w = 100; h = 80; }
+      else if (n.shape === 'rounded') { w = 120; h = 50; }
+      n.width = w;
+      n.height = h;
+    }
 
-    for (let i = 0; i < nodeArray.length; i++) {
-      const node = nodeArray[i];
+    // 5. สร้างกราฟ Dagre
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: direction, align: 'UL', nodesep: 40, ranksep: 50 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    // เพิ่มโหนด
+    for (const n of nodeArray) {
+      g.setNode(n.id, { width: n.width, height: n.height });
+    }
+    // เพิ่ม edges
+    for (const e of edges) {
+      g.setEdge(e.from, e.to);
+    }
+
+    // 6. คำนวณ Layout
+    dagre.layout(g);
+
+    // 7. สร้าง Vertex และ Edge ใน mxGraph
+    const parent = graph.getDefaultParent();
+
+    for (const n of nodeArray) {
+      const pos = g.node(n.id);
+      const x = pos.x - (n.width || 120) / 2;
+      const y = pos.y - (n.height || 50) / 2;
+      const w = n.width || 120;
+      const h = n.height || 50;
+
       let style: string;
-      let w = 120;
-      let h = 50;
-
-      switch (node.shape) {
+      switch (n.shape) {
         case 'rounded':
-          style = 'rounded=1;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;';
+          style = 'rounded=1;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;fontColor=#000000;';
           break;
         case 'diamond':
-          style =
-            'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;';
-          w = 100;
-          h = 80;
+          style = 'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;fontColor=#000000;';
           break;
         default:
-          style = 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;';
+          style = 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontColor=#000000;';
           break;
       }
 
-      const x = direction === 'LR' ? startX + i * spacingX : startX + (i % 4) * spacingX;
-      const y = direction === 'LR' ? startY : startY + Math.floor(i / 4) * spacingY;
-
       const styleObj = parseStyleString(style);
-      const cell = graph.insertVertex(parent, node.id, node.label, x, y, w, h, styleObj);
-      cellMap.set(node.id, cell);
+      const cell = graph.insertVertex(parent, n.id, n.label, x, y, w, h, styleObj);
+      cellMap.set(n.id, cell);
       cells.push({
-        id: node.id,
-        label: node.label,
+        id: n.id,
+        label: n.label,
         style: stringifyStyleObject(styleObj),
         geometry: { x, y, width: w, height: h },
-        type: 'vertex',
+        type: 'vertex'
       });
     }
 
-    for (const edge of edges) {
-      const source = cellMap.get(edge.from);
-      const target = cellMap.get(edge.to);
+    // สร้าง edges
+    for (const e of edges) {
+      const source = cellMap.get(e.from);
+      const target = cellMap.get(e.to);
       if (!source || !target) continue;
-      const edgeStyle = `edgeStyle=${edge.style};fontSize=11;`;
+
+      const edgeStyle = `edgeStyle=${e.style};fontSize=11;fontColor=#000000;`;
       const styleObj = parseStyleString(edgeStyle);
-      const edgeId = `edge_${edge.from}_${edge.to}_${Date.now()}_${Math.random()}`;
-      const edgeCell = graph.insertEdge(parent, edgeId, edge.label, source, target, styleObj);
+      const edgeId = `edge_${e.from}_${e.to}_${Date.now()}_${Math.random()}`;
+      const edgeCell = graph.insertEdge(parent, edgeId, e.label, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
       cells.push({
         id: edgeId,
-        label: edge.label,
+        label: e.label,
         style: stringifyStyleObject(styleObj),
         geometry: { x: 0, y: 0, width: 80, height: 40 },
         type: 'edge',
-        source: edge.from,
-        target: edge.to,
+        source: e.from,
+        target: e.to
       });
     }
   }
 
+  // ==================== SEQUENCE (คงเดิม) ====================
   private parseSequence(
     script: string,
     graph: Graph,
-    model: any, // เปลี่ยนจาก GraphDataModel
+    model: any,
     cellMap: Map<string, Cell>,
     cells: GraphData['cells'],
   ): void {
+    // ... (โค้ดเดิม ไม่ต้องแก้)
+    // เนื่องจากไม่มีการเปลี่ยนแปลง ให้คงไว้ตามเดิม
     const lines = script
       .split('\n')
       .map((l) => l.trim())
@@ -295,7 +320,7 @@ export class MermaidToMaxgraphService {
       const x = actorX + i * spacingX;
 
       const actorStyleObj = parseStyleString(
-        'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+        'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontColor=#000000;',
       );
       const actorCell = graph.insertVertex(
         parent,
@@ -317,7 +342,7 @@ export class MermaidToMaxgraphService {
       });
 
       const lfStyleObj = parseStyleString(
-        'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;',
+        'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;fontColor=#000000;',
       );
       const lifelineCell = graph.insertVertex(
         parent,
@@ -345,8 +370,8 @@ export class MermaidToMaxgraphService {
       const target = cellMap.get(`actor_${msg.to}`);
       if (!source || !target) continue;
       const edgeStyle = msg.dashed
-        ? 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;'
-        : 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
+        ? 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;fontColor=#000000;'
+        : 'edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#000000;';
       const styleObj = parseStyleString(edgeStyle);
       const edgeId = `msg_${msg.from}_${msg.to}_${i}`;
       const edgeCell = graph.insertEdge(parent, edgeId, msg.label, source, target, styleObj);
@@ -363,13 +388,15 @@ export class MermaidToMaxgraphService {
     }
   }
 
+  // ==================== ER (คงเดิม) ====================
   private parseER(
     script: string,
     graph: Graph,
-    model: any, // เปลี่ยนจาก GraphDataModel
+    model: any,
     cellMap: Map<string, Cell>,
     cells: GraphData['cells'],
   ): void {
+    // ... (โค้ดเดิม ไม่ต้องแก้)
     const lines = script
       .split('\n')
       .map((l) => l.trim())
@@ -469,7 +496,7 @@ export class MermaidToMaxgraphService {
       const label = ent.attrs.length > 0 ? `${ent.name}\n${ent.attrs.join('\n')}` : ent.name;
       const h = Math.max(50, 30 + ent.attrs.length * 20);
       const styleObj = parseStyleString(
-        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontColor=#000000;',
       );
       const cell = graph.insertVertex(parent, `entity_${ent.name}`, label, x, y, 140, h, styleObj);
       cellMap.set(`entity_${ent.name}`, cell);
@@ -487,7 +514,7 @@ export class MermaidToMaxgraphService {
       const target = cellMap.get(`entity_${rel.to}`);
       if (!source || !target) continue;
       const edgeLabel = `${rel.fromCard}--${rel.label}--${rel.toCard}`;
-      const styleObj = parseStyleString('edgeStyle=orthogonalEdgeStyle;fontSize=11;');
+      const styleObj = parseStyleString('edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#000000;');
       const edgeId = `rel_${rel.from}_${rel.to}_${Date.now()}`;
       const edgeCell = graph.insertEdge(parent, edgeId, edgeLabel, source, target, styleObj);
       cellMap.set(edgeId, edgeCell);
@@ -503,13 +530,15 @@ export class MermaidToMaxgraphService {
     }
   }
 
+  // ==================== CLASS (คงเดิม) ====================
   private parseClass(
     script: string,
     graph: Graph,
-    model: any, // เปลี่ยนจาก GraphDataModel
+    model: any,
     cellMap: Map<string, Cell>,
     cells: GraphData['cells'],
   ): void {
+    // ... (โค้ดเดิม ไม่ต้องแก้)
     const lines = script
       .split('\n')
       .map((l) => l.trim())
@@ -613,7 +642,7 @@ export class MermaidToMaxgraphService {
       const label = body ? `${header}\n${divider}\n${body}` : header;
       const h = Math.max(50, 40 + cls.members.length * 20);
       const styleObj = parseStyleString(
-        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+        'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontColor=#000000;',
       );
       const cell = graph.insertVertex(parent, `class_${cls.name}`, label, x, y, 160, h, styleObj);
       cellMap.set(`class_${cls.name}`, cell);
@@ -631,9 +660,9 @@ export class MermaidToMaxgraphService {
       const target = cellMap.get(`class_${rel.to}`);
       if (!source || !target) continue;
 
-      let edgeStyle = 'edgeStyle=orthogonalEdgeStyle;fontSize=11;';
+      let edgeStyle = 'edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#000000;';
       if (rel.type.includes('..'))
-        edgeStyle = 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;';
+        edgeStyle = 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;fontColor=#000000;';
       if (rel.type.includes('*')) edgeStyle += 'endArrow=openThin;';
       if (rel.type.includes('o')) edgeStyle += 'endFill=0;startFill=0;';
 

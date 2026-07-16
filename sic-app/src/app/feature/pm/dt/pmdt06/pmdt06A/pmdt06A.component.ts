@@ -83,7 +83,6 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   private startPreviewWidth = 0;
   private containerWidth = 0;
 
-  // เก็บ reference ไปยัง Visual Editor
   private visualEditor?: Pmdt06FComponent;
 
   ngOnInit() {
@@ -166,13 +165,10 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     this.autoSave$.next(updated);
   }
 
-  // ✅ Text Mode แก้ไข: อัปเดต mermaidScript โดยไม่ลบ graphData
   onTextDiagramChange(updated: DiagramModel) {
-    // ไม่ต้องลบ graphData เพื่อให้ Visual คงภาพเดิมไว้
     this.updateDiagram(updated);
   }
 
-  // ✅ Visual Mode แก้ไข: อัปเดตเฉพาะ graphData
   onGraphDataChange(data: any) {
     const tab = this.activeTab();
     if (tab) {
@@ -181,15 +177,49 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ✅ เมื่อ Visual Editor พร้อมใช้งาน
   onVisualEditorReady(editor: Pmdt06FComponent) {
     this.visualEditor = editor;
-    // ไม่โหลด Mermaid อัตโนมัติ – รอให้ผู้ใช้กดปุ่ม Import
   }
 
-  // ✅ สลับโหมด Visual/Text โดยไม่โหลดอัตโนมัติ
-  toggleEditorMode() {
-    this.editorMode.update(m => m === 'visual' ? 'text' : 'visual');
+  async toggleEditorMode() {
+    const currentMode = this.editorMode();
+    const tab = this.activeTab();
+
+    if (currentMode === 'text' && tab) {
+      // เปลี่ยนจาก Text -> Visual
+      // ถ้ามี graphData อยู่แล้ว ใช้เลย
+      const hasGraphData = tab.graphData && (
+        typeof tab.graphData === 'string'
+          ? tab.graphData.trim().length > 0
+          : (tab.graphData?.xml && typeof tab.graphData.xml === 'string' && tab.graphData.xml.trim().length > 0)
+      );
+      if (hasGraphData) {
+        // Visual Editor จะโหลด graphData อัตโนมัติผ่าน @Input
+        this.editorMode.set('visual');
+        return;
+      }
+
+      // ถ้าไม่มี graphData แต่มี mermaidScript ให้ถามผู้ใช้
+      if (tab.mermaidScript) {
+        const ok = await this.dialogService.confirm(
+          'No Visual Data',
+          'Do you want to generate visual diagram from current Mermaid script?'
+        );
+        if (ok && this.visualEditor) {
+          await this.visualEditor.loadMermaidScript(tab.mermaidScript);
+          this.editorMode.set('visual');
+        } else {
+          // ไม่อยาก generate ก็ให้อยู่ใน text mode ต่อไป
+          this.editorMode.set('text');
+        }
+      } else {
+        // ไม่มี script และไม่มี graphData
+        this.editorMode.set('visual'); // ไปโหมด visual ว่าง
+      }
+    } else {
+      // เปลี่ยนจาก Visual -> Text (ไม่มีอะไรต้องทำ)
+      this.editorMode.set('text');
+    }
   }
 
   drop(event: CdkDragDrop<DiagramModel[]>) {
@@ -199,7 +229,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
     this.diagramService.reorderTabs(reorder).subscribe();
   }
 
-  handleAiResponse(response: any) {
+  async handleAiResponse(response: any) {
     if (response.action === 'create' && response.diagram) {
       if (!this.projectId) {
         this.dialogService.error('No project', 'Please select a project');
@@ -223,6 +253,10 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
         const updated = { ...current, mermaidScript: response.diagram.script, graphData: null };
         this.updateDiagram(updated);
         if (this.isVisualType()) {
+          // ถ้าเป็น visual type และมี editor ให้โหลด script
+          if (this.visualEditor) {
+            await this.visualEditor.loadMermaidScript(response.diagram.script);
+          }
           this.editorMode.set('visual');
         }
       }
@@ -291,7 +325,7 @@ export class Pmdt06AComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 }
 
-// ===== Dialog Component (ไม่มีการเปลี่ยนแปลง) =====
+// ===== Dialog Component =====
 @Component({
   selector: 'app-create-diagram-dialog',
   standalone: true,

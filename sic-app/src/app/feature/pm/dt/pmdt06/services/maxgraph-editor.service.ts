@@ -1,12 +1,22 @@
 // src/app/feature/pm/dt/pmdt06/services/maxgraph-editor.service.ts
-import { Injectable, inject, NgZone } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, NgZone, inject } from '@angular/core';
 import {
-  Graph, Cell, Geometry, InternalEvent, KeyHandler, UndoManager, UndoableEdit,
-  Codec, Point, Rectangle, Stylesheet
+  Cell,
+  Codec,
+  Geometry,
+  Graph,
+  InternalEvent,
+  KeyHandler,
+  UndoManager,
+  UndoableEdit,
 } from '@maxgraph/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import type { DiagramType } from '../diagram.model';
-import { parseStyleString, stringifyStyleObject, type CellStyleObject } from '../services/style-utils';
+import {
+  parseStyleString,
+  stringifyStyleObject,
+  type CellStyleObject,
+} from '../services/style-utils';
 
 export interface DiagramCellData {
   id: string;
@@ -120,11 +130,7 @@ export class MaxgraphEditorService {
         const children = parent.getChildren ? parent.getChildren() : [];
         const vb = graph.getView().getBounds(children);
         if (vb) {
-          const scale = Math.min(
-            vb.width / b.width,
-            vb.height / b.height,
-            1
-          ) * 0.9;
+          const scale = Math.min(vb.width / b.width, vb.height / b.height, 1) * 0.9;
           graph.zoomTo(scale);
           graph.center();
         }
@@ -170,7 +176,7 @@ export class MaxgraphEditorService {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ): Cell | null {
     const graph = this.graph;
     if (!graph) return null;
@@ -183,7 +189,7 @@ export class MaxgraphEditorService {
     source: Cell | null,
     target: Cell | null,
     label: string,
-    style: string
+    style: string,
   ): Cell | null {
     const graph = this.graph;
     if (!graph) return null;
@@ -232,13 +238,7 @@ export class MaxgraphEditorService {
     });
   }
 
-  updateCellGeometry(
-    cell: Cell,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-  ): void {
+  updateCellGeometry(cell: Cell, x: number, y: number, width: number, height: number): void {
     const graph = this.graph;
     if (!graph) return;
     const model = graph.getDataModel();
@@ -339,7 +339,7 @@ export class MaxgraphEditorService {
           cellData.geometry.x,
           cellData.geometry.y,
           cellData.geometry.width,
-          cellData.geometry.height
+          cellData.geometry.height,
         );
         const styleObj = parseStyleString(cellData.style);
         const cell = new Cell(cellData.label, geo, styleObj);
@@ -393,41 +393,159 @@ export class MaxgraphEditorService {
   getTemplateShapes(type: DiagramType): Partial<DiagramCellData>[] {
     const templates: Record<DiagramType, Partial<DiagramCellData>[]> = {
       Flowchart: [
-        { label: 'Process', style: 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Decision', style: 'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;', geometry: { x: 0, y: 0, width: 100, height: 80 } },
-        { label: 'Start/End', style: 'rounded=1;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Input/Output', style: 'shape=parallelogram;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Document', style: 'shape=document;whiteSpace=wrap;fillColor=#FFF8E1;strokeColor=#F57F17;fontSize=12;', geometry: { x: 0, y: 0, width: 100, height: 60 } },
-        { label: 'Database', style: 'shape=cylinder;whiteSpace=wrap;fillColor=#E0F2F1;strokeColor=#00695C;fontSize=12;', geometry: { x: 0, y: 0, width: 100, height: 60 } },
-        { label: 'Subprocess', style: 'rounded=0;whiteSpace=wrap;fillColor=#FBE9E7;strokeColor=#BF360C;dashed=1;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
+        {
+          label: 'Process',
+          style: 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Decision',
+          style: 'shape=diamond;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 100, height: 80 },
+        },
+        {
+          label: 'Start/End',
+          style: 'rounded=1;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Input/Output',
+          style:
+            'shape=parallelogram;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Document',
+          style:
+            'shape=document;whiteSpace=wrap;fillColor=#FFF8E1;strokeColor=#F57F17;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 100, height: 60 },
+        },
+        {
+          label: 'Database',
+          style:
+            'shape=cylinder;whiteSpace=wrap;fillColor=#E0F2F1;strokeColor=#00695C;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 100, height: 60 },
+        },
+        {
+          label: 'Subprocess',
+          style:
+            'rounded=0;whiteSpace=wrap;fillColor=#FBE9E7;strokeColor=#BF360C;dashed=1;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
       ],
       DFD: [
-        { label: 'Process', style: 'shape=ellipse;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;', geometry: { x: 0, y: 0, width: 80, height: 80 } },
-        { label: 'External Entity', style: 'rounded=0;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Data Store', style: 'shape=datastore;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;', geometry: { x: 0, y: 0, width: 100, height: 60 } },
-        { label: 'Data Flow', style: 'whiteSpace=wrap;fontSize=11;fontColor=#1565C0;', geometry: { x: 0, y: 0, width: 80, height: 40 } },
+        {
+          label: 'Process',
+          style: 'shape=ellipse;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 80, height: 80 },
+        },
+        {
+          label: 'External Entity',
+          style: 'rounded=0;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Data Store',
+          style:
+            'shape=datastore;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 100, height: 60 },
+        },
+        {
+          label: 'Data Flow',
+          style: 'whiteSpace=wrap;fontSize=11;fontColor=#1565C0;',
+          geometry: { x: 0, y: 0, width: 80, height: 40 },
+        },
       ],
       ER: [
-        { label: 'Entity', style: 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Weak Entity', style: 'rounded=0;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Relationship', style: 'shape=diamond;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;', geometry: { x: 0, y: 0, width: 100, height: 80 } },
-        { label: 'Attribute', style: 'shape=ellipse;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;', geometry: { x: 0, y: 0, width: 80, height: 50 } },
-        { label: 'Primary Key', style: 'rounded=0;whiteSpace=wrap;fillColor=#FFF8E1;strokeColor=#F57F17;fontSize=12;fontStyle=4;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'Foreign Key', style: 'rounded=0;whiteSpace=wrap;fillColor=#FBE9E7;strokeColor=#BF360C;dashed=1;fontSize=12;fontStyle=2;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
+        {
+          label: 'Entity',
+          style: 'rounded=0;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Weak Entity',
+          style:
+            'rounded=0;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Relationship',
+          style: 'shape=diamond;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 100, height: 80 },
+        },
+        {
+          label: 'Attribute',
+          style: 'shape=ellipse;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 80, height: 50 },
+        },
+        {
+          label: 'Primary Key',
+          style:
+            'rounded=0;whiteSpace=wrap;fillColor=#FFF8E1;strokeColor=#F57F17;fontSize=12;fontStyle=4;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'Foreign Key',
+          style:
+            'rounded=0;whiteSpace=wrap;fillColor=#FBE9E7;strokeColor=#BF360C;dashed=1;fontSize=12;fontStyle=2;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
       ],
       'Use Case': [
-        { label: 'Actor', style: 'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;', geometry: { x: 0, y: 0, width: 40, height: 60 } },
-        { label: 'Use Case', style: 'shape=ellipse;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;', geometry: { x: 0, y: 0, width: 120, height: 50 } },
-        { label: 'System Boundary', style: 'rounded=0;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;dashed=1;fontSize=12;', geometry: { x: 0, y: 0, width: 200, height: 150 } },
-        { label: 'Include', style: 'edgeStyle=orthogonalEdgeStyle;dashed=0;fontSize=11;', geometry: { x: 0, y: 0, width: 80, height: 40 } },
-        { label: 'Extend', style: 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;', geometry: { x: 0, y: 0, width: 80, height: 40 } },
+        {
+          label: 'Actor',
+          style: 'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 40, height: 60 },
+        },
+        {
+          label: 'Use Case',
+          style: 'shape=ellipse;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 120, height: 50 },
+        },
+        {
+          label: 'System Boundary',
+          style:
+            'rounded=0;whiteSpace=wrap;fillColor=#E8F5E9;strokeColor=#2E7D32;dashed=1;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 200, height: 150 },
+        },
+        {
+          label: 'Include',
+          style: 'edgeStyle=orthogonalEdgeStyle;dashed=0;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 80, height: 40 },
+        },
+        {
+          label: 'Extend',
+          style: 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 80, height: 40 },
+        },
       ],
       Sequence: [
-        { label: 'Actor', style: 'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;', geometry: { x: 0, y: 0, width: 40, height: 60 } },
-        { label: 'Lifeline', style: 'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;', geometry: { x: 0, y: 0, width: 20, height: 200 } },
-        { label: 'Activation', style: 'rounded=0;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=11;', geometry: { x: 0, y: 0, width: 16, height: 60 } },
-        { label: 'Message', style: 'edgeStyle=orthogonalEdgeStyle;fontSize=11;', geometry: { x: 0, y: 0, width: 80, height: 40 } },
-        { label: 'Return Message', style: 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;', geometry: { x: 0, y: 0, width: 80, height: 40 } },
+        {
+          label: 'Actor',
+          style: 'shape=actor;whiteSpace=wrap;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;',
+          geometry: { x: 0, y: 0, width: 40, height: 60 },
+        },
+        {
+          label: 'Lifeline',
+          style:
+            'shape=lifeline;whiteSpace=wrap;fillColor=#FFF3E0;strokeColor=#E65100;dashed=1;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 20, height: 200 },
+        },
+        {
+          label: 'Activation',
+          style: 'rounded=0;whiteSpace=wrap;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 16, height: 60 },
+        },
+        {
+          label: 'Message',
+          style: 'edgeStyle=orthogonalEdgeStyle;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 80, height: 40 },
+        },
+        {
+          label: 'Return Message',
+          style: 'edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=11;',
+          geometry: { x: 0, y: 0, width: 80, height: 40 },
+        },
       ],
       Class: [],
       State: [],
@@ -447,7 +565,7 @@ export class MaxgraphEditorService {
     const stylesheet = graph.getStylesheet();
     const defaultVertex = stylesheet.getDefaultVertexStyle();
     if (defaultVertex) {
-      defaultVertex['fontColor'] = '#333333';
+      defaultVertex['fontColor'] = '#000000';
       defaultVertex['fillColor'] = '#FFFFFF';
       defaultVertex['strokeColor'] = '#424242';
       defaultVertex['fontSize'] = 12;
@@ -456,7 +574,7 @@ export class MaxgraphEditorService {
     const defaultEdge = stylesheet.getDefaultEdgeStyle();
     if (defaultEdge) {
       defaultEdge['strokeColor'] = '#424242';
-      defaultEdge['fontColor'] = '#333333';
+      defaultEdge['fontColor'] = '#000000';
       defaultEdge['fontSize'] = 11;
       defaultEdge['edgeStyle'] = 'orthogonalEdgeStyle';
       defaultEdge['strokeWidth'] = 1.5;
@@ -479,12 +597,24 @@ export class MaxgraphEditorService {
     const keyHandler = new KeyHandler(graph);
     this.keyHandler = keyHandler;
 
-    keyHandler.bindControlKey(90, () => { this.undo(); });
-    keyHandler.bindControlKey(89, () => { this.redo(); });
-    keyHandler.bindControlKey(67, () => { /* graph.copySelection(); */ });
-    keyHandler.bindControlKey(86, () => { /* graph.pasteSelection(); */ });
-    keyHandler.bindControlKey(88, () => { /* graph.cutSelection(); */ });
-    keyHandler.bindControlKey(65, () => { graph.selectAll(); });
+    keyHandler.bindControlKey(90, () => {
+      this.undo();
+    });
+    keyHandler.bindControlKey(89, () => {
+      this.redo();
+    });
+    keyHandler.bindControlKey(67, () => {
+      /* graph.copySelection(); */
+    });
+    keyHandler.bindControlKey(86, () => {
+      /* graph.pasteSelection(); */
+    });
+    keyHandler.bindControlKey(88, () => {
+      /* graph.cutSelection(); */
+    });
+    keyHandler.bindControlKey(65, () => {
+      graph.selectAll();
+    });
 
     keyHandler.bindKey(46, () => {
       const cells = graph.getSelectionCells();
