@@ -18,16 +18,16 @@
         }
       </div>
       <button (click)="generateDiagram()" [disabled]="isGenerating" class="btn-generate">
-  @if (isGenerating) {
-    <span class="flex items-center gap-2">
-      <i class="bi bi-arrow-repeat animate-spin"></i> Generating...
-    </span>
-  } @else {
-    <span class="flex items-center gap-2">
-      <i class="bi bi-magic"></i> Generate
-    </span>
-  }
-</button>
+        @if (isGenerating) {
+          <span class="flex items-center gap-2">
+            <i class="bi bi-arrow-repeat animate-spin"></i> Generating...
+          </span>
+        } @else {
+          <span class="flex items-center gap-2">
+            <i class="bi bi-magic"></i> Generate
+          </span>
+        }
+      </button>
     </div>
 
     <div class="actions">
@@ -52,15 +52,15 @@
     <div class="status-left">
       <span class="status-dot" [class.ready]="drawioReady"></span>
       <span class="status-text">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
-    </div>
-    <div class="status-center">
+      <!-- ✅ เอา project badge ไปไว้ข้างๆ status -->
       @if (projectName) {
         <span class="project-badge">
-          <i class="bi bi-folder-fill"></i>
+          <i class="bi bi-folder"></i>
           {{ projectName }}
         </span>
       }
     </div>
+    <!-- เอาส่วน status-center ออก -->
     <div class="status-right">
       @if (currentTabId) {
         <span class="tab-id">#{{ currentTabId | slice:0:8 }}</span>

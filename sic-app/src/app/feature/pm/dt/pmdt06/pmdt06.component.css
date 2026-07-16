@@ -102,42 +102,45 @@
   transform: scale(1.1);
 }
 
+/* ===== ปุ่ม Generate (สีเดียวกับปุ่มอื่น) ===== */
 .btn-generate {
   padding: 10px 28px;
-  background: linear-gradient(135deg, var(--crm-primary, #1a73e8), #6c5ce7);
-  color: #fff;
-  border: none;
+  background: var(--sidebar, #f6f8fa);
+  color: var(--text-active, #1e293b);
+  border: 1.5px solid var(--border, #d0d7de);
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-width: 130px;
-  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
+  box-shadow: none;
 }
 
 .btn-generate:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.35);
+  background: var(--sidebar-hover, #e1e4e8);
+  transform: translateY(-1px);
+  border-color: var(--crm-primary, #1a73e8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .btn-generate:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
 }
 
 .btn-generate:disabled {
-  background: #a0b8d6;
+  background: #e9ecef;
   cursor: not-allowed;
-  opacity: 0.7;
-  box-shadow: none;
+  opacity: 0.6;
+  border-color: var(--border, #d0d7de);
 }
 
+/* ===== ปุ่มอื่น ๆ ===== */
 .actions {
   display: flex;
   gap: 10px;
@@ -166,7 +169,7 @@
 }
 
 .btn-chat {
-  background: var(--bg, #f8f9fa);
+  background: var(--sidebar, #f6f8fa);
   border-color: var(--border, #d0d7de);
 }
 
@@ -234,7 +237,8 @@
 .status-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex: 1;
 }
 
 .status-dot {
@@ -253,42 +257,38 @@
 .status-text {
   font-weight: 500;
   font-size: 12px;
+  color: var(--text-active, #1e293b);
 }
 
-.status-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: center;
-}
-
+/* ✅ project badge อยู่ถัดจาก status-text */
 .project-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--crm-primary, #1a73e8);
-  color: #fff;
-  padding: 2px 14px;
-  border-radius: 20px;
+  gap: 4px;
+  color: var(--text-muted, #6c757d);
   font-size: 12px;
-  font-weight: 600;
-  line-height: 22px;
-  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.15);
+  font-weight: 400;
+  background: transparent;
+  padding: 0 6px;
+  border: none;
   white-space: nowrap;
-  max-width: 300px;
+  max-width: 250px;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-left: 1px solid var(--border, #d0d7de);
+  padding-left: 10px;
 }
 
 .project-badge i {
   font-size: 12px;
+  color: var(--text-muted, #6c757d);
 }
 
 .status-right {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .tab-id {
