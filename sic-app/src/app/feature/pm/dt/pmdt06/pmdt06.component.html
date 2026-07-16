@@ -2,32 +2,111 @@
   <!-- Toolbar -->
   <div class="toolbar">
     <div class="ai-section">
-      <textarea
-        [(ngModel)]="aiPrompt"
-        placeholder="Describe your diagram... (e.g., 'Create an e-commerce order flow')"
-        rows="1"
-        class="ai-input"
-      >
-      </textarea>
+      <div class="ai-input-wrapper">
+        <i class="bi bi-stars ai-icon"></i>
+        <textarea
+          [(ngModel)]="aiPrompt"
+          placeholder="Describe your diagram... (e.g., 'Create an e-commerce order flow')"
+          rows="1"
+          class="ai-input"
+          (keydown.enter)="onEnterKey($event)"
+        ></textarea>
+        @if (aiPrompt.length > 0) {
+          <button (click)="clearPrompt()" class="clear-btn" title="Clear">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        }
+      </div>
       <button (click)="generateDiagram()" [disabled]="isGenerating" class="btn-generate">
-        {{ isGenerating ? '⏳ Generating...' : '✨ Generate with AI' }}
+  @if (isGenerating) {
+    <span class="flex items-center gap-2">
+      <i class="bi bi-arrow-repeat animate-spin"></i> Generating...
+    </span>
+  } @else {
+    <span class="flex items-center gap-2">
+      <i class="bi bi-magic"></i> Generate
+    </span>
+  }
+</button>
+    </div>
+
+    <div class="actions">
+      <button (click)="toggleChat()" class="btn-chat" title="AI Chat History">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span>Chat</span>
+        @if (unreadCount > 0) {
+          <span class="badge">{{ unreadCount }}</span>
+        }
+      </button>
+      <button (click)="saveDiagram()" class="btn-save" title="Save diagram">
+        <i class="bi bi-check-circle-fill"></i> Save
+      </button>
+      <button (click)="loadExistingDiagram()" class="btn-load" title="Reload from server">
+        <i class="bi bi-arrow-repeat"></i> Reload
       </button>
     </div>
-    <div class="actions">
-      <button (click)="saveDiagram()" class="btn-save">💾 Save</button>
-      <button (click)="loadExistingDiagram()" class="btn-load">🔄 Reload</button>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-left">
+      <span class="status-dot" [class.ready]="drawioReady"></span>
+      <span class="status-text">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
+    </div>
+    <div class="status-center">
+      @if (projectName) {
+        <span class="project-badge">
+          <i class="bi bi-folder-fill"></i>
+          {{ projectName }}
+        </span>
+      }
+    </div>
+    <div class="status-right">
+      @if (currentTabId) {
+        <span class="tab-id">#{{ currentTabId | slice:0:8 }}</span>
+      }
     </div>
   </div>
 
   <!-- Draw.io Editor -->
   <div class="editor-container">
+    @if (isLoading) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <span>Loading diagram…</span>
+      </div>
+    }
     <iframe
       #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1"
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&save=0&noSave=1"
       width="100%"
       height="100%"
       frameborder="0"
-    >
-    </iframe>
+      allowfullscreen
+    ></iframe>
   </div>
+
+  <!-- Chat Sidebar -->
+  <div class="chat-sidebar" [class.open]="chatOpen()">
+    <div class="chat-sidebar-header">
+      <span class="flex items-center gap-2">
+        <i class="bi bi-robot text-[var(--crm-primary)]"></i>
+        AI Assistant
+      </span>
+      <button (click)="toggleChat()" class="close-btn" title="Close chat">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="chat-sidebar-body">
+      <app-pmdt06c
+        [diagramId]="currentTabId"
+        (aiResponse)="handleAiResponse($event)"
+      ></app-pmdt06c>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  @if (chatOpen()) {
+    <div class="chat-overlay" (click)="toggleChat()"></div>
+  }
 </div>
