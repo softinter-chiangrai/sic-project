@@ -1,98 +1,118 @@
-// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
-
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { ThemeService } from '../../../../core/services/theme.service';
-import type { DiagramProject } from './diagram.model';
-import { DiagramService } from './diagram.service';
-import { Pmdt06AComponent } from './pmdt06A/pmdt06A.component';
+import { AfterViewInit, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { filter, take } from 'rxjs/operators';
+import { AiDiagramService } from './ai-diagram.service';
+import { DrawioConnectorService } from './drawio-connector.service';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
-  imports: [CommonModule, Pmdt06AComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './pmdt06.component.html',
   styleUrls: ['./pmdt06.component.css'],
 })
-export class Pmdt06Component implements OnInit, OnDestroy {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private diagramService = inject(DiagramService);
-  private themeService = inject(ThemeService);
-  private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
-  private destroy$ = new Subject<void>();
+export class Pmdt06Component implements AfterViewInit {
+  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
 
-  currentProject = signal<DiagramProject | null>(null);
-  isDark = signal(false);
-  isLoading = signal(true);
-  projectId = signal<string | null>(null);
+  aiPrompt = '';
+  isGenerating = false;
+  isLoading = false;
+  currentTabId: string | null = null;
+  projectId: string | null = null;
 
-  ngOnInit() {
-    this.isDark.set(this.themeService.isDark());
+  constructor(
+    private drawioService: DrawioConnectorService,
+    private aiService: AiDiagramService,
+    private route: ActivatedRoute,
+  ) {}
 
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      let projectId = params['projectId'] || this.customerState.getProjectId();
-      let projectName = params['projectName'] || this.customerState.getProjectName() || '';
+  ngAfterViewInit(): void {
 
-      if (!projectId) {
-        this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้').then(() => {
-          this.router.navigate(['/feature/pm/pmrt02']);
-        });
-        return;
-      }
+    this.drawioService.init(
+        this.iframe.nativeElement
+    );
 
-      this.projectId.set(projectId);
-      this.isLoading.set(true);
+    this.drawioService.isReady$
+      .subscribe(ready => {
 
-      // โหลด tabs เพื่อเช็คว่า projectId นี้มีอยู่จริง
-      this.diagramService.getTabs(projectId).subscribe({
-        next: (tabs) => {
-          // ✅ ดึง projectName จาก response ถ้ามี
-          const projectNameFromApi = tabs.length > 0 ? tabs[0].projectName : null;
-          const finalProjectName = projectNameFromApi || projectName || 'โครงการ';
+        console.log('READY STATUS:', ready);
 
-          this.currentProject.set({
-            id: projectId,
-            name: finalProjectName, // ← ใช้ค่าจาก API
-            isFavorite: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          this.isLoading.set(false);
-          console.error('Load tabs error:', err);
-          const msg = err.error?.message || err.message || 'ไม่พบโครงการนี้ในระบบ';
-          this.dialog.error('ไม่พบโครงการ', msg).then(() => {
-            this.router.navigate(['/feature/pm/pmrt02']);
-          });
-        },
       });
+
+}
+
+  // รับ Message จาก Draw.io
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent) {
+    this.drawioService.handleMessage(event);
+  }
+
+  // กดปุ่ม Generate ด้วย AI
+  generateDiagram() {
+    if (!this.aiPrompt.trim()) return;
+    this.isGenerating = true;
+
+    this.aiService.generateMermaid(this.aiPrompt).subscribe({
+      next: (res) => {
+        console.log('AI Mermaid:', res.mermaid);
+        // ส่ง Mermaid ไปให้ Draw.io โหลดเลย
+        this.drawioService.loadMermaid(res.mermaid);
+        this.isGenerating = false;
+      },
+      error: (err) => {
+        console.error(err);
+        alert('AI generation failed!');
+        this.isGenerating = false;
+      },
     });
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+  // โหลด Diagram จาก Database
+  loadExistingDiagram() {
+    if (!this.currentTabId) return;
+    this.isLoading = true;
+    this.aiService.loadDiagram(this.currentTabId).subscribe({
+      next: (res) => {
+        if (res.xml) {
+          this.drawioService.loadXml(res.xml);
+        } else {
+          // If the record exists but has no XML yet, load empty string to clear loading screen
+          this.drawioService.loadXml('');
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        // In case of error, load empty diagram so it doesn't spin forever
+        this.drawioService.loadXml('');
+      },
+    });
   }
 
-  toggleTheme() {
-    this.themeService.toggleDark();
-    this.isDark.set(this.themeService.isDark());
-  }
-
-  goBack() {
-    const projectId = this.projectId();
-    if (projectId) {
-      this.router.navigate(['/feature/pm/pmrt03'], { queryParams: { projectId } });
-    } else {
-      this.router.navigate(['/feature/pm/pmrt02']);
+  // บันทึก Diagram ปัจจุบัน
+  saveDiagram() {
+    if (!this.currentTabId) {
+      alert('Cannot save: No diagram ID is loaded.');
+      return;
     }
+
+    // ขอ XML จาก Draw.io
+    this.drawioService.requestXml();
+
+    // ปรับตรงนี้: ดักรับแค่ครั้งเดียว (take 1) เพื่อไม่ให้บั๊กเวลายูสเซอร์กดปุ่มเซฟรัวๆ
+    this.drawioService.xml$.pipe(take(1)).subscribe((xml) => {
+      if (xml && this.currentTabId) {
+        this.aiService.saveDiagram(this.currentTabId, xml).subscribe({
+          next: () => {
+            alert('Diagram saved successfully!');
+          },
+          error: () => {
+            alert('Save failed!');
+          },
+        });
+      }
+    });
   }
 }

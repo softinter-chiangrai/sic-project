@@ -1,39 +1,33 @@
-<!-- src/app/feature/pm/dt/pmdt06/pmdt06.component.html -->
-<div class="h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
-  <!-- Top Navbar -->
-  <header class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <button (click)="goBack()" class="p-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] transition-colors">
-        <i class="bi bi-arrow-left text-lg"></i>
-      </button>
-      <div class="flex items-center gap-2">
-        <h1 class="text-lg font-bold text-[var(--crm-primary)]">AI Diagram Studio</h1>
-        <span class="text-xs text-[var(--text-muted)]">v2.0</span>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <!-- Project Selector -->
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm bg-[var(--bg)]">
-        <i class="bi bi-folder text-[var(--text-muted)]"></i>
-        <span class="font-medium">{{ currentProject()?.name || 'Select Project' }}</span>
-      </div>
-
-      <button (click)="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--sidebar-hover)] transition-colors" title="Toggle theme">
-        <i class="bi text-lg" [class.bi-moon]="!isDark()" [class.bi-sun]="isDark()"></i>
+<div class="pmdt06-wrapper">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="ai-section">
+      <textarea
+        [(ngModel)]="aiPrompt"
+        placeholder="Describe your diagram... (e.g., 'Create an e-commerce order flow')"
+        rows="1"
+        class="ai-input"
+      >
+      </textarea>
+      <button (click)="generateDiagram()" [disabled]="isGenerating" class="btn-generate">
+        {{ isGenerating ? '⏳ Generating...' : '✨ Generate with AI' }}
       </button>
     </div>
-  </header>
-
-  <!-- Workspace -->
-  @if (!isLoading() && currentProject()) {
-    <app-pmdt06A [projectId]="projectId()!" />
-  } @else {
-    <div class="flex-1 flex items-center justify-center">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-        <p class="text-sm text-[var(--text-muted)]">กำลังโหลด...</p>
-      </div>
+    <div class="actions">
+      <button (click)="saveDiagram()" class="btn-save">💾 Save</button>
+      <button (click)="loadExistingDiagram()" class="btn-load">🔄 Reload</button>
     </div>
-  }
+  </div>
+
+  <!-- Draw.io Editor -->
+  <div class="editor-container">
+    <iframe
+      #drawioIframe
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1"
+      width="100%"
+      height="100%"
+      frameborder="0"
+    >
+    </iframe>
+  </div>
 </div>

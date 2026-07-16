@@ -1,5 +1,129 @@
-/* src/app/features/pmdt06/pmdt06.component.css */
-:host {
-  display: block;
+.pmdt06-wrapper {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
+  width: 100%;
+  background: #f0f2f5;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-section {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  min-width: 300px;
+}
+
+.ai-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.ai-input:focus {
+  outline: none;
+  border-color: #4d90fe;
+  box-shadow: 0 0 0 3px rgba(77, 144, 254, 0.2);
+}
+
+.btn-generate {
+  padding: 10px 24px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-generate:hover:not(:disabled) {
+  background: #1557b0;
+}
+
+.btn-generate:disabled {
+  background: #a0b8d6;
+  cursor: not-allowed;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  padding: 10px 18px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-save {
+  background: #2da44e;
+  color: white;
+  border-color: #2da44e;
+}
+
+.btn-save:hover {
+  background: #22863a;
+}
+
+.btn-load {
+  background: #f6f8fa;
+}
+
+.btn-load:hover {
+  background: #e1e4e8;
+}
+
+/* Editor */
+.editor-container {
+  flex: 1;
+  position: relative;
+  background: white;
+}
+
+iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ai-section {
+    flex-wrap: wrap;
+  }
+  .btn-generate {
+    width: 100%;
+  }
 }
