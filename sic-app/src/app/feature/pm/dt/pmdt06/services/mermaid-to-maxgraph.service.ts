@@ -5,6 +5,7 @@ import * as dagre from '@dagrejs/dagre';
 import type { DiagramType } from '../diagram.model';
 import { parseStyleString, stringifyStyleObject } from '../services/style-utils';
 import type { GraphData } from './maxgraph-editor.service';
+import { parse } from '@mermaid-js/parser';
 
 interface MermaidNode {
   id: string;
