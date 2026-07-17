@@ -23976,6 +23976,141 @@ public class S3Config {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/ex/ExExampleController.java">
+package com.softinter.sicapi.controller.ex;
+
+import com.softinter.sicapi.dto.request.*;
+import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.entity.ex.ExExample;
+import com.softinter.sicapi.repository.ex.ExExampleRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/ex/examples")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Example", description = "Example CRUD API")
+public class ExExampleController {
+
+    private final ExExampleRepository exampleRepository;
+
+    @GetMapping
+    @Operation(summary = "Get all examples")
+    public ResponseEntity<List<ExExample>> getAll() {
+        List<ExExample> examples = exampleRepository.findByIsDeleteFalse();
+        return ResponseEntity.ok(examples);
+    }
+
+    @GetMapping("/paging")
+    @Operation(summary = "Get examples with pagination")
+    public ResponseEntity<PaginationResponse<ExExample>> paging(
+            @Valid @ModelAttribute ExamplePageRequest request) {
+        
+        Pageable pageable = PageRequest.of(
+                request.getPageNumber() - 1,
+                request.getPageSize(),
+                Sort.by("createdDate").descending());
+
+        Specification<ExExample> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("isDelete"), false));
+            if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+                String keyword = "%" + request.getKeyword().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("exampleCode")), keyword),
+                        cb.like(cb.lower(root.get("messageEn")), keyword)
+                ));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<ExExample> page = exampleRepository.findAll(spec, pageable);
+
+        PaginationResponse<ExExample> response = new PaginationResponse<>();
+        response.setData(page.getContent());
+        
+        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
+        pageableDto.setPageNumber(request.getPageNumber());
+        pageableDto.setPageSize(request.getPageSize());
+        pageableDto.setTotalElements(page.getTotalElements());
+        pageableDto.calculateTotalPages();
+        response.setPageable(pageableDto);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/lov")
+    @Operation(summary = "Get example LOV")
+    public ResponseEntity<List<LovResponse>> lov() {
+        List<LovResponse> lov = exampleRepository.findByIsDeleteFalse()
+                .stream()
+                .map(e -> new LovResponse(e.getId(), e.getExampleCode()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(lov);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get example by ID")
+    public ResponseEntity<ExExample> getById(@PathVariable UUID id) {
+        ExExample example = exampleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Example not found"));
+        return ResponseEntity.ok(example);
+    }
+
+    @PostMapping("/save")
+    @Operation(summary = "Save example")
+    public ResponseEntity<UUID> save(@RequestBody ExExample request) {
+        ExExample example;
+        if (request.getId() != null) {
+            example = exampleRepository.findById(request.getId())
+                    .orElseThrow(() -> new RuntimeException("Example not found"));
+        } else {
+            example = new ExExample();
+        }
+        example.setExampleCode(request.getExampleCode());
+        example.setMessageEn(request.getMessageEn());
+        example.setMessageLocal(request.getMessageLocal());
+        example.setStartDate(request.getStartDate());
+        example.setEndDate(request.getEndDate());
+        example.setStartTime(request.getStartTime());
+        example.setEndTime(request.getEndTime());
+        example.setIsAccept(request.getIsAccept());
+        example.setColor(request.getColor());
+        example.setCountryCode(request.getCountryCode());
+        example.setTotal(request.getTotal());
+        example.setUploadGroupId(request.getUploadGroupId());
+        example.setIsActive(request.getIsActive());
+        exampleRepository.save(example);
+        return ResponseEntity.ok(example.getId());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete example")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        ExExample example = exampleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Example not found"));
+        example.setIsDelete(true);
+        example.setIsActive(false);
+        exampleRepository.save(example);
+        return ResponseEntity.ok().build();
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/BaseController.java">
 package com.softinter.sicapi.controller;
 
@@ -24122,6 +24257,21 @@ public class CompleteUploadSessionRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CreateGroupRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class CreateGroupRequest {
+    private String Name;
+    private String groupDescription;
+    private List<String> memberUserIds;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/DeleteMessageRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -24130,6 +24280,20 @@ import lombok.Data;
 @Data
 public class DeleteMessageRequest {
     private String deleteBy;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/DeleteRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class DeleteRequest {
+    private UUID id;
+    private Integer rowVersion;
 }
 </file>
 
@@ -24222,6 +24386,41 @@ public class SaveMessageRequest {
     private Boolean isActive;
     private String createdBy;
     private String updatedBy;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveUserBusinessRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveUserBusinessRequest {
+    private UUID id;
+    private String userId;
+    private UUID businessId;
+    private boolean isActive = true;
+    private boolean isDefault = false;
+    private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveUserBusinessRoleRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveUserBusinessRoleRequest {
+    private UUID id;
+    private UUID userBusinessId;
+    private UUID businessRoleId;
+    private boolean isActive = true;
+    private Integer rowVersion;
 }
 </file>
 
@@ -24431,6 +24630,26 @@ public class ChatGroupMessageResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChatGroupResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class ChatGroupResponse {
+    private UUID id;
+    private String Name;
+    private String groupDescription;
+    private String createdByUserId;
+    private List<ChatMemberResponse> members;
+    private Instant createdDate;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChatMemberResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -24501,6 +24720,25 @@ import lombok.Data;
 public class I18nMessageResponse {
     private String messageCode;
     private String message;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MessageResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class MessageResponse {
+    private UUID id;
+    private String module;
+    private String messageKey;
+    private String messageEn;
+    private String messageLocal;
+    private boolean isActive;
+    private Integer rowVersion;
 }
 </file>
 
@@ -24597,6 +24835,47 @@ public class UploadSessionResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserBusinessResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class UserBusinessResponse {
+    private UUID id;
+    private String userId;
+    private UUID businessId;
+    private String businessCode;
+    private String businessName;
+    private boolean isActive;
+    private boolean isDefault;
+    private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserBusinessRoleResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class UserBusinessRoleResponse {
+    private UUID id;
+    private UUID userBusinessId;
+    private String userId;
+    private UUID businessId;
+    private UUID businessRoleId;
+    private String businessRoleCode;
+    private String businessRoleName;
+    private boolean isActive;
+    private Integer rowVersion;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserTaskResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -24618,6 +24897,26 @@ public class UserTaskResponse {
     private Instant completedAt;
     private boolean isCompleted;
     private boolean isActive;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/VerifyTokenResponse.java">
+// VerifyTokenResponse.java
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+import java.time.Instant;
+
+@Data
+public class VerifyTokenResponse {
+    private String verifyType;             
+    private String referenceNumber;   
+    private Integer expirationMinutes; 
+    private Integer maxRetry;          
+    private String recipient;          
+    private Boolean valid;             
+    private Instant expiresAt;         
+    private String message;            
 }
 </file>
 
@@ -24810,6 +25109,68 @@ public class DbMailConfig extends BaseEntity {
 
     @OneToMany(mappedBy = "mailConfig") // assuming DbMailQueue has a field 'mailConfig'
     private List<DbMailQueue> mailQueues = new ArrayList<>();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/db/DbMailQueue.java">
+package com.softinter.sicapi.entity.db;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "db_mail_queue")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class DbMailQueue extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id", nullable = false)
+    private DbMailTemplate mailTemplate;
+
+    @Column(name = "recipient_email", nullable = false, length = 255)
+    private String recipientEmail;
+
+    @Column(name = "recipient_name", length = 255)
+    private String recipientName;
+
+    @Column(name = "body_data", columnDefinition = "TEXT")
+    private String bodyData;
+
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "Pending";
+
+    @Column(name = "retry_count")
+    private Integer retryCount = 0;
+
+    @Column(name = "error_message", length = 500)
+    private String errorMessage;
+
+    @Column(name = "scheduled_at")
+    private Instant scheduledAt;
+
+    @Column(name = "sent_at")
+    private Instant sentAt;
+
+    @Column(name = "next_retry_at")
+    private Instant nextRetryAt;
+
+    @Column(name = "used_config_id")
+    private UUID usedConfigId;
+
+    @Column(name = "use_english")
+    private Boolean useEnglish = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "\"DbMailConfigId\"")
+    private DbMailConfig mailConfig;
 }
 </file>
 
@@ -25209,6 +25570,64 @@ public class SuBusiness extends BaseEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroupCallParticipant.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_chat_group_call_participant")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuChatGroupCallParticipant extends BaseEntity {
+
+    @Column(name = "log_id", nullable = false)
+    private UUID logId;
+
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroup.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.base.BaseEntity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "su_chat_group")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuChatGroup extends BaseEntity {
+
+    @Column(name = "name", nullable = false, length = 200)
+    private String name;
+
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
+    private List<SuChatGroupMember> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
+    private List<SuChatGroupLog> messages = new ArrayList<>();
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroupLog.java">
 package com.softinter.sicapi.entity.su;
 
@@ -25266,6 +25685,39 @@ public class SuChatGroupLog extends BaseBusinessEntity {
     @JoinColumn(name = "attachment_id")
     private SuUpload attachment;
 
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroupMember.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_chat_group_member")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuChatGroupMember extends BaseBusinessEntity {
+
+    @Column(name = "group_id", insertable = false, updatable = false)
+    private UUID groupId;
+
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    private SuChatGroup group;
+
+    
 }
 </file>
 
@@ -25383,6 +25835,155 @@ public class SuMessage extends BaseEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuProfile.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.db.*;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_profile",
+       indexes = {
+           @Index(name = "idx_user_id", columnList = "user_id", unique = true)
+       })
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuProfile extends BaseEntity {
+
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
+
+    @Column(name = "tax_id", length = 30)
+    private String taxId;
+
+    // Foreign key fields (mirror, read-only)
+    @Column(name = "title_id", nullable = false, insertable = false, updatable = false)
+    private UUID titleId;
+
+    @Column(name = "country_id", insertable = false, updatable = false)
+    private UUID countryId;
+
+    @Column(name = "province_id", insertable = false, updatable = false)
+    private UUID provinceId;
+
+    @Column(name = "district_id", insertable = false, updatable = false)
+    private UUID districtId;
+
+    @Column(name = "sub_district_id", insertable = false, updatable = false)
+    private UUID subDistrictId;
+
+    // Navigation properties (own the foreign key columns)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "title_id", nullable = false)
+    private DbTitle title;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private DbCountry country;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "province_id")
+    private DbProvince province;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "district_id")
+    private DbDistrict district;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_district_id")
+    private DbSubDistrict subDistrict;
+
+    // Other fields
+    @Column(name = "first_name_en", nullable = false, length = 100)
+    private String firstNameEn;
+
+    @Column(name = "middle_name_en", length = 100)
+    private String middleNameEn;
+
+    @Column(name = "last_name_en", length = 100)
+    private String lastNameEn;
+
+    @Column(name = "first_name_local", nullable = false, length = 100)
+    private String firstNameLocal;
+
+    @Column(name = "middle_name_local", length = 100)
+    private String middleNameLocal;
+
+    @Column(name = "last_name_local", length = 100)
+    private String lastNameLocal;
+
+    @Column(name = "support_local_address", nullable = false)
+    private Boolean supportLocalAddress = false;
+
+    @Column(name = "address_en", length = 255)
+    private String addressEn;
+
+    @Column(name = "address_local", length = 255)
+    private String addressLocal;
+
+    @Column(name = "zip_code", length = 20)
+    private String zipCode;
+
+    @Column(name = "email", nullable = false, length = 320)
+    private String email;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "upload_group_id")
+    private UUID uploadGroupId;
+
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuTask.java">
+package com.softinter.sicapi.entity.su;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "su_task")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuTask extends BaseBusinessEntity{
+
+    @Column(name = "task_code", nullable = false, length = 20)
+    private String taskCode;
+
+    @Column(name = "task_name_en", length = 255)
+    private String taskNameEn;
+
+    @Column(name = "task_name_local", length = 255)
+    private String taskNameLocal;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY)
+    private List<SuUserTask> userTasks = new ArrayList<>();
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuUpload.java">
 package com.softinter.sicapi.entity.su;
 
@@ -25450,6 +26051,48 @@ public class SuUpload extends BaseEntity {
 
     @Column(name = "temp_expires_at")
     private Instant tempExpiresAt;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuUserBusiness.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_user_business",
+       indexes = {
+           @Index(name = "idx_user_business", columnList = "user_id, business_id", unique = true)
+       })
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuUserBusiness extends BaseBusinessEntity {
+
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_id", insertable = false, updatable = false)
+    private SuBusiness business;
+
+    @Column(name = "is_default", nullable = false)
+    private Boolean isDefault = false;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @OneToMany(mappedBy = "userBusiness", fetch = FetchType.LAZY)
+    private List<SuUserBusinessRole> userBusinessRoles = new ArrayList<>();
 }
 </file>
 
@@ -25536,6 +26179,48 @@ public class SuUserTask extends BaseBusinessEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuVerify.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "su_verify")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuVerify extends BaseEntity {
+
+    @Column(name = "verify_type", nullable = false, length = 100)
+    private String verifyType;
+
+    @Column(name = "reference_number", nullable = false, length = 300)
+    private String referenceNumber;
+
+    @Column(name = "token", nullable = false, length = 300)
+    private String token;
+
+    @Column(name = "max_retry", nullable = false)
+    private Integer maxRetry = 5;
+
+    @Column(name = "retry_count", nullable = false)
+    private Integer retryCount = 0;
+
+    @Column(name = "expire_at", nullable = false)
+    private Instant expireAt;
+
+    @Column(name = "recipient", nullable = false, length = 255)
+    private String recipient;
+    
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/exception/ResourceNotFoundException.java">
 package com.softinter.sicapi.exception;
 
@@ -25599,6 +26284,128 @@ public interface DbMailTemplateRepository extends JpaRepository<DbMailTemplate, 
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/ex/ExExampleRepository.java">
+package com.softinter.sicapi.repository.ex;
+
+import com.softinter.sicapi.entity.ex.ExExample;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface ExExampleRepository extends JpaRepository<ExExample, UUID>, JpaSpecificationExecutor<ExExample> {
+    List<ExExample> findByIsDeleteFalse();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/findByInviteTokenAndIsDeleteFalse.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuBusinessInvite;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface findByInviteTokenAndIsDeleteFalse extends JpaRepository<SuBusinessInvite, UUID> {
+    Optional<SuBusinessInvite> findByInviteTokenAndIsDeleteFalse(String inviteToken);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupLogRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuChatGroupLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuChatGroupLogRepository extends JpaRepository<SuChatGroupLog, UUID> {
+    List<SuChatGroupLog> findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(UUID groupId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupMemberRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuChatGroupMember;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuChatGroupMemberRepository extends JpaRepository<SuChatGroupMember, UUID> {
+    List<SuChatGroupMember> findByGroupIdAndIsDeleteFalse(UUID groupId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuChatGroup;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuChatGroupRepository extends JpaRepository<SuChatGroup, UUID> {
+
+  
+    @Query("SELECT DISTINCT cg FROM SuChatGroup cg " +
+       "LEFT JOIN FETCH cg.members m " +
+       "WHERE m.userId = :userId " +
+       "AND cg.isDelete = false " +
+       "AND m.isDelete = false")
+    List<SuChatGroup> findByMemberUserId(@Param("userId") String userId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatLogRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuChatLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuChatLogRepository extends JpaRepository<SuChatLog, UUID> {
+
+   
+    @Query("SELECT c FROM SuChatLog c WHERE " +
+           "((c.senderId = :userId1 AND c.receiverId = :userId2) OR (c.senderId = :userId2 AND c.receiverId = :userId1)) " +
+           "AND c.isDelete = false ORDER BY c.createdDate")
+    List<SuChatLog> findChatHistory(@Param("userId1") String userId1, @Param("userId2") String userId2);
+
+   
+    @Query("SELECT c FROM SuChatLog c WHERE c.receiverId = :userId AND c.isRead = false AND c.isDelete = false")
+    List<SuChatLog> findUnreadMessages(@Param("userId") String userId);
+
+    @Modifying
+    @Query("UPDATE SuChatLog c SET c.isRead = true WHERE c.senderId = :senderId AND c.receiverId = :receiverId AND c.isRead = false")
+    int markAsRead(@Param("senderId") String senderId, @Param("receiverId") String receiverId);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuMessageRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -25620,6 +26427,64 @@ public interface SuMessageRepository extends JpaRepository<SuMessage, UUID> {
 
     // 🌟 เพิ่มเมธอดนี้เข้าไป เพื่อให้ฝั่ง Service เรียกใช้
     List<SuMessage> findByModuleCodeAndIsDeleteFalseOrderByMessageCode(String moduleCode);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuTaskRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuTask;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuTaskRepository extends JpaRepository<SuTask, UUID> {
+    // ค้นหา task ที่ active (is_active = true)
+    List<SuTask> findByIsActiveTrue();
+    
+    // ค้นหา task ที่ active และไม่ถูกลบ
+    List<SuTask> findByIsActiveTrueAndIsDeleteFalse();
+    
+    // ค้นหา task ตาม business_id (ถ้ามี business_id ใน entity)
+    List<SuTask> findByBusinessIdAndIsActiveTrue(UUID businessId);
+    
+    // ค้นหา task ตาม task_code
+    List<SuTask> findByTaskCode(String taskCode);
+    
+    // ค้นหา task ที่ active เรียงตาม created_date (ใช้แทน sort_order)
+    List<SuTask> findByIsActiveTrueOrderByCreatedDateAsc();
+    
+    // ค้นหา task ที่ active เรียงตาม task_code
+    List<SuTask> findByIsActiveTrueOrderByTaskCodeAsc();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserTaskRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuUserTask;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuUserTaskRepository extends JpaRepository<SuUserTask, UUID>, JpaSpecificationExecutor<SuUserTask> {
+    List<SuUserTask> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+    
+    // ✅ ค้นหาตาม taskId และ businessId
+    List<SuUserTask> findByTaskIdAndBusinessIdAndIsDeleteFalse(UUID taskId, UUID businessId);
+    
+    // ✅ หรือใช้ @Query ถ้าต้องการ join กับ task
+    @Query("SELECT ut FROM SuUserTask ut WHERE ut.businessId = :businessId AND ut.isDelete = false")
+    List<SuUserTask> findAllByBusinessId(@Param("businessId") UUID businessId);
 }
 </file>
 
@@ -57572,141 +58437,6 @@ public class ChatHubController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/ex/ExExampleController.java">
-package com.softinter.sicapi.controller.ex;
-
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.ex.ExExample;
-import com.softinter.sicapi.repository.ex.ExExampleRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@RestController
-@RequestMapping("/api/ex/examples")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Example", description = "Example CRUD API")
-public class ExExampleController {
-
-    private final ExExampleRepository exampleRepository;
-
-    @GetMapping
-    @Operation(summary = "Get all examples")
-    public ResponseEntity<List<ExExample>> getAll() {
-        List<ExExample> examples = exampleRepository.findByIsDeleteFalse();
-        return ResponseEntity.ok(examples);
-    }
-
-    @GetMapping("/paging")
-    @Operation(summary = "Get examples with pagination")
-    public ResponseEntity<PaginationResponse<ExExample>> paging(
-            @Valid @ModelAttribute ExamplePageRequest request) {
-        
-        Pageable pageable = PageRequest.of(
-                request.getPageNumber() - 1,
-                request.getPageSize(),
-                Sort.by("createdDate").descending());
-
-        Specification<ExExample> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("isDelete"), false));
-            if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-                String keyword = "%" + request.getKeyword().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("exampleCode")), keyword),
-                        cb.like(cb.lower(root.get("messageEn")), keyword)
-                ));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        Page<ExExample> page = exampleRepository.findAll(spec, pageable);
-
-        PaginationResponse<ExExample> response = new PaginationResponse<>();
-        response.setData(page.getContent());
-        
-        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
-        pageableDto.setPageNumber(request.getPageNumber());
-        pageableDto.setPageSize(request.getPageSize());
-        pageableDto.setTotalElements(page.getTotalElements());
-        pageableDto.calculateTotalPages();
-        response.setPageable(pageableDto);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/lov")
-    @Operation(summary = "Get example LOV")
-    public ResponseEntity<List<LovResponse>> lov() {
-        List<LovResponse> lov = exampleRepository.findByIsDeleteFalse()
-                .stream()
-                .map(e -> new LovResponse(e.getId(), e.getExampleCode()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(lov);
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Get example by ID")
-    public ResponseEntity<ExExample> getById(@PathVariable UUID id) {
-        ExExample example = exampleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Example not found"));
-        return ResponseEntity.ok(example);
-    }
-
-    @PostMapping("/save")
-    @Operation(summary = "Save example")
-    public ResponseEntity<UUID> save(@RequestBody ExExample request) {
-        ExExample example;
-        if (request.getId() != null) {
-            example = exampleRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Example not found"));
-        } else {
-            example = new ExExample();
-        }
-        example.setExampleCode(request.getExampleCode());
-        example.setMessageEn(request.getMessageEn());
-        example.setMessageLocal(request.getMessageLocal());
-        example.setStartDate(request.getStartDate());
-        example.setEndDate(request.getEndDate());
-        example.setStartTime(request.getStartTime());
-        example.setEndTime(request.getEndTime());
-        example.setIsAccept(request.getIsAccept());
-        example.setColor(request.getColor());
-        example.setCountryCode(request.getCountryCode());
-        example.setTotal(request.getTotal());
-        example.setUploadGroupId(request.getUploadGroupId());
-        example.setIsActive(request.getIsActive());
-        exampleRepository.save(example);
-        return ResponseEntity.ok(example.getId());
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete example")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        ExExample example = exampleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Example not found"));
-        example.setIsDelete(true);
-        example.setIsActive(false);
-        exampleRepository.save(example);
-        return ResponseEntity.ok().build();
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/MilestoneController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -58820,6 +59550,259 @@ public class StorageController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/ChatController.java">
+package com.softinter.sicapi.controller.su;
+
+import com.softinter.sicapi.dto.request.*;
+import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.entity.su.*;
+import com.softinter.sicapi.repository.su.*;
+import com.softinter.sicapi.service.CurrentUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/su/chat")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Chat", description = "Chat API")
+public class ChatController {
+
+    private final SuChatLogRepository chatLogRepository;
+    private final SuChatGroupRepository chatGroupRepository;
+    private final SuChatGroupMemberRepository chatGroupMemberRepository;
+    private final SuChatGroupLogRepository chatGroupLogRepository;
+    private final CurrentUserService currentUserService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    // ========== Private Chat ==========
+    
+    @GetMapping("/history/{userId}")
+    @Operation(summary = "Get chat history with user")
+    public ResponseEntity<List<ChatMessageResponse>> getChatHistory(@PathVariable String userId) {
+        String currentUserId = currentUserService.getUserId();
+        List<ChatMessageResponse> messages = chatLogRepository.findChatHistory(currentUserId, userId)
+                .stream()
+                .map(this::toChatMessageResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(messages);
+    }
+
+    @PostMapping("/send")
+    @Operation(summary = "Send chat message")
+    public ResponseEntity<ChatMessageResponse> sendMessage(@RequestBody ChatMessageRequest request) {
+        String currentUserId = currentUserService.getUserId();
+        String currentUsername = currentUserService.getUsername();
+
+        SuChatLog chatLog = new SuChatLog();
+        chatLog.setSenderId(currentUserId);
+        chatLog.setSenderName(currentUsername);
+        chatLog.setReceiverId(request.getReceiverId());
+        chatLog.setMessage(request.getMessage());
+        chatLog.setMessageType(request.getMessageType());
+        chatLog.setIsRead(false);
+        chatLog.setCreatedDate(Instant.now());
+        chatLogRepository.save(chatLog);
+
+        ChatMessageResponse response = toChatMessageResponse(chatLog);
+        messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
+        return ResponseEntity.ok(response);
+    }
+
+    // ========== Chat Groups ==========
+    
+    @GetMapping("/groups")
+    @Operation(summary = "Get chat groups")
+    public ResponseEntity<List<ChatGroupResponse>> getChatGroups() {
+        String currentUserId = currentUserService.getUserId();
+        List<ChatGroupResponse> groups = chatGroupRepository.findByMemberUserId(currentUserId)
+                .stream()
+                .map(this::toChatGroupResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(groups);
+    }
+
+    @GetMapping("/members")
+    @Operation(summary = "Get all chat members from groups that current user belongs to")
+    public ResponseEntity<List<ChatMemberResponse>> getChatMembers() {
+        String currentUserId = currentUserService.getUserId();
+        
+        List<SuChatGroup> userGroups = chatGroupRepository.findByMemberUserId(currentUserId);
+        
+        List<ChatMemberResponse> members = userGroups.stream()
+                .flatMap(group -> group.getMembers().stream())
+                .filter(member -> !member.getUserId().equals(currentUserId))
+                .map(this::toMemberResponse)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(members);
+    }
+
+    @GetMapping("/group/{groupId}/history")
+    @Operation(summary = "Get group chat history")
+    public ResponseEntity<List<ChatGroupMessageResponse>> getGroupChatHistory(@PathVariable UUID groupId) {
+        List<ChatGroupMessageResponse> messages = chatGroupLogRepository
+                .findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(groupId)
+                .stream()
+                .map(this::toGroupMessageResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(messages);
+    }
+
+    @PostMapping("/group/create")
+    @Operation(summary = "Create chat group")
+    public ResponseEntity<ChatGroupResponse> createGroup(@RequestBody CreateGroupRequest request) {
+        String currentUserId = currentUserService.getUserId();
+
+        SuChatGroup group = new SuChatGroup();
+        group.setName(request.getName());
+        group.setCreatedBy(currentUserId);
+        group.setCreatedDate(Instant.now());
+
+        chatGroupRepository.save(group);
+
+        SuChatGroupMember creatorMember = new SuChatGroupMember();
+        creatorMember.setGroup(group);
+        creatorMember.setUserId(currentUserId);
+        chatGroupMemberRepository.save(creatorMember);
+
+        if (request.getMemberUserIds() != null) {
+            for (String memberId : request.getMemberUserIds()) {
+                SuChatGroupMember member = new SuChatGroupMember();
+                member.setGroup(group);
+                member.setUserId(memberId);
+                chatGroupMemberRepository.save(member);
+            }
+        }
+
+        return ResponseEntity.ok(toChatGroupResponse(group));
+    }
+
+    @PostMapping("/group/send")
+    @Operation(summary = "Send group message")
+    public ResponseEntity<ChatGroupMessageResponse> sendGroupMessage(@RequestBody GroupMessageRequest request) {
+        String currentUserId = currentUserService.getUserId();
+        String currentUsername = currentUserService.getUsername();
+
+        SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        SuChatGroupLog log = new SuChatGroupLog();
+        log.setGroup(group);
+        log.setSenderId(currentUserId);
+        log.setSenderName(currentUsername);
+        log.setMessage(request.getMessage());
+        log.setMessageType(request.getMessageType());
+        log.setCreatedDate(Instant.now());
+        chatGroupLogRepository.save(log);
+
+        ChatGroupMessageResponse response = toGroupMessageResponse(log);
+        messagingTemplate.convertAndSend("/topic/group/" + request.getGroupId(), response);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/group/{groupId}/members")
+    @Operation(summary = "Get group members")
+    public ResponseEntity<List<ChatMemberResponse>> getGroupMembers(@PathVariable UUID groupId) {
+        List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId)
+                .stream()
+                .map(this::toMemberResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(members);
+    }
+
+    // ========== WebSocket ==========
+    
+    @MessageMapping("/chat.send")
+    public void sendWebSocketMessage(@Payload ChatMessageRequest request) {
+        String currentUserId = currentUserService.getUserId();
+        String currentUsername = currentUserService.getUsername();
+
+        SuChatLog chatLog = new SuChatLog();
+        chatLog.setSenderId(currentUserId);
+        chatLog.setSenderName(currentUsername);
+        chatLog.setReceiverId(request.getReceiverId());
+        chatLog.setMessage(request.getMessage());
+        chatLog.setMessageType(request.getMessageType());
+        chatLog.setIsRead(false);
+        chatLog.setCreatedDate(Instant.now());
+        chatLogRepository.save(chatLog);
+
+        ChatMessageResponse response = toChatMessageResponse(chatLog);
+        messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
+    }
+
+    // ========== Private Helper Methods ==========
+    
+    private ChatMessageResponse toChatMessageResponse(SuChatLog log) {
+        ChatMessageResponse response = new ChatMessageResponse();
+        response.setId(log.getId());
+        response.setSenderId(log.getSenderId());
+        response.setSenderName(log.getSenderName());
+        response.setReceiverId(log.getReceiverId());
+        response.setReceiverName(log.getReceiverName());
+        response.setMessage(log.getMessage());
+        response.setMessageType(log.getMessageType());
+        response.setAttachmentId(log.getAttachmentId());
+        response.setRead(Boolean.TRUE.equals(log.getIsRead()));
+        response.setCreatedDate(log.getCreatedDate());
+        return response;
+    }
+
+    private ChatGroupResponse toChatGroupResponse(SuChatGroup group) {
+        ChatGroupResponse response = new ChatGroupResponse();
+        response.setId(group.getId());
+        response.setName(group.getName());
+        response.setCreatedByUserId(group.getCreatedBy());
+        response.setCreatedDate(group.getCreatedDate());
+        if (group.getMembers() != null) {
+            response.setMembers(group.getMembers().stream()
+                    .map(this::toMemberResponse)
+                    .collect(Collectors.toList()));
+        }
+        return response;
+    }
+
+    private ChatMemberResponse toMemberResponse(SuChatGroupMember member) {
+        ChatMemberResponse response = new ChatMemberResponse();
+        response.setId(member.getId());
+        if (member.getGroup() != null) {
+            response.setGroupId(member.getGroup().getId());
+        }
+        response.setUserId(member.getUserId());
+        return response;
+    }
+
+    private ChatGroupMessageResponse toGroupMessageResponse(SuChatGroupLog log) {
+        ChatGroupMessageResponse response = new ChatGroupMessageResponse();
+        response.setId(log.getId());
+        if (log.getGroup() != null) {
+            response.setGroupId(log.getGroup().getId());
+        }
+        response.setSenderId(log.getSenderId());
+        response.setSenderName(log.getSenderName());
+        response.setMessage(log.getMessage());
+        response.setMessageType(log.getMessageType());
+        response.setAttachmentId(log.getAttachmentId());
+        response.setCreatedDate(log.getCreatedDate());
+        return response;
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/MessageController.java">
 package com.softinter.sicapi.controller.su;
 
@@ -58889,6 +59872,58 @@ public ResponseEntity<Map<String, String>> i18n(
 
     return ResponseEntity.ok(translations);
 }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuTaskController.java">
+package com.softinter.sicapi.controller.su;
+
+import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.entity.su.SuTask;
+import com.softinter.sicapi.repository.su.SuTaskRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/su/tasks")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Task", description = "Task Management API")
+public class SuTaskController {
+
+    private final SuTaskRepository taskRepository;
+
+    @GetMapping("/lov")
+    @Operation(summary = "Get task LOV")
+    public ResponseEntity<List<LovResponse>> getLov() {
+        List<LovResponse> lov = taskRepository.findByIsActiveTrue()
+                .stream()
+                .map(t -> new LovResponse(t.getId(), t.getTaskNameEn()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(lov);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search tasks")
+    public ResponseEntity<List<SuTask>> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID taskId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        // TODO: implement search logic based on parameters
+        // ปัจจุบันคืนค่าทั้งหมด (ยังไม่ implement filter)
+        List<SuTask> tasks = taskRepository.findByIsActiveTrue();
+        return ResponseEntity.ok(tasks);
+    }
 }
 </file>
 
@@ -58998,21 +60033,6 @@ public class ApprovalSubmitRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CreateGroupRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-import java.util.List;
-
-@Data
-public class CreateGroupRequest {
-    private String Name;
-    private String groupDescription;
-    private List<String> memberUserIds;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CreateInviteRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -59031,20 +60051,6 @@ public class CreateInviteRequest {
     private String inviteType; // "email" or "token"
     private String inviteEmail;
     private Integer maxUses;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/DeleteRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class DeleteRequest {
-    private UUID id;
-    private Integer rowVersion;
 }
 </file>
 
@@ -59165,41 +60171,6 @@ import java.util.UUID;
 public class SaveRolePermissionsRequest {
     private UUID roleId;
     private List<SaveBusinessRoleProgramRequest> modules;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveUserBusinessRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveUserBusinessRequest {
-    private UUID id;
-    private String userId;
-    private UUID businessId;
-    private boolean isActive = true;
-    private boolean isDefault = false;
-    private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveUserBusinessRoleRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveUserBusinessRoleRequest {
-    private UUID id;
-    private UUID userBusinessId;
-    private UUID businessRoleId;
-    private boolean isActive = true;
-    private Integer rowVersion;
 }
 </file>
 
@@ -59431,23 +60402,44 @@ public class BusinessResponseDto {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChatGroupResponse.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessResponse.java">
 package com.softinter.sicapi.dto.response;
 
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import lombok.Data;
 
-import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Data
-public class ChatGroupResponse {
+public class BusinessResponse {
     private UUID id;
-    private String Name;
-    private String groupDescription;
-    private String createdByUserId;
-    private List<ChatMemberResponse> members;
-    private Instant createdDate;
+    private String taxId;
+    private String businessCode;
+    private String branchCode;
+    private String personType;
+    private UUID titleId;
+    private String firstNameEn;
+    private String middleNameEn;
+    private String lastNameEn;
+    private String firstNameLocal;
+    private String middleNameLocal;
+    private String lastNameLocal;
+    private UUID countryId;
+    private Boolean supportLocalAddress;
+    private String addressEn;
+    private String addressLocal;
+    private UUID provinceId;
+    private UUID districtId;
+    private UUID subDistrictId;
+    private String zipCode;
+    private String email;
+    private String phoneNumber;
+    private UUID uploadGroupId;
+    private List<StorageUploadReference> uploadGroupData = new ArrayList<>();
+    private Integer state;
+    private Integer rowVersion;
 }
 </file>
 
@@ -59594,25 +60586,6 @@ public class MenuProgramResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MessageResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class MessageResponse {
-    private UUID id;
-    private String module;
-    private String messageKey;
-    private String messageEn;
-    private String messageLocal;
-    private boolean isActive;
-    private Integer rowVersion;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/NegotiateResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -59735,47 +60708,6 @@ public class TransportResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserBusinessResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class UserBusinessResponse {
-    private UUID id;
-    private String userId;
-    private UUID businessId;
-    private String businessCode;
-    private String businessName;
-    private boolean isActive;
-    private boolean isDefault;
-    private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserBusinessRoleResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class UserBusinessRoleResponse {
-    private UUID id;
-    private UUID userBusinessId;
-    private String userId;
-    private UUID businessId;
-    private UUID businessRoleId;
-    private String businessRoleCode;
-    private String businessRoleName;
-    private boolean isActive;
-    private Integer rowVersion;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -59792,88 +60724,6 @@ public class UserResponse {
     private String id;
     private String name;
     private String email;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/VerifyTokenResponse.java">
-// VerifyTokenResponse.java
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-import java.time.Instant;
-
-@Data
-public class VerifyTokenResponse {
-    private String verifyType;             
-    private String referenceNumber;   
-    private Integer expirationMinutes; 
-    private Integer maxRetry;          
-    private String recipient;          
-    private Boolean valid;             
-    private Instant expiresAt;         
-    private String message;            
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/db/DbMailQueue.java">
-package com.softinter.sicapi.entity.db;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Entity
-@Table(name = "db_mail_queue")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class DbMailQueue extends BaseEntity {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id", nullable = false)
-    private DbMailTemplate mailTemplate;
-
-    @Column(name = "recipient_email", nullable = false, length = 255)
-    private String recipientEmail;
-
-    @Column(name = "recipient_name", length = 255)
-    private String recipientName;
-
-    @Column(name = "body_data", columnDefinition = "TEXT")
-    private String bodyData;
-
-    @Column(name = "status", nullable = false, length = 20)
-    private String status = "Pending";
-
-    @Column(name = "retry_count")
-    private Integer retryCount = 0;
-
-    @Column(name = "error_message", length = 500)
-    private String errorMessage;
-
-    @Column(name = "scheduled_at")
-    private Instant scheduledAt;
-
-    @Column(name = "sent_at")
-    private Instant sentAt;
-
-    @Column(name = "next_retry_at")
-    private Instant nextRetryAt;
-
-    @Column(name = "used_config_id")
-    private UUID usedConfigId;
-
-    @Column(name = "use_english")
-    private Boolean useEnglish = false;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "\"DbMailConfigId\"")
-    private DbMailConfig mailConfig;
 }
 </file>
 
@@ -60006,6 +60856,76 @@ public enum FileVisibility {
     FileVisibility(int fileVisibilityCode) {
         this.fileVisibilityCode = fileVisibilityCode;
     }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/ex/ExExample.java">
+package com.softinter.sicapi.entity.ex;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "ex_example")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class ExExample extends BaseEntity {
+
+     @Column(name = "example_code", length = 100)
+    private String exampleCode;
+
+    @Column(name = "message_en", length = 500)
+    private String messageEn;
+
+    @Column(name = "message_local", length = 500)
+    private String messageLocal;
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "end_date")
+    private Instant endDate;
+
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
+    @Column(name = "is_accept")
+    private Boolean isAccept = false;
+
+    @Column(name = "color", length = 50)
+    private String color;
+
+    @Column(name = "country_code", length = 10)
+    private String countryCode;
+
+    @Column(name = "total")
+    private BigDecimal total;
+
+    @Column(name = "upload_group_id")
+    private UUID uploadGroupId;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Transient
+    private List<StorageUploadReference> uploadGroupData;
 }
 </file>
 
@@ -60672,205 +61592,6 @@ public class SuBusinessRoleProgram extends BaseEntity {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroupCallParticipant.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_chat_group_call_participant")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuChatGroupCallParticipant extends BaseEntity {
-
-    @Column(name = "log_id", nullable = false)
-    private UUID logId;
-
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroup.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-import com.softinter.sicapi.entity.base.BaseEntity;
-
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
-
-@Entity
-@Table(name = "su_chat_group")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuChatGroup extends BaseEntity {
-
-    @Column(name = "name", nullable = false, length = 200)
-    private String name;
-
-    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
-    private List<SuChatGroupMember> members = new ArrayList<>();
-
-    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
-    private List<SuChatGroupLog> messages = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuChatGroupMember.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_chat_group_member")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuChatGroupMember extends BaseBusinessEntity {
-
-    @Column(name = "group_id", insertable = false, updatable = false)
-    private UUID groupId;
-
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private SuChatGroup group;
-
-    
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuProfile.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import com.softinter.sicapi.entity.db.*;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_profile",
-       indexes = {
-           @Index(name = "idx_user_id", columnList = "user_id", unique = true)
-       })
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuProfile extends BaseEntity {
-
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
-
-    @Column(name = "tax_id", length = 30)
-    private String taxId;
-
-    // Foreign key fields (mirror, read-only)
-    @Column(name = "title_id", nullable = false, insertable = false, updatable = false)
-    private UUID titleId;
-
-    @Column(name = "country_id", insertable = false, updatable = false)
-    private UUID countryId;
-
-    @Column(name = "province_id", insertable = false, updatable = false)
-    private UUID provinceId;
-
-    @Column(name = "district_id", insertable = false, updatable = false)
-    private UUID districtId;
-
-    @Column(name = "sub_district_id", insertable = false, updatable = false)
-    private UUID subDistrictId;
-
-    // Navigation properties (own the foreign key columns)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "title_id", nullable = false)
-    private DbTitle title;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "country_id")
-    private DbCountry country;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "province_id")
-    private DbProvince province;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_id")
-    private DbDistrict district;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sub_district_id")
-    private DbSubDistrict subDistrict;
-
-    // Other fields
-    @Column(name = "first_name_en", nullable = false, length = 100)
-    private String firstNameEn;
-
-    @Column(name = "middle_name_en", length = 100)
-    private String middleNameEn;
-
-    @Column(name = "last_name_en", length = 100)
-    private String lastNameEn;
-
-    @Column(name = "first_name_local", nullable = false, length = 100)
-    private String firstNameLocal;
-
-    @Column(name = "middle_name_local", length = 100)
-    private String middleNameLocal;
-
-    @Column(name = "last_name_local", length = 100)
-    private String lastNameLocal;
-
-    @Column(name = "support_local_address", nullable = false)
-    private Boolean supportLocalAddress = false;
-
-    @Column(name = "address_en", length = 255)
-    private String addressEn;
-
-    @Column(name = "address_local", length = 255)
-    private String addressLocal;
-
-    @Column(name = "zip_code", length = 20)
-    private String zipCode;
-
-    @Column(name = "email", nullable = false, length = 320)
-    private String email;
-
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
-
-    @Column(name = "upload_group_id")
-    private UUID uploadGroupId;
-
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuProgram.java">
 package com.softinter.sicapi.entity.su;
 
@@ -60945,131 +61666,6 @@ public class SuProgram extends BaseEntity {
 
     @Column(name = "is_search")
     private boolean isSearch;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuTask.java">
-package com.softinter.sicapi.entity.su;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-@Entity
-@Table(name = "su_task")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuTask extends BaseBusinessEntity{
-
-    @Column(name = "task_code", nullable = false, length = 20)
-    private String taskCode;
-
-    @Column(name = "task_name_en", length = 255)
-    private String taskNameEn;
-
-    @Column(name = "task_name_local", length = 255)
-    private String taskNameLocal;
-
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
-
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY)
-    private List<SuUserTask> userTasks = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuUserBusiness.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseBusinessEntity;
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_user_business",
-       indexes = {
-           @Index(name = "idx_user_business", columnList = "user_id, business_id", unique = true)
-       })
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuUserBusiness extends BaseBusinessEntity {
-
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", insertable = false, updatable = false)
-    private SuBusiness business;
-
-    @Column(name = "is_default", nullable = false)
-    private Boolean isDefault = false;
-
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
-
-    @OneToMany(mappedBy = "userBusiness", fetch = FetchType.LAZY)
-    private List<SuUserBusinessRole> userBusinessRoles = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuVerify.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-
-@Entity
-@Table(name = "su_verify")
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuVerify extends BaseEntity {
-
-    @Column(name = "verify_type", nullable = false, length = 100)
-    private String verifyType;
-
-    @Column(name = "reference_number", nullable = false, length = 300)
-    private String referenceNumber;
-
-    @Column(name = "token", nullable = false, length = 300)
-    private String token;
-
-    @Column(name = "max_retry", nullable = false)
-    private Integer maxRetry = 5;
-
-    @Column(name = "retry_count", nullable = false)
-    private Integer retryCount = 0;
-
-    @Column(name = "expire_at", nullable = false)
-    private Instant expireAt;
-
-    @Column(name = "recipient", nullable = false, length = 255)
-    private String recipient;
-    
 }
 </file>
 
@@ -61484,23 +62080,6 @@ public interface DbTitleRepository extends JpaRepository<DbTitle, UUID>, JpaSpec
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/ex/ExExampleRepository.java">
-package com.softinter.sicapi.repository.ex;
-
-import com.softinter.sicapi.entity.ex.ExExample;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface ExExampleRepository extends JpaRepository<ExExample, UUID>, JpaSpecificationExecutor<ExExample> {
-    List<ExExample> findByIsDeleteFalse();
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmApprovalFlowRepository.java">
 package com.softinter.sicapi.repository.pm;
 
@@ -61844,22 +62423,6 @@ public interface PmWorkPackageRepository extends JpaRepository<PmWorkPackage, UU
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/findByInviteTokenAndIsDeleteFalse.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuBusinessInvite;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-public interface findByInviteTokenAndIsDeleteFalse extends JpaRepository<SuBusinessInvite, UUID> {
-    Optional<SuBusinessInvite> findByInviteTokenAndIsDeleteFalse(String inviteToken);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuBusinessAuditRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -61948,150 +62511,41 @@ public interface SuBusinessRepository extends JpaRepository<SuBusiness, UUID>, J
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupLogRepository.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuVerifyRepository.java">
 package com.softinter.sicapi.repository.su;
 
-import com.softinter.sicapi.entity.su.SuChatGroupLog;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuChatGroupLogRepository extends JpaRepository<SuChatGroupLog, UUID> {
-    List<SuChatGroupLog> findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(UUID groupId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupMemberRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuChatGroupMember;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuChatGroupMemberRepository extends JpaRepository<SuChatGroupMember, UUID> {
-    List<SuChatGroupMember> findByGroupIdAndIsDeleteFalse(UUID groupId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatGroupRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuChatGroup;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuChatGroupRepository extends JpaRepository<SuChatGroup, UUID> {
-
-  
-    @Query("SELECT DISTINCT cg FROM SuChatGroup cg " +
-       "LEFT JOIN FETCH cg.members m " +
-       "WHERE m.userId = :userId " +
-       "AND cg.isDelete = false " +
-       "AND m.isDelete = false")
-    List<SuChatGroup> findByMemberUserId(@Param("userId") String userId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuChatLogRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuChatLog;
+import com.softinter.sicapi.entity.su.SuVerify;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface SuChatLogRepository extends JpaRepository<SuChatLog, UUID> {
-
-   
-    @Query("SELECT c FROM SuChatLog c WHERE " +
-           "((c.senderId = :userId1 AND c.receiverId = :userId2) OR (c.senderId = :userId2 AND c.receiverId = :userId1)) " +
-           "AND c.isDelete = false ORDER BY c.createdDate")
-    List<SuChatLog> findChatHistory(@Param("userId1") String userId1, @Param("userId2") String userId2);
-
-   
-    @Query("SELECT c FROM SuChatLog c WHERE c.receiverId = :userId AND c.isRead = false AND c.isDelete = false")
-    List<SuChatLog> findUnreadMessages(@Param("userId") String userId);
-
-    @Modifying
-    @Query("UPDATE SuChatLog c SET c.isRead = true WHERE c.senderId = :senderId AND c.receiverId = :receiverId AND c.isRead = false")
-    int markAsRead(@Param("senderId") String senderId, @Param("receiverId") String receiverId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuTaskRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuTask;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuTaskRepository extends JpaRepository<SuTask, UUID> {
-    // ค้นหา task ที่ active (is_active = true)
-    List<SuTask> findByIsActiveTrue();
+public interface SuVerifyRepository extends JpaRepository<SuVerify, UUID> {
     
-    // ค้นหา task ที่ active และไม่ถูกลบ
-    List<SuTask> findByIsActiveTrueAndIsDeleteFalse();
+    // 1. ค้นหาด้วย token (พื้นฐานที่สุด)
+    Optional<SuVerify> findByToken(String token);
     
-    // ค้นหา task ตาม business_id (ถ้ามี business_id ใน entity)
-    List<SuTask> findByBusinessIdAndIsActiveTrue(UUID businessId);
+    // 2. ค้นหา token ที่ยังไม่ถูกลบและยังไม่หมดอายุ
+    Optional<SuVerify> findByTokenAndIsDeleteFalseAndExpireAtAfter(String token, Instant now);
     
-    // ค้นหา task ตาม task_code
-    List<SuTask> findByTaskCode(String taskCode);
+    // 3. ค้นหาคำขอ verification ที่ค้างอยู่ (ยังไม่ถูกลบ, ยังไม่หมดอายุ) สำหรับ reference + type
+    //    ใช้ตอนขอ verify ใหม่ (ป้องกันสร้างหลายตัว)
+    Optional<SuVerify> findByReferenceNumberAndVerifyTypeAndIsDeleteFalseAndExpireAtAfter(
+        String referenceNumber, String verifyType, Instant now);
     
-    // ค้นหา task ที่ active เรียงตาม created_date (ใช้แทน sort_order)
-    List<SuTask> findByIsActiveTrueOrderByCreatedDateAsc();
+    // 4. นับจำนวนคำขอ verification ที่ active (ใช้ limit การส่ง OTP/email)
+    long countByReferenceNumberAndVerifyTypeAndIsDeleteFalseAndExpireAtAfter(
+        String referenceNumber, String verifyType, Instant now);
     
-    // ค้นหา task ที่ active เรียงตาม task_code
-    List<SuTask> findByIsActiveTrueOrderByTaskCodeAsc();
-}
-</file>
+    // 5. ค้นหา token ที่ยังไม่ถูกลบ
+    Optional<SuVerify> findByTokenAndIsDeleteFalse(String token);
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserTaskRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuUserTask;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuUserTaskRepository extends JpaRepository<SuUserTask, UUID>, JpaSpecificationExecutor<SuUserTask> {
-    List<SuUserTask> findByBusinessIdAndIsDeleteFalse(UUID businessId);
-    
-    // ✅ ค้นหาตาม taskId และ businessId
-    List<SuUserTask> findByTaskIdAndBusinessIdAndIsDeleteFalse(UUID taskId, UUID businessId);
-    
-    // ✅ หรือใช้ @Query ถ้าต้องการ join กับ task
-    @Query("SELECT ut FROM SuUserTask ut WHERE ut.businessId = :businessId AND ut.isDelete = false")
-    List<SuUserTask> findAllByBusinessId(@Param("businessId") UUID businessId);
+   Optional<SuVerify> findByVerifyTypeAndReferenceNumberAndToken(String verifyType, String referenceNumber, String token);
 }
 </file>
 
@@ -62657,6 +63111,168 @@ public class SuBusinessServiceImpl implements SuBusinessService {
     public SuBusiness findById(UUID id) {
         return businessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Business not found"));
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/VerifyServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.response.VerifyTokenResponse;
+import com.softinter.sicapi.entity.su.SuVerify;
+import com.softinter.sicapi.repository.su.SuVerifyRepository;
+import com.softinter.sicapi.service.MailService;
+import com.softinter.sicapi.service.VerifyService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class VerifyServiceImpl implements VerifyService {
+
+    private final SuVerifyRepository verifyRepository;
+    private final MailService mailService;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Override
+    @Transactional
+    public VerifyTokenResponse generateVerifyToken(String recipient) {
+        try {
+            log.info("📧 Starting verification for: {}", recipient);
+
+            if (recipient == null || recipient.trim().isEmpty()) {
+                throw new IllegalArgumentException("Recipient cannot be null or empty");
+            }
+
+            // Generate token
+            byte[] tokenBytes = new byte[32];
+            secureRandom.nextBytes(tokenBytes);
+            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+
+            // Generate reference number
+            String referenceNumber = UUID.randomUUID().toString();
+
+            // Save to database
+            SuVerify verify = new SuVerify();
+            verify.setRecipient(recipient);
+            verify.setToken(token);
+            verify.setReferenceNumber(referenceNumber);
+            verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
+            verify.setVerifyType("Email");
+
+            SuVerify saved = verifyRepository.save(verify);
+            log.debug("Saved verify with id: {}", saved.getId());
+
+            // Prepare response
+            VerifyTokenResponse response = new VerifyTokenResponse();
+            response.setValid(false);
+            response.setVerifyType("Email");
+            response.setReferenceNumber(referenceNumber);
+            response.setRecipient(recipient);
+            response.setExpirationMinutes(1440);
+            response.setMaxRetry(5);
+            response.setExpiresAt(verify.getExpireAt());
+            response.setMessage("Verification token generated successfully");
+
+            // Send email
+            try {
+                mailService.sendTemplatedMail(recipient, "VERIFY_EMAIL", token, referenceNumber);
+                log.info("✅ Email sent to: {}", recipient);
+            } catch (Exception e) {
+                log.error("❌ Failed to send email: {}", recipient, e);
+            }
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("Failed to generate verification token", e);
+            throw new RuntimeException("An error occurred while generating verification token", e);
+        }
+    }
+
+    // ===========================
+    // Method เดิม (ใช้ token อย่างเดียว) – เก็บไว้เพื่อ backward compatibility
+    // ===========================
+    @Override
+    @Transactional
+    public VerifyTokenResponse verifyToken(String token) {
+        SuVerify verify = verifyRepository.findByToken(token).orElse(null);
+
+        VerifyTokenResponse response = new VerifyTokenResponse();
+        if (verify == null) {
+            response.setValid(false);
+            response.setMessage("Invalid token");
+            return response;
+        }
+
+        if (verify.getExpireAt().isBefore(Instant.now())) {
+            response.setValid(false);
+            response.setRecipient(verify.getRecipient());
+            response.setMessage("Token expired");
+            return response;
+        }
+
+        // Soft delete after use
+        verify.setIsDelete(true);
+        verify.setDeleteBy("system");
+        verify.setDeleteDate(Instant.now());
+        verifyRepository.save(verify);
+
+        response.setValid(true);
+        response.setRecipient(verify.getRecipient());
+        response.setMessage("Token verified successfully");
+        return response;
+    }
+
+    // ===========================
+    // Method ใหม่ ที่รับ referenceNumber + token (เหมือน .NET)
+    // ===========================
+    @Override
+    @Transactional
+    public VerifyTokenResponse verifyToken(String type, String referenceNumber, String token) {
+        SuVerify verify = verifyRepository.findByVerifyTypeAndReferenceNumberAndToken(type, referenceNumber, token).orElse(null);
+
+        VerifyTokenResponse response = new VerifyTokenResponse();
+        if (verify == null) {
+            response.setValid(false);
+            response.setMessage("Invalid reference number or token");
+            return response;
+        }
+
+        // ถ้า token ถูกใช้ไปแล้ว (soft delete)
+        if (verify.getIsDelete() != null && verify.getIsDelete()) {
+            response.setValid(false);
+            response.setRecipient(verify.getRecipient());
+            response.setMessage("Token already used");
+            return response;
+        }
+
+        if (verify.getExpireAt().isBefore(Instant.now())) {
+            response.setValid(false);
+            response.setRecipient(verify.getRecipient());
+            response.setMessage("Token expired");
+            return response;
+        }
+
+        // Soft delete after successful verification (same as .NET)
+        verify.setIsDelete(true);
+        verify.setDeleteBy("system");
+        verify.setDeleteDate(Instant.now());
+        verifyRepository.save(verify);
+
+        response.setValid(true);
+        response.setRecipient(verify.getRecipient());
+        response.setReferenceNumber(verify.getReferenceNumber());
+        response.setMessage("Token verified successfully");
+        return response;
     }
 }
 </file>
@@ -67732,259 +68348,6 @@ public class PmCustomerContractController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/ChatController.java">
-package com.softinter.sicapi.controller.su;
-
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.su.*;
-import com.softinter.sicapi.repository.su.*;
-import com.softinter.sicapi.service.CurrentUserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@RestController
-@RequestMapping("/api/su/chat")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Chat", description = "Chat API")
-public class ChatController {
-
-    private final SuChatLogRepository chatLogRepository;
-    private final SuChatGroupRepository chatGroupRepository;
-    private final SuChatGroupMemberRepository chatGroupMemberRepository;
-    private final SuChatGroupLogRepository chatGroupLogRepository;
-    private final CurrentUserService currentUserService;
-    private final SimpMessagingTemplate messagingTemplate;
-
-    // ========== Private Chat ==========
-    
-    @GetMapping("/history/{userId}")
-    @Operation(summary = "Get chat history with user")
-    public ResponseEntity<List<ChatMessageResponse>> getChatHistory(@PathVariable String userId) {
-        String currentUserId = currentUserService.getUserId();
-        List<ChatMessageResponse> messages = chatLogRepository.findChatHistory(currentUserId, userId)
-                .stream()
-                .map(this::toChatMessageResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(messages);
-    }
-
-    @PostMapping("/send")
-    @Operation(summary = "Send chat message")
-    public ResponseEntity<ChatMessageResponse> sendMessage(@RequestBody ChatMessageRequest request) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
-
-        SuChatLog chatLog = new SuChatLog();
-        chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
-        chatLog.setReceiverId(request.getReceiverId());
-        chatLog.setMessage(request.getMessage());
-        chatLog.setMessageType(request.getMessageType());
-        chatLog.setIsRead(false);
-        chatLog.setCreatedDate(Instant.now());
-        chatLogRepository.save(chatLog);
-
-        ChatMessageResponse response = toChatMessageResponse(chatLog);
-        messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
-        return ResponseEntity.ok(response);
-    }
-
-    // ========== Chat Groups ==========
-    
-    @GetMapping("/groups")
-    @Operation(summary = "Get chat groups")
-    public ResponseEntity<List<ChatGroupResponse>> getChatGroups() {
-        String currentUserId = currentUserService.getUserId();
-        List<ChatGroupResponse> groups = chatGroupRepository.findByMemberUserId(currentUserId)
-                .stream()
-                .map(this::toChatGroupResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(groups);
-    }
-
-    @GetMapping("/members")
-    @Operation(summary = "Get all chat members from groups that current user belongs to")
-    public ResponseEntity<List<ChatMemberResponse>> getChatMembers() {
-        String currentUserId = currentUserService.getUserId();
-        
-        List<SuChatGroup> userGroups = chatGroupRepository.findByMemberUserId(currentUserId);
-        
-        List<ChatMemberResponse> members = userGroups.stream()
-                .flatMap(group -> group.getMembers().stream())
-                .filter(member -> !member.getUserId().equals(currentUserId))
-                .map(this::toMemberResponse)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(members);
-    }
-
-    @GetMapping("/group/{groupId}/history")
-    @Operation(summary = "Get group chat history")
-    public ResponseEntity<List<ChatGroupMessageResponse>> getGroupChatHistory(@PathVariable UUID groupId) {
-        List<ChatGroupMessageResponse> messages = chatGroupLogRepository
-                .findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(groupId)
-                .stream()
-                .map(this::toGroupMessageResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(messages);
-    }
-
-    @PostMapping("/group/create")
-    @Operation(summary = "Create chat group")
-    public ResponseEntity<ChatGroupResponse> createGroup(@RequestBody CreateGroupRequest request) {
-        String currentUserId = currentUserService.getUserId();
-
-        SuChatGroup group = new SuChatGroup();
-        group.setName(request.getName());
-        group.setCreatedBy(currentUserId);
-        group.setCreatedDate(Instant.now());
-
-        chatGroupRepository.save(group);
-
-        SuChatGroupMember creatorMember = new SuChatGroupMember();
-        creatorMember.setGroup(group);
-        creatorMember.setUserId(currentUserId);
-        chatGroupMemberRepository.save(creatorMember);
-
-        if (request.getMemberUserIds() != null) {
-            for (String memberId : request.getMemberUserIds()) {
-                SuChatGroupMember member = new SuChatGroupMember();
-                member.setGroup(group);
-                member.setUserId(memberId);
-                chatGroupMemberRepository.save(member);
-            }
-        }
-
-        return ResponseEntity.ok(toChatGroupResponse(group));
-    }
-
-    @PostMapping("/group/send")
-    @Operation(summary = "Send group message")
-    public ResponseEntity<ChatGroupMessageResponse> sendGroupMessage(@RequestBody GroupMessageRequest request) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
-
-        SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Group not found"));
-
-        SuChatGroupLog log = new SuChatGroupLog();
-        log.setGroup(group);
-        log.setSenderId(currentUserId);
-        log.setSenderName(currentUsername);
-        log.setMessage(request.getMessage());
-        log.setMessageType(request.getMessageType());
-        log.setCreatedDate(Instant.now());
-        chatGroupLogRepository.save(log);
-
-        ChatGroupMessageResponse response = toGroupMessageResponse(log);
-        messagingTemplate.convertAndSend("/topic/group/" + request.getGroupId(), response);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/group/{groupId}/members")
-    @Operation(summary = "Get group members")
-    public ResponseEntity<List<ChatMemberResponse>> getGroupMembers(@PathVariable UUID groupId) {
-        List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId)
-                .stream()
-                .map(this::toMemberResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(members);
-    }
-
-    // ========== WebSocket ==========
-    
-    @MessageMapping("/chat.send")
-    public void sendWebSocketMessage(@Payload ChatMessageRequest request) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
-
-        SuChatLog chatLog = new SuChatLog();
-        chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
-        chatLog.setReceiverId(request.getReceiverId());
-        chatLog.setMessage(request.getMessage());
-        chatLog.setMessageType(request.getMessageType());
-        chatLog.setIsRead(false);
-        chatLog.setCreatedDate(Instant.now());
-        chatLogRepository.save(chatLog);
-
-        ChatMessageResponse response = toChatMessageResponse(chatLog);
-        messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
-    }
-
-    // ========== Private Helper Methods ==========
-    
-    private ChatMessageResponse toChatMessageResponse(SuChatLog log) {
-        ChatMessageResponse response = new ChatMessageResponse();
-        response.setId(log.getId());
-        response.setSenderId(log.getSenderId());
-        response.setSenderName(log.getSenderName());
-        response.setReceiverId(log.getReceiverId());
-        response.setReceiverName(log.getReceiverName());
-        response.setMessage(log.getMessage());
-        response.setMessageType(log.getMessageType());
-        response.setAttachmentId(log.getAttachmentId());
-        response.setRead(Boolean.TRUE.equals(log.getIsRead()));
-        response.setCreatedDate(log.getCreatedDate());
-        return response;
-    }
-
-    private ChatGroupResponse toChatGroupResponse(SuChatGroup group) {
-        ChatGroupResponse response = new ChatGroupResponse();
-        response.setId(group.getId());
-        response.setName(group.getName());
-        response.setCreatedByUserId(group.getCreatedBy());
-        response.setCreatedDate(group.getCreatedDate());
-        if (group.getMembers() != null) {
-            response.setMembers(group.getMembers().stream()
-                    .map(this::toMemberResponse)
-                    .collect(Collectors.toList()));
-        }
-        return response;
-    }
-
-    private ChatMemberResponse toMemberResponse(SuChatGroupMember member) {
-        ChatMemberResponse response = new ChatMemberResponse();
-        response.setId(member.getId());
-        if (member.getGroup() != null) {
-            response.setGroupId(member.getGroup().getId());
-        }
-        response.setUserId(member.getUserId());
-        return response;
-    }
-
-    private ChatGroupMessageResponse toGroupMessageResponse(SuChatGroupLog log) {
-        ChatGroupMessageResponse response = new ChatGroupMessageResponse();
-        response.setId(log.getId());
-        if (log.getGroup() != null) {
-            response.setGroupId(log.getGroup().getId());
-        }
-        response.setSenderId(log.getSenderId());
-        response.setSenderName(log.getSenderName());
-        response.setMessage(log.getMessage());
-        response.setMessageType(log.getMessageType());
-        response.setAttachmentId(log.getAttachmentId());
-        response.setCreatedDate(log.getCreatedDate());
-        return response;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuBusinessInviteController.java">
 package com.softinter.sicapi.controller.su;
 import java.util.List;
@@ -68053,55 +68416,148 @@ public class SuBusinessInviteController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuTaskController.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessController.java">
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.su.SuTask;
-import com.softinter.sicapi.repository.su.SuTaskRepository;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/su/tasks")
+@RequestMapping("/api/su/user-businesses")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Task", description = "Task Management API")
-public class SuTaskController {
+@Tag(name = "User Business", description = "User Business Management API")
+public class SuUserBusinessController {
 
-    private final SuTaskRepository taskRepository;
+    private final SuUserBusinessRepository userBusinessRepository;
+
+    @GetMapping
+    @Operation(summary = "Get all user businesses")
+    public ResponseEntity<List<UserBusinessResponse>> getAll(
+            @RequestParam(required = false) String userId) {
+        List<SuUserBusiness> list;
+        if (userId != null) {
+            list = userBusinessRepository.findByUserIdAndIsActiveTrue(userId);
+        } else {
+            list = userBusinessRepository.findAll();
+        }
+        List<UserBusinessResponse> response = list.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/paging")
+    @Operation(summary = "Get user businesses with pagination")
+    public ResponseEntity<PaginationResponse<UserBusinessResponse>> paging(
+            @Valid @ModelAttribute UserBusinessPageRequest request) {
+        Pageable pageable = PageRequest.of(request.getPageNumber() - 1, request.getPageSize());
+
+        Specification<SuUserBusiness> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("isDelete"), false));
+            if (request.getUserId() != null) {
+                predicates.add(cb.equal(root.get("userId"), request.getUserId()));
+            }
+            if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+                String keyword = "%" + request.getKeyword().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("userId")), keyword)
+                ));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<SuUserBusiness> page = userBusinessRepository.findAll(spec, pageable);
+        List<UserBusinessResponse> data = page.getContent().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        PaginationResponse<UserBusinessResponse> response = new PaginationResponse<>();
+        response.setData(data);
+        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
+        pageableDto.setPageNumber(request.getPageNumber());
+        pageableDto.setPageSize(request.getPageSize());
+        pageableDto.setTotalElements(page.getTotalElements());
+        pageableDto.calculateTotalPages();
+        response.setPageable(pageableDto);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/lov")
-    @Operation(summary = "Get task LOV")
-    public ResponseEntity<List<LovResponse>> getLov() {
-        List<LovResponse> lov = taskRepository.findByIsActiveTrue()
+    @Operation(summary = "Get user business LOV")
+    public ResponseEntity<List<LovResponse>> lov(@RequestParam String userId) {
+        List<LovResponse> lov = userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
                 .stream()
-                .map(t -> new LovResponse(t.getId(), t.getTaskNameEn()))
+                .map(ub -> new LovResponse(ub.getId(), ub.getUserId()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lov);
     }
 
-    @GetMapping("/search")
-    @Operation(summary = "Search tasks")
-    public ResponseEntity<List<SuTask>> search(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) UUID taskId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate
-    ) {
-        // TODO: implement search logic based on parameters
-        // ปัจจุบันคืนค่าทั้งหมด (ยังไม่ implement filter)
-        List<SuTask> tasks = taskRepository.findByIsActiveTrue();
-        return ResponseEntity.ok(tasks);
+    @PostMapping("/save")
+    @Operation(summary = "Save user business")
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveUserBusinessRequest request) {
+        SuUserBusiness ub;
+        if (request.getId() != null) {
+            ub = userBusinessRepository.findById(request.getId())
+                    .orElseThrow(() -> new RuntimeException("User business not found"));
+        } else {
+            ub = new SuUserBusiness();
+        }
+        ub.setUserId(request.getUserId());
+        ub.setIsActive(request.isActive());
+        ub.setIsDefault(request.isDefault());
+        // หมายเหตุ: ยังไม่ได้ set businessId หรือ relation ถ้ามี ควรเพิ่ม
+        userBusinessRepository.save(ub);
+        return ResponseEntity.ok(ub.getId());
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete user business")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        SuUserBusiness ub = userBusinessRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User business not found"));
+        ub.setIsDelete(true);
+        ub.setIsActive(false);
+        userBusinessRepository.save(ub);
+        return ResponseEntity.noContent().build();
+    }
+
+   private UserBusinessResponse toResponse(SuUserBusiness ub) {
+    UserBusinessResponse response = new UserBusinessResponse();
+    response.setId(ub.getId());
+    response.setUserId(ub.getUserId());
+    if (ub.getBusiness() != null) {
+        response.setBusinessId(ub.getBusiness().getId());
+        response.setBusinessCode(ub.getBusiness().getBusinessCode());
+        // ✅ เพิ่ม
+        response.setBusinessName(LocalizationHelper.getBusinessName(ub.getBusiness()));
+    }
+    response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
+    response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
+    response.setRowVersion(ub.getRowVersion());
+    return response;
+}
 }
 </file>
 
@@ -68527,6 +68983,33 @@ public class SaveApprovalFlowStepRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.enums.EntityState;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveBusinessRoleRequest {
+    private UUID id;
+    private UUID businessId;
+    private UUID parentRoleId;
+    private String roleCode;
+    private String roleNameEn;
+    private String roleNameLocal;
+    private String roleLevel;
+    private Integer sortOrder;
+    private boolean isActive = true;
+    private Integer state;
+    private Integer rowVersion;
+    private String color;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/WorkPackageRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -68545,44 +69028,57 @@ public class WorkPackageRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessResponse.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleProgramResponse.java">
 package com.softinter.sicapi.dto.response;
 
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Data
-public class BusinessResponse {
+public class BusinessRoleProgramResponse {
     private UUID id;
-    private String taxId;
-    private String businessCode;
-    private String branchCode;
-    private String personType;
-    private UUID titleId;
-    private String firstNameEn;
-    private String middleNameEn;
-    private String lastNameEn;
-    private String firstNameLocal;
-    private String middleNameLocal;
-    private String lastNameLocal;
-    private UUID countryId;
-    private Boolean supportLocalAddress;
-    private String addressEn;
-    private String addressLocal;
-    private UUID provinceId;
-    private UUID districtId;
-    private UUID subDistrictId;
-    private String zipCode;
-    private String email;
-    private String phoneNumber;
-    private UUID uploadGroupId;
-    private List<StorageUploadReference> uploadGroupData = new ArrayList<>();
-    private Integer state;
+    private UUID businessRoleId;
+    private String businessRoleCode;
+    private UUID programId;
+    private String programCode;
+    private String programNameEn;
+    private String programNameLocal;
+    private String programName;
+    private boolean isActive;
+    private boolean isAdd;
+    private boolean isBack;
+    private boolean isPrint;
+    private boolean isRemove;
+    private boolean isSave;
+    private boolean isSearch;
     private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class BusinessRoleResponse {
+    private UUID id;
+    private UUID businessId;
+    private String businessName;
+    private UUID parentRoleId;
+    private String parentRoleCode;
+    private String roleCode;
+    private String roleNameEn;
+    private String roleNameLocal;
+    private String roleName;
+    private String roleLevel;
+    private Integer sortOrder;
+    private boolean isActive;
+    private Integer rowVersion;
+    private String color;
 }
 </file>
 
@@ -68759,6 +69255,32 @@ public class PmCustomerResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ProgramResponse.java">
+// src/main/java/com/softinter/sicapi/dto/response/ProgramResponse.java
+
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class ProgramResponse {
+    private UUID id;
+    private UUID parentProgramId;
+    private String parentProgramCode;
+    private String programCode;
+    private String programNameEn;
+    private String programNameLocal;
+    private String programName;
+    private String programIcon;
+    private String routePath;
+    private Integer sortOrder;
+    private boolean isActive;
+    private Integer rowVersion;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/SuUserBusinessMemberResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -68814,73 +69336,164 @@ public class WorkPackageResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/ex/ExExample.java">
-package com.softinter.sicapi.entity.ex;
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/base/BaseBusinessEntity.java">
+package com.softinter.sicapi.entity.base;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalTime;
-import java.util.List;
+import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และเอา Instant ออก
 import java.util.UUID;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.softinter.sicapi.entity.enums.EntityState;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "ex_example")
 @Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class ExExample extends BaseEntity {
+@EqualsAndHashCode(of = "id")
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseBusinessEntity {
 
-     @Column(name = "example_code", length = 100)
-    private String exampleCode;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(name = "message_en", length = 500)
-    private String messageEn;
+    @Column(name = "business_id", nullable = false, length = 36)
+    private UUID businessId;
 
-    @Column(name = "message_local", length = 500)
-    private String messageLocal;
+    @CreatedBy
+    @Column(name = "created_by", nullable = false, length = 100)
+    private String createdBy = "system";
 
-    @Column(name = "start_date")
-    private Instant startDate;
+    @CreatedDate
+    @Column(name = "created_date", nullable = false, updatable = false) // เพิ่ม updatable = false เพื่อล็อกเวลาสร้างตัวแรกไว้
+    private Instant createdDate; // เปลี่ยนเป็น Instant
 
-    @Column(name = "end_date")
-    private Instant endDate;
+    @LastModifiedBy
+    @Column(name = "updated_by", nullable = false, length = 100)
+    private String updatedBy = "system";
 
-    @Column(name = "start_time")
-    private LocalTime startTime;
+    @LastModifiedDate
+    @Column(name = "updated_date", nullable = false)
+    private Instant updatedDate; // เปลี่ยนเป็น Instant
 
-    @Column(name = "end_time")
-    private LocalTime endTime;
+    @Column(name = "is_delete", nullable = false)
+    private Boolean isDelete = false;
 
-    @Column(name = "is_accept")
-    private Boolean isAccept = false;
+    @Column(name = "delete_by", length = 100)
+    private String deleteBy;
 
-    @Column(name = "color", length = 50)
-    private String color;
+    @Column(name = "delete_date")
+    private Instant deleteDate; 
 
-    @Column(name = "country_code", length = 10)
-    private String countryCode;
-
-    @Column(name = "total")
-    private BigDecimal total;
-
-    @Column(name = "upload_group_id")
-    private UUID uploadGroupId;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Version
+    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
+    private Integer  rowVersion;
 
     @Transient
-    private List<StorageUploadReference> uploadGroupData;
+    private EntityState state = EntityState.DETACHED;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+        if (this.isDelete == null) {
+            this.isDelete = false;
+        }
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/base/BaseEntity.java">
+package com.softinter.sicapi.entity.base;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.softinter.sicapi.entity.enums.EntityState;
+
+import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และลบ Instant ออก
+import java.util.UUID;
+
+@Data
+@EqualsAndHashCode(of = "id")
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
+
+    @CreatedBy
+    @Column(name = "created_by", nullable = false, length = 100)
+    private String createdBy = "system";
+
+    @CreatedDate
+    @Column(name = "created_date", nullable = false, updatable = false) // แนะนำเพิ่ม updatable = false ป้องกันการถูกเขียนทับ
+    private Instant createdDate; // เปลี่ยนเป็น Instant
+
+    @LastModifiedBy
+    @Column(name = "updated_by", nullable = false, length = 100)
+    private String updatedBy = "system";
+
+    @LastModifiedDate
+    @Column(name = "updated_date", nullable = false)
+    private Instant updatedDate; // เปลี่ยนเป็น Instant
+
+    @Column(name = "is_delete", nullable = false)
+    private Boolean isDelete = false;
+
+    @Column(name = "delete_by", length = 100)
+    private String deleteBy;
+
+    @Column(name = "delete_date")
+    private Instant deleteDate; // เปลี่ยนเป็น Instant
+    
+    @Version
+    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
+    private Integer  rowVersion;
+    
+    @Transient
+    private EntityState state = EntityState.DETACHED;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+        if (this.isDelete == null) {
+            this.isDelete = false;
+        }
+    }
+    
 }
 </file>
 
@@ -69346,44 +69959,6 @@ public interface SuBusinessRoleProgramRepository extends JpaRepository<SuBusines
     List<SuBusinessRoleProgram> findAllWithFetch(@Param("businessRoleId") UUID businessRoleId);
 
      List<SuBusinessRoleProgram> findByProgramIdAndIsDeleteFalse(UUID programId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuVerifyRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuVerify;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-public interface SuVerifyRepository extends JpaRepository<SuVerify, UUID> {
-    
-    // 1. ค้นหาด้วย token (พื้นฐานที่สุด)
-    Optional<SuVerify> findByToken(String token);
-    
-    // 2. ค้นหา token ที่ยังไม่ถูกลบและยังไม่หมดอายุ
-    Optional<SuVerify> findByTokenAndIsDeleteFalseAndExpireAtAfter(String token, Instant now);
-    
-    // 3. ค้นหาคำขอ verification ที่ค้างอยู่ (ยังไม่ถูกลบ, ยังไม่หมดอายุ) สำหรับ reference + type
-    //    ใช้ตอนขอ verify ใหม่ (ป้องกันสร้างหลายตัว)
-    Optional<SuVerify> findByReferenceNumberAndVerifyTypeAndIsDeleteFalseAndExpireAtAfter(
-        String referenceNumber, String verifyType, Instant now);
-    
-    // 4. นับจำนวนคำขอ verification ที่ active (ใช้ limit การส่ง OTP/email)
-    long countByReferenceNumberAndVerifyTypeAndIsDeleteFalseAndExpireAtAfter(
-        String referenceNumber, String verifyType, Instant now);
-    
-    // 5. ค้นหา token ที่ยังไม่ถูกลบ
-    Optional<SuVerify> findByTokenAndIsDeleteFalse(String token);
-
-   Optional<SuVerify> findByVerifyTypeAndReferenceNumberAndToken(String verifyType, String referenceNumber, String token);
 }
 </file>
 
@@ -71084,168 +71659,6 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
         response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
         response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
         response.setRowVersion(ub.getRowVersion());
-        return response;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/VerifyServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.response.VerifyTokenResponse;
-import com.softinter.sicapi.entity.su.SuVerify;
-import com.softinter.sicapi.repository.su.SuVerifyRepository;
-import com.softinter.sicapi.service.MailService;
-import com.softinter.sicapi.service.VerifyService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.util.Base64;
-import java.util.UUID;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class VerifyServiceImpl implements VerifyService {
-
-    private final SuVerifyRepository verifyRepository;
-    private final MailService mailService;
-    private final SecureRandom secureRandom = new SecureRandom();
-
-    @Override
-    @Transactional
-    public VerifyTokenResponse generateVerifyToken(String recipient) {
-        try {
-            log.info("📧 Starting verification for: {}", recipient);
-
-            if (recipient == null || recipient.trim().isEmpty()) {
-                throw new IllegalArgumentException("Recipient cannot be null or empty");
-            }
-
-            // Generate token
-            byte[] tokenBytes = new byte[32];
-            secureRandom.nextBytes(tokenBytes);
-            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
-
-            // Generate reference number
-            String referenceNumber = UUID.randomUUID().toString();
-
-            // Save to database
-            SuVerify verify = new SuVerify();
-            verify.setRecipient(recipient);
-            verify.setToken(token);
-            verify.setReferenceNumber(referenceNumber);
-            verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
-            verify.setVerifyType("Email");
-
-            SuVerify saved = verifyRepository.save(verify);
-            log.debug("Saved verify with id: {}", saved.getId());
-
-            // Prepare response
-            VerifyTokenResponse response = new VerifyTokenResponse();
-            response.setValid(false);
-            response.setVerifyType("Email");
-            response.setReferenceNumber(referenceNumber);
-            response.setRecipient(recipient);
-            response.setExpirationMinutes(1440);
-            response.setMaxRetry(5);
-            response.setExpiresAt(verify.getExpireAt());
-            response.setMessage("Verification token generated successfully");
-
-            // Send email
-            try {
-                mailService.sendTemplatedMail(recipient, "VERIFY_EMAIL", token, referenceNumber);
-                log.info("✅ Email sent to: {}", recipient);
-            } catch (Exception e) {
-                log.error("❌ Failed to send email: {}", recipient, e);
-            }
-
-            return response;
-
-        } catch (Exception e) {
-            log.error("Failed to generate verification token", e);
-            throw new RuntimeException("An error occurred while generating verification token", e);
-        }
-    }
-
-    // ===========================
-    // Method เดิม (ใช้ token อย่างเดียว) – เก็บไว้เพื่อ backward compatibility
-    // ===========================
-    @Override
-    @Transactional
-    public VerifyTokenResponse verifyToken(String token) {
-        SuVerify verify = verifyRepository.findByToken(token).orElse(null);
-
-        VerifyTokenResponse response = new VerifyTokenResponse();
-        if (verify == null) {
-            response.setValid(false);
-            response.setMessage("Invalid token");
-            return response;
-        }
-
-        if (verify.getExpireAt().isBefore(Instant.now())) {
-            response.setValid(false);
-            response.setRecipient(verify.getRecipient());
-            response.setMessage("Token expired");
-            return response;
-        }
-
-        // Soft delete after use
-        verify.setIsDelete(true);
-        verify.setDeleteBy("system");
-        verify.setDeleteDate(Instant.now());
-        verifyRepository.save(verify);
-
-        response.setValid(true);
-        response.setRecipient(verify.getRecipient());
-        response.setMessage("Token verified successfully");
-        return response;
-    }
-
-    // ===========================
-    // Method ใหม่ ที่รับ referenceNumber + token (เหมือน .NET)
-    // ===========================
-    @Override
-    @Transactional
-    public VerifyTokenResponse verifyToken(String type, String referenceNumber, String token) {
-        SuVerify verify = verifyRepository.findByVerifyTypeAndReferenceNumberAndToken(type, referenceNumber, token).orElse(null);
-
-        VerifyTokenResponse response = new VerifyTokenResponse();
-        if (verify == null) {
-            response.setValid(false);
-            response.setMessage("Invalid reference number or token");
-            return response;
-        }
-
-        // ถ้า token ถูกใช้ไปแล้ว (soft delete)
-        if (verify.getIsDelete() != null && verify.getIsDelete()) {
-            response.setValid(false);
-            response.setRecipient(verify.getRecipient());
-            response.setMessage("Token already used");
-            return response;
-        }
-
-        if (verify.getExpireAt().isBefore(Instant.now())) {
-            response.setValid(false);
-            response.setRecipient(verify.getRecipient());
-            response.setMessage("Token expired");
-            return response;
-        }
-
-        // Soft delete after successful verification (same as .NET)
-        verify.setIsDelete(true);
-        verify.setDeleteBy("system");
-        verify.setDeleteDate(Instant.now());
-        verifyRepository.save(verify);
-
-        response.setValid(true);
-        response.setRecipient(verify.getRecipient());
-        response.setReferenceNumber(verify.getReferenceNumber());
-        response.setMessage("Token verified successfully");
         return response;
     }
 }
@@ -73592,151 +74005,6 @@ public class ProfileController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessController.java">
-package com.softinter.sicapi.controller.su;
-
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
-import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
-import com.softinter.sicapi.util.LocalizationHelper;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@RestController
-@RequestMapping("/api/su/user-businesses")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "User Business", description = "User Business Management API")
-public class SuUserBusinessController {
-
-    private final SuUserBusinessRepository userBusinessRepository;
-
-    @GetMapping
-    @Operation(summary = "Get all user businesses")
-    public ResponseEntity<List<UserBusinessResponse>> getAll(
-            @RequestParam(required = false) String userId) {
-        List<SuUserBusiness> list;
-        if (userId != null) {
-            list = userBusinessRepository.findByUserIdAndIsActiveTrue(userId);
-        } else {
-            list = userBusinessRepository.findAll();
-        }
-        List<UserBusinessResponse> response = list.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/paging")
-    @Operation(summary = "Get user businesses with pagination")
-    public ResponseEntity<PaginationResponse<UserBusinessResponse>> paging(
-            @Valid @ModelAttribute UserBusinessPageRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNumber() - 1, request.getPageSize());
-
-        Specification<SuUserBusiness> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("isDelete"), false));
-            if (request.getUserId() != null) {
-                predicates.add(cb.equal(root.get("userId"), request.getUserId()));
-            }
-            if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-                String keyword = "%" + request.getKeyword().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("userId")), keyword)
-                ));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        Page<SuUserBusiness> page = userBusinessRepository.findAll(spec, pageable);
-        List<UserBusinessResponse> data = page.getContent().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-
-        PaginationResponse<UserBusinessResponse> response = new PaginationResponse<>();
-        response.setData(data);
-        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
-        pageableDto.setPageNumber(request.getPageNumber());
-        pageableDto.setPageSize(request.getPageSize());
-        pageableDto.setTotalElements(page.getTotalElements());
-        pageableDto.calculateTotalPages();
-        response.setPageable(pageableDto);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/lov")
-    @Operation(summary = "Get user business LOV")
-    public ResponseEntity<List<LovResponse>> lov(@RequestParam String userId) {
-        List<LovResponse> lov = userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
-                .stream()
-                .map(ub -> new LovResponse(ub.getId(), ub.getUserId()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(lov);
-    }
-
-    @PostMapping("/save")
-    @Operation(summary = "Save user business")
-    public ResponseEntity<UUID> save(@Valid @RequestBody SaveUserBusinessRequest request) {
-        SuUserBusiness ub;
-        if (request.getId() != null) {
-            ub = userBusinessRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("User business not found"));
-        } else {
-            ub = new SuUserBusiness();
-        }
-        ub.setUserId(request.getUserId());
-        ub.setIsActive(request.isActive());
-        ub.setIsDefault(request.isDefault());
-        // หมายเหตุ: ยังไม่ได้ set businessId หรือ relation ถ้ามี ควรเพิ่ม
-        userBusinessRepository.save(ub);
-        return ResponseEntity.ok(ub.getId());
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete user business")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        SuUserBusiness ub = userBusinessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User business not found"));
-        ub.setIsDelete(true);
-        ub.setIsActive(false);
-        userBusinessRepository.save(ub);
-        return ResponseEntity.noContent().build();
-    }
-
-   private UserBusinessResponse toResponse(SuUserBusiness ub) {
-    UserBusinessResponse response = new UserBusinessResponse();
-    response.setId(ub.getId());
-    response.setUserId(ub.getUserId());
-    if (ub.getBusiness() != null) {
-        response.setBusinessId(ub.getBusiness().getId());
-        response.setBusinessCode(ub.getBusiness().getBusinessCode());
-        // ✅ เพิ่ม
-        response.setBusinessName(LocalizationHelper.getBusinessName(ub.getBusiness()));
-    }
-    response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
-    response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
-    response.setRowVersion(ub.getRowVersion());
-    return response;
-}
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java">
 // File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java
 package com.softinter.sicapi.dto.request;
@@ -73773,30 +74041,114 @@ public class PmDiagramTabRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleRequest.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleProgramRequest.java">
 package com.softinter.sicapi.dto.request;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
-import com.softinter.sicapi.entity.enums.EntityState;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class SaveBusinessRoleRequest {
+public class SaveBusinessRoleProgramRequest {
     private UUID id;
-    private UUID businessId;
-    private UUID parentRoleId;
-    private String roleCode;
-    private String roleNameEn;
-    private String roleNameLocal;
-    private String roleLevel;
+    private UUID businessRoleId;
+    private UUID programId;
+
+    @JsonProperty("isActive")
+    private boolean active = true;
+
+    @JsonProperty("isAdd")
+    private boolean add;
+
+    @JsonProperty("isBack")
+    private boolean back;
+
+    @JsonProperty("isPrint")
+    private boolean print;
+
+    @JsonProperty("isRemove")
+    private boolean remove;
+
+    @JsonProperty("isSave")
+    private boolean save;
+
+    @JsonProperty("isSearch")
+    private boolean search;
+
+    Integer state;
+    private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveProfileRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+import java.util.List;
+import java.util.UUID;
+
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+
+@Data
+public class SaveProfileRequest {
+    private String email;
+    private UUID avatarUploadId;
+    private UUID uploadGroupId;
+    private List<StorageUploadReference> uploadGroupData;
+    private String firstNameEn;
+    private String middleNameEn;
+    private String lastNameEn;
+    private String firstNameLocal;
+    private String middleNameLocal;
+    private String lastNameLocal;
+    private UUID titleId;
+    private String phoneNumber;
+    private String address;
+    private UUID countryId;
+    private UUID provinceId;
+    private UUID districtId;
+    private UUID subDistrictId;
+    private String zipCode;
+    private String addressEn;
+    private String addressLocal;
+    private Integer rowVersion;
+    private Integer state;;          
+    private UUID id;                     
+    private String referenceNumber;     
+    private String verifyToken;    
+    private String taxId;     
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java">
+// src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java
+
+package com.softinter.sicapi.dto.request;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveProgramRequest {
+    private UUID id;
+    private UUID parentProgramId;
+    private String programCode;
+    private String programNameEn;
+    private String programNameLocal;
+    private String programIcon;
+    private String routePath;
     private Integer sortOrder;
-    private boolean isActive = true;
+
+    @JsonProperty("isActive")
+    private boolean isActive;
+
     private Integer state;
     private Integer rowVersion;
-    private String color;
 }
 </file>
 
@@ -73822,60 +74174,6 @@ public class TaskRequest {
     private String priority;
     private String color;
     private List<String> assigneeIds;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleProgramResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class BusinessRoleProgramResponse {
-    private UUID id;
-    private UUID businessRoleId;
-    private String businessRoleCode;
-    private UUID programId;
-    private String programCode;
-    private String programNameEn;
-    private String programNameLocal;
-    private String programName;
-    private boolean isActive;
-    private boolean isAdd;
-    private boolean isBack;
-    private boolean isPrint;
-    private boolean isRemove;
-    private boolean isSave;
-    private boolean isSearch;
-    private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class BusinessRoleResponse {
-    private UUID id;
-    private UUID businessId;
-    private String businessName;
-    private UUID parentRoleId;
-    private String parentRoleCode;
-    private String roleCode;
-    private String roleNameEn;
-    private String roleNameLocal;
-    private String roleName;
-    private String roleLevel;
-    private Integer sortOrder;
-    private boolean isActive;
-    private Integer rowVersion;
-    private String color;
 }
 </file>
 
@@ -73996,32 +74294,6 @@ public class ProfileResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ProgramResponse.java">
-// src/main/java/com/softinter/sicapi/dto/response/ProgramResponse.java
-
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class ProgramResponse {
-    private UUID id;
-    private UUID parentProgramId;
-    private String parentProgramCode;
-    private String programCode;
-    private String programNameEn;
-    private String programNameLocal;
-    private String programName;
-    private String programIcon;
-    private String routePath;
-    private Integer sortOrder;
-    private boolean isActive;
-    private Integer rowVersion;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/TaskResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -74052,167 +74324,6 @@ public class TaskResponse {
     private String priority;
     private List<String> assigneeIds;
     private Map<String, String> assigneeNames; 
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/base/BaseBusinessEntity.java">
-package com.softinter.sicapi.entity.base;
-
-import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และเอา Instant ออก
-import java.util.UUID;
-
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import com.softinter.sicapi.entity.enums.EntityState;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Transient;
-import jakarta.persistence.Version;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-@Data
-@EqualsAndHashCode(of = "id")
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class BaseBusinessEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-
-    @Column(name = "business_id", nullable = false, length = 36)
-    private UUID businessId;
-
-    @CreatedBy
-    @Column(name = "created_by", nullable = false, length = 100)
-    private String createdBy = "system";
-
-    @CreatedDate
-    @Column(name = "created_date", nullable = false, updatable = false) // เพิ่ม updatable = false เพื่อล็อกเวลาสร้างตัวแรกไว้
-    private Instant createdDate; // เปลี่ยนเป็น Instant
-
-    @LastModifiedBy
-    @Column(name = "updated_by", nullable = false, length = 100)
-    private String updatedBy = "system";
-
-    @LastModifiedDate
-    @Column(name = "updated_date", nullable = false)
-    private Instant updatedDate; // เปลี่ยนเป็น Instant
-
-    @Column(name = "is_delete", nullable = false)
-    private Boolean isDelete = false;
-
-    @Column(name = "delete_by", length = 100)
-    private String deleteBy;
-
-    @Column(name = "delete_date")
-    private Instant deleteDate; 
-
-    @Version
-    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
-    private Integer  rowVersion;
-
-    @Transient
-    private EntityState state = EntityState.DETACHED;
-
-    @PrePersist
-    @PreUpdate
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-        if (this.isDelete == null) {
-            this.isDelete = false;
-        }
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/base/BaseEntity.java">
-package com.softinter.sicapi.entity.base;
-
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import com.softinter.sicapi.entity.enums.EntityState;
-
-import java.time.Instant; // เปลี่ยนมาใช้ java.time.Instant และลบ Instant ออก
-import java.util.UUID;
-
-@Data
-@EqualsAndHashCode(of = "id")
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-
-    @CreatedBy
-    @Column(name = "created_by", nullable = false, length = 100)
-    private String createdBy = "system";
-
-    @CreatedDate
-    @Column(name = "created_date", nullable = false, updatable = false) // แนะนำเพิ่ม updatable = false ป้องกันการถูกเขียนทับ
-    private Instant createdDate; // เปลี่ยนเป็น Instant
-
-    @LastModifiedBy
-    @Column(name = "updated_by", nullable = false, length = 100)
-    private String updatedBy = "system";
-
-    @LastModifiedDate
-    @Column(name = "updated_date", nullable = false)
-    private Instant updatedDate; // เปลี่ยนเป็น Instant
-
-    @Column(name = "is_delete", nullable = false)
-    private Boolean isDelete = false;
-
-    @Column(name = "delete_by", length = 100)
-    private String deleteBy;
-
-    @Column(name = "delete_date")
-    private Instant deleteDate; // เปลี่ยนเป็น Instant
-    
-    @Version
-    @Column(name = "xmin", columnDefinition = "xid", insertable = false, updatable = false)
-    private Integer  rowVersion;
-    
-    @Transient
-    private EntityState state = EntityState.DETACHED;
-
-    @PrePersist
-    @PreUpdate
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-        if (this.isDelete == null) {
-            this.isDelete = false;
-        }
-    }
-    
 }
 </file>
 
@@ -74469,6 +74580,48 @@ public class PmWorkPackage extends BaseBusinessEntity  {
 
     @OneToMany(mappedBy = "workPackage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PmTask> tasks = new ArrayList<>();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProfileRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.entity.su.SuProfile;
+
+@Repository
+public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
+
+    Optional<SuProfile> findByUserId(String userId); 
+    
+    boolean existsByUserId(String userId);
+
+    // หรือถ้าต้องการ check isDelete
+    Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
+
+    boolean existsByEmailIgnoreCase(String email);
+    
+    Optional<SuProfile> findByEmailIgnoreCase(String email);
+
+    Optional<SuProfile> findByPhoneNumber(String phoneNumber);
+
+    Optional<SuProfile> findByTaxId(String taxId);
+
+
+    boolean existsByPhoneNumber(String phoneNumber);
+    
+    boolean existsByTaxId(String taxId);
+
+    @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
+    List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
 }
 </file>
 
@@ -79914,47 +80067,7 @@ public class SuProgramController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleProgramRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveBusinessRoleProgramRequest {
-    private UUID id;
-    private UUID businessRoleId;
-    private UUID programId;
-
-    @JsonProperty("isActive")
-    private boolean active = true;
-
-    @JsonProperty("isAdd")
-    private boolean add;
-
-    @JsonProperty("isBack")
-    private boolean back;
-
-    @JsonProperty("isPrint")
-    private boolean print;
-
-    @JsonProperty("isRemove")
-    private boolean remove;
-
-    @JsonProperty("isSave")
-    private boolean save;
-
-    @JsonProperty("isSearch")
-    private boolean search;
-
-    Integer state;
-    private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveProfileRequest.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRequest.java">
 package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
@@ -79966,62 +80079,35 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
-public class SaveProfileRequest {
-    private String email;
-    private UUID avatarUploadId;
-    private UUID uploadGroupId;
-    private List<StorageUploadReference> uploadGroupData;
+public class SaveBusinessRequest {
+    private UUID id;
+    private String taxId;
+    private String businessCode;
+    private String branchCode;
+    private String personType;
+    private UUID titleId;
     private String firstNameEn;
     private String middleNameEn;
     private String lastNameEn;
     private String firstNameLocal;
     private String middleNameLocal;
     private String lastNameLocal;
-    private UUID titleId;
-    private String phoneNumber;
-    private String address;
     private UUID countryId;
+    private boolean supportLocalAddress;
+    private String addressEn;
+    private String addressLocal;
     private UUID provinceId;
     private UUID districtId;
     private UUID subDistrictId;
     private String zipCode;
-    private String addressEn;
-    private String addressLocal;
-    private Integer rowVersion;
-    private Integer state;;          
-    private UUID id;                     
-    private String referenceNumber;     
-    private String verifyToken;    
-    private String taxId;     
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java">
-// src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java
-
-package com.softinter.sicapi.dto.request;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveProgramRequest {
-    private UUID id;
-    private UUID parentProgramId;
-    private String programCode;
-    private String programNameEn;
-    private String programNameLocal;
-    private String programIcon;
-    private String routePath;
-    private Integer sortOrder;
-
-    @JsonProperty("isActive")
-    private boolean isActive;
-
+    private String email;
+    private String phoneNumber;
+    private String fax;
     private Integer state;
+    private UUID uploadGroupId;
+    private boolean isActive;
     private Integer rowVersion;
+    private List<StorageUploadReference> uploadGroupData;
 }
 </file>
 
@@ -80184,48 +80270,6 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
   
 
   
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProfileRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.entity.su.SuProfile;
-
-@Repository
-public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
-
-    Optional<SuProfile> findByUserId(String userId); 
-    
-    boolean existsByUserId(String userId);
-
-    // หรือถ้าต้องการ check isDelete
-    Optional<SuProfile> findByUserIdAndIsDeleteFalse(String userId);
-
-    boolean existsByEmailIgnoreCase(String email);
-    
-    Optional<SuProfile> findByEmailIgnoreCase(String email);
-
-    Optional<SuProfile> findByPhoneNumber(String phoneNumber);
-
-    Optional<SuProfile> findByTaxId(String taxId);
-
-
-    boolean existsByPhoneNumber(String phoneNumber);
-    
-    boolean existsByTaxId(String taxId);
-
-    @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
-    List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
 }
 </file>
 
@@ -83760,50 +83804,6 @@ public class SuBusinessRoleProgramController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-import java.util.List;
-import java.util.UUID;
-
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-
-@Data
-public class SaveBusinessRequest {
-    private UUID id;
-    private String taxId;
-    private String businessCode;
-    private String branchCode;
-    private String personType;
-    private UUID titleId;
-    private String firstNameEn;
-    private String middleNameEn;
-    private String lastNameEn;
-    private String firstNameLocal;
-    private String middleNameLocal;
-    private String lastNameLocal;
-    private UUID countryId;
-    private boolean supportLocalAddress;
-    private String addressEn;
-    private String addressLocal;
-    private UUID provinceId;
-    private UUID districtId;
-    private UUID subDistrictId;
-    private String zipCode;
-    private String email;
-    private String phoneNumber;
-    private String fax;
-    private Integer state;
-    private UUID uploadGroupId;
-    private boolean isActive;
-    private Integer rowVersion;
-    private List<StorageUploadReference> uploadGroupData;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -85362,6 +85362,328 @@ public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
     @GetMapping("/{id}")
     public ResponseEntity<SuUserBusinessMemberResponse> getMember(@PathVariable UUID id) {
         return ResponseEntity.ok(memberService.getMemberById(id));
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ProfileServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.softinter.sicapi.dto.request.SaveProfileRequest;
+import com.softinter.sicapi.dto.response.ProfileResponse;
+import com.softinter.sicapi.dto.response.VerifyTokenResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.FileVisibility;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.db.DbCountryRepository;
+import com.softinter.sicapi.repository.db.DbDistrictRepository;
+import com.softinter.sicapi.repository.db.DbProvinceRepository;
+import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
+import com.softinter.sicapi.repository.db.DbTitleRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.service.ProfileService;
+import com.softinter.sicapi.service.VerifyService;
+import com.softinter.sicapi.util.LocalizationHelper;
+import com.softinter.sicapi.util.UniquenessValidator;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProfileServiceImpl implements ProfileService {
+
+    private final SuProfileRepository profileRepository;
+    private final SuUploadRepository uploadRepository;
+    private final DbTitleRepository titleRepository;
+    private final DbCountryRepository countryRepository;
+    private final DbProvinceRepository provinceRepository;
+    private final DbDistrictRepository districtRepository;
+    private final DbSubDistrictRepository subDistrictRepository;
+    private final FileStorageService fileStorageService;
+    private final VerifyService verifyService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfileByUserId(String userId) {
+        SuProfile profile = profileRepository.findByUserIdAndIsDeleteFalse(userId)
+                .orElse(new SuProfile());
+        return toResponse(profile);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isProfileComplete(String userId) {
+        return profileRepository.existsByUserId(userId);
+    }
+
+    @Override
+    @Transactional
+    public UUID saveProfile(String userId, SaveProfileRequest request) {
+        // 1. ตรวจสอบ State (Required)
+        if (request.getState() == null) {
+            throw new IllegalArgumentException("State must be ADDED or MODIFIED");
+        }
+
+        // 2. ตรวจสอบ Id และ RowVersion กรณี MODIFIED
+        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
+            if (request.getId() == null) {
+                throw new IllegalArgumentException("Id is required when state is MODIFIED");
+            }
+            if (request.getRowVersion() == null) {
+                throw new IllegalArgumentException("RowVersion is required when state is MODIFIED");
+            }
+        }
+
+        // 3. โหลดหรือสร้าง Entity
+        SuProfile profile;
+        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
+            profile = profileRepository.findById(request.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
+            profile.setRowVersion(request.getRowVersion());
+        } else {
+            profile = new SuProfile();
+        }
+
+        // ============================================================
+        // 4. ✅ ตรวจสอบความซ้ำของ Email, Phone, Tax ID (ใช้ UniquenessValidator)
+        // ============================================================
+        UniquenessValidator.validate(
+            request.getEmail(),
+            profile.getEmail(),
+            profileRepository::findByEmailIgnoreCase,
+            profile.getId(),
+            "Email"
+        );
+
+        UniquenessValidator.validate(
+            request.getPhoneNumber(),
+            profile.getPhoneNumber(),
+            profileRepository::findByPhoneNumber,
+            profile.getId(),
+            "Phone number"
+        );
+
+        UniquenessValidator.validate(
+            request.getTaxId(),
+            profile.getTaxId(),
+            profileRepository::findByTaxId,
+            profile.getId(),
+            "Tax ID"
+        );
+
+        // ============================================================
+        // 5. ตรวจสอบ Email Verification (เฉพาะเมื่ออีเมลเปลี่ยน)
+        // ============================================================
+        boolean isEmailChanged = false;
+        if (request.getState() == EntityState.ADDED.getEntityStateCode()) {
+            isEmailChanged = true;
+        } else if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
+            String oldEmail = profile.getEmail();
+            if (oldEmail != null && !oldEmail.equalsIgnoreCase(request.getEmail())) {
+                isEmailChanged = true;
+            }
+        }
+
+        if (isEmailChanged) {
+            if (!StringUtils.hasText(request.getReferenceNumber())) {
+                throw new IllegalArgumentException("Reference number is missing.");
+            }
+            if (!StringUtils.hasText(request.getVerifyToken())) {
+                throw new IllegalArgumentException("Verification token is missing.");
+            }
+
+            VerifyTokenResponse verifyResponse = verifyService.verifyToken(
+                "Email",
+                request.getReferenceNumber(),
+                request.getVerifyToken()
+            );
+
+            if (verifyResponse == null || !verifyResponse.getValid()) {
+                String errorMsg = (verifyResponse != null && StringUtils.hasText(verifyResponse.getMessage()))
+                                    ? verifyResponse.getMessage()
+                                    : "Email verification failed.";
+                throw new IllegalArgumentException(errorMsg);
+            }
+        }
+
+        // ============================================================
+        // 6. จัดการ UploadGroupId
+        // ============================================================
+        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
+        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
+        profile.setUploadGroupId(finalUploadGroupId);
+
+        // ============================================================
+        // 7. Mapping ข้อมูล
+        // ============================================================
+        profile.setUserId(userId);
+        profile.setEmail(request.getEmail());
+        profile.setFirstNameEn(request.getFirstNameEn());
+        profile.setMiddleNameEn(request.getMiddleNameEn());
+        profile.setLastNameEn(request.getLastNameEn());
+        profile.setFirstNameLocal(request.getFirstNameLocal());
+        profile.setMiddleNameLocal(request.getMiddleNameLocal());
+        profile.setLastNameLocal(request.getLastNameLocal());
+        profile.setPhoneNumber(request.getPhoneNumber());
+        profile.setTaxId(request.getTaxId());
+        profile.setAddressEn(request.getAddressEn());
+        profile.setAddressLocal(request.getAddressLocal());
+        profile.setZipCode(request.getZipCode());
+
+        if (request.getTitleId() != null) {
+            profile.setTitle(titleRepository.findById(request.getTitleId()).orElse(null));
+        } else {
+            profile.setTitle(null);
+        }
+        if (request.getCountryId() != null) {
+            profile.setCountry(countryRepository.findById(request.getCountryId()).orElse(null));
+        } else {
+            profile.setCountry(null);
+        }
+        if (request.getProvinceId() != null) {
+            profile.setProvince(provinceRepository.findById(request.getProvinceId()).orElse(null));
+        } else {
+            profile.setProvince(null);
+        }
+        if (request.getDistrictId() != null) {
+            profile.setDistrict(districtRepository.findById(request.getDistrictId()).orElse(null));
+        } else {
+            profile.setDistrict(null);
+        }
+        if (request.getSubDistrictId() != null) {
+            profile.setSubDistrict(subDistrictRepository.findById(request.getSubDistrictId()).orElse(null));
+        } else {
+            profile.setSubDistrict(null);
+        }
+
+        // 8. บันทึก
+        profile = profileRepository.save(profile);
+
+        // 9. Sync Uploads
+        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+        }
+
+        return profile.getId();
+    }
+
+    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
+        if (existingGroupId != null) {
+            return existingGroupId;
+        }
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        for (StorageUploadReference ref : references) {
+            if (ref.getUploadGroupId() != null) {
+                return ref.getUploadGroupId();
+            }
+            if (ref.getId() != null) {
+                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
+                if (upload != null && upload.getUploadGroupId() != null) {
+                    return upload.getUploadGroupId();
+                }
+            }
+        }
+        return null;
+    }
+
+    // ============================================================
+    // toResponse - ใช้ LocalizationHelper แทนการเขียน if/else
+    // ============================================================
+    private ProfileResponse toResponse(SuProfile profile) {
+        if (profile == null || profile.getId() == null) return null;
+
+        ProfileResponse response = new ProfileResponse();
+        response.setId(profile.getId());
+
+        // ✅ ใช้ LocalizationHelper.getFullName(profile) แทน buildFullName
+        response.setName(LocalizationHelper.getFullName(profile));
+
+        response.setTaxId(profile.getTaxId());
+        response.setTitleId(profile.getTitleId());
+
+        response.setFirstNameEn(profile.getFirstNameEn());
+        response.setMiddleNameEn(profile.getMiddleNameEn());
+        response.setLastNameEn(profile.getLastNameEn());
+        response.setFirstNameLocal(profile.getFirstNameLocal());
+        response.setMiddleNameLocal(profile.getMiddleNameLocal());
+        response.setLastNameLocal(profile.getLastNameLocal());
+
+        response.setSupportLocalAddress(profile.getSupportLocalAddress());
+        response.setAddressEn(profile.getAddressEn());
+        response.setAddressLocal(profile.getAddressLocal());
+
+        response.setCountryId(profile.getCountryId());
+        response.setProvinceId(profile.getProvinceId());
+        response.setDistrictId(profile.getDistrictId());
+        response.setSubDistrictId(profile.getSubDistrictId());
+        response.setZipCode(profile.getZipCode());
+
+        response.setEmail(profile.getEmail());
+        response.setPhoneNumber(profile.getPhoneNumber());
+
+        response.setRowVersion(profile.getRowVersion());
+        response.setState(profile.getState() != null
+                ? profile.getState().getEntityStateCode()
+                : EntityState.DETACHED.getEntityStateCode());
+
+        UUID uploadGroupId = profile.getUploadGroupId();
+        response.setUploadGroupId(uploadGroupId);
+
+        List<StorageUploadReference> uploadData = new ArrayList<>();
+        if (uploadGroupId != null) {
+            List<SuUpload> uploads = uploadRepository
+                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+
+            for (SuUpload upload : uploads) {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(uploadGroupId);
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+
+                // TODO: ทำให้ baseUrl configurable
+                String baseUrl = "http://localhost:5265";
+                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+
+                ref.setState(EntityState.DETACHED.getEntityStateCode());
+                ref.setIsActive(upload.getIsActive());
+                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+
+                uploadData.add(ref);
+            }
+        }
+        response.setUploadGroupData(uploadData);
+
+        return response;
+    }
+
+    private String mapVisibilityToString(FileVisibility visibility) {
+        if (visibility == null) return "Public";
+        switch (visibility) {
+            case UPLOADER_ONLY: return "UploaderOnly";
+            case BUSINESS_ONLY: return "BusinessOnly";
+            case ANYONE_WITH_LINK: return "AnyoneWithLink";
+            case PUBLIC: return "Public";
+            default: return "Public";
+        }
     }
 }
 </file>
@@ -86979,328 +87301,6 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
     @Query("SELECT COUNT(ub) FROM SuUserBusiness ub WHERE ub.userId IN :userIds AND ub.businessId = :businessId AND ub.isActive = true")
     long countByUserIdInAndBusinessId(@Param("userIds") List<String> userIds, @Param("businessId") UUID businessId);
 
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ProfileServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import com.softinter.sicapi.dto.request.SaveProfileRequest;
-import com.softinter.sicapi.dto.response.ProfileResponse;
-import com.softinter.sicapi.dto.response.VerifyTokenResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.FileVisibility;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.repository.db.DbCountryRepository;
-import com.softinter.sicapi.repository.db.DbDistrictRepository;
-import com.softinter.sicapi.repository.db.DbProvinceRepository;
-import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
-import com.softinter.sicapi.repository.db.DbTitleRepository;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.FileStorageService;
-import com.softinter.sicapi.service.ProfileService;
-import com.softinter.sicapi.service.VerifyService;
-import com.softinter.sicapi.util.LocalizationHelper;
-import com.softinter.sicapi.util.UniquenessValidator;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class ProfileServiceImpl implements ProfileService {
-
-    private final SuProfileRepository profileRepository;
-    private final SuUploadRepository uploadRepository;
-    private final DbTitleRepository titleRepository;
-    private final DbCountryRepository countryRepository;
-    private final DbProvinceRepository provinceRepository;
-    private final DbDistrictRepository districtRepository;
-    private final DbSubDistrictRepository subDistrictRepository;
-    private final FileStorageService fileStorageService;
-    private final VerifyService verifyService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ProfileResponse getProfileByUserId(String userId) {
-        SuProfile profile = profileRepository.findByUserIdAndIsDeleteFalse(userId)
-                .orElse(new SuProfile());
-        return toResponse(profile);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isProfileComplete(String userId) {
-        return profileRepository.existsByUserId(userId);
-    }
-
-    @Override
-    @Transactional
-    public UUID saveProfile(String userId, SaveProfileRequest request) {
-        // 1. ตรวจสอบ State (Required)
-        if (request.getState() == null) {
-            throw new IllegalArgumentException("State must be ADDED or MODIFIED");
-        }
-
-        // 2. ตรวจสอบ Id และ RowVersion กรณี MODIFIED
-        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
-            if (request.getId() == null) {
-                throw new IllegalArgumentException("Id is required when state is MODIFIED");
-            }
-            if (request.getRowVersion() == null) {
-                throw new IllegalArgumentException("RowVersion is required when state is MODIFIED");
-            }
-        }
-
-        // 3. โหลดหรือสร้าง Entity
-        SuProfile profile;
-        if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
-            profile = profileRepository.findById(request.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
-            profile.setRowVersion(request.getRowVersion());
-        } else {
-            profile = new SuProfile();
-        }
-
-        // ============================================================
-        // 4. ✅ ตรวจสอบความซ้ำของ Email, Phone, Tax ID (ใช้ UniquenessValidator)
-        // ============================================================
-        UniquenessValidator.validate(
-            request.getEmail(),
-            profile.getEmail(),
-            profileRepository::findByEmailIgnoreCase,
-            profile.getId(),
-            "Email"
-        );
-
-        UniquenessValidator.validate(
-            request.getPhoneNumber(),
-            profile.getPhoneNumber(),
-            profileRepository::findByPhoneNumber,
-            profile.getId(),
-            "Phone number"
-        );
-
-        UniquenessValidator.validate(
-            request.getTaxId(),
-            profile.getTaxId(),
-            profileRepository::findByTaxId,
-            profile.getId(),
-            "Tax ID"
-        );
-
-        // ============================================================
-        // 5. ตรวจสอบ Email Verification (เฉพาะเมื่ออีเมลเปลี่ยน)
-        // ============================================================
-        boolean isEmailChanged = false;
-        if (request.getState() == EntityState.ADDED.getEntityStateCode()) {
-            isEmailChanged = true;
-        } else if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
-            String oldEmail = profile.getEmail();
-            if (oldEmail != null && !oldEmail.equalsIgnoreCase(request.getEmail())) {
-                isEmailChanged = true;
-            }
-        }
-
-        if (isEmailChanged) {
-            if (!StringUtils.hasText(request.getReferenceNumber())) {
-                throw new IllegalArgumentException("Reference number is missing.");
-            }
-            if (!StringUtils.hasText(request.getVerifyToken())) {
-                throw new IllegalArgumentException("Verification token is missing.");
-            }
-
-            VerifyTokenResponse verifyResponse = verifyService.verifyToken(
-                "Email",
-                request.getReferenceNumber(),
-                request.getVerifyToken()
-            );
-
-            if (verifyResponse == null || !verifyResponse.getValid()) {
-                String errorMsg = (verifyResponse != null && StringUtils.hasText(verifyResponse.getMessage()))
-                                    ? verifyResponse.getMessage()
-                                    : "Email verification failed.";
-                throw new IllegalArgumentException(errorMsg);
-            }
-        }
-
-        // ============================================================
-        // 6. จัดการ UploadGroupId
-        // ============================================================
-        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
-        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
-        profile.setUploadGroupId(finalUploadGroupId);
-
-        // ============================================================
-        // 7. Mapping ข้อมูล
-        // ============================================================
-        profile.setUserId(userId);
-        profile.setEmail(request.getEmail());
-        profile.setFirstNameEn(request.getFirstNameEn());
-        profile.setMiddleNameEn(request.getMiddleNameEn());
-        profile.setLastNameEn(request.getLastNameEn());
-        profile.setFirstNameLocal(request.getFirstNameLocal());
-        profile.setMiddleNameLocal(request.getMiddleNameLocal());
-        profile.setLastNameLocal(request.getLastNameLocal());
-        profile.setPhoneNumber(request.getPhoneNumber());
-        profile.setTaxId(request.getTaxId());
-        profile.setAddressEn(request.getAddressEn());
-        profile.setAddressLocal(request.getAddressLocal());
-        profile.setZipCode(request.getZipCode());
-
-        if (request.getTitleId() != null) {
-            profile.setTitle(titleRepository.findById(request.getTitleId()).orElse(null));
-        } else {
-            profile.setTitle(null);
-        }
-        if (request.getCountryId() != null) {
-            profile.setCountry(countryRepository.findById(request.getCountryId()).orElse(null));
-        } else {
-            profile.setCountry(null);
-        }
-        if (request.getProvinceId() != null) {
-            profile.setProvince(provinceRepository.findById(request.getProvinceId()).orElse(null));
-        } else {
-            profile.setProvince(null);
-        }
-        if (request.getDistrictId() != null) {
-            profile.setDistrict(districtRepository.findById(request.getDistrictId()).orElse(null));
-        } else {
-            profile.setDistrict(null);
-        }
-        if (request.getSubDistrictId() != null) {
-            profile.setSubDistrict(subDistrictRepository.findById(request.getSubDistrictId()).orElse(null));
-        } else {
-            profile.setSubDistrict(null);
-        }
-
-        // 8. บันทึก
-        profile = profileRepository.save(profile);
-
-        // 9. Sync Uploads
-        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
-            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
-        }
-
-        return profile.getId();
-    }
-
-    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
-        if (existingGroupId != null) {
-            return existingGroupId;
-        }
-        if (references == null || references.isEmpty()) {
-            return null;
-        }
-        for (StorageUploadReference ref : references) {
-            if (ref.getUploadGroupId() != null) {
-                return ref.getUploadGroupId();
-            }
-            if (ref.getId() != null) {
-                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
-                if (upload != null && upload.getUploadGroupId() != null) {
-                    return upload.getUploadGroupId();
-                }
-            }
-        }
-        return null;
-    }
-
-    // ============================================================
-    // toResponse - ใช้ LocalizationHelper แทนการเขียน if/else
-    // ============================================================
-    private ProfileResponse toResponse(SuProfile profile) {
-        if (profile == null || profile.getId() == null) return null;
-
-        ProfileResponse response = new ProfileResponse();
-        response.setId(profile.getId());
-
-        // ✅ ใช้ LocalizationHelper.getFullName(profile) แทน buildFullName
-        response.setName(LocalizationHelper.getFullName(profile));
-
-        response.setTaxId(profile.getTaxId());
-        response.setTitleId(profile.getTitleId());
-
-        response.setFirstNameEn(profile.getFirstNameEn());
-        response.setMiddleNameEn(profile.getMiddleNameEn());
-        response.setLastNameEn(profile.getLastNameEn());
-        response.setFirstNameLocal(profile.getFirstNameLocal());
-        response.setMiddleNameLocal(profile.getMiddleNameLocal());
-        response.setLastNameLocal(profile.getLastNameLocal());
-
-        response.setSupportLocalAddress(profile.getSupportLocalAddress());
-        response.setAddressEn(profile.getAddressEn());
-        response.setAddressLocal(profile.getAddressLocal());
-
-        response.setCountryId(profile.getCountryId());
-        response.setProvinceId(profile.getProvinceId());
-        response.setDistrictId(profile.getDistrictId());
-        response.setSubDistrictId(profile.getSubDistrictId());
-        response.setZipCode(profile.getZipCode());
-
-        response.setEmail(profile.getEmail());
-        response.setPhoneNumber(profile.getPhoneNumber());
-
-        response.setRowVersion(profile.getRowVersion());
-        response.setState(profile.getState() != null
-                ? profile.getState().getEntityStateCode()
-                : EntityState.DETACHED.getEntityStateCode());
-
-        UUID uploadGroupId = profile.getUploadGroupId();
-        response.setUploadGroupId(uploadGroupId);
-
-        List<StorageUploadReference> uploadData = new ArrayList<>();
-        if (uploadGroupId != null) {
-            List<SuUpload> uploads = uploadRepository
-                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
-
-            for (SuUpload upload : uploads) {
-                StorageUploadReference ref = new StorageUploadReference();
-                ref.setId(upload.getId());
-                ref.setUploadGroupId(uploadGroupId);
-                ref.setFileName(upload.getFileName());
-                ref.setContentType(upload.getContentType());
-                ref.setFileSize(upload.getFileSize());
-
-                // TODO: ทำให้ baseUrl configurable
-                String baseUrl = "http://localhost:5265";
-                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
-
-                ref.setState(EntityState.DETACHED.getEntityStateCode());
-                ref.setIsActive(upload.getIsActive());
-                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
-                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
-
-                uploadData.add(ref);
-            }
-        }
-        response.setUploadGroupData(uploadData);
-
-        return response;
-    }
-
-    private String mapVisibilityToString(FileVisibility visibility) {
-        if (visibility == null) return "Public";
-        switch (visibility) {
-            case UPLOADER_ONLY: return "UploaderOnly";
-            case BUSINESS_ONLY: return "BusinessOnly";
-            case ANYONE_WITH_LINK: return "AnyoneWithLink";
-            case PUBLIC: return "Public";
-            default: return "Public";
-        }
-    }
 }
 </file>
 

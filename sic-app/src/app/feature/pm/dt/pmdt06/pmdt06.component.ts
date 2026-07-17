@@ -12,7 +12,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, take } from 'rxjs';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
@@ -32,6 +32,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   private drawioService = inject(DrawioConnectorService);
   private diagramService = inject(DiagramService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   isLoading = false;
   currentTabId: string | null = null;
@@ -46,6 +47,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   // ✅ State สำหรับ Import Dialog
   showImportDialog = signal(false);
   pendingMermaid: { script: string; name?: string; type?: string } | null = null;
+
+  // ✅ ป้องกันการเรียก loadExistingDiagram ซ้ำ
+  private isLoadingDiagram = false;
 
   ngAfterViewInit(): void {
     this.drawioService.init(this.iframe.nativeElement);
@@ -72,21 +76,42 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.currentTabId = params['tabId'] || params['diagramId'] || null;
       this.projectId = params['projectId'] || null;
-      if (this.projectId) {
-        this.loadProjectName();
-        if (!this.currentTabId) {
-          this.diagramService.getTabs(this.projectId).subscribe({
-            next: (tabs) => {
-              if (tabs && tabs.length > 0) {
-                this.currentTabId = tabs[0].id;
-                if (this.drawioReady) this.loadExistingDiagram();
-              }
-            },
-          });
-        }
+
+      // ✅ ถ้าไม่มี projectId → เปลี่ยนเส้นทางไปเลือกโปรเจกต์
+      if (!this.projectId) {
+        console.warn('No projectId provided, redirecting to project selection');
+        this.router.navigate(['/projects']); // ปรับ path ตามโครงสร้างของคุณ
+        return;
       }
-      if (this.currentTabId && this.drawioReady) {
-        this.loadExistingDiagram();
+
+      // มี projectId
+      this.loadProjectName();
+
+      if (!this.currentTabId) {
+        // โหลดรายการ tabs
+        this.diagramService.getTabs(this.projectId).subscribe({
+          next: (tabs) => {
+            if (tabs && tabs.length > 0) {
+              this.currentTabId = tabs[0].id;
+              if (this.drawioReady) {
+                this.loadExistingDiagram();
+              }
+            } else {
+              // ✅ ไม่มี diagram → ปิด loading และโหลดแผนภาพเปล่า
+              this.isLoading = false;
+              this.drawioService.loadXml(''); // โหลด empty diagram
+            }
+          },
+          error: () => {
+            this.isLoading = false;
+            this.drawioService.loadXml(''); // กรณี error ก็โหลดเปล่า
+          },
+        });
+      } else {
+        // มี currentTabId จาก URL
+        if (this.drawioReady) {
+          this.loadExistingDiagram();
+        }
       }
     });
   }
@@ -263,13 +288,16 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
    * โหลด Diagram จากฐานข้อมูล (XML) มาแสดงใน Draw.io
    */
   loadExistingDiagram(): void {
-    if (!this.currentTabId) return;
+    if (!this.currentTabId || this.isLoadingDiagram) return;
+    this.isLoadingDiagram = true;
     this.isLoading = true;
+
     this.diagramService.getDiagram(this.currentTabId).subscribe({
       next: (diagram) => {
         if (this.projectId && diagram.projectId !== this.projectId) {
           alert('❌ ไดอะแกรมนี้ไม่ใช่ของโปรเจกต์ที่เลือก');
           this.isLoading = false;
+          this.isLoadingDiagram = false;
           this.drawioService.loadXml('');
           return;
         }
@@ -277,9 +305,11 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         const xml = diagram.graphData?.xml || '';
         this.drawioService.loadXml(xml);
         this.isLoading = false;
+        this.isLoadingDiagram = false;
       },
       error: () => {
         this.isLoading = false;
+        this.isLoadingDiagram = false;
         this.drawioService.loadXml('');
       },
     });
@@ -287,13 +317,39 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   /**
    * บันทึก XML ปัจจุบันจาก Draw.io ลงฐานข้อมูล
+   * ถ้ายังไม่มี currentTabId ให้สร้างแท็บใหม่ก่อน
    */
   saveDiagram(): void {
+    // ถ้าไม่มี currentTabId แต่มี projectId ให้สร้างแท็บใหม่ก่อน
+    if (!this.currentTabId && this.projectId) {
+      // สร้างแท็บใหม่ด้วยชื่อเริ่มต้น
+      this.diagramService.createTab(this.projectId, 'New Diagram', 'Flowchart', '').subscribe({
+        next: (newTab) => {
+          this.currentTabId = newTab.id;
+          this.currentDiagram = newTab;
+          // หลังจากสร้างแล้ว ให้บันทึกต่อ
+          this.saveDiagramInternal();
+        },
+        error: (err) => {
+          alert('❌ ไม่สามารถสร้างแท็บใหม่ได้');
+          console.error(err);
+        }
+      });
+      return;
+    }
+
     if (!this.currentTabId) {
       alert('❌ ไม่มี Diagram ID ให้บันทึก');
       return;
     }
 
+    this.saveDiagramInternal();
+  }
+
+  /**
+   * บันทึก Diagram หลังจากมั่นใจว่ามี currentTabId แล้ว
+   */
+  private saveDiagramInternal(): void {
     this.drawioService.requestXml();
 
     this.drawioService.xml$.pipe(takeUntil(this.destroy$)).subscribe((xml) => {
