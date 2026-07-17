@@ -1,3 +1,5 @@
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -25,8 +27,30 @@ import { DiagramService, PmChatResponse } from '../diagram.service';
   styleUrls: ['./pmdt06A.component.css'],
 })
 export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  @Input() diagramId!: string | null;
-  @Output() aiResponse = new EventEmitter<{ action: string; script?: string; name?: string; type?: string }>();
+  // ✅ ใช้ setter เพื่อให้ตอบสนองเมื่อ diagramId เปลี่ยน (รวมถึงตอนรีเฟรช)
+  private _diagramId: string | null = null;
+  @Input()
+  set diagramId(value: string | null) {
+    // ถ้าค่าเปลี่ยนไปและมีค่าจริง → โหลดประวัติ
+    if (value && value !== this._diagramId) {
+      this._diagramId = value;
+      this.loadChatHistory(value);
+    } else if (!value) {
+      // ถ้าไม่มี diagramId ให้ clear ข้อความ
+      this._diagramId = null;
+      this.messages.set([]);
+    }
+  }
+  get diagramId(): string | null {
+    return this._diagramId;
+  }
+
+  @Output() aiResponse = new EventEmitter<{
+    action: string;
+    script?: string;
+    name?: string;
+    type?: string;
+  }>();
 
   private diagramService = inject(DiagramService);
   private destroy$ = new Subject<void>();
@@ -38,9 +62,9 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   chatContainer = viewChild<ElementRef>('chatContainer');
 
   ngAfterViewInit() {
-    if (this.diagramId) {
-      this.loadChatHistory(this.diagramId);
-    }
+    // ไม่ต้องทำอะไรเพิ่ม เพราะ setter จะถูกเรียกเมื่อ parent กำหนดค่า
+    // แต่ถ้าตอนเริ่มต้น diagramId มีค่าอยู่แล้ว (เช่นจาก route) setter จะทำงาน
+    // ถ้าไม่มีค่า ก็จะไม่โหลด
   }
 
   ngOnDestroy() {
@@ -49,6 +73,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   }
 
   loadChatHistory(diagramId: string) {
+    if (!diagramId) return;
     this.diagramService
       .getChatHistory(diagramId)
       .pipe(takeUntil(this.destroy$))
@@ -58,8 +83,10 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
           this.scrollToBottom();
         },
         error: () => {
-          // silent fail
-        }
+          // silent fail – อาจแสดงข้อความ error หรือไม่ก็ได้
+          console.warn('Failed to load chat history for diagram:', diagramId);
+          this.messages.set([]);
+        },
       });
   }
 
