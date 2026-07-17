@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, take } from 'rxjs';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
@@ -117,7 +117,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     console.log('AI Response from chat:', response);
 
     if (response.action === 'update' && response.script) {
-      // ✅ แทนที่จะทำงานทันที ให้เก็บไว้และเปิด Dialog ให้ผู้ใช้กด Import
+      // ✅ เก็บ Mermaid ไว้ใน pending และเปิด Dialog ให้ผู้ใช้กด Import
       this.pendingMermaid = {
         script: response.script,
         name: response.name || 'AI Generated Diagram',
@@ -129,22 +129,92 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * ผู้ใช้กดปุ่ม Import → โหลด Mermaid ลง Draw.io และบันทึกฐานข้อมูล
+   * ผู้ใช้กดปุ่ม Import → ดึง XML ปัจจุบัน, เพิ่มหน้าใหม่, บันทึกฐานข้อมูล
    */
   importMermaid(): void {
     if (!this.pendingMermaid) return;
 
     const { script, name, type } = this.pendingMermaid;
 
-    // 1. โหลด Mermaid ลงใน Draw.io (เป็น Text Box)
-    this.loadMermaidAsDrawioPage(script, name || 'AI Diagram');
+    // ✅ ขั้นตอนที่ 1: ดึง XML ปัจจุบันจาก Draw.io (ถ้ามี)
+    this.isLoading = true;
+    this.drawioService.requestXml();
 
-    // 2. อัปเดตฐานข้อมูล (บันทึก Mermaid script ลงใน currentTab)
-    this.applyMermaidScript(script, name, type);
+    this.drawioService.xml$
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (currentXml) => {
+          // ✅ ขั้นตอนที่ 2: สร้าง XML สำหรับหน้าใหม่
+          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
 
-    // 3. ปิด Dialog และล้าง pending
-    this.showImportDialog.set(false);
-    this.pendingMermaid = null;
+          // ✅ ขั้นตอนที่ 3: รวม XML (เพิ่มหน้าใหม่ต่อท้าย)
+          const mergedXml = this.appendDiagramPage(currentXml, newPageXml);
+
+          // ✅ ขั้นตอนที่ 4: โหลด XML ที่รวมแล้วกลับเข้าไป
+          this.drawioService.postMessage({ action: 'load', xml: mergedXml, autosave: false });
+
+          // ✅ ขั้นตอนที่ 5: บันทึก Mermaid script ลงฐานข้อมูล
+          this.applyMermaidScript(script, name, type);
+
+          this.isLoading = false;
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          alert('✅ นำเข้าไดอะแกรมสำเร็จ (เพิ่มเป็นหน้าใหม่)');
+        },
+        error: (err) => {
+          console.error('Failed to get current XML:', err);
+          this.isLoading = false;
+          // ถ้าดึง XML ไม่ได้ ให้โหลดเป็นหน้าใหม่เลย (ไม่ต้องรวม)
+          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
+          const fallbackXml = `<mxfile>${newPageXml}</mxfile>`;
+          this.drawioService.postMessage({ action: 'load', xml: fallbackXml, autosave: false });
+          this.applyMermaidScript(script, name, type);
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          alert('⚠️ ไม่สามารถดึงหน้าปัจจุบันได้ แต่ได้สร้างหน้าใหม่แทน');
+        }
+      });
+  }
+
+  /**
+   * สร้าง XML สำหรับ Mermaid Page ใหม่ (เฉพาะ <diagram>)
+   */
+  private createMermaidPageXml(script: string, pageName: string): string {
+    const escaped = script
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    return `
+      <diagram id="ai_mermaid_${Date.now()}" name="${pageName}">
+        <mxGraphModel>
+          <root>
+            <mxCell id="0"/>
+            <mxCell id="1" parent="0"/>
+            <mxCell id="mermaid_code" 
+              value="&lt;pre style=&quot;font-family: 'Courier New', monospace; white-space: pre-wrap; font-size: 13px;&quot;&gt;${escaped}&lt;/pre&gt;" 
+              style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#1a73e8;fontFamily=monospace;fontSize=13;align=left;verticalAlign=top;" 
+              vertex="1" parent="1">
+              <mxGeometry x="40" y="40" width="800" height="600" as="geometry"/>
+            </mxCell>
+          </root>
+        </mxGraphModel>
+      </diagram>
+    `;
+  }
+
+  /**
+   * รวม XML เดิม + หน้าใหม่ (แทรกก่อน </mxfile>)
+   */
+  private appendDiagramPage(existingXml: string, newPageXml: string): string {
+    const closingTag = '</mxfile>';
+    const index = existingXml.lastIndexOf(closingTag);
+    if (index === -1) {
+      // ถ้าไม่มี </mxfile> ให้สร้างใหม่
+      return `<mxfile>${newPageXml}</mxfile>`;
+    }
+    return existingXml.slice(0, index) + newPageXml + closingTag;
   }
 
   /**
@@ -153,54 +223,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   cancelImport(): void {
     this.showImportDialog.set(false);
     this.pendingMermaid = null;
-  }
-
-  /**
-   * สร้าง XML ที่แสดง Mermaid script เป็นข้อความแบบ Preformatted
-   * แล้วส่งให้ Draw.io โหลด (แทนที่หน้าจอปัจจุบัน)
-   */
-  private loadMermaidAsDrawioPage(mermaidScript: string, pageName: string): void {
-    // Escape ข้อความเพื่อป้องกัน XML พัง
-    const escaped = mermaidScript
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-
-    // สร้าง XML ที่มีกล่องข้อความขนาดใหญ่ แสดงโค้ด Mermaid
-    const mermaidXml = `
-      <mxfile>
-        <diagram id="ai_mermaid_${Date.now()}" name="${pageName}">
-          <mxGraphModel>
-            <root>
-              <mxCell id="0"/>
-              <mxCell id="1" parent="0"/>
-              <mxCell id="mermaid_code" 
-                value="&lt;pre style=&quot;font-family: 'Courier New', monospace; white-space: pre-wrap; font-size: 13px;&quot;&gt;${escaped}&lt;/pre&gt;" 
-                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#1a73e8;fontFamily=monospace;fontSize=13;align=left;verticalAlign=top;" 
-                vertex="1" parent="1">
-                <mxGeometry x="40" y="40" width="800" height="600" as="geometry"/>
-              </mxCell>
-            </root>
-          </mxGraphModel>
-        </diagram>
-      </mxfile>
-    `.trim();
-
-    // ตรวจสอบว่า Draw.io พร้อมแล้วหรือยัง ถ้ายังให้รอ
-    if (!this.drawioReady) {
-      console.warn('Draw.io not ready, will retry...');
-      const checkReady = setInterval(() => {
-        if (this.drawioReady) {
-          clearInterval(checkReady);
-          this.drawioService.postMessage({ action: 'load', xml: mermaidXml, autosave: false });
-        }
-      }, 500);
-      return;
-    }
-
-    // ส่ง XML ไปให้ Draw.io โหลด
-    this.drawioService.postMessage({ action: 'load', xml: mermaidXml, autosave: false });
   }
 
   /**
@@ -227,7 +249,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       next: (res) => {
         this.currentDiagram = res;
         this.isLoading = false;
-        console.log('Mermaid script saved successfully.');
+        console.log('✅ Mermaid script saved successfully.');
       },
       error: (err) => {
         console.error('Update failed:', err);

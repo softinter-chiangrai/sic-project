@@ -1,5 +1,3 @@
-// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
-
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -7,10 +5,8 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  OnChanges,
   OnDestroy,
   Output,
-  SimpleChanges,
   inject,
   signal,
   viewChild,
@@ -28,20 +24,8 @@ import { DiagramService, PmChatResponse } from '../diagram.service';
   templateUrl: './pmdt06A.component.html',
   styleUrls: ['./pmdt06A.component.css'],
 })
-export class pmdt06AComponent implements AfterViewInit, OnChanges, OnDestroy {
-  private _diagramId: string | null = null;
-
-  @Input() set diagramId(id: string | null) {
-    this._diagramId = id;
-    // ✅ ทุกครั้งที่ diagramId เปลี่ยน → โหลดประวัติใหม่
-    if (id) {
-      this.loadChatHistory(id);
-    }
-  }
-  get diagramId(): string | null {
-    return this._diagramId;
-  }
-
+export class pmdt06AComponent implements AfterViewInit, OnDestroy {
+  @Input() diagramId!: string | null;
   @Output() aiResponse = new EventEmitter<{ action: string; script?: string; name?: string; type?: string }>();
 
   private diagramService = inject(DiagramService);
@@ -54,13 +38,7 @@ export class pmdt06AComponent implements AfterViewInit, OnChanges, OnDestroy {
   chatContainer = viewChild<ElementRef>('chatContainer');
 
   ngAfterViewInit() {
-    // ถ้ามี diagramId อยู่แล้วตั้งแต่เริ่ม (จาก setter จะเรียก loadChatHistory ไปแล้ว)
-    // แต่ถ้าไม่มี ก็ไม่ต้องทำอะไร
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    // เผื่อกรณีที่ @Input ไม่ถูก set ในครั้งแรก
-    if (changes['diagramId'] && this.diagramId) {
+    if (this.diagramId) {
       this.loadChatHistory(this.diagramId);
     }
   }
@@ -81,7 +59,7 @@ export class pmdt06AComponent implements AfterViewInit, OnChanges, OnDestroy {
         },
         error: () => {
           // silent fail
-        },
+        }
       });
   }
 

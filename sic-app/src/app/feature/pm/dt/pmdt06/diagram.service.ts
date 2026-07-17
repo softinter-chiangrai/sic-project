@@ -1,5 +1,3 @@
-// src/app/feature/pm/dt/pmdt06/diagram.service.ts
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
@@ -13,7 +11,6 @@ import type {
 } from './diagram.model';
 import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 
-// ✅ เพิ่ม interface ให้ตรงกับ Response จาก Backend
 export interface PmChatResponse {
   id: string;
   diagramId: string;
@@ -169,7 +166,6 @@ export class DiagramService {
     return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
   }
 
-  // ✅ แก้ไข: ส่ง diagramId และรับ PmChatResponse โดยตรง
   sendChatMessage(
     tabId: string,
     message: string,

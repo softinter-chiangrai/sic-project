@@ -14,7 +14,6 @@
   <div
     class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
   >
-    <!-- ส่วนซ้าย: แสดงชื่อโครงการ -->
     <div class="flex items-center gap-3">
       @if (projectName) {
         <span
@@ -25,9 +24,7 @@
       }
     </div>
 
-    <!-- ส่วนขวา: ปุ่ม actions -->
     <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
-      <!-- ปุ่ม Chat -->
       <button
         (click)="toggleChat()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -44,7 +41,6 @@
         }
       </button>
 
-      <!-- ปุ่ม Save -->
       <button
         (click)="saveDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -54,7 +50,6 @@
         <span>Save</span>
       </button>
 
-      <!-- ปุ่ม Reload -->
       <button
         (click)="loadExistingDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -135,83 +130,5 @@
       class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
       (click)="toggleChat()"
     ></div>
-  }
-
-  <!-- ✅ Import Mermaid Dialog -->
-  @if (showImportDialog()) {
-    <div
-      class="fixed inset-0 z-[1060] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
-      (click)="cancelImport()"
-    >
-      <div
-        class="bg-[var(--sidebar,#ffffff)] rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col"
-        (click)="$event.stopPropagation()"
-      >
-        <!-- Header -->
-        <div
-          class="flex justify-between items-center px-6 py-4 border-b border-[var(--border,#d0d7de)]"
-        >
-          <h2 class="text-xl font-bold text-[var(--text-active,#1e293b)] flex items-center gap-2">
-            <i class="bi bi-graph-up-arrow text-[var(--crm-primary,#1a73e8)]"></i>
-            Import AI-Generated Diagram
-          </h2>
-          <button
-            (click)="cancelImport()"
-            class="text-2xl text-[var(--text-muted,#6c757d)] hover:text-[var(--text-active,#1e293b)] transition-colors"
-          >
-            &times;
-          </button>
-        </div>
-
-        <!-- Body -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div class="mb-4 text-sm text-[var(--text-muted,#6c757d)]">
-            <p class="mb-2">
-              <i class="bi bi-info-circle-fill text-[var(--crm-primary,#1a73e8)]"></i>
-              ระบบจะนำ Mermaid script ด้านล่างไปแสดงใน Draw.io และบันทึกไว้ในแท็บปัจจุบัน
-            </p>
-            <p class="text-xs text-[var(--crm-danger,#e74c3c)]">
-              ⚠️ การนำเข้าจะแทนที่หน้าจอ Draw.io ปัจจุบัน หากคุณมีการแก้ไขที่ยังไม่ได้บันทึก กรุณากดปุ่ม "Save" ก่อนดำเนินการ
-            </p>
-          </div>
-
-          <!-- แสดง Mermaid script -->
-          <div class="bg-[var(--bg,#f8f9fa)] border border-[var(--border,#d0d7de)] rounded-lg p-4 overflow-auto max-h-[50vh]">
-            <pre class="text-sm font-mono whitespace-pre-wrap break-words">{{ pendingMermaid?.script }}</pre>
-          </div>
-
-          <!-- ชื่อและประเภท (ถ้ามี) -->
-          <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="font-medium text-[var(--text-muted)]">ชื่อ:</span>
-              <span class="ml-2">{{ pendingMermaid?.name || 'ไม่ระบุ' }}</span>
-            </div>
-            <div>
-              <span class="font-medium text-[var(--text-muted)]">ประเภท:</span>
-              <span class="ml-2">{{ pendingMermaid?.type || 'ไม่ระบุ' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div
-          class="flex justify-end gap-3 px-6 py-4 border-t border-[var(--border,#d0d7de)] bg-[var(--bg,#f8f9fa)] rounded-b-xl"
-        >
-          <button
-            (click)="cancelImport()"
-            class="px-5 py-2 rounded-lg border border-[var(--border,#d0d7de)] bg-white text-[var(--text-muted,#6c757d)] hover:bg-[var(--sidebar-hover,#e9ecef)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            (click)="importMermaid()"
-            class="px-5 py-2 rounded-lg bg-[var(--crm-primary,#1a73e8)] text-white font-medium hover:bg-[var(--crm-primary-dark,#1557b0)] transition-colors flex items-center gap-2"
-          >
-            <i class="bi bi-cloud-upload"></i>
-            Import to Draw.io
-          </button>
-        </div>
-      </div>
-    </div>
   }
 </div>
