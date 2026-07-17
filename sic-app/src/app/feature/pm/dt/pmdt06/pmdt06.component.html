@@ -1,19 +1,25 @@
 <style>
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 </style>
 
 <div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
-  
   <!-- Toolbar -->
-  <div class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
-    
+  <div
+    class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
+  >
     <!-- ส่วนซ้าย: แสดงชื่อโครงการ (ไม่มีจุด bullet แล้ว) -->
     <div class="flex items-center gap-3">
       @if (projectName) {
-        <span class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
+        <span
+          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
+        >
           {{ projectName }}
         </span>
       }
@@ -21,38 +27,55 @@
 
     <!-- ส่วนขวา: ปุ่ม actions -->
     <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
-      
       <!-- ปุ่ม Chat -->
-      <button (click)="toggleChat()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="AI Chat History">
+      <button
+        (click)="toggleChat()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
+        title="AI Chat History"
+      >
         <i class="bi bi-chat-dots-fill text-lg"></i>
         <span>Chat</span>
         @if (unreadCount > 0) {
-          <span class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]">
+          <span
+            class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
+          >
             {{ unreadCount }}
           </span>
         }
       </button>
 
       <!-- ปุ่ม Save (สีปกติเป็นเทาอ่อน, hover เป็นสีหลัก) -->
-      <button (click)="saveDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="Save diagram">
-        <i class="bi bi-check-circle-fill text-lg"></i> 
+      <button
+        (click)="saveDiagram()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
+        title="Save diagram"
+      >
+        <i class="bi bi-check-circle-fill text-lg"></i>
         <span>Save</span>
       </button>
 
       <!-- ปุ่ม Reload -->
-      <button (click)="loadExistingDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"  title="Reload from server">
-        <i class="bi bi-arrow-repeat text-lg"></i> 
+      <button
+        (click)="loadExistingDiagram()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
+        title="Reload from server"
+      >
+        <i class="bi bi-arrow-repeat text-lg"></i>
         <span>Reload</span>
       </button>
-
     </div>
   </div>
 
   <!-- Status Bar (เอา Tab ID ออกแล้ว) -->
-  <div class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5">
+  <div
+    class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5"
+  >
     <div class="flex items-center gap-2 max-md:flex-wrap">
       <!-- แก้ไขจุดที่ error: ใช้ [style.background] แทน [class.bg-[...]] -->
-      <span class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0" [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"></span>
+      <span
+        class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0"
+        [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
+      ></span>
       <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
     </div>
   </div>
@@ -60,14 +83,18 @@
   <!-- Draw.io Editor -->
   <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
     @if (isLoading) {
-      <div class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm">
-        <div class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"></div>
+      <div
+        class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
+      >
+        <div
+          class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
+        ></div>
         <span>Loading diagram…</span>
       </div>
     }
     <iframe
       #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark"
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1"
       class="block w-full h-full border-none bg-white"
       frameborder="0"
       allowfullscreen
@@ -75,13 +102,22 @@
   </div>
 
   <!-- Chat Sidebar -->
-  <div class="fixed top-0 right-[-440px] w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full max-md:right-[-100%]" [class.right-0]="chatOpen()">
-    <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]">
+  <div
+    class="fixed top-0 right-[-440px] w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full max-md:right-[-100%]"
+    [class.right-0]="chatOpen()"
+  >
+    <div
+      class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]"
+    >
       <span class="flex items-center gap-2">
         <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
         AI Assistant
       </span>
-      <button (click)="toggleChat()" class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]" title="Close chat">
+      <button
+        (click)="toggleChat()"
+        class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]"
+        title="Close chat"
+      >
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -96,6 +132,9 @@
 
   <!-- Overlay -->
   @if (chatOpen()) {
-    <div class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]" (click)="toggleChat()"></div>
+    <div
+      class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
+      (click)="toggleChat()"
+    ></div>
   }
 </div>
