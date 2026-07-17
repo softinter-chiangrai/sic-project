@@ -1,4 +1,5 @@
 // src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
+
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -41,6 +42,10 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   chatOpen = signal(false);
   unreadCount = 0;
   currentDiagram: any = null;
+
+  // ✅ State สำหรับ Import Dialog
+  showImportDialog = signal(false);
+  pendingMermaid: { script: string; name?: string; type?: string } | null = null;
 
   ngAfterViewInit(): void {
     this.drawioService.init(this.iframe.nativeElement);
@@ -104,20 +109,144 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     if (this.chatOpen()) this.unreadCount = 0;
   }
 
-  handleAiResponse(response: any): void {
+  /**
+   * รับ Event จาก Child Component (pmdt06A)
+   * เมื่อ AI สร้าง Mermaid script แล้วจะส่ง action 'update' พร้อม script, name, type
+   */
+  handleAiResponse(response: { action: string; script?: string; name?: string; type?: string }): void {
     console.log('AI Response from chat:', response);
-    if (response.action === 'update' && response.diagram) {
-      this.loadExistingDiagram();
+
+    if (response.action === 'update' && response.script) {
+      // ✅ แทนที่จะทำงานทันที ให้เก็บไว้และเปิด Dialog ให้ผู้ใช้กด Import
+      this.pendingMermaid = {
+        script: response.script,
+        name: response.name || 'AI Generated Diagram',
+        type: response.type || 'Flowchart',
+      };
+      this.showImportDialog.set(true);
     }
+    // ถ้า action เป็น 'message' จะไม่ทำอะไร (แค่แสดงข้อความใน Chat)
   }
 
+  /**
+   * ผู้ใช้กดปุ่ม Import → โหลด Mermaid ลง Draw.io และบันทึกฐานข้อมูล
+   */
+  importMermaid(): void {
+    if (!this.pendingMermaid) return;
+
+    const { script, name, type } = this.pendingMermaid;
+
+    // 1. โหลด Mermaid ลงใน Draw.io (เป็น Text Box)
+    this.loadMermaidAsDrawioPage(script, name || 'AI Diagram');
+
+    // 2. อัปเดตฐานข้อมูล (บันทึก Mermaid script ลงใน currentTab)
+    this.applyMermaidScript(script, name, type);
+
+    // 3. ปิด Dialog และล้าง pending
+    this.showImportDialog.set(false);
+    this.pendingMermaid = null;
+  }
+
+  /**
+   * ผู้ใช้กด Cancel → ปิด Dialog โดยไม่ทำอะไร
+   */
+  cancelImport(): void {
+    this.showImportDialog.set(false);
+    this.pendingMermaid = null;
+  }
+
+  /**
+   * สร้าง XML ที่แสดง Mermaid script เป็นข้อความแบบ Preformatted
+   * แล้วส่งให้ Draw.io โหลด (แทนที่หน้าจอปัจจุบัน)
+   */
+  private loadMermaidAsDrawioPage(mermaidScript: string, pageName: string): void {
+    // Escape ข้อความเพื่อป้องกัน XML พัง
+    const escaped = mermaidScript
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    // สร้าง XML ที่มีกล่องข้อความขนาดใหญ่ แสดงโค้ด Mermaid
+    const mermaidXml = `
+      <mxfile>
+        <diagram id="ai_mermaid_${Date.now()}" name="${pageName}">
+          <mxGraphModel>
+            <root>
+              <mxCell id="0"/>
+              <mxCell id="1" parent="0"/>
+              <mxCell id="mermaid_code" 
+                value="&lt;pre style=&quot;font-family: 'Courier New', monospace; white-space: pre-wrap; font-size: 13px;&quot;&gt;${escaped}&lt;/pre&gt;" 
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#1a73e8;fontFamily=monospace;fontSize=13;align=left;verticalAlign=top;" 
+                vertex="1" parent="1">
+                <mxGeometry x="40" y="40" width="800" height="600" as="geometry"/>
+              </mxCell>
+            </root>
+          </mxGraphModel>
+        </diagram>
+      </mxfile>
+    `.trim();
+
+    // ตรวจสอบว่า Draw.io พร้อมแล้วหรือยัง ถ้ายังให้รอ
+    if (!this.drawioReady) {
+      console.warn('Draw.io not ready, will retry...');
+      const checkReady = setInterval(() => {
+        if (this.drawioReady) {
+          clearInterval(checkReady);
+          this.drawioService.postMessage({ action: 'load', xml: mermaidXml, autosave: false });
+        }
+      }, 500);
+      return;
+    }
+
+    // ส่ง XML ไปให้ Draw.io โหลด
+    this.drawioService.postMessage({ action: 'load', xml: mermaidXml, autosave: false });
+  }
+
+  /**
+   * บันทึก Mermaid script ลงในฐานข้อมูล (เฉพาะ currentTab)
+   */
+  private applyMermaidScript(script: string, name?: string, type?: string): void {
+    if (!this.currentTabId) {
+      console.warn('No tab ID to update');
+      return;
+    }
+
+    this.isLoading = true;
+    const updatedTab = {
+      ...this.currentDiagram,
+      id: this.currentTabId,
+      name: name || this.currentDiagram?.name || 'AI Diagram',
+      diagramType: type || this.currentDiagram?.diagramType || 'Flowchart',
+      mermaidScript: script,
+      projectId: this.projectId || this.currentDiagram?.projectId,
+      graphData: null, // ไม่ต้องเปลี่ยน XML (เรายังเก็บ Mermaid ไว้ต่างหาก)
+    };
+
+    this.diagramService.updateTab(updatedTab).subscribe({
+      next: (res) => {
+        this.currentDiagram = res;
+        this.isLoading = false;
+        console.log('Mermaid script saved successfully.');
+      },
+      error: (err) => {
+        console.error('Update failed:', err);
+        this.isLoading = false;
+        alert('❌ ไม่สามารถบันทึก Mermaid script ได้ กรุณาลองอีกครั้ง');
+      },
+    });
+  }
+
+  /**
+   * โหลด Diagram จากฐานข้อมูล (XML) มาแสดงใน Draw.io
+   */
   loadExistingDiagram(): void {
     if (!this.currentTabId) return;
     this.isLoading = true;
     this.diagramService.getDiagram(this.currentTabId).subscribe({
       next: (diagram) => {
         if (this.projectId && diagram.projectId !== this.projectId) {
-          alert('Error: Diagram does not belong to the selected project.');
+          alert('❌ ไดอะแกรมนี้ไม่ใช่ของโปรเจกต์ที่เลือก');
           this.isLoading = false;
           this.drawioService.loadXml('');
           return;
@@ -134,9 +263,12 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * บันทึก XML ปัจจุบันจาก Draw.io ลงฐานข้อมูล
+   */
   saveDiagram(): void {
     if (!this.currentTabId) {
-      alert('Cannot save: No diagram ID is loaded.');
+      alert('❌ ไม่มี Diagram ID ให้บันทึก');
       return;
     }
 
@@ -149,7 +281,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         const projectId = this.currentDiagram?.projectId || this.projectId;
 
         if (!projectId) {
-          alert('Cannot save: Project ID is missing.');
+          alert('❌ ขาด Project ID ไม่สามารถบันทึกได้');
           return;
         }
 
@@ -160,16 +292,17 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
           diagramType,
           projectId,
           graphData: { xml },
+          mermaidScript: this.currentDiagram?.mermaidScript || null,
         };
 
         this.diagramService.updateTab(updatedTab as any).subscribe({
           next: (res) => {
             this.currentDiagram = res;
-            alert('Diagram saved successfully!');
+            alert('✅ บันทึกสำเร็จ!');
           },
           error: (err) => {
             console.error('Save failed:', err);
-            alert('Save failed!');
+            alert('❌ บันทึกไม่สำเร็จ!');
           },
         });
       }

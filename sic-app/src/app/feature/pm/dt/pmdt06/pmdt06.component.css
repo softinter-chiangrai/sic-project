@@ -1,9 +1,22 @@
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sidebar สำหรับ desktop */
+.chat-sidebar {
+  right: -440px;
+}
+.chat-sidebar.open {
+  right: 0 !important;
+}
+
+/* สำหรับ mobile */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    right: -100% !important;
   }
-  @media (max-width: 768px) {
-  .max-md-right-0 {
+  .chat-sidebar.open {
     right: 0 !important;
   }
 }

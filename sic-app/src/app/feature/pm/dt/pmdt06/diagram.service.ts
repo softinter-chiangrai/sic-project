@@ -1,4 +1,5 @@
-// src/app/core/services/diagram.service.ts
+// src/app/feature/pm/dt/pmdt06/diagram.service.ts
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
@@ -11,6 +12,17 @@ import type {
   DiagramVersion,
 } from './diagram.model';
 import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+
+// ✅ เพิ่ม interface ให้ตรงกับ Response จาก Backend
+export interface PmChatResponse {
+  id: string;
+  diagramId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  contextData: any;
+  createdBy: string;
+  createdDate: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class DiagramService {
@@ -26,16 +38,13 @@ export class DiagramService {
   tabs$ = this.tabsSubject.asObservable();
   activeTabId$ = this.activeTabIdSubject.asObservable();
 
-  // ==================== Projects ====================
- getProjectName(projectId: string): Observable<string> {
+  getProjectName(projectId: string): Observable<string> {
     return this.pmrt02Service.getProject(projectId).pipe(
       map(project => project.projectName)
     );
   }
-  
+
   getProjects(): Observable<DiagramProject[]> {
-    // ใช้ API /api/pm/customer-projects แต่ต้องมี customerId
-    // ถ้าไม่มี ให้ return empty หรือใช้วิธีอื่น
     return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
       .pipe(
         map(response => {
@@ -52,7 +61,6 @@ export class DiagramService {
         })
       );
   }
-
 
   createProject(name: string, description?: string): Observable<DiagramProject> {
     return this.http
@@ -83,7 +91,6 @@ export class DiagramService {
     );
   }
 
-  // ==================== Tabs (Diagrams) ====================
   getTabs(projectId: string): Observable<DiagramModel[]> {
     return this.http
       .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
@@ -147,7 +154,6 @@ export class DiagramService {
     return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
   }
 
-  // ==================== Versions ====================
   getVersions(tabId: string): Observable<DiagramVersion[]> {
     return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
   }
@@ -159,27 +165,25 @@ export class DiagramService {
     );
   }
 
-  // ==================== Chat ====================
   getChatHistory(tabId: string): Observable<ChatMessage[]> {
     return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
   }
 
+  // ✅ แก้ไข: ส่ง diagramId และรับ PmChatResponse โดยตรง
   sendChatMessage(
     tabId: string,
     message: string,
-  ): Observable<{ message: ChatMessage; diagram?: DiagramModel; action?: 'create' | 'update' }> {
-    return this.http.post<{
-      message: ChatMessage;
-      diagram?: DiagramModel;
-      action?: 'create' | 'update';
-    }>(`${this.apiUrl}/api/diagram/chat`, { tabId, message });
+  ): Observable<PmChatResponse> {
+    return this.http.post<PmChatResponse>(
+      `${this.apiUrl}/api/diagram/chat`,
+      { diagramId: tabId, message }
+    );
   }
 
   clearChatHistory(tabId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
   }
 
-  // ==================== AI ====================
   generateDiagram(
     prompt: string,
     context?: any,
@@ -214,7 +218,6 @@ export class DiagramService {
     );
   }
 
-  // ==================== Export ====================
   exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
       responseType: 'blob',
@@ -227,7 +230,6 @@ export class DiagramService {
     });
   }
 
-  // ==================== State Management ====================
   setActiveTab(tabId: string | null) {
     this.activeTabIdSubject.next(tabId);
   }
@@ -241,6 +243,7 @@ export class DiagramService {
     this.tabsSubject.next([]);
     this.activeTabIdSubject.next(null);
   }
+
   getDiagram(id: string): Observable<DiagramModel> {
     return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
   }

@@ -1,4 +1,5 @@
-// src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts
+// src/app/core/component/sic-drawio/drawio-connector.service.ts
+
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 
@@ -82,6 +83,24 @@ export class DrawioConnectorService {
       return;
     }
     this.postMessage({ action: 'export', format: 'xml' });
+  }
+
+  // ✅ ใช้ action: 'mermaid' เพื่อแทรก Mermaid เป็น Page ใหม่
+  insertMermaid(mermaidScript: string, pageName?: string): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
+      this.pendingMessages.push({
+        action: 'mermaid',
+        mermaid: mermaidScript,
+        title: pageName || 'AI Generated Diagram'
+      });
+      return;
+    }
+    this.postMessage({
+      action: 'mermaid',
+      mermaid: mermaidScript,
+      title: pageName || 'AI Generated Diagram'
+    });
   }
 
   handleMessage(event: MessageEvent): void {

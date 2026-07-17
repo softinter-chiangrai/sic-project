@@ -1,4 +1,5 @@
-// src/app/features/pmdt06/pmdt06A/pmdt06A.component.ts
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -6,8 +7,10 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
+  SimpleChanges,
   inject,
   signal,
   viewChild,
@@ -16,7 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
 import { Subject, takeUntil } from 'rxjs';
 import type { ChatMessage } from '../diagram.model';
-import { DiagramService } from '../diagram.service';
+import { DiagramService, PmChatResponse } from '../diagram.service';
 
 @Component({
   selector: 'app-pmdt06A',
@@ -25,9 +28,21 @@ import { DiagramService } from '../diagram.service';
   templateUrl: './pmdt06A.component.html',
   styleUrls: ['./pmdt06A.component.css'],
 })
-export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  @Input() diagramId!: string | null;
-  @Output() aiResponse = new EventEmitter<any>();
+export class pmdt06AComponent implements AfterViewInit, OnChanges, OnDestroy {
+  private _diagramId: string | null = null;
+
+  @Input() set diagramId(id: string | null) {
+    this._diagramId = id;
+    // ✅ ทุกครั้งที่ diagramId เปลี่ยน → โหลดประวัติใหม่
+    if (id) {
+      this.loadChatHistory(id);
+    }
+  }
+  get diagramId(): string | null {
+    return this._diagramId;
+  }
+
+  @Output() aiResponse = new EventEmitter<{ action: string; script?: string; name?: string; type?: string }>();
 
   private diagramService = inject(DiagramService);
   private destroy$ = new Subject<void>();
@@ -39,7 +54,13 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   chatContainer = viewChild<ElementRef>('chatContainer');
 
   ngAfterViewInit() {
-    if (this.diagramId) {
+    // ถ้ามี diagramId อยู่แล้วตั้งแต่เริ่ม (จาก setter จะเรียก loadChatHistory ไปแล้ว)
+    // แต่ถ้าไม่มี ก็ไม่ต้องทำอะไร
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // เผื่อกรณีที่ @Input ไม่ถูก set ในครั้งแรก
+    if (changes['diagramId'] && this.diagramId) {
       this.loadChatHistory(this.diagramId);
     }
   }
@@ -53,9 +74,14 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     this.diagramService
       .getChatHistory(diagramId)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((history) => {
-        this.messages.set(history);
-        this.scrollToBottom();
+      .subscribe({
+        next: (history) => {
+          this.messages.set(history);
+          this.scrollToBottom();
+        },
+        error: () => {
+          // silent fail
+        },
       });
   }
 
@@ -80,31 +106,70 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
       .sendChatMessage(this.diagramId, input)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
+        next: (response: PmChatResponse) => {
           const assistantMsg: ChatMessage = {
-            id: crypto.randomUUID(),
-            diagramId: this.diagramId!,
-            userId: 'system',
-            role: 'assistant',
-            content: response.message.content,
-            contextData: response.message.contextData,
-            createdAt: new Date().toISOString(),
+            id: response.id || crypto.randomUUID(),
+            diagramId: response.diagramId || this.diagramId!,
+            userId: response.createdBy || 'system',
+            role: response.role || 'assistant',
+            content: response.content,
+            contextData: response.contextData,
+            createdAt: response.createdDate || new Date().toISOString(),
           };
           this.messages.update((m) => [...m, assistantMsg]);
           this.isLoading.set(false);
           this.scrollToBottom();
 
-          if (response.diagram) {
+          const content = assistantMsg.content;
+          const mermaidMatch = content.match(/```mermaid\s*([\s\S]*?)```/);
+          if (mermaidMatch) {
+            const script = mermaidMatch[1].trim();
+            const nameMatch = content.match(/(?:name|title)\s*[:：]\s*(.+)/i);
+            const name = nameMatch ? nameMatch[1].trim() : 'AI Generated Diagram';
+            const type = this.detectDiagramType(script);
             this.aiResponse.emit({
-              action: response.action || 'update',
-              diagram: response.diagram,
+              action: 'update',
+              script,
+              name,
+              type,
             });
+          } else {
+            this.aiResponse.emit({ action: 'message' });
           }
         },
-        error: () => {
+        error: (err) => {
+          console.error('Chat error:', err);
           this.isLoading.set(false);
+          const errorMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            diagramId: this.diagramId!,
+            userId: 'system',
+            role: 'assistant',
+            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
+            createdAt: new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, errorMsg]);
+          this.scrollToBottom();
         },
       });
+  }
+
+  private detectDiagramType(script: string): string {
+    const lower = script.toLowerCase().trim();
+    if (lower.startsWith('sequence')) return 'Sequence';
+    if (lower.startsWith('classdiagram')) return 'Class';
+    if (lower.startsWith('erdiagram') || lower.startsWith('er')) return 'ER';
+    if (lower.startsWith('state')) return 'State';
+    if (lower.startsWith('journey')) return 'Journey';
+    if (lower.startsWith('mindmap')) return 'Mindmap';
+    if (lower.startsWith('timeline')) return 'Timeline';
+    if (lower.startsWith('requirement')) return 'Requirement';
+    if (lower.startsWith('c4')) return 'C4';
+    if (lower.startsWith('git')) return 'Git Graph';
+    if (lower.startsWith('pie')) return 'Pie';
+    if (lower.startsWith('gantt')) return 'Gantt';
+    if (lower.includes('graph') || lower.includes('flowchart')) return 'Flowchart';
+    return 'Flowchart';
   }
 
   clearChat() {

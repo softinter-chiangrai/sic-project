@@ -16,55 +16,50 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jakarta.annotation.PostConstruct; 
 
 @Slf4j
 @Service
 public class PmAiProviderServiceImpl implements PmAiProviderService {
 
-    @Value("${app.ai.provider:openai}")
+    @Value("${app.ai.provider:gemini}")
     private String provider;
 
     @Value("${app.ai.api-key:}")
     private String apiKey;
 
-    @Value("${app.ai.model:gpt-4}")
+    @Value("${app.ai.model:gemini-2.5-flash-lite}")
     private String model;
 
-    @Value("${app.ai.api-url:https://api.openai.com/v1/chat/completions}")
+    @Value("${app.ai.api-url:https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions}")
     private String apiUrl;
+
+     @PostConstruct
+    public void logConfig() {
+        log.info("AI API URL: {}", apiUrl);
+        log.info("AI Model: {}", model);
+        log.info("AI Provider: {}", provider);
+    }
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final Pattern MERMAID_BLOCK_PATTERN = Pattern.compile("```mermaid\\s*([\\s\\S]*?)```");
+    private static final Pattern NAME_PATTERN = Pattern.compile("(?:name|title|ชื่อ)\\s*[:：]\\s*(.+?)(?:\\n|$)", Pattern.CASE_INSENSITIVE);
+
     @Override
     public String generateResponse(String userMessage, String context) {
+        // ✅ บังคับให้ AI ตอบเฉพาะ Mermaid code block เท่านั้น
         String systemPrompt = """
-                You are an expert diagram designer and Mermaid.js specialist.
-                Generate valid Mermaid diagrams based on user requests.
-                
-                Guidelines:
-                1. Only output Mermaid code inside ```mermaid ... ``` blocks
-                2. Add a brief explanation before the code block
-                3. Use proper Mermaid syntax for the diagram type
-                4. If the user asks to modify an existing diagram, understand the context
-                5. If creating a new diagram, suggest an appropriate name and type
-                6. If you detect a Mermaid error in the context, suggest a fix
-                
-                Diagram Types:
-                - Flowchart: graph TD or flowchart TD
-                - Sequence: sequenceDiagram
-                - Class: classDiagram
-                - ER: erDiagram
-                - State: stateDiagram-v2
-                - Journey: journey
-                - Mindmap: mindmap
-                - Timeline: timeline
-                - Requirement: requirementDiagram
-                - C4: C4Context
-                - Git Graph: gitGraph
-                - Pie: pie
-                - Gantt: gantt
-                
+                You are a Mermaid diagram generator.
+                RULES:
+                1. Your response MUST contain ONLY a valid Mermaid code block.
+                2. The code block MUST start with ```mermaid and end with ```.
+                3. Do NOT include any text outside the code block.
+                4. If the user asks for a diagram, generate it.
+                5. If the user asks something else, still respond with a default diagram.
+                6. Supported types: flowchart, sequence, class, er, state, journey, mindmap, timeline, requirement, C4, git, pie, gantt.
+                7. Always use correct Mermaid syntax.
                 Current Context:
                 %s
                 """.formatted(context);
@@ -92,18 +87,18 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
             }
 
             log.error("AI API error: {}", response.getStatusCode());
-            return "I'm sorry, I'm having trouble generating a response right now. Please try again.";
+            return "```mermaid\ngraph TD\n  A[Error] --> B[Please try again]\n```";
 
         } catch (Exception e) {
             log.error("AI service error", e);
-            return "I encountered an error. Please check your API configuration and try again.";
+            return "```mermaid\ngraph TD\n  A[Error] --> B[Check API configuration]\n```";
         }
     }
 
     @Override
     public String extractMermaidScript(String aiResponse) {
-        Pattern pattern = Pattern.compile("```mermaid\\s*([\\s\\S]*?)```");
-        Matcher matcher = pattern.matcher(aiResponse);
+        if (aiResponse == null) return null;
+        Matcher matcher = MERMAID_BLOCK_PATTERN.matcher(aiResponse);
         if (matcher.find()) {
             return matcher.group(1).trim();
         }
@@ -112,20 +107,30 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     @Override
     public String extractDiagramName(String aiResponse) {
-        String lower = aiResponse.toLowerCase();
-        if (lower.contains("name:")) {
-            int idx = lower.indexOf("name:");
-            int end = lower.indexOf("\n", idx);
-            if (end == -1) end = lower.indexOf(".", idx);
-            if (end == -1) end = Math.min(idx + 50, lower.length());
-            return aiResponse.substring(idx + 5, end).trim();
+        if (aiResponse == null) return "AI Generated Diagram";
+        Matcher matcher = NAME_PATTERN.matcher(aiResponse);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
         }
-        if (lower.contains("title:")) {
-            int idx = lower.indexOf("title:");
-            int end = lower.indexOf("\n", idx);
-            if (end == -1) end = lower.indexOf(".", idx);
-            if (end == -1) end = Math.min(idx + 50, lower.length());
-            return aiResponse.substring(idx + 6, end).trim();
+        // fallback: ถ้าไม่มีชื่อ ให้ดูในบรรทัดแรกของ mermaid script
+        String script = extractMermaidScript(aiResponse);
+        if (script != null) {
+            String firstLine = script.split("\n")[0].trim();
+            if (firstLine.startsWith("graph") || firstLine.startsWith("flowchart")) {
+                return "Flowchart";
+            }
+            if (firstLine.startsWith("sequenceDiagram")) return "Sequence Diagram";
+            if (firstLine.startsWith("classDiagram")) return "Class Diagram";
+            if (firstLine.startsWith("erDiagram")) return "ER Diagram";
+            if (firstLine.startsWith("stateDiagram")) return "State Diagram";
+            if (firstLine.startsWith("journey")) return "Journey";
+            if (firstLine.startsWith("mindmap")) return "Mindmap";
+            if (firstLine.startsWith("timeline")) return "Timeline";
+            if (firstLine.startsWith("requirementDiagram")) return "Requirement Diagram";
+            if (firstLine.startsWith("C4Context")) return "C4 Context";
+            if (firstLine.startsWith("gitGraph")) return "Git Graph";
+            if (firstLine.startsWith("pie")) return "Pie Chart";
+            if (firstLine.startsWith("gantt")) return "Gantt Chart";
         }
         return "AI Generated Diagram";
     }

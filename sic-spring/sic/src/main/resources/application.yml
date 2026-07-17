@@ -71,6 +71,12 @@ app:
       endpoint: http://localhost:8888
       path-style-access-enabled: true
 
+  ai:
+    provider: gemini
+    api-key: sk_Lhki2ELsMXbWXAZIC6aYOI2YV54LnYQwtE5UK90aGFahN3EKf7HhcDPJwEbmRDQR
+    model: gemini-2.5-flash-lite
+    api-url: https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions
+
 logging:
   pattern:
     console: "%msg%n"
