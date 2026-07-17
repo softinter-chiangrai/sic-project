@@ -1,115 +1,61 @@
-<div #container class="flex h-[calc(100vh-56px)] select-none" [class.resizing]="isResizing()">
-  <!-- Left Sidebar: Tabs + Toolbox -->
-  <aside class="flex-shrink-0 border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col" [style.width.px]="sidebarWidth()">
-    <!-- Search -->
-    <div class="p-3 border-b border-[var(--border)]">
-      <input [(ngModel)]="searchQuery" type="text" placeholder="Search diagrams..." class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors" />
-    </div>
-
-    <!-- Filter by Type -->
-    <div class="p-3 border-b border-[var(--border)]">
-      <select [(ngModel)]="filterType" class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors">
-        <option value="all">All types</option>
-        @for (type of diagramTypeOptions; track type) {
-          <option [value]="type">{{ type }}</option>
-        }
-      </select>
-    </div>
-
-    <!-- Tab List -->
-    <div class="flex-1 overflow-y-auto p-2 space-y-1" cdkDropList (cdkDropListDropped)="drop($event)">
-      @for (tab of filteredTabs(); track tab.id) {
-        <div class="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all group" [class]="activeTabId() === tab.id ? 'bg-[var(--crm-primary)] text-white' : 'hover:bg-[var(--sidebar-hover)]'" (click)="selectTab(tab.id)" cdkDrag>
-          <i class="bi text-sm" [class]="getIcon(tab.diagramType)"></i>
-          <span class="flex-1 truncate text-sm">{{ tab.name }}</span>
-          <span class="text-[0.55rem] px-1.5 py-0.5 rounded bg-opacity-20" [class]="activeTabId() === tab.id ? 'bg-white/20 text-white' : 'bg-[var(--border)]/20 text-[var(--text-muted)]'">{{ tab.diagramType }}</span>
-          <button (click)="closeTab(tab.id, $event)" class="opacity-0 group-hover:opacity-100 hover:text-[var(--crm-danger)] transition-all" [class.text-white/70]="activeTabId() === tab.id"><i class="bi bi-x"></i></button>
+<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<div class="h-full flex flex-col bg-[var(--bg)]">
+  <div
+    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
+  >
+    <h3 class="text-sm font-medium">AI Assistant</h3>
+    <button
+      (click)="clearChat()"
+      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
+    >
+      Clear
+    </button>
+  </div>
+  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
+    @for (message of messages(); track message.id) {
+      <div class="flex" [class.justify-end]="message.role === 'user'">
+        <div
+          class="max-w-[80%] px-4 py-2 rounded-xl"
+          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
+          [class.text-white]="message.role === 'user'"
+          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
+        >
+          <div
+            [class.text-sm]="message.role === 'user'"
+            [class.prose]="message.role === 'assistant'"
+          >
+            <markdown
+              [data]="message.content"
+              [class.text-white]="message.role === 'user'"
+            ></markdown>
+          </div>
+          <div class="text-xs mt-1 opacity-60">{{ message.createdAt | date: 'shortTime' }}</div>
         </div>
-      } @empty {
-        <div class="text-center text-[var(--text-muted)] text-sm py-8">
-          <i class="bi bi-inbox text-2xl block mb-2 opacity-30"></i>
-          No diagrams found
-        </div>
-      }
-    </div>
-
-    <!-- Toolbox (visible when visual type active) -->
-    @if (activeTab() && isVisualType() && editorMode() === 'visual') {
-      <div class="border-t border-[var(--border)] overflow-y-auto max-h-[200px]">
-        <app-pmdt06g [diagramType]="activeTab()?.diagramType || 'Flowchart'" />
       </div>
     }
-
-    <!-- Create Button -->
-    <div class="p-3 border-t border-[var(--border)]">
-      <button (click)="createTab()" class="w-full py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
-        <i class="bi bi-plus-lg mr-1"></i> New Diagram
+    @if (isLoading()) {
+      <div class="flex justify-start">
+        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
+          <span class="animate-pulse">AI is thinking...</span>
+        </div>
+      </div>
+    }
+  </div>
+  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
+    <div class="flex gap-2">
+      <input
+        [(ngModel)]="userInput"
+        (keydown.enter)="sendMessage()"
+        placeholder="Ask AI to create or modify diagrams..."
+        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      />
+      <button
+        (click)="sendMessage()"
+        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
+        [disabled]="isLoading() || !userInput.trim()"
+      >
+        Send
       </button>
     </div>
-  </aside>
-
-  <!-- Handle 1: Sidebar ↔ Center -->
-  <div class="resize-handle" [class.active]="isResizingSidebar()" (mousedown)="startResizeSidebar($event)"></div>
-
-  <!-- Center: Editor + Chat -->
-  <div class="flex-1 flex flex-col min-w-0">
-    <!-- Tabs header + Mode toggle -->
-    <div class="flex items-center gap-0.5 px-2 border-b border-[var(--border)] bg-[var(--sidebar)] overflow-x-auto flex-shrink-0">
-      @for (tab of filteredTabs(); track tab.id) {
-        <div class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-b-2 cursor-pointer whitespace-nowrap transition-colors"
-          [class.border-[var(--crm-primary)]]="activeTabId() === tab.id"
-          [class.text-[var(--text-active)]]="activeTabId() === tab.id"
-          [class.text-[var(--text-muted)]]="activeTabId() !== tab.id"
-          (click)="selectTab(tab.id)">
-          <i class="bi text-xs" [class]="getIcon(tab.diagramType)"></i>
-          <span>{{ tab.name }}</span>
-          <button (click)="closeTab(tab.id, $event)" class="text-xs hover:text-[var(--crm-danger)] ml-0.5"><i class="bi bi-x"></i></button>
-        </div>
-      }
-      <!-- Mode toggle (only for visual types) -->
-      @if (isVisualType()) {
-        <span class="flex-1"></span>
-        <button (click)="toggleEditorMode()" class="px-2 py-1 text-xs rounded transition-colors"
-          [class.bg-[var(--crm-primary)]/20]="true"
-          [class.text-[var(--crm-primary)]]="true">
-          <i class="bi" [class.bi-pencil-square]="editorMode() === 'visual'" [class.bi-eye]="editorMode() === 'text'"></i>
-          {{ editorMode() === 'visual' ? 'Visual' : 'Text' }}
-        </button>
-      }
-    </div>
-
-    <!-- Split: Editor (60%) + Chat (40%) -->
-    <div class="flex-1 flex flex-col min-h-0">
-      <div class="flex-1 min-h-0 border-b border-[var(--border)]">
-        <!-- ✅ แก้ไข: ส่ง mermaidScript ลงไปที่ Visual Editor -->
-        @if (isVisualType() && editorMode() === 'visual') {
-          <app-pmdt06f
-            [diagram]="activeTab()"
-            [graphData]="activeTab()?.graphData"
-            [mermaidScript]="activeTab()?.mermaidScript || ''"
-            (graphDataChange)="onGraphDataChange($event)"
-            (editorReady)="onVisualEditorReady($event)"
-          />
-        } @else {
-          <app-pmdt06b
-            [diagram]="activeTab()"
-            (diagramChange)="onTextDiagramChange($event)"
-          />
-        }
-      </div>
-      <div class="h-[35%] min-h-[150px]">
-        <app-pmdt06c [diagramId]="activeTabId()" (aiResponse)="handleAiResponse($event)" />
-      </div>
-    </div>
   </div>
-
-  <!-- Handle 2: Center ↔ Preview -->
-  <div class="resize-handle" [class.active]="isResizingPreview()" (mousedown)="startResizePreview($event)"></div>
-
-  <!-- Right: Live Preview -->
-  @if (!(isVisualType() && editorMode() === 'visual')) {
-    <aside class="flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg)]" [style.width.px]="previewWidth()">
-      <app-pmdt06d [script]="activeTab()?.mermaidScript || ''" />
-    </aside>
-  }
 </div>
