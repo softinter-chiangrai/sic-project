@@ -1,19 +1,10 @@
 package com.softinter.sicapi.service.impl;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
 import com.softinter.sicapi.entity.pm.PmDiagramVersion;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
@@ -21,9 +12,15 @@ import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,8 +29,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private final PmDiagramTabRepository tabRepository;
     private final PmDiagramVersionRepository versionRepository;
-    private final PmCustomerProjectRepository customerProjectRepository;
     private final CurrentUserService currentUserService;
+    private final PmCustomerProjectRepository customerProjectRepository; 
 
     @Override
     @Transactional(readOnly = true)
@@ -86,7 +83,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript());
         tab.setMetadata(request.getMetadata());
-        tab.setGraphData(request.getGraphData());
+        tab.setGraphData(request.getGraphData()); // ✅ ตั้งค่า graphData
         tab.setSortOrder(maxSort + 1);
         tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -119,6 +116,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         if (request.getMetadata() != null) {
             tab.setMetadata(request.getMetadata());
         }
+        // ✅ บันทึก graphData
         if (request.getGraphData() != null) {
             tab.setGraphData(request.getGraphData());
         }
@@ -154,7 +152,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
         duplicate.setMetadata(original.getMetadata());
-        duplicate.setGraphData(original.getGraphData());
+        duplicate.setGraphData(original.getGraphData()); // ✅ คัดลอก graphData
         duplicate.setSortOrder(original.getSortOrder() + 1);
         duplicate.setIsActive(true);
 
@@ -192,6 +190,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         PmDiagramTab tab = version.getDiagram();
         tab.setMermaidScript(version.getMermaidScript());
+        // ✅ เมื่อ restore version ควรตั้ง graphData เป็น null หรือคงเดิม? (เลือกคงเดิม)
+        // tab.setGraphData(null); // ถ้าต้องการให้ใช้ Mermaid อย่างเดียว
 
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Restored from version " + version.getVersionNumber());
@@ -234,7 +234,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             dto.setDiagramType(tab.getDiagramType());
             dto.setMermaidScript(tab.getMermaidScript());
             dto.setMetadata(tab.getMetadata());
-            dto.setGraphData(tab.getGraphData());
+            dto.setGraphData(tab.getGraphData()); // ✅ ส่ง graphData กลับ
             dto.setProjectId(tab.getProjectId());
 
             // ดึง projectName (ถ้ามี)
@@ -269,7 +269,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             fallback.setDiagramType(tab.getDiagramType());
             fallback.setMermaidScript(tab.getMermaidScript());
             fallback.setMetadata(tab.getMetadata());
-            fallback.setGraphData(tab.getGraphData());
+            fallback.setGraphData(tab.getGraphData()); // ✅ fallback ก็ส่ง graphData
             fallback.setProjectId(tab.getProjectId());
             fallback.setSortOrder(tab.getSortOrder());
             fallback.setIsActive(tab.getIsActive());

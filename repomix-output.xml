@@ -22813,6 +22813,50 @@ public class OpenApiConfig {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/config/S3Config.java">
+package com.softinter.sicapi.config;
+
+import java.net.URI;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
+
+@Configuration
+public class S3Config {
+
+    @Value("${app.storage.s3.endpoint:http://localhost:8888}")
+    private String endpoint;
+
+    @Value("${app.storage.s3.access-key:seaweedfs}")
+    private String accessKey;
+
+    @Value("${app.storage.s3.secret-key:seaweedfs-secret}")
+    private String secretKey;
+
+    @Value("${app.storage.s3.region:us-east-1}")
+    private String region;
+
+    @Bean
+    public S3Client s3Client() {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        return S3Client.builder()
+                .region(Region.of(region))
+                .endpointOverride(URI.create(endpoint))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)   // สำคัญที่สุด!
+                        .build())
+                .build();
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/BaseController.java">
 package com.softinter.sicapi.controller;
 
@@ -22914,6 +22958,20 @@ public class ChatMessageRequest {
     
     @Builder.Default
     private ChatMessageType messageType = ChatMessageType.TEXT;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CompleteUploadSessionRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Getter;
+import lombok.Setter;
+import java.util.UUID;
+
+@Getter
+@Setter
+public class CompleteUploadSessionRequest {
+    private UUID sessionId;  // uploadGroupId ที่ได้จาก create session
 }
 </file>
 
@@ -23345,6 +23403,26 @@ public class StorageDownloadResponse {
     private String fileName;
     private String contentType;
     private long fileSize;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UploadSessionResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Builder
+public class UploadSessionResponse {
+    private String sessionId;
+    private String uploadUrl;
+    private Integer chunkSize;
+    private Integer totalChunks;
+    private Integer nextChunkIndex;   
+    private Long uploadedBytes;  
 }
 </file>
 
@@ -35837,232 +35915,6 @@ export class AiDiagramService {
         }
       });
     });
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DrawioConnectorService {
-
-  private iframe: HTMLIFrameElement | null = null;
-  private pendingMessages: any[] = [];
-  private drawioReady = false;
-
-  private isReadySubject = new BehaviorSubject<boolean>(false);
-  isReady$ = this.isReadySubject.asObservable();
-
-  private xmlSubject = new Subject<string>();
-  xml$ = this.xmlSubject.asObservable();
-
-  private errorSubject = new Subject<string>();
-  error$ = this.errorSubject.asObservable();
-
-  init(iframe: HTMLIFrameElement): void {
-    this.iframe = iframe;
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-    console.log('[Draw.io] iframe initialized');
-  }
-
-  /**
-   * ส่งข้อความไปยัง iframe
-   * force = true เพื่อข้ามการ queue (ใช้สำหรับ init/load ตอนเริ่มต้น)
-   */
-  postMessage(data: any, force = false): void {
-    if (!this.iframe?.contentWindow) {
-      console.warn('[Draw.io] No contentWindow, message queued:', data);
-      this.pendingMessages.push(data);
-      return;
-    }
-
-    if (!this.drawioReady && !force) {
-      console.log('[Draw.io] Not ready, queued:', data);
-      this.pendingMessages.push(data);
-      return;
-    }
-
-    try {
-      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
-      console.log('[Draw.io] SEND:', data);
-    } catch (e) {
-      console.error('[Draw.io] postMessage error:', e);
-      this.errorSubject.next('Failed to send message to Draw.io');
-    }
-  }
-
-  /**
-   * ส่งคิว messages ที่ค้างอยู่
-   */
-  private flushQueue(): void {
-    if (!this.drawioReady) {
-      return;
-    }
-
-    while (this.pendingMessages.length > 0) {
-      const msg = this.pendingMessages.shift();
-      try {
-        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
-        console.log('[Draw.io] SEND QUEUE:', msg);
-      } catch (e) {
-        console.error('[Draw.io] flushQueue error:', e);
-      }
-    }
-  }
-
-  /**
-   * โหลด XML ลงใน Draw.io
-   * @param xml - XML string (ถ้าไม่ระบุจะโหลด empty diagram)
-   * @param force - ส่งทันทีโดยไม่รอ ready (ใช้สำหรับ init)
-   */
-  loadXml(xml?: string, force = false): void {
-    if (!xml) {
-      xml = `<mxfile>
-<diagram id="page1" name="Page-1">
-<mxGraphModel>
-<root>
-<mxCell id="0"/>
-<mxCell id="1" parent="0"/>
-</root>
-</mxGraphModel>
-</diagram>
-</mxfile>`;
-    }
-
-    this.postMessage({
-      action: 'load',
-      xml: xml,
-      autosave: false
-    }, force);
-  }
-
-  /**
-   * โหลด Mermaid (ยังไม่รองรับ)
-   */
-  loadMermaid(mermaid: string): void {
-    console.warn('[Draw.io] Mermaid conversion not implemented yet.');
-    this.errorSubject.next('Mermaid conversion not supported');
-  }
-
-  /**
-   * ขอ XML ปัจจุบันจาก Draw.io
-   */
-  requestXml(): void {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
-      this.errorSubject.next('Draw.io not ready to export');
-      return;
-    }
-    this.postMessage({
-      action: 'export',
-      format: 'xml'
-    });
-  }
-
-  /**
-   * จัดการข้อความจาก Draw.io
-   */
-  handleMessage(event: MessageEvent): void {
-    // ตรวจสอบว่าเป็น messages จาก diagrams.net หรือไม่
-    if (!event.origin.includes('diagrams.net')) {
-      return;
-    }
-
-    let data: any;
-    try {
-      if (typeof event.data === 'string') {
-        if (event.data === 'ready') {
-          data = { event: 'ready' };
-        } else {
-          data = JSON.parse(event.data);
-        }
-      } else {
-        data = event.data;
-      }
-    } catch (e) {
-      console.warn('[Draw.io] Failed to parse message:', event.data);
-      return;
-    }
-
-    console.log('[Draw.io] EVENT:', data);
-
-    // ---------------------------
-    // 1) configure
-    // ---------------------------
-    if (data.event === 'configure') {
-      // ส่ง config ที่สมบูรณ์ยิ่งขึ้น
-      const configPayload = {
-        action: 'configure',
-        config: {
-          defaultLibraries: true,
-          autosave: false,
-          ui: 'dark',
-          customLibraries: []
-        }
-      };
-      try {
-        this.iframe?.contentWindow?.postMessage(JSON.stringify(configPayload), '*');
-        console.log('[Draw.io] SEND CONFIGURE (updated)');
-      } catch (e) {
-        console.error('[Draw.io] Configure error:', e);
-      }
-      return;
-    }
-
-    // ---------------------------
-    // 2) init
-    // ---------------------------
-    if (data.event === 'init') {
-      console.log('[Draw.io] INIT received, loading initial page');
-      this.loadXml(undefined, true);
-      return;
-    }
-
-    // ---------------------------
-    // 3) ready
-    // ---------------------------
-    if (data.event === 'ready') {
-      console.log('[Draw.io] READY');
-      this.drawioReady = true;
-      this.isReadySubject.next(true);
-      this.flushQueue();
-      return;
-    }
-
-    // ---------------------------
-    // 4) export (xml)
-    // ---------------------------
-    if (data.event === 'export' && data.xml) {
-      console.log('[Draw.io] XML export received');
-      this.xmlSubject.next(data.xml);
-      return;
-    }
-
-    // ---------------------------
-    // 5) error / other events
-    // ---------------------------
-    if (data.event === 'error') {
-      console.error('[Draw.io] Error event:', data);
-      this.errorSubject.next(data.message || 'Unknown Draw.io error');
-    }
-  }
-
-  /**
-   * รีเซ็ตสถานะ (ใช้เมื่อ reload iframe หรือ logout)
-   */
-  reset(): void {
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-    this.xmlSubject = new Subject<string>();
-    this.errorSubject = new Subject<string>();
-    console.log('[Draw.io] Service reset');
   }
 }
 </file>
@@ -55398,50 +55250,6 @@ public class BusinessContextFilter extends OncePerRequestFilter {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/config/S3Config.java">
-package com.softinter.sicapi.config;
-
-import java.net.URI;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Configuration;
-
-@Configuration
-public class S3Config {
-
-    @Value("${app.storage.s3.endpoint:http://localhost:8888}")
-    private String endpoint;
-
-    @Value("${app.storage.s3.access-key:seaweedfs}")
-    private String accessKey;
-
-    @Value("${app.storage.s3.secret-key:seaweedfs-secret}")
-    private String secretKey;
-
-    @Value("${app.storage.s3.region:us-east-1}")
-    private String region;
-
-    @Bean
-    public S3Client s3Client() {
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-        return S3Client.builder()
-                .region(Region.of(region))
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .serviceConfiguration(S3Configuration.builder()
-                        .pathStyleAccessEnabled(true)   // สำคัญที่สุด!
-                        .build())
-                .build();
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/config/WebConfig.java">
 package com.softinter.sicapi.config;
 
@@ -56811,20 +56619,6 @@ public class ApprovalSubmitRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CompleteUploadSessionRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Getter;
-import lombok.Setter;
-import java.util.UUID;
-
-@Getter
-@Setter
-public class CompleteUploadSessionRequest {
-    private UUID sessionId;  // uploadGroupId ที่ได้จาก create session
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CreateGroupRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -57547,6 +57341,30 @@ public class PmRequirementResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/StorageUploadResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import java.util.UUID;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class StorageUploadResponse {
+    private UUID id;
+    private String fileName;
+    private String fileUrl;
+    private long fileSize;
+    private String contentType;
+    private UUID uploadGroupId;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/TransportResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -57559,26 +57377,6 @@ import java.util.List;
 public class TransportResponse {
     private String transport;
     private List<String> transferFormats;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UploadSessionResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-@Builder
-public class UploadSessionResponse {
-    private String sessionId;
-    private String uploadUrl;
-    private Integer chunkSize;
-    private Integer totalChunks;
-    private Integer nextChunkIndex;   
-    private Long uploadedBytes;  
 }
 </file>
 
@@ -60957,6 +60755,47 @@ public interface ComboboxService {
     List<LovResponse> getProvinceList(UUID countryId, String value, String lang);
     List<LovResponse> getDistrictList(UUID provinceId, String value, String lang);
     List<LovResponse> getSubDistrictList(UUID districtId, String value, String lang);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/FileStorageService.java">
+package com.softinter.sicapi.service;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.softinter.sicapi.dto.request.UploadSessionRequest;
+import com.softinter.sicapi.dto.response.StorageDownloadResponse;
+import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+
+public interface FileStorageService {
+    // Single file upload
+    StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId);
+    StorageDownloadResponse downloadFile(UUID fileId);
+    void deleteFile(UUID fileId);
+    String getFileUrl(UUID fileId);
+
+    // Resumable upload session
+    UploadSessionResponse createUploadSession(UploadSessionRequest request);
+    StorageUploadResponse completeUploadSession(UUID sessionId);
+    StorageUploadResponse completeUploadSession(UUID sessionId, jakarta.servlet.http.HttpServletRequest request); // overload
+
+    // Additional methods for .NET compatibility
+    UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk);
+    void cancelSession(UUID sessionId);
+    void activateUpload(UUID uploadId);
+    StorageDownloadResponse downloadByKey(String bucketName, String objectKey);
+    String getFileUrlByUploadGroupId(UUID uploadGroupId);
+    void activateUpload(UUID uploadId, String userId);
+    void cleanupExpiredTemporaryUploads();
+    UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences);
+
+    void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences);
+    
 }
 </file>
 
@@ -67136,252 +66975,229 @@ export class Pmdt06DComponent implements OnChanges {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
-// src/app/core/services/diagram.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type {
-  ChatMessage,
-  DiagramModel,
-  DiagramProject,
-  DiagramType,
-  DiagramVersion,
-} from './diagram.model';
-import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })
-export class DiagramService {
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiBaseUrl;
+@Injectable({
+  providedIn: 'root',
+})
+export class DrawioConnectorService {
+  private iframe: HTMLIFrameElement | null = null;
+  private pendingMessages: any[] = [];
+  private drawioReady = false;
 
-  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
-  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
-  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
-  private pmrt02Service = inject(Pmrt02Service);
+  private isReadySubject = new BehaviorSubject<boolean>(false);
+  isReady$ = this.isReadySubject.asObservable();
 
-  projects$ = this.projectsSubject.asObservable();
-  tabs$ = this.tabsSubject.asObservable();
-  activeTabId$ = this.activeTabIdSubject.asObservable();
+  private xmlSubject = new Subject<string>();
+  xml$ = this.xmlSubject.asObservable();
 
-  // ==================== Projects ====================
- getProjectName(projectId: string): Observable<string> {
-    return this.pmrt02Service.getProject(projectId).pipe(
-      map(project => project.projectName)
-    );
-  }
-  
-  getProjects(): Observable<DiagramProject[]> {
-    // ใช้ API /api/pm/customer-projects แต่ต้องมี customerId
-    // ถ้าไม่มี ให้ return empty หรือใช้วิธีอื่น
-    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
-      .pipe(
-        map(response => {
-          const items = response?.content || response?.data || [];
-          return items.map((p: any) => ({
-            id: p.id,
-            name: p.projectName,
-            description: p.description,
-            isFavorite: false,
-            lastOpened: p.updatedDate || p.createdDate,
-            createdAt: p.createdDate,
-            updatedAt: p.updatedDate
-          }));
-        })
-      );
+  private errorSubject = new Subject<string>();
+  error$ = this.errorSubject.asObservable();
+
+  init(iframe: HTMLIFrameElement): void {
+    this.iframe = iframe;
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+    console.log('[Draw.io] iframe initialized');
   }
 
+  /**
+   * ส่งข้อความไปยัง iframe
+   * force = true เพื่อข้ามการ queue (ใช้สำหรับ init/load ตอนเริ่มต้น)
+   */
+  postMessage(data: any, force = false): void {
+    if (!this.iframe?.contentWindow) {
+      console.warn('[Draw.io] No contentWindow, message queued:', data);
+      this.pendingMessages.push(data);
+      return;
+    }
 
-  createProject(name: string, description?: string): Observable<DiagramProject> {
-    return this.http
-      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
-      .pipe(
-        tap((project) => {
-          const current = this.projectsSubject.value;
-          this.projectsSubject.next([...current, project]);
-        }),
-      );
+    if (!this.drawioReady && !force) {
+      console.log('[Draw.io] Not ready, queued:', data);
+      this.pendingMessages.push(data);
+      return;
+    }
+
+    try {
+      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+      console.log('[Draw.io] SEND:', data);
+    } catch (e) {
+      console.error('[Draw.io] postMessage error:', e);
+      this.errorSubject.next('Failed to send message to Draw.io');
+    }
   }
 
-  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
-    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
-      tap((updated) => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
-      }),
-    );
+  /**
+   * ส่งคิว messages ที่ค้างอยู่
+   */
+  private flushQueue(): void {
+    if (!this.drawioReady) {
+      return;
+    }
+
+    while (this.pendingMessages.length > 0) {
+      const msg = this.pendingMessages.shift();
+      try {
+        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
+        console.log('[Draw.io] SEND QUEUE:', msg);
+      } catch (e) {
+        console.error('[Draw.io] flushQueue error:', e);
+      }
+    }
   }
 
-  deleteProject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
-      tap(() => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.filter((p) => p.id !== id));
-      }),
-    );
-  }
+  /**
+   * โหลด XML ลงใน Draw.io
+   * @param xml - XML string (ถ้าไม่ระบุจะโหลด empty diagram)
+   * @param force - ส่งทันทีโดยไม่รอ ready (ใช้สำหรับ init)
+   */
+  loadXml(xml?: string, force = false): void {
+    if (!xml) {
+      xml = `<mxfile>
+<diagram id="page1" name="Page-1">
+<mxGraphModel>
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>`;
+    }
 
-  // ==================== Tabs (Diagrams) ====================
-  getTabs(projectId: string): Observable<DiagramModel[]> {
-    return this.http
-      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
-      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
-  }
-
-  createTab(
-    projectId: string,
-    name: string,
-    type: DiagramType,
-    script?: string,
-  ): Observable<DiagramModel> {
-    const payload = {
-      projectId,
-      name,
-      diagramType: type,
-      mermaidScript: script || '',
-      metadata: {},
-      sortOrder: this.tabsSubject.value.length + 1,
-    };
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
-      tap((tab) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next([...current, tab]);
-      }),
+    this.postMessage(
+      {
+        action: 'load',
+        xml: xml,
+        autosave: false,
+      },
+      force,
     );
   }
 
-  updateTab(tab: DiagramModel): Observable<DiagramModel> {
-    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
-      tap((updated) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
-      }),
-    );
+  /**
+   * โหลด Mermaid (ยังไม่รองรับ)
+   */
+  loadMermaid(mermaid: string): void {
+    console.warn('[Draw.io] Mermaid conversion not implemented yet.');
+    this.errorSubject.next('Mermaid conversion not supported');
   }
 
-  deleteTab(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.filter((t) => t.id !== id));
-      }),
-    );
-  }
-
-  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        const updated = current.map((t) => {
-          const order = tabs.find((o) => o.id === t.id);
-          return order ? { ...t, sortOrder: order.sortOrder } : t;
-        });
-        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
-      }),
-    );
-  }
-
-  duplicateTab(id: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
-  }
-
-  // ==================== Versions ====================
-  getVersions(tabId: string): Observable<DiagramVersion[]> {
-    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
-  }
-
-  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(
-      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
-      {},
-    );
-  }
-
-  // ==================== Chat ====================
-  getChatHistory(tabId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  sendChatMessage(
-    tabId: string,
-    message: string,
-  ): Observable<{ message: ChatMessage; diagram?: DiagramModel; action?: 'create' | 'update' }> {
-    return this.http.post<{
-      message: ChatMessage;
-      diagram?: DiagramModel;
-      action?: 'create' | 'update';
-    }>(`${this.apiUrl}/api/diagram/chat`, { tabId, message });
-  }
-
-  clearChatHistory(tabId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  // ==================== AI ====================
-  generateDiagram(
-    prompt: string,
-    context?: any,
-  ): Observable<{ script: string; type: DiagramType; name: string }> {
-    return this.http.post<{ script: string; type: DiagramType; name: string }>(
-      `${this.apiUrl}/api/diagram/ai/generate`,
-      { prompt, context },
-    );
-  }
-
-  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
-      script,
-      instruction,
+  /**
+   * ขอ XML ปัจจุบันจาก Draw.io
+   */
+  requestXml(): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
+      this.errorSubject.next('Draw.io not ready to export');
+      return;
+    }
+    this.postMessage({
+      action: 'export',
+      format: 'xml',
     });
   }
 
-  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
-      script,
-      errorMessage,
-    });
+  /**
+   * จัดการข้อความจาก Draw.io
+   */
+  handleMessage(event: MessageEvent): void {
+    // ตรวจสอบว่าเป็น messages จาก diagrams.net หรือไม่
+    if (!event.origin.includes('diagrams.net')) {
+      return;
+    }
+
+    let data: any;
+    try {
+      if (typeof event.data === 'string') {
+        if (event.data === 'ready') {
+          data = { event: 'ready' };
+        } else {
+          data = JSON.parse(event.data);
+        }
+      } else {
+        data = event.data;
+      }
+    } catch (e) {
+      console.warn('[Draw.io] Failed to parse message:', event.data);
+      return;
+    }
+
+    console.log('[Draw.io] EVENT:', data);
+
+    // ---------------------------
+    // 1) configure - ตอบกลับด้วยรูปแบบที่ถูกต้องและเรียบง่ายที่สุด
+    // ---------------------------
+    if (data.event === 'configure') {
+      const reply = {
+        action: 'configure',
+        config: {
+          defaultFonts: [],
+          defaultLibraries: true,
+        },
+      };
+      try {
+        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
+        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok)');
+      } catch (e) {
+        console.error('[Draw.io] Configure response error:', e);
+      }
+      return;
+    }
+
+    // ---------------------------
+    // 2) init - Draw.io พร้อมทำงานแล้ว (แทน ready event)
+    // ---------------------------
+    if (data.event === 'init') {
+      console.log('[Draw.io] INIT received');
+      this.drawioReady = true;
+      this.isReadySubject.next(true);
+      this.flushQueue();
+      return;
+    }
+
+    // ---------------------------
+    // 3) ready (กรณีบาง version ส่งมา)
+    // ---------------------------
+    if (data.event === 'ready') {
+      console.log('[Draw.io] READY received (fallback)');
+      this.drawioReady = true;
+      this.isReadySubject.next(true);
+      this.flushQueue();
+      return;
+    }
+
+    // ---------------------------
+    // 4) export (xml)
+    // ---------------------------
+    if (data.event === 'export' && data.xml) {
+      console.log('[Draw.io] XML export received');
+      this.xmlSubject.next(data.xml);
+      return;
+    }
+
+    // ---------------------------
+    // 5) error / other events
+    // ---------------------------
+    if (data.event === 'error') {
+      console.error('[Draw.io] Error event:', data);
+      this.errorSubject.next(data.message || 'Unknown Draw.io error');
+    }
   }
 
-  convertDiagram(
-    script: string,
-    targetType: DiagramType,
-  ): Observable<{ script: string; type: DiagramType }> {
-    return this.http.post<{ script: string; type: DiagramType }>(
-      `${this.apiUrl}/api/diagram/ai/convert`,
-      { script, targetType },
-    );
-  }
-
-  // ==================== Export ====================
-  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
-      responseType: 'blob',
-    });
-  }
-
-  exportProject(projectId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
-      responseType: 'blob',
-    });
-  }
-
-  // ==================== State Management ====================
-  setActiveTab(tabId: string | null) {
-    this.activeTabIdSubject.next(tabId);
-  }
-
-  getActiveTab(): string | null {
-    return this.activeTabIdSubject.value;
-  }
-
-  clearState() {
-    this.projectsSubject.next([]);
-    this.tabsSubject.next([]);
-    this.activeTabIdSubject.next(null);
-  }
-  getDiagram(id: string): Observable<DiagramModel> {
-    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  /**
+   * รีเซ็ตสถานะ (ใช้เมื่อ reload iframe หรือ logout)
+   */
+  reset(): void {
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+    this.xmlSubject = new Subject<string>();
+    this.errorSubject = new Subject<string>();
+    console.log('[Draw.io] Service reset');
   }
 }
 </file>
@@ -68903,6 +68719,205 @@ public class PmCustomerContractController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/storage/StorageController.java">
+package com.softinter.sicapi.controller.storage;
+
+import com.nimbusds.jose.util.Resource;
+import com.softinter.sicapi.dto.request.CompleteUploadSessionRequest;
+import com.softinter.sicapi.dto.request.UploadSessionRequest;
+import com.softinter.sicapi.dto.response.StorageDownloadResponse;
+import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.FileStorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/storage")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Storage", description = "File Storage API")
+public class StorageController {
+
+    private final FileStorageService fileStorageService;
+    private final SuUploadRepository uploadRepository;
+
+    // ========== Single file upload ==========
+    @PostMapping("/upload/image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file,
+                                         @RequestParam(required = false) String visibility,
+                                         @RequestParam(required = false) UUID uploadGroupId) {
+        StorageUploadResponse res = fileStorageService.uploadFile(file, "IMAGE", visibility, uploadGroupId);
+        return ResponseEntity.ok(Map.of(
+                "id", res.getId(),
+                "accessUrl", res.getFileUrl(),
+                "fileName", res.getFileName(),
+                "fileSize", res.getFileSize(),
+                "contentType", res.getContentType()
+        ));
+    }
+
+    @PostMapping("/upload/video")
+    public ResponseEntity<?> uploadVideo(@RequestParam("file") MultipartFile file,
+                                         @RequestParam(required = false) String visibility,
+                                         @RequestParam(required = false) UUID uploadGroupId) {
+        StorageUploadResponse res = fileStorageService.uploadFile(file, "VIDEO", visibility, uploadGroupId);
+        return ResponseEntity.ok(Map.of(
+                "id", res.getId(),
+                "accessUrl", res.getFileUrl(),
+                "fileName", res.getFileName(),
+                "fileSize", res.getFileSize(),
+                "contentType", res.getContentType()
+        ));
+    }
+
+    @PostMapping("/upload/document")
+    public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file,
+                                            @RequestParam(required = false) String visibility,
+                                            @RequestParam(required = false) UUID uploadGroupId) {
+        StorageUploadResponse res = fileStorageService.uploadFile(file, "DOCUMENT", visibility, uploadGroupId);
+        return ResponseEntity.ok(Map.of(
+                "id", res.getId(),
+                "accessUrl", res.getFileUrl(),
+                "fileName", res.getFileName(),
+                "fileSize", res.getFileSize(),
+                "contentType", res.getContentType()
+        ));
+    }
+
+    // ========== Resumable upload session ==========
+    @PostMapping("/upload/sessions")
+    @Operation(summary = "Create upload session")
+    public ResponseEntity<UploadSessionResponse> createUploadSession(@RequestBody UploadSessionRequest request) {
+        UploadSessionResponse response = fileStorageService.createUploadSession(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/upload/sessions/{sessionId}")
+    @Operation(summary = "Get session status")
+    public ResponseEntity<Map<String, Object>> getSessionStatus(@PathVariable UUID sessionId) {
+        // TODO: implement status response
+        return ResponseEntity.ok(Map.of("sessionId", sessionId));
+    }
+
+    @PostMapping("/upload/sessions/{sessionId}/chunks/{chunkIndex}")
+    @Operation(summary = "Upload a chunk")
+    public ResponseEntity<UploadSessionResponse> uploadChunk(
+            @PathVariable UUID sessionId,
+            @PathVariable int chunkIndex,
+            @RequestParam("chunk") MultipartFile chunk) {
+        UploadSessionResponse response = fileStorageService.uploadChunk(sessionId, chunkIndex, chunk);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/upload/sessions/{sessionId}/complete")
+    @Operation(summary = "Complete upload session (using path variable)")
+    public ResponseEntity<StorageUploadResponse> completeUploadSession(@PathVariable UUID sessionId,
+                                                                       HttpServletRequest request) {
+        StorageUploadResponse response = fileStorageService.completeUploadSession(sessionId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/upload/sessions/{sessionId}")
+    @Operation(summary = "Cancel upload session")
+    public ResponseEntity<Void> cancelSession(@PathVariable UUID sessionId) {
+        fileStorageService.cancelSession(sessionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/uploads/{uploadId}/activate")
+    @Operation(summary = "Activate upload")
+    public ResponseEntity<Void> activateUpload(@PathVariable UUID uploadId) {
+        fileStorageService.activateUpload(uploadId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ========== Legacy endpoint: complete session using request body (sessionId) ==========
+    @PostMapping("/upload/sessions/complete")
+    @Operation(summary = "Complete upload session (using sessionId in request body)")
+    public ResponseEntity<?> completeUploadSessionLegacy(@RequestBody CompleteUploadSessionRequest request,
+                                                         HttpServletRequest httpRequest) {
+        if (request == null || request.getSessionId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "sessionId is required in request body"));
+        }
+        StorageUploadResponse response = fileStorageService.completeUploadSession(request.getSessionId(), httpRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    // ========== Download ==========
+    @GetMapping("/download/{fileId}")
+    @Operation(summary = "Download file by ID")
+    public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID fileId) {
+        StorageDownloadResponse download = fileStorageService.downloadFile(fileId);
+        InputStreamResource resource = new InputStreamResource(download.getInputStream());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(download.getContentType()))
+                .contentLength(download.getFileSize())
+                .body(resource);
+    }
+
+    @GetMapping("/files/{bucketName}/{*objectKey}")
+    @Operation(summary = "Download file by bucket and object key")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadByKey(@PathVariable String bucketName,
+                                                                              @PathVariable String objectKey,
+                                                                              @RequestParam(required = false) Integer width,
+                                                                              @RequestParam(required = false) Integer height,
+                                                                              HttpServletRequest request) {
+        StorageDownloadResponse download = fileStorageService.downloadByKey(bucketName, objectKey);
+        InputStreamResource resource = new InputStreamResource(download.getInputStream());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(download.getContentType()))
+                .contentLength(download.getFileSize())
+                .body(resource);
+    }
+
+    @DeleteMapping("/{fileId}")
+    @Operation(summary = "Delete file")
+    public ResponseEntity<Void> delete(@PathVariable UUID fileId) {
+        fileStorageService.deleteFile(fileId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/url/{fileId}")
+    @Operation(summary = "Get file URL")
+    public ResponseEntity<String> getFileUrl(@PathVariable UUID fileId) {
+        String url = fileStorageService.getFileUrl(fileId);
+        return ResponseEntity.ok(url);
+    }
+
+   @GetMapping("/avatar/{groupId}")
+    public ResponseEntity<InputStreamResource> getAvatar(@PathVariable UUID groupId) {
+        SuUpload upload = uploadRepository
+            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
+            .orElseThrow(() -> new RuntimeException("Avatar not found"));
+
+        StorageDownloadResponse download = fileStorageService.downloadFile(upload.getId());
+        InputStreamResource resource = new InputStreamResource(download.getInputStream());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(download.getContentType()))
+                .contentLength(download.getFileSize())
+                .body(resource);
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/ChatController.java">
 package com.softinter.sicapi.controller.su;
 
@@ -69930,30 +69945,6 @@ public class PmCustomerResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/StorageUploadResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import java.util.UUID;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class StorageUploadResponse {
-    private UUID id;
-    private String fileName;
-    private String fileUrl;
-    private long fileSize;
-    private String contentType;
-    private UUID uploadGroupId;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/SuUserBusinessMemberResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -70006,6 +69997,26 @@ public class WorkPackageResponse {
     private String status;
     private String color;
     private List<TaskResponse> tasks;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/enums/FileVisibility.java">
+package com.softinter.sicapi.entity.enums;
+
+import lombok.Getter;
+
+@Getter
+public enum FileVisibility {
+    UPLOADER_ONLY(1),
+    BUSINESS_ONLY(2),
+    ANYONE_WITH_LINK(3),
+    PUBLIC(4);
+
+    private final int fileVisibilityCode;
+
+    FileVisibility(int fileVisibilityCode) {
+        this.fileVisibilityCode = fileVisibilityCode;
+    }
 }
 </file>
 
@@ -71567,47 +71578,6 @@ public interface CurrentUserService {
     String getIpAddress();
     String getUsername();
     String getEmail();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/FileStorageService.java">
-package com.softinter.sicapi.service;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.web.multipart.MultipartFile;
-
-import com.softinter.sicapi.dto.request.UploadSessionRequest;
-import com.softinter.sicapi.dto.response.StorageDownloadResponse;
-import com.softinter.sicapi.dto.response.StorageUploadResponse;
-import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-
-public interface FileStorageService {
-    // Single file upload
-    StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId);
-    StorageDownloadResponse downloadFile(UUID fileId);
-    void deleteFile(UUID fileId);
-    String getFileUrl(UUID fileId);
-
-    // Resumable upload session
-    UploadSessionResponse createUploadSession(UploadSessionRequest request);
-    StorageUploadResponse completeUploadSession(UUID sessionId);
-    StorageUploadResponse completeUploadSession(UUID sessionId, jakarta.servlet.http.HttpServletRequest request); // overload
-
-    // Additional methods for .NET compatibility
-    UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk);
-    void cancelSession(UUID sessionId);
-    void activateUpload(UUID uploadId);
-    StorageDownloadResponse downloadByKey(String bucketName, String objectKey);
-    String getFileUrlByUploadGroupId(UUID uploadGroupId);
-    void activateUpload(UUID uploadId, String userId);
-    void cleanupExpiredTemporaryUploads();
-    UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences);
-
-    void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences);
-    
 }
 </file>
 
@@ -73966,6 +73936,256 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
 };
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
+// src/app/core/services/diagram.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type {
+  ChatMessage,
+  DiagramModel,
+  DiagramProject,
+  DiagramType,
+  DiagramVersion,
+} from './diagram.model';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+
+@Injectable({ providedIn: 'root' })
+export class DiagramService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiBaseUrl;
+
+  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
+  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
+  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
+  private pmrt02Service = inject(Pmrt02Service);
+
+  projects$ = this.projectsSubject.asObservable();
+  tabs$ = this.tabsSubject.asObservable();
+  activeTabId$ = this.activeTabIdSubject.asObservable();
+
+  // ==================== Projects ====================
+ getProjectName(projectId: string): Observable<string> {
+    return this.pmrt02Service.getProject(projectId).pipe(
+      map(project => project.projectName)
+    );
+  }
+  
+  getProjects(): Observable<DiagramProject[]> {
+    // ใช้ API /api/pm/customer-projects แต่ต้องมี customerId
+    // ถ้าไม่มี ให้ return empty หรือใช้วิธีอื่น
+    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
+      .pipe(
+        map(response => {
+          const items = response?.content || response?.data || [];
+          return items.map((p: any) => ({
+            id: p.id,
+            name: p.projectName,
+            description: p.description,
+            isFavorite: false,
+            lastOpened: p.updatedDate || p.createdDate,
+            createdAt: p.createdDate,
+            updatedAt: p.updatedDate
+          }));
+        })
+      );
+  }
+
+
+  createProject(name: string, description?: string): Observable<DiagramProject> {
+    return this.http
+      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
+      .pipe(
+        tap((project) => {
+          const current = this.projectsSubject.value;
+          this.projectsSubject.next([...current, project]);
+        }),
+      );
+  }
+
+  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
+    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
+      tap((updated) => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
+      }),
+    );
+  }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
+      tap(() => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.filter((p) => p.id !== id));
+      }),
+    );
+  }
+
+  // ==================== Tabs (Diagrams) ====================
+  getTabs(projectId: string): Observable<DiagramModel[]> {
+    return this.http
+      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
+      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
+  }
+
+  createTab(
+    projectId: string,
+    name: string,
+    type: DiagramType,
+    script?: string,
+  ): Observable<DiagramModel> {
+    const payload = {
+      projectId,
+      name,
+      diagramType: type,
+      mermaidScript: script || '',
+      metadata: {},
+      sortOrder: this.tabsSubject.value.length + 1,
+    };
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
+      tap((tab) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next([...current, tab]);
+      }),
+    );
+  }
+
+  updateTab(tab: DiagramModel): Observable<DiagramModel> {
+    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
+      tap((updated) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
+      }),
+    );
+  }
+
+  deleteTab(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.filter((t) => t.id !== id));
+      }),
+    );
+  }
+
+  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        const updated = current.map((t) => {
+          const order = tabs.find((o) => o.id === t.id);
+          return order ? { ...t, sortOrder: order.sortOrder } : t;
+        });
+        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
+      }),
+    );
+  }
+
+  duplicateTab(id: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
+  }
+
+  // ==================== Versions ====================
+  getVersions(tabId: string): Observable<DiagramVersion[]> {
+    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
+  }
+
+  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(
+      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
+      {},
+    );
+  }
+
+  // ==================== Chat ====================
+  getChatHistory(tabId: string): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  sendChatMessage(
+    tabId: string,
+    message: string,
+  ): Observable<{ message: ChatMessage; diagram?: DiagramModel; action?: 'create' | 'update' }> {
+    return this.http.post<{
+      message: ChatMessage;
+      diagram?: DiagramModel;
+      action?: 'create' | 'update';
+    }>(`${this.apiUrl}/api/diagram/chat`, { tabId, message });
+  }
+
+  clearChatHistory(tabId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  // ==================== AI ====================
+  generateDiagram(
+    prompt: string,
+    context?: any,
+  ): Observable<{ script: string; type: DiagramType; name: string }> {
+    return this.http.post<{ script: string; type: DiagramType; name: string }>(
+      `${this.apiUrl}/api/diagram/ai/generate`,
+      { prompt, context },
+    );
+  }
+
+  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
+      script,
+      instruction,
+    });
+  }
+
+  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
+      script,
+      errorMessage,
+    });
+  }
+
+  convertDiagram(
+    script: string,
+    targetType: DiagramType,
+  ): Observable<{ script: string; type: DiagramType }> {
+    return this.http.post<{ script: string; type: DiagramType }>(
+      `${this.apiUrl}/api/diagram/ai/convert`,
+      { script, targetType },
+    );
+  }
+
+  // ==================== Export ====================
+  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      responseType: 'blob',
+    });
+  }
+
+  exportProject(projectId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
+      responseType: 'blob',
+    });
+  }
+
+  // ==================== State Management ====================
+  setActiveTab(tabId: string | null) {
+    this.activeTabIdSubject.next(tabId);
+  }
+
+  getActiveTab(): string | null {
+    return this.activeTabIdSubject.value;
+  }
+
+  clearState() {
+    this.projectsSubject.next([]);
+    this.tabsSubject.next([]);
+    this.activeTabIdSubject.next(null);
+  }
+  getDiagram(id: string): Observable<DiagramModel> {
+    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.form.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.form.ts
 
@@ -74632,205 +74852,6 @@ public class DbParameterController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/storage/StorageController.java">
-package com.softinter.sicapi.controller.storage;
-
-import com.nimbusds.jose.util.Resource;
-import com.softinter.sicapi.dto.request.CompleteUploadSessionRequest;
-import com.softinter.sicapi.dto.request.UploadSessionRequest;
-import com.softinter.sicapi.dto.response.StorageDownloadResponse;
-import com.softinter.sicapi.dto.response.StorageUploadResponse;
-import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.FileStorageService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Map;
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/storage")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Storage", description = "File Storage API")
-public class StorageController {
-
-    private final FileStorageService fileStorageService;
-    private final SuUploadRepository uploadRepository;
-
-    // ========== Single file upload ==========
-    @PostMapping("/upload/image")
-    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file,
-                                         @RequestParam(required = false) String visibility,
-                                         @RequestParam(required = false) UUID uploadGroupId) {
-        StorageUploadResponse res = fileStorageService.uploadFile(file, "IMAGE", visibility, uploadGroupId);
-        return ResponseEntity.ok(Map.of(
-                "id", res.getId(),
-                "accessUrl", res.getFileUrl(),
-                "fileName", res.getFileName(),
-                "fileSize", res.getFileSize(),
-                "contentType", res.getContentType()
-        ));
-    }
-
-    @PostMapping("/upload/video")
-    public ResponseEntity<?> uploadVideo(@RequestParam("file") MultipartFile file,
-                                         @RequestParam(required = false) String visibility,
-                                         @RequestParam(required = false) UUID uploadGroupId) {
-        StorageUploadResponse res = fileStorageService.uploadFile(file, "VIDEO", visibility, uploadGroupId);
-        return ResponseEntity.ok(Map.of(
-                "id", res.getId(),
-                "accessUrl", res.getFileUrl(),
-                "fileName", res.getFileName(),
-                "fileSize", res.getFileSize(),
-                "contentType", res.getContentType()
-        ));
-    }
-
-    @PostMapping("/upload/document")
-    public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file,
-                                            @RequestParam(required = false) String visibility,
-                                            @RequestParam(required = false) UUID uploadGroupId) {
-        StorageUploadResponse res = fileStorageService.uploadFile(file, "DOCUMENT", visibility, uploadGroupId);
-        return ResponseEntity.ok(Map.of(
-                "id", res.getId(),
-                "accessUrl", res.getFileUrl(),
-                "fileName", res.getFileName(),
-                "fileSize", res.getFileSize(),
-                "contentType", res.getContentType()
-        ));
-    }
-
-    // ========== Resumable upload session ==========
-    @PostMapping("/upload/sessions")
-    @Operation(summary = "Create upload session")
-    public ResponseEntity<UploadSessionResponse> createUploadSession(@RequestBody UploadSessionRequest request) {
-        UploadSessionResponse response = fileStorageService.createUploadSession(request);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/upload/sessions/{sessionId}")
-    @Operation(summary = "Get session status")
-    public ResponseEntity<Map<String, Object>> getSessionStatus(@PathVariable UUID sessionId) {
-        // TODO: implement status response
-        return ResponseEntity.ok(Map.of("sessionId", sessionId));
-    }
-
-    @PostMapping("/upload/sessions/{sessionId}/chunks/{chunkIndex}")
-    @Operation(summary = "Upload a chunk")
-    public ResponseEntity<UploadSessionResponse> uploadChunk(
-            @PathVariable UUID sessionId,
-            @PathVariable int chunkIndex,
-            @RequestParam("chunk") MultipartFile chunk) {
-        UploadSessionResponse response = fileStorageService.uploadChunk(sessionId, chunkIndex, chunk);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/upload/sessions/{sessionId}/complete")
-    @Operation(summary = "Complete upload session (using path variable)")
-    public ResponseEntity<StorageUploadResponse> completeUploadSession(@PathVariable UUID sessionId,
-                                                                       HttpServletRequest request) {
-        StorageUploadResponse response = fileStorageService.completeUploadSession(sessionId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/upload/sessions/{sessionId}")
-    @Operation(summary = "Cancel upload session")
-    public ResponseEntity<Void> cancelSession(@PathVariable UUID sessionId) {
-        fileStorageService.cancelSession(sessionId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/uploads/{uploadId}/activate")
-    @Operation(summary = "Activate upload")
-    public ResponseEntity<Void> activateUpload(@PathVariable UUID uploadId) {
-        fileStorageService.activateUpload(uploadId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ========== Legacy endpoint: complete session using request body (sessionId) ==========
-    @PostMapping("/upload/sessions/complete")
-    @Operation(summary = "Complete upload session (using sessionId in request body)")
-    public ResponseEntity<?> completeUploadSessionLegacy(@RequestBody CompleteUploadSessionRequest request,
-                                                         HttpServletRequest httpRequest) {
-        if (request == null || request.getSessionId() == null) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "sessionId is required in request body"));
-        }
-        StorageUploadResponse response = fileStorageService.completeUploadSession(request.getSessionId(), httpRequest);
-        return ResponseEntity.ok(response);
-    }
-
-    // ========== Download ==========
-    @GetMapping("/download/{fileId}")
-    @Operation(summary = "Download file by ID")
-    public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID fileId) {
-        StorageDownloadResponse download = fileStorageService.downloadFile(fileId);
-        InputStreamResource resource = new InputStreamResource(download.getInputStream());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
-                .contentType(MediaType.parseMediaType(download.getContentType()))
-                .contentLength(download.getFileSize())
-                .body(resource);
-    }
-
-    @GetMapping("/files/{bucketName}/{*objectKey}")
-    @Operation(summary = "Download file by bucket and object key")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadByKey(@PathVariable String bucketName,
-                                                                              @PathVariable String objectKey,
-                                                                              @RequestParam(required = false) Integer width,
-                                                                              @RequestParam(required = false) Integer height,
-                                                                              HttpServletRequest request) {
-        StorageDownloadResponse download = fileStorageService.downloadByKey(bucketName, objectKey);
-        InputStreamResource resource = new InputStreamResource(download.getInputStream());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
-                .contentType(MediaType.parseMediaType(download.getContentType()))
-                .contentLength(download.getFileSize())
-                .body(resource);
-    }
-
-    @DeleteMapping("/{fileId}")
-    @Operation(summary = "Delete file")
-    public ResponseEntity<Void> delete(@PathVariable UUID fileId) {
-        fileStorageService.deleteFile(fileId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/url/{fileId}")
-    @Operation(summary = "Get file URL")
-    public ResponseEntity<String> getFileUrl(@PathVariable UUID fileId) {
-        String url = fileStorageService.getFileUrl(fileId);
-        return ResponseEntity.ok(url);
-    }
-
-   @GetMapping("/avatar/{groupId}")
-    public ResponseEntity<InputStreamResource> getAvatar(@PathVariable UUID groupId) {
-        SuUpload upload = uploadRepository
-            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
-            .orElseThrow(() -> new RuntimeException("Avatar not found"));
-
-        StorageDownloadResponse download = fileStorageService.downloadFile(upload.getId());
-        InputStreamResource resource = new InputStreamResource(download.getInputStream());
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(download.getContentType()))
-                .contentLength(download.getFileSize())
-                .body(resource);
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserBusinessController.java">
 package com.softinter.sicapi.controller.su;
 
@@ -75250,26 +75271,6 @@ public class TaskResponse {
     private String priority;
     private List<String> assigneeIds;
     private Map<String, String> assigneeNames; 
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/enums/FileVisibility.java">
-package com.softinter.sicapi.entity.enums;
-
-import lombok.Getter;
-
-@Getter
-public enum FileVisibility {
-    UPLOADER_ONLY(1),
-    BUSINESS_ONLY(2),
-    ANYONE_WITH_LINK(3),
-    PUBLIC(4);
-
-    private final int fileVisibilityCode;
-
-    FileVisibility(int fileVisibilityCode) {
-        this.fileVisibilityCode = fileVisibilityCode;
-    }
 }
 </file>
 
@@ -77208,303 +77209,6 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.config.BusinessContextHolder;
-import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
-import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
-import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
-import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
-import com.softinter.sicapi.entity.pm.PmDiagramTab;
-import com.softinter.sicapi.entity.pm.PmDiagramVersion;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.PmDiagramTabService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmDiagramTabServiceImpl implements PmDiagramTabService {
-
-    private final PmDiagramTabRepository tabRepository;
-    private final PmDiagramVersionRepository versionRepository;
-    private final PmCustomerProjectRepository customerProjectRepository;
-    private final CurrentUserService currentUserService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
-        try {
-            String userId = currentUserService.getUserId();
-            List<PmDiagramTab> tabs;
-            if (projectId != null) {
-                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-            } else {
-                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
-            }
-            return tabs.stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error in getTabs for projectId: {}", projectId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDiagramTabResponse getTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        return toResponse(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID businessId = BusinessContextHolder.getBusinessId();
-
-        if (!customerProjectRepository.existsById(request.getProjectId())) {
-            throw new RuntimeException("Project not found: " + request.getProjectId());
-        }
-
-        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
-                request.getProjectId()
-        );
-        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
-
-        PmDiagramTab tab = new PmDiagramTab();
-        tab.setUserId(userId);
-        tab.setBusinessId(businessId);
-        tab.setProjectId(request.getProjectId());
-        tab.setName(request.getName());
-        tab.setDiagramType(request.getDiagramType());
-        tab.setMermaidScript(request.getMermaidScript());
-        tab.setMetadata(request.getMetadata());
-        tab.setGraphData(request.getGraphData());
-        tab.setSortOrder(maxSort + 1);
-        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Initial version");
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
-            throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
-        }
-
-        if (request.getName() != null) {
-            tab.setName(request.getName());
-        }
-        if (request.getDiagramType() != null) {
-            tab.setDiagramType(request.getDiagramType());
-        }
-        if (request.getMermaidScript() != null) {
-            tab.setMermaidScript(request.getMermaidScript());
-            createVersion(tab, "Auto-save");
-        }
-        if (request.getMetadata() != null) {
-            tab.setMetadata(request.getMetadata());
-        }
-        if (request.getGraphData() != null) {
-            tab.setGraphData(request.getGraphData());
-        }
-        if (request.getIsActive() != null) {
-            tab.setIsActive(request.getIsActive());
-        }
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void deleteTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        tab.setIsDelete(true);
-        tab.setDeleteDate(Instant.now());
-        tabRepository.save(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse duplicateTab(UUID id) {
-        PmDiagramTab original = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        PmDiagramTab duplicate = new PmDiagramTab();
-        duplicate.setUserId(original.getUserId());
-        duplicate.setBusinessId(original.getBusinessId());
-        duplicate.setProjectId(original.getProjectId());
-        duplicate.setName(original.getName() + " (Copy)");
-        duplicate.setDiagramType(original.getDiagramType());
-        duplicate.setMermaidScript(original.getMermaidScript());
-        duplicate.setMetadata(original.getMetadata());
-        duplicate.setGraphData(original.getGraphData());
-        duplicate.setSortOrder(original.getSortOrder() + 1);
-        duplicate.setIsActive(true);
-
-        PmDiagramTab saved = tabRepository.save(duplicate);
-        createVersion(saved, "Duplicated from " + original.getName());
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void reorderTabs(PmDiagramReorderRequest request) {
-        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
-            PmDiagramTab tab = tabRepository.findById(order.getId())
-                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
-            tab.setSortOrder(order.getSortOrder());
-            tabRepository.save(tab);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
-        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
-                .stream()
-                .map(this::toVersionResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
-        PmDiagramVersion version = versionRepository.findById(versionId)
-                .orElseThrow(() -> new RuntimeException("Version not found"));
-
-        PmDiagramTab tab = version.getDiagram();
-        tab.setMermaidScript(version.getMermaidScript());
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Restored from version " + version.getVersionNumber());
-
-        return toResponse(saved);
-    }
-
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    private void createVersion(PmDiagramTab tab, String comment) {
-        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
-        int nextVersion = versionCount + 1;
-
-        if (versionCount >= 50) {
-            List<PmDiagramVersion> oldestVersions = versionRepository
-                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
-            if (!oldestVersions.isEmpty()) {
-                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
-                oldest.setIsDelete(true);
-                versionRepository.save(oldest);
-            }
-        }
-
-        PmDiagramVersion version = new PmDiagramVersion();
-        version.setBusinessId(tab.getBusinessId());
-        version.setDiagram(tab);
-        version.setMermaidScript(tab.getMermaidScript());
-        version.setVersionNumber(nextVersion);
-        version.setChangeComment(comment);
-        versionRepository.save(version);
-    }
-
-    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
-        try {
-            PmDiagramTabResponse dto = new PmDiagramTabResponse();
-            dto.setId(tab.getId());
-            dto.setName(tab.getName());
-            dto.setDiagramType(tab.getDiagramType());
-            dto.setMermaidScript(tab.getMermaidScript());
-            dto.setMetadata(tab.getMetadata());
-            dto.setGraphData(tab.getGraphData());
-            dto.setProjectId(tab.getProjectId());
-
-            // ดึง projectName (ถ้ามี)
-            try {
-                customerProjectRepository.findById(tab.getProjectId())
-                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
-            } catch (Exception e) {
-                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
-                dto.setProjectName(null);
-            }
-
-            dto.setSortOrder(tab.getSortOrder());
-            dto.setIsActive(tab.getIsActive());
-            dto.setCreatedDate(tab.getCreatedDate());
-            dto.setUpdatedDate(tab.getUpdatedDate());
-
-            // ดึง version count
-            try {
-                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
-            } catch (Exception e) {
-                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
-                dto.setVersionCount(0);
-            }
-
-            return dto;
-        } catch (Exception e) {
-            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
-            // Fallback: ส่ง response แบบ minimal (ไม่มี projectName, versionCount)
-            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
-            fallback.setId(tab.getId());
-            fallback.setName(tab.getName());
-            fallback.setDiagramType(tab.getDiagramType());
-            fallback.setMermaidScript(tab.getMermaidScript());
-            fallback.setMetadata(tab.getMetadata());
-            fallback.setGraphData(tab.getGraphData());
-            fallback.setProjectId(tab.getProjectId());
-            fallback.setSortOrder(tab.getSortOrder());
-            fallback.setIsActive(tab.getIsActive());
-            fallback.setCreatedDate(tab.getCreatedDate());
-            fallback.setUpdatedDate(tab.getUpdatedDate());
-            fallback.setVersionCount(0);
-            return fallback;
-        }
-    }
-
-    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
-        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
-        dto.setId(version.getId());
-        dto.setDiagramId(version.getDiagram().getId());
-        dto.setMermaidScript(version.getMermaidScript());
-        dto.setVersionNumber(version.getVersionNumber());
-        dto.setChangeComment(version.getChangeComment());
-        dto.setCreatedBy(version.getCreatedBy());
-        dto.setCreatedDate(version.getCreatedDate());
-        return dto;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/WorkPackageServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -77878,63 +77582,6 @@ public static String getMessage(ExExample example) {
     ));
 }
 }
-</file>
-
-<file path=".repomixignore">
-# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
-dist/
-build/
-out/
-sic-api/
-sic-auth/
-sic-database/
-sic-storage/
-.kilo/
-.github/
-Migrations/
-resources/
-drawio-dev/
-
-# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
-**/.angular/
-**/.vscode/
-**/.editorconfig
-**/.gitignore
-**/.postcssrc.json
-**/angular.json
-**/package-lock.json
-**/package.json
-**/README.md
-**/tsconfig.app.json
-**/tsconfig.json
-**/tsconfig.spec.json
-**/tmp_do_not_use.txt
-
-# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
-src/assets/
-public/images/
-
-# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-*.mp4
-*.txt
-*.xml
-*.gitignore
-*.md
-*.json
-*.gitattributes
-
-# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
-**/Migrations/
-**/App_Data/
-**/bin/
-**/obj/
-**/node_modules/
 </file>
 
 <file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.component.ts">
@@ -81925,6 +81572,42 @@ public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUploadRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.softinter.sicapi.entity.su.SuUpload;
+
+public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
+    Optional<SuUpload> findByIdAndIsActiveTrue(UUID id);
+    Optional<SuUpload> findByUploadGroupIdAndIsActiveFalse(UUID uploadGroupId);
+    Optional<SuUpload> findByObjectKey(String objectKey);
+    Optional<SuUpload> findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(UUID uploadGroupId);
+    List<SuUpload> findAllByIsActiveFalseAndTempExpiresAtBefore(Instant now);
+
+    @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = true ORDER BY u.createdDate DESC")
+    List<SuUpload> findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(@Param("groupId") UUID uploadGroupId);
+
+    @Modifying
+    @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
+           "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
+    int softDeleteExpiredUpload(@Param("id") UUID id,
+                                @Param("deleteBy") String deleteBy,
+                                @Param("deleteDate") Instant deleteDate,
+                                @Param("now") Instant now);
+
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserBusinessRoleRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -82406,6 +82089,303 @@ public class MilestoneServiceImpl implements MilestoneService {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
+import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
+import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
+import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmDiagramTab;
+import com.softinter.sicapi.entity.pm.PmDiagramVersion;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmDiagramTabService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmDiagramTabServiceImpl implements PmDiagramTabService {
+
+    private final PmDiagramTabRepository tabRepository;
+    private final PmDiagramVersionRepository versionRepository;
+    private final PmCustomerProjectRepository customerProjectRepository;
+    private final CurrentUserService currentUserService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
+        try {
+            String userId = currentUserService.getUserId();
+            List<PmDiagramTab> tabs;
+            if (projectId != null) {
+                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            } else {
+                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+            }
+            return tabs.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in getTabs for projectId: {}", projectId, e);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDiagramTabResponse getTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+        return toResponse(tab);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
+        String userId = currentUserService.getUserId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
+
+        if (!customerProjectRepository.existsById(request.getProjectId())) {
+            throw new RuntimeException("Project not found: " + request.getProjectId());
+        }
+
+        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
+                request.getProjectId()
+        );
+        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
+
+        PmDiagramTab tab = new PmDiagramTab();
+        tab.setUserId(userId);
+        tab.setBusinessId(businessId);
+        tab.setProjectId(request.getProjectId());
+        tab.setName(request.getName());
+        tab.setDiagramType(request.getDiagramType());
+        tab.setMermaidScript(request.getMermaidScript());
+        tab.setMetadata(request.getMetadata());
+        tab.setGraphData(request.getGraphData());
+        tab.setSortOrder(maxSort + 1);
+        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Initial version");
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+
+        if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
+            throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+        }
+
+        if (request.getName() != null) {
+            tab.setName(request.getName());
+        }
+        if (request.getDiagramType() != null) {
+            tab.setDiagramType(request.getDiagramType());
+        }
+        if (request.getMermaidScript() != null) {
+            tab.setMermaidScript(request.getMermaidScript());
+            createVersion(tab, "Auto-save");
+        }
+        if (request.getMetadata() != null) {
+            tab.setMetadata(request.getMetadata());
+        }
+        if (request.getGraphData() != null) {
+            tab.setGraphData(request.getGraphData());
+        }
+        if (request.getIsActive() != null) {
+            tab.setIsActive(request.getIsActive());
+        }
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+        tab.setIsDelete(true);
+        tab.setDeleteDate(Instant.now());
+        tabRepository.save(tab);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse duplicateTab(UUID id) {
+        PmDiagramTab original = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+
+        PmDiagramTab duplicate = new PmDiagramTab();
+        duplicate.setUserId(original.getUserId());
+        duplicate.setBusinessId(original.getBusinessId());
+        duplicate.setProjectId(original.getProjectId());
+        duplicate.setName(original.getName() + " (Copy)");
+        duplicate.setDiagramType(original.getDiagramType());
+        duplicate.setMermaidScript(original.getMermaidScript());
+        duplicate.setMetadata(original.getMetadata());
+        duplicate.setGraphData(original.getGraphData());
+        duplicate.setSortOrder(original.getSortOrder() + 1);
+        duplicate.setIsActive(true);
+
+        PmDiagramTab saved = tabRepository.save(duplicate);
+        createVersion(saved, "Duplicated from " + original.getName());
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void reorderTabs(PmDiagramReorderRequest request) {
+        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
+            PmDiagramTab tab = tabRepository.findById(order.getId())
+                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
+            tab.setSortOrder(order.getSortOrder());
+            tabRepository.save(tab);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
+        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
+                .stream()
+                .map(this::toVersionResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
+        PmDiagramVersion version = versionRepository.findById(versionId)
+                .orElseThrow(() -> new RuntimeException("Version not found"));
+
+        PmDiagramTab tab = version.getDiagram();
+        tab.setMermaidScript(version.getMermaidScript());
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Restored from version " + version.getVersionNumber());
+
+        return toResponse(saved);
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    private void createVersion(PmDiagramTab tab, String comment) {
+        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
+        int nextVersion = versionCount + 1;
+
+        if (versionCount >= 50) {
+            List<PmDiagramVersion> oldestVersions = versionRepository
+                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
+            if (!oldestVersions.isEmpty()) {
+                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
+                oldest.setIsDelete(true);
+                versionRepository.save(oldest);
+            }
+        }
+
+        PmDiagramVersion version = new PmDiagramVersion();
+        version.setBusinessId(tab.getBusinessId());
+        version.setDiagram(tab);
+        version.setMermaidScript(tab.getMermaidScript());
+        version.setVersionNumber(nextVersion);
+        version.setChangeComment(comment);
+        versionRepository.save(version);
+    }
+
+    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
+        try {
+            PmDiagramTabResponse dto = new PmDiagramTabResponse();
+            dto.setId(tab.getId());
+            dto.setName(tab.getName());
+            dto.setDiagramType(tab.getDiagramType());
+            dto.setMermaidScript(tab.getMermaidScript());
+            dto.setMetadata(tab.getMetadata());
+            dto.setGraphData(tab.getGraphData());
+            dto.setProjectId(tab.getProjectId());
+
+            // ดึง projectName (ถ้ามี)
+            try {
+                customerProjectRepository.findById(tab.getProjectId())
+                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
+            } catch (Exception e) {
+                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
+                dto.setProjectName(null);
+            }
+
+            dto.setSortOrder(tab.getSortOrder());
+            dto.setIsActive(tab.getIsActive());
+            dto.setCreatedDate(tab.getCreatedDate());
+            dto.setUpdatedDate(tab.getUpdatedDate());
+
+            // ดึง version count
+            try {
+                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
+            } catch (Exception e) {
+                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
+                dto.setVersionCount(0);
+            }
+
+            return dto;
+        } catch (Exception e) {
+            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
+            // Fallback: ส่ง response แบบ minimal (ไม่มี projectName, versionCount)
+            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
+            fallback.setId(tab.getId());
+            fallback.setName(tab.getName());
+            fallback.setDiagramType(tab.getDiagramType());
+            fallback.setMermaidScript(tab.getMermaidScript());
+            fallback.setMetadata(tab.getMetadata());
+            fallback.setGraphData(tab.getGraphData());
+            fallback.setProjectId(tab.getProjectId());
+            fallback.setSortOrder(tab.getSortOrder());
+            fallback.setIsActive(tab.getIsActive());
+            fallback.setCreatedDate(tab.getCreatedDate());
+            fallback.setUpdatedDate(tab.getUpdatedDate());
+            fallback.setVersionCount(0);
+            return fallback;
+        }
+    }
+
+    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
+        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
+        dto.setId(version.getId());
+        dto.setDiagramId(version.getDiagram().getId());
+        dto.setMermaidScript(version.getMermaidScript());
+        dto.setVersionNumber(version.getVersionNumber());
+        dto.setChangeComment(version.getChangeComment());
+        dto.setCreatedBy(version.getCreatedBy());
+        dto.setCreatedDate(version.getCreatedDate());
+        return dto;
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java">
 // src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java
 
@@ -82619,6 +82599,63 @@ public class TaskServiceImpl implements TaskService {
         return List.of();
     }
 }
+</file>
+
+<file path=".repomixignore">
+# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
+dist/
+build/
+out/
+sic-api/
+sic-auth/
+sic-database/
+sic-storage/
+.kilo/
+.github/
+Migrations/
+resources/
+drawio-dev/
+
+# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
+**/.angular/
+**/.vscode/
+**/.editorconfig
+**/.gitignore
+**/.postcssrc.json
+**/angular.json
+**/package-lock.json
+**/package.json
+**/README.md
+**/tsconfig.app.json
+**/tsconfig.json
+**/tsconfig.spec.json
+**/tmp_do_not_use.txt
+
+# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
+src/assets/
+public/images/
+
+# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.txt
+*.xml
+*.gitignore
+*.md
+*.json
+*.gitattributes
+
+# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
+**/Migrations/
+**/App_Data/
+**/bin/
+**/obj/
+**/node_modules/
 </file>
 
 <file path="sic-app/src/app/core/component/sic-treenode/tree-node.component.ts">
@@ -83790,190 +83827,6 @@ export class Pmdt04Component implements OnInit {
     } catch {
       return dateStr;
     }
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.css">
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @media (max-width: 768px) {
-  .max-md-right-0 {
-    right: 0 !important;
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
-import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, ViewChild, signal, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { take } from 'rxjs/operators';
-import { AiDiagramService } from './ai-diagram.service';
-import { DrawioConnectorService } from './drawio-connector.service';
-import { Pmdt06CComponent } from './pmdt06C/pmdt06C.component';
-import { DiagramService } from './diagram.service';
-
-@Component({
-  selector: 'app-pmdt06',
-  standalone: true,
-  imports: [CommonModule, FormsModule, Pmdt06CComponent],
-  templateUrl: './pmdt06.component.html',
-  styleUrls: ['./pmdt06.component.css'],
-})
-export class Pmdt06Component implements AfterViewInit {
-  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
-
-  isLoading = false;
-  currentTabId: string | null = null;
-  projectId: string | null = null;
-  drawioReady = false;
-  projectName = '';
-
-  chatOpen = signal(false);
-  unreadCount = 0;
-
-  private drawioService = inject(DrawioConnectorService);
-  private aiService = inject(AiDiagramService);
-  private route = inject(ActivatedRoute);
-  private diagramService = inject(DiagramService);
-
-  currentDiagram: any = null;
-
-  ngAfterViewInit(): void {
-    this.drawioService.init(this.iframe.nativeElement);
-
-    this.drawioService.isReady$.subscribe((ready) => {
-      this.drawioReady = ready;
-      console.log('Draw.io ready status:', ready);
-      if (ready && this.currentTabId) {
-        this.loadExistingDiagram();
-      }
-    });
-
-    this.route.queryParams.subscribe((params) => {
-      this.currentTabId = params['tabId'] || params['diagramId'] || null;
-      this.projectId = params['projectId'] || null;
-      if (this.projectId) {
-        this.loadProjectName();
-        if (!this.currentTabId) {
-          this.diagramService.getTabs(this.projectId).subscribe({
-            next: (tabs) => {
-              if (tabs && tabs.length > 0) {
-                this.currentTabId = tabs[0].id;
-                if (this.drawioReady) {
-                  this.loadExistingDiagram();
-                }
-              } else {
-                console.log('No diagram found for project:', this.projectId);
-              }
-            }
-          });
-        }
-      }
-      if (this.drawioReady && this.currentTabId) {
-        this.loadExistingDiagram();
-      }
-    });
-  }
-
-  loadProjectName(): void {
-  if (!this.projectId) return;
-  this.diagramService.getProjectName(this.projectId).subscribe({
-    next: (name) => {
-      this.projectName = name;
-    },
-    error: () => {
-      this.projectName = 'Unknown Project';
-    }
-  });
-}
-
-  @HostListener('window:message', ['$event'])
-  onMessage(event: MessageEvent) {
-    this.drawioService.handleMessage(event);
-  }
-
-  toggleChat(): void {
-    this.chatOpen.update((v) => !v);
-    if (this.chatOpen()) {
-      this.unreadCount = 0;
-    }
-  }
-
-  handleAiResponse(response: any): void {
-    console.log('AI Response from chat:', response);
-    if (response.action === 'update' && response.diagram) {
-      this.loadExistingDiagram();
-    }
-  }
-
-  loadExistingDiagram() {
-    if (!this.currentTabId) return;
-    this.isLoading = true;
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
-      next: (diagram) => {
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          alert('Error: Diagram does not belong to the selected project.');
-          this.isLoading = false;
-          this.drawioService.loadXml('');
-          return;
-        }
-        this.currentDiagram = diagram;
-        const xml = diagram.graphData?.xml || '';
-        this.drawioService.loadXml(xml);
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        this.drawioService.loadXml('');
-      },
-    });
-  }
-
-  saveDiagram() {
-    if (!this.currentTabId) {
-      alert('Cannot save: No diagram ID is loaded.');
-      return;
-    }
-
-    this.drawioService.requestXml();
-
-    this.drawioService.xml$.pipe(take(1)).subscribe((xml) => {
-      if (xml && this.currentTabId) {
-        const name = this.currentDiagram?.name || 'Drawio Diagram';
-        const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
-        const projectId = this.currentDiagram?.projectId || this.projectId;
-
-        if (!projectId) {
-          alert('Cannot save: Project ID is missing.');
-          return;
-        }
-
-        const updatedTab = {
-          ...this.currentDiagram,
-          id: this.currentTabId,
-          name,
-          diagramType,
-          projectId,
-          graphData: { xml }
-        };
-
-        this.diagramService.updateTab(updatedTab as any).subscribe({
-          next: (res) => {
-            this.currentDiagram = res;
-            alert('Diagram saved successfully!');
-          },
-          error: (err) => {
-            console.error('Save failed:', err);
-            alert('Save failed!');
-          },
-        });
-      }
-    });
   }
 }
 </file>
@@ -85550,39 +85403,730 @@ List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessI
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUploadRepository.java">
-package com.softinter.sicapi.repository.su;
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/FileStorageServiceImpl.java">
+package com.softinter.sicapi.service.impl;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.softinter.sicapi.dto.request.UploadSessionRequest;
+import com.softinter.sicapi.dto.response.StorageDownloadResponse;
+import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.FileCategory;
+import com.softinter.sicapi.entity.enums.FileVisibility;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.util.FileVisibilityConverter;
 
-public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
-    Optional<SuUpload> findByIdAndIsActiveTrue(UUID id);
-    Optional<SuUpload> findByUploadGroupIdAndIsActiveFalse(UUID uploadGroupId);
-    Optional<SuUpload> findByObjectKey(String objectKey);
-    Optional<SuUpload> findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(UUID uploadGroupId);
-    List<SuUpload> findAllByIsActiveFalseAndTempExpiresAtBefore(Instant now);
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
-    @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = true ORDER BY u.createdDate DESC")
-    List<SuUpload> findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(@Param("groupId") UUID uploadGroupId);
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FileStorageServiceImpl implements FileStorageService {
 
-    @Modifying
-    @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
-           "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
-    int softDeleteExpiredUpload(@Param("id") UUID id,
-                                @Param("deleteBy") String deleteBy,
-                                @Param("deleteDate") Instant deleteDate,
-                                @Param("now") Instant now);
+    private final S3Client s3Client;
+    private final SuUploadRepository uploadRepository;
+    private final CurrentUserService currentUserService;
 
+    @Value("${app.storage.s3.bucket}")
+    private String bucketName;
+
+    private static final int DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
+    private static final long TEMP_UPLOAD_EXPIRY_SECONDS = 24 * 60 * 60;
+
+    // ==================== Single file ====================
+    @Override
+    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId) {
+        try {
+            String fileName = file.getOriginalFilename();
+            String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
+
+            try {
+                s3Client.putObject(PutObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(key)
+                                .contentType(file.getContentType())
+                                .build(),
+                        RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            } catch (S3Exception e) {
+                log.error("S3 upload failed for file {}", fileName, e);
+                throw new RuntimeException("Failed to upload file to S3: " + e.awsErrorDetails().errorMessage(), e);
+            }
+
+            FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
+            FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
+            String username = currentUserService.getUsername();
+
+            SuUpload upload = new SuUpload();
+            upload.setFileName(fileName);
+            upload.setObjectKey(key);
+            upload.setBucketName(bucketName);
+            upload.setFileSize(file.getSize());
+            upload.setContentType(file.getContentType());
+            upload.setCategory(categoryEnum);
+            upload.setVisibility(visibilityEnum);
+            upload.setUploadGroupId(uploadGroupId);
+            upload.setIsActive(false);
+            upload.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
+            upload.setIsStreaming(false);
+            upload.setCreatedBy(username);
+            upload.setUpdatedBy(username);
+
+            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key)).toExternalForm();
+            String accessUrl = "/api/storage/files/" + bucketName + "/" + key;
+            upload.setStorageUrl(storageUrl);
+            upload.setAccessUrl(accessUrl);
+
+            try {
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to save upload record for file {}", fileName, e);
+                throw new RuntimeException("Failed to save upload metadata", e);
+            }
+
+            StorageUploadResponse response = new StorageUploadResponse();
+            response.setId(upload.getId());
+            response.setFileName(fileName);
+            response.setFileUrl(storageUrl);
+            response.setFileSize(file.getSize());
+            response.setContentType(file.getContentType());
+            response.setUploadGroupId(uploadGroupId);
+            return response;
+        } catch (IOException e) {
+            log.error("IO error reading file", e);
+            throw new RuntimeException("Failed to read file content", e);
+        }
+    }
+
+    // ==================== Resumable upload session ====================
+    @Override
+    public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
+        try {
+            UUID sessionId = UUID.randomUUID();
+            String fileName = request.getFileName();
+            long fileSize = request.getFileSize();
+            String contentType = request.getContentType();
+
+            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
+            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
+
+            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
+            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
+            String username = currentUserService.getUsername();
+
+            SuUpload sessionRecord = new SuUpload();
+            sessionRecord.setUploadGroupId(sessionId);
+            sessionRecord.setFileName(fileName);
+            sessionRecord.setFileSize(fileSize);
+            sessionRecord.setContentType(contentType);
+            sessionRecord.setObjectKey(tempKeyPrefix);
+            sessionRecord.setBucketName(bucketName);
+            sessionRecord.setCategory(categoryEnum);
+            sessionRecord.setVisibility(visibilityEnum);
+            sessionRecord.setIsActive(false);
+            sessionRecord.setIsStreaming(false);
+            sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
+            sessionRecord.setStorageUrl("");
+            sessionRecord.setAccessUrl("");
+            sessionRecord.setCreatedBy(username);
+            sessionRecord.setUpdatedBy(username);
+
+            try {
+                uploadRepository.save(sessionRecord);
+            } catch (Exception e) {
+                log.error("Failed to create upload session for file {}", fileName, e);
+                throw new RuntimeException("Failed to create upload session", e);
+            }
+
+            return UploadSessionResponse.builder()
+                    .sessionId(sessionId.toString())
+                    .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
+                    .chunkSize(DEFAULT_CHUNK_SIZE)
+                    .totalChunks(totalChunks)
+                    .nextChunkIndex(0)
+                    .uploadedBytes(0L)
+                    .build();
+        } catch (Exception e) {
+            log.error("Unexpected error creating upload session", e);
+            throw new RuntimeException("Failed to create upload session", e);
+        }
+    }
+
+    @Override
+    public UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk) {
+        String chunkKey = String.format("temp/sessions/%s/chunk_%d", sessionId, chunkIndex);
+        log.info("Uploading chunk {} for session {} to S3 key: {}", chunkIndex, sessionId, chunkKey);
+
+        try {
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(chunkKey)
+                    .contentType(chunk.getContentType())
+                    .build();
+            s3Client.putObject(putRequest,
+                    RequestBody.fromInputStream(chunk.getInputStream(), chunk.getSize()));
+            log.info("Chunk {} uploaded successfully", chunkIndex);
+        } catch (IOException e) {
+            log.error("IO error reading chunk data", e);
+            throw new RuntimeException("Failed to read chunk data", e);
+        } catch (S3Exception e) {
+            log.error("S3 upload failed for chunk {}", chunkIndex, e);
+            throw new RuntimeException("Failed to upload chunk to S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error uploading chunk", e);
+            throw new RuntimeException("Failed to upload chunk", e);
+        }
+
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found or database error", e);
+        }
+
+        long fileSize = session.getFileSize();
+        int chunkSize = DEFAULT_CHUNK_SIZE;
+        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
+        long uploadedBytes = Math.min((chunkIndex + 1) * (long) chunkSize, fileSize);
+        int nextChunkIndex = chunkIndex + 1;
+
+        return UploadSessionResponse.builder()
+                .sessionId(sessionId.toString())
+                .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
+                .chunkSize(chunkSize)
+                .totalChunks(totalChunks)
+                .nextChunkIndex(nextChunkIndex)
+                .uploadedBytes(uploadedBytes)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
+        SuUpload sessionRecord;
+        try {
+            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found", e);
+        }
+
+        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
+            throw new RuntimeException("Upload session has expired");
+        }
+
+        String tempKeyPrefix = sessionRecord.getObjectKey();
+        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
+
+        long fileSize = sessionRecord.getFileSize();
+        int chunkSize = DEFAULT_CHUNK_SIZE;
+        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
+
+        if (totalChunks == 1) {
+            String sourceKey = tempKeyPrefix + "chunk_0";
+            try {
+                s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+                s3Client.copyObject(CopyObjectRequest.builder()
+                        .copySource(bucketName + "/" + sourceKey)
+                        .destinationBucket(bucketName)
+                        .destinationKey(finalKey)
+                        .build());
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+            } catch (S3Exception e) {
+                log.error("Source chunk missing: {}", sourceKey, e);
+                throw new RuntimeException("Upload incomplete: missing chunk", e);
+            } catch (Exception e) {
+                log.error("Unexpected error completing single‑chunk upload", e);
+                throw new RuntimeException("Failed to complete upload session", e);
+            }
+        } else {
+            try {
+                CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .contentType(sessionRecord.getContentType())
+                        .build();
+                CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
+                String uploadId = createResponse.uploadId();
+
+                List<CompletedPart> completedParts = new java.util.ArrayList<>();
+
+                for (int i = 0; i < totalChunks; i++) {
+                    String chunkKey = tempKeyPrefix + "chunk_" + i;
+                    try {
+                        s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
+                    } catch (S3Exception e) {
+                        throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
+                    }
+
+                    UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
+                            .copySource(bucketName + "/" + chunkKey)
+                            .destinationBucket(bucketName)
+                            .destinationKey(finalKey)
+                            .uploadId(uploadId)
+                            .partNumber(i + 1)
+                            .build();
+
+                    UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
+                    completedParts.add(CompletedPart.builder()
+                            .partNumber(i + 1)
+                            .eTag(copyResponse.copyPartResult().eTag())
+                            .build());
+                }
+
+                CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .uploadId(uploadId)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                        .build();
+                s3Client.completeMultipartUpload(completeRequest);
+
+                deleteTempChunks(tempKeyPrefix);
+
+            } catch (S3Exception e) {
+                log.error("Multipart upload failed for session {}", sessionId, e);
+                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
+            } catch (Exception e) {
+                log.error("Unexpected error during multipart upload completion", e);
+                throw new RuntimeException("Failed to complete upload session", e);
+            }
+        }
+
+        try {
+            sessionRecord.setObjectKey(finalKey);
+            sessionRecord.setIsActive(true);
+            sessionRecord.setTempExpiresAt(null);
+            sessionRecord.setUpdatedBy(currentUserService.getUsername());
+
+            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
+            String accessUrl;
+            if (request != null) {
+                String scheme = request.getScheme();
+                String serverName = request.getServerName();
+                int serverPort = request.getServerPort();
+                String contextPath = request.getContextPath();
+                String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+                accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
+            } else {
+                accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
+            }
+            sessionRecord.setStorageUrl(storageUrl);
+            sessionRecord.setAccessUrl(accessUrl);
+            uploadRepository.save(sessionRecord);
+        } catch (Exception e) {
+            log.error("Failed to update database record for session {}", sessionId, e);
+            throw new RuntimeException("Failed to save upload metadata", e);
+        }
+
+        StorageUploadResponse response = new StorageUploadResponse();
+        response.setId(sessionRecord.getId());
+        response.setFileName(sessionRecord.getFileName());
+        response.setFileUrl(sessionRecord.getStorageUrl());
+        response.setFileSize(sessionRecord.getFileSize());
+        response.setContentType(sessionRecord.getContentType());
+        response.setUploadGroupId(sessionId);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId) {
+        return completeUploadSession(sessionId, null);
+    }
+
+    @Override
+    public void cancelSession(UUID sessionId) {
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Session not found for cancellation: {}", sessionId, e);
+            throw new RuntimeException("Session not found", e);
+        }
+        String prefix = session.getObjectKey();
+        deleteTempChunks(prefix);
+        try {
+            uploadRepository.delete(session);
+        } catch (Exception e) {
+            log.error("Failed to delete session record for {}", sessionId, e);
+            throw new RuntimeException("Failed to cancel session", e);
+        }
+    }
+
+    private void deleteTempChunks(String prefix) {
+        try {
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    .build();
+            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+            for (S3Object s3Obj : listResponse.contents()) {
+                try {
+                    s3Client.deleteObject(DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Obj.key())
+                            .build());
+                } catch (S3Exception e) {
+                    log.warn("Failed to delete temp object {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                }
+            }
+        } catch (S3Exception e) {
+            log.warn("Failed to list temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting temp chunks with prefix {}", prefix, e);
+        }
+    }
+
+    // ==================== Activate Upload ====================
+    @Override
+    @Transactional
+    public void activateUpload(UUID uploadId, String userId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId)
+                    .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
+        } catch (Exception e) {
+            log.error("Failed to find upload for activation: {}", uploadId, e);
+            throw new RuntimeException("Upload not found", e);
+        }
+
+        if (upload.getIsActive()) {
+            log.debug("Upload {} is already active", uploadId);
+            return;
+        }
+
+        if (upload.getTempExpiresAt() != null && upload.getTempExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalStateException("Upload has expired and cannot be activated");
+        }
+
+        String currentUsername = currentUserService.getUsername();
+        if (!currentUsername.equals(upload.getCreatedBy())) {
+            throw new SecurityException("Only the uploader can activate this upload");
+        }
+
+        try {
+            upload.setIsActive(true);
+            upload.setTempExpiresAt(null);
+            upload.setUpdatedBy(currentUsername);
+            uploadRepository.save(upload);
+            log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
+        } catch (Exception e) {
+            log.error("Failed to save activated upload {}", uploadId, e);
+            throw new RuntimeException("Failed to activate upload", e);
+        }
+    }
+
+    @Override
+    public void activateUpload(UUID uploadId) {
+        activateUpload(uploadId, null);
+    }
+
+    // ==================== Cleanup Expired Temporary Uploads ====================
+    @Override
+@Transactional
+public void cleanupExpiredTemporaryUploads() {
+    Instant now = Instant.now();
+    List<SuUpload> expired;
+    try {
+        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+    } catch (Exception e) {
+        log.error("Failed to query expired temporary uploads", e);
+        return;
+    }
+
+    if (expired.isEmpty()) {
+        log.debug("No expired temporary uploads to clean up");
+        return;
+    }
+
+    log.info("Found {} expired temporary uploads to clean up", expired.size());
+    for (SuUpload upload : expired) {
+        try {
+            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+            int updated = uploadRepository.softDeleteExpiredUpload(
+                upload.getId(), "system-cleanup", Instant.now(), now);
+            if (updated == 0) {
+                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
+            } else {
+                log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
+        }
+    }
+}
+
+    private void deletePhysicalFile(String bucketName, String objectKey) {
+        try {
+            if (objectKey.endsWith("/")) {
+                ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                        .bucket(bucketName)
+                        .prefix(objectKey)
+                        .build();
+                ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+                for (S3Object s3Obj : listResponse.contents()) {
+                    try {
+                        s3Client.deleteObject(DeleteObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(s3Obj.key())
+                                .build());
+                    } catch (S3Exception e) {
+                        if (e.statusCode() != 404) {
+                            log.warn("Failed to delete file {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                        }
+                    }
+                }
+            } else {
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(objectKey)
+                        .build());
+            }
+        } catch (S3Exception e) {
+            if (e.statusCode() != 404) {
+                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
+        }
+    }
+
+    @Override
+    public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
+        if (uploadGroupId == null) return null;
+        try {
+            return uploadRepository
+                    .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
+                    .map(upload -> {
+                        String url = upload.getStorageUrl();
+                        return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to get file URL for group {}", uploadGroupId, e);
+            return null;
+        }
+    }
+
+    // ==================== Sync uploads methods ====================
+    @Override
+    public UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences) {
+        if (uploadReferences == null || uploadReferences.isEmpty()) {
+            return null;
+        }
+        boolean hasActiveUploads = uploadReferences.stream()
+                .anyMatch(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode());
+        if (!hasActiveUploads) {
+            return null;
+        }
+        if (currentUploadGroupId == null || currentUploadGroupId.equals(new UUID(0, 0))) {
+            return UUID.randomUUID();
+        }
+        return currentUploadGroupId;
+    }
+
+    @Override
+    @Transactional
+    public void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences) {
+        if (uploadReferences == null || uploadReferences.isEmpty()) {
+            return;
+        }
+
+        List<UUID> deletedIds = uploadReferences.stream()
+                .filter(ref -> ref.getState() == EntityState.DELETED.getEntityStateCode())
+                .map(StorageUploadReference::getId)
+                .collect(Collectors.toList());
+        for (UUID id : deletedIds) {
+            try {
+                deleteUpload(id);
+            } catch (Exception e) {
+                log.error("Failed to delete upload {} during sync", id, e);
+            }
+        }
+
+        List<UUID> activeIds = uploadReferences.stream()
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
+                .map(StorageUploadReference::getId)
+                .collect(Collectors.toList());
+        if (activeIds.isEmpty()) {
+            return;
+        }
+
+        List<SuUpload> uploads;
+        try {
+            uploads = uploadRepository.findAllById(activeIds);
+        } catch (Exception e) {
+            log.error("Failed to find uploads by IDs", e);
+            throw new RuntimeException("Failed to sync uploads", e);
+        }
+
+        Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
+                .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
+
+        for (SuUpload upload : uploads) {
+            StorageUploadReference ref = refMap.get(upload.getId());
+            if (ref == null) {
+                continue;
+            }
+            try {
+                upload.setUploadGroupId(uploadGroupId);
+                if (ref.getIsActive() != null) {
+                    upload.setIsActive(ref.getIsActive());
+                    if (Boolean.TRUE.equals(ref.getIsActive())) {
+                        upload.setTempExpiresAt(null);
+                    }
+                }
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to update upload {} during sync", upload.getId(), e);
+            }
+        }
+    }
+
+    private void deleteUpload(UUID uploadId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId).orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to find upload {} for deletion", uploadId, e);
+            return;
+        }
+        if (upload == null) return;
+        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+        try {
+            uploadRepository.delete(upload);
+        } catch (Exception e) {
+            log.error("Failed to delete upload record {}", uploadId, e);
+        }
+    }
+
+    // ==================== Other existing methods ====================
+    @Override
+    public StorageDownloadResponse downloadFile(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {}", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            var s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(upload.getObjectKey())
+                    .build());
+            StorageDownloadResponse response = new StorageDownloadResponse();
+            response.setInputStream(s3Object);
+            response.setFileName(upload.getFileName());
+            response.setContentType(upload.getContentType());
+            response.setFileSize(upload.getFileSize());
+            return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for file {}", fileId, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error downloading file {}", fileId, e);
+            throw new RuntimeException("Failed to download file", e);
+        }
+    }
+
+    @Override
+    public void deleteFile(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for deletion", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+        try {
+            upload.setIsActive(false);
+            uploadRepository.save(upload);
+        } catch (Exception e) {
+            log.error("Failed to update file record after deletion {}", fileId, e);
+            throw new RuntimeException("Failed to delete file", e);
+        }
+    }
+
+    @Override
+    public String getFileUrl(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for URL", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
+        } catch (S3Exception e) {
+            log.error("Failed to generate URL for file {}", fileId, e);
+            throw new RuntimeException("Failed to generate file URL", e);
+        }
+    }
+
+    @Override
+    public StorageDownloadResponse downloadByKey(String bucketName, String objectKey) {
+        if (!this.bucketName.equals(bucketName)) {
+            throw new RuntimeException("Bucket not accessible");
+        }
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByObjectKey(objectKey)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file by key {}", objectKey, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            var s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .build());
+            StorageDownloadResponse response = new StorageDownloadResponse();
+            response.setInputStream(s3Object);
+            response.setFileName(upload.getFileName());
+            response.setContentType(upload.getContentType());
+            response.setFileSize(upload.getFileSize());
+            return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error downloading file by key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file", e);
+        }
+    }
 }
 </file>
 
@@ -86359,108 +86903,218 @@ export class Pmdt06FComponent implements AfterViewInit, OnChanges, OnDestroy {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">
-<style>
-  @keyframes fadeIn {
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.css">
+@keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-</style>
-
-<div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
-  
-  <!-- Toolbar -->
-  <div class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
-    
-    <!-- ส่วนซ้าย: แสดงชื่อโครงการ (ไม่มีจุด bullet แล้ว) -->
-    <div class="flex items-center gap-3">
-      @if (projectName) {
-        <span class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
-          {{ projectName }}
-        </span>
-      }
-    </div>
-
-    <!-- ส่วนขวา: ปุ่ม actions -->
-    <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
-      
-      <!-- ปุ่ม Chat -->
-      <button (click)="toggleChat()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="AI Chat History">
-        <i class="bi bi-chat-dots-fill text-lg"></i>
-        <span>Chat</span>
-        @if (unreadCount > 0) {
-          <span class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]">
-            {{ unreadCount }}
-          </span>
-        }
-      </button>
-
-      <!-- ปุ่ม Save (สีปกติเป็นเทาอ่อน, hover เป็นสีหลัก) -->
-      <button (click)="saveDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="Save diagram">
-        <i class="bi bi-check-circle-fill text-lg"></i> 
-        <span>Save</span>
-      </button>
-
-      <!-- ปุ่ม Reload -->
-      <button (click)="loadExistingDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"  title="Reload from server">
-        <i class="bi bi-arrow-repeat text-lg"></i> 
-        <span>Reload</span>
-      </button>
-
-    </div>
-  </div>
-
-  <!-- Status Bar (เอา Tab ID ออกแล้ว) -->
-  <div class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5">
-    <div class="flex items-center gap-2 max-md:flex-wrap">
-      <!-- แก้ไขจุดที่ error: ใช้ [style.background] แทน [class.bg-[...]] -->
-      <span class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0" [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"></span>
-      <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
-    </div>
-  </div>
-
-  <!-- Draw.io Editor -->
-  <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
-    @if (isLoading) {
-      <div class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm">
-        <div class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"></div>
-        <span>Loading diagram…</span>
-      </div>
-    }
-    <iframe
-      #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark"
-      class="block w-full h-full border-none bg-white"
-      frameborder="0"
-      allowfullscreen
-    ></iframe>
-  </div>
-
-  <!-- Chat Sidebar -->
-  <div class="fixed top-0 right-[-440px] w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full max-md:right-[-100%]" [class.right-0]="chatOpen()">
-    <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]">
-      <span class="flex items-center gap-2">
-        <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
-        AI Assistant
-      </span>
-      <button (click)="toggleChat()" class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]" title="Close chat">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-      <app-pmdt06c
-        [diagramId]="currentTabId"
-        (aiResponse)="handleAiResponse($event)"
-        class="flex-1 flex flex-col h-full overflow-hidden"
-      ></app-pmdt06c>
-    </div>
-  </div>
-
-  <!-- Overlay -->
-  @if (chatOpen()) {
-    <div class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]" (click)="toggleChat()"></div>
+  @media (max-width: 768px) {
+  .max-md-right-0 {
+    right: 0 !important;
   }
-</div>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, HostListener, ViewChild, signal, inject, OnDestroy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntil, Subject } from 'rxjs';
+import { AiDiagramService } from './ai-diagram.service';
+import { DrawioConnectorService } from './drawio-connector.service';
+import { Pmdt06CComponent } from './pmdt06C/pmdt06C.component';
+import { DiagramService } from './diagram.service';
+
+@Component({
+  selector: 'app-pmdt06',
+  standalone: true,
+  imports: [CommonModule, FormsModule, Pmdt06CComponent],
+  templateUrl: './pmdt06.component.html',
+  styleUrls: ['./pmdt06.component.css'],
+})
+export class Pmdt06Component implements AfterViewInit, OnDestroy {
+  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
+
+  private destroy$ = new Subject<void>();
+
+  isLoading = false;
+  currentTabId: string | null = null;
+  projectId: string | null = null;
+  drawioReady = false;
+  projectName = '';
+
+  chatOpen = signal(false);
+  unreadCount = 0;
+
+  private drawioService = inject(DrawioConnectorService);
+  private aiService = inject(AiDiagramService);
+  private route = inject(ActivatedRoute);
+  private diagramService = inject(DiagramService);
+
+  currentDiagram: any = null;
+
+  ngAfterViewInit(): void {
+    this.drawioService.init(this.iframe.nativeElement);
+
+    // ฟัง ready event (จาก init)
+    this.drawioService.isReady$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((ready) => {
+        this.drawioReady = ready;
+        console.log('Draw.io ready status:', ready);
+        if (ready && this.currentTabId) {
+          this.loadExistingDiagram();
+        }
+      });
+
+    // Fallback: ถ้า 7 วินาทียังไม่ ready ให้บังคับ ready
+    setTimeout(() => {
+      if (!this.drawioReady) {
+        console.warn('[Draw.io] Fallback: force ready after 7s');
+        this.drawioReady = true;
+        // เรียก isReadySubject ทางอ้อมไม่ได้ เพราะเป็น private
+        // แต่เราสามารถเรียก loadExistingDiagram ได้เลย
+        if (this.currentTabId) {
+          this.loadExistingDiagram();
+        }
+      }
+    }, 7000);
+
+    // รับ query params
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        this.currentTabId = params['tabId'] || params['diagramId'] || null;
+        this.projectId = params['projectId'] || null;
+        if (this.projectId) {
+          this.loadProjectName();
+          if (!this.currentTabId) {
+            this.diagramService.getTabs(this.projectId).subscribe({
+              next: (tabs) => {
+                if (tabs && tabs.length > 0) {
+                  this.currentTabId = tabs[0].id;
+                  if (this.drawioReady) {
+                    this.loadExistingDiagram();
+                  }
+                } else {
+                  console.log('No diagram found for project:', this.projectId);
+                }
+              }
+            });
+          }
+        }
+        // ถ้ามี currentTabId และ drawioReady แล้ว ให้โหลด
+        if (this.currentTabId && this.drawioReady) {
+          this.loadExistingDiagram();
+        }
+      });
+  }
+
+  loadProjectName(): void {
+    if (!this.projectId) return;
+    this.diagramService.getProjectName(this.projectId).subscribe({
+      next: (name) => {
+        this.projectName = name;
+      },
+      error: () => {
+        this.projectName = 'Unknown Project';
+      }
+    });
+  }
+
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent) {
+    this.drawioService.handleMessage(event);
+  }
+
+  toggleChat(): void {
+    this.chatOpen.update((v) => !v);
+    if (this.chatOpen()) {
+      this.unreadCount = 0;
+    }
+  }
+
+  handleAiResponse(response: any): void {
+    console.log('AI Response from chat:', response);
+    if (response.action === 'update' && response.diagram) {
+      this.loadExistingDiagram();
+    }
+  }
+
+  loadExistingDiagram() {
+    if (!this.currentTabId) return;
+    this.isLoading = true;
+    this.diagramService.getDiagram(this.currentTabId).subscribe({
+      next: (diagram) => {
+        if (this.projectId && diagram.projectId !== this.projectId) {
+          alert('Error: Diagram does not belong to the selected project.');
+          this.isLoading = false;
+          this.drawioService.loadXml('');
+          return;
+        }
+        this.currentDiagram = diagram;
+        const xml = diagram.graphData?.xml || '';
+        this.drawioService.loadXml(xml);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.drawioService.loadXml('');
+      },
+    });
+  }
+
+  saveDiagram() {
+    if (!this.currentTabId) {
+      alert('Cannot save: No diagram ID is loaded.');
+      return;
+    }
+
+    this.drawioService.requestXml();
+
+    this.drawioService.xml$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((xml) => {
+        if (xml && this.currentTabId) {
+          const name = this.currentDiagram?.name || 'Drawio Diagram';
+          const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
+          const projectId = this.currentDiagram?.projectId || this.projectId;
+
+          if (!projectId) {
+            alert('Cannot save: Project ID is missing.');
+            return;
+          }
+
+          const updatedTab = {
+            ...this.currentDiagram,
+            id: this.currentTabId,
+            name,
+            diagramType,
+            projectId,
+            graphData: { xml }
+          };
+
+          this.diagramService.updateTab(updatedTab as any).subscribe({
+            next: (res) => {
+              this.currentDiagram = res;
+              alert('Diagram saved successfully!');
+            },
+            error: (err) => {
+              console.error('Save failed:', err);
+              alert('Save failed!');
+            },
+          });
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
@@ -87776,733 +88430,6 @@ public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/FileStorageServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.softinter.sicapi.dto.request.UploadSessionRequest;
-import com.softinter.sicapi.dto.response.StorageDownloadResponse;
-import com.softinter.sicapi.dto.response.StorageUploadResponse;
-import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.FileCategory;
-import com.softinter.sicapi.entity.enums.FileVisibility;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.FileStorageService;
-import com.softinter.sicapi.util.FileVisibilityConverter;
-
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class FileStorageServiceImpl implements FileStorageService {
-
-    private final S3Client s3Client;
-    private final SuUploadRepository uploadRepository;
-    private final CurrentUserService currentUserService;
-
-    @Value("${app.storage.s3.bucket}")
-    private String bucketName;
-
-    private static final int DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
-    private static final long TEMP_UPLOAD_EXPIRY_SECONDS = 24 * 60 * 60;
-
-    // ==================== Single file ====================
-    @Override
-    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId) {
-        try {
-            String fileName = file.getOriginalFilename();
-            String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
-
-            try {
-                s3Client.putObject(PutObjectRequest.builder()
-                                .bucket(bucketName)
-                                .key(key)
-                                .contentType(file.getContentType())
-                                .build(),
-                        RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            } catch (S3Exception e) {
-                log.error("S3 upload failed for file {}", fileName, e);
-                throw new RuntimeException("Failed to upload file to S3: " + e.awsErrorDetails().errorMessage(), e);
-            }
-
-            FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
-            FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
-            String username = currentUserService.getUsername();
-
-            SuUpload upload = new SuUpload();
-            upload.setFileName(fileName);
-            upload.setObjectKey(key);
-            upload.setBucketName(bucketName);
-            upload.setFileSize(file.getSize());
-            upload.setContentType(file.getContentType());
-            upload.setCategory(categoryEnum);
-            upload.setVisibility(visibilityEnum);
-            upload.setUploadGroupId(uploadGroupId);
-            upload.setIsActive(false);
-            upload.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
-            upload.setIsStreaming(false);
-            upload.setCreatedBy(username);
-            upload.setUpdatedBy(username);
-
-            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key)).toExternalForm();
-            String accessUrl = "/api/storage/files/" + bucketName + "/" + key;
-            upload.setStorageUrl(storageUrl);
-            upload.setAccessUrl(accessUrl);
-
-            try {
-                uploadRepository.save(upload);
-            } catch (Exception e) {
-                log.error("Failed to save upload record for file {}", fileName, e);
-                throw new RuntimeException("Failed to save upload metadata", e);
-            }
-
-            StorageUploadResponse response = new StorageUploadResponse();
-            response.setId(upload.getId());
-            response.setFileName(fileName);
-            response.setFileUrl(storageUrl);
-            response.setFileSize(file.getSize());
-            response.setContentType(file.getContentType());
-            response.setUploadGroupId(uploadGroupId);
-            return response;
-        } catch (IOException e) {
-            log.error("IO error reading file", e);
-            throw new RuntimeException("Failed to read file content", e);
-        }
-    }
-
-    // ==================== Resumable upload session ====================
-    @Override
-    public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
-        try {
-            UUID sessionId = UUID.randomUUID();
-            String fileName = request.getFileName();
-            long fileSize = request.getFileSize();
-            String contentType = request.getContentType();
-
-            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
-            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
-
-            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
-            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
-            String username = currentUserService.getUsername();
-
-            SuUpload sessionRecord = new SuUpload();
-            sessionRecord.setUploadGroupId(sessionId);
-            sessionRecord.setFileName(fileName);
-            sessionRecord.setFileSize(fileSize);
-            sessionRecord.setContentType(contentType);
-            sessionRecord.setObjectKey(tempKeyPrefix);
-            sessionRecord.setBucketName(bucketName);
-            sessionRecord.setCategory(categoryEnum);
-            sessionRecord.setVisibility(visibilityEnum);
-            sessionRecord.setIsActive(false);
-            sessionRecord.setIsStreaming(false);
-            sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
-            sessionRecord.setStorageUrl("");
-            sessionRecord.setAccessUrl("");
-            sessionRecord.setCreatedBy(username);
-            sessionRecord.setUpdatedBy(username);
-
-            try {
-                uploadRepository.save(sessionRecord);
-            } catch (Exception e) {
-                log.error("Failed to create upload session for file {}", fileName, e);
-                throw new RuntimeException("Failed to create upload session", e);
-            }
-
-            return UploadSessionResponse.builder()
-                    .sessionId(sessionId.toString())
-                    .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                    .chunkSize(DEFAULT_CHUNK_SIZE)
-                    .totalChunks(totalChunks)
-                    .nextChunkIndex(0)
-                    .uploadedBytes(0L)
-                    .build();
-        } catch (Exception e) {
-            log.error("Unexpected error creating upload session", e);
-            throw new RuntimeException("Failed to create upload session", e);
-        }
-    }
-
-    @Override
-    public UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk) {
-        String chunkKey = String.format("temp/sessions/%s/chunk_%d", sessionId, chunkIndex);
-        log.info("Uploading chunk {} for session {} to S3 key: {}", chunkIndex, sessionId, chunkKey);
-
-        try {
-            PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(chunkKey)
-                    .contentType(chunk.getContentType())
-                    .build();
-            s3Client.putObject(putRequest,
-                    RequestBody.fromInputStream(chunk.getInputStream(), chunk.getSize()));
-            log.info("Chunk {} uploaded successfully", chunkIndex);
-        } catch (IOException e) {
-            log.error("IO error reading chunk data", e);
-            throw new RuntimeException("Failed to read chunk data", e);
-        } catch (S3Exception e) {
-            log.error("S3 upload failed for chunk {}", chunkIndex, e);
-            throw new RuntimeException("Failed to upload chunk to S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error uploading chunk", e);
-            throw new RuntimeException("Failed to upload chunk", e);
-        }
-
-        SuUpload session;
-        try {
-            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session not found"));
-        } catch (Exception e) {
-            log.error("Failed to find upload session {}", sessionId, e);
-            throw new RuntimeException("Upload session not found or database error", e);
-        }
-
-        long fileSize = session.getFileSize();
-        int chunkSize = DEFAULT_CHUNK_SIZE;
-        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
-        long uploadedBytes = Math.min((chunkIndex + 1) * (long) chunkSize, fileSize);
-        int nextChunkIndex = chunkIndex + 1;
-
-        return UploadSessionResponse.builder()
-                .sessionId(sessionId.toString())
-                .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                .chunkSize(chunkSize)
-                .totalChunks(totalChunks)
-                .nextChunkIndex(nextChunkIndex)
-                .uploadedBytes(uploadedBytes)
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
-        SuUpload sessionRecord;
-        try {
-            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
-        } catch (Exception e) {
-            log.error("Failed to find upload session {}", sessionId, e);
-            throw new RuntimeException("Upload session not found", e);
-        }
-
-        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
-            throw new RuntimeException("Upload session has expired");
-        }
-
-        String tempKeyPrefix = sessionRecord.getObjectKey();
-        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
-
-        long fileSize = sessionRecord.getFileSize();
-        int chunkSize = DEFAULT_CHUNK_SIZE;
-        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
-
-        if (totalChunks == 1) {
-            String sourceKey = tempKeyPrefix + "chunk_0";
-            try {
-                s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-                s3Client.copyObject(CopyObjectRequest.builder()
-                        .copySource(bucketName + "/" + sourceKey)
-                        .destinationBucket(bucketName)
-                        .destinationKey(finalKey)
-                        .build());
-                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-            } catch (S3Exception e) {
-                log.error("Source chunk missing: {}", sourceKey, e);
-                throw new RuntimeException("Upload incomplete: missing chunk", e);
-            } catch (Exception e) {
-                log.error("Unexpected error completing single‑chunk upload", e);
-                throw new RuntimeException("Failed to complete upload session", e);
-            }
-        } else {
-            try {
-                CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
-                        .bucket(bucketName)
-                        .key(finalKey)
-                        .contentType(sessionRecord.getContentType())
-                        .build();
-                CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
-                String uploadId = createResponse.uploadId();
-
-                List<CompletedPart> completedParts = new java.util.ArrayList<>();
-
-                for (int i = 0; i < totalChunks; i++) {
-                    String chunkKey = tempKeyPrefix + "chunk_" + i;
-                    try {
-                        s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
-                    } catch (S3Exception e) {
-                        throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
-                    }
-
-                    UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
-                            .copySource(bucketName + "/" + chunkKey)
-                            .destinationBucket(bucketName)
-                            .destinationKey(finalKey)
-                            .uploadId(uploadId)
-                            .partNumber(i + 1)
-                            .build();
-
-                    UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
-                    completedParts.add(CompletedPart.builder()
-                            .partNumber(i + 1)
-                            .eTag(copyResponse.copyPartResult().eTag())
-                            .build());
-                }
-
-                CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
-                        .bucket(bucketName)
-                        .key(finalKey)
-                        .uploadId(uploadId)
-                        .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
-                        .build();
-                s3Client.completeMultipartUpload(completeRequest);
-
-                deleteTempChunks(tempKeyPrefix);
-
-            } catch (S3Exception e) {
-                log.error("Multipart upload failed for session {}", sessionId, e);
-                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
-            } catch (Exception e) {
-                log.error("Unexpected error during multipart upload completion", e);
-                throw new RuntimeException("Failed to complete upload session", e);
-            }
-        }
-
-        try {
-            sessionRecord.setObjectKey(finalKey);
-            sessionRecord.setIsActive(true);
-            sessionRecord.setTempExpiresAt(null);
-            sessionRecord.setUpdatedBy(currentUserService.getUsername());
-
-            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
-            String accessUrl;
-            if (request != null) {
-                String scheme = request.getScheme();
-                String serverName = request.getServerName();
-                int serverPort = request.getServerPort();
-                String contextPath = request.getContextPath();
-                String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
-                accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
-            } else {
-                accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
-            }
-            sessionRecord.setStorageUrl(storageUrl);
-            sessionRecord.setAccessUrl(accessUrl);
-            uploadRepository.save(sessionRecord);
-        } catch (Exception e) {
-            log.error("Failed to update database record for session {}", sessionId, e);
-            throw new RuntimeException("Failed to save upload metadata", e);
-        }
-
-        StorageUploadResponse response = new StorageUploadResponse();
-        response.setId(sessionRecord.getId());
-        response.setFileName(sessionRecord.getFileName());
-        response.setFileUrl(sessionRecord.getStorageUrl());
-        response.setFileSize(sessionRecord.getFileSize());
-        response.setContentType(sessionRecord.getContentType());
-        response.setUploadGroupId(sessionId);
-        return response;
-    }
-
-    @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId) {
-        return completeUploadSession(sessionId, null);
-    }
-
-    @Override
-    public void cancelSession(UUID sessionId) {
-        SuUpload session;
-        try {
-            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session not found"));
-        } catch (Exception e) {
-            log.error("Session not found for cancellation: {}", sessionId, e);
-            throw new RuntimeException("Session not found", e);
-        }
-        String prefix = session.getObjectKey();
-        deleteTempChunks(prefix);
-        try {
-            uploadRepository.delete(session);
-        } catch (Exception e) {
-            log.error("Failed to delete session record for {}", sessionId, e);
-            throw new RuntimeException("Failed to cancel session", e);
-        }
-    }
-
-    private void deleteTempChunks(String prefix) {
-        try {
-            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                    .bucket(bucketName)
-                    .prefix(prefix)
-                    .build();
-            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-            for (S3Object s3Obj : listResponse.contents()) {
-                try {
-                    s3Client.deleteObject(DeleteObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Obj.key())
-                            .build());
-                } catch (S3Exception e) {
-                    log.warn("Failed to delete temp object {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
-                }
-            }
-        } catch (S3Exception e) {
-            log.warn("Failed to list temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
-        } catch (Exception e) {
-            log.warn("Unexpected error while deleting temp chunks with prefix {}", prefix, e);
-        }
-    }
-
-    // ==================== Activate Upload ====================
-    @Override
-    @Transactional
-    public void activateUpload(UUID uploadId, String userId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findById(uploadId)
-                    .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
-        } catch (Exception e) {
-            log.error("Failed to find upload for activation: {}", uploadId, e);
-            throw new RuntimeException("Upload not found", e);
-        }
-
-        if (upload.getIsActive()) {
-            log.debug("Upload {} is already active", uploadId);
-            return;
-        }
-
-        if (upload.getTempExpiresAt() != null && upload.getTempExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalStateException("Upload has expired and cannot be activated");
-        }
-
-        String currentUsername = currentUserService.getUsername();
-        if (!currentUsername.equals(upload.getCreatedBy())) {
-            throw new SecurityException("Only the uploader can activate this upload");
-        }
-
-        try {
-            upload.setIsActive(true);
-            upload.setTempExpiresAt(null);
-            upload.setUpdatedBy(currentUsername);
-            uploadRepository.save(upload);
-            log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
-        } catch (Exception e) {
-            log.error("Failed to save activated upload {}", uploadId, e);
-            throw new RuntimeException("Failed to activate upload", e);
-        }
-    }
-
-    @Override
-    public void activateUpload(UUID uploadId) {
-        activateUpload(uploadId, null);
-    }
-
-    // ==================== Cleanup Expired Temporary Uploads ====================
-    @Override
-@Transactional
-public void cleanupExpiredTemporaryUploads() {
-    Instant now = Instant.now();
-    List<SuUpload> expired;
-    try {
-        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
-    } catch (Exception e) {
-        log.error("Failed to query expired temporary uploads", e);
-        return;
-    }
-
-    if (expired.isEmpty()) {
-        log.debug("No expired temporary uploads to clean up");
-        return;
-    }
-
-    log.info("Found {} expired temporary uploads to clean up", expired.size());
-    for (SuUpload upload : expired) {
-        try {
-            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-            int updated = uploadRepository.softDeleteExpiredUpload(
-                upload.getId(), "system-cleanup", Instant.now(), now);
-            if (updated == 0) {
-                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
-            } else {
-                log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
-            }
-        } catch (Exception e) {
-            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
-        }
-    }
-}
-
-    private void deletePhysicalFile(String bucketName, String objectKey) {
-        try {
-            if (objectKey.endsWith("/")) {
-                ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                        .bucket(bucketName)
-                        .prefix(objectKey)
-                        .build();
-                ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-                for (S3Object s3Obj : listResponse.contents()) {
-                    try {
-                        s3Client.deleteObject(DeleteObjectRequest.builder()
-                                .bucket(bucketName)
-                                .key(s3Obj.key())
-                                .build());
-                    } catch (S3Exception e) {
-                        if (e.statusCode() != 404) {
-                            log.warn("Failed to delete file {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
-                        }
-                    }
-                }
-            } else {
-                s3Client.deleteObject(DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .build());
-            }
-        } catch (S3Exception e) {
-            if (e.statusCode() != 404) {
-                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
-            }
-        } catch (Exception e) {
-            log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
-        }
-    }
-
-    @Override
-    public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
-        if (uploadGroupId == null) return null;
-        try {
-            return uploadRepository
-                    .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
-                    .map(upload -> {
-                        String url = upload.getStorageUrl();
-                        return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
-                    })
-                    .orElse(null);
-        } catch (Exception e) {
-            log.error("Failed to get file URL for group {}", uploadGroupId, e);
-            return null;
-        }
-    }
-
-    // ==================== Sync uploads methods ====================
-    @Override
-    public UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences) {
-        if (uploadReferences == null || uploadReferences.isEmpty()) {
-            return null;
-        }
-        boolean hasActiveUploads = uploadReferences.stream()
-                .anyMatch(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode());
-        if (!hasActiveUploads) {
-            return null;
-        }
-        if (currentUploadGroupId == null || currentUploadGroupId.equals(new UUID(0, 0))) {
-            return UUID.randomUUID();
-        }
-        return currentUploadGroupId;
-    }
-
-    @Override
-    @Transactional
-    public void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences) {
-        if (uploadReferences == null || uploadReferences.isEmpty()) {
-            return;
-        }
-
-        List<UUID> deletedIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() == EntityState.DELETED.getEntityStateCode())
-                .map(StorageUploadReference::getId)
-                .collect(Collectors.toList());
-        for (UUID id : deletedIds) {
-            try {
-                deleteUpload(id);
-            } catch (Exception e) {
-                log.error("Failed to delete upload {} during sync", id, e);
-            }
-        }
-
-        List<UUID> activeIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
-                .map(StorageUploadReference::getId)
-                .collect(Collectors.toList());
-        if (activeIds.isEmpty()) {
-            return;
-        }
-
-        List<SuUpload> uploads;
-        try {
-            uploads = uploadRepository.findAllById(activeIds);
-        } catch (Exception e) {
-            log.error("Failed to find uploads by IDs", e);
-            throw new RuntimeException("Failed to sync uploads", e);
-        }
-
-        Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
-                .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
-
-        for (SuUpload upload : uploads) {
-            StorageUploadReference ref = refMap.get(upload.getId());
-            if (ref == null) {
-                continue;
-            }
-            try {
-                upload.setUploadGroupId(uploadGroupId);
-                if (ref.getIsActive() != null) {
-                    upload.setIsActive(ref.getIsActive());
-                    if (Boolean.TRUE.equals(ref.getIsActive())) {
-                        upload.setTempExpiresAt(null);
-                    }
-                }
-                uploadRepository.save(upload);
-            } catch (Exception e) {
-                log.error("Failed to update upload {} during sync", upload.getId(), e);
-            }
-        }
-    }
-
-    private void deleteUpload(UUID uploadId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findById(uploadId).orElse(null);
-        } catch (Exception e) {
-            log.error("Failed to find upload {} for deletion", uploadId, e);
-            return;
-        }
-        if (upload == null) return;
-        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        try {
-            uploadRepository.delete(upload);
-        } catch (Exception e) {
-            log.error("Failed to delete upload record {}", uploadId, e);
-        }
-    }
-
-    // ==================== Other existing methods ====================
-    @Override
-    public StorageDownloadResponse downloadFile(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {}", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            var s3Object = s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(upload.getObjectKey())
-                    .build());
-            StorageDownloadResponse response = new StorageDownloadResponse();
-            response.setInputStream(s3Object);
-            response.setFileName(upload.getFileName());
-            response.setContentType(upload.getContentType());
-            response.setFileSize(upload.getFileSize());
-            return response;
-        } catch (S3Exception e) {
-            log.error("S3 download failed for file {}", fileId, e);
-            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error downloading file {}", fileId, e);
-            throw new RuntimeException("Failed to download file", e);
-        }
-    }
-
-    @Override
-    public void deleteFile(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {} for deletion", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        try {
-            upload.setIsActive(false);
-            uploadRepository.save(upload);
-        } catch (Exception e) {
-            log.error("Failed to update file record after deletion {}", fileId, e);
-            throw new RuntimeException("Failed to delete file", e);
-        }
-    }
-
-    @Override
-    public String getFileUrl(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {} for URL", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
-        } catch (S3Exception e) {
-            log.error("Failed to generate URL for file {}", fileId, e);
-            throw new RuntimeException("Failed to generate file URL", e);
-        }
-    }
-
-    @Override
-    public StorageDownloadResponse downloadByKey(String bucketName, String objectKey) {
-        if (!this.bucketName.equals(bucketName)) {
-            throw new RuntimeException("Bucket not accessible");
-        }
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByObjectKey(objectKey)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file by key {}", objectKey, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            var s3Object = s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .build());
-            StorageDownloadResponse response = new StorageDownloadResponse();
-            response.setInputStream(s3Object);
-            response.setFileName(upload.getFileName());
-            response.setContentType(upload.getContentType());
-            response.setFileSize(upload.getFileSize());
-            return response;
-        } catch (S3Exception e) {
-            log.error("S3 download failed for key {}", objectKey, e);
-            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error downloading file by key {}", objectKey, e);
-            throw new RuntimeException("Failed to download file", e);
-        }
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessMemberServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -89125,6 +89052,110 @@ export class CreateDiagramDialogComponent {
     this.dialogRef.close();
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+
+<div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
+  
+  <!-- Toolbar -->
+  <div class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
+    
+    <!-- ส่วนซ้าย: แสดงชื่อโครงการ (ไม่มีจุด bullet แล้ว) -->
+    <div class="flex items-center gap-3">
+      @if (projectName) {
+        <span class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
+          {{ projectName }}
+        </span>
+      }
+    </div>
+
+    <!-- ส่วนขวา: ปุ่ม actions -->
+    <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
+      
+      <!-- ปุ่ม Chat -->
+      <button (click)="toggleChat()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="AI Chat History">
+        <i class="bi bi-chat-dots-fill text-lg"></i>
+        <span>Chat</span>
+        @if (unreadCount > 0) {
+          <span class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]">
+            {{ unreadCount }}
+          </span>
+        }
+      </button>
+
+      <!-- ปุ่ม Save (สีปกติเป็นเทาอ่อน, hover เป็นสีหลัก) -->
+      <button (click)="saveDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]" title="Save diagram">
+        <i class="bi bi-check-circle-fill text-lg"></i> 
+        <span>Save</span>
+      </button>
+
+      <!-- ปุ่ม Reload -->
+      <button (click)="loadExistingDiagram()" class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"  title="Reload from server">
+        <i class="bi bi-arrow-repeat text-lg"></i> 
+        <span>Reload</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Status Bar (เอา Tab ID ออกแล้ว) -->
+  <div class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5">
+    <div class="flex items-center gap-2 max-md:flex-wrap">
+      <!-- แก้ไขจุดที่ error: ใช้ [style.background] แทน [class.bg-[...]] -->
+      <span class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0" [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"></span>
+      <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
+    </div>
+  </div>
+
+  <!-- Draw.io Editor -->
+  <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
+    @if (isLoading) {
+      <div class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm">
+        <div class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"></div>
+        <span>Loading diagram…</span>
+      </div>
+    }
+    <iframe
+      #drawioIframe
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark"
+      class="block w-full h-full border-none bg-white"
+      frameborder="0"
+      allowfullscreen
+    ></iframe>
+  </div>
+
+  <!-- Chat Sidebar -->
+  <div class="fixed top-0 right-[-440px] w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full max-md:right-[-100%]" [class.right-0]="chatOpen()">
+    <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]">
+      <span class="flex items-center gap-2">
+        <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
+        AI Assistant
+      </span>
+      <button (click)="toggleChat()" class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]" title="Close chat">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+      <app-pmdt06c
+        [diagramId]="currentTabId"
+        (aiResponse)="handleAiResponse($event)"
+        class="flex-1 flex flex-col h-full overflow-hidden"
+      ></app-pmdt06c>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  @if (chatOpen()) {
+    <div class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]" (click)="toggleChat()"></div>
+  }
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
