@@ -17521,6 +17521,207 @@ export enum SicEntityState {
 }
 </file>
 
+<file path="sic-app/src/app/core/model/sic-from-data.ts">
+import { FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { SicEntityState } from './sic-entity-state';
+
+type SicStateModel = {
+  id?: unknown;
+  state?: SicEntityState | null;
+};
+
+export class SicFromData<TModel extends object & SicStateModel> {
+  private readonly initialModel: TModel;
+  private readonly initialComparableValue: Record<string, unknown>;
+  private readonly subscription: Subscription;
+  private currentState: SicEntityState;
+
+  constructor(
+    private readonly sourceFormGroup: FormGroup,
+    model?: TModel,
+  ) {
+    const resolvedModel = this.resolveInitialModel(model);
+
+    this.sourceFormGroup.patchValue(resolvedModel, { emitEvent: false });
+
+    this.initialModel = this.cloneValue(resolvedModel);
+    this.currentState = this.resolveInitialState(resolvedModel);
+    this.initialComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
+
+    this.writeState(this.currentState);
+    this.subscription = this.sourceFormGroup.valueChanges.subscribe(() => this.syncStateFromForm());
+  }
+
+  get isChanged(): boolean {
+    return this.currentState === SicEntityState.Modified || this.currentState === SicEntityState.Added || this.currentState === SicEntityState.Deleted;
+  }
+
+  get isNotChanged(): boolean {
+    return this.currentState === SicEntityState.Unchanged || this.currentState === SicEntityState.Detached;
+  }
+
+  get state(): SicEntityState {
+    return this.currentState;
+  }
+
+  get formGroup(): FormGroup {
+    return this.sourceFormGroup;
+  }
+
+  get invalid(): boolean {
+    return this.sourceFormGroup.invalid;
+  }
+
+  get valid(): boolean {
+    return this.sourceFormGroup.valid;
+  }
+
+  get value(): TModel {
+    const rawValue = this.sourceFormGroup.getRawValue() as Partial<TModel>;
+
+    return {
+      ...this.cloneValue(this.initialModel),
+      ...rawValue,
+      state: this.currentState,
+    } as TModel;
+  }
+
+  delete(): void {
+    this.writeState(SicEntityState.Deleted);
+  }
+
+  markAllAsTouched(): void {
+    this.sourceFormGroup.markAllAsTouched();
+  }
+
+  markAsPristine(): void {
+    this.sourceFormGroup.markAsPristine();
+    this.currentState = SicEntityState.Detached;
+  }
+
+  destroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  get dirty(): boolean {
+    return this.sourceFormGroup.dirty;
+  }
+
+  private syncStateFromForm(): void {
+    if (this.currentState === SicEntityState.Deleted) {
+      return;
+    }
+
+    if (this.currentState === SicEntityState.Added) {
+      this.writeState(SicEntityState.Added);
+      return;
+    }
+
+    const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
+    const hasChanges = !this.isEqual(this.initialComparableValue, currentComparableValue);
+
+    this.writeState(hasChanges ? SicEntityState.Modified : SicEntityState.Unchanged);
+  }
+
+  private resolveInitialState(model: TModel): SicEntityState {
+    if (model.state != null) {
+      return model.state;
+    }
+
+    return model.id ? SicEntityState.Unchanged : SicEntityState.Added;
+  }
+
+  private resolveInitialModel(model?: TModel): TModel {
+    if (model) {
+      return model;
+    }
+
+    return this.sourceFormGroup.getRawValue() as TModel;
+  }
+
+  private writeState(state: SicEntityState): void {
+    this.currentState = state;
+
+    const stateControl = this.sourceFormGroup.get('state');
+    if (stateControl) {
+      stateControl.setValue(state, { emitEvent: false });
+    }
+  }
+
+  private toComparableValue(value: Record<string, unknown>): Record<string, unknown> {
+    const comparableValue = this.cloneValue(value);
+    delete comparableValue['state'];
+    return comparableValue;
+  }
+
+  private cloneValue<TValue>(value: TValue): TValue {
+    if (typeof globalThis.structuredClone === 'function') {
+      return globalThis.structuredClone(value);
+    }
+
+    return this.cloneFallback(value);
+  }
+
+  private cloneFallback<TValue>(value: TValue): TValue {
+    if (value == null || typeof value !== 'object') {
+      return value;
+    }
+
+    if (value instanceof Date) {
+      return new Date(value.getTime()) as TValue;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.cloneFallback(item)) as TValue;
+    }
+
+    const clone: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      clone[key] = this.cloneFallback(item);
+    }
+
+    return clone as TValue;
+  }
+
+  private isEqual(left: unknown, right: unknown): boolean {
+    if (left === right) {
+      return true;
+    }
+
+    if (left instanceof Date && right instanceof Date) {
+      return left.getTime() === right.getTime();
+    }
+
+    if (
+      left == null ||
+      right == null ||
+      typeof left !== 'object' ||
+      typeof right !== 'object'
+    ) {
+      return false;
+    }
+
+    if (Array.isArray(left) || Array.isArray(right)) {
+      if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+        return false;
+      }
+
+      return left.every((item, index) => this.isEqual(item, right[index]));
+    }
+
+    const leftEntries = Object.entries(left);
+    const rightEntries = Object.entries(right);
+
+    if (leftEntries.length !== rightEntries.length) {
+      return false;
+    }
+
+    return leftEntries.every(([key, value]) => this.isEqual(value, (right as Record<string, unknown>)[key]));
+  }
+}
+</file>
+
 <file path="sic-app/src/app/core/pipes/sic-date.pipe.ts">
 // src/app/shared/pipes/user-datetime.pipe.ts
 import { Pipe, PipeTransform } from '@angular/core';
@@ -32379,207 +32580,6 @@ export interface PaginationResponse<T> {
         totalElements: number;
         totalPages: number;
     };
-}
-</file>
-
-<file path="sic-app/src/app/core/model/sic-from-data.ts">
-import { FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { SicEntityState } from './sic-entity-state';
-
-type SicStateModel = {
-  id?: unknown;
-  state?: SicEntityState | null;
-};
-
-export class SicFromData<TModel extends object & SicStateModel> {
-  private readonly initialModel: TModel;
-  private readonly initialComparableValue: Record<string, unknown>;
-  private readonly subscription: Subscription;
-  private currentState: SicEntityState;
-
-  constructor(
-    private readonly sourceFormGroup: FormGroup,
-    model?: TModel,
-  ) {
-    const resolvedModel = this.resolveInitialModel(model);
-
-    this.sourceFormGroup.patchValue(resolvedModel, { emitEvent: false });
-
-    this.initialModel = this.cloneValue(resolvedModel);
-    this.currentState = this.resolveInitialState(resolvedModel);
-    this.initialComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
-
-    this.writeState(this.currentState);
-    this.subscription = this.sourceFormGroup.valueChanges.subscribe(() => this.syncStateFromForm());
-  }
-
-  get isChanged(): boolean {
-    return this.currentState === SicEntityState.Modified || this.currentState === SicEntityState.Added || this.currentState === SicEntityState.Deleted;
-  }
-
-  get isNotChanged(): boolean {
-    return this.currentState === SicEntityState.Unchanged || this.currentState === SicEntityState.Detached;
-  }
-
-  get state(): SicEntityState {
-    return this.currentState;
-  }
-
-  get formGroup(): FormGroup {
-    return this.sourceFormGroup;
-  }
-
-  get invalid(): boolean {
-    return this.sourceFormGroup.invalid;
-  }
-
-  get valid(): boolean {
-    return this.sourceFormGroup.valid;
-  }
-
-  get value(): TModel {
-    const rawValue = this.sourceFormGroup.getRawValue() as Partial<TModel>;
-
-    return {
-      ...this.cloneValue(this.initialModel),
-      ...rawValue,
-      state: this.currentState,
-    } as TModel;
-  }
-
-  delete(): void {
-    this.writeState(SicEntityState.Deleted);
-  }
-
-  markAllAsTouched(): void {
-    this.sourceFormGroup.markAllAsTouched();
-  }
-
-  markAsPristine(): void {
-    this.sourceFormGroup.markAsPristine();
-    this.currentState = SicEntityState.Detached;
-  }
-
-  destroy(): void {
-    this.subscription.unsubscribe();
-  }
-
-  get dirty(): boolean {
-    return this.sourceFormGroup.dirty;
-  }
-
-  private syncStateFromForm(): void {
-    if (this.currentState === SicEntityState.Deleted) {
-      return;
-    }
-
-    if (this.currentState === SicEntityState.Added) {
-      this.writeState(SicEntityState.Added);
-      return;
-    }
-
-    const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
-    const hasChanges = !this.isEqual(this.initialComparableValue, currentComparableValue);
-
-    this.writeState(hasChanges ? SicEntityState.Modified : SicEntityState.Unchanged);
-  }
-
-  private resolveInitialState(model: TModel): SicEntityState {
-    if (model.state != null) {
-      return model.state;
-    }
-
-    return model.id ? SicEntityState.Unchanged : SicEntityState.Added;
-  }
-
-  private resolveInitialModel(model?: TModel): TModel {
-    if (model) {
-      return model;
-    }
-
-    return this.sourceFormGroup.getRawValue() as TModel;
-  }
-
-  private writeState(state: SicEntityState): void {
-    this.currentState = state;
-
-    const stateControl = this.sourceFormGroup.get('state');
-    if (stateControl) {
-      stateControl.setValue(state, { emitEvent: false });
-    }
-  }
-
-  private toComparableValue(value: Record<string, unknown>): Record<string, unknown> {
-    const comparableValue = this.cloneValue(value);
-    delete comparableValue['state'];
-    return comparableValue;
-  }
-
-  private cloneValue<TValue>(value: TValue): TValue {
-    if (typeof globalThis.structuredClone === 'function') {
-      return globalThis.structuredClone(value);
-    }
-
-    return this.cloneFallback(value);
-  }
-
-  private cloneFallback<TValue>(value: TValue): TValue {
-    if (value == null || typeof value !== 'object') {
-      return value;
-    }
-
-    if (value instanceof Date) {
-      return new Date(value.getTime()) as TValue;
-    }
-
-    if (Array.isArray(value)) {
-      return value.map((item) => this.cloneFallback(item)) as TValue;
-    }
-
-    const clone: Record<string, unknown> = {};
-    for (const [key, item] of Object.entries(value)) {
-      clone[key] = this.cloneFallback(item);
-    }
-
-    return clone as TValue;
-  }
-
-  private isEqual(left: unknown, right: unknown): boolean {
-    if (left === right) {
-      return true;
-    }
-
-    if (left instanceof Date && right instanceof Date) {
-      return left.getTime() === right.getTime();
-    }
-
-    if (
-      left == null ||
-      right == null ||
-      typeof left !== 'object' ||
-      typeof right !== 'object'
-    ) {
-      return false;
-    }
-
-    if (Array.isArray(left) || Array.isArray(right)) {
-      if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
-        return false;
-      }
-
-      return left.every((item, index) => this.isEqual(item, right[index]));
-    }
-
-    const leftEntries = Object.entries(left);
-    const rightEntries = Object.entries(right);
-
-    if (leftEntries.length !== rightEntries.length) {
-      return false;
-    }
-
-    return leftEntries.every(([key, value]) => this.isEqual(value, (right as Record<string, unknown>)[key]));
-  }
 }
 </file>
 
@@ -56966,6 +56966,72 @@ export class Profile implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/management/profile/profile.service.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { EmailVerifyModel, ProfileModel } from './profile.model';
+
+@Injectable({ providedIn: 'root' })
+export class ProfileService {
+  private readonly http = inject(HttpClient);
+
+  private readonly apiBaseUrl = environment.apiBaseUrl;
+  private readonly apiProfile = `${this.apiBaseUrl}/api/profile`;
+
+  // ✅ Combobox APIs
+  readonly apiGetComboboxTitle = `${this.apiProfile}/combobox-title`;
+  readonly apiGetComboboxCountry = `${this.apiProfile}/combobox-country`;
+  readonly apiGetComboboxProvince = `${this.apiProfile}/combobox-province`;
+  readonly apiGetComboboxDistrict = `${this.apiProfile}/combobox-district`;
+  readonly apiGetComboboxSubDistrict = `${this.apiProfile}/combobox-sub-district`;
+
+  // ✅ Profile APIs
+  readonly apiGetMe = `${this.apiProfile}/me`;
+  readonly apiGetMailCheck = `${this.apiProfile}/mail-check`;
+  readonly apiPostSendVerify = `${this.apiProfile}/send-verify`;
+  readonly apiSaveProfile = `${this.apiProfile}/save`;
+
+  // ✅ New Check APIs (ต้องมี Backend endpoint)
+  readonly apiGetPhoneCheck = `${this.apiProfile}/phone-check`;
+  readonly apiGetTaxCheck = `${this.apiProfile}/tax-check`;
+
+  // ===== GET Profile =====
+  getProfile(): Observable<ProfileModel> {
+    return this.http.get<ProfileModel>(this.apiGetMe);
+  }
+
+  // ===== Check Email Duplicate =====
+  checkEmail(email: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiGetMailCheck, { params: { email } });
+  }
+
+  // ===== Check Phone Duplicate =====
+  checkPhone(phone: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiGetPhoneCheck, { params: { phone } });
+  }
+
+  // ===== Check Tax ID Duplicate =====
+  checkTaxId(taxId: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiGetTaxCheck, { params: { taxId } });
+  }
+
+  // ===== Send Verification Email =====
+  sendVerifyToken(email: string): Observable<EmailVerifyModel> {
+    return this.http.post<EmailVerifyModel>(this.apiPostSendVerify, {
+      recipient: email,
+      verifyType: 'Email',
+    });
+  }
+
+  // ===== Save Profile =====
+  save(profile: ProfileModel): Observable<ProfileModel> {
+    return this.http.post<ProfileModel>(this.apiSaveProfile, profile);
+  }
+}
+</file>
+
 <file path="sic-app/src/index.html">
 <!doctype html>
 <html lang="en">
@@ -62306,163 +62372,6 @@ public void sendTemplatedMail(String to, String templateCode, Object... template
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmAiProviderServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.softinter.sicapi.service.PmAiProviderService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-@Slf4j
-@Service
-public class PmAiProviderServiceImpl implements PmAiProviderService {
-
-    @Value("${app.ai.provider:openai}")
-    private String provider;
-
-    @Value("${app.ai.api-key:}")
-    private String apiKey;
-
-    @Value("${app.ai.model:gpt-4}")
-    private String model;
-
-    @Value("${app.ai.api-url:https://api.openai.com/v1/chat/completions}")
-    private String apiUrl;
-
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Override
-    public String generateResponse(String userMessage, String context) {
-        String systemPrompt = """
-                You are an expert diagram designer and Mermaid.js specialist.
-                Generate valid Mermaid diagrams based on user requests.
-                
-                Guidelines:
-                1. Only output Mermaid code inside ```mermaid ... ``` blocks
-                2. Add a brief explanation before the code block
-                3. Use proper Mermaid syntax for the diagram type
-                4. If the user asks to modify an existing diagram, understand the context
-                5. If creating a new diagram, suggest an appropriate name and type
-                6. If you detect a Mermaid error in the context, suggest a fix
-                
-                Diagram Types:
-                - Flowchart: graph TD or flowchart TD
-                - Sequence: sequenceDiagram
-                - Class: classDiagram
-                - ER: erDiagram
-                - State: stateDiagram-v2
-                - Journey: journey
-                - Mindmap: mindmap
-                - Timeline: timeline
-                - Requirement: requirementDiagram
-                - C4: C4Context
-                - Git Graph: gitGraph
-                - Pie: pie
-                - Gantt: gantt
-                
-                Current Context:
-                %s
-                """.formatted(context);
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", model);
-        requestBody.put("messages", new Object[]{
-                Map.of("role", "system", "content", systemPrompt),
-                Map.of("role", "user", "content", userMessage)
-        });
-        requestBody.put("temperature", 0.7);
-
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + apiKey);
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
-
-            if (response.getStatusCode().is2xxSuccessful()) {
-                JsonNode root = objectMapper.readTree(response.getBody());
-                String content = root.path("choices").get(0).path("message").path("content").asText();
-                return content;
-            }
-
-            log.error("AI API error: {}", response.getStatusCode());
-            return "I'm sorry, I'm having trouble generating a response right now. Please try again.";
-
-        } catch (Exception e) {
-            log.error("AI service error", e);
-            return "I encountered an error. Please check your API configuration and try again.";
-        }
-    }
-
-    @Override
-    public String extractMermaidScript(String aiResponse) {
-        Pattern pattern = Pattern.compile("```mermaid\\s*([\\s\\S]*?)```");
-        Matcher matcher = pattern.matcher(aiResponse);
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        }
-        return null;
-    }
-
-    @Override
-    public String extractDiagramName(String aiResponse) {
-        String lower = aiResponse.toLowerCase();
-        if (lower.contains("name:")) {
-            int idx = lower.indexOf("name:");
-            int end = lower.indexOf("\n", idx);
-            if (end == -1) end = lower.indexOf(".", idx);
-            if (end == -1) end = Math.min(idx + 50, lower.length());
-            return aiResponse.substring(idx + 5, end).trim();
-        }
-        if (lower.contains("title:")) {
-            int idx = lower.indexOf("title:");
-            int end = lower.indexOf("\n", idx);
-            if (end == -1) end = lower.indexOf(".", idx);
-            if (end == -1) end = Math.min(idx + 50, lower.length());
-            return aiResponse.substring(idx + 6, end).trim();
-        }
-        return "AI Generated Diagram";
-    }
-
-    @Override
-    public String extractDiagramType(String script) {
-        if (script == null) return "Flowchart";
-
-        String lower = script.toLowerCase().trim();
-        if (lower.startsWith("sequence")) return "Sequence";
-        if (lower.startsWith("classdiagram")) return "Class";
-        if (lower.startsWith("erdiagram") || lower.startsWith("er")) return "ER";
-        if (lower.startsWith("state")) return "State";
-        if (lower.startsWith("journey")) return "Journey";
-        if (lower.startsWith("mindmap")) return "Mindmap";
-        if (lower.startsWith("timeline")) return "Timeline";
-        if (lower.startsWith("requirement")) return "Requirement";
-        if (lower.startsWith("c4")) return "C4";
-        if (lower.startsWith("git")) return "Git Graph";
-        if (lower.startsWith("pie")) return "Pie";
-        if (lower.startsWith("gantt")) return "Gantt";
-        if (lower.contains("graph") || lower.contains("flowchart")) return "Flowchart";
-
-        return "Flowchart";
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramChatServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -67364,72 +67273,6 @@ export class Pmrt02Service {
 }
 </file>
 
-<file path="sic-app/src/app/management/profile/profile.service.ts">
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { EmailVerifyModel, ProfileModel } from './profile.model';
-
-@Injectable({ providedIn: 'root' })
-export class ProfileService {
-  private readonly http = inject(HttpClient);
-
-  private readonly apiBaseUrl = environment.apiBaseUrl;
-  private readonly apiProfile = `${this.apiBaseUrl}/api/profile`;
-
-  // ✅ Combobox APIs
-  readonly apiGetComboboxTitle = `${this.apiProfile}/combobox-title`;
-  readonly apiGetComboboxCountry = `${this.apiProfile}/combobox-country`;
-  readonly apiGetComboboxProvince = `${this.apiProfile}/combobox-province`;
-  readonly apiGetComboboxDistrict = `${this.apiProfile}/combobox-district`;
-  readonly apiGetComboboxSubDistrict = `${this.apiProfile}/combobox-sub-district`;
-
-  // ✅ Profile APIs
-  readonly apiGetMe = `${this.apiProfile}/me`;
-  readonly apiGetMailCheck = `${this.apiProfile}/mail-check`;
-  readonly apiPostSendVerify = `${this.apiProfile}/send-verify`;
-  readonly apiSaveProfile = `${this.apiProfile}/save`;
-
-  // ✅ New Check APIs (ต้องมี Backend endpoint)
-  readonly apiGetPhoneCheck = `${this.apiProfile}/phone-check`;
-  readonly apiGetTaxCheck = `${this.apiProfile}/tax-check`;
-
-  // ===== GET Profile =====
-  getProfile(): Observable<ProfileModel> {
-    return this.http.get<ProfileModel>(this.apiGetMe);
-  }
-
-  // ===== Check Email Duplicate =====
-  checkEmail(email: string): Observable<boolean> {
-    return this.http.get<boolean>(this.apiGetMailCheck, { params: { email } });
-  }
-
-  // ===== Check Phone Duplicate =====
-  checkPhone(phone: string): Observable<boolean> {
-    return this.http.get<boolean>(this.apiGetPhoneCheck, { params: { phone } });
-  }
-
-  // ===== Check Tax ID Duplicate =====
-  checkTaxId(taxId: string): Observable<boolean> {
-    return this.http.get<boolean>(this.apiGetTaxCheck, { params: { taxId } });
-  }
-
-  // ===== Send Verification Email =====
-  sendVerifyToken(email: string): Observable<EmailVerifyModel> {
-    return this.http.post<EmailVerifyModel>(this.apiPostSendVerify, {
-      recipient: email,
-      verifyType: 'Email',
-    });
-  }
-
-  // ===== Save Profile =====
-  save(profile: ProfileModel): Observable<ProfileModel> {
-    return this.http.post<ProfileModel>(this.apiSaveProfile, profile);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/app.config.ts">
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -69955,6 +69798,895 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/FileStorageServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.softinter.sicapi.dto.request.UploadSessionRequest;
+import com.softinter.sicapi.dto.response.StorageDownloadResponse;
+import com.softinter.sicapi.dto.response.StorageUploadResponse;
+import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.FileCategory;
+import com.softinter.sicapi.entity.enums.FileVisibility;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.util.FileVisibilityConverter;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FileStorageServiceImpl implements FileStorageService {
+
+    private final S3Client s3Client;
+    private final SuUploadRepository uploadRepository;
+    private final CurrentUserService currentUserService;
+
+    @Value("${app.storage.s3.bucket}")
+    private String bucketName;
+
+    private static final int DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
+    private static final long TEMP_UPLOAD_EXPIRY_SECONDS = 24 * 60 * 60;
+
+    // ==================== Single file ====================
+    @Override
+    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId) {
+        try {
+            String fileName = file.getOriginalFilename();
+            String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
+
+            try {
+                s3Client.putObject(PutObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(key)
+                                .contentType(file.getContentType())
+                                .build(),
+                        RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            } catch (S3Exception e) {
+                log.error("S3 upload failed for file {}", fileName, e);
+                throw new RuntimeException("Failed to upload file to S3: " + e.awsErrorDetails().errorMessage(), e);
+            }
+
+            FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
+            FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
+            String username = currentUserService.getUsername();
+
+            SuUpload upload = new SuUpload();
+            upload.setFileName(fileName);
+            upload.setObjectKey(key);
+            upload.setBucketName(bucketName);
+            upload.setFileSize(file.getSize());
+            upload.setContentType(file.getContentType());
+            upload.setCategory(categoryEnum);
+            upload.setVisibility(visibilityEnum);
+            upload.setUploadGroupId(uploadGroupId);
+            upload.setIsActive(false);
+            upload.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
+            upload.setIsStreaming(false);
+            upload.setCreatedBy(username);
+            upload.setUpdatedBy(username);
+
+            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key)).toExternalForm();
+            String accessUrl = "/api/storage/files/" + bucketName + "/" + key;
+            upload.setStorageUrl(storageUrl);
+            upload.setAccessUrl(accessUrl);
+
+            try {
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to save upload record for file {}", fileName, e);
+                throw new RuntimeException("Failed to save upload metadata", e);
+            }
+
+            StorageUploadResponse response = new StorageUploadResponse();
+            response.setId(upload.getId());
+            response.setFileName(fileName);
+            response.setFileUrl(storageUrl);
+            response.setFileSize(file.getSize());
+            response.setContentType(file.getContentType());
+            response.setUploadGroupId(uploadGroupId);
+            return response;
+        } catch (IOException e) {
+            log.error("IO error reading file", e);
+            throw new RuntimeException("Failed to read file content", e);
+        }
+    }
+
+    // ==================== Resumable upload session ====================
+    @Override
+    public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
+        try {
+            UUID sessionId = UUID.randomUUID();
+            String fileName = request.getFileName();
+            long fileSize = request.getFileSize();
+            String contentType = request.getContentType();
+
+            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
+            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
+
+            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
+            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
+            String username = currentUserService.getUsername();
+
+            SuUpload sessionRecord = new SuUpload();
+            sessionRecord.setUploadGroupId(sessionId);
+            sessionRecord.setFileName(fileName);
+            sessionRecord.setFileSize(fileSize);
+            sessionRecord.setContentType(contentType);
+            sessionRecord.setObjectKey(tempKeyPrefix);
+            sessionRecord.setBucketName(bucketName);
+            sessionRecord.setCategory(categoryEnum);
+            sessionRecord.setVisibility(visibilityEnum);
+            sessionRecord.setIsActive(false);
+            sessionRecord.setIsStreaming(false);
+            sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
+            sessionRecord.setStorageUrl("");
+            sessionRecord.setAccessUrl("");
+            sessionRecord.setCreatedBy(username);
+            sessionRecord.setUpdatedBy(username);
+
+            try {
+                uploadRepository.save(sessionRecord);
+            } catch (Exception e) {
+                log.error("Failed to create upload session for file {}", fileName, e);
+                throw new RuntimeException("Failed to create upload session", e);
+            }
+
+            return UploadSessionResponse.builder()
+                    .sessionId(sessionId.toString())
+                    .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
+                    .chunkSize(DEFAULT_CHUNK_SIZE)
+                    .totalChunks(totalChunks)
+                    .nextChunkIndex(0)
+                    .uploadedBytes(0L)
+                    .build();
+        } catch (Exception e) {
+            log.error("Unexpected error creating upload session", e);
+            throw new RuntimeException("Failed to create upload session", e);
+        }
+    }
+
+    @Override
+    public UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk) {
+        String chunkKey = String.format("temp/sessions/%s/chunk_%d", sessionId, chunkIndex);
+        log.info("Uploading chunk {} for session {} to S3 key: {}", chunkIndex, sessionId, chunkKey);
+
+        try {
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(chunkKey)
+                    .contentType(chunk.getContentType())
+                    .build();
+            s3Client.putObject(putRequest,
+                    RequestBody.fromInputStream(chunk.getInputStream(), chunk.getSize()));
+            log.info("Chunk {} uploaded successfully", chunkIndex);
+        } catch (IOException e) {
+            log.error("IO error reading chunk data", e);
+            throw new RuntimeException("Failed to read chunk data", e);
+        } catch (S3Exception e) {
+            log.error("S3 upload failed for chunk {}", chunkIndex, e);
+            throw new RuntimeException("Failed to upload chunk to S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error uploading chunk", e);
+            throw new RuntimeException("Failed to upload chunk", e);
+        }
+
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found or database error", e);
+        }
+
+        long fileSize = session.getFileSize();
+        int chunkSize = DEFAULT_CHUNK_SIZE;
+        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
+        long uploadedBytes = Math.min((chunkIndex + 1) * (long) chunkSize, fileSize);
+        int nextChunkIndex = chunkIndex + 1;
+
+        return UploadSessionResponse.builder()
+                .sessionId(sessionId.toString())
+                .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
+                .chunkSize(chunkSize)
+                .totalChunks(totalChunks)
+                .nextChunkIndex(nextChunkIndex)
+                .uploadedBytes(uploadedBytes)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
+        SuUpload sessionRecord;
+        try {
+            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
+        } catch (Exception e) {
+            log.error("Failed to find upload session {}", sessionId, e);
+            throw new RuntimeException("Upload session not found", e);
+        }
+
+        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
+            throw new RuntimeException("Upload session has expired");
+        }
+
+        String tempKeyPrefix = sessionRecord.getObjectKey();
+        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
+
+        long fileSize = sessionRecord.getFileSize();
+        int chunkSize = DEFAULT_CHUNK_SIZE;
+        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
+
+        if (totalChunks == 1) {
+            String sourceKey = tempKeyPrefix + "chunk_0";
+            try {
+                s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+                s3Client.copyObject(CopyObjectRequest.builder()
+                        .copySource(bucketName + "/" + sourceKey)
+                        .destinationBucket(bucketName)
+                        .destinationKey(finalKey)
+                        .build());
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
+            } catch (S3Exception e) {
+                log.error("Source chunk missing: {}", sourceKey, e);
+                throw new RuntimeException("Upload incomplete: missing chunk", e);
+            } catch (Exception e) {
+                log.error("Unexpected error completing single‑chunk upload", e);
+                throw new RuntimeException("Failed to complete upload session", e);
+            }
+        } else {
+            try {
+                CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .contentType(sessionRecord.getContentType())
+                        .build();
+                CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
+                String uploadId = createResponse.uploadId();
+
+                List<CompletedPart> completedParts = new java.util.ArrayList<>();
+
+                for (int i = 0; i < totalChunks; i++) {
+                    String chunkKey = tempKeyPrefix + "chunk_" + i;
+                    try {
+                        s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
+                    } catch (S3Exception e) {
+                        throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
+                    }
+
+                    UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
+                            .copySource(bucketName + "/" + chunkKey)
+                            .destinationBucket(bucketName)
+                            .destinationKey(finalKey)
+                            .uploadId(uploadId)
+                            .partNumber(i + 1)
+                            .build();
+
+                    UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
+                    completedParts.add(CompletedPart.builder()
+                            .partNumber(i + 1)
+                            .eTag(copyResponse.copyPartResult().eTag())
+                            .build());
+                }
+
+                CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(finalKey)
+                        .uploadId(uploadId)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                        .build();
+                s3Client.completeMultipartUpload(completeRequest);
+
+                deleteTempChunks(tempKeyPrefix);
+
+            } catch (S3Exception e) {
+                log.error("Multipart upload failed for session {}", sessionId, e);
+                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
+            } catch (Exception e) {
+                log.error("Unexpected error during multipart upload completion", e);
+                throw new RuntimeException("Failed to complete upload session", e);
+            }
+        }
+
+        try {
+            sessionRecord.setObjectKey(finalKey);
+            sessionRecord.setIsActive(true);
+            sessionRecord.setTempExpiresAt(null);
+            sessionRecord.setUpdatedBy(currentUserService.getUsername());
+
+            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
+            String accessUrl;
+            if (request != null) {
+                String scheme = request.getScheme();
+                String serverName = request.getServerName();
+                int serverPort = request.getServerPort();
+                String contextPath = request.getContextPath();
+                String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+                accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
+            } else {
+                accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
+            }
+            sessionRecord.setStorageUrl(storageUrl);
+            sessionRecord.setAccessUrl(accessUrl);
+            uploadRepository.save(sessionRecord);
+        } catch (Exception e) {
+            log.error("Failed to update database record for session {}", sessionId, e);
+            throw new RuntimeException("Failed to save upload metadata", e);
+        }
+
+        StorageUploadResponse response = new StorageUploadResponse();
+        response.setId(sessionRecord.getId());
+        response.setFileName(sessionRecord.getFileName());
+        response.setFileUrl(sessionRecord.getStorageUrl());
+        response.setFileSize(sessionRecord.getFileSize());
+        response.setContentType(sessionRecord.getContentType());
+        response.setUploadGroupId(sessionId);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public StorageUploadResponse completeUploadSession(UUID sessionId) {
+        return completeUploadSession(sessionId, null);
+    }
+
+    @Override
+    public void cancelSession(UUID sessionId) {
+        SuUpload session;
+        try {
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session not found"));
+        } catch (Exception e) {
+            log.error("Session not found for cancellation: {}", sessionId, e);
+            throw new RuntimeException("Session not found", e);
+        }
+        String prefix = session.getObjectKey();
+        deleteTempChunks(prefix);
+        try {
+            uploadRepository.delete(session);
+        } catch (Exception e) {
+            log.error("Failed to delete session record for {}", sessionId, e);
+            throw new RuntimeException("Failed to cancel session", e);
+        }
+    }
+
+    private void deleteTempChunks(String prefix) {
+        try {
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    .build();
+            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+            for (S3Object s3Obj : listResponse.contents()) {
+                try {
+                    s3Client.deleteObject(DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Obj.key())
+                            .build());
+                } catch (S3Exception e) {
+                    log.warn("Failed to delete temp object {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                }
+            }
+        } catch (S3Exception e) {
+            log.warn("Failed to list temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting temp chunks with prefix {}", prefix, e);
+        }
+    }
+
+    // ==================== Activate Upload ====================
+    @Override
+    @Transactional
+    public void activateUpload(UUID uploadId, String userId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId)
+                    .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
+        } catch (Exception e) {
+            log.error("Failed to find upload for activation: {}", uploadId, e);
+            throw new RuntimeException("Upload not found", e);
+        }
+
+        if (upload.getIsActive()) {
+            log.debug("Upload {} is already active", uploadId);
+            return;
+        }
+
+        if (upload.getTempExpiresAt() != null && upload.getTempExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalStateException("Upload has expired and cannot be activated");
+        }
+
+        String currentUsername = currentUserService.getUsername();
+        if (!currentUsername.equals(upload.getCreatedBy())) {
+            throw new SecurityException("Only the uploader can activate this upload");
+        }
+
+        try {
+            upload.setIsActive(true);
+            upload.setTempExpiresAt(null);
+            upload.setUpdatedBy(currentUsername);
+            uploadRepository.save(upload);
+            log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
+        } catch (Exception e) {
+            log.error("Failed to save activated upload {}", uploadId, e);
+            throw new RuntimeException("Failed to activate upload", e);
+        }
+    }
+
+    @Override
+    public void activateUpload(UUID uploadId) {
+        activateUpload(uploadId, null);
+    }
+
+    // ==================== Cleanup Expired Temporary Uploads ====================
+    @Override
+@Transactional
+public void cleanupExpiredTemporaryUploads() {
+    Instant now = Instant.now();
+    List<SuUpload> expired;
+    try {
+        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+    } catch (Exception e) {
+        log.error("Failed to query expired temporary uploads", e);
+        return;
+    }
+
+    if (expired.isEmpty()) {
+        log.debug("No expired temporary uploads to clean up");
+        return;
+    }
+
+    log.info("Found {} expired temporary uploads to clean up", expired.size());
+    for (SuUpload upload : expired) {
+        try {
+            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+            int updated = uploadRepository.softDeleteExpiredUpload(
+                upload.getId(), "system-cleanup", Instant.now(), now);
+            if (updated == 0) {
+                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
+            } else {
+                log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
+        }
+    }
+}
+
+    private void deletePhysicalFile(String bucketName, String objectKey) {
+        try {
+            if (objectKey.endsWith("/")) {
+                ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                        .bucket(bucketName)
+                        .prefix(objectKey)
+                        .build();
+                ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+                for (S3Object s3Obj : listResponse.contents()) {
+                    try {
+                        s3Client.deleteObject(DeleteObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(s3Obj.key())
+                                .build());
+                    } catch (S3Exception e) {
+                        if (e.statusCode() != 404) {
+                            log.warn("Failed to delete file {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
+                        }
+                    }
+                }
+            } else {
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(objectKey)
+                        .build());
+            }
+        } catch (S3Exception e) {
+            if (e.statusCode() != 404) {
+                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
+        }
+    }
+
+    @Override
+    public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
+        if (uploadGroupId == null) return null;
+        try {
+            return uploadRepository
+                    .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
+                    .map(upload -> {
+                        String url = upload.getStorageUrl();
+                        return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to get file URL for group {}", uploadGroupId, e);
+            return null;
+        }
+    }
+
+    // ==================== Sync uploads methods ====================
+    @Override
+    public UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences) {
+        if (uploadReferences == null || uploadReferences.isEmpty()) {
+            return null;
+        }
+        boolean hasActiveUploads = uploadReferences.stream()
+                .anyMatch(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode());
+        if (!hasActiveUploads) {
+            return null;
+        }
+        if (currentUploadGroupId == null || currentUploadGroupId.equals(new UUID(0, 0))) {
+            return UUID.randomUUID();
+        }
+        return currentUploadGroupId;
+    }
+
+    @Override
+    @Transactional
+    public void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences) {
+        if (uploadReferences == null || uploadReferences.isEmpty()) {
+            return;
+        }
+
+        List<UUID> deletedIds = uploadReferences.stream()
+                .filter(ref -> ref.getState() == EntityState.DELETED.getEntityStateCode())
+                .map(StorageUploadReference::getId)
+                .collect(Collectors.toList());
+        for (UUID id : deletedIds) {
+            try {
+                deleteUpload(id);
+            } catch (Exception e) {
+                log.error("Failed to delete upload {} during sync", id, e);
+            }
+        }
+
+        List<UUID> activeIds = uploadReferences.stream()
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
+                .map(StorageUploadReference::getId)
+                .collect(Collectors.toList());
+        if (activeIds.isEmpty()) {
+            return;
+        }
+
+        List<SuUpload> uploads;
+        try {
+            uploads = uploadRepository.findAllById(activeIds);
+        } catch (Exception e) {
+            log.error("Failed to find uploads by IDs", e);
+            throw new RuntimeException("Failed to sync uploads", e);
+        }
+
+        Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
+                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
+                .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
+
+        for (SuUpload upload : uploads) {
+            StorageUploadReference ref = refMap.get(upload.getId());
+            if (ref == null) {
+                continue;
+            }
+            try {
+                upload.setUploadGroupId(uploadGroupId);
+                if (ref.getIsActive() != null) {
+                    upload.setIsActive(ref.getIsActive());
+                    if (Boolean.TRUE.equals(ref.getIsActive())) {
+                        upload.setTempExpiresAt(null);
+                    }
+                }
+                uploadRepository.save(upload);
+            } catch (Exception e) {
+                log.error("Failed to update upload {} during sync", upload.getId(), e);
+            }
+        }
+    }
+
+    private void deleteUpload(UUID uploadId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findById(uploadId).orElse(null);
+        } catch (Exception e) {
+            log.error("Failed to find upload {} for deletion", uploadId, e);
+            return;
+        }
+        if (upload == null) return;
+        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+        try {
+            uploadRepository.delete(upload);
+        } catch (Exception e) {
+            log.error("Failed to delete upload record {}", uploadId, e);
+        }
+    }
+
+    // ==================== Other existing methods ====================
+    @Override
+    public StorageDownloadResponse downloadFile(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {}", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            var s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(upload.getObjectKey())
+                    .build());
+            StorageDownloadResponse response = new StorageDownloadResponse();
+            response.setInputStream(s3Object);
+            response.setFileName(upload.getFileName());
+            response.setContentType(upload.getContentType());
+            response.setFileSize(upload.getFileSize());
+            return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for file {}", fileId, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error downloading file {}", fileId, e);
+            throw new RuntimeException("Failed to download file", e);
+        }
+    }
+
+    @Override
+    public void deleteFile(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for deletion", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+        try {
+            upload.setIsActive(false);
+            uploadRepository.save(upload);
+        } catch (Exception e) {
+            log.error("Failed to update file record after deletion {}", fileId, e);
+            throw new RuntimeException("Failed to delete file", e);
+        }
+    }
+
+    @Override
+    public String getFileUrl(UUID fileId) {
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file {} for URL", fileId, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
+        } catch (S3Exception e) {
+            log.error("Failed to generate URL for file {}", fileId, e);
+            throw new RuntimeException("Failed to generate file URL", e);
+        }
+    }
+
+    @Override
+    public StorageDownloadResponse downloadByKey(String bucketName, String objectKey) {
+        if (!this.bucketName.equals(bucketName)) {
+            throw new RuntimeException("Bucket not accessible");
+        }
+        SuUpload upload;
+        try {
+            upload = uploadRepository.findByObjectKey(objectKey)
+                    .orElseThrow(() -> new RuntimeException("File not found"));
+        } catch (Exception e) {
+            log.error("Failed to find file by key {}", objectKey, e);
+            throw new RuntimeException("File not found", e);
+        }
+        try {
+            var s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .build());
+            StorageDownloadResponse response = new StorageDownloadResponse();
+            response.setInputStream(s3Object);
+            response.setFileName(upload.getFileName());
+            response.setContentType(upload.getContentType());
+            response.setFileSize(upload.getFileSize());
+            return response;
+        } catch (S3Exception e) {
+            log.error("S3 download failed for key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error downloading file by key {}", objectKey, e);
+            throw new RuntimeException("Failed to download file", e);
+        }
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmAiProviderServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.service.PmAiProviderService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import jakarta.annotation.PostConstruct; 
+
+@Slf4j
+@Service
+public class PmAiProviderServiceImpl implements PmAiProviderService {
+
+    @Value("${app.ai.provider:gemini}")
+    private String provider;
+
+    @Value("${app.ai.api-key:}")
+    private String apiKey;
+
+    @Value("${app.ai.model:gemini-2.5-flash-lite}")
+    private String model;
+
+    @Value("${app.ai.api-url:https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions}")
+    private String apiUrl;
+
+     @PostConstruct
+    public void logConfig() {
+        log.info("AI API URL: {}", apiUrl);
+        log.info("AI Model: {}", model);
+        log.info("AI Provider: {}", provider);
+    }
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Pattern MERMAID_BLOCK_PATTERN = Pattern.compile("```mermaid\\s*([\\s\\S]*?)```");
+    private static final Pattern NAME_PATTERN = Pattern.compile("(?:name|title|ชื่อ)\\s*[:：]\\s*(.+?)(?:\\n|$)", Pattern.CASE_INSENSITIVE);
+
+    @Override
+    public String generateResponse(String userMessage, String context) {
+        // ✅ บังคับให้ AI ตอบเฉพาะ Mermaid code block เท่านั้น
+        String systemPrompt = """
+                You are a Mermaid diagram generator.
+                RULES:
+                1. Your response MUST contain ONLY a valid Mermaid code block.
+                2. The code block MUST start with ```mermaid and end with ```.
+                3. Do NOT include any text outside the code block.
+                4. If the user asks for a diagram, generate it.
+                5. If the user asks something else, still respond with a default diagram.
+                6. Supported types: flowchart, sequence, class, er, state, journey, mindmap, timeline, requirement, C4, git, pie, gantt.
+                7. Always use correct Mermaid syntax.
+                Current Context:
+                %s
+                """.formatted(context);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", new Object[]{
+                Map.of("role", "system", "content", systemPrompt),
+                Map.of("role", "user", "content", userMessage)
+        });
+        requestBody.put("temperature", 0.7);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + apiKey);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                String content = root.path("choices").get(0).path("message").path("content").asText();
+                return content;
+            }
+
+            log.error("AI API error: {}", response.getStatusCode());
+            return "```mermaid\ngraph TD\n  A[Error] --> B[Please try again]\n```";
+
+        } catch (Exception e) {
+            log.error("AI service error", e);
+            return "```mermaid\ngraph TD\n  A[Error] --> B[Check API configuration]\n```";
+        }
+    }
+
+    @Override
+    public String extractMermaidScript(String aiResponse) {
+        if (aiResponse == null) return null;
+        Matcher matcher = MERMAID_BLOCK_PATTERN.matcher(aiResponse);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }
+
+    @Override
+    public String extractDiagramName(String aiResponse) {
+        if (aiResponse == null) return "AI Generated Diagram";
+        Matcher matcher = NAME_PATTERN.matcher(aiResponse);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        // fallback: ถ้าไม่มีชื่อ ให้ดูในบรรทัดแรกของ mermaid script
+        String script = extractMermaidScript(aiResponse);
+        if (script != null) {
+            String firstLine = script.split("\n")[0].trim();
+            if (firstLine.startsWith("graph") || firstLine.startsWith("flowchart")) {
+                return "Flowchart";
+            }
+            if (firstLine.startsWith("sequenceDiagram")) return "Sequence Diagram";
+            if (firstLine.startsWith("classDiagram")) return "Class Diagram";
+            if (firstLine.startsWith("erDiagram")) return "ER Diagram";
+            if (firstLine.startsWith("stateDiagram")) return "State Diagram";
+            if (firstLine.startsWith("journey")) return "Journey";
+            if (firstLine.startsWith("mindmap")) return "Mindmap";
+            if (firstLine.startsWith("timeline")) return "Timeline";
+            if (firstLine.startsWith("requirementDiagram")) return "Requirement Diagram";
+            if (firstLine.startsWith("C4Context")) return "C4 Context";
+            if (firstLine.startsWith("gitGraph")) return "Git Graph";
+            if (firstLine.startsWith("pie")) return "Pie Chart";
+            if (firstLine.startsWith("gantt")) return "Gantt Chart";
+        }
+        return "AI Generated Diagram";
+    }
+
+    @Override
+    public String extractDiagramType(String script) {
+        if (script == null) return "Flowchart";
+
+        String lower = script.toLowerCase().trim();
+        if (lower.startsWith("sequence")) return "Sequence";
+        if (lower.startsWith("classdiagram")) return "Class";
+        if (lower.startsWith("erdiagram") || lower.startsWith("er")) return "ER";
+        if (lower.startsWith("state")) return "State";
+        if (lower.startsWith("journey")) return "Journey";
+        if (lower.startsWith("mindmap")) return "Mindmap";
+        if (lower.startsWith("timeline")) return "Timeline";
+        if (lower.startsWith("requirement")) return "Requirement";
+        if (lower.startsWith("c4")) return "C4";
+        if (lower.startsWith("git")) return "Git Graph";
+        if (lower.startsWith("pie")) return "Pie";
+        if (lower.startsWith("gantt")) return "Gantt";
+        if (lower.contains("graph") || lower.contains("flowchart")) return "Flowchart";
+
+        return "Flowchart";
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmCustomerServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -72188,406 +72920,6 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
   Gantt: 'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
   'Use Case': 'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
 };
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
-// src/app/core/services/diagram.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type {
-  ChatMessage,
-  DiagramModel,
-  DiagramProject,
-  DiagramType,
-  DiagramVersion,
-} from './diagram.model';
-import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
-
-@Injectable({ providedIn: 'root' })
-export class DiagramService {
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiBaseUrl;
-
-  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
-  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
-  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
-  private pmrt02Service = inject(Pmrt02Service);
-
-  projects$ = this.projectsSubject.asObservable();
-  tabs$ = this.tabsSubject.asObservable();
-  activeTabId$ = this.activeTabIdSubject.asObservable();
-
-  // ==================== Projects ====================
- getProjectName(projectId: string): Observable<string> {
-    return this.pmrt02Service.getProject(projectId).pipe(
-      map(project => project.projectName)
-    );
-  }
-  
-  getProjects(): Observable<DiagramProject[]> {
-    // ใช้ API /api/pm/customer-projects แต่ต้องมี customerId
-    // ถ้าไม่มี ให้ return empty หรือใช้วิธีอื่น
-    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
-      .pipe(
-        map(response => {
-          const items = response?.content || response?.data || [];
-          return items.map((p: any) => ({
-            id: p.id,
-            name: p.projectName,
-            description: p.description,
-            isFavorite: false,
-            lastOpened: p.updatedDate || p.createdDate,
-            createdAt: p.createdDate,
-            updatedAt: p.updatedDate
-          }));
-        })
-      );
-  }
-
-
-  createProject(name: string, description?: string): Observable<DiagramProject> {
-    return this.http
-      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
-      .pipe(
-        tap((project) => {
-          const current = this.projectsSubject.value;
-          this.projectsSubject.next([...current, project]);
-        }),
-      );
-  }
-
-  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
-    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
-      tap((updated) => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
-      }),
-    );
-  }
-
-  deleteProject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
-      tap(() => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.filter((p) => p.id !== id));
-      }),
-    );
-  }
-
-  // ==================== Tabs (Diagrams) ====================
-  getTabs(projectId: string): Observable<DiagramModel[]> {
-    return this.http
-      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
-      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
-  }
-
-  createTab(
-    projectId: string,
-    name: string,
-    type: DiagramType,
-    script?: string,
-  ): Observable<DiagramModel> {
-    const payload = {
-      projectId,
-      name,
-      diagramType: type,
-      mermaidScript: script || '',
-      metadata: {},
-      sortOrder: this.tabsSubject.value.length + 1,
-    };
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
-      tap((tab) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next([...current, tab]);
-      }),
-    );
-  }
-
-  updateTab(tab: DiagramModel): Observable<DiagramModel> {
-    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
-      tap((updated) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
-      }),
-    );
-  }
-
-  deleteTab(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.filter((t) => t.id !== id));
-      }),
-    );
-  }
-
-  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        const updated = current.map((t) => {
-          const order = tabs.find((o) => o.id === t.id);
-          return order ? { ...t, sortOrder: order.sortOrder } : t;
-        });
-        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
-      }),
-    );
-  }
-
-  duplicateTab(id: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
-  }
-
-  // ==================== Versions ====================
-  getVersions(tabId: string): Observable<DiagramVersion[]> {
-    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
-  }
-
-  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(
-      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
-      {},
-    );
-  }
-
-  // ==================== Chat ====================
-  getChatHistory(tabId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  sendChatMessage(
-    tabId: string,
-    message: string,
-  ): Observable<{ message: ChatMessage; diagram?: DiagramModel; action?: 'create' | 'update' }> {
-    return this.http.post<{
-      message: ChatMessage;
-      diagram?: DiagramModel;
-      action?: 'create' | 'update';
-    }>(`${this.apiUrl}/api/diagram/chat`, { tabId, message });
-  }
-
-  clearChatHistory(tabId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  // ==================== AI ====================
-  generateDiagram(
-    prompt: string,
-    context?: any,
-  ): Observable<{ script: string; type: DiagramType; name: string }> {
-    return this.http.post<{ script: string; type: DiagramType; name: string }>(
-      `${this.apiUrl}/api/diagram/ai/generate`,
-      { prompt, context },
-    );
-  }
-
-  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
-      script,
-      instruction,
-    });
-  }
-
-  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
-      script,
-      errorMessage,
-    });
-  }
-
-  convertDiagram(
-    script: string,
-    targetType: DiagramType,
-  ): Observable<{ script: string; type: DiagramType }> {
-    return this.http.post<{ script: string; type: DiagramType }>(
-      `${this.apiUrl}/api/diagram/ai/convert`,
-      { script, targetType },
-    );
-  }
-
-  // ==================== Export ====================
-  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
-      responseType: 'blob',
-    });
-  }
-
-  exportProject(projectId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
-      responseType: 'blob',
-    });
-  }
-
-  // ==================== State Management ====================
-  setActiveTab(tabId: string | null) {
-    this.activeTabIdSubject.next(tabId);
-  }
-
-  getActiveTab(): string | null {
-    return this.activeTabIdSubject.value;
-  }
-
-  clearState() {
-    this.projectsSubject.next([]);
-    this.tabsSubject.next([]);
-    this.activeTabIdSubject.next(null);
-  }
-  getDiagram(id: string): Observable<DiagramModel> {
-    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
-// src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
-
-@Injectable({ providedIn: 'root' })
-export class DrawioConnectorService {
-  private iframe: HTMLIFrameElement | null = null;
-  private pendingMessages: any[] = [];
-  private drawioReady = false;
-
-  private isReadySubject = new BehaviorSubject<boolean>(false);
-  isReady$ = this.isReadySubject.asObservable();
-
-  private xmlSubject = new Subject<string>();
-  xml$ = this.xmlSubject.asObservable();
-
-  private errorSubject = new Subject<string>();
-  error$ = this.errorSubject.asObservable();
-
-  init(iframe: HTMLIFrameElement): void {
-    this.iframe = iframe;
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-  }
-
-  postMessage(data: any, force = false): void {
-    if (!this.iframe?.contentWindow) {
-      this.pendingMessages.push(data);
-      return;
-    }
-    if (!this.drawioReady && !force) {
-      this.pendingMessages.push(data);
-      return;
-    }
-    try {
-      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
-      console.log('[Draw.io] SEND:', data);
-    } catch (e) {
-      console.error('[Draw.io] postMessage error:', e);
-      this.errorSubject.next('Failed to send message to Draw.io');
-    }
-  }
-
-  private flushQueue(): void {
-    if (!this.drawioReady) return;
-    while (this.pendingMessages.length > 0) {
-      const msg = this.pendingMessages.shift();
-      try {
-        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
-        console.log('[Draw.io] SEND QUEUE:', msg);
-      } catch (e) {
-        console.error('[Draw.io] flushQueue error:', e);
-      }
-    }
-  }
-
-  loadXml(xml?: string, force = false): void {
-    if (!xml || xml.trim() === '') {
-      xml = this.getEmptyDiagramXml();
-    }
-    this.postMessage({ action: 'load', xml, autosave: false }, force);
-  }
-
-  getEmptyDiagramXml(): string {
-    return `<mxfile>
-<diagram id="page1" name="Page-1">
-<mxGraphModel>
-<root>
-<mxCell id="0"/>
-<mxCell id="1" parent="0"/>
-</root>
-</mxGraphModel>
-</diagram>
-</mxfile>`;
-  }
-
-  requestXml(): void {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
-      this.errorSubject.next('Draw.io not ready to export');
-      return;
-    }
-    this.postMessage({ action: 'export', format: 'xml' });
-  }
-
-  handleMessage(event: MessageEvent): void {
-    if (!event.origin.includes('diagrams.net')) return;
-
-    let data: any;
-    try {
-      if (typeof event.data === 'string') {
-        if (event.data === 'ready') {
-          data = { event: 'ready' };
-        } else {
-          data = JSON.parse(event.data);
-        }
-      } else {
-        data = event.data;
-      }
-    } catch (e) {
-      console.warn('[Draw.io] Failed to parse message:', event.data);
-      return;
-    }
-
-    console.log('[Draw.io] EVENT:', data);
-
-    if (data.event === 'configure') {
-      const reply = { action: 'configure', config: { defaultFonts: [], defaultLibraries: true } };
-      try {
-        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
-        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok)');
-      } catch (e) {
-        console.error('[Draw.io] Configure response error:', e);
-      }
-      return;
-    }
-
-    if (data.event === 'init' || data.event === 'ready') {
-      console.log('[Draw.io] READY received');
-      this.drawioReady = true;
-      this.isReadySubject.next(true);
-      this.flushQueue();
-      return;
-    }
-
-    if (data.event === 'export' && data.xml) {
-      console.log('[Draw.io] XML export received');
-      this.xmlSubject.next(data.xml);
-      return;
-    }
-
-    if (data.event === 'error') {
-      console.error('[Draw.io] Error event:', data);
-      this.errorSubject.next(data.message || 'Unknown Draw.io error');
-    }
-  }
-
-  reset(): void {
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-    this.xmlSubject = new Subject<string>();
-    this.errorSubject = new Subject<string>();
-    console.log('[Draw.io] Service reset');
-  }
-}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.form.ts">
@@ -75203,733 +75535,6 @@ public class ApprovalServiceImpl implements ApprovalService {
             case CANCELLED: return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
             case EXPIRED: return "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400";
             default: return "bg-gray-100 text-gray-600";
-        }
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/FileStorageServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.softinter.sicapi.dto.request.UploadSessionRequest;
-import com.softinter.sicapi.dto.response.StorageDownloadResponse;
-import com.softinter.sicapi.dto.response.StorageUploadResponse;
-import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.FileCategory;
-import com.softinter.sicapi.entity.enums.FileVisibility;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.FileStorageService;
-import com.softinter.sicapi.util.FileVisibilityConverter;
-
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class FileStorageServiceImpl implements FileStorageService {
-
-    private final S3Client s3Client;
-    private final SuUploadRepository uploadRepository;
-    private final CurrentUserService currentUserService;
-
-    @Value("${app.storage.s3.bucket}")
-    private String bucketName;
-
-    private static final int DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
-    private static final long TEMP_UPLOAD_EXPIRY_SECONDS = 24 * 60 * 60;
-
-    // ==================== Single file ====================
-    @Override
-    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId) {
-        try {
-            String fileName = file.getOriginalFilename();
-            String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
-
-            try {
-                s3Client.putObject(PutObjectRequest.builder()
-                                .bucket(bucketName)
-                                .key(key)
-                                .contentType(file.getContentType())
-                                .build(),
-                        RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            } catch (S3Exception e) {
-                log.error("S3 upload failed for file {}", fileName, e);
-                throw new RuntimeException("Failed to upload file to S3: " + e.awsErrorDetails().errorMessage(), e);
-            }
-
-            FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
-            FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
-            String username = currentUserService.getUsername();
-
-            SuUpload upload = new SuUpload();
-            upload.setFileName(fileName);
-            upload.setObjectKey(key);
-            upload.setBucketName(bucketName);
-            upload.setFileSize(file.getSize());
-            upload.setContentType(file.getContentType());
-            upload.setCategory(categoryEnum);
-            upload.setVisibility(visibilityEnum);
-            upload.setUploadGroupId(uploadGroupId);
-            upload.setIsActive(false);
-            upload.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
-            upload.setIsStreaming(false);
-            upload.setCreatedBy(username);
-            upload.setUpdatedBy(username);
-
-            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key)).toExternalForm();
-            String accessUrl = "/api/storage/files/" + bucketName + "/" + key;
-            upload.setStorageUrl(storageUrl);
-            upload.setAccessUrl(accessUrl);
-
-            try {
-                uploadRepository.save(upload);
-            } catch (Exception e) {
-                log.error("Failed to save upload record for file {}", fileName, e);
-                throw new RuntimeException("Failed to save upload metadata", e);
-            }
-
-            StorageUploadResponse response = new StorageUploadResponse();
-            response.setId(upload.getId());
-            response.setFileName(fileName);
-            response.setFileUrl(storageUrl);
-            response.setFileSize(file.getSize());
-            response.setContentType(file.getContentType());
-            response.setUploadGroupId(uploadGroupId);
-            return response;
-        } catch (IOException e) {
-            log.error("IO error reading file", e);
-            throw new RuntimeException("Failed to read file content", e);
-        }
-    }
-
-    // ==================== Resumable upload session ====================
-    @Override
-    public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
-        try {
-            UUID sessionId = UUID.randomUUID();
-            String fileName = request.getFileName();
-            long fileSize = request.getFileSize();
-            String contentType = request.getContentType();
-
-            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
-            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
-
-            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
-            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
-            String username = currentUserService.getUsername();
-
-            SuUpload sessionRecord = new SuUpload();
-            sessionRecord.setUploadGroupId(sessionId);
-            sessionRecord.setFileName(fileName);
-            sessionRecord.setFileSize(fileSize);
-            sessionRecord.setContentType(contentType);
-            sessionRecord.setObjectKey(tempKeyPrefix);
-            sessionRecord.setBucketName(bucketName);
-            sessionRecord.setCategory(categoryEnum);
-            sessionRecord.setVisibility(visibilityEnum);
-            sessionRecord.setIsActive(false);
-            sessionRecord.setIsStreaming(false);
-            sessionRecord.setTempExpiresAt(Instant.now().plusSeconds(TEMP_UPLOAD_EXPIRY_SECONDS));
-            sessionRecord.setStorageUrl("");
-            sessionRecord.setAccessUrl("");
-            sessionRecord.setCreatedBy(username);
-            sessionRecord.setUpdatedBy(username);
-
-            try {
-                uploadRepository.save(sessionRecord);
-            } catch (Exception e) {
-                log.error("Failed to create upload session for file {}", fileName, e);
-                throw new RuntimeException("Failed to create upload session", e);
-            }
-
-            return UploadSessionResponse.builder()
-                    .sessionId(sessionId.toString())
-                    .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                    .chunkSize(DEFAULT_CHUNK_SIZE)
-                    .totalChunks(totalChunks)
-                    .nextChunkIndex(0)
-                    .uploadedBytes(0L)
-                    .build();
-        } catch (Exception e) {
-            log.error("Unexpected error creating upload session", e);
-            throw new RuntimeException("Failed to create upload session", e);
-        }
-    }
-
-    @Override
-    public UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk) {
-        String chunkKey = String.format("temp/sessions/%s/chunk_%d", sessionId, chunkIndex);
-        log.info("Uploading chunk {} for session {} to S3 key: {}", chunkIndex, sessionId, chunkKey);
-
-        try {
-            PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(chunkKey)
-                    .contentType(chunk.getContentType())
-                    .build();
-            s3Client.putObject(putRequest,
-                    RequestBody.fromInputStream(chunk.getInputStream(), chunk.getSize()));
-            log.info("Chunk {} uploaded successfully", chunkIndex);
-        } catch (IOException e) {
-            log.error("IO error reading chunk data", e);
-            throw new RuntimeException("Failed to read chunk data", e);
-        } catch (S3Exception e) {
-            log.error("S3 upload failed for chunk {}", chunkIndex, e);
-            throw new RuntimeException("Failed to upload chunk to S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error uploading chunk", e);
-            throw new RuntimeException("Failed to upload chunk", e);
-        }
-
-        SuUpload session;
-        try {
-            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session not found"));
-        } catch (Exception e) {
-            log.error("Failed to find upload session {}", sessionId, e);
-            throw new RuntimeException("Upload session not found or database error", e);
-        }
-
-        long fileSize = session.getFileSize();
-        int chunkSize = DEFAULT_CHUNK_SIZE;
-        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
-        long uploadedBytes = Math.min((chunkIndex + 1) * (long) chunkSize, fileSize);
-        int nextChunkIndex = chunkIndex + 1;
-
-        return UploadSessionResponse.builder()
-                .sessionId(sessionId.toString())
-                .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                .chunkSize(chunkSize)
-                .totalChunks(totalChunks)
-                .nextChunkIndex(nextChunkIndex)
-                .uploadedBytes(uploadedBytes)
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
-        SuUpload sessionRecord;
-        try {
-            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
-        } catch (Exception e) {
-            log.error("Failed to find upload session {}", sessionId, e);
-            throw new RuntimeException("Upload session not found", e);
-        }
-
-        if (sessionRecord.getTempExpiresAt() != null && sessionRecord.getTempExpiresAt().isBefore(Instant.now())) {
-            throw new RuntimeException("Upload session has expired");
-        }
-
-        String tempKeyPrefix = sessionRecord.getObjectKey();
-        String finalKey = "uploads/" + sessionRecord.getUploadGroupId() + "/" + sessionRecord.getFileName();
-
-        long fileSize = sessionRecord.getFileSize();
-        int chunkSize = DEFAULT_CHUNK_SIZE;
-        int totalChunks = (int) Math.ceil((double) fileSize / chunkSize);
-
-        if (totalChunks == 1) {
-            String sourceKey = tempKeyPrefix + "chunk_0";
-            try {
-                s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-                s3Client.copyObject(CopyObjectRequest.builder()
-                        .copySource(bucketName + "/" + sourceKey)
-                        .destinationBucket(bucketName)
-                        .destinationKey(finalKey)
-                        .build());
-                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(sourceKey).build());
-            } catch (S3Exception e) {
-                log.error("Source chunk missing: {}", sourceKey, e);
-                throw new RuntimeException("Upload incomplete: missing chunk", e);
-            } catch (Exception e) {
-                log.error("Unexpected error completing single‑chunk upload", e);
-                throw new RuntimeException("Failed to complete upload session", e);
-            }
-        } else {
-            try {
-                CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
-                        .bucket(bucketName)
-                        .key(finalKey)
-                        .contentType(sessionRecord.getContentType())
-                        .build();
-                CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
-                String uploadId = createResponse.uploadId();
-
-                List<CompletedPart> completedParts = new java.util.ArrayList<>();
-
-                for (int i = 0; i < totalChunks; i++) {
-                    String chunkKey = tempKeyPrefix + "chunk_" + i;
-                    try {
-                        s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(chunkKey).build());
-                    } catch (S3Exception e) {
-                        throw new RuntimeException("Missing chunk " + i + " for session " + sessionId, e);
-                    }
-
-                    UploadPartCopyRequest copyRequest = UploadPartCopyRequest.builder()
-                            .copySource(bucketName + "/" + chunkKey)
-                            .destinationBucket(bucketName)
-                            .destinationKey(finalKey)
-                            .uploadId(uploadId)
-                            .partNumber(i + 1)
-                            .build();
-
-                    UploadPartCopyResponse copyResponse = s3Client.uploadPartCopy(copyRequest);
-                    completedParts.add(CompletedPart.builder()
-                            .partNumber(i + 1)
-                            .eTag(copyResponse.copyPartResult().eTag())
-                            .build());
-                }
-
-                CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
-                        .bucket(bucketName)
-                        .key(finalKey)
-                        .uploadId(uploadId)
-                        .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
-                        .build();
-                s3Client.completeMultipartUpload(completeRequest);
-
-                deleteTempChunks(tempKeyPrefix);
-
-            } catch (S3Exception e) {
-                log.error("Multipart upload failed for session {}", sessionId, e);
-                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
-            } catch (Exception e) {
-                log.error("Unexpected error during multipart upload completion", e);
-                throw new RuntimeException("Failed to complete upload session", e);
-            }
-        }
-
-        try {
-            sessionRecord.setObjectKey(finalKey);
-            sessionRecord.setIsActive(true);
-            sessionRecord.setTempExpiresAt(null);
-            sessionRecord.setUpdatedBy(currentUserService.getUsername());
-
-            String storageUrl = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(finalKey)).toExternalForm();
-            String accessUrl;
-            if (request != null) {
-                String scheme = request.getScheme();
-                String serverName = request.getServerName();
-                int serverPort = request.getServerPort();
-                String contextPath = request.getContextPath();
-                String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
-                accessUrl = baseUrl + "/api/storage/files/" + bucketName + "/" + finalKey;
-            } else {
-                accessUrl = "/api/storage/files/" + bucketName + "/" + finalKey;
-            }
-            sessionRecord.setStorageUrl(storageUrl);
-            sessionRecord.setAccessUrl(accessUrl);
-            uploadRepository.save(sessionRecord);
-        } catch (Exception e) {
-            log.error("Failed to update database record for session {}", sessionId, e);
-            throw new RuntimeException("Failed to save upload metadata", e);
-        }
-
-        StorageUploadResponse response = new StorageUploadResponse();
-        response.setId(sessionRecord.getId());
-        response.setFileName(sessionRecord.getFileName());
-        response.setFileUrl(sessionRecord.getStorageUrl());
-        response.setFileSize(sessionRecord.getFileSize());
-        response.setContentType(sessionRecord.getContentType());
-        response.setUploadGroupId(sessionId);
-        return response;
-    }
-
-    @Override
-    @Transactional
-    public StorageUploadResponse completeUploadSession(UUID sessionId) {
-        return completeUploadSession(sessionId, null);
-    }
-
-    @Override
-    public void cancelSession(UUID sessionId) {
-        SuUpload session;
-        try {
-            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session not found"));
-        } catch (Exception e) {
-            log.error("Session not found for cancellation: {}", sessionId, e);
-            throw new RuntimeException("Session not found", e);
-        }
-        String prefix = session.getObjectKey();
-        deleteTempChunks(prefix);
-        try {
-            uploadRepository.delete(session);
-        } catch (Exception e) {
-            log.error("Failed to delete session record for {}", sessionId, e);
-            throw new RuntimeException("Failed to cancel session", e);
-        }
-    }
-
-    private void deleteTempChunks(String prefix) {
-        try {
-            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                    .bucket(bucketName)
-                    .prefix(prefix)
-                    .build();
-            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-            for (S3Object s3Obj : listResponse.contents()) {
-                try {
-                    s3Client.deleteObject(DeleteObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Obj.key())
-                            .build());
-                } catch (S3Exception e) {
-                    log.warn("Failed to delete temp object {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
-                }
-            }
-        } catch (S3Exception e) {
-            log.warn("Failed to list temp chunks with prefix {}: {}", prefix, e.awsErrorDetails().errorMessage());
-        } catch (Exception e) {
-            log.warn("Unexpected error while deleting temp chunks with prefix {}", prefix, e);
-        }
-    }
-
-    // ==================== Activate Upload ====================
-    @Override
-    @Transactional
-    public void activateUpload(UUID uploadId, String userId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findById(uploadId)
-                    .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
-        } catch (Exception e) {
-            log.error("Failed to find upload for activation: {}", uploadId, e);
-            throw new RuntimeException("Upload not found", e);
-        }
-
-        if (upload.getIsActive()) {
-            log.debug("Upload {} is already active", uploadId);
-            return;
-        }
-
-        if (upload.getTempExpiresAt() != null && upload.getTempExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalStateException("Upload has expired and cannot be activated");
-        }
-
-        String currentUsername = currentUserService.getUsername();
-        if (!currentUsername.equals(upload.getCreatedBy())) {
-            throw new SecurityException("Only the uploader can activate this upload");
-        }
-
-        try {
-            upload.setIsActive(true);
-            upload.setTempExpiresAt(null);
-            upload.setUpdatedBy(currentUsername);
-            uploadRepository.save(upload);
-            log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
-        } catch (Exception e) {
-            log.error("Failed to save activated upload {}", uploadId, e);
-            throw new RuntimeException("Failed to activate upload", e);
-        }
-    }
-
-    @Override
-    public void activateUpload(UUID uploadId) {
-        activateUpload(uploadId, null);
-    }
-
-    // ==================== Cleanup Expired Temporary Uploads ====================
-    @Override
-@Transactional
-public void cleanupExpiredTemporaryUploads() {
-    Instant now = Instant.now();
-    List<SuUpload> expired;
-    try {
-        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
-    } catch (Exception e) {
-        log.error("Failed to query expired temporary uploads", e);
-        return;
-    }
-
-    if (expired.isEmpty()) {
-        log.debug("No expired temporary uploads to clean up");
-        return;
-    }
-
-    log.info("Found {} expired temporary uploads to clean up", expired.size());
-    for (SuUpload upload : expired) {
-        try {
-            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-            int updated = uploadRepository.softDeleteExpiredUpload(
-                upload.getId(), "system-cleanup", Instant.now(), now);
-            if (updated == 0) {
-                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
-            } else {
-                log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
-            }
-        } catch (Exception e) {
-            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
-        }
-    }
-}
-
-    private void deletePhysicalFile(String bucketName, String objectKey) {
-        try {
-            if (objectKey.endsWith("/")) {
-                ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                        .bucket(bucketName)
-                        .prefix(objectKey)
-                        .build();
-                ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-                for (S3Object s3Obj : listResponse.contents()) {
-                    try {
-                        s3Client.deleteObject(DeleteObjectRequest.builder()
-                                .bucket(bucketName)
-                                .key(s3Obj.key())
-                                .build());
-                    } catch (S3Exception e) {
-                        if (e.statusCode() != 404) {
-                            log.warn("Failed to delete file {}: {}", s3Obj.key(), e.awsErrorDetails().errorMessage());
-                        }
-                    }
-                }
-            } else {
-                s3Client.deleteObject(DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .build());
-            }
-        } catch (S3Exception e) {
-            if (e.statusCode() != 404) {
-                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
-            }
-        } catch (Exception e) {
-            log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
-        }
-    }
-
-    @Override
-    public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
-        if (uploadGroupId == null) return null;
-        try {
-            return uploadRepository
-                    .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
-                    .map(upload -> {
-                        String url = upload.getStorageUrl();
-                        return (url != null && !url.isBlank()) ? url : upload.getAccessUrl();
-                    })
-                    .orElse(null);
-        } catch (Exception e) {
-            log.error("Failed to get file URL for group {}", uploadGroupId, e);
-            return null;
-        }
-    }
-
-    // ==================== Sync uploads methods ====================
-    @Override
-    public UUID resolveUploadGroupId(UUID currentUploadGroupId, List<StorageUploadReference> uploadReferences) {
-        if (uploadReferences == null || uploadReferences.isEmpty()) {
-            return null;
-        }
-        boolean hasActiveUploads = uploadReferences.stream()
-                .anyMatch(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode());
-        if (!hasActiveUploads) {
-            return null;
-        }
-        if (currentUploadGroupId == null || currentUploadGroupId.equals(new UUID(0, 0))) {
-            return UUID.randomUUID();
-        }
-        return currentUploadGroupId;
-    }
-
-    @Override
-    @Transactional
-    public void syncUploads(UUID uploadGroupId, List<StorageUploadReference> uploadReferences) {
-        if (uploadReferences == null || uploadReferences.isEmpty()) {
-            return;
-        }
-
-        List<UUID> deletedIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() == EntityState.DELETED.getEntityStateCode())
-                .map(StorageUploadReference::getId)
-                .collect(Collectors.toList());
-        for (UUID id : deletedIds) {
-            try {
-                deleteUpload(id);
-            } catch (Exception e) {
-                log.error("Failed to delete upload {} during sync", id, e);
-            }
-        }
-
-        List<UUID> activeIds = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
-                .map(StorageUploadReference::getId)
-                .collect(Collectors.toList());
-        if (activeIds.isEmpty()) {
-            return;
-        }
-
-        List<SuUpload> uploads;
-        try {
-            uploads = uploadRepository.findAllById(activeIds);
-        } catch (Exception e) {
-            log.error("Failed to find uploads by IDs", e);
-            throw new RuntimeException("Failed to sync uploads", e);
-        }
-
-        Map<UUID, StorageUploadReference> refMap = uploadReferences.stream()
-                .filter(ref -> ref.getState() != EntityState.DELETED.getEntityStateCode())
-                .collect(Collectors.toMap(StorageUploadReference::getId, ref -> ref));
-
-        for (SuUpload upload : uploads) {
-            StorageUploadReference ref = refMap.get(upload.getId());
-            if (ref == null) {
-                continue;
-            }
-            try {
-                upload.setUploadGroupId(uploadGroupId);
-                if (ref.getIsActive() != null) {
-                    upload.setIsActive(ref.getIsActive());
-                    if (Boolean.TRUE.equals(ref.getIsActive())) {
-                        upload.setTempExpiresAt(null);
-                    }
-                }
-                uploadRepository.save(upload);
-            } catch (Exception e) {
-                log.error("Failed to update upload {} during sync", upload.getId(), e);
-            }
-        }
-    }
-
-    private void deleteUpload(UUID uploadId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findById(uploadId).orElse(null);
-        } catch (Exception e) {
-            log.error("Failed to find upload {} for deletion", uploadId, e);
-            return;
-        }
-        if (upload == null) return;
-        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        try {
-            uploadRepository.delete(upload);
-        } catch (Exception e) {
-            log.error("Failed to delete upload record {}", uploadId, e);
-        }
-    }
-
-    // ==================== Other existing methods ====================
-    @Override
-    public StorageDownloadResponse downloadFile(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {}", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            var s3Object = s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(upload.getObjectKey())
-                    .build());
-            StorageDownloadResponse response = new StorageDownloadResponse();
-            response.setInputStream(s3Object);
-            response.setFileName(upload.getFileName());
-            response.setContentType(upload.getContentType());
-            response.setFileSize(upload.getFileSize());
-            return response;
-        } catch (S3Exception e) {
-            log.error("S3 download failed for file {}", fileId, e);
-            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error downloading file {}", fileId, e);
-            throw new RuntimeException("Failed to download file", e);
-        }
-    }
-
-    @Override
-    public void deleteFile(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {} for deletion", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-        try {
-            upload.setIsActive(false);
-            uploadRepository.save(upload);
-        } catch (Exception e) {
-            log.error("Failed to update file record after deletion {}", fileId, e);
-            throw new RuntimeException("Failed to delete file", e);
-        }
-    }
-
-    @Override
-    public String getFileUrl(UUID fileId) {
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file {} for URL", fileId, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            return s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(upload.getObjectKey())).toExternalForm();
-        } catch (S3Exception e) {
-            log.error("Failed to generate URL for file {}", fileId, e);
-            throw new RuntimeException("Failed to generate file URL", e);
-        }
-    }
-
-    @Override
-    public StorageDownloadResponse downloadByKey(String bucketName, String objectKey) {
-        if (!this.bucketName.equals(bucketName)) {
-            throw new RuntimeException("Bucket not accessible");
-        }
-        SuUpload upload;
-        try {
-            upload = uploadRepository.findByObjectKey(objectKey)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
-        } catch (Exception e) {
-            log.error("Failed to find file by key {}", objectKey, e);
-            throw new RuntimeException("File not found", e);
-        }
-        try {
-            var s3Object = s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .build());
-            StorageDownloadResponse response = new StorageDownloadResponse();
-            response.setInputStream(s3Object);
-            response.setFileName(upload.getFileName());
-            response.setContentType(upload.getContentType());
-            response.setFileSize(upload.getFileSize());
-            return response;
-        } catch (S3Exception e) {
-            log.error("S3 download failed for key {}", objectKey, e);
-            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error downloading file by key {}", objectKey, e);
-            throw new RuntimeException("Failed to download file", e);
         }
     }
 }
@@ -78677,6 +78282,175 @@ export class Pmdt03Component implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
+// src/app/core/component/sic-drawio/drawio-connector.service.ts
+
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class DrawioConnectorService {
+  private iframe: HTMLIFrameElement | null = null;
+  private pendingMessages: any[] = [];
+  private drawioReady = false;
+
+  private isReadySubject = new BehaviorSubject<boolean>(false);
+  isReady$ = this.isReadySubject.asObservable();
+
+  private xmlSubject = new Subject<string>();
+  xml$ = this.xmlSubject.asObservable();
+
+  private errorSubject = new Subject<string>();
+  error$ = this.errorSubject.asObservable();
+
+  init(iframe: HTMLIFrameElement): void {
+    this.iframe = iframe;
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+  }
+
+  postMessage(data: any, force = false): void {
+    if (!this.iframe?.contentWindow) {
+      this.pendingMessages.push(data);
+      return;
+    }
+    if (!this.drawioReady && !force) {
+      this.pendingMessages.push(data);
+      return;
+    }
+    try {
+      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+      console.log('[Draw.io] SEND:', data);
+    } catch (e) {
+      console.error('[Draw.io] postMessage error:', e);
+      this.errorSubject.next('Failed to send message to Draw.io');
+    }
+  }
+
+  private flushQueue(): void {
+    if (!this.drawioReady) return;
+    while (this.pendingMessages.length > 0) {
+      const msg = this.pendingMessages.shift();
+      try {
+        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
+        console.log('[Draw.io] SEND QUEUE:', msg);
+      } catch (e) {
+        console.error('[Draw.io] flushQueue error:', e);
+      }
+    }
+  }
+
+  loadXml(xml?: string, force = false): void {
+    if (!xml || xml.trim() === '') {
+      xml = this.getEmptyDiagramXml();
+    }
+    this.postMessage({ action: 'load', xml, autosave: false }, force);
+  }
+
+  getEmptyDiagramXml(): string {
+    return `<mxfile>
+<diagram id="page1" name="Page-1">
+<mxGraphModel>
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>`;
+  }
+
+  requestXml(): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
+      this.errorSubject.next('Draw.io not ready to export');
+      return;
+    }
+    this.postMessage({ action: 'export', format: 'xml' });
+  }
+
+  // ✅ ใช้ action: 'mermaid' เพื่อแทรก Mermaid เป็น Page ใหม่
+  insertMermaid(mermaidScript: string, pageName?: string): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
+      this.pendingMessages.push({
+        action: 'mermaid',
+        mermaid: mermaidScript,
+        title: pageName || 'AI Generated Diagram'
+      });
+      return;
+    }
+    this.postMessage({
+      action: 'mermaid',
+      mermaid: mermaidScript,
+      title: pageName || 'AI Generated Diagram'
+    });
+  }
+
+  handleMessage(event: MessageEvent): void {
+    if (!event.origin.includes('diagrams.net')) return;
+
+    let data: any;
+    try {
+      if (typeof event.data === 'string') {
+        if (event.data === 'ready') {
+          data = { event: 'ready' };
+        } else {
+          data = JSON.parse(event.data);
+        }
+      } else {
+        data = event.data;
+      }
+    } catch (e) {
+      console.warn('[Draw.io] Failed to parse message:', event.data);
+      return;
+    }
+
+    console.log('[Draw.io] EVENT:', data);
+
+    if (data.event === 'configure') {
+      const reply = { action: 'configure', config: { defaultFonts: [], defaultLibraries: true } };
+      try {
+        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
+        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok)');
+      } catch (e) {
+        console.error('[Draw.io] Configure response error:', e);
+      }
+      return;
+    }
+
+    if (data.event === 'init' || data.event === 'ready') {
+      console.log('[Draw.io] READY received');
+      this.drawioReady = true;
+      this.isReadySubject.next(true);
+      this.flushQueue();
+      return;
+    }
+
+    if (data.event === 'export' && data.xml) {
+      console.log('[Draw.io] XML export received');
+      this.xmlSubject.next(data.xml);
+      return;
+    }
+
+    if (data.event === 'error') {
+      console.error('[Draw.io] Error event:', data);
+      this.errorSubject.next(data.message || 'Unknown Draw.io error');
+    }
+  }
+
+  reset(): void {
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+    this.xmlSubject = new Subject<string>();
+    this.errorSubject = new Subject<string>();
+    console.log('[Draw.io] Service reset');
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.html">
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02.component.html -->
 <div class="space-y-5 p-0.5">
@@ -79377,6 +79151,141 @@ export class Pmdt03Component implements OnInit {
     </div>
   </div>
 }
+</file>
+
+<file path="sic-app/src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { AuthCallbackComponent } from './core/auth/auth-callback.component';
+import { authGuard } from './core/auth/auth.guard';
+import { profileGuard } from './core/auth/profile.guard';
+import { profileResolver } from './management/profile/profile.resolver';
+import { businessGuard } from './core/auth/business.guard';
+import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
+import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
+import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
+import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
+
+export const routes: Routes = [
+  {
+    path: 'auth/callback',
+    component: AuthCallbackComponent,
+  },
+  {
+    path: '',
+    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
+      },
+      {
+        path: 'product',
+        loadComponent: () =>
+          import('./main/index/product/product.component').then((m) => m.Product),
+      },
+      {
+        path: 'blog',
+        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
+      },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./main/index/contact/contact.component').then((m) => m.Contact),
+      },
+    ],
+  },
+  {
+    path: 'feature',
+    canActivate: [authGuard, profileGuard, businessGuard],
+    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
+      {
+        path: 'bu',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'db',
+        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
+      },
+      {
+        path: 'su',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'pm',
+        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
+      },
+    ],
+  },
+  {
+    path: 'management',
+    canActivate: [authGuard],
+    loadComponent: () => import('./management/management.component').then((m) => m.Management),
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./management/profile/profile.component').then((m) => m.Profile),
+        resolve: { form: profileResolver },
+      },
+      {
+        path: 'business',
+        loadComponent: () =>
+          import('./management/business/business.component').then((m) => m.BusinessComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./management/business/business-options/business-options.component').then(
+                (m) => m.BusinessOptionsComponent,
+              ),
+          },
+          {
+            path: 'create',
+            loadComponent: () =>
+              import('./management/business/business-create/business-create.component').then(
+                (m) => m.BusinessCreateComponent,
+              ),
+            resolve: { form: businessCreateResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'join',
+            loadComponent: () =>
+              import('./management/business/business-join/business-join.component').then(
+                (m) => m.BusinessJoinComponent,
+              ),
+            resolve: { form: businessJoinResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'invite',
+            loadComponent: () =>
+              import('./management/business/business-invite/business-invite.component').then(
+                (m) => m.BusinessInviteComponent,
+              ),
+            resolve: { form: businessInviteResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'tutorial',
+    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
+  },
+];
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/config/SecurityConfig.java">
@@ -82246,6 +82155,255 @@ export class Pmdt04Component implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type {
+  ChatMessage,
+  DiagramModel,
+  DiagramProject,
+  DiagramType,
+  DiagramVersion,
+} from './diagram.model';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+
+export interface PmChatResponse {
+  id: string;
+  diagramId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  contextData: any;
+  createdBy: string;
+  createdDate: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DiagramService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiBaseUrl;
+
+  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
+  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
+  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
+  private pmrt02Service = inject(Pmrt02Service);
+
+  projects$ = this.projectsSubject.asObservable();
+  tabs$ = this.tabsSubject.asObservable();
+  activeTabId$ = this.activeTabIdSubject.asObservable();
+
+  getProjectName(projectId: string): Observable<string> {
+    return this.pmrt02Service.getProject(projectId).pipe(
+      map(project => project.projectName)
+    );
+  }
+
+  getProjects(): Observable<DiagramProject[]> {
+    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
+      .pipe(
+        map(response => {
+          const items = response?.content || response?.data || [];
+          return items.map((p: any) => ({
+            id: p.id,
+            name: p.projectName,
+            description: p.description,
+            isFavorite: false,
+            lastOpened: p.updatedDate || p.createdDate,
+            createdAt: p.createdDate,
+            updatedAt: p.updatedDate
+          }));
+        })
+      );
+  }
+
+  createProject(name: string, description?: string): Observable<DiagramProject> {
+    return this.http
+      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
+      .pipe(
+        tap((project) => {
+          const current = this.projectsSubject.value;
+          this.projectsSubject.next([...current, project]);
+        }),
+      );
+  }
+
+  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
+    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
+      tap((updated) => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
+      }),
+    );
+  }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
+      tap(() => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.filter((p) => p.id !== id));
+      }),
+    );
+  }
+
+  getTabs(projectId: string): Observable<DiagramModel[]> {
+    return this.http
+      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
+      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
+  }
+
+  createTab(
+    projectId: string,
+    name: string,
+    type: DiagramType,
+    script?: string,
+  ): Observable<DiagramModel> {
+    const payload = {
+      projectId,
+      name,
+      diagramType: type,
+      mermaidScript: script || '',
+      metadata: {},
+      sortOrder: this.tabsSubject.value.length + 1,
+    };
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
+      tap((tab) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next([...current, tab]);
+      }),
+    );
+  }
+
+  updateTab(tab: DiagramModel): Observable<DiagramModel> {
+    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
+      tap((updated) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
+      }),
+    );
+  }
+
+  deleteTab(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.filter((t) => t.id !== id));
+      }),
+    );
+  }
+
+  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        const updated = current.map((t) => {
+          const order = tabs.find((o) => o.id === t.id);
+          return order ? { ...t, sortOrder: order.sortOrder } : t;
+        });
+        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
+      }),
+    );
+  }
+
+  duplicateTab(id: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
+  }
+
+  getVersions(tabId: string): Observable<DiagramVersion[]> {
+    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
+  }
+
+  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(
+      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
+      {},
+    );
+  }
+
+  getChatHistory(tabId: string): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  sendChatMessage(
+    tabId: string,
+    message: string,
+  ): Observable<PmChatResponse> {
+    return this.http.post<PmChatResponse>(
+      `${this.apiUrl}/api/diagram/chat`,
+      { diagramId: tabId, message }
+    );
+  }
+
+  clearChatHistory(tabId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  generateDiagram(
+    prompt: string,
+    context?: any,
+  ): Observable<{ script: string; type: DiagramType; name: string }> {
+    return this.http.post<{ script: string; type: DiagramType; name: string }>(
+      `${this.apiUrl}/api/diagram/ai/generate`,
+      { prompt, context },
+    );
+  }
+
+  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
+      script,
+      instruction,
+    });
+  }
+
+  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
+      script,
+      errorMessage,
+    });
+  }
+
+  convertDiagram(
+    script: string,
+    targetType: DiagramType,
+  ): Observable<{ script: string; type: DiagramType }> {
+    return this.http.post<{ script: string; type: DiagramType }>(
+      `${this.apiUrl}/api/diagram/ai/convert`,
+      { script, targetType },
+    );
+  }
+
+  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      responseType: 'blob',
+    });
+  }
+
+  exportProject(projectId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
+      responseType: 'blob',
+    });
+  }
+
+  setActiveTab(tabId: string | null) {
+    this.activeTabIdSubject.next(tabId);
+  }
+
+  getActiveTab(): string | null {
+    return this.activeTabIdSubject.value;
+  }
+
+  clearState() {
+    this.projectsSubject.next([]);
+    this.tabsSubject.next([]);
+    this.activeTabIdSubject.next(null);
+  }
+
+  getDiagram(id: string): Observable<DiagramModel> {
+    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.html">
 <!-- src/app/feature/pm/rt/pmrt01A/pmrt01A.component.html -->
 
@@ -83288,141 +83446,6 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 </div>
 </file>
 
-<file path="sic-app/src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { AuthCallbackComponent } from './core/auth/auth-callback.component';
-import { authGuard } from './core/auth/auth.guard';
-import { profileGuard } from './core/auth/profile.guard';
-import { profileResolver } from './management/profile/profile.resolver';
-import { businessGuard } from './core/auth/business.guard';
-import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
-import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
-import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
-import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
-
-export const routes: Routes = [
-  {
-    path: 'auth/callback',
-    component: AuthCallbackComponent,
-  },
-  {
-    path: '',
-    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
-      },
-      {
-        path: 'product',
-        loadComponent: () =>
-          import('./main/index/product/product.component').then((m) => m.Product),
-      },
-      {
-        path: 'blog',
-        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
-      },
-      {
-        path: 'contact',
-        loadComponent: () =>
-          import('./main/index/contact/contact.component').then((m) => m.Contact),
-      },
-    ],
-  },
-  {
-    path: 'feature',
-    canActivate: [authGuard, profileGuard, businessGuard],
-    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
-    children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'bu',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'db',
-        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
-      },
-      {
-        path: 'su',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'pm',
-        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
-      },
-    ],
-  },
-  {
-    path: 'management',
-    canActivate: [authGuard],
-    loadComponent: () => import('./management/management.component').then((m) => m.Management),
-    children: [
-      {
-        path: 'profile',
-        loadComponent: () =>
-          import('./management/profile/profile.component').then((m) => m.Profile),
-        resolve: { form: profileResolver },
-      },
-      {
-        path: 'business',
-        loadComponent: () =>
-          import('./management/business/business.component').then((m) => m.BusinessComponent),
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./management/business/business-options/business-options.component').then(
-                (m) => m.BusinessOptionsComponent,
-              ),
-          },
-          {
-            path: 'create',
-            loadComponent: () =>
-              import('./management/business/business-create/business-create.component').then(
-                (m) => m.BusinessCreateComponent,
-              ),
-            resolve: { form: businessCreateResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'join',
-            loadComponent: () =>
-              import('./management/business/business-join/business-join.component').then(
-                (m) => m.BusinessJoinComponent,
-              ),
-            resolve: { form: businessJoinResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'invite',
-            loadComponent: () =>
-              import('./management/business/business-invite/business-invite.component').then(
-                (m) => m.BusinessInviteComponent,
-              ),
-            resolve: { form: businessInviteResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    path: 'tutorial',
-    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
-  },
-];
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/BusinessController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -84257,31 +84280,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         dto.setCreatedDate(version.getCreatedDate());
         return dto;
     }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.css">
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Sidebar สำหรับ desktop */
-.chat-sidebar {
-  right: -440px;
-}
-.chat-sidebar.open {
-  right: 0 !important;
-}
-
-/* สำหรับ mobile */
-@media (max-width: 768px) {
-  .chat-sidebar {
-    right: -100% !important;
-  }
-  .chat-sidebar.open {
-    right: 0 !important;
-  }
 }
 </file>
 
@@ -85616,68 +85614,29 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
-<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
-<div class="h-full flex flex-col bg-[var(--bg)]">
-  <div
-    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
-  >
-    <h3 class="text-sm font-medium">AI Assistant</h3>
-    <button
-      (click)="clearChat()"
-      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
-    >
-      Clear
-    </button>
-  </div>
-  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
-    @for (message of messages(); track message.id) {
-      <div class="flex" [class.justify-end]="message.role === 'user'">
-        <div
-          class="max-w-[80%] px-4 py-2 rounded-xl"
-          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
-          [class.text-white]="message.role === 'user'"
-          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
-        >
-          <div
-            [class.text-sm]="message.role === 'user'"
-            [class.prose]="message.role === 'assistant'"
-          >
-            <markdown
-              [data]="message.content"
-              [class.text-white]="message.role === 'user'"
-            ></markdown>
-          </div>
-          <div class="text-xs mt-1 opacity-60">{{ message.createdAt | date: 'shortTime' }}</div>
-        </div>
-      </div>
-    }
-    @if (isLoading()) {
-      <div class="flex justify-start">
-        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
-          <span class="animate-pulse">AI is thinking...</span>
-        </div>
-      </div>
-    }
-  </div>
-  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
-    <div class="flex gap-2">
-      <input
-        [(ngModel)]="userInput"
-        (keydown.enter)="sendMessage()"
-        placeholder="Ask AI to create or modify diagrams..."
-        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
-      />
-      <button
-        (click)="sendMessage()"
-        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
-        [disabled]="isLoading() || !userInput.trim()"
-      >
-        Send
-      </button>
-    </div>
-  </div>
-</div>
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.css">
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sidebar สำหรับ desktop */
+.chat-sidebar {
+  right: -440px;
+}
+.chat-sidebar.open {
+  right: 0 !important;
+}
+
+/* สำหรับ mobile */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    right: -100% !important;
+  }
+  .chat-sidebar.open {
+    right: 0 !important;
+  }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
@@ -87836,321 +87795,68 @@ export class Pmdt02Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
-// src/app/features/pmdt06/pmdt06A/pmdt06A.component.ts
-import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnDestroy,
-  Output,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MarkdownModule } from 'ngx-markdown';
-import { Subject, takeUntil } from 'rxjs';
-import type { ChatMessage } from '../diagram.model';
-import { DiagramService } from '../diagram.service';
-
-@Component({
-  selector: 'app-pmdt06A',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownModule],
-  templateUrl: './pmdt06A.component.html',
-  styleUrls: ['./pmdt06A.component.css'],
-})
-export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  @Input() diagramId!: string | null;
-  @Output() aiResponse = new EventEmitter<any>();
-
-  private diagramService = inject(DiagramService);
-  private destroy$ = new Subject<void>();
-
-  messages = signal<ChatMessage[]>([]);
-  userInput = '';
-  isLoading = signal(false);
-
-  chatContainer = viewChild<ElementRef>('chatContainer');
-
-  ngAfterViewInit() {
-    if (this.diagramId) {
-      this.loadChatHistory(this.diagramId);
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
+<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<div class="h-full flex flex-col bg-[var(--bg)]">
+  <div
+    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
+  >
+    <h3 class="text-sm font-medium">AI Assistant</h3>
+    <button
+      (click)="clearChat()"
+      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
+    >
+      Clear
+    </button>
+  </div>
+  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
+    @for (message of messages(); track message.id) {
+      <div class="flex" [class.justify-end]="message.role === 'user'">
+        <div
+          class="max-w-[80%] px-4 py-2 rounded-xl"
+          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
+          [class.text-white]="message.role === 'user'"
+          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
+        >
+          <div
+            [class.text-sm]="message.role === 'user'"
+            [class.prose]="message.role === 'assistant'"
+          >
+            <markdown
+              [data]="message.content"
+              [class.text-white]="message.role === 'user'"
+            ></markdown>
+          </div>
+          <div class="text-xs mt-1 opacity-60">{{ message.createdAt | date: 'shortTime' }}</div>
+        </div>
+      </div>
     }
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  loadChatHistory(diagramId: string) {
-    this.diagramService
-      .getChatHistory(diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((history) => {
-        this.messages.set(history);
-        this.scrollToBottom();
-      });
-  }
-
-  sendMessage() {
-    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
-
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      diagramId: this.diagramId,
-      userId: 'current-user',
-      role: 'user',
-      content: this.userInput.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    this.messages.update((m) => [...m, userMessage]);
-    const input = this.userInput.trim();
-    this.userInput = '';
-    this.isLoading.set(true);
-    this.scrollToBottom();
-
-    this.diagramService
-      .sendChatMessage(this.diagramId, input)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          const assistantMsg: ChatMessage = {
-            id: crypto.randomUUID(),
-            diagramId: this.diagramId!,
-            userId: 'system',
-            role: 'assistant',
-            content: response.message.content,
-            contextData: response.message.contextData,
-            createdAt: new Date().toISOString(),
-          };
-          this.messages.update((m) => [...m, assistantMsg]);
-          this.isLoading.set(false);
-          this.scrollToBottom();
-
-          if (response.diagram) {
-            this.aiResponse.emit({
-              action: response.action || 'update',
-              diagram: response.diagram,
-            });
-          }
-        },
-        error: () => {
-          this.isLoading.set(false);
-        },
-      });
-  }
-
-  clearChat() {
-    if (!this.diagramId) return;
-    this.diagramService
-      .clearChatHistory(this.diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.messages.set([]);
-      });
-  }
-
-  private scrollToBottom() {
-    setTimeout(() => {
-      const container = this.chatContainer()?.nativeElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }, 50);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
-// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
-import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  OnDestroy,
-  signal,
-  ViewChild,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
-import { DiagramService } from './diagram.service';
-import { DrawioConnectorService } from './drawio-connector.service';
-import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
-
-@Component({
-  selector: 'app-pmdt06',
-  standalone: true,
-  imports: [CommonModule, FormsModule, pmdt06AComponent],
-  templateUrl: './pmdt06.component.html',
-  styleUrls: ['./pmdt06.component.css'],
-})
-export class Pmdt06Component implements AfterViewInit, OnDestroy {
-  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
-
-  private destroy$ = new Subject<void>();
-  private drawioService = inject(DrawioConnectorService);
-  private diagramService = inject(DiagramService);
-  private route = inject(ActivatedRoute);
-
-  isLoading = false;
-  currentTabId: string | null = null;
-  projectId: string | null = null;
-  drawioReady = false;
-  projectName = '';
-
-  chatOpen = signal(false);
-  unreadCount = 0;
-  currentDiagram: any = null;
-
-  ngAfterViewInit(): void {
-    this.drawioService.init(this.iframe.nativeElement);
-
-    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
-      this.drawioReady = ready;
-      console.log('Draw.io ready status:', ready);
-      if (ready && this.currentTabId) {
-        this.loadExistingDiagram();
-      }
-    });
-
-    // fallback 7 วินาที
-    setTimeout(() => {
-      if (!this.drawioReady) {
-        console.warn('[Draw.io] Fallback: force ready after 7s');
-        this.drawioReady = true;
-        if (this.currentTabId) {
-          this.loadExistingDiagram();
-        }
-      }
-    }, 7000);
-
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      this.currentTabId = params['tabId'] || params['diagramId'] || null;
-      this.projectId = params['projectId'] || null;
-      if (this.projectId) {
-        this.loadProjectName();
-        if (!this.currentTabId) {
-          this.diagramService.getTabs(this.projectId).subscribe({
-            next: (tabs) => {
-              if (tabs && tabs.length > 0) {
-                this.currentTabId = tabs[0].id;
-                if (this.drawioReady) this.loadExistingDiagram();
-              }
-            },
-          });
-        }
-      }
-      if (this.currentTabId && this.drawioReady) {
-        this.loadExistingDiagram();
-      }
-    });
-  }
-
-  loadProjectName(): void {
-    if (!this.projectId) return;
-    this.diagramService.getProjectName(this.projectId).subscribe({
-      next: (name) => (this.projectName = name),
-      error: () => (this.projectName = 'Unknown Project'),
-    });
-  }
-
-  @HostListener('window:message', ['$event'])
-  onMessage(event: MessageEvent) {
-    this.drawioService.handleMessage(event);
-  }
-
-  toggleChat(): void {
-    this.chatOpen.update((v) => !v);
-    if (this.chatOpen()) this.unreadCount = 0;
-  }
-
-  handleAiResponse(response: any): void {
-    console.log('AI Response from chat:', response);
-    if (response.action === 'update' && response.diagram) {
-      this.loadExistingDiagram();
+    @if (isLoading()) {
+      <div class="flex justify-start">
+        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
+          <span class="animate-pulse">AI is thinking...</span>
+        </div>
+      </div>
     }
-  }
-
-  loadExistingDiagram(): void {
-    if (!this.currentTabId) return;
-    this.isLoading = true;
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
-      next: (diagram) => {
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          alert('Error: Diagram does not belong to the selected project.');
-          this.isLoading = false;
-          this.drawioService.loadXml('');
-          return;
-        }
-        this.currentDiagram = diagram;
-        const xml = diagram.graphData?.xml || '';
-        this.drawioService.loadXml(xml);
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        this.drawioService.loadXml('');
-      },
-    });
-  }
-
-  saveDiagram(): void {
-    if (!this.currentTabId) {
-      alert('Cannot save: No diagram ID is loaded.');
-      return;
-    }
-
-    this.drawioService.requestXml();
-
-    this.drawioService.xml$.pipe(takeUntil(this.destroy$)).subscribe((xml) => {
-      if (xml && this.currentTabId) {
-        const name = this.currentDiagram?.name || 'Drawio Diagram';
-        const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
-        const projectId = this.currentDiagram?.projectId || this.projectId;
-
-        if (!projectId) {
-          alert('Cannot save: Project ID is missing.');
-          return;
-        }
-
-        const updatedTab = {
-          ...this.currentDiagram,
-          id: this.currentTabId,
-          name,
-          diagramType,
-          projectId,
-          graphData: { xml },
-        };
-
-        this.diagramService.updateTab(updatedTab as any).subscribe({
-          next: (res) => {
-            this.currentDiagram = res;
-            alert('Diagram saved successfully!');
-          },
-          error: (err) => {
-            console.error('Save failed:', err);
-            alert('Save failed!');
-          },
-        });
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-}
+  </div>
+  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
+    <div class="flex gap-2">
+      <input
+        [(ngModel)]="userInput"
+        (keydown.enter)="sendMessage()"
+        placeholder="Ask AI to create or modify diagrams..."
+        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      />
+      <button
+        (click)="sendMessage()"
+        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
+        [disabled]="isLoading() || !userInput.trim()"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/BusinessAccessServiceImpl.java">
@@ -88589,6 +88295,548 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
+
+import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  OnDestroy,
+  signal,
+  ViewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil, take } from 'rxjs';
+import { DiagramService } from './diagram.service';
+import { DrawioConnectorService } from './drawio-connector.service';
+import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
+
+@Component({
+  selector: 'app-pmdt06',
+  standalone: true,
+  imports: [CommonModule, FormsModule, pmdt06AComponent],
+  templateUrl: './pmdt06.component.html',
+  styleUrls: ['./pmdt06.component.css'],
+})
+export class Pmdt06Component implements AfterViewInit, OnDestroy {
+  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
+
+  private destroy$ = new Subject<void>();
+  private drawioService = inject(DrawioConnectorService);
+  private diagramService = inject(DiagramService);
+  private route = inject(ActivatedRoute);
+
+  isLoading = false;
+  currentTabId: string | null = null;
+  projectId: string | null = null;
+  drawioReady = false;
+  projectName = '';
+
+  chatOpen = signal(false);
+  unreadCount = 0;
+  currentDiagram: any = null;
+
+  // ✅ State สำหรับ Import Dialog
+  showImportDialog = signal(false);
+  pendingMermaid: { script: string; name?: string; type?: string } | null = null;
+
+  ngAfterViewInit(): void {
+    this.drawioService.init(this.iframe.nativeElement);
+
+    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+      this.drawioReady = ready;
+      console.log('Draw.io ready status:', ready);
+      if (ready && this.currentTabId) {
+        this.loadExistingDiagram();
+      }
+    });
+
+    // fallback 7 วินาที
+    setTimeout(() => {
+      if (!this.drawioReady) {
+        console.warn('[Draw.io] Fallback: force ready after 7s');
+        this.drawioReady = true;
+        if (this.currentTabId) {
+          this.loadExistingDiagram();
+        }
+      }
+    }, 7000);
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.currentTabId = params['tabId'] || params['diagramId'] || null;
+      this.projectId = params['projectId'] || null;
+      if (this.projectId) {
+        this.loadProjectName();
+        if (!this.currentTabId) {
+          this.diagramService.getTabs(this.projectId).subscribe({
+            next: (tabs) => {
+              if (tabs && tabs.length > 0) {
+                this.currentTabId = tabs[0].id;
+                if (this.drawioReady) this.loadExistingDiagram();
+              }
+            },
+          });
+        }
+      }
+      if (this.currentTabId && this.drawioReady) {
+        this.loadExistingDiagram();
+      }
+    });
+  }
+
+  loadProjectName(): void {
+    if (!this.projectId) return;
+    this.diagramService.getProjectName(this.projectId).subscribe({
+      next: (name) => (this.projectName = name),
+      error: () => (this.projectName = 'Unknown Project'),
+    });
+  }
+
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent) {
+    this.drawioService.handleMessage(event);
+  }
+
+  toggleChat(): void {
+    this.chatOpen.update((v) => !v);
+    if (this.chatOpen()) this.unreadCount = 0;
+  }
+
+  /**
+   * รับ Event จาก Child Component (pmdt06A)
+   * เมื่อ AI สร้าง Mermaid script แล้วจะส่ง action 'update' พร้อม script, name, type
+   */
+  handleAiResponse(response: { action: string; script?: string; name?: string; type?: string }): void {
+    console.log('AI Response from chat:', response);
+
+    if (response.action === 'update' && response.script) {
+      // ✅ เก็บ Mermaid ไว้ใน pending และเปิด Dialog ให้ผู้ใช้กด Import
+      this.pendingMermaid = {
+        script: response.script,
+        name: response.name || 'AI Generated Diagram',
+        type: response.type || 'Flowchart',
+      };
+      this.showImportDialog.set(true);
+    }
+    // ถ้า action เป็น 'message' จะไม่ทำอะไร (แค่แสดงข้อความใน Chat)
+  }
+
+  /**
+   * ผู้ใช้กดปุ่ม Import → ดึง XML ปัจจุบัน, เพิ่มหน้าใหม่, บันทึกฐานข้อมูล
+   */
+  importMermaid(): void {
+    if (!this.pendingMermaid) return;
+
+    const { script, name, type } = this.pendingMermaid;
+
+    // ✅ ขั้นตอนที่ 1: ดึง XML ปัจจุบันจาก Draw.io (ถ้ามี)
+    this.isLoading = true;
+    this.drawioService.requestXml();
+
+    this.drawioService.xml$
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (currentXml) => {
+          // ✅ ขั้นตอนที่ 2: สร้าง XML สำหรับหน้าใหม่
+          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
+
+          // ✅ ขั้นตอนที่ 3: รวม XML (เพิ่มหน้าใหม่ต่อท้าย)
+          const mergedXml = this.appendDiagramPage(currentXml, newPageXml);
+
+          // ✅ ขั้นตอนที่ 4: โหลด XML ที่รวมแล้วกลับเข้าไป
+          this.drawioService.postMessage({ action: 'load', xml: mergedXml, autosave: false });
+
+          // ✅ ขั้นตอนที่ 5: บันทึก Mermaid script ลงฐานข้อมูล
+          this.applyMermaidScript(script, name, type);
+
+          this.isLoading = false;
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          alert('✅ นำเข้าไดอะแกรมสำเร็จ (เพิ่มเป็นหน้าใหม่)');
+        },
+        error: (err) => {
+          console.error('Failed to get current XML:', err);
+          this.isLoading = false;
+          // ถ้าดึง XML ไม่ได้ ให้โหลดเป็นหน้าใหม่เลย (ไม่ต้องรวม)
+          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
+          const fallbackXml = `<mxfile>${newPageXml}</mxfile>`;
+          this.drawioService.postMessage({ action: 'load', xml: fallbackXml, autosave: false });
+          this.applyMermaidScript(script, name, type);
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          alert('⚠️ ไม่สามารถดึงหน้าปัจจุบันได้ แต่ได้สร้างหน้าใหม่แทน');
+        }
+      });
+  }
+
+  /**
+   * สร้าง XML สำหรับ Mermaid Page ใหม่ (เฉพาะ <diagram>)
+   */
+  private createMermaidPageXml(script: string, pageName: string): string {
+    const escaped = script
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    return `
+      <diagram id="ai_mermaid_${Date.now()}" name="${pageName}">
+        <mxGraphModel>
+          <root>
+            <mxCell id="0"/>
+            <mxCell id="1" parent="0"/>
+            <mxCell id="mermaid_code" 
+              value="&lt;pre style=&quot;font-family: 'Courier New', monospace; white-space: pre-wrap; font-size: 13px;&quot;&gt;${escaped}&lt;/pre&gt;" 
+              style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#1a73e8;fontFamily=monospace;fontSize=13;align=left;verticalAlign=top;" 
+              vertex="1" parent="1">
+              <mxGeometry x="40" y="40" width="800" height="600" as="geometry"/>
+            </mxCell>
+          </root>
+        </mxGraphModel>
+      </diagram>
+    `;
+  }
+
+  /**
+   * รวม XML เดิม + หน้าใหม่ (แทรกก่อน </mxfile>)
+   */
+  private appendDiagramPage(existingXml: string, newPageXml: string): string {
+    const closingTag = '</mxfile>';
+    const index = existingXml.lastIndexOf(closingTag);
+    if (index === -1) {
+      // ถ้าไม่มี </mxfile> ให้สร้างใหม่
+      return `<mxfile>${newPageXml}</mxfile>`;
+    }
+    return existingXml.slice(0, index) + newPageXml + closingTag;
+  }
+
+  /**
+   * ผู้ใช้กด Cancel → ปิด Dialog โดยไม่ทำอะไร
+   */
+  cancelImport(): void {
+    this.showImportDialog.set(false);
+    this.pendingMermaid = null;
+  }
+
+  /**
+   * บันทึก Mermaid script ลงในฐานข้อมูล (เฉพาะ currentTab)
+   */
+  private applyMermaidScript(script: string, name?: string, type?: string): void {
+    if (!this.currentTabId) {
+      console.warn('No tab ID to update');
+      return;
+    }
+
+    this.isLoading = true;
+    const updatedTab = {
+      ...this.currentDiagram,
+      id: this.currentTabId,
+      name: name || this.currentDiagram?.name || 'AI Diagram',
+      diagramType: type || this.currentDiagram?.diagramType || 'Flowchart',
+      mermaidScript: script,
+      projectId: this.projectId || this.currentDiagram?.projectId,
+      graphData: null, // ไม่ต้องเปลี่ยน XML (เรายังเก็บ Mermaid ไว้ต่างหาก)
+    };
+
+    this.diagramService.updateTab(updatedTab).subscribe({
+      next: (res) => {
+        this.currentDiagram = res;
+        this.isLoading = false;
+        console.log('✅ Mermaid script saved successfully.');
+      },
+      error: (err) => {
+        console.error('Update failed:', err);
+        this.isLoading = false;
+        alert('❌ ไม่สามารถบันทึก Mermaid script ได้ กรุณาลองอีกครั้ง');
+      },
+    });
+  }
+
+  /**
+   * โหลด Diagram จากฐานข้อมูล (XML) มาแสดงใน Draw.io
+   */
+  loadExistingDiagram(): void {
+    if (!this.currentTabId) return;
+    this.isLoading = true;
+    this.diagramService.getDiagram(this.currentTabId).subscribe({
+      next: (diagram) => {
+        if (this.projectId && diagram.projectId !== this.projectId) {
+          alert('❌ ไดอะแกรมนี้ไม่ใช่ของโปรเจกต์ที่เลือก');
+          this.isLoading = false;
+          this.drawioService.loadXml('');
+          return;
+        }
+        this.currentDiagram = diagram;
+        const xml = diagram.graphData?.xml || '';
+        this.drawioService.loadXml(xml);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.drawioService.loadXml('');
+      },
+    });
+  }
+
+  /**
+   * บันทึก XML ปัจจุบันจาก Draw.io ลงฐานข้อมูล
+   */
+  saveDiagram(): void {
+    if (!this.currentTabId) {
+      alert('❌ ไม่มี Diagram ID ให้บันทึก');
+      return;
+    }
+
+    this.drawioService.requestXml();
+
+    this.drawioService.xml$.pipe(takeUntil(this.destroy$)).subscribe((xml) => {
+      if (xml && this.currentTabId) {
+        const name = this.currentDiagram?.name || 'Drawio Diagram';
+        const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
+        const projectId = this.currentDiagram?.projectId || this.projectId;
+
+        if (!projectId) {
+          alert('❌ ขาด Project ID ไม่สามารถบันทึกได้');
+          return;
+        }
+
+        const updatedTab = {
+          ...this.currentDiagram,
+          id: this.currentTabId,
+          name,
+          diagramType,
+          projectId,
+          graphData: { xml },
+          mermaidScript: this.currentDiagram?.mermaidScript || null,
+        };
+
+        this.diagramService.updateTab(updatedTab as any).subscribe({
+          next: (res) => {
+            this.currentDiagram = res;
+            alert('✅ บันทึกสำเร็จ!');
+          },
+          error: (err) => {
+            console.error('Save failed:', err);
+            alert('❌ บันทึกไม่สำเร็จ!');
+          },
+        });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
+import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  Output,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MarkdownModule } from 'ngx-markdown';
+import { Subject, takeUntil } from 'rxjs';
+import type { ChatMessage } from '../diagram.model';
+import { DiagramService, PmChatResponse } from '../diagram.service';
+
+@Component({
+  selector: 'app-pmdt06A',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MarkdownModule],
+  templateUrl: './pmdt06A.component.html',
+  styleUrls: ['./pmdt06A.component.css'],
+})
+export class pmdt06AComponent implements AfterViewInit, OnDestroy {
+  // ✅ ใช้ setter เพื่อให้ตอบสนองเมื่อ diagramId เปลี่ยน (รวมถึงตอนรีเฟรช)
+  private _diagramId: string | null = null;
+  @Input()
+  set diagramId(value: string | null) {
+    // ถ้าค่าเปลี่ยนไปและมีค่าจริง → โหลดประวัติ
+    if (value && value !== this._diagramId) {
+      this._diagramId = value;
+      this.loadChatHistory(value);
+    } else if (!value) {
+      // ถ้าไม่มี diagramId ให้ clear ข้อความ
+      this._diagramId = null;
+      this.messages.set([]);
+    }
+  }
+  get diagramId(): string | null {
+    return this._diagramId;
+  }
+
+  @Output() aiResponse = new EventEmitter<{
+    action: string;
+    script?: string;
+    name?: string;
+    type?: string;
+  }>();
+
+  private diagramService = inject(DiagramService);
+  private destroy$ = new Subject<void>();
+
+  messages = signal<ChatMessage[]>([]);
+  userInput = '';
+  isLoading = signal(false);
+
+  chatContainer = viewChild<ElementRef>('chatContainer');
+
+  ngAfterViewInit() {
+    // ไม่ต้องทำอะไรเพิ่ม เพราะ setter จะถูกเรียกเมื่อ parent กำหนดค่า
+    // แต่ถ้าตอนเริ่มต้น diagramId มีค่าอยู่แล้ว (เช่นจาก route) setter จะทำงาน
+    // ถ้าไม่มีค่า ก็จะไม่โหลด
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadChatHistory(diagramId: string) {
+    if (!diagramId) return;
+    this.diagramService
+      .getChatHistory(diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (history) => {
+          this.messages.set(history);
+          this.scrollToBottom();
+        },
+        error: () => {
+          // silent fail – อาจแสดงข้อความ error หรือไม่ก็ได้
+          console.warn('Failed to load chat history for diagram:', diagramId);
+          this.messages.set([]);
+        },
+      });
+  }
+
+  sendMessage() {
+    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      diagramId: this.diagramId,
+      userId: 'current-user',
+      role: 'user',
+      content: this.userInput.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    this.messages.update((m) => [...m, userMessage]);
+    const input = this.userInput.trim();
+    this.userInput = '';
+    this.isLoading.set(true);
+    this.scrollToBottom();
+
+    this.diagramService
+      .sendChatMessage(this.diagramId, input)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PmChatResponse) => {
+          const assistantMsg: ChatMessage = {
+            id: response.id || crypto.randomUUID(),
+            diagramId: response.diagramId || this.diagramId!,
+            userId: response.createdBy || 'system',
+            role: response.role || 'assistant',
+            content: response.content,
+            contextData: response.contextData,
+            createdAt: response.createdDate || new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, assistantMsg]);
+          this.isLoading.set(false);
+          this.scrollToBottom();
+
+          const content = assistantMsg.content;
+          const mermaidMatch = content.match(/```mermaid\s*([\s\S]*?)```/);
+          if (mermaidMatch) {
+            const script = mermaidMatch[1].trim();
+            const nameMatch = content.match(/(?:name|title)\s*[:：]\s*(.+)/i);
+            const name = nameMatch ? nameMatch[1].trim() : 'AI Generated Diagram';
+            const type = this.detectDiagramType(script);
+            this.aiResponse.emit({
+              action: 'update',
+              script,
+              name,
+              type,
+            });
+          } else {
+            this.aiResponse.emit({ action: 'message' });
+          }
+        },
+        error: (err) => {
+          console.error('Chat error:', err);
+          this.isLoading.set(false);
+          const errorMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            diagramId: this.diagramId!,
+            userId: 'system',
+            role: 'assistant',
+            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
+            createdAt: new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, errorMsg]);
+          this.scrollToBottom();
+        },
+      });
+  }
+
+  private detectDiagramType(script: string): string {
+    const lower = script.toLowerCase().trim();
+    if (lower.startsWith('sequence')) return 'Sequence';
+    if (lower.startsWith('classdiagram')) return 'Class';
+    if (lower.startsWith('erdiagram') || lower.startsWith('er')) return 'ER';
+    if (lower.startsWith('state')) return 'State';
+    if (lower.startsWith('journey')) return 'Journey';
+    if (lower.startsWith('mindmap')) return 'Mindmap';
+    if (lower.startsWith('timeline')) return 'Timeline';
+    if (lower.startsWith('requirement')) return 'Requirement';
+    if (lower.startsWith('c4')) return 'C4';
+    if (lower.startsWith('git')) return 'Git Graph';
+    if (lower.startsWith('pie')) return 'Pie';
+    if (lower.startsWith('gantt')) return 'Gantt';
+    if (lower.includes('graph') || lower.includes('flowchart')) return 'Flowchart';
+    return 'Flowchart';
+  }
+
+  clearChat() {
+    if (!this.diagramId) return;
+    this.diagramService
+      .clearChatHistory(this.diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.messages.set([]);
+      });
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      const container = this.chatContainer()?.nativeElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 50);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">
 <style>
   @keyframes fadeIn {
@@ -88606,7 +88854,6 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
   <div
     class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
   >
-    <!-- ส่วนซ้าย: แสดงชื่อโครงการ (ไม่มีจุด bullet แล้ว) -->
     <div class="flex items-center gap-3">
       @if (projectName) {
         <span
@@ -88617,9 +88864,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
       }
     </div>
 
-    <!-- ส่วนขวา: ปุ่ม actions -->
     <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
-      <!-- ปุ่ม Chat -->
       <button
         (click)="toggleChat()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -88636,7 +88881,6 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         }
       </button>
 
-      <!-- ปุ่ม Save (สีปกติเป็นเทาอ่อน, hover เป็นสีหลัก) -->
       <button
         (click)="saveDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -88646,7 +88890,6 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         <span>Save</span>
       </button>
 
-      <!-- ปุ่ม Reload -->
       <button
         (click)="loadExistingDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
@@ -88658,12 +88901,11 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     </div>
   </div>
 
-  <!-- Status Bar (เอา Tab ID ออกแล้ว) -->
+  <!-- Status Bar -->
   <div
     class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5"
   >
     <div class="flex items-center gap-2 max-md:flex-wrap">
-      <!-- แก้ไขจุดที่ error: ใช้ [style.background] แทน [class.bg-[...]] -->
       <span
         class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0"
         [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
