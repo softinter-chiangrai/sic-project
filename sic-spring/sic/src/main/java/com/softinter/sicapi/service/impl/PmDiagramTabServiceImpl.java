@@ -102,6 +102,10 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found"));
 
+        if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
+            throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+        }
+
         if (request.getName() != null) {
             tab.setName(request.getName());
         }

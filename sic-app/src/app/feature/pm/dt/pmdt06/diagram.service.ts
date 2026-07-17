@@ -1,7 +1,7 @@
 // src/app/core/services/diagram.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type {
   ChatMessage,
@@ -10,6 +10,7 @@ import type {
   DiagramType,
   DiagramVersion,
 } from './diagram.model';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 
 @Injectable({ providedIn: 'root' })
 export class DiagramService {
@@ -19,17 +20,39 @@ export class DiagramService {
   private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
   private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
   private activeTabIdSubject = new BehaviorSubject<string | null>(null);
+  private pmrt02Service = inject(Pmrt02Service);
 
   projects$ = this.projectsSubject.asObservable();
   tabs$ = this.tabsSubject.asObservable();
   activeTabId$ = this.activeTabIdSubject.asObservable();
 
   // ==================== Projects ====================
-  getProjects(): Observable<DiagramProject[]> {
-    return this.http
-      .get<DiagramProject[]>(`${this.apiUrl}/api/diagram/projects`)
-      .pipe(tap((projects) => this.projectsSubject.next(projects)));
+ getProjectName(projectId: string): Observable<string> {
+    return this.pmrt02Service.getProject(projectId).pipe(
+      map(project => project.projectName)
+    );
   }
+  
+  getProjects(): Observable<DiagramProject[]> {
+    // ใช้ API /api/pm/customer-projects แต่ต้องมี customerId
+    // ถ้าไม่มี ให้ return empty หรือใช้วิธีอื่น
+    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
+      .pipe(
+        map(response => {
+          const items = response?.content || response?.data || [];
+          return items.map((p: any) => ({
+            id: p.id,
+            name: p.projectName,
+            description: p.description,
+            isFavorite: false,
+            lastOpened: p.updatedDate || p.createdDate,
+            createdAt: p.createdDate,
+            updatedAt: p.updatedDate
+          }));
+        })
+      );
+  }
+
 
   createProject(name: string, description?: string): Observable<DiagramProject> {
     return this.http

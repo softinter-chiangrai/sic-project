@@ -18,8 +18,6 @@ import { DiagramService } from './diagram.service';
 export class Pmdt06Component implements AfterViewInit {
   @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
 
-  aiPrompt = '';
-  isGenerating = false;
   isLoading = false;
   currentTabId: string | null = null;
   projectId: string | null = null;
@@ -34,38 +32,56 @@ export class Pmdt06Component implements AfterViewInit {
   private route = inject(ActivatedRoute);
   private diagramService = inject(DiagramService);
 
+  currentDiagram: any = null;
+
   ngAfterViewInit(): void {
     this.drawioService.init(this.iframe.nativeElement);
 
     this.drawioService.isReady$.subscribe((ready) => {
       this.drawioReady = ready;
       console.log('Draw.io ready status:', ready);
+      if (ready && this.currentTabId) {
+        this.loadExistingDiagram();
+      }
     });
 
     this.route.queryParams.subscribe((params) => {
       this.currentTabId = params['tabId'] || params['diagramId'] || null;
       this.projectId = params['projectId'] || null;
-      if (this.currentTabId) {
-        this.loadExistingDiagram();
-      }
       if (this.projectId) {
         this.loadProjectName();
+        if (!this.currentTabId) {
+          this.diagramService.getTabs(this.projectId).subscribe({
+            next: (tabs) => {
+              if (tabs && tabs.length > 0) {
+                this.currentTabId = tabs[0].id;
+                if (this.drawioReady) {
+                  this.loadExistingDiagram();
+                }
+              } else {
+                console.log('No diagram found for project:', this.projectId);
+              }
+            }
+          });
+        }
+      }
+      if (this.drawioReady && this.currentTabId) {
+        this.loadExistingDiagram();
       }
     });
   }
 
   loadProjectName(): void {
-    if (!this.projectId) return;
-    this.diagramService.getProjects().subscribe({
-      next: (projects) => {
-        const found = projects.find((p) => p.id === this.projectId);
-        this.projectName = found?.name || 'Unknown Project';
-      },
-      error: () => {
-        this.projectName = 'Unknown Project';
-      },
-    });
-  }
+  if (!this.projectId) return;
+  this.diagramService.getProjectName(this.projectId).subscribe({
+    next: (name) => {
+      this.projectName = name;
+    },
+    error: () => {
+      this.projectName = 'Unknown Project';
+    }
+  });
+}
 
   @HostListener('window:message', ['$event'])
   onMessage(event: MessageEvent) {
@@ -79,54 +95,27 @@ export class Pmdt06Component implements AfterViewInit {
     }
   }
 
-  clearPrompt(): void {
-    this.aiPrompt = '';
-  }
-
   handleAiResponse(response: any): void {
     console.log('AI Response from chat:', response);
     if (response.action === 'update' && response.diagram) {
-      alert('Diagram updated by AI. Please use "Reload" to see changes.');
+      this.loadExistingDiagram();
     }
-  }
-
-  onEnterKey(event: Event): void {
-    const keyboardEvent = event as KeyboardEvent;
-    if (keyboardEvent.shiftKey) {
-      return;
-    }
-    keyboardEvent.preventDefault();
-    this.generateDiagram();
-  }
-
-  generateDiagram() {
-    if (!this.aiPrompt.trim()) return;
-    this.isGenerating = true;
-
-    this.aiService.generateMermaid(this.aiPrompt).subscribe({
-      next: (res) => {
-        console.log('AI Mermaid:', res.mermaid);
-        this.drawioService.loadMermaid(res.mermaid);
-        this.isGenerating = false;
-      },
-      error: (err) => {
-        console.error(err);
-        alert('AI generation failed!');
-        this.isGenerating = false;
-      },
-    });
   }
 
   loadExistingDiagram() {
     if (!this.currentTabId) return;
     this.isLoading = true;
-    this.aiService.loadDiagram(this.currentTabId).subscribe({
-      next: (res) => {
-        if (res.xml) {
-          this.drawioService.loadXml(res.xml);
-        } else {
+    this.diagramService.getDiagram(this.currentTabId).subscribe({
+      next: (diagram) => {
+        if (this.projectId && diagram.projectId !== this.projectId) {
+          alert('Error: Diagram does not belong to the selected project.');
+          this.isLoading = false;
           this.drawioService.loadXml('');
+          return;
         }
+        this.currentDiagram = diagram;
+        const xml = diagram.graphData?.xml || '';
+        this.drawioService.loadXml(xml);
         this.isLoading = false;
       },
       error: () => {
@@ -146,11 +135,31 @@ export class Pmdt06Component implements AfterViewInit {
 
     this.drawioService.xml$.pipe(take(1)).subscribe((xml) => {
       if (xml && this.currentTabId) {
-        this.aiService.saveDiagram(this.currentTabId, xml).subscribe({
-          next: () => {
+        const name = this.currentDiagram?.name || 'Drawio Diagram';
+        const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
+        const projectId = this.currentDiagram?.projectId || this.projectId;
+
+        if (!projectId) {
+          alert('Cannot save: Project ID is missing.');
+          return;
+        }
+
+        const updatedTab = {
+          ...this.currentDiagram,
+          id: this.currentTabId,
+          name,
+          diagramType,
+          projectId,
+          graphData: { xml }
+        };
+
+        this.diagramService.updateTab(updatedTab as any).subscribe({
+          next: (res) => {
+            this.currentDiagram = res;
             alert('Diagram saved successfully!');
           },
-          error: () => {
+          error: (err) => {
+            console.error('Save failed:', err);
             alert('Save failed!');
           },
         });
