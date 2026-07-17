@@ -14,9 +14,12 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, take } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-pmdt06',
@@ -33,6 +36,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   private diagramService = inject(DiagramService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
 
   isLoading = false;
   currentTabId: string | null = null;
@@ -385,6 +390,84 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  // ============================================================
+  // ✅ NEW: Generate SQL from ER Diagram
+  // ============================================================
+  generateSql(): void {
+    if (!this.currentTabId) {
+      this.dialogService.warn('No Diagram', 'Please open a diagram first.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.drawioService.requestXml();
+
+    this.drawioService.xml$
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (xml) => {
+          if (!xml || xml.trim().length === 0) {
+            this.dialogService.warn('Empty Diagram', 'The diagram is empty. Please draw an ER diagram first.');
+            this.isLoading = false;
+            return;
+          }
+
+          // ส่ง XML ไป Backend
+          this.http.post<{ sql: string }>(
+            `${environment.apiBaseUrl}/api/diagram/generate-sql`,
+            { xml }
+          ).subscribe({
+            next: (response) => {
+              this.isLoading = false;
+              this.showSqlDialog(response.sql);
+            },
+            error: (err) => {
+              this.isLoading = false;
+              this.dialogService.error('Generation Failed', err.error?.message || 'Could not parse ER diagram.');
+            }
+          });
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.dialogService.error('Error', 'Failed to get diagram XML.');
+        }
+      });
+  }
+
+  private showSqlDialog(sql: string): void {
+    // ใช้ DialogService แสดง SQL
+    // แต่ DialogService ปกติไม่รองรับ TextArea ขนาดใหญ่
+    // เราใช้วิธีสร้าง Component ชั่วคราวด้วย template string
+    // หรือจะใช้ alert() แทนก็ได้ แต่ไม่สวย
+    // ผมแนะนำให้ใช้ window.prompt() เพื่อให้ copy ได้ง่าย (ไม่สวยแต่ใช้ได้)
+    // แต่วิธีที่ดีกว่าคือสร้าง dialog ที่มี textarea
+    // ข้างล่างนี้เป็นวิธี quick & dirty ด้วย prompt
+    // window.prompt('Copy the SQL below:', sql);
+
+    // ใช้ DialogService แบบ custom component (ถ้ามี)
+    // เนื่องจาก DialogService รองรับ component เราสามารถสร้าง component เล็ก ๆ ได้
+    // แต่เพื่อความรวดเร็ว ขอใช้ alert และให้ดาวน์โหลดไฟล์
+    const confirmResult = confirm('SQL generated successfully. Click OK to download .sql file, Cancel to view in console.');
+    if (confirmResult) {
+      this.downloadSqlFile(sql);
+    } else {
+      console.log('Generated SQL:\n', sql);
+      this.dialogService.info('SQL Generated', 'Check the browser console for the SQL script.');
+    }
+  }
+
+  private downloadSqlFile(sql: string): void {
+    const blob = new Blob([sql], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schema_${new Date().toISOString().slice(0,10)}.sql`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   ngOnDestroy(): void {

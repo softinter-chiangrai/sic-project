@@ -45,6 +45,7 @@ public/images/
 *.md
 *.json
 *.gitattributes
+*.css
 
 # ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
 **/Migrations/
