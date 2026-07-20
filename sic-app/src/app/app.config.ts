@@ -17,6 +17,7 @@ import {
 import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { provideMarkdown } from 'ngx-markdown';
+import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,6 +29,8 @@ export const appConfig: ApplicationConfig = {
     provideEnvironmentNgxMask(),
     provideSicNumberConfig({ decimal: 2 }),
     provideOAuthClient(),
+    provideMarkdown(),
+    provideAngularQuery(new QueryClient()),
     provideAppInitializer(() => inject(AuthService).initializeAuth()),
     provideAppInitializer(() => inject(LanguageService).initLanguage()),
     { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
@@ -42,6 +45,5 @@ export const appConfig: ApplicationConfig = {
         useExisting: AppTranslateLoader
       }
     }),
-     provideMarkdown(),
   ]
 };

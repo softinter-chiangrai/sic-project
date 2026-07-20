@@ -6,4 +6,5 @@ import lombok.Data;
 @Data
 public class GenerateSqlRequest {
     private String xml;
+    private String vendor;
 }
