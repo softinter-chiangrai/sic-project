@@ -9,7 +9,7 @@ import { SicButtonComponent } from '../../../../core/component/sic-button/sic-bu
 interface DiagramPage {
   id: string;
   name: string;
-  xml: string; // xml เฉพาะหน้านั้น (รวม <diagram>...</diagram>)
+  xml: string;
 }
 
 @Component({
@@ -33,7 +33,7 @@ interface DiagramPage {
       <div class="flex-1 overflow-y-auto p-5 space-y-4">
         <!-- Select Page -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Select Diagram Page</label>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Select ER Diagram Page</label>
           <select
             [(ngModel)]="selectedPageId"
             (change)="onPageChange()"
@@ -43,6 +43,11 @@ interface DiagramPage {
               <option [value]="page.id">{{ page.name }}</option>
             }
           </select>
+          @if (pages().length === 0) {
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER,er)
+            </p>
+          }
         </div>
 
         <!-- Vendor Selector -->
@@ -112,7 +117,7 @@ export class SqlExportDialogComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
 
-  // รับ XML ทั้งไฟล์จาก parent
+  // ✅ เปลี่ยนจาก fullXml เป็น @Input() xml
   @Input() xml: string = '';
 
   pages = signal<DiagramPage[]>([]);
@@ -129,48 +134,55 @@ export class SqlExportDialogComponent implements OnInit {
   }
 
   private extractPages(xml: string) {
-  if (!xml) return;
+    if (!xml) return;
 
-  // ✅ ปรับ Regex ให้รองรับ:
-  // 1. ช่องว่างก่อน/หลัง > 
-  // 2. การจับคู่แบบ Non-greedy เพื่อไม่ให้จับข้ามหน้า
-  const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
-  const pages: DiagramPage[] = [];
-  let match;
+    // ✅ แก้ regex ให้ถูกต้อง (ไม่มีช่องว่างแปลกๆ)
+    const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
+    const allPages: DiagramPage[] = [];
+    let match;
 
-  while ((match = regex.exec(xml)) !== null) {
-    const fullTag = match[0];
+    while ((match = regex.exec(xml)) !== null) {
+      const fullTag = match[0];
+      
+      // ✅ regex ที่รองรับทั้ง " และ ' และช่องว่างรอบๆ =
+      const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
+      const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
+
+      const id = idMatch ? idMatch[1] : `page-${allPages.length + 1}`;
+      const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
+      const name = this.decodeHtmlEntities(rawName);
+
+      // ✅ กรองเฉพาะ ER Diagram
+      if (this.isErDiagramPage(name)) {
+        allPages.push({ id, name, xml: fullTag });
+      }
+    }
+
+    // ✅ ถ้าไม่มี ER Diagram เลย
+    if (allPages.length === 0) {
+      this.pages.set([]);
+      return;
+    }
+
+    this.pages.set(allPages);
+  }
+
+  // ✅ ฟังก์ชันตรวจสอบว่าเป็น ER Diagram หรือไม่ (จากชื่อ)
+  private isErDiagramPage(name: string): boolean {
+    const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
+    const upperName = name.toUpperCase();
     
-    // ✅ ปรับ Regex ให้รองรับทั้ง Double Quote (") และ Single Quote (')
-    // และรองรับช่องว่างรอบๆ เครื่องหมาย = 
-    const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
-    const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
-
-    const id = idMatch ? idMatch[1] : `page-${pages.length + 1}`;
-    // ✅ Decode HTML entities ในชื่อหน้า (เช่น &amp; -> &)
-    const rawName = nameMatch ? nameMatch[1] : `Page-${pages.length + 1}`;
-    const name = this.decodeHtmlEntities(rawName);
-
-    pages.push({ id, name, xml: fullTag });
+    return erKeywords.some(keyword => upperName.includes(keyword.toUpperCase()));
   }
 
-  // ✅ Fallback: ถ้า XML ไม่มีแท็ก <diagram> เลย (เช่น เป็น <mxGraphModel> เพียวๆ)
-  if (pages.length === 0 && xml.trim().length > 0) {
-    pages.push({ id: 'default', name: 'Default Page', xml });
+  // ✅ Decode HTML entities ในชื่อหน้า
+  private decodeHtmlEntities(text: string): string {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
   }
-
-  this.pages.set(pages);
-}
-
-// ✅ ฟังก์ชันเสริมสำหรับ Decode ชื่อหน้าที่อาจมี HTML Entities
-private decodeHtmlEntities(text: string): string {
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  return textarea.value;
-}
 
   onPageChange() {
-    // เคลียร์ SQL เก่าเมื่อเปลี่ยนหน้า
     this.sql.set('');
   }
 
@@ -187,6 +199,7 @@ private decodeHtmlEntities(text: string): string {
     }
 
     this.loading.set(true);
+
     this.http.post<{ sql: string }>(
       `${environment.apiBaseUrl}/api/diagram/generate-sql`,
       { xml: selectedPage.xml, vendor: this.vendor }
@@ -203,14 +216,14 @@ private decodeHtmlEntities(text: string): string {
   }
 
   copyToClipboard() {
-    const sql = this.sql();
-    if (!sql) return;
-    navigator.clipboard?.writeText(sql).then(() => {
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    navigator.clipboard?.writeText(sqlText).then(() => {
       this.dialogService.success('Copied', 'SQL copied to clipboard.');
     }).catch(() => {
-      // fallback
       const textarea = document.createElement('textarea');
-      textarea.value = sql;
+      textarea.value = sqlText;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
@@ -220,9 +233,10 @@ private decodeHtmlEntities(text: string): string {
   }
 
   download() {
-    const sql = this.sql();
-    if (!sql) return;
-    const blob = new Blob([sql], { type: 'text/plain;charset=utf-8' });
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    const blob = new Blob([sqlText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
