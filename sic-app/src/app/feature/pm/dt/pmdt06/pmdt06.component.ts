@@ -1,6 +1,7 @@
 // src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
 
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
@@ -13,13 +14,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil, take } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { Subject, take, takeUntil } from 'rxjs';
+import { DialogService } from '../../../../core/services/dialog.service';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
-import { DialogService } from '../../../../core/services/dialog.service';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
 
 @Component({
@@ -144,7 +143,12 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
    * รับ Event จาก Child Component (pmdt06A)
    * เมื่อ AI สร้าง Mermaid script แล้วจะส่ง action 'update' พร้อม script, name, type
    */
-  handleAiResponse(response: { action: string; script?: string; name?: string; type?: string }): void {
+  handleAiResponse(response: {
+    action: string;
+    script?: string;
+    name?: string;
+    type?: string;
+  }): void {
     console.log('AI Response from chat:', response);
 
     if (response.action === 'update' && response.script) {
@@ -171,40 +175,38 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     this.isLoading = true;
     this.drawioService.requestXml();
 
-    this.drawioService.xml$
-      .pipe(take(1), takeUntil(this.destroy$))
-      .subscribe({
-        next: (currentXml) => {
-          // ✅ ขั้นตอนที่ 2: สร้าง XML สำหรับหน้าใหม่
-          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
+    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
+      next: (currentXml) => {
+        // ✅ ขั้นตอนที่ 2: สร้าง XML สำหรับหน้าใหม่
+        const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
 
-          // ✅ ขั้นตอนที่ 3: รวม XML (เพิ่มหน้าใหม่ต่อท้าย)
-          const mergedXml = this.appendDiagramPage(currentXml, newPageXml);
+        // ✅ ขั้นตอนที่ 3: รวม XML (เพิ่มหน้าใหม่ต่อท้าย)
+        const mergedXml = this.appendDiagramPage(currentXml, newPageXml);
 
-          // ✅ ขั้นตอนที่ 4: โหลด XML ที่รวมแล้วกลับเข้าไป
-          this.drawioService.postMessage({ action: 'load', xml: mergedXml, autosave: false });
+        // ✅ ขั้นตอนที่ 4: โหลด XML ที่รวมแล้วกลับเข้าไป
+        this.drawioService.postMessage({ action: 'load', xml: mergedXml, autosave: false });
 
-          // ✅ ขั้นตอนที่ 5: บันทึก Mermaid script ลงฐานข้อมูล
-          this.applyMermaidScript(script, name, type);
+        // ✅ ขั้นตอนที่ 5: บันทึก Mermaid script ลงฐานข้อมูล
+        this.applyMermaidScript(script, name, type);
 
-          this.isLoading = false;
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-          alert('✅ นำเข้าไดอะแกรมสำเร็จ (เพิ่มเป็นหน้าใหม่)');
-        },
-        error: (err) => {
-          console.error('Failed to get current XML:', err);
-          this.isLoading = false;
-          // ถ้าดึง XML ไม่ได้ ให้โหลดเป็นหน้าใหม่เลย (ไม่ต้องรวม)
-          const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
-          const fallbackXml = `<mxfile>${newPageXml}</mxfile>`;
-          this.drawioService.postMessage({ action: 'load', xml: fallbackXml, autosave: false });
-          this.applyMermaidScript(script, name, type);
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-          alert('⚠️ ไม่สามารถดึงหน้าปัจจุบันได้ แต่ได้สร้างหน้าใหม่แทน');
-        }
-      });
+        this.isLoading = false;
+        this.showImportDialog.set(false);
+        this.pendingMermaid = null;
+        alert('✅ นำเข้าไดอะแกรมสำเร็จ (เพิ่มเป็นหน้าใหม่)');
+      },
+      error: (err) => {
+        console.error('Failed to get current XML:', err);
+        this.isLoading = false;
+        // ถ้าดึง XML ไม่ได้ ให้โหลดเป็นหน้าใหม่เลย (ไม่ต้องรวม)
+        const newPageXml = this.createMermaidPageXml(script, name || 'AI Diagram');
+        const fallbackXml = `<mxfile>${newPageXml}</mxfile>`;
+        this.drawioService.postMessage({ action: 'load', xml: fallbackXml, autosave: false });
+        this.applyMermaidScript(script, name, type);
+        this.showImportDialog.set(false);
+        this.pendingMermaid = null;
+        alert('⚠️ ไม่สามารถดึงหน้าปัจจุบันได้ แต่ได้สร้างหน้าใหม่แทน');
+      },
+    });
   }
 
   /**
@@ -339,7 +341,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         error: (err) => {
           alert('❌ ไม่สามารถสร้างแท็บใหม่ได้');
           console.error(err);
-        }
+        },
       });
       return;
     }
@@ -358,7 +360,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   private saveDiagramInternal(): void {
     this.drawioService.requestXml();
 
-    this.drawioService.xml$.pipe(takeUntil(this.destroy$)).subscribe((xml) => {
+    this.drawioService.xml$.pipe(take(1)).subscribe((xml) => {
       if (xml && this.currentTabId) {
         const name = this.currentDiagram?.name || 'Drawio Diagram';
         const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
@@ -396,22 +398,23 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   // ============================================================
   // ✅ NEW: Generate SQL from ER Diagram
   // ============================================================
- generateSql(): void {
-  if (!this.currentTabId) {
-    this.dialogService.warn('No Diagram', 'Please open a diagram first.');
-    return;
-  }
+  generateSql(): void {
+    if (!this.currentTabId) {
+      this.dialogService.warn('No Diagram', 'Please open a diagram first.');
+      return;
+    }
 
-  this.isLoading = true;
-  this.drawioService.requestXml();
+    this.isLoading = true;
+    this.drawioService.requestXml();
 
-  this.drawioService.xml$
-    .pipe(take(1), takeUntil(this.destroy$))
-    .subscribe({
+    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
       next: (xml) => {
         this.isLoading = false;
         if (!xml || xml.trim().length === 0) {
-          this.dialogService.warn('Empty Diagram', 'The diagram is empty. Please draw an ER diagram first.');
+          this.dialogService.warn(
+            'Empty Diagram',
+            'The diagram is empty. Please draw an ER diagram first.',
+          );
           return;
         }
 
@@ -420,20 +423,22 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
           type: 'confirm',
           component: SqlExportDialogComponent,
           componentInputs: {
-            xml: xml,  // ส่ง xml ไปให้ dialog
+            xml: xml, // ส่ง xml ไปให้ dialog
           },
         });
       },
       error: (err) => {
         this.isLoading = false;
         this.dialogService.error('Error', 'Failed to get diagram XML.');
-      }
+      },
     });
-}
+  }
 
   private showSqlDialog(sql: string): void {
     // แต่เพื่อความรวดเร็ว ขอใช้ alert และให้ดาวน์โหลดไฟล์
-    const confirmResult = confirm('SQL generated successfully. Click OK to download .sql file, Cancel to view in console.');
+    const confirmResult = confirm(
+      'SQL generated successfully. Click OK to download .sql file, Cancel to view in console.',
+    );
     if (confirmResult) {
       this.downloadSqlFile(sql);
     } else {
@@ -447,7 +452,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `schema_${new Date().toISOString().slice(0,10)}.sql`;
+    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
     document.body.appendChild(a);
     a.click();
     a.remove();
