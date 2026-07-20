@@ -409,6 +409,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
     this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
       next: (xml) => {
+        console.log('📄 XML from Draw.io:', xml); 
         this.isLoading = false;
         if (!xml || xml.trim().length === 0) {
           this.dialogService.warn(
