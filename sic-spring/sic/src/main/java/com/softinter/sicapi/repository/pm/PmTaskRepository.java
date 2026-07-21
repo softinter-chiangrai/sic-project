@@ -10,5 +10,8 @@ import com.softinter.sicapi.entity.pm.PmTask;
 
 @Repository
 public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
+
     List<PmTask> findByWorkPackageIdAndIsDeleteFalse(UUID workPackageId);
+
+    List<PmTask> findBySpecificationIdIn(List<UUID> specIds);
 }

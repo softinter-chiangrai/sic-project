@@ -247,7 +247,7 @@ export class Pmrt03Component implements OnInit {
   // ---- เพิ่ม Navigation สำหรับ Module อื่นๆ ----
   goToChangeRequests() {
     const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/change-request'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/pmdt07'], { queryParams: { projectId: id } });
   }
 
   goToSpecifications() {

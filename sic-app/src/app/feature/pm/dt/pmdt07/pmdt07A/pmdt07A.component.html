@@ -1,0 +1,286 @@
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
+
+<div class="space-y-5 p-0.5">
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+    <a [routerLink]="['/feature/pm/pmdt07']" class="hover:text-[var(--crm-primary)]"
+      >Change Request</a
+    >
+    <span>/</span>
+    <span class="text-[var(--text-active)] font-medium">{{ isEdit ? 'แก้ไข' : 'สร้างใหม่' }}</span>
+  </div>
+
+  <!-- Card หลัก -->
+  <sic-card>
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Requirement Combobox -->
+        <div class="md:col-span-2">
+          <sic-combobox
+            label="Requirement ที่ขอเปลี่ยนแปลง"
+            formControlName="requirementId"
+            [apiUrl]="requirementApiUrl"
+            [params]="{ projectId: projectId }"
+            valueField="id"
+            textField="title"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือก Requirement' }"
+          ></sic-combobox>
+        </div>
+
+        <!-- Change Description -->
+        <div class="md:col-span-2">
+          <sic-input-area
+            label="คำอธิบายการเปลี่ยนแปลง"
+            formControlName="changeDescription"
+            [required]="true"
+            [rows]="3"
+            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
+          ></sic-input-area>
+        </div>
+
+        <!-- Impact Summary -->
+        <div class="md:col-span-2">
+          <sic-input-area
+            label="สรุปผลกระทบ (โดยสังเขป)"
+            formControlName="impactSummary"
+            [rows]="2"
+            placeholder="สรุปผลกระทบที่คาดว่าจะเกิดขึ้น"
+          ></sic-input-area>
+        </div>
+
+        <!-- Estimated Manday -->
+        <div>
+          <sic-number
+            label="Manday ที่ประเมิน (เพิ่ม/ลด)"
+            formControlName="estimatedManday"
+            placeholder="0"
+            [decimal]="0"
+          ></sic-number>
+        </div>
+
+        <!-- Status -->
+        <div>
+          <sic-combobox
+            label="สถานะ"
+            formControlName="status"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov'"
+            [params]="{ group: 'COMMON', parameterCode: 'DOC_STATUS' }"
+            valueField="value"
+            textField="text"
+            [required]="true"
+          ></sic-combobox>
+        </div>
+
+        <!-- Hidden projectId -->
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+        <sic-button type="submit" variant="primary" [disabled]="isSaving">
+          @if (isSaving) {
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+          }
+          {{ isSaving ? 'กำลังบันทึก...' : isEdit ? 'บันทึก' : 'สร้าง' }}
+        </sic-button>
+        <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+      </div>
+    </form>
+  </sic-card>
+
+  <!-- ===== Impact Analysis Section ===== -->
+  @if (isEdit && changeRequestId) {
+    <sic-card>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-diagram-3 text-[var(--crm-warning)]"></i>
+            Impact Analysis
+          </h3>
+          <button
+            type="button"
+            (click)="autoDetectImpact()"
+            [disabled]="isLoadingImpact() || !form.get('id')?.value"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-[var(--border)] rounded-lg hover:bg-[var(--sidebar-hover)] transition-all disabled:opacity-50"
+          >
+            @if (isLoadingImpact()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-robot"></i>
+            }
+            วิเคราะห์อัตโนมัติ
+          </button>
+        </div>
+
+        @if (impactAnalysis(); as impact) {
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[var(--bg)] p-4 rounded-lg border border-[var(--border)]"
+          >
+            <!-- DFD Impact -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)]">DFD Impact</label>
+              <textarea
+                class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                [(ngModel)]="impact.dfdImpact"
+                [ngModelOptions]="{ standalone: true }"
+                rows="2"
+                placeholder="ระบุ DFD ที่กระทบ"
+              ></textarea>
+            </div>
+            <!-- ER Impact -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)]">ER Impact</label>
+              <textarea
+                class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                [(ngModel)]="impact.erImpact"
+                [ngModelOptions]="{ standalone: true }"
+                rows="2"
+                placeholder="ระบุ ER Table / Column ที่กระทบ"
+              ></textarea>
+            </div>
+            <!-- UI Impact -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)]">UI Impact</label>
+              <textarea
+                class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                [(ngModel)]="impact.uiImpact"
+                [ngModelOptions]="{ standalone: true }"
+                rows="2"
+                placeholder="ระบุหน้าจอที่กระทบ"
+              ></textarea>
+            </div>
+            <!-- API Impact -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)]">API Impact</label>
+              <textarea
+                class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                [(ngModel)]="impact.apiImpact"
+                [ngModelOptions]="{ standalone: true }"
+                rows="2"
+                placeholder="ระบุ API Endpoint ที่กระทบ"
+              ></textarea>
+            </div>
+            <!-- Test Impact -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-active)]">Test Impact</label>
+              <textarea
+                class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                [(ngModel)]="impact.testImpact"
+                [ngModelOptions]="{ standalone: true }"
+                rows="2"
+                placeholder="ระบุ Test Case ที่กระทบ"
+              ></textarea>
+            </div>
+            <!-- Manday / Timeline / Cost -->
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-active)]"
+                  >Manday +/-</label
+                >
+                <input
+                  type="number"
+                  class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                  [(ngModel)]="impact.mandayImpact"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-active)]"
+                  >Timeline +/-</label
+                >
+                <input
+                  type="number"
+                  class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                  [(ngModel)]="impact.timelineImpact"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-active)]"
+                  >Cost Impact</label
+                >
+                <input
+                  type="text"
+                  class="w-full p-2 rounded border border-[var(--border)] bg-[var(--bg)] text-sm"
+                  [(ngModel)]="impact.costImpact"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="บาท"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- แสดงรายการที่กระทบ -->
+          @if (
+            impact.impactedRequirementIds?.length ||
+            impact.impactedSpecIds?.length ||
+            impact.impactedTaskIds?.length
+          ) {
+            <div class="p-4 bg-[var(--sidebar)] rounded-lg border border-[var(--border)]">
+              <p class="text-sm font-semibold text-[var(--text-active)] mb-2">
+                🔗 รายการที่กระทบ (จากระบบอัตโนมัติ)
+              </p>
+              <div class="flex flex-wrap gap-2">
+                @for (id of impact.impactedRequirementIds; track id) {
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  >
+                    Req: {{ id }}
+                  </span>
+                }
+                @for (id of impact.impactedSpecIds; track id) {
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                  >
+                    Spec: {{ id }}
+                  </span>
+                }
+                @for (id of impact.impactedTaskIds; track id) {
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  >
+                    Task: {{ id }}
+                  </span>
+                }
+                @for (id of impact.impactedTestCaseIds; track id) {
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                  >
+                    Test: {{ id }}
+                  </span>
+                }
+                @for (id of impact.impactedBugIds; track id) {
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  >
+                    Bug: {{ id }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- บันทึก Impact -->
+          <div class="flex justify-end">
+            <sic-button
+              type="button"
+              variant="primary"
+              (click)="saveImpactAnalysis()"
+              [disabled]="isSaving"
+            >
+              @if (isSaving) {
+                <i class="bi bi-arrow-repeat animate-spin"></i>
+              }
+              {{ isSaving ? 'กำลังบันทึก...' : 'บันทึก Impact' }}
+            </sic-button>
+          </div>
+        } @else {
+          <p class="text-sm text-[var(--text-muted)] italic">
+            ยังไม่มีข้อมูล Impact Analysis คลิก "วิเคราะห์อัตโนมัติ" หรือกรอกข้อมูลเอง
+          </p>
+        }
+      </div>
+    </sic-card>
+  }
+</div>

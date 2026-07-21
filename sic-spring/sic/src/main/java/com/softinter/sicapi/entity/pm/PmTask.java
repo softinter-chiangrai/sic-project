@@ -22,6 +22,10 @@ public class PmTask extends BaseBusinessEntity {
     @JoinColumn(name = "work_package_id")
     private PmWorkPackage workPackage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spec_id")
+    private PmSpecification specification;
+
     @Column(name = "task_code", nullable = false, length = 30)
     private String taskCode;
 

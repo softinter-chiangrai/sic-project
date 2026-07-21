@@ -25,8 +25,10 @@ import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmRequirementResponse;
 import com.softinter.sicapi.entity.db.DbParameter;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.db.DbParameterRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.util.LocalizationHelper;
@@ -38,7 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/requirement")
+@RequestMapping("/api/pm/requirement")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Requirement", description = "Requirement Management API")
@@ -48,6 +50,7 @@ public class PmRequirementController {
     private final PmCustomerProjectRepository projectRepository;
     private final DbParameterRepository parameterRepository;
     private final CurrentUserService currentUserService;
+    private final PmRequirementRepository requirementRepository;
 
     @GetMapping
     @Operation(summary = "Get requirements with pagination and filters")
@@ -155,4 +158,23 @@ public class PmRequirementController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
+    @GetMapping("/combobox")
+@Operation(summary = "Get requirement combobox list")
+public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
+        @RequestParam(required = false) UUID projectId) {
+    UUID businessId = BusinessContextHolder.getBusinessId();
+    if (businessId == null) {
+        return ResponseEntity.badRequest().build();
+    }
+    List<PmRequirement> requirements;
+    if (projectId != null) {
+        requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+    } else {
+        requirements = requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+    }
+    List<ComboboxResponse> list = requirements.stream()
+            .map(r -> new ComboboxResponse(r.getId().toString(), r.getTitle()))
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(list);
+}
 }

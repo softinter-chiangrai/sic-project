@@ -1,6 +1,9 @@
 package com.softinter.sicapi.repository.pm;
 
-import com.softinter.sicapi.entity.pm.PmRequirement;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,8 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.softinter.sicapi.entity.pm.PmRequirement;
 
 @Repository
 public interface PmRequirementRepository extends JpaRepository<PmRequirement, UUID>, JpaSpecificationExecutor<PmRequirement> {
@@ -55,4 +57,7 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<PmRequirement> searchByKeywordAndStatus(@Param("businessId") UUID businessId, @Param("keyword") String keyword, @Param("status") String status, Pageable pageable);
+
+    List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+    List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
 }

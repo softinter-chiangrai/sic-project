@@ -182,22 +182,27 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // // ===== Change Request =====
-  // {
-  //   path: 'change-request',
-  //   loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
-  //   canActivate: [customerGuard, projectGuard],
-  // },
-  // {
-  //   path: 'change-request/new',
-  //   loadComponent: () => import('./dt/pmdt066/pmdt066.component').then((m) => m.pmdt06Aomponent),
-  //   canActivate: [customerGuard, projectGuard],
-  // },
-  // {
-  //   path: 'change-request/:id/edit',
-  //   loadComponent: () => import('./dt/pmdt066/pmdt066.component').then((m) => m.pmdt06Aomponent),
-  //   canActivate: [customerGuard, projectGuard],
-  // },
+  // ===== Change Request =====
+  {
+  path: 'pmdt07',
+  loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'pmdt07/new',
+  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'pmdt07/:id/edit',
+  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'pmdt07/:id/view',
+  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+  canActivate: [customerGuard, projectGuard],
+},
 
   // ===== Specification =====
   {
