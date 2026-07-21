@@ -42,25 +42,22 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
 
         // 3. สร้าง Prompt (ระบุ vendor)
          String prompt = String.format("""
-            You are an expert SQL developer. Based on the following database structure (tables, columns, and relations),
-            generate a complete DDL SQL script for a **%s** database.
+    You are an expert SQL developer. Based on the following database structure (tables, columns, and relations),
+    generate a complete DDL SQL script for a **%s** database.
 
-            Additionally, generate a **Mermaid ER diagram** using the **erDiagram** syntax.
-            The ER diagram should clearly show all tables, columns (with types), primary keys, and foreign key relationships.
-            Output the ER diagram in a ```mermaid ... ``` block.
+    **Rules for SQL:**
+    1. Use appropriate data types (VARCHAR, INT, DATE, DECIMAL, TIMESTAMP, BOOLEAN, etc.) based on the column names.
+    2. If a column name is "id", make it PRIMARY KEY with UUID or BIGSERIAL/BIGINT.
+    3. Add FOREIGN KEY constraints for all relations.
+    4. Add useful indexes for foreign key columns.
+    5. Add `created_at` and `updated_at` TIMESTAMP columns with defaults.
+    6. **DO NOT include any comments in the SQL script — no `--` line comments and no `/* ... */` block comments.**
+    7. **DO NOT include any explanations, notes, or suggestions outside the SQL code.**
+    8. Output **ONLY** the SQL code. No markdown, no backticks, no extra text.
 
-            **Rules for SQL:**
-            1. Use appropriate data types (VARCHAR, INT, DATE, DECIMAL, TIMESTAMP, BOOLEAN, etc.) based on the column names.
-            2. If a column name is "id", make it PRIMARY KEY with UUID or BIGSERIAL/BIGINT.
-            3. Add FOREIGN KEY constraints for all relations.
-            4. Add useful indexes for foreign key columns.
-            5. Add `created_at` and `updated_at` TIMESTAMP columns with defaults if they don't exist.
-            6. Use proper naming conventions (snake_case).
-            7. Output **ONLY** the SQL code and the Mermaid ER diagram. Do NOT include any explanations outside the code blocks.
-
-            **Database Structure:**
-            %s
-            """, vendor, structureJson);
+    **Database Structure:**
+    %s
+    """, vendor, structureJson);
 
         // 4. เรียก AI
         String aiRawResponse = aiProviderService.generateResponse(prompt, "");
