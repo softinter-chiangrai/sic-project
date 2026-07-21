@@ -1,11 +1,11 @@
 // src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { DialogService } from '../../../../core/services/dialog.service';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 interface DiagramPage {
   id: string;
@@ -18,14 +18,23 @@ interface DiagramPage {
   standalone: true,
   imports: [CommonModule, FormsModule, SicButtonComponent],
   template: `
-    <div class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col">
+    <div
+      class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"
+    >
       <!-- Header -->
-      <div class="flex items-center justify-between border-b px-5 py-4" style="border-color: var(--border);">
+      <div
+        class="flex items-center justify-between border-b px-5 py-4"
+        style="border-color: var(--border);"
+      >
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
           Generate SQL
         </h3>
-        <button type="button" class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors" (click)="close()">
+        <button
+          type="button"
+          class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+          (click)="close()"
+        >
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -34,7 +43,9 @@ interface DiagramPage {
       <div class="flex-1 overflow-y-auto p-5 space-y-4">
         <!-- Select Page -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Select ER Diagram Page</label>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Select ER Diagram Page</label
+          >
           <select
             [(ngModel)]="selectedPageId"
             (change)="onPageChange()"
@@ -53,7 +64,9 @@ interface DiagramPage {
 
         <!-- Vendor Selector -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Database Vendor</label>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Database Vendor</label
+          >
           <select
             [(ngModel)]="vendor"
             class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
@@ -69,16 +82,17 @@ interface DiagramPage {
           <div class="flex gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
-              <span class="text-sm">⚙️ Parser (Fast, Free)</span>
+              <span class="text-sm"></span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
-              <span class="text-sm">🤖 AI (Smarter, ~0.0005 USD/req)</span>
+              <span class="text-sm"></span>
             </label>
           </div>
           @if (engine === 'ai') {
             <p class="text-xs text-amber-500 mt-1">
-              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve naming.
+              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve
+              naming.
             </p>
           }
         </div>
@@ -122,7 +136,10 @@ interface DiagramPage {
                 </button>
               </div>
             </div>
-            <pre class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap">{{ sql() }}</pre>
+            <pre
+              class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap"
+              >{{ sql() }}</pre
+            >
           </div>
         }
       </div>
@@ -143,7 +160,7 @@ export class SqlExportDialogComponent implements OnInit {
   pages = signal<DiagramPage[]>([]);
   selectedPageId: string | null = null;
   vendor = 'postgresql';
-  engine: 'parser' | 'ai' = 'parser'; // ⭐ NEW
+  engine: 'parser' | 'ai' = 'parser';
   sql = signal<string>('');
   loading = signal(false);
 
@@ -181,7 +198,7 @@ export class SqlExportDialogComponent implements OnInit {
   private isErDiagramPage(name: string): boolean {
     const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
     const upperName = name.toUpperCase();
-    return erKeywords.some(keyword => upperName.includes(keyword.toUpperCase()));
+    return erKeywords.some((keyword) => upperName.includes(keyword.toUpperCase()));
   }
 
   private decodeHtmlEntities(text: string): string {
@@ -200,7 +217,7 @@ export class SqlExportDialogComponent implements OnInit {
       return;
     }
 
-    const selectedPage = this.pages().find(p => p.id === this.selectedPageId);
+    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
     if (!selectedPage) {
       this.dialogService.warn('Page not found', 'Selected page does not exist.');
       return;
@@ -208,25 +225,33 @@ export class SqlExportDialogComponent implements OnInit {
 
     this.loading.set(true);
 
-    // ⭐ Choose endpoint based on engine
-    const endpoint = this.engine === 'ai'
-      ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
-      : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
+    const endpoint =
+      this.engine === 'ai'
+        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
+        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
 
-    this.http.post<{ sql: string }>(endpoint, {
+    // ✅ Build payload object
+    const payload = {
       xml: selectedPage.xml,
       vendor: this.vendor,
-      pageName: selectedPage.name
-    }).subscribe({
+      pageName: selectedPage.name,
+    };
+
+    // ✅ Log payload to console (for debugging)
+    console.log('📤 Sending to AI (engine: ' + this.engine + '):', payload);
+
+    this.http.post<{ sql: string }>(endpoint, payload).subscribe({
       next: (res) => {
+        console.log('✅ AI Response:', res);
         this.sql.set(res.sql);
         this.loading.set(false);
       },
       error: (err) => {
+        console.error('❌ AI Error:', err);
         this.loading.set(false);
         const msg = err.error?.message || err.message || 'Could not generate SQL.';
         this.dialogService.error('Generation Failed', msg);
-      }
+      },
     });
   }
 
@@ -234,17 +259,20 @@ export class SqlExportDialogComponent implements OnInit {
     const sqlText = this.sql();
     if (!sqlText) return;
 
-    navigator.clipboard?.writeText(sqlText).then(() => {
-      this.dialogService.success('Copied', 'SQL copied to clipboard.');
-    }).catch(() => {
-      const textarea = document.createElement('textarea');
-      textarea.value = sqlText;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      textarea.remove();
-      this.dialogService.success('Copied', 'SQL copied to clipboard.');
-    });
+    navigator.clipboard
+      ?.writeText(sqlText)
+      .then(() => {
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      })
+      .catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = sqlText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      });
   }
 
   download() {
@@ -255,7 +283,7 @@ export class SqlExportDialogComponent implements OnInit {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `schema_${new Date().toISOString().slice(0,10)}.sql`;
+    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
     document.body.appendChild(a);
     a.click();
     a.remove();

@@ -1,18 +1,19 @@
 package com.softinter.sicapi.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.softinter.sicapi.service.AiSqlGeneratorService;
-import com.softinter.sicapi.service.PmAiProviderService;
-import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.service.AiSqlGeneratorService;
+import com.softinter.sicapi.service.PmAiProviderService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -40,23 +41,26 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
         log.info("Generated structure JSON ({} chars) for AI", structureJson.length());
 
         // 3. สร้าง Prompt (ระบุ vendor)
-        String prompt = String.format("""
-                You are an expert SQL developer. Based on the following database structure (tables, columns, and relations),
-                generate a complete DDL SQL script for a **%s** database.
+         String prompt = String.format("""
+            You are an expert SQL developer. Based on the following database structure (tables, columns, and relations),
+            generate a complete DDL SQL script for a **%s** database.
 
-                **Rules:**
-                1. Use appropriate data types (VARCHAR, INT, DATE, DECIMAL, TIMESTAMP, BOOLEAN, etc.) based on the column names.
-                2. If a column name is "id", make it PRIMARY KEY with UUID or BIGSERIAL/BIGINT.
-                3. Add FOREIGN KEY constraints for all relations.
-                4. Add useful indexes for foreign key columns.
-                5. Add `created_at` and `updated_at` TIMESTAMP columns with defaults if they don't exist.
-                6. Use proper naming conventions (snake_case).
-                7. Output **ONLY** the SQL code. Do NOT include any explanations, markdown formatting, or backticks outside the SQL block.
-                8. If you use backticks, wrap the entire SQL in ```sql ... ```.
+            Additionally, generate a **Mermaid ER diagram** using the **erDiagram** syntax.
+            The ER diagram should clearly show all tables, columns (with types), primary keys, and foreign key relationships.
+            Output the ER diagram in a ```mermaid ... ``` block.
 
-                **Database Structure:**
-                %s
-                """, vendor, structureJson);
+            **Rules for SQL:**
+            1. Use appropriate data types (VARCHAR, INT, DATE, DECIMAL, TIMESTAMP, BOOLEAN, etc.) based on the column names.
+            2. If a column name is "id", make it PRIMARY KEY with UUID or BIGSERIAL/BIGINT.
+            3. Add FOREIGN KEY constraints for all relations.
+            4. Add useful indexes for foreign key columns.
+            5. Add `created_at` and `updated_at` TIMESTAMP columns with defaults if they don't exist.
+            6. Use proper naming conventions (snake_case).
+            7. Output **ONLY** the SQL code and the Mermaid ER diagram. Do NOT include any explanations outside the code blocks.
+
+            **Database Structure:**
+            %s
+            """, vendor, structureJson);
 
         // 4. เรียก AI
         String aiRawResponse = aiProviderService.generateResponse(prompt, "");
@@ -73,16 +77,6 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
         return extractedSql.trim();
     }
 
-    /**
-     * แปลง DatabaseModel เป็น JSON สั้นๆ
-     * Example:
-     * {
-     *   "tables": [
-     *     { "name": "customers", "columns": [{ "name": "id", "type": "PK" }, { "name": "name", "type": "varchar" }] }
-     *   ],
-     *   "relations": [ { "from": "orders", "to": "customers" } ]
-     * }
-     */
     private String buildSimplifiedJson(ErXmlParserServiceImpl.DatabaseModel model) {
         try {
             Map<String, Object> root = new HashMap<>();

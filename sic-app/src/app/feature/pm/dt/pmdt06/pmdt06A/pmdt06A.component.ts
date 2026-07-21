@@ -174,7 +174,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     if (lower.startsWith('pie')) return 'Pie';
     if (lower.startsWith('gantt')) return 'Gantt';
     if (lower.includes('graph') || lower.includes('flowchart')) return 'Flowchart';
-    return 'Flowchart';
+    return 'ER';
   }
 
   clearChat() {
