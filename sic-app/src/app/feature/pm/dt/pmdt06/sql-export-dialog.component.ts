@@ -1,5 +1,6 @@
+// src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, OnInit, Input } from '@angular/core';
+import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
@@ -62,6 +63,26 @@ interface DiagramPage {
           </select>
         </div>
 
+        <!-- ⭐ NEW: Engine Selection (Parser vs AI) -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Engine</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
+              <span class="text-sm">⚙️ Parser (Fast, Free)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
+              <span class="text-sm">🤖 AI (Smarter, ~0.0005 USD/req)</span>
+            </label>
+          </div>
+          @if (engine === 'ai') {
+            <p class="text-xs text-amber-500 mt-1">
+              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve naming.
+            </p>
+          }
+        </div>
+
         <!-- Generate Button -->
         <div>
           <sic-button
@@ -117,12 +138,12 @@ export class SqlExportDialogComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
 
-  // ✅ เปลี่ยนจาก fullXml เป็น @Input() xml
   @Input() xml: string = '';
 
   pages = signal<DiagramPage[]>([]);
   selectedPageId: string | null = null;
   vendor = 'postgresql';
+  engine: 'parser' | 'ai' = 'parser'; // ⭐ NEW
   sql = signal<string>('');
   loading = signal(false);
 
@@ -136,15 +157,12 @@ export class SqlExportDialogComponent implements OnInit {
   private extractPages(xml: string) {
     if (!xml) return;
 
-    // ✅ แก้ regex ให้ถูกต้อง (ไม่มีช่องว่างแปลกๆ)
     const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
     const allPages: DiagramPage[] = [];
     let match;
 
     while ((match = regex.exec(xml)) !== null) {
       const fullTag = match[0];
-      
-      // ✅ regex ที่รองรับทั้ง " และ ' และช่องว่างรอบๆ =
       const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
       const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
 
@@ -152,30 +170,20 @@ export class SqlExportDialogComponent implements OnInit {
       const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
       const name = this.decodeHtmlEntities(rawName);
 
-      // ✅ กรองเฉพาะ ER Diagram
       if (this.isErDiagramPage(name)) {
         allPages.push({ id, name, xml: fullTag });
       }
     }
 
-    // ✅ ถ้าไม่มี ER Diagram เลย
-    if (allPages.length === 0) {
-      this.pages.set([]);
-      return;
-    }
-
     this.pages.set(allPages);
   }
 
-  // ✅ ฟังก์ชันตรวจสอบว่าเป็น ER Diagram หรือไม่ (จากชื่อ)
   private isErDiagramPage(name: string): boolean {
     const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
     const upperName = name.toUpperCase();
-    
     return erKeywords.some(keyword => upperName.includes(keyword.toUpperCase()));
   }
 
-  // ✅ Decode HTML entities ในชื่อหน้า
   private decodeHtmlEntities(text: string): string {
     const textarea = document.createElement('textarea');
     textarea.innerHTML = text;
@@ -200,17 +208,24 @@ export class SqlExportDialogComponent implements OnInit {
 
     this.loading.set(true);
 
-    this.http.post<{ sql: string }>(
-      `${environment.apiBaseUrl}/api/diagram/generate-sql`,
-      { xml: selectedPage.xml, vendor: this.vendor }
-    ).subscribe({
+    // ⭐ Choose endpoint based on engine
+    const endpoint = this.engine === 'ai'
+      ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
+      : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
+
+    this.http.post<{ sql: string }>(endpoint, {
+      xml: selectedPage.xml,
+      vendor: this.vendor,
+      pageName: selectedPage.name
+    }).subscribe({
       next: (res) => {
         this.sql.set(res.sql);
         this.loading.set(false);
       },
       error: (err) => {
         this.loading.set(false);
-        this.dialogService.error('Generation Failed', err.error?.message || 'Could not generate SQL.');
+        const msg = err.error?.message || err.message || 'Could not generate SQL.';
+        this.dialogService.error('Generation Failed', msg);
       }
     });
   }
