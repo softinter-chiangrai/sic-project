@@ -16,11 +16,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, take, takeUntil } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
+import type { DiagramModel } from './diagram.model';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
-import type { DiagramModel } from './diagram.model';
 
 @Component({
   selector: 'app-pmdt06',
@@ -54,6 +54,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
+  // ===== Rename state =====
+  editingTabId = signal<string | null>(null);
+
   // ===== Import Dialog =====
   showImportDialog = signal(false);
   pendingMermaid: { script: string; name?: string; type?: string } | null = null;
@@ -72,7 +75,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       }
     });
 
-    // Fallback 7 วินาที
     setTimeout(() => {
       if (!this.drawioReady) {
         console.warn('[Draw.io] Fallback: force ready after 7s');
@@ -94,11 +96,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       }
 
       this.loadProjectName();
-
-      // ✅ โหลด Tabs ทั้งหมด
       this.loadTabs();
 
-      // ✅ ถ้ามี currentTabId และ Draw.io พร้อม → โหลด diagram
       if (this.currentTabId && this.drawioReady) {
         this.loadExistingDiagram();
       }
@@ -120,7 +119,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         this.tabs.set(tabs);
         this.isLoadingTabs = false;
 
-        // ถ้าไม่มี currentTabId → เลือก Tab แรก
         if (!this.currentTabId && tabs.length > 0) {
           this.currentTabId = tabs[0].id;
           if (this.drawioReady) {
@@ -128,7 +126,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
           }
         }
 
-        // ถ้าไม่มี Tab เลย → สร้าง DFD เริ่มต้น?
         if (tabs.length === 0) {
           this.createDefaultTab();
         }
@@ -161,11 +158,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   createNewTab(): void {
     if (!this.projectId) return;
 
-    // ใช้ Dialog แทน prompt (สวยกว่า)
     const name = prompt('Enter diagram name:', 'New Diagram');
     if (!name) return;
 
-    // ให้เลือกประเภท
     const typeOptions = ['DFD', 'ER', 'Flowchart', 'Sequence', 'Class', 'State', 'Gantt'];
     const type = prompt(
       'Enter diagram type (DFD, ER, Flowchart, Sequence, Class, State, Gantt):',
@@ -195,7 +190,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     this.currentTabId = tabId;
     this.currentDiagram = null;
 
-    // อัปเดต URL
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tabId: tabId, projectId: this.projectId },
@@ -238,6 +232,72 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
+  // ===== Rename methods =====
+  startRename(tabId: string, event: Event): void {
+    event.stopPropagation();
+    this.editingTabId.set(tabId);
+    setTimeout(() => {
+      const input = document.getElementById(`rename-input-${tabId}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  finishRename(tabId: string, newName: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.editingTabId() !== tabId) return;
+
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    const tab = this.tabs().find(t => t.id === tabId);
+    if (!tab) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    if (trimmed === tab.name) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    const updatedTab = {
+      ...tab,
+      name: trimmed,
+      state: 3,
+      rowVersion: tab.rowVersion || 0
+    };
+
+    this.diagramService.updateTab(updatedTab as any).subscribe({
+      next: (res) => {
+        this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+        if (this.currentTabId === tabId) {
+          this.currentDiagram = res;
+        }
+        this.editingTabId.set(null);
+        this.dialogService.success('เปลี่ยนชื่อสำเร็จ', `เปลี่ยนชื่อเป็น "${res.name}"`);
+      },
+      error: (err) => {
+        console.error('Rename failed:', err);
+        this.dialogService.error('เปลี่ยนชื่อไม่สำเร็จ', err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้');
+        this.editingTabId.set(null);
+      }
+    });
+  }
+
+  cancelRename(tabId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.editingTabId() === tabId) {
+      this.editingTabId.set(null);
+    }
+  }
+
+  // ===== Helpers =====
   getTabIcon(type: string): string {
     const map: Record<string, string> = {
       DFD: 'bi-diagram-3',
@@ -268,7 +328,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     return map[type] || 'text-gray-500';
   }
 
-  // ===== Project Name =====
   loadProjectName(): void {
     if (!this.projectId) return;
     this.diagramService.getProjectName(this.projectId).subscribe({
@@ -277,7 +336,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // ===== Draw.io Integration =====
   @HostListener('window:message', ['$event'])
   onMessage(event: MessageEvent) {
     this.drawioService.handleMessage(event);
@@ -311,7 +369,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     if (!this.pendingMermaid) return;
     const { script, name, type } = this.pendingMermaid;
 
-    // ✅ สร้าง Tab ใหม่สำหรับ AI Diagram แทนที่จะเพิ่มหน้าในไฟล์เดิม
     if (this.projectId) {
       const tabName = name || 'AI Diagram';
       const tabType = type || 'Flowchart';
@@ -375,7 +432,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   saveDiagram(): void {
     if (!this.currentTabId) {
-      // ถ้าไม่มี Tab → สร้างใหม่
       if (this.projectId) {
         this.diagramService
           .createTab(this.projectId, 'New Diagram', 'Flowchart', '')
@@ -426,14 +482,13 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         projectId,
         graphData: { xml },
         mermaidScript: this.currentDiagram?.mermaidScript || null,
-        state: 3, // MODIFIED
+        state: 3,
         rowVersion: this.currentDiagram?.rowVersion || 0,
       };
 
       this.diagramService.updateTab(updatedTab as any).subscribe({
         next: (res) => {
           this.currentDiagram = res;
-          // อัปเดตใน tabs list
           this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
           this.dialogService.success('Saved', 'Diagram saved successfully.');
         },
@@ -476,11 +531,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // ===== Trace Links for DFD/ER =====
-  /**
-   * เรียกใช้เมื่อสร้าง DFD Tab ใหม่
-   * Frontend จะส่ง relatedRequirementIds ไปให้ Backend สร้าง Trace Link
-   */
+  // ===== Trace Links =====
   createDfdTab(name: string, relatedRequirementIds: string[]): void {
     if (!this.projectId) return;
 
@@ -488,13 +539,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       .createTab(this.projectId, name, 'DFD', '')
       .subscribe({
         next: (newTab) => {
-          // ✅ หลังจากได้ tabId แล้ว สร้าง Trace Link ผ่าน Backend (ทำใน createTab อยู่แล้ว)
-          // แต่ถ้าต้องการส่ง relatedRequirementIds ไปด้วย ต้องแก้ createTab ให้รับ parameter
-          // หรือเรียก API แยกเพื่อสร้าง Trace Link
           this.tabs.update((t) => [...t, newTab]);
           this.switchTab(newTab.id);
-
-          // ถ้าต้องการสร้าง Trace Link แยก (กรณี createTab ไม่รองรับ)
           this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
         },
         error: (err) => {
@@ -504,15 +550,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
-  /**
-   * สร้าง Trace Links แยก (กรณี Backend ไม่รองรับ)
-   */
   createTraceLinksForTab(tabId: string, type: string, relatedIds: string[]): void {
     if (!this.projectId || !tabId || !relatedIds.length) return;
 
-    // TODO: เรียก API /api/trace/create แยก
-    // หรือใช้ endpoint ที่มีอยู่แล้วใน PmDiagramTabService
-    // ตัวอย่าง: POST /api/diagram/tabs/{tabId}/trace-links
     this.http
       .post(`/api/diagram/tabs/${tabId}/trace-links`, {
         sourceType: type === 'DFD' ? 'REQUIREMENT' : 'DFD',
@@ -530,12 +570,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
-  // ============================================================
-  // ⭐ NEW: API for Trace Links from Frontend
-  // ============================================================
-  /**
-   * สร้าง Trace Link จาก DFD/ER ไปยัง Requirement หรือ DFD
-   */
   createTraceLink(
     sourceType: string,
     sourceId: string,
