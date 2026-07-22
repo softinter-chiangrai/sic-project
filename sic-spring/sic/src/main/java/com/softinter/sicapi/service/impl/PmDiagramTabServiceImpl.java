@@ -331,6 +331,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             dto.setIsActive(tab.getIsActive());
             dto.setCreatedDate(tab.getCreatedDate());
             dto.setUpdatedDate(tab.getUpdatedDate());
+            dto.setRowVersion(tab.getRowVersion());
 
             try {
                 dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
@@ -355,6 +356,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             fallback.setCreatedDate(tab.getCreatedDate());
             fallback.setUpdatedDate(tab.getUpdatedDate());
             fallback.setVersionCount(0);
+            fallback.setRowVersion(tab.getRowVersion());
             return fallback;
         }
     }

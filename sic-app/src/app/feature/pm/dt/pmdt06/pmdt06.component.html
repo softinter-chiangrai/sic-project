@@ -84,31 +84,55 @@
     }
 
     @for (tab of tabs(); track tab.id) {
-      <button
-        (click)="switchTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
-        [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
-        [class.text-white]="currentTabId === tab.id"
-        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
-        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
-        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
-      >
-        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
-        <span>{{ tab.name }}</span>
-        <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
-          {{ tab.diagramType }}
-        </span>
+      <!-- ในลูป @for (tab of tabs(); track tab.id) -->
+<button
+  (click)="switchTab(tab.id)"
+  class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
+  [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
+  [class.text-white]="currentTabId === tab.id"
+  [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+  [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+  [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+>
+  <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <!-- ปุ่มลบ -->
-        <button
-          (click)="deleteTab(tab.id, $event)"
-          class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          title="Delete tab"
-        >
-          <i class="bi bi-x text-sm"></i>
-        </button>
-      </button>
+  <!-- ชื่อ Tab: แสดงเป็น Input เมื่อกำลังแก้ไข -->
+  @if (editingTabId() === tab.id) {
+    <input
+      [id]="'rename-input-' + tab.id"
+      type="text"
+      [value]="tab.name"
+      (blur)="finishRename(tab.id, $any($event.target).value)"
+      (keydown.enter)="finishRename(tab.id, $any($event.target).value)"
+      (keydown.escape)="cancelRename(tab.id)"
+      (click)="$event.stopPropagation()"
+      class="bg-transparent border-b border-white/50 outline-none text-white w-auto min-w-[60px] max-w-[150px] px-0 py-0 text-sm"
+      autofocus
+    />
+  } @else {
+    <span
+      (dblclick)="startRename(tab.id, $event)"
+      class="cursor-pointer hover:text-[var(--crm-primary)] transition-colors"
+      title="Double-click to rename"
+    >
+      {{ tab.name }}
+    </span>
+  }
+
+  <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
+    {{ tab.diagramType }}
+  </span>
+
+  <!-- ปุ่มลบ -->
+  <button
+    (click)="deleteTab(tab.id, $event)"
+    class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+    [class.opacity-100]="currentTabId === tab.id"
+    title="ลบ"
+  >
+    <i class="bi bi-x text-sm"></i>
+  </button>
+</button>
     }
 
     <button

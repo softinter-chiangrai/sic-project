@@ -26,4 +26,5 @@ public class PmDiagramTabResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer versionCount;
+    private Integer rowVersion;
 }

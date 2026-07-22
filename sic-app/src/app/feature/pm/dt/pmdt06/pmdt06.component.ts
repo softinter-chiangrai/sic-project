@@ -65,44 +65,64 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
-    this.drawioService.init(this.iframe.nativeElement);
+  this.drawioService.init(this.iframe.nativeElement);
 
-    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
-      this.drawioReady = ready;
-      console.log('Draw.io ready status:', ready);
-      if (ready && this.currentTabId) {
+  let isFirstReady = true;
+
+  this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+    this.drawioReady = ready;
+    console.log('[Draw.io] Ready status:', ready);
+    if (ready && this.currentTabId && isFirstReady) {
+      isFirstReady = false;
+      this.loadExistingDiagram();
+    }
+  });
+
+  // ✅ Fallback: ถ้า Draw.io ไม่พร้อมภายใน 7 วินาที ให้ force load
+  setTimeout(() => {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Fallback: force ready after 7s');
+      this.drawioReady = true;
+      if (this.currentTabId) {
         this.loadExistingDiagram();
       }
-    });
+    }
+  }, 7000);
 
-    setTimeout(() => {
-      if (!this.drawioReady) {
-        console.warn('[Draw.io] Fallback: force ready after 7s');
-        this.drawioReady = true;
-        if (this.currentTabId) {
-          this.loadExistingDiagram();
-        }
-      }
-    }, 7000);
+  // ✅ รับ queryParams จาก URL
+  this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+    const newTabId = params['tabId'] || params['diagramId'] || null;
+    const newProjectId = params['projectId'] || null;
 
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      this.currentTabId = params['tabId'] || params['diagramId'] || null;
-      this.projectId = params['projectId'] || null;
+    if (!newProjectId) {
+      console.warn('[Route] No projectId, redirecting');
+      this.router.navigate(['/projects']);
+      return;
+    }
 
-      if (!this.projectId) {
-        console.warn('No projectId provided, redirecting to project selection');
-        this.router.navigate(['/projects']);
-        return;
-      }
-
+    // ✅ ถ้า projectId เปลี่ยน → โหลด Tabs ใหม่
+    if (newProjectId !== this.projectId) {
+      this.projectId = newProjectId;
+      this.currentTabId = null;
+      this.currentDiagram = null;
       this.loadProjectName();
       this.loadTabs();
+      return;
+    }
 
-      if (this.currentTabId && this.drawioReady) {
+    // ✅ ถ้า tabId เปลี่ยน → โหลด Diagram ใหม่
+    if (newTabId !== this.currentTabId) {
+      this.currentTabId = newTabId;
+      this.currentDiagram = null;
+      if (this.drawioReady) {
         this.loadExistingDiagram();
       }
-    });
-  }
+    } else if (!this.currentTabId) {
+      // ✅ ถ้ายังไม่มี tabId → โหลด Tabs แล้วเลือกอันแรก
+      this.loadTabs();
+    }
+  });
+}
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -111,36 +131,49 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Tabs Management =====
   loadTabs(): void {
-    if (!this.projectId) return;
-    this.isLoadingTabs = true;
+  if (!this.projectId) return;
+  this.isLoadingTabs = true;
 
-    this.diagramService.getTabs(this.projectId).subscribe({
-      next: (tabs) => {
-        this.tabs.set(tabs);
-        this.isLoadingTabs = false;
+  this.diagramService.getTabs(this.projectId).subscribe({
+    next: (tabs) => {
+      this.tabs.set(tabs);
+      this.isLoadingTabs = false;
 
-        if (!this.currentTabId && tabs.length > 0) {
-          this.currentTabId = tabs[0].id;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
-          }
+      // ✅ ถ้ายังไม่มี currentTabId แต่มี Tabs → เลือกอันแรก
+      if (!this.currentTabId && tabs.length > 0) {
+        this.currentTabId = tabs[0].id;
+        // ✅ อัปเดต URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { tabId: this.currentTabId, projectId: this.projectId },
+          queryParamsHandling: 'merge',
+        });
+        // ✅ โหลด Diagram (ถ้า Draw.io พร้อม)
+        if (this.drawioReady) {
+          this.loadExistingDiagram();
         }
+      }
 
-        if (tabs.length === 0) {
-          this.createDefaultTab();
-        }
-      },
-      error: () => {
-        this.isLoadingTabs = false;
-        this.tabs.set([]);
-      },
-    });
-  }
+      if (tabs.length === 0) {
+        this.createDefaultTab();
+      }
+    },
+    error: () => {
+      this.isLoadingTabs = false;
+      this.tabs.set([]);
+    },
+  });
+}
 
   createDefaultTab(): void {
     if (!this.projectId) return;
     this.diagramService
-      .createTab(this.projectId, 'DFD - Main', 'DFD', 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]')
+      .createTab(
+        this.projectId,
+        'DFD - Main',
+        'DFD',
+        'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
+      )
       .subscribe({
         next: (newTab) => {
           this.tabs.update((t) => [...t, newTab]);
@@ -164,25 +197,23 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     const typeOptions = ['DFD', 'ER', 'Flowchart', 'Sequence', 'Class', 'State', 'Gantt'];
     const type = prompt(
       'Enter diagram type (DFD, ER, Flowchart, Sequence, Class, State, Gantt):',
-      'DFD'
+      'DFD',
     );
     if (!type) return;
 
-    const selectedType = typeOptions.find(t => t.toLowerCase() === type.toLowerCase()) || 'DFD';
+    const selectedType = typeOptions.find((t) => t.toLowerCase() === type.toLowerCase()) || 'DFD';
 
-    this.diagramService
-      .createTab(this.projectId, name, selectedType as any, '')
-      .subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-          this.dialogService.success('Created', `Tab "${name}" created successfully.`);
-        },
-        error: (err) => {
-          console.error('Failed to create tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create tab.');
-        },
-      });
+    this.diagramService.createTab(this.projectId, name, selectedType as any, '').subscribe({
+      next: (newTab) => {
+        this.tabs.update((t) => [...t, newTab]);
+        this.switchTab(newTab.id);
+        this.dialogService.success('Created', `Tab "${name}" created successfully.`);
+      },
+      error: (err) => {
+        console.error('Failed to create tab:', err);
+        this.dialogService.error('Failed', err.error?.message || 'Could not create tab.');
+      },
+    });
   }
 
   switchTab(tabId: string): void {
@@ -203,7 +234,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   deleteTab(tabId: string, event: Event): void {
     event.stopPropagation();
-    const tab = this.tabs().find(t => t.id === tabId);
+    const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
 
     this.dialogService
@@ -255,7 +286,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const tab = this.tabs().find(t => t.id === tabId);
+    const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) {
       this.editingTabId.set(null);
       return;
@@ -270,7 +301,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       ...tab,
       name: trimmed,
       state: 3,
-      rowVersion: tab.rowVersion || 0
+      rowVersion: tab.rowVersion || 0,
     };
 
     this.diagramService.updateTab(updatedTab as any).subscribe({
@@ -284,9 +315,12 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       },
       error: (err) => {
         console.error('Rename failed:', err);
-        this.dialogService.error('เปลี่ยนชื่อไม่สำเร็จ', err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้');
+        this.dialogService.error(
+          'เปลี่ยนชื่อไม่สำเร็จ',
+          err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
+        );
         this.editingTabId.set(null);
-      }
+      },
     });
   }
 
@@ -372,23 +406,21 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     if (this.projectId) {
       const tabName = name || 'AI Diagram';
       const tabType = type || 'Flowchart';
-      this.diagramService
-        .createTab(this.projectId, tabName, tabType as any, script)
-        .subscribe({
-          next: (newTab) => {
-            this.tabs.update((t) => [...t, newTab]);
-            this.switchTab(newTab.id);
-            this.showImportDialog.set(false);
-            this.pendingMermaid = null;
-            this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
-          },
-          error: (err) => {
-            console.error('Failed to create AI diagram tab:', err);
-            this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
-            this.showImportDialog.set(false);
-            this.pendingMermaid = null;
-          },
-        });
+      this.diagramService.createTab(this.projectId, tabName, tabType as any, script).subscribe({
+        next: (newTab) => {
+          this.tabs.update((t) => [...t, newTab]);
+          this.switchTab(newTab.id);
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+        },
+        error: (err) => {
+          console.error('Failed to create AI diagram tab:', err);
+          this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+        },
+      });
     } else {
       this.showImportDialog.set(false);
       this.pendingMermaid = null;
@@ -401,52 +433,75 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Diagram CRUD =====
-  loadExistingDiagram(): void {
-    if (!this.currentTabId || this.isLoadingDiagram) return;
-    this.isLoadingDiagram = true;
-    this.isLoading = true;
+ loadExistingDiagram(): void {
+  if (!this.currentTabId) {
+    console.warn('[Diagram] No tabId to load');
+    return;
+  }
 
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
-      next: (diagram) => {
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          alert('❌ This diagram does not belong to the selected project.');
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
-          this.drawioService.loadXml('');
-          return;
-        }
-        this.currentDiagram = diagram;
-        const xml = diagram.graphData?.xml || '';
-        this.drawioService.loadXml(xml);
-        this.isLoading = false;
-        this.isLoadingDiagram = false;
-      },
-      error: (err) => {
-        console.error('Failed to load diagram:', err);
+  if (this.isLoadingDiagram) {
+    console.warn('[Diagram] Already loading, skip');
+    return;
+  }
+
+  this.isLoadingDiagram = true;
+  this.isLoading = true;
+  console.log('[Diagram] Loading diagram:', this.currentTabId);
+
+  this.diagramService.getDiagram(this.currentTabId).subscribe({
+    next: (diagram) => {
+      console.log('[Diagram] Loaded diagram data:', diagram);
+
+      if (this.projectId && diagram.projectId !== this.projectId) {
+        console.warn('[Diagram] Project mismatch');
+        this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
         this.isLoading = false;
         this.isLoadingDiagram = false;
         this.drawioService.loadXml('');
-      },
-    });
-  }
+        return;
+      }
 
+      this.currentDiagram = diagram;
+
+      // ✅ ดึง XML จาก graphData (ถ้ามี) หรือใช้ค่าปริยาย
+      const xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+      console.log('[Diagram] XML length:', xml.length);
+
+      // ✅ ใช้ setTimeout เพื่อให้ Draw.io พร้อมรับ XML อย่างเต็มที่
+      setTimeout(() => {
+        this.drawioService.loadXml(xml, true);
+      }, 300);
+
+      this.isLoading = false;
+      this.isLoadingDiagram = false;
+    },
+    error: (err) => {
+      console.error('[Diagram] Failed to load diagram:', err);
+      this.isLoading = false;
+      this.isLoadingDiagram = false;
+      // ✅ โหลด Diagram ว่างเปล่าเพื่อให้ UI ไม่ค้าง
+      setTimeout(() => {
+        this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
+      }, 300);
+      this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+    },
+  });
+}
   saveDiagram(): void {
     if (!this.currentTabId) {
       if (this.projectId) {
-        this.diagramService
-          .createTab(this.projectId, 'New Diagram', 'Flowchart', '')
-          .subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.currentTabId = newTab.id;
-              this.currentDiagram = newTab;
-              this.saveDiagramInternal();
-            },
-            error: (err) => {
-              alert('❌ Could not create new tab.');
-              console.error(err);
-            },
-          });
+        this.diagramService.createTab(this.projectId, 'New Diagram', 'Flowchart', '').subscribe({
+          next: (newTab) => {
+            this.tabs.update((t) => [...t, newTab]);
+            this.currentTabId = newTab.id;
+            this.currentDiagram = newTab;
+            this.saveDiagramInternal();
+          },
+          error: (err) => {
+            alert('❌ Could not create new tab.');
+            console.error(err);
+          },
+        });
       }
       return;
     }
@@ -535,19 +590,17 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   createDfdTab(name: string, relatedRequirementIds: string[]): void {
     if (!this.projectId) return;
 
-    this.diagramService
-      .createTab(this.projectId, name, 'DFD', '')
-      .subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-          this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
-        },
-        error: (err) => {
-          console.error('Failed to create DFD tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
-        },
-      });
+    this.diagramService.createTab(this.projectId, name, 'DFD', '').subscribe({
+      next: (newTab) => {
+        this.tabs.update((t) => [...t, newTab]);
+        this.switchTab(newTab.id);
+        this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
+      },
+      error: (err) => {
+        console.error('Failed to create DFD tab:', err);
+        this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
+      },
+    });
   }
 
   createTraceLinksForTab(tabId: string, type: string, relatedIds: string[]): void {
@@ -575,7 +628,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     sourceId: string,
     targetType: string,
     targetId: string,
-    relationshipType: string
+    relationshipType: string,
   ): void {
     this.http
       .post('/api/trace/links', {
@@ -588,11 +641,58 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       })
       .subscribe({
         next: () => {
-          console.log(`✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`);
+          console.log(
+            `✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`,
+          );
         },
         error: (err) => {
           console.error('Failed to create trace link:', err);
         },
       });
+  }
+  renameTab(tabId: string, currentName: string, event: Event): void {
+    event.stopPropagation();
+    const newName = prompt('ป้อนชื่อใหม่สำหรับ Diagram:', currentName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
+
+    this.diagramService.getDiagram(tabId).subscribe({
+      next: (latest) => {
+        // ✅ แปลงเป็น DiagramModel ที่มี rowVersion
+        const updatedTab: any = {
+          id: latest.id,
+          name: newName.trim(),
+          diagramType: latest.diagramType,
+          projectId: latest.projectId,
+          mermaidScript: latest.mermaidScript || '',
+          graphData: latest.graphData || {},
+          metadata: latest.metadata || {},
+          sortOrder: latest.sortOrder || 0,
+          isActive: latest.isActive ?? true,
+          state: 3, // Modified
+          rowVersion: latest.rowVersion ?? 0, // ใช้ค่าจริงจากฐานข้อมูล
+        };
+
+        this.diagramService.updateTab(updatedTab).subscribe({
+          next: (res) => {
+            this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+            if (this.currentTabId === tabId) this.currentDiagram = res;
+            this.dialogService.success(
+              'เปลี่ยนชื่อสำเร็จ',
+              `เปลี่ยนชื่อ Diagram เป็น "${res.name}"`,
+            );
+          },
+          error: (err) => {
+            console.error('เปลี่ยนชื่อล้มเหลว:', err);
+            this.dialogService.error(
+              'เปลี่ยนชื่อไม่สำเร็จ',
+              err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
+            );
+          },
+        });
+      },
+      error: (err) => {
+        this.dialogService.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดข้อมูล Diagram ปัจจุบันได้');
+      },
+    });
   }
 }
