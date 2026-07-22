@@ -9291,6 +9291,322 @@ export abstract class BaseActionComponent implements  OnDestroy {
 }
 </file>
 
+<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.component.html">
+<div class="h-screen min-h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+  <button role="button" tabindex="0"
+    class="fixed inset-0 z-25 bg-[rgba(15,23,42,0.4)] opacity-0 transition-opacity duration-200 pointer-events-none md:hidden"
+    [class.opacity-100]="isMobileSidebarOpen()" [class.pointer-events-auto]="isMobileSidebarOpen()"
+    (click)="closeMobileSidebar()" (keydown.enter)="closeMobileSidebar()" (keydown.space)="closeMobileSidebar()"
+    aria-label="Close mobile sidebar overlay"></button>
+
+  <header
+    cl
+    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md md:hidden">
+    <div class="flex items-center gap-4">
+      <div class="relative">
+        <div
+          class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)]">
+          <img [src]="profileImageSrc" [alt]="profile.name" class="h-full w-full rounded-full object-cover" />
+        </div>
+        <div class="absolute h-6 w-6 -right-2 bottom-[-2PX] rounded-full border-1 border-[var(--crm-success)] bg-white">
+          <img [src]="businessImageSrc" [alt]="business.name" class="h-full w-full rounded-full object-cover" />
+        </div>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <div class="flex gap-1">
+          <div class="flex-initial min-w-0">
+            <p class="m-0 text-[0.8rem] font-medium text-truncate text-[var(--text-active)]">{{profile.name}}</p>
+          </div>
+          <div class="flex-none">
+            <p class="m-0 text-[0.8rem] font-bold">({{business.code}})</p>
+          </div>
+        </div>
+        <div class="mt-0.5">
+          <div class="flex gap-2">
+            <button type="button" (click)="toggleLanguage()"
+              class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer" aria-label="Toggle Language">
+              <img src="images/language.png" alt="Language" class="h-6 w-6 object-contain rounded-full" />
+            </button>
+            <button type="button" (click)="toggleTheme()"
+              class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer" aria-label="Toggle Theme">
+              <img src="images/day-and-night.png" alt="Theme" class="h-6 w-6 object-contain" />
+            </button>
+            <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <img src="images/chat.png" alt="Chat" class="h-4 object-contain rounded-full" />
+              </div>
+              <div
+                class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
+              </div>
+              <div
+                class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
+                7</div>
+            </div>
+            <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <img src="images/bell.png" alt="Notification" class="h-4 object-contain rounded-full" />
+              </div>
+              <div
+                class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
+              </div>
+              <div
+                class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
+                7</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="grid h-8 w-8 place-items-center rounded-xl text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
+      type="button" aria-label="Open sidebar" (click)="openMobileSidebar()">
+      <i class="bi bi-list"></i>
+    </button>
+  </header>
+
+  <div class="md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
+    <aside
+      class="fixed inset-y-0 left-0 z-30 flex h-screen min-h-screen w-[min(18rem,calc(100vw-2rem))] -translate-x-full flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] transition-transform duration-200 md:sticky md:top-0 md:w-64 md:translate-x-0"
+      [class.translate-x-0]="isMobileSidebarOpen()">
+
+      <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3.5">
+        <div class="flex items-center gap-4 w-full">
+          <div class="relative">
+            <div
+              class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)]">
+              <img [src]="profileImageSrc" [alt]="profile.name" class="h-full w-full rounded-full object-cover"
+                [tooltip]="profile.name" />
+            </div>
+            <div
+              class="absolute h-6 w-6 -right-2 bottom-[-2PX] rounded-full border-1 border-[var(--crm-success)] bg-white"
+              [tooltip]="business.name">
+              <img [src]="businessImageSrc" [alt]="business.name" class="h-full w-full rounded-full object-cover" />
+            </div>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex gap-1 min-w-0 w-full">
+              <div class="min-w-0 flex-1">
+                <p class="m-0 text-[0.8rem] font-medium truncate text-[var(--text-active)]">
+                  {{ profile.name }}
+                </p>
+              </div>
+              <div class="flex-none shrink-0">
+                <p class="m-0 text-[0.8rem] font-bold">({{ business.code }})</p>
+              </div>
+            </div>
+            <div class="mt-0.5">
+              <div class="flex gap-2">
+                <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
+                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
+                  <img src="images/language.png" alt="Change Language" class="h-6 w-6 object-contain rounded-full" />
+                </button>
+                <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
+                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()">
+                  <img src="images/day-and-night.png" alt="Change Theme" class="h-6 w-6 object-contain" />
+                </button>
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full"
+                  [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate ">
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <img src="images/chat.png" alt="Chat Link" class="h-4 object-contain rounded-full" />
+                  </div>
+                  <div
+                    class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
+                  </div>
+                  <div
+                    class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
+                    7</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="grid h-8 w-8 place-items-center rounded-xl text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)] md:hidden"
+          type="button" aria-label="Close sidebar" (click)="closeMobileSidebar()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto px-2 py-2.5">
+
+        <!--
+          ng-template recursive
+          context: { items: SidebarItem[], depth: number }
+          depth 0 = root → ใช้ style เดิมของ sidebar-menu-item
+          depth >= 1    → ใช้ style เดิมของ sidebar-submenu-item
+        -->
+        <ng-template #menuNode let-items="items" let-depth="depth">
+          @for (item of items; track item.code) {
+
+          @if (depth === 0) {
+          <!-- ── Root level: ทุก class/attribute เหมือนเดิม 100% ── -->
+          <button
+            class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
+            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
+            [class.bg-[var(--sidebar-hover)]]="isItemActive(item)" [class.text-[1.1rem]]="isItemActive(item)"
+            (click)="toggleMenu(item.code, !!item.children?.length)">
+            <span class="flex min-w-0 items-center gap-3">
+              <i class="bi text-[0.95rem]" [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </span>
+            @if (item.badge || item.notification || item.children?.length) {
+            <span class="ml-auto flex items-center gap-2">
+              @if (item.badge) {
+              <span
+                class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
+                {{ item.badge }}
+              </span>
+              }
+              @if (item.notification) {
+              <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
+              }
+              @if (item.children?.length) {
+              <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
+                [class.rotate-90]="isExpanded(item.code)"></i>
+              }
+            </span>
+            }
+          </button>
+
+          } @else {
+          <!-- ── Sub level (depth >= 1): ทุก class/attribute เหมือนเดิม 100% ── -->
+          <button
+            class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
+            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
+            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
+            [class.text-[1rem]]="isItemActive(item)" [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
+            (click)="toggleMenu(item.code, !!item.children?.length)">
+            <span class="flex min-w-0 items-center justify-between">
+              <span>{{ item.label }}</span>
+              @if (item.children?.length) {
+              <i class="bi bi-chevron-right text-[0.75rem] transition-transform duration-200 ml-auto"
+                [class.rotate-90]="isExpanded(item.code)"></i>
+              }
+            </span>
+          </button>
+          }
+
+          <!-- ── Children: กาง/หุบ เหมือนเดิม แต่ recursive ── -->
+          @if (item.children?.length) {
+          <div class="sidebar-submenu" [class.open]="isExpanded(item.code)"
+            [style.padding-left]="depth >= 1 ? '0.95rem' : null">
+            <div class="sidebar-submenu-content">
+              <ng-container *ngTemplateOutlet="menuNode; context: { items: item.children, depth: depth + 1 }">
+              </ng-container>
+            </div>
+          </div>
+          }
+
+          }
+        </ng-template>
+
+        <!-- Bootstrap ที่ depth 0 -->
+        <ng-container *ngTemplateOutlet="menuNode; context: { items: mainMenu(), depth: 0 }">
+        </ng-container>
+
+      </nav>
+
+      <div class="border-t border-[var(--border)] bg-[var(--sidebar)] px-3 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-[0.8rem] text-[var(--text-active)]">
+            <span class="min-w-[150px] font-medium tabular-nums">{{ datetime() }}</span>
+          </div>
+          <button type="button" [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate " tooltipPosition="top"
+            class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
+            (click)="logout()">
+            <i class="bi bi-box-arrow-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main role="presentation" class="h-screen min-h-screen flex flex-col overflow-hidden bg-[var(--bg)]"
+      (click)="closeMobileSidebar()">
+
+      <div class="p-4 md:p-6 pb-0 md:pb-0 mb-5 md:mb-6 flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-[0.95rem]">
+          @for (crumb of breadcrumbs(); track $index) {
+          @if ($index > 0) {
+          <i class="bi bi-chevron-right text-[0.72rem] text-[var(--text-muted)]"></i>
+          }
+
+          @if (crumb.url && !crumb.isCurrent) {
+          <a [routerLink]="crumb.url"
+            class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
+            [class.text-[var(--crm-primary)]]="$index === 0" [class.text-[var(--text-muted)]]="$index !== 0">
+            @if (crumb.icon) {
+            <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
+            }
+            <span>{{ crumb.label }}</span>
+          </a>
+          } @else {
+          <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
+            [class.text-[var(--text-active)]]="crumb.isCurrent" [class.text-[var(--text-muted)]]="!crumb.isCurrent">
+            @if (crumb.icon) {
+            <i class="bi text-[0.95rem]" [class]="crumb.icon" [class.text-[var(--crm-primary)]]="$index === 0"></i>
+            }
+            <span>{{ crumb.label }}</span>
+          </span>
+          }
+          }
+        </nav>
+
+        <div class="flex items-center gap-2 text-[var(--text-muted)]">
+          @if (isBack) {
+            <button type="button" tooltip="ย้อนกลับ" (click)="onActionClick('back')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Back">
+              <i class="bi bi-arrow-left-circle text-xl"></i>
+            </button>
+          }
+          @if (isSearch) {
+            <button type="button" tooltip="ค้นหา" (click)="onActionClick('search')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Search">
+              <i class="bi bi-search text-lg"></i>
+            </button>
+          }
+          @if (isAdd) {
+            <button type="button" tooltip="เพิ่ม" (click)="onActionClick('add')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Search">
+              <i class="bi bi-plus-circle-fill"></i>
+            </button>
+          }
+          @if (isSave) {
+            <button type="button" tooltip="บันทึก" (click)="onActionClick('save')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Save">
+              <i class="bi bi-floppy2 text-lg"></i>
+            </button>
+          }
+          @if (isPrint) {
+            <button type="button" tooltip="พิมพ์" (click)="onActionClick('print')"
+              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+              title="Print">
+              <i class="bi bi-printer text-lg"></i>
+            </button>
+          }
+        </div>
+
+      </div>
+
+      <div class="flex-1 overflow-auto min-h-0 w-full px-4 pt-0.5 md:px-6 pb-4 md:pb-6">
+        <sic-card>
+          <ng-content></ng-content>
+        </sic-card>
+      </div>
+    </main>
+  </div>
+</div>
+</file>
+
 <file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.model.ts">
 import { StorageUploadReference } from "../sic-upload/sic-upload.component";
 
@@ -9349,6 +9665,79 @@ export interface ISidebarAction {
   onAdd?(): void;
   onSave?(): void;
   onPrint?(): void;
+}
+</file>
+
+<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.service.ts">
+import { inject, Injectable } from '@angular/core';
+import { environment } from '../../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { Observable, Subject } from 'rxjs';
+import { BusinessInfoModel, MenuActionFlags, MenuItemModel, ProfileInfoModel } from './sic-sidebar.model';
+
+export type SidebarAction = 'back' | 'search' | 'add' | 'save' | 'print'  | null;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SicSidebarService {
+
+
+  actionSubject = new Subject<SidebarAction>();
+  action$ = this.actionSubject.asObservable();
+
+  private readonly http = inject(HttpClient);
+
+  apiProfile = environment.apiBaseUrl + '/api/profile';
+  apiBusiness = environment.apiBaseUrl + '/api/business';
+  apiMenu = environment.apiBaseUrl + '/api/menu';
+
+  getProfile(): Observable<ProfileInfoModel> {
+    return this.http.get<ProfileInfoModel>(this.apiProfile);
+  }
+
+  getBusiness(): Observable<BusinessInfoModel> {
+    return this.http.get<BusinessInfoModel>(this.apiBusiness);
+  }
+
+  getMenu(): Observable<MenuItemModel[]> {
+    return this.http.get<MenuItemModel[]>(this.apiMenu);
+  }
+
+  triggerAction(action: SidebarAction) {
+    this.actionSubject.next(action);
+  }
+
+  readonly DEFAULT_FLAGS: MenuActionFlags = {
+    isBack: false, isSearch: false, isAdd: false,
+    isSave: false, isRemove: false, isPrint: false,
+  };
+
+  /**
+   * Recursively search menu items and return action flags
+   * for the item whose path matches the given route path segment.
+   * e.g. path = 'bu/burt01'
+   */
+  getActionFlagsForPath(items: MenuItemModel[], path: string): MenuActionFlags | null {
+    for (const item of items) {
+      if (item.path === path) {
+        return {
+          isBack: item.isBack,
+          isSearch: item.isSearch,
+          isAdd: item.isAdd,
+          isSave: item.isSave,
+          isRemove: item.isRemove,
+          isPrint: item.isPrint,
+        };
+      }
+      if (item.children?.length) {
+        const found = this.getActionFlagsForPath(item.children, path);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
 }
 </file>
 
@@ -13909,6 +14298,218 @@ import { Component } from '@angular/core';
 })
 export class Burp01Component {
 
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt01/burt01.component.html">
+@if (formData; as data) {
+<form formsearch [formGroup]="data.formGroup">
+  <div class="grid grid-cols-6 gap-4">
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-profile [size]="150" [visibility]="4" formControlName="uploadGroupData" src="images/business_logo.png">
+      </sic-profile>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <sic-radio formControlName="personType" direction="horizontal" alignment="center"
+        [apiUrl]="service.apiGetLovPersonType"></sic-radio>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-3">
+        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0"
+          formControlName="taxId"></sic-input>
+      </div>
+      @if (data.formGroup.get('personType')?.value == 'CORPORATE') {
+      <div class="flex-1">
+        <sic-input label="สาขา" mask="00000" formControlName="branchCode"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle"
+        [params]="{ personType: data.formGroup.get('personType')?.value }">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-2">
+        <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
+      </div>
+      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+      <div class="flex-1">
+        <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
+      </div>
+      <div class="flex-2">
+        <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+      <div class="flex-2">
+        <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
+      </div>
+      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
+      <div class="flex-1">
+        <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
+      </div>
+      <div class="flex-2">
+        <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
+      </div>
+      }
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry"
+        (selectionChanged)="onCountryChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
+    </div>
+    @if(data.formGroup.get('supportLocalAddress')?.value) {
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince"
+        [params]="{ countryId: data.formGroup.get('countryId')?.value }" (selectionChanged)="onProvinceChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict"
+        [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
+        (selectionChanged)="onDistrictChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict"
+        [params]="{ districtId: data.formGroup.get('districtId')?.value }"
+        (selectionChanged)="onSubDistrictChange($event)">
+      </sic-combobox>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+    </div>
+    }
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input label="อีเมล" formControlName="email"></sic-input>
+    </div>
+    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+    </div>
+  </div>
+</form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt01/burt01.component.ts">
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+import { Burt01FormData, Burt01Model } from './burt01.model';
+import { CommonModule } from '@angular/common';
+import { SicProfileComponent } from '../../../../core/component/sic-profile/sic-profile.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicInputPhoneComponent } from '../../../../core/component/sic-input-phone/sic-input-phone.component';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { Burt01Service } from './burt01.service';
+import { SicRadioComponent } from "../../../../core/component/sic-radio/sic-radio.component";
+import { SicCardComponent } from "../../../../core/component/sic-card/sic-card.component";
+import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
+import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
+
+@Component({
+  selector: 'app-burt01',
+  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent],
+  templateUrl: './burt01.component.html',
+  styleUrl: './burt01.component.css',
+})
+export class Burt01Component extends BaseActionComponent implements OnInit, ISidebarAction {
+
+  readonly route = inject(ActivatedRoute);
+  readonly dialog = inject(DialogService);
+  readonly authService = inject(AuthService);
+  readonly service = inject(Burt01Service);
+  readonly router = inject(Router);
+
+  formData!: SicFromData<Burt01Model>;
+
+  ngOnInit(): void {
+     const form:Burt01FormData = this.route.snapshot.data['form'];
+     this.formData = form.businessInfo;
+  }
+
+  onCountryChange(event: any): void {
+    this.formData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
+    this.formData.formGroup.get('provinceId')?.setValue(null);
+    this.formData.formGroup.get('districtId')?.setValue(null);
+    this.formData.formGroup.get('subDistrictId')?.setValue(null); 
+    this.formData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onProvinceChange(event: any): void {
+    this.formData.formGroup.get('districtId')?.setValue(null);
+    this.formData.formGroup.get('subDistrictId')?.setValue(null);
+    this.formData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onDistrictChange(event: any): void {
+    this.formData.formGroup.get('subDistrictId')?.setValue(null);
+    this.formData.formGroup.get('zipCode')?.setValue(null);
+  }
+
+  onSubDistrictChange(event: any): void {
+    this.formData.formGroup.get('zipCode')?.setValue(event.zipCode);// You can add any logic here if needed when the sub-district changes 
+  }
+
+  submit() {
+    this.formData.markAllAsTouched();
+    if (this.formData.invalid) {
+      this.dialog.warn('Invalid Form', 'Please correct the errors in the form before saving.');
+    } else if (this.formData.isNotChanged) {
+      this.dialog.warn('No Changes', 'There are no changes to save.');
+    } else {
+      this.save();
+    }
+  }
+
+  save() {
+    const data = this.formData.value;
+    this.service.save(data).subscribe({
+      next: (response) => {
+        this.dialog.success('Business Saved', 'Your Business has been successfully saved.');
+      },
+      error: (error) => {
+        this.dialog.error('Save Failed', error);
+      }
+    });
+  }
+
+  onAdd(): void {
+    console.log('add');
+  }
+  
+  onBack(): void {
+    console.log('back');
+  }
+  
+  onPrint(): void {
+    console.log('print');
+  }
+  
+  onSave(): void {
+    console.log('save');
+    
+  }
+
+  onSearch(): void {
+    console.log('search');
+  }
 }
 </file>
 
@@ -18935,6 +19536,101 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(jwtChannelInterceptor);
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/BusinessController.java">
+package com.softinter.sicapi.controller.basic;
+
+import com.softinter.sicapi.dto.request.*;
+import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.service.BusinessAccessService;
+import com.softinter.sicapi.service.ComboboxService;        // ✅ เพิ่ม
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.util.LanguageUtils;             // ✅ เพิ่ม
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/business")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Business", description = "Business Management API")
+public class BusinessController {
+
+    private final BusinessAccessService businessAccessService;
+    private final CurrentUserService currentUserService;
+    private final ComboboxService comboboxService;   // ✅ เพิ่ม
+
+    @GetMapping
+    @Operation(summary = "Get current active business info")
+    public ResponseEntity<BusinessResponseDto> getCurrentBusiness() {
+        UUID activeId = businessAccessService.getBusinessId();
+        if (activeId == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(businessAccessService.getBusiness(activeId));
+    }
+
+    @GetMapping("/my-business")
+    @Operation(summary = "Get my business list")
+    public ResponseEntity<List<BusinessResponseDto>> getMyBusiness() {
+        return ResponseEntity.ok(businessAccessService.getMyBusinesses());
+    }
+
+    @GetMapping("/activation")
+    @Operation(summary = "Get business activation status")
+    public ResponseEntity<Boolean> getBusinessActivation() {
+        return ResponseEntity.ok(businessAccessService.getBusinessActivation());
+    }
+
+    @PostMapping("/change-business")
+    @Operation(summary = "Change active business")
+    public ResponseEntity<ChangeBusinessResponse> changeBusiness(
+            @RequestBody ChangeBusinessRequest request) {
+        return ResponseEntity.ok(
+                businessAccessService.changeBusiness(request.getBusinessId()));
+    }
+
+    @GetMapping("/business-access")
+    @Operation(summary = "Get current business access details")
+    public ResponseEntity<BusinessAccessResponse> getBusinessAccess() {
+        UUID businessId = businessAccessService.getBusinessId();
+        boolean canAccess = businessAccessService.canAccessBusiness(businessId);
+        BusinessAccessResponse response = new BusinessAccessResponse();
+        response.setBusinessId(businessId);
+        response.setCanAccess(canAccess);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
+        String userId = currentUserService.getUserId();
+        UUID id = businessAccessService.saveBusiness(request, userId);
+        return ResponseEntity.ok(id);
+    }
+
+    @GetMapping("/{businessId}")
+    @Operation(summary = "Get business info")
+    public ResponseEntity<BusinessResponseDto> getBusinessInfo(@PathVariable UUID businessId) {
+        return ResponseEntity.ok(businessAccessService.getBusiness(businessId));
+    }
+
+    @GetMapping("/lov-person-type")
+    @Operation(summary = "Get person type LOV (Individual/Corporate)")
+    public ResponseEntity<List<LovResponse>> getLovPersonType() {
+        // ✅ ดึงจาก Database แทน Hardcode
+        String lang = LanguageUtils.getLanguage();
+        return ResponseEntity.ok(comboboxService.getPersonTypeLov(lang));
     }
 }
 </file>
@@ -27842,392 +28538,378 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
 }
 </file>
 
-<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.component.html">
-<div class="h-screen min-h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-  <button role="button" tabindex="0"
-    class="fixed inset-0 z-25 bg-[rgba(15,23,42,0.4)] opacity-0 transition-opacity duration-200 pointer-events-none md:hidden"
-    [class.opacity-100]="isMobileSidebarOpen()" [class.pointer-events-auto]="isMobileSidebarOpen()"
-    (click)="closeMobileSidebar()" (keydown.enter)="closeMobileSidebar()" (keydown.space)="closeMobileSidebar()"
-    aria-label="Close mobile sidebar overlay"></button>
+<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.component.ts">
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
+import {
+  Component,
+  effect,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { filter, Subscription } from 'rxjs';
+import { AuthService } from '../../auth/auth.service';
+import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
+import { DialogService } from '../../services/dialog.service';
+import { AppLanguage, LanguageService } from '../../services/language.service';
+import { ThemeService } from '../../services/theme.service';
+import { DateTimeUtil } from '../../utils/datetime.util';
+import { SicCardComponent } from '../sic-card/sic-card.component';
+import {
+  BusinessInfoModel,
+  MenuItemModel,
+  ProfileInfoModel,
+  SidebarItem,
+} from './sic-sidebar.model';
+import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
 
-  <header
-    cl
-    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md md:hidden">
-    <div class="flex items-center gap-4">
-      <div class="relative">
-        <div
-          class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)]">
-          <img [src]="profileImageSrc" [alt]="profile.name" class="h-full w-full rounded-full object-cover" />
-        </div>
-        <div class="absolute h-6 w-6 -right-2 bottom-[-2PX] rounded-full border-1 border-[var(--crm-success)] bg-white">
-          <img [src]="businessImageSrc" [alt]="business.name" class="h-full w-full rounded-full object-cover" />
-        </div>
-      </div>
+interface BreadcrumbItem {
+  label: string;
+  url: string | null;
+  icon?: string;
+  isCurrent?: boolean;
+}
 
-      <div class="min-w-0 flex-1">
-        <div class="flex gap-1">
-          <div class="flex-initial min-w-0">
-            <p class="m-0 text-[0.8rem] font-medium text-truncate text-[var(--text-active)]">{{profile.name}}</p>
-          </div>
-          <div class="flex-none">
-            <p class="m-0 text-[0.8rem] font-bold">({{business.code}})</p>
-          </div>
-        </div>
-        <div class="mt-0.5">
-          <div class="flex gap-2">
-            <button type="button" (click)="toggleLanguage()"
-              class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer" aria-label="Toggle Language">
-              <img src="images/language.png" alt="Language" class="h-6 w-6 object-contain rounded-full" />
-            </button>
-            <button type="button" (click)="toggleTheme()"
-              class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer" aria-label="Toggle Theme">
-              <img src="images/day-and-night.png" alt="Theme" class="h-6 w-6 object-contain" />
-            </button>
-            <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <img src="images/chat.png" alt="Chat" class="h-4 object-contain rounded-full" />
-              </div>
-              <div
-                class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
-              </div>
-              <div
-                class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
-                7</div>
-            </div>
-            <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <img src="images/bell.png" alt="Notification" class="h-4 object-contain rounded-full" />
-              </div>
-              <div
-                class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
-              </div>
-              <div
-                class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
-                7</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <button
-      class="grid h-8 w-8 place-items-center rounded-xl text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)]"
-      type="button" aria-label="Open sidebar" (click)="openMobileSidebar()">
-      <i class="bi bi-list"></i>
-    </button>
-  </header>
-
-  <div class="md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
-    <aside
-      class="fixed inset-y-0 left-0 z-30 flex h-screen min-h-screen w-[min(18rem,calc(100vw-2rem))] -translate-x-full flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] transition-transform duration-200 md:sticky md:top-0 md:w-64 md:translate-x-0"
-      [class.translate-x-0]="isMobileSidebarOpen()">
-
-      <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3.5">
-        <div class="flex items-center gap-4 w-full">
-          <div class="relative">
-            <div
-              class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)]">
-              <img [src]="profileImageSrc" [alt]="profile.name" class="h-full w-full rounded-full object-cover"
-                [tooltip]="profile.name" />
-            </div>
-            <div
-              class="absolute h-6 w-6 -right-2 bottom-[-2PX] rounded-full border-1 border-[var(--crm-success)] bg-white"
-              [tooltip]="business.name">
-              <img [src]="businessImageSrc" [alt]="business.name" class="h-full w-full rounded-full object-cover" />
-            </div>
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <div class="flex gap-1 min-w-0 w-full">
-              <div class="min-w-0 flex-1">
-                <p class="m-0 text-[0.8rem] font-medium truncate text-[var(--text-active)]">
-                  {{ profile.name }}
-                </p>
-              </div>
-              <div class="flex-none shrink-0">
-                <p class="m-0 text-[0.8rem] font-bold">({{ business.code }})</p>
-              </div>
-            </div>
-            <div class="mt-0.5">
-              <div class="flex gap-2">
-                <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
-                  <img src="images/language.png" alt="Change Language" class="h-6 w-6 object-contain rounded-full" />
-                </button>
-                <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()">
-                  <img src="images/day-and-night.png" alt="Change Theme" class="h-6 w-6 object-contain" />
-                </button>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full"
-                  [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate ">
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <img src="images/chat.png" alt="Chat Link" class="h-4 object-contain rounded-full" />
-                  </div>
-                  <div
-                    class="rounded-full bg-[var(--crm-primary)] text-[0.6rem] text-white h-6 w-6 flex items-center justify-center">
-                  </div>
-                  <div
-                    class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-red-500 text-white text-[0.5rem] flex items-center justify-center">
-                    7</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          class="grid h-8 w-8 place-items-center rounded-xl text-[var(--text-active)] transition-colors hover:bg-[var(--sidebar-hover)] md:hidden"
-          type="button" aria-label="Close sidebar" (click)="closeMobileSidebar()">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <nav class="flex-1 overflow-y-auto px-2 py-2.5">
-
-        <!--
-          ng-template recursive
-          context: { items: SidebarItem[], depth: number }
-          depth 0 = root → ใช้ style เดิมของ sidebar-menu-item
-          depth >= 1    → ใช้ style เดิมของ sidebar-submenu-item
-        -->
-        <ng-template #menuNode let-items="items" let-depth="depth">
-          @for (item of items; track item.code) {
-
-          @if (depth === 0) {
-          <!-- ── Root level: ทุก class/attribute เหมือนเดิม 100% ── -->
-          <button
-            class="mb-0.5 flex w-full items-center justify-between rounded-xl bg-transparent px-3.5 py-3 text-left transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
-            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
-            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
-            [class.bg-[var(--sidebar-hover)]]="isItemActive(item)" [class.text-[1.1rem]]="isItemActive(item)"
-            (click)="toggleMenu(item.code, !!item.children?.length)">
-            <span class="flex min-w-0 items-center gap-3">
-              <i class="bi text-[0.95rem]" [class]="item.icon"></i>
-              <span>{{ item.label }}</span>
-            </span>
-            @if (item.badge || item.notification || item.children?.length) {
-            <span class="ml-auto flex items-center gap-2">
-              @if (item.badge) {
-              <span
-                class="rounded-md bg-[color-mix(in_srgb,var(--crm-primary)_12%,transparent)] px-1.5 py-0.5 text-[0.65rem] text-[var(--crm-primary)]">
-                {{ item.badge }}
-              </span>
-              }
-              @if (item.notification) {
-              <span class="h-1.5 w-1.5 rounded-full bg-[var(--crm-danger)]"></span>
-              }
-              @if (item.children?.length) {
-              <i class="bi bi-chevron-right text-[0.95rem] transition-transform duration-200"
-                [class.rotate-90]="isExpanded(item.code)"></i>
-              }
-            </span>
-            }
-          </button>
-
-          } @else {
-          <!-- ── Sub level (depth >= 1): ทุก class/attribute เหมือนเดิม 100% ── -->
-          <button
-            class="relative block w-full rounded-lg bg-transparent px-3 py-2 text-left text-[0.8rem] cursor-pointer hover:bg-[var(--sidebar-hover)]"
-            type="button" [routerLink]="item.children?.length ? null : getItemLink(item.path)"
-            [class.text-[var(--text-active)]]="isItemActive(item)" [class.font-bold]="isItemActive(item)"
-            [class.text-[1rem]]="isItemActive(item)" [class.bg-[var(--sidebar-hover)]]="isItemActive(item)"
-            (click)="toggleMenu(item.code, !!item.children?.length)">
-            <span class="flex min-w-0 items-center justify-between">
-              <span>{{ item.label }}</span>
-              @if (item.children?.length) {
-              <i class="bi bi-chevron-right text-[0.75rem] transition-transform duration-200 ml-auto"
-                [class.rotate-90]="isExpanded(item.code)"></i>
-              }
-            </span>
-          </button>
-          }
-
-          <!-- ── Children: กาง/หุบ เหมือนเดิม แต่ recursive ── -->
-          @if (item.children?.length) {
-          <div class="sidebar-submenu" [class.open]="isExpanded(item.code)"
-            [style.padding-left]="depth >= 1 ? '0.95rem' : null">
-            <div class="sidebar-submenu-content">
-              <ng-container *ngTemplateOutlet="menuNode; context: { items: item.children, depth: depth + 1 }">
-              </ng-container>
-            </div>
-          </div>
-          }
-
-          }
-        </ng-template>
-
-        <!-- Bootstrap ที่ depth 0 -->
-        <ng-container *ngTemplateOutlet="menuNode; context: { items: mainMenu(), depth: 0 }">
-        </ng-container>
-
-      </nav>
-
-      <div class="border-t border-[var(--border)] bg-[var(--sidebar)] px-3 py-3">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2 text-[0.8rem] text-[var(--text-active)]">
-            <span class="min-w-[150px] font-medium tabular-nums">{{ datetime() }}</span>
-          </div>
-          <button type="button" [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate " tooltipPosition="top"
-            class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
-            (click)="logout()">
-            <i class="bi bi-box-arrow-right text-sm"></i>
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <main role="presentation" class="h-screen min-h-screen flex flex-col overflow-hidden bg-[var(--bg)]"
-      (click)="closeMobileSidebar()">
-
-      <div class="p-4 md:p-6 pb-0 md:pb-0 mb-5 md:mb-6 flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
-
-        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-[0.95rem]">
-          @for (crumb of breadcrumbs(); track $index) {
-          @if ($index > 0) {
-          <i class="bi bi-chevron-right text-[0.72rem] text-[var(--text-muted)]"></i>
-          }
-
-          @if (crumb.url && !crumb.isCurrent) {
-          <a [routerLink]="crumb.url"
-            class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
-            [class.text-[var(--crm-primary)]]="$index === 0" [class.text-[var(--text-muted)]]="$index !== 0">
-            @if (crumb.icon) {
-            <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
-            }
-            <span>{{ crumb.label }}</span>
-          </a>
-          } @else {
-          <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
-            [class.text-[var(--text-active)]]="crumb.isCurrent" [class.text-[var(--text-muted)]]="!crumb.isCurrent">
-            @if (crumb.icon) {
-            <i class="bi text-[0.95rem]" [class]="crumb.icon" [class.text-[var(--crm-primary)]]="$index === 0"></i>
-            }
-            <span>{{ crumb.label }}</span>
-          </span>
-          }
-          }
-        </nav>
-
-        <div class="flex items-center gap-2 text-[var(--text-muted)]">
-          @if (isBack) {
-            <button type="button" tooltip="ย้อนกลับ" (click)="onActionClick('back')"
-              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
-              title="Back">
-              <i class="bi bi-arrow-left-circle text-xl"></i>
-            </button>
-          }
-          @if (isSearch) {
-            <button type="button" tooltip="ค้นหา" (click)="onActionClick('search')"
-              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
-              title="Search">
-              <i class="bi bi-search text-lg"></i>
-            </button>
-          }
-          @if (isAdd) {
-            <button type="button" tooltip="เพิ่ม" (click)="onActionClick('add')"
-              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
-              title="Search">
-              <i class="bi bi-plus-circle-fill"></i>
-            </button>
-          }
-          @if (isSave) {
-            <button type="button" tooltip="บันทึก" (click)="onActionClick('save')"
-              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
-              title="Save">
-              <i class="bi bi-floppy2 text-lg"></i>
-            </button>
-          }
-          @if (isPrint) {
-            <button type="button" tooltip="พิมพ์" (click)="onActionClick('print')"
-              class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
-              title="Print">
-              <i class="bi bi-printer text-lg"></i>
-            </button>
-          }
-        </div>
-
-      </div>
-
-      <div class="flex-1 overflow-auto min-h-0 w-full px-4 pt-0.5 md:px-6 pb-4 md:pb-6">
-        <sic-card>
-          <ng-content></ng-content>
-        </sic-card>
-      </div>
-    </main>
-  </div>
-</div>
-</file>
-
-<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.service.ts">
-import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { BusinessInfoModel, MenuActionFlags, MenuItemModel, ProfileInfoModel } from './sic-sidebar.model';
-
-export type SidebarAction = 'back' | 'search' | 'add' | 'save' | 'print'  | null;
-
-@Injectable({
-  providedIn: 'root',
+@Component({
+  selector: 'sic-sidebar',
+  standalone: true,
+  imports: [
+    TooltipDirective,
+    TranslateModule,
+    RouterLink,
+    NgTemplateOutlet,
+    SicCardComponent,
+    FormsModule,
+  ],
+  templateUrl: './sic-sidebar.component.html',
+  styleUrl: './sic-sidebar.component.css',
+  host: {
+    ngSkipHydration: 'true',
+  },
 })
-export class SicSidebarService {
+export class SicSidebarComponent implements OnInit, OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
+  private readonly languageService = inject(LanguageService);
+  private readonly dialog = inject(DialogService);
+  private readonly service = inject(SicSidebarService);
+  public readonly router = inject(Router);
 
+  private readonly ngZone = inject(NgZone);
+  private clockTimer?: ReturnType<typeof setInterval>;
+  private routerSubscription?: Subscription;
 
-  actionSubject = new Subject<SidebarAction>();
-  action$ = this.actionSubject.asObservable();
+  isBack: boolean = false;
+  isSearch: boolean = false;
+  isAdd: boolean = false;
+  isSave: boolean = false;
+  isPrint: boolean = false;
 
-  private readonly http = inject(HttpClient);
+  /** Raw menu items from API — kept so we can look up flags on route change */
+  private rawMenuItems: MenuItemModel[] = [];
 
-  apiProfile = environment.apiBaseUrl + '/api/profile';
-  apiBusiness = environment.apiBaseUrl + '/api/business';
-  apiMenu = environment.apiBaseUrl + '/api/menu';
+  readonly isMobileSidebarOpen = signal(false);
+  readonly expandedMenus = signal<string[]>(
+    JSON.parse(localStorage.getItem('expandedMenus') || '[]'),
+  );
+  readonly isDark = this.themeService.isDark.asReadonly();
+  readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
+  readonly datetime = signal('--/--/---- --:--:--');
+  readonly breadcrumbs = signal<BreadcrumbItem[]>([
+    { label: 'Home', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
+  ]);
 
-  getProfile(): Observable<ProfileInfoModel> {
-    return this.http.get<ProfileInfoModel>(this.apiProfile);
-  }
+  // signal เก็บ URL ปัจจุบัน — อัปเดตทุกครั้งที่ route เปลี่ยน
+  // template อ่าน signal นี้โดยตรง → Angular re-render อัตโนมัติ
+  readonly currentUrl = signal('');
 
-  getBusiness(): Observable<BusinessInfoModel> {
-    return this.http.get<BusinessInfoModel>(this.apiBusiness);
-  }
-
-  getMenu(): Observable<MenuItemModel[]> {
-    return this.http.get<MenuItemModel[]>(this.apiMenu);
-  }
-
-  triggerAction(action: SidebarAction) {
-    this.actionSubject.next(action);
-  }
-
-  readonly DEFAULT_FLAGS: MenuActionFlags = {
-    isBack: false, isSearch: false, isAdd: false,
-    isSave: false, isRemove: false, isPrint: false,
+  private readonly DASHBOARD_ITEM: SidebarItem = {
+    code: 'dashboard',
+    label: 'Dashboard',
+    icon: 'bi-house-door',
+    path: 'dashboard',
   };
 
+  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
+
+  profile: ProfileInfoModel = {} as ProfileInfoModel;
+  business: BusinessInfoModel = {} as BusinessInfoModel;
+
+  get profileImageSrc(): string {
+    return this.profile?.uploadGroupData?.[0]?.accessUrl || 'images/profile.png';
+  }
+
+  get businessImageSrc(): string {
+    return this.business?.uploadGroupData?.[0]?.accessUrl || 'images/business_logo.png';
+  }
+
+  constructor() {
+    effect(() => {
+      localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+    });
+  }
+
+  ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.currentUrl.set(this.router.url);
+    this.loadInfomations();
+
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const url = (event as NavigationEnd).urlAfterRedirects;
+        this.currentUrl.set(url);
+        this.autoExpand();
+        this.updateBreadcrumbs();
+        this.updateActionFlags();
+      });
+
+    // 🔥 แก้ไขตรงนี้: ครอบด้วย runOutsideAngular เพื่อไม่ให้นาฬิกาไปกวน Change Detection หน้าอื่น
+    this.ngZone.runOutsideAngular(() => {
+      setTimeout(() => {
+        // เมื่อต้องการอัปเดตค่า Signal (UI ของตัวนาฬิกาเอง) ค่อยดึงกลับเข้าโซนสั้นๆ
+        this.ngZone.run(() => this.updateClock());
+
+        this.clockTimer = setInterval(() => {
+          this.ngZone.run(() => this.updateClock());
+        }, 1000);
+      }, 0);
+    });
+  }
+
+  loadInfomations(): void {
+    this.service.getProfile().subscribe((profile) => (this.profile = profile));
+    this.service.getBusiness().subscribe((business) => (this.business = business));
+
+    this.service.getMenu().subscribe((menu) => {
+      this.rawMenuItems = menu;
+      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
+      this.autoExpand();
+      this.updateBreadcrumbs();
+      this.updateActionFlags();
+    });
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Action-button flag sync
+  // ────────────────────────────────────────────────────────────────
+
   /**
-   * Recursively search menu items and return action flags
-   * for the item whose path matches the given route path segment.
-   * e.g. path = 'bu/burt01'
+   * Derive which header action-buttons to show from the active menu item.
+   * Matches /feature/<path> URL to the item.path stored in the menu JSON.
    */
-  getActionFlagsForPath(items: MenuItemModel[], path: string): MenuActionFlags | null {
+  private updateActionFlags(): void {
+    const url = this.currentUrl();
+    // Extract the path segment after /feature/  e.g. "bu/burt01"
+    const match = url.match(/^\/feature\/(.+?)(\?.*)?$/);
+    const pathSegment = match ? match[1] : null;
+
+    const flags = pathSegment
+      ? this.service.getActionFlagsForPath(this.rawMenuItems, pathSegment)
+      : null;
+
+    const f = flags ?? this.service.DEFAULT_FLAGS;
+    this.isBack = f.isBack;
+    this.isSearch = f.isSearch;
+    this.isAdd = f.isAdd;
+    this.isSave = f.isSave;
+    this.isPrint = f.isPrint;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Helpers
+  // ────────────────────────────────────────────────────────────────
+
+  private mapMenuItem(item: MenuItemModel): SidebarItem {
+    return {
+      code: item.code,
+      label: item.name,
+      icon: item.icon ?? 'bi-circle',
+      path: item.path ?? undefined,
+      children: item.children?.length ? item.children.map((c) => this.mapMenuItem(c)) : undefined,
+    };
+  }
+
+  /**
+   * กาง ancestor ของ node ที่ path ตรงกับ URL ปัจจุบัน
+   */
+  private autoExpand(): void {
+    const url = this.currentUrl();
+    const toAdd: string[] = [];
+    this.collectAncestorsToExpand(this.mainMenu(), url, toAdd);
+    const current = this.expandedMenus();
+    const newOnes = toAdd.filter((code) => !current.includes(code));
+    if (newOnes.length > 0) {
+      this.expandedMenus.update((curr) => [...curr, ...newOnes]);
+    }
+  }
+
+  private collectAncestorsToExpand(items: SidebarItem[], url: string, out: string[]): boolean {
     for (const item of items) {
-      if (item.path === path) {
-        return {
-          isBack: item.isBack,
-          isSearch: item.isSearch,
-          isAdd: item.isAdd,
-          isSave: item.isSave,
-          isRemove: item.isRemove,
-          isPrint: item.isPrint,
-        };
+      if (item.children?.length) {
+        const childMatch = this.collectAncestorsToExpand(item.children, url, out);
+        if (childMatch && !out.includes(item.code)) {
+          out.push(item.code);
+        }
+      } else if (item.path && this.isPathActive(item.path, url)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private updateBreadcrumbs(): void {
+    const home: BreadcrumbItem = {
+      label: 'Home',
+      url: '/feature/dashboard',
+      icon: 'bi-house-door',
+    };
+    const activeTrail = this.findActiveTrail(this.mainMenu(), this.currentUrl()) ?? [];
+    const trailWithoutDashboard = activeTrail.filter(
+      (item) => item.code !== this.DASHBOARD_ITEM.code,
+    );
+    const breadcrumbItems: BreadcrumbItem[] = [home];
+
+    for (const item of trailWithoutDashboard) {
+      breadcrumbItems.push({
+        label: item.label,
+        url: item.children?.length ? null : this.getItemLink(item.path),
+        icon: item.icon,
+      });
+    }
+
+    this.breadcrumbs.set(
+      breadcrumbItems.map((item, index) => ({
+        ...item,
+        isCurrent: index === breadcrumbItems.length - 1,
+        url: index === breadcrumbItems.length - 1 ? null : item.url,
+      })),
+    );
+  }
+
+  private findActiveTrail(
+    items: SidebarItem[],
+    url: string,
+    trail: SidebarItem[] = [],
+  ): SidebarItem[] | null {
+    for (const item of items) {
+      const nextTrail = [...trail, item];
+      if (item.path && this.isPathActive(item.path, url)) {
+        return nextTrail;
       }
       if (item.children?.length) {
-        const found = this.getActionFlagsForPath(item.children, path);
-        if (found) return found;
+        const childTrail = this.findActiveTrail(item.children, url, nextTrail);
+        if (childTrail) return childTrail;
       }
     }
     return null;
   }
 
+  // ────────────────────────────────────────────────────────────────
+  // Template-facing pure functions (อ่าน currentUrl() signal)
+  // ────────────────────────────────────────────────────────────────
+
+  /**
+   * ใช้ใน template แทน routerLinkActive สำหรับ leaf node
+   * (path ของ child คือ "bu/budt01" → full URL คือ /feature/bu/budt01)
+   */
+  isLeafActive(path: string | undefined): boolean {
+    if (!path) return false;
+    return this.isPathActive(path, this.currentUrl());
+  }
+
+  isItemActive(item: SidebarItem): boolean {
+    return item.children?.length ? this.isParentActive(item) : this.isLeafActive(item.path);
+  }
+
+  /**
+   * ใช้ใน template สำหรับ root/parent node ที่มี children
+   * คืน true เมื่อ URL ปัจจุบันอยู่ใน subtree ของ node นี้
+   */
+  isParentActive(item: SidebarItem): boolean {
+    if (!item.children?.length) return false;
+    return this.subtreeHasActivePath(item.children, this.currentUrl());
+  }
+
+  private isPathActive(path: string, url: string): boolean {
+    // รองรับทั้ง path แบบ "bu/budt01" (child) และ "/dashboard" (absolute)
+    const full = path.startsWith('/') ? path : `/feature/${path}`;
+    return url === full || url.startsWith(full + '/') || url.startsWith(full + '?');
+  }
+
+  private subtreeHasActivePath(items: SidebarItem[], url: string): boolean {
+    return items.some(
+      (item) =>
+        (item.path ? this.isPathActive(item.path, url) : false) ||
+        (item.children?.length ? this.subtreeHasActivePath(item.children, url) : false),
+    );
+  }
+
+  getItemLink(path: string | undefined): string | null {
+    if (!path) return null;
+    return path.startsWith('/') ? path : `/feature/${path}`;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+
+  toggleMenu(code: string, hasChildren: boolean): void {
+    if (!hasChildren) return;
+    this.expandedMenus.update((curr) =>
+      curr.includes(code) ? curr.filter((c) => c !== code) : [...curr, code],
+    );
+  }
+
+  isExpanded(code: string): boolean {
+    return this.expandedMenus().includes(code);
+  }
+
+  openMobileSidebar(): void {
+    this.isMobileSidebarOpen.set(true);
+  }
+  closeMobileSidebar(): void {
+    this.isMobileSidebarOpen.set(false);
+  }
+  toggleTheme(): void {
+    this.themeService.toggleDark();
+  }
+
+  toggleLanguage(): void {
+    const next: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';
+    this.languageService.setLanguage(next);
+    this.currentLanguage.set(next);
+    DateTimeUtil.setEra(next);
+    this.loadInfomations();
+  }
+
+  logout(): void {
+    this.dialog.confirm('ลงชื่ออก', 'ยืนยันการออกจากระบบหรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        this.closeMobileSidebar();
+        this.authService.logout();
+      }
+    });
+  }
+
+  private updateClock(): void {
+    this.datetime.set(DateTimeUtil.formatDateTime(DateTimeUtil.now(), 'DD/MM/YYYY HH:mm:ss'));
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockTimer) clearInterval(this.clockTimer);
+    if (this.routerSubscription) this.routerSubscription.unsubscribe();
+  }
+
+  onActionClick(action: SidebarAction) {
+    this.service.triggerAction(action);
+  }
 }
 </file>
 
@@ -28542,218 +29224,6 @@ export class LanguageService {
     const html = this.document.documentElement;
     html.lang = lang;
     html.dir = 'ltr';
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/bu/rt/burt01/burt01.component.html">
-@if (formData; as data) {
-<form formsearch [formGroup]="data.formGroup">
-  <div class="grid grid-cols-6 gap-4">
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-profile [size]="150" [visibility]="4" formControlName="uploadGroupData" src="images/business_logo.png">
-      </sic-profile>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-      <sic-radio formControlName="personType" direction="horizontal" alignment="center"
-        [apiUrl]="service.apiGetLovPersonType"></sic-radio>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-      <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-      <div class="flex-3">
-        <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0"
-          formControlName="taxId"></sic-input>
-      </div>
-      @if (data.formGroup.get('personType')?.value == 'CORPORATE') {
-      <div class="flex-1">
-        <sic-input label="สาขา" mask="00000" formControlName="branchCode"></sic-input>
-      </div>
-      }
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle"
-        [params]="{ personType: data.formGroup.get('personType')?.value }">
-      </sic-combobox>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-      <div class="flex-2">
-        <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
-      </div>
-      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
-      <div class="flex-1">
-        <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
-      </div>
-      <div class="flex-2">
-        <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
-      </div>
-      }
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-      <div class="flex-2">
-        <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
-      </div>
-      @if(data.formGroup.get('personType')?.value == 'INDIVIDUAL') {
-      <div class="flex-1">
-        <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
-      </div>
-      <div class="flex-2">
-        <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
-      </div>
-      }
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry"
-        (selectionChanged)="onCountryChange($event)">
-      </sic-combobox>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
-    </div>
-    @if(data.formGroup.get('supportLocalAddress')?.value) {
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince"
-        [params]="{ countryId: data.formGroup.get('countryId')?.value }" (selectionChanged)="onProvinceChange($event)">
-      </sic-combobox>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict"
-        [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
-        (selectionChanged)="onDistrictChange($event)">
-      </sic-combobox>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict"
-        [params]="{ districtId: data.formGroup.get('districtId')?.value }"
-        (selectionChanged)="onSubDistrictChange($event)">
-      </sic-combobox>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
-    </div>
-    }
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-input label="อีเมล" formControlName="email"></sic-input>
-    </div>
-    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-      <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
-    </div>
-  </div>
-</form>
-}
-</file>
-
-<file path="sic-app/src/app/feature/bu/rt/burt01/burt01.component.ts">
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { AuthService } from '../../../../core/auth/auth.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { Burt01FormData, Burt01Model } from './burt01.model';
-import { CommonModule } from '@angular/common';
-import { SicProfileComponent } from '../../../../core/component/sic-profile/sic-profile.component';
-import { ReactiveFormsModule } from '@angular/forms';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicInputPhoneComponent } from '../../../../core/component/sic-input-phone/sic-input-phone.component';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { Burt01Service } from './burt01.service';
-import { SicRadioComponent } from "../../../../core/component/sic-radio/sic-radio.component";
-import { SicCardComponent } from "../../../../core/component/sic-card/sic-card.component";
-import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
-import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
-
-@Component({
-  selector: 'app-burt01',
-  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent],
-  templateUrl: './burt01.component.html',
-  styleUrl: './burt01.component.css',
-})
-export class Burt01Component extends BaseActionComponent implements OnInit, ISidebarAction {
-
-  readonly route = inject(ActivatedRoute);
-  readonly dialog = inject(DialogService);
-  readonly authService = inject(AuthService);
-  readonly service = inject(Burt01Service);
-  readonly router = inject(Router);
-
-  formData!: SicFromData<Burt01Model>;
-
-  ngOnInit(): void {
-     const form:Burt01FormData = this.route.snapshot.data['form'];
-     this.formData = form.businessInfo;
-  }
-
-  onCountryChange(event: any): void {
-    this.formData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
-    this.formData.formGroup.get('provinceId')?.setValue(null);
-    this.formData.formGroup.get('districtId')?.setValue(null);
-    this.formData.formGroup.get('subDistrictId')?.setValue(null); 
-    this.formData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onProvinceChange(event: any): void {
-    this.formData.formGroup.get('districtId')?.setValue(null);
-    this.formData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onDistrictChange(event: any): void {
-    this.formData.formGroup.get('subDistrictId')?.setValue(null);
-    this.formData.formGroup.get('zipCode')?.setValue(null);
-  }
-
-  onSubDistrictChange(event: any): void {
-    this.formData.formGroup.get('zipCode')?.setValue(event.zipCode);// You can add any logic here if needed when the sub-district changes 
-  }
-
-  submit() {
-    this.formData.markAllAsTouched();
-    if (this.formData.invalid) {
-      this.dialog.warn('Invalid Form', 'Please correct the errors in the form before saving.');
-    } else if (this.formData.isNotChanged) {
-      this.dialog.warn('No Changes', 'There are no changes to save.');
-    } else {
-      this.save();
-    }
-  }
-
-  save() {
-    const data = this.formData.value;
-    this.service.save(data).subscribe({
-      next: (response) => {
-        this.dialog.success('Business Saved', 'Your Business has been successfully saved.');
-      },
-      error: (error) => {
-        this.dialog.error('Save Failed', error);
-      }
-    });
-  }
-
-  onAdd(): void {
-    console.log('add');
-  }
-  
-  onBack(): void {
-    console.log('back');
-  }
-  
-  onPrint(): void {
-    console.log('print');
-  }
-  
-  onSave(): void {
-    console.log('save');
-    
-  }
-
-  onSearch(): void {
-    console.log('search');
   }
 }
 </file>
@@ -53479,101 +53949,6 @@ export class ProfileService {
 </html>
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/BusinessController.java">
-package com.softinter.sicapi.controller.basic;
-
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.service.BusinessAccessService;
-import com.softinter.sicapi.service.ComboboxService;        // ✅ เพิ่ม
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.util.LanguageUtils;             // ✅ เพิ่ม
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/business")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Business", description = "Business Management API")
-public class BusinessController {
-
-    private final BusinessAccessService businessAccessService;
-    private final CurrentUserService currentUserService;
-    private final ComboboxService comboboxService;   // ✅ เพิ่ม
-
-    @GetMapping
-    @Operation(summary = "Get current active business info")
-    public ResponseEntity<BusinessResponseDto> getCurrentBusiness() {
-        UUID activeId = businessAccessService.getBusinessId();
-        if (activeId == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(businessAccessService.getBusiness(activeId));
-    }
-
-    @GetMapping("/my-business")
-    @Operation(summary = "Get my business list")
-    public ResponseEntity<List<BusinessResponseDto>> getMyBusiness() {
-        return ResponseEntity.ok(businessAccessService.getMyBusinesses());
-    }
-
-    @GetMapping("/activation")
-    @Operation(summary = "Get business activation status")
-    public ResponseEntity<Boolean> getBusinessActivation() {
-        return ResponseEntity.ok(businessAccessService.getBusinessActivation());
-    }
-
-    @PostMapping("/change-business")
-    @Operation(summary = "Change active business")
-    public ResponseEntity<ChangeBusinessResponse> changeBusiness(
-            @RequestBody ChangeBusinessRequest request) {
-        return ResponseEntity.ok(
-                businessAccessService.changeBusiness(request.getBusinessId()));
-    }
-
-    @GetMapping("/business-access")
-    @Operation(summary = "Get current business access details")
-    public ResponseEntity<BusinessAccessResponse> getBusinessAccess() {
-        UUID businessId = businessAccessService.getBusinessId();
-        boolean canAccess = businessAccessService.canAccessBusiness(businessId);
-        BusinessAccessResponse response = new BusinessAccessResponse();
-        response.setBusinessId(businessId);
-        response.setCanAccess(canAccess);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/save")
-    public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID id = businessAccessService.saveBusiness(request, userId);
-        return ResponseEntity.ok(id);
-    }
-
-    @GetMapping("/{businessId}")
-    @Operation(summary = "Get business info")
-    public ResponseEntity<BusinessResponseDto> getBusinessInfo(@PathVariable UUID businessId) {
-        return ResponseEntity.ok(businessAccessService.getBusiness(businessId));
-    }
-
-    @GetMapping("/lov-person-type")
-    @Operation(summary = "Get person type LOV (Individual/Corporate)")
-    public ResponseEntity<List<LovResponse>> getLovPersonType() {
-        // ✅ ดึงจาก Database แทน Hardcode
-        String lang = LanguageUtils.getLanguage();
-        return ResponseEntity.ok(comboboxService.getPersonTypeLov(lang));
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/MenuController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -60928,381 +61303,6 @@ export interface SicOrganizationalChartNode {
   _roleCode?: string;
   _sortOrder?: number;
   _roleLevel?: string;
-}
-</file>
-
-<file path="sic-app/src/app/core/component/sic-sidebar/sic-sidebar.component.ts">
-import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
-import {
-  Component,
-  effect,
-  inject,
-  NgZone,
-  OnDestroy,
-  OnInit,
-  PLATFORM_ID,
-  signal,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { filter, Subscription } from 'rxjs';
-import { AuthService } from '../../auth/auth.service';
-import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
-import { DialogService } from '../../services/dialog.service';
-import { AppLanguage, LanguageService } from '../../services/language.service';
-import { ThemeService } from '../../services/theme.service';
-import { DateTimeUtil } from '../../utils/datetime.util';
-import { SicCardComponent } from '../sic-card/sic-card.component';
-import {
-  BusinessInfoModel,
-  MenuItemModel,
-  ProfileInfoModel,
-  SidebarItem,
-} from './sic-sidebar.model';
-import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
-
-interface BreadcrumbItem {
-  label: string;
-  url: string | null;
-  icon?: string;
-  isCurrent?: boolean;
-}
-
-@Component({
-  selector: 'sic-sidebar',
-  standalone: true,
-  imports: [
-    TooltipDirective,
-    TranslateModule,
-    RouterLink,
-    NgTemplateOutlet,
-    SicCardComponent,
-    FormsModule,
-  ],
-  templateUrl: './sic-sidebar.component.html',
-  styleUrl: './sic-sidebar.component.css',
-  host: {
-    ngSkipHydration: 'true',
-  },
-})
-export class SicSidebarComponent implements OnInit, OnDestroy {
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly authService = inject(AuthService);
-  private readonly themeService = inject(ThemeService);
-  private readonly languageService = inject(LanguageService);
-  private readonly dialog = inject(DialogService);
-  private readonly service = inject(SicSidebarService);
-  public readonly router = inject(Router);
-
-  private readonly ngZone = inject(NgZone);
-  private clockTimer?: ReturnType<typeof setInterval>;
-  private routerSubscription?: Subscription;
-
-  isBack: boolean = false;
-  isSearch: boolean = false;
-  isAdd: boolean = false;
-  isSave: boolean = false;
-  isPrint: boolean = false;
-
-  /** Raw menu items from API — kept so we can look up flags on route change */
-  private rawMenuItems: MenuItemModel[] = [];
-
-  readonly isMobileSidebarOpen = signal(false);
-  readonly expandedMenus = signal<string[]>(
-    JSON.parse(localStorage.getItem('expandedMenus') || '[]'),
-  );
-  readonly isDark = this.themeService.isDark.asReadonly();
-  readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
-  readonly datetime = signal('--/--/---- --:--:--');
-  readonly breadcrumbs = signal<BreadcrumbItem[]>([
-    { label: 'Home', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
-  ]);
-
-  // signal เก็บ URL ปัจจุบัน — อัปเดตทุกครั้งที่ route เปลี่ยน
-  // template อ่าน signal นี้โดยตรง → Angular re-render อัตโนมัติ
-  readonly currentUrl = signal('');
-
-  private readonly DASHBOARD_ITEM: SidebarItem = {
-    code: 'dashboard',
-    label: 'Dashboard',
-    icon: 'bi-house-door',
-    path: 'dashboard',
-  };
-
-  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
-
-  profile: ProfileInfoModel = {} as ProfileInfoModel;
-  business: BusinessInfoModel = {} as BusinessInfoModel;
-
-  get profileImageSrc(): string {
-    return this.profile?.uploadGroupData?.[0]?.accessUrl || 'images/profile.png';
-  }
-
-  get businessImageSrc(): string {
-    return this.business?.uploadGroupData?.[0]?.accessUrl || 'images/business_logo.png';
-  }
-
-  constructor() {
-    effect(() => {
-      localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
-    });
-  }
-
-  ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    this.currentUrl.set(this.router.url);
-    this.loadInfomations();
-
-    this.routerSubscription = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event) => {
-        const url = (event as NavigationEnd).urlAfterRedirects;
-        this.currentUrl.set(url);
-        this.autoExpand();
-        this.updateBreadcrumbs();
-        this.updateActionFlags();
-      });
-
-    // 🔥 แก้ไขตรงนี้: ครอบด้วย runOutsideAngular เพื่อไม่ให้นาฬิกาไปกวน Change Detection หน้าอื่น
-    this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => {
-        // เมื่อต้องการอัปเดตค่า Signal (UI ของตัวนาฬิกาเอง) ค่อยดึงกลับเข้าโซนสั้นๆ
-        this.ngZone.run(() => this.updateClock());
-
-        this.clockTimer = setInterval(() => {
-          this.ngZone.run(() => this.updateClock());
-        }, 1000);
-      }, 0);
-    });
-  }
-
-  loadInfomations(): void {
-    this.service.getProfile().subscribe((profile) => (this.profile = profile));
-    this.service.getBusiness().subscribe((business) => (this.business = business));
-
-    this.service.getMenu().subscribe((menu) => {
-      this.rawMenuItems = menu;
-      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
-      this.autoExpand();
-      this.updateBreadcrumbs();
-      this.updateActionFlags();
-    });
-  }
-
-  // ────────────────────────────────────────────────────────────────
-  // Action-button flag sync
-  // ────────────────────────────────────────────────────────────────
-
-  /**
-   * Derive which header action-buttons to show from the active menu item.
-   * Matches /feature/<path> URL to the item.path stored in the menu JSON.
-   */
-  private updateActionFlags(): void {
-    const url = this.currentUrl();
-    // Extract the path segment after /feature/  e.g. "bu/burt01"
-    const match = url.match(/^\/feature\/(.+?)(\?.*)?$/);
-    const pathSegment = match ? match[1] : null;
-
-    const flags = pathSegment
-      ? this.service.getActionFlagsForPath(this.rawMenuItems, pathSegment)
-      : null;
-
-    const f = flags ?? this.service.DEFAULT_FLAGS;
-    this.isBack = f.isBack;
-    this.isSearch = f.isSearch;
-    this.isAdd = f.isAdd;
-    this.isSave = f.isSave;
-    this.isPrint = f.isPrint;
-  }
-
-  // ────────────────────────────────────────────────────────────────
-  // Helpers
-  // ────────────────────────────────────────────────────────────────
-
-  private mapMenuItem(item: MenuItemModel): SidebarItem {
-    return {
-      code: item.code,
-      label: item.name,
-      icon: item.icon ?? 'bi-circle',
-      path: item.path ?? undefined,
-      children: item.children?.length ? item.children.map((c) => this.mapMenuItem(c)) : undefined,
-    };
-  }
-
-  /**
-   * กาง ancestor ของ node ที่ path ตรงกับ URL ปัจจุบัน
-   */
-  private autoExpand(): void {
-    const url = this.currentUrl();
-    const toAdd: string[] = [];
-    this.collectAncestorsToExpand(this.mainMenu(), url, toAdd);
-    const current = this.expandedMenus();
-    const newOnes = toAdd.filter((code) => !current.includes(code));
-    if (newOnes.length > 0) {
-      this.expandedMenus.update((curr) => [...curr, ...newOnes]);
-    }
-  }
-
-  private collectAncestorsToExpand(items: SidebarItem[], url: string, out: string[]): boolean {
-    for (const item of items) {
-      if (item.children?.length) {
-        const childMatch = this.collectAncestorsToExpand(item.children, url, out);
-        if (childMatch && !out.includes(item.code)) {
-          out.push(item.code);
-        }
-      } else if (item.path && this.isPathActive(item.path, url)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private updateBreadcrumbs(): void {
-    const home: BreadcrumbItem = {
-      label: 'Home',
-      url: '/feature/dashboard',
-      icon: 'bi-house-door',
-    };
-    const activeTrail = this.findActiveTrail(this.mainMenu(), this.currentUrl()) ?? [];
-    const trailWithoutDashboard = activeTrail.filter(
-      (item) => item.code !== this.DASHBOARD_ITEM.code,
-    );
-    const breadcrumbItems: BreadcrumbItem[] = [home];
-
-    for (const item of trailWithoutDashboard) {
-      breadcrumbItems.push({
-        label: item.label,
-        url: item.children?.length ? null : this.getItemLink(item.path),
-        icon: item.icon,
-      });
-    }
-
-    this.breadcrumbs.set(
-      breadcrumbItems.map((item, index) => ({
-        ...item,
-        isCurrent: index === breadcrumbItems.length - 1,
-        url: index === breadcrumbItems.length - 1 ? null : item.url,
-      })),
-    );
-  }
-
-  private findActiveTrail(
-    items: SidebarItem[],
-    url: string,
-    trail: SidebarItem[] = [],
-  ): SidebarItem[] | null {
-    for (const item of items) {
-      const nextTrail = [...trail, item];
-      if (item.path && this.isPathActive(item.path, url)) {
-        return nextTrail;
-      }
-      if (item.children?.length) {
-        const childTrail = this.findActiveTrail(item.children, url, nextTrail);
-        if (childTrail) return childTrail;
-      }
-    }
-    return null;
-  }
-
-  // ────────────────────────────────────────────────────────────────
-  // Template-facing pure functions (อ่าน currentUrl() signal)
-  // ────────────────────────────────────────────────────────────────
-
-  /**
-   * ใช้ใน template แทน routerLinkActive สำหรับ leaf node
-   * (path ของ child คือ "bu/budt01" → full URL คือ /feature/bu/budt01)
-   */
-  isLeafActive(path: string | undefined): boolean {
-    if (!path) return false;
-    return this.isPathActive(path, this.currentUrl());
-  }
-
-  isItemActive(item: SidebarItem): boolean {
-    return item.children?.length ? this.isParentActive(item) : this.isLeafActive(item.path);
-  }
-
-  /**
-   * ใช้ใน template สำหรับ root/parent node ที่มี children
-   * คืน true เมื่อ URL ปัจจุบันอยู่ใน subtree ของ node นี้
-   */
-  isParentActive(item: SidebarItem): boolean {
-    if (!item.children?.length) return false;
-    return this.subtreeHasActivePath(item.children, this.currentUrl());
-  }
-
-  private isPathActive(path: string, url: string): boolean {
-    // รองรับทั้ง path แบบ "bu/budt01" (child) และ "/dashboard" (absolute)
-    const full = path.startsWith('/') ? path : `/feature/${path}`;
-    return url === full || url.startsWith(full + '/') || url.startsWith(full + '?');
-  }
-
-  private subtreeHasActivePath(items: SidebarItem[], url: string): boolean {
-    return items.some(
-      (item) =>
-        (item.path ? this.isPathActive(item.path, url) : false) ||
-        (item.children?.length ? this.subtreeHasActivePath(item.children, url) : false),
-    );
-  }
-
-  getItemLink(path: string | undefined): string | null {
-    if (!path) return null;
-    return path.startsWith('/') ? path : `/feature/${path}`;
-  }
-
-  // ────────────────────────────────────────────────────────────────
-
-  toggleMenu(code: string, hasChildren: boolean): void {
-    if (!hasChildren) return;
-    this.expandedMenus.update((curr) =>
-      curr.includes(code) ? curr.filter((c) => c !== code) : [...curr, code],
-    );
-  }
-
-  isExpanded(code: string): boolean {
-    return this.expandedMenus().includes(code);
-  }
-
-  openMobileSidebar(): void {
-    this.isMobileSidebarOpen.set(true);
-  }
-  closeMobileSidebar(): void {
-    this.isMobileSidebarOpen.set(false);
-  }
-  toggleTheme(): void {
-    this.themeService.toggleDark();
-  }
-
-  toggleLanguage(): void {
-    const next: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';
-    this.languageService.setLanguage(next);
-    this.currentLanguage.set(next);
-    DateTimeUtil.setEra(next);
-    this.loadInfomations();
-  }
-
-  logout(): void {
-    this.dialog.confirm('ลงชื่ออก', 'ยืนยันการออกจากระบบหรือไม่?').then((confirmed) => {
-      if (confirmed) {
-        this.closeMobileSidebar();
-        this.authService.logout();
-      }
-    });
-  }
-
-  private updateClock(): void {
-    this.datetime.set(DateTimeUtil.formatDateTime(DateTimeUtil.now(), 'DD/MM/YYYY HH:mm:ss'));
-  }
-
-  ngOnDestroy(): void {
-    if (this.clockTimer) clearInterval(this.clockTimer);
-    if (this.routerSubscription) this.routerSubscription.unsubscribe();
-  }
-
-  onActionClick(action: SidebarAction) {
-    this.service.triggerAction(action);
-  }
 }
 </file>
 
@@ -69838,95 +69838,6 @@ export class Pmdt02AComponent implements OnInit {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.model.ts">
-// src/app/core/models/diagram.model.ts
-export interface DiagramProject {
-  id: string;
-  name: string;
-  description?: string;
-  isFavorite: boolean;
-  lastOpened?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DiagramModel {
-  id: string;
-  name: string;
-  diagramType: string;
-  mermaidScript: string;
-  metadata: any;
-  graphData: any;
-  projectId: string;
-  projectName?: string;
-  userId: string;
-  sortOrder: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DiagramVersion {
-  id: string;
-  diagramId: string;
-  mermaidScript: string;
-  versionNumber: number;
-  changeComment?: string;
-  createdAt: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  diagramId: string;
-  userId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  contextData?: any;
-  createdAt: string;
-}
-
-export type DiagramType = 
-  | 'Flowchart'
-  | 'Sequence'
-  | 'Class'
-  | 'ER'
-  | 'DFD'
-  | 'State'
-  | 'Journey'
-  | 'Mindmap'
-  | 'Timeline'
-  | 'Requirement'
-  | 'C4'
-  | 'Git Graph'
-  | 'Pie'
-  | 'Gantt'
-  | 'Use Case';
-
-export const DIAGRAM_TYPES: DiagramType[] = [
-  'Flowchart', 'Sequence', 'Class', 'ER', 'DFD', 'State',
-  'Journey', 'Mindmap', 'Timeline', 'Requirement',
-  'C4', 'Git Graph', 'Pie', 'Gantt', 'Use Case'
-];
-
-export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
-  Flowchart: 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
-  Sequence: 'sequenceDiagram\n  participant User\n  participant System\n  User->>System: Request\n  System-->>User: Response',
-  Class: 'classDiagram\n  class Person {\n    +String name\n    +int age\n    +greet()\n  }',
-  ER: 'erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE_ITEM : contains',
-  DFD: 'graph TD\n  A[User] -->|Login| B[Auth System]\n  B --> C[Database]',
-  State: 'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Processing : start\n  Processing --> Done : complete\n  Done --> [*]',
-  Journey: 'journey\n  section Login\n    Enter credentials: 5: User\n    Click login: 3: User\n    Verify account: 1: System',
-  Mindmap: 'mindmap\n  root((Project))\n    Planning\n      Requirements\n      Design\n    Development\n      Coding\n      Testing',
-  Timeline: 'timeline\n  title Project Timeline\n  2024 Q1 : Planning\n  2024 Q2 : Development\n  2024 Q3 : Testing\n  2024 Q4 : Launch',
-  Requirement: 'requirementDiagram\n  requirement req1 {\n    id: REQ-001\n    text: User login\n  }\n  element elem1 {\n    type: feature\n  }\n  req1 - elem1',
-  C4: 'C4Context\n  Person(user, "User")\n  System(system, "System")\n  Rel(user, system, "Uses")',
-  'Git Graph': 'gitGraph\n  commit\n  branch develop\n  checkout develop\n  commit\n  checkout main\n  merge develop',
-  Pie: 'pie\n  "Development" : 45\n  "Testing" : 25\n  "Design" : 20\n  "Planning" : 10',
-  Gantt: 'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
-  'Use Case': 'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
-};
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.form.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.form.ts
 
@@ -70987,38 +70898,6 @@ public class SuProgramController {
                 return new boolean[]{false, false, false, false, false, false};
         }
     }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java">
-// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class PmDiagramTabResponse {
-    private UUID id;
-    private String name;
-    private String diagramType;
-    private String mermaidScript;
-
-    // เปลี่ยนจาก String เป็น Map เพื่อให้ Frontend รับ Object ได้สะดวก
-    private Map<String, Object> metadata;
-
-    private Map<String, Object> graphData;
-
-    private UUID projectId;
-    private String projectName;
-    private Integer sortOrder;
-    private Boolean isActive;
-    private Instant createdDate;
-    private Instant updatedDate;
-    private Integer versionCount;
 }
 </file>
 
@@ -75202,6 +75081,118 @@ export class Pmdt03Component implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.model.ts">
+// src/app/core/models/diagram.model.ts
+export interface DiagramProject {
+  id: string;
+  name: string;
+  description?: string;
+  isFavorite: boolean;
+  lastOpened?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiagramModel {
+  id: string;
+  name: string;
+  diagramType: string;
+  mermaidScript: string;
+  metadata: any;
+  graphData: any;
+  projectId: string;
+  projectName?: string;
+  userId: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  state?: number;
+  rowVersion?: number;
+}
+
+export interface DiagramVersion {
+  id: string;
+  diagramId: string;
+  mermaidScript: string;
+  versionNumber: number;
+  changeComment?: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  diagramId: string;
+  userId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  contextData?: any;
+  createdAt: string;
+}
+
+export type DiagramType =
+  | 'Flowchart'
+  | 'Sequence'
+  | 'Class'
+  | 'ER'
+  | 'DFD'
+  | 'State'
+  | 'Journey'
+  | 'Mindmap'
+  | 'Timeline'
+  | 'Requirement'
+  | 'C4'
+  | 'Git Graph'
+  | 'Pie'
+  | 'Gantt'
+  | 'Use Case';
+
+export const DIAGRAM_TYPES: DiagramType[] = [
+  'Flowchart',
+  'Sequence',
+  'Class',
+  'ER',
+  'DFD',
+  'State',
+  'Journey',
+  'Mindmap',
+  'Timeline',
+  'Requirement',
+  'C4',
+  'Git Graph',
+  'Pie',
+  'Gantt',
+  'Use Case',
+];
+
+export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
+  Flowchart: 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
+  Sequence:
+    'sequenceDiagram\n  participant User\n  participant System\n  User->>System: Request\n  System-->>User: Response',
+  Class: 'classDiagram\n  class Person {\n    +String name\n    +int age\n    +greet()\n  }',
+  ER: 'erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE_ITEM : contains',
+  DFD: 'graph TD\n  A[User] -->|Login| B[Auth System]\n  B --> C[Database]',
+  State:
+    'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Processing : start\n  Processing --> Done : complete\n  Done --> [*]',
+  Journey:
+    'journey\n  section Login\n    Enter credentials: 5: User\n    Click login: 3: User\n    Verify account: 1: System',
+  Mindmap:
+    'mindmap\n  root((Project))\n    Planning\n      Requirements\n      Design\n    Development\n      Coding\n      Testing',
+  Timeline:
+    'timeline\n  title Project Timeline\n  2024 Q1 : Planning\n  2024 Q2 : Development\n  2024 Q3 : Testing\n  2024 Q4 : Launch',
+  Requirement:
+    'requirementDiagram\n  requirement req1 {\n    id: REQ-001\n    text: User login\n  }\n  element elem1 {\n    type: feature\n  }\n  req1 - elem1',
+  C4: 'C4Context\n  Person(user, "User")\n  System(system, "System")\n  Rel(user, system, "Uses")',
+  'Git Graph':
+    'gitGraph\n  commit\n  branch develop\n  checkout develop\n  commit\n  checkout main\n  merge develop',
+  Pie: 'pie\n  "Development" : 45\n  "Testing" : 25\n  "Design" : 20\n  "Planning" : 10',
+  Gantt:
+    'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
+  'Use Case':
+    'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
+};
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
 // src/app/core/component/sic-drawio/drawio-connector.service.ts
 
@@ -76797,6 +76788,39 @@ public class TaskRequest {
 
     // ===== เพิ่มสำหรับ Traceability =====
     private UUID specificationId;   // เชื่อมกับ Specification
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java">
+// File: sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmDiagramTabResponse.java
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class PmDiagramTabResponse {
+    private UUID id;
+    private String name;
+    private String diagramType;
+    private String mermaidScript;
+
+    // เปลี่ยนจาก String เป็น Map เพื่อให้ Frontend รับ Object ได้สะดวก
+    private Map<String, Object> metadata;
+
+    private Map<String, Object> graphData;
+
+    private UUID projectId;
+    private String projectName;
+    private Integer sortOrder;
+    private Boolean isActive;
+    private Instant createdDate;
+    private Instant updatedDate;
+    private Integer versionCount;
+    private Integer rowVersion;
 }
 </file>
 
@@ -81487,382 +81511,6 @@ public ResponseEntity<SuUserBusinessMemberResponse> updateMember(
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.config.BusinessContextHolder;
-import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
-import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
-import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
-import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.TraceRelationship;
-import com.softinter.sicapi.entity.pm.PmDiagramTab;
-import com.softinter.sicapi.entity.pm.PmDiagramVersion;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.PmDiagramTabService;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmDiagramTabServiceImpl implements PmDiagramTabService {
-
-    private final PmDiagramTabRepository tabRepository;
-    private final PmDiagramVersionRepository versionRepository;
-    private final CurrentUserService currentUserService;
-    private final PmCustomerProjectRepository customerProjectRepository;
-    private final PmRequirementRepository requirementRepository;
-
-    // ===== Inject TraceLinkService =====
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
-        try {
-            String userId = currentUserService.getUserId();
-            List<PmDiagramTab> tabs;
-            if (projectId != null) {
-                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-            } else {
-                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
-            }
-            return tabs.stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error in getTabs for projectId: {}", projectId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDiagramTabResponse getTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        return toResponse(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID businessId = BusinessContextHolder.getBusinessId();
-
-        if (!customerProjectRepository.existsById(request.getProjectId())) {
-            throw new RuntimeException("Project not found: " + request.getProjectId());
-        }
-
-        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
-                request.getProjectId()
-        );
-        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
-
-        PmDiagramTab tab = new PmDiagramTab();
-        tab.setUserId(userId);
-        tab.setBusinessId(businessId);
-        tab.setProjectId(request.getProjectId());
-        tab.setName(request.getName());
-        tab.setDiagramType(request.getDiagramType());
-        tab.setMermaidScript(request.getMermaidScript());
-        tab.setMetadata(request.getMetadata());
-        tab.setGraphData(request.getGraphData());
-        tab.setSortOrder(maxSort + 1);
-        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Initial version");
-
-        // ============================================================
-        // 🚀 CREATE TRACE LINKS (ตามแนวทางที่ 1)
-        // ============================================================
-        UUID projectId = request.getProjectId();
-        String diagramType = request.getDiagramType().toUpperCase();
-
-        if ("DFD".equals(diagramType) || "FLOWCHART".equals(diagramType)) {
-            // DFD → เชื่อมกับ Requirement
-            if (request.getRelatedRequirementIds() != null) {
-                for (UUID reqId : request.getRelatedRequirementIds()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                            projectId,
-                            "REQUIREMENT", reqId,
-                            "DFD", saved.getId(),
-                            TraceRelationship.DESIGNED_BY.name()
-                        );
-                    }
-                }
-            }
-        } else if ("ER".equals(diagramType)) {
-            // ER → เชื่อมกับ DFD
-            if (request.getRelatedDfdIds() != null) {
-                for (UUID dfdId : request.getRelatedDfdIds()) {
-                    traceLinkService.createLink(
-                        projectId,
-                        "DFD", dfdId,
-                        "ER", saved.getId(),
-                        TraceRelationship.IMPLEMENTED_BY.name()
-                    );
-                }
-            }
-            // ER → เชื่อมกับ Requirement (ถ้ามี)
-            if (request.getRelatedRequirementIdsForEr() != null) {
-                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                            projectId,
-                            "REQUIREMENT", reqId,
-                            "ER", saved.getId(),
-                            TraceRelationship.DESIGNED_BY.name()
-                        );
-                    }
-                }
-            }
-        }
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
-
-        if (state == EntityState.MODIFIED) {
-            // Check rowVersion
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
-                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
-            }
-
-            if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
-                throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
-            }
-
-            if (request.getName() != null) {
-                tab.setName(request.getName());
-            }
-            if (request.getDiagramType() != null) {
-                tab.setDiagramType(request.getDiagramType());
-            }
-            if (request.getMermaidScript() != null) {
-                tab.setMermaidScript(request.getMermaidScript());
-                createVersion(tab, "Auto-save");
-            }
-            if (request.getMetadata() != null) {
-                tab.setMetadata(request.getMetadata());
-            }
-            if (request.getGraphData() != null) {
-                tab.setGraphData(request.getGraphData());
-            }
-            if (request.getIsActive() != null) {
-                tab.setIsActive(request.getIsActive());
-            }
-
-            PmDiagramTab saved = tabRepository.save(tab);
-
-            // ============================================================
-            // 🚀 UPDATE TRACE LINKS (ถ้าต้องการ)
-            // ง่ายสุด: ลบเก่าทั้งหมดแล้วสร้างใหม่
-            // ============================================================
-            // TODO: ถ้าต้องการอัปเดต Trace Links เมื่อแก้ไข diagram type
-            // เราไม่แก้ trace links ในรอบนี้
-
-            return toResponse(saved);
-        } else if (state == EntityState.DELETED) {
-            tab.setIsDelete(true);
-            tab.setDeleteDate(Instant.now());
-            tabRepository.save(tab);
-            return toResponse(tab);
-        }
-
-        return toResponse(tab);
-    }
-
-    @Override
-    @Transactional
-    public void deleteTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        tab.setIsDelete(true);
-        tab.setDeleteDate(Instant.now());
-        tabRepository.save(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse duplicateTab(UUID id) {
-        PmDiagramTab original = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        PmDiagramTab duplicate = new PmDiagramTab();
-        duplicate.setUserId(original.getUserId());
-        duplicate.setBusinessId(original.getBusinessId());
-        duplicate.setProjectId(original.getProjectId());
-        duplicate.setName(original.getName() + " (Copy)");
-        duplicate.setDiagramType(original.getDiagramType());
-        duplicate.setMermaidScript(original.getMermaidScript());
-        duplicate.setMetadata(original.getMetadata());
-        duplicate.setGraphData(original.getGraphData());
-        duplicate.setSortOrder(original.getSortOrder() + 1);
-        duplicate.setIsActive(true);
-
-        PmDiagramTab saved = tabRepository.save(duplicate);
-        createVersion(saved, "Duplicated from " + original.getName());
-
-        // ============================================================
-        // 🚀 COPY TRACE LINKS
-        // ============================================================
-        // TODO: คัดลอก Trace Links จากต้นฉบับไปยังตัวใหม่
-        // ยังไม่ต้องทำในรอบนี้
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void reorderTabs(PmDiagramReorderRequest request) {
-        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
-            PmDiagramTab tab = tabRepository.findById(order.getId())
-                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
-            tab.setSortOrder(order.getSortOrder());
-            tabRepository.save(tab);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
-        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
-                .stream()
-                .map(this::toVersionResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
-        PmDiagramVersion version = versionRepository.findById(versionId)
-                .orElseThrow(() -> new RuntimeException("Version not found"));
-
-        PmDiagramTab tab = version.getDiagram();
-        tab.setMermaidScript(version.getMermaidScript());
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Restored from version " + version.getVersionNumber());
-
-        return toResponse(saved);
-    }
-
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    private void createVersion(PmDiagramTab tab, String comment) {
-        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
-        int nextVersion = versionCount + 1;
-
-        if (versionCount >= 50) {
-            List<PmDiagramVersion> oldestVersions = versionRepository
-                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
-            if (!oldestVersions.isEmpty()) {
-                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
-                oldest.setIsDelete(true);
-                versionRepository.save(oldest);
-            }
-        }
-
-        PmDiagramVersion version = new PmDiagramVersion();
-        version.setBusinessId(tab.getBusinessId());
-        version.setDiagram(tab);
-        version.setMermaidScript(tab.getMermaidScript());
-        version.setVersionNumber(nextVersion);
-        version.setChangeComment(comment);
-        versionRepository.save(version);
-    }
-
-    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
-        try {
-            PmDiagramTabResponse dto = new PmDiagramTabResponse();
-            dto.setId(tab.getId());
-            dto.setName(tab.getName());
-            dto.setDiagramType(tab.getDiagramType());
-            dto.setMermaidScript(tab.getMermaidScript());
-            dto.setMetadata(tab.getMetadata());
-            dto.setGraphData(tab.getGraphData());
-            dto.setProjectId(tab.getProjectId());
-
-            try {
-                customerProjectRepository.findById(tab.getProjectId())
-                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
-            } catch (Exception e) {
-                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
-                dto.setProjectName(null);
-            }
-
-            dto.setSortOrder(tab.getSortOrder());
-            dto.setIsActive(tab.getIsActive());
-            dto.setCreatedDate(tab.getCreatedDate());
-            dto.setUpdatedDate(tab.getUpdatedDate());
-
-            try {
-                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
-            } catch (Exception e) {
-                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
-                dto.setVersionCount(0);
-            }
-
-            return dto;
-        } catch (Exception e) {
-            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
-            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
-            fallback.setId(tab.getId());
-            fallback.setName(tab.getName());
-            fallback.setDiagramType(tab.getDiagramType());
-            fallback.setMermaidScript(tab.getMermaidScript());
-            fallback.setMetadata(tab.getMetadata());
-            fallback.setGraphData(tab.getGraphData());
-            fallback.setProjectId(tab.getProjectId());
-            fallback.setSortOrder(tab.getSortOrder());
-            fallback.setIsActive(tab.getIsActive());
-            fallback.setCreatedDate(tab.getCreatedDate());
-            fallback.setUpdatedDate(tab.getUpdatedDate());
-            fallback.setVersionCount(0);
-            return fallback;
-        }
-    }
-
-    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
-        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
-        dto.setId(version.getId());
-        dto.setDiagramId(version.getDiagram().getId());
-        dto.setMermaidScript(version.getMermaidScript());
-        dto.setVersionNumber(version.getVersionNumber());
-        dto.setChangeComment(version.getChangeComment());
-        dto.setCreatedBy(version.getCreatedBy());
-        dto.setCreatedDate(version.getCreatedDate());
-        return dto;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessMemberServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -82952,6 +82600,384 @@ ngOnInit(): void {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
+import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
+import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
+import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+import com.softinter.sicapi.entity.pm.PmDiagramTab;
+import com.softinter.sicapi.entity.pm.PmDiagramVersion;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmDiagramTabService;
+import com.softinter.sicapi.service.TraceLinkService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmDiagramTabServiceImpl implements PmDiagramTabService {
+
+    private final PmDiagramTabRepository tabRepository;
+    private final PmDiagramVersionRepository versionRepository;
+    private final CurrentUserService currentUserService;
+    private final PmCustomerProjectRepository customerProjectRepository;
+    private final PmRequirementRepository requirementRepository;
+
+    // ===== Inject TraceLinkService =====
+    private final TraceLinkService traceLinkService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
+        try {
+            String userId = currentUserService.getUserId();
+            List<PmDiagramTab> tabs;
+            if (projectId != null) {
+                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            } else {
+                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+            }
+            return tabs.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in getTabs for projectId: {}", projectId, e);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDiagramTabResponse getTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+        return toResponse(tab);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
+        String userId = currentUserService.getUserId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
+
+        if (!customerProjectRepository.existsById(request.getProjectId())) {
+            throw new RuntimeException("Project not found: " + request.getProjectId());
+        }
+
+        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
+                request.getProjectId()
+        );
+        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
+
+        PmDiagramTab tab = new PmDiagramTab();
+        tab.setUserId(userId);
+        tab.setBusinessId(businessId);
+        tab.setProjectId(request.getProjectId());
+        tab.setName(request.getName());
+        tab.setDiagramType(request.getDiagramType());
+        tab.setMermaidScript(request.getMermaidScript());
+        tab.setMetadata(request.getMetadata());
+        tab.setGraphData(request.getGraphData());
+        tab.setSortOrder(maxSort + 1);
+        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Initial version");
+
+        // ============================================================
+        // 🚀 CREATE TRACE LINKS (ตามแนวทางที่ 1)
+        // ============================================================
+        UUID projectId = request.getProjectId();
+        String diagramType = request.getDiagramType().toUpperCase();
+
+        if ("DFD".equals(diagramType) || "FLOWCHART".equals(diagramType)) {
+            // DFD → เชื่อมกับ Requirement
+            if (request.getRelatedRequirementIds() != null) {
+                for (UUID reqId : request.getRelatedRequirementIds()) {
+                    if (requirementRepository.existsById(reqId)) {
+                        traceLinkService.createLink(
+                            projectId,
+                            "REQUIREMENT", reqId,
+                            "DFD", saved.getId(),
+                            TraceRelationship.DESIGNED_BY.name()
+                        );
+                    }
+                }
+            }
+        } else if ("ER".equals(diagramType)) {
+            // ER → เชื่อมกับ DFD
+            if (request.getRelatedDfdIds() != null) {
+                for (UUID dfdId : request.getRelatedDfdIds()) {
+                    traceLinkService.createLink(
+                        projectId,
+                        "DFD", dfdId,
+                        "ER", saved.getId(),
+                        TraceRelationship.IMPLEMENTED_BY.name()
+                    );
+                }
+            }
+            // ER → เชื่อมกับ Requirement (ถ้ามี)
+            if (request.getRelatedRequirementIdsForEr() != null) {
+                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
+                    if (requirementRepository.existsById(reqId)) {
+                        traceLinkService.createLink(
+                            projectId,
+                            "REQUIREMENT", reqId,
+                            "ER", saved.getId(),
+                            TraceRelationship.DESIGNED_BY.name()
+                        );
+                    }
+                }
+            }
+        }
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
+
+        if (state == EntityState.MODIFIED) {
+            // Check rowVersion
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
+                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            }
+
+            if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
+                throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+            }
+
+            if (request.getName() != null) {
+                tab.setName(request.getName());
+            }
+            if (request.getDiagramType() != null) {
+                tab.setDiagramType(request.getDiagramType());
+            }
+            if (request.getMermaidScript() != null) {
+                tab.setMermaidScript(request.getMermaidScript());
+                createVersion(tab, "Auto-save");
+            }
+            if (request.getMetadata() != null) {
+                tab.setMetadata(request.getMetadata());
+            }
+            if (request.getGraphData() != null) {
+                tab.setGraphData(request.getGraphData());
+            }
+            if (request.getIsActive() != null) {
+                tab.setIsActive(request.getIsActive());
+            }
+
+            PmDiagramTab saved = tabRepository.save(tab);
+
+            // ============================================================
+            // 🚀 UPDATE TRACE LINKS (ถ้าต้องการ)
+            // ง่ายสุด: ลบเก่าทั้งหมดแล้วสร้างใหม่
+            // ============================================================
+            // TODO: ถ้าต้องการอัปเดต Trace Links เมื่อแก้ไข diagram type
+            // เราไม่แก้ trace links ในรอบนี้
+
+            return toResponse(saved);
+        } else if (state == EntityState.DELETED) {
+            tab.setIsDelete(true);
+            tab.setDeleteDate(Instant.now());
+            tabRepository.save(tab);
+            return toResponse(tab);
+        }
+
+        return toResponse(tab);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+        tab.setIsDelete(true);
+        tab.setDeleteDate(Instant.now());
+        tabRepository.save(tab);
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse duplicateTab(UUID id) {
+        PmDiagramTab original = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found"));
+
+        PmDiagramTab duplicate = new PmDiagramTab();
+        duplicate.setUserId(original.getUserId());
+        duplicate.setBusinessId(original.getBusinessId());
+        duplicate.setProjectId(original.getProjectId());
+        duplicate.setName(original.getName() + " (Copy)");
+        duplicate.setDiagramType(original.getDiagramType());
+        duplicate.setMermaidScript(original.getMermaidScript());
+        duplicate.setMetadata(original.getMetadata());
+        duplicate.setGraphData(original.getGraphData());
+        duplicate.setSortOrder(original.getSortOrder() + 1);
+        duplicate.setIsActive(true);
+
+        PmDiagramTab saved = tabRepository.save(duplicate);
+        createVersion(saved, "Duplicated from " + original.getName());
+
+        // ============================================================
+        // 🚀 COPY TRACE LINKS
+        // ============================================================
+        // TODO: คัดลอก Trace Links จากต้นฉบับไปยังตัวใหม่
+        // ยังไม่ต้องทำในรอบนี้
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void reorderTabs(PmDiagramReorderRequest request) {
+        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
+            PmDiagramTab tab = tabRepository.findById(order.getId())
+                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
+            tab.setSortOrder(order.getSortOrder());
+            tabRepository.save(tab);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
+        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
+                .stream()
+                .map(this::toVersionResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
+        PmDiagramVersion version = versionRepository.findById(versionId)
+                .orElseThrow(() -> new RuntimeException("Version not found"));
+
+        PmDiagramTab tab = version.getDiagram();
+        tab.setMermaidScript(version.getMermaidScript());
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Restored from version " + version.getVersionNumber());
+
+        return toResponse(saved);
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    private void createVersion(PmDiagramTab tab, String comment) {
+        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
+        int nextVersion = versionCount + 1;
+
+        if (versionCount >= 50) {
+            List<PmDiagramVersion> oldestVersions = versionRepository
+                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
+            if (!oldestVersions.isEmpty()) {
+                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
+                oldest.setIsDelete(true);
+                versionRepository.save(oldest);
+            }
+        }
+
+        PmDiagramVersion version = new PmDiagramVersion();
+        version.setBusinessId(tab.getBusinessId());
+        version.setDiagram(tab);
+        version.setMermaidScript(tab.getMermaidScript());
+        version.setVersionNumber(nextVersion);
+        version.setChangeComment(comment);
+        versionRepository.save(version);
+    }
+
+    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
+        try {
+            PmDiagramTabResponse dto = new PmDiagramTabResponse();
+            dto.setId(tab.getId());
+            dto.setName(tab.getName());
+            dto.setDiagramType(tab.getDiagramType());
+            dto.setMermaidScript(tab.getMermaidScript());
+            dto.setMetadata(tab.getMetadata());
+            dto.setGraphData(tab.getGraphData());
+            dto.setProjectId(tab.getProjectId());
+
+            try {
+                customerProjectRepository.findById(tab.getProjectId())
+                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
+            } catch (Exception e) {
+                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
+                dto.setProjectName(null);
+            }
+
+            dto.setSortOrder(tab.getSortOrder());
+            dto.setIsActive(tab.getIsActive());
+            dto.setCreatedDate(tab.getCreatedDate());
+            dto.setUpdatedDate(tab.getUpdatedDate());
+            dto.setRowVersion(tab.getRowVersion());
+
+            try {
+                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
+            } catch (Exception e) {
+                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
+                dto.setVersionCount(0);
+            }
+
+            return dto;
+        } catch (Exception e) {
+            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
+            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
+            fallback.setId(tab.getId());
+            fallback.setName(tab.getName());
+            fallback.setDiagramType(tab.getDiagramType());
+            fallback.setMermaidScript(tab.getMermaidScript());
+            fallback.setMetadata(tab.getMetadata());
+            fallback.setGraphData(tab.getGraphData());
+            fallback.setProjectId(tab.getProjectId());
+            fallback.setSortOrder(tab.getSortOrder());
+            fallback.setIsActive(tab.getIsActive());
+            fallback.setCreatedDate(tab.getCreatedDate());
+            fallback.setUpdatedDate(tab.getUpdatedDate());
+            fallback.setVersionCount(0);
+            fallback.setRowVersion(tab.getRowVersion());
+            return fallback;
+        }
+    }
+
+    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
+        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
+        dto.setId(version.getId());
+        dto.setDiagramId(version.getDiagram().getId());
+        dto.setMermaidScript(version.getMermaidScript());
+        dto.setVersionNumber(version.getVersionNumber());
+        dto.setChangeComment(version.getChangeComment());
+        dto.setCreatedBy(version.getCreatedBy());
+        dto.setCreatedDate(version.getCreatedDate());
+        return dto;
+    }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts">
 // src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
 import { CommonModule } from '@angular/common';
@@ -83765,7 +83791,7 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId: id } });
   }
 
-    goToDiagram() {
+  goToDiagram() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/diagram'], { queryParams: { projectId: id } });
   }
@@ -84157,20 +84183,25 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">
 <style>
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 </style>
 
 <div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
-
   <!-- ===== Toolbar ===== -->
   <div
     class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
   >
     <div class="flex items-center gap-3">
       @if (projectName) {
-        <span class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
+        <span
+          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
+        >
           {{ projectName }}
         </span>
       }
@@ -84194,7 +84225,9 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
         <i class="bi bi-chat-dots-fill text-lg"></i>
         <span>Chat</span>
         @if (unreadCount > 0) {
-          <span class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]">
+          <span
+            class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
+          >
             {{ unreadCount }}
           </span>
         }
@@ -84226,37 +84259,63 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   >
     @if (isLoadingTabs) {
       <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
-        <div class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <div
+          class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+        ></div>
         Loading tabs...
       </div>
     }
 
     @for (tab of tabs(); track tab.id) {
-      <button
-        (click)="switchTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
-        [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
-        [class.text-white]="currentTabId === tab.id"
-        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
-        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
-        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
-      >
-        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
-        <span>{{ tab.name }}</span>
-        <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
-          {{ tab.diagramType }}
-        </span>
+      <!-- ในลูป @for (tab of tabs(); track tab.id) -->
+<button
+  (click)="switchTab(tab.id)"
+  class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
+  [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
+  [class.text-white]="currentTabId === tab.id"
+  [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+  [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+  [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+>
+  <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <!-- ปุ่มลบ -->
-        <button
-          (click)="deleteTab(tab.id, $event)"
-          class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          title="Delete tab"
-        >
-          <i class="bi bi-x text-sm"></i>
-        </button>
-      </button>
+  <!-- ชื่อ Tab: แสดงเป็น Input เมื่อกำลังแก้ไข -->
+  @if (editingTabId() === tab.id) {
+    <input
+      [id]="'rename-input-' + tab.id"
+      type="text"
+      [value]="tab.name"
+      (blur)="finishRename(tab.id, $any($event.target).value)"
+      (keydown.enter)="finishRename(tab.id, $any($event.target).value)"
+      (keydown.escape)="cancelRename(tab.id)"
+      (click)="$event.stopPropagation()"
+      class="bg-transparent border-b border-white/50 outline-none text-white w-auto min-w-[60px] max-w-[150px] px-0 py-0 text-sm"
+      autofocus
+    />
+  } @else {
+    <span
+      (dblclick)="startRename(tab.id, $event)"
+      class="cursor-pointer hover:text-[var(--crm-primary)] transition-colors"
+      title="Double-click to rename"
+    >
+      {{ tab.name }}
+    </span>
+  }
+
+  <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
+    {{ tab.diagramType }}
+  </span>
+
+  <!-- ปุ่มลบ -->
+  <button
+    (click)="deleteTab(tab.id, $event)"
+    class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+    [class.opacity-100]="currentTabId === tab.id"
+    title="ลบ"
+  >
+    <i class="bi bi-x text-sm"></i>
+  </button>
+</button>
     }
 
     <button
@@ -84280,7 +84339,9 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
       <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
       @if (currentTabId) {
         <span class="text-[var(--text-muted)] mx-2">|</span>
-        <span class="font-mono text-[0.6rem] text-[var(--text-muted)]">ID: {{ currentTabId.slice(0, 8) }}</span>
+        <span class="font-mono text-[0.6rem] text-[var(--text-muted)]"
+          >ID: {{ currentTabId.slice(0, 8) }}</span
+        >
       }
     </div>
     <div class="flex items-center gap-3">
@@ -84291,8 +84352,12 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   <!-- ===== Draw.io Editor ===== -->
   <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
     @if (isLoading) {
-      <div class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm">
-        <div class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"></div>
+      <div
+        class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
+      >
+        <div
+          class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
+        ></div>
         <span>Loading diagram…</span>
       </div>
     }
@@ -84310,7 +84375,9 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     class="fixed top-0 w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full chat-sidebar"
     [class.open]="chatOpen()"
   >
-    <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]">
+    <div
+      class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]"
+    >
       <span class="flex items-center gap-2">
         <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
         AI Assistant
@@ -84334,13 +84401,20 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
 
   <!-- ===== Overlay ===== -->
   @if (chatOpen()) {
-    <div class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]" (click)="toggleChat()"></div>
+    <div
+      class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
+      (click)="toggleChat()"
+    ></div>
   }
 
   <!-- ===== Import Dialog ===== -->
   @if (showImportDialog()) {
-    <div class="fixed inset-0 z-[1060] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div class="bg-[var(--bg)] rounded-2xl border border-[var(--border)] shadow-2xl p-6 max-w-md w-full">
+    <div
+      class="fixed inset-0 z-[1060] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+    >
+      <div
+        class="bg-[var(--bg)] rounded-2xl border border-[var(--border)] shadow-2xl p-6 max-w-md w-full"
+      >
         <h3 class="text-lg font-semibold text-[var(--text-active)] mb-2">Import AI Diagram</h3>
         <p class="text-sm text-[var(--text-muted)] mb-4">
           AI has generated a new diagram. This will be created as a new tab.
@@ -84385,11 +84459,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, take, takeUntil } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
+import type { DiagramModel } from './diagram.model';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
-import type { DiagramModel } from './diagram.model';
 
 @Component({
   selector: 'app-pmdt06',
@@ -84423,6 +84497,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
+  // ===== Rename state =====
+  editingTabId = signal<string | null>(null);
+
   // ===== Import Dialog =====
   showImportDialog = signal(false);
   pendingMermaid: { script: string; name?: string; type?: string } | null = null;
@@ -84431,48 +84508,64 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
-    this.drawioService.init(this.iframe.nativeElement);
+  this.drawioService.init(this.iframe.nativeElement);
 
-    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
-      this.drawioReady = ready;
-      console.log('Draw.io ready status:', ready);
-      if (ready && this.currentTabId) {
+  let isFirstReady = true;
+
+  this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+    this.drawioReady = ready;
+    console.log('[Draw.io] Ready status:', ready);
+    if (ready && this.currentTabId && isFirstReady) {
+      isFirstReady = false;
+      this.loadExistingDiagram();
+    }
+  });
+
+  // ✅ Fallback: ถ้า Draw.io ไม่พร้อมภายใน 7 วินาที ให้ force load
+  setTimeout(() => {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Fallback: force ready after 7s');
+      this.drawioReady = true;
+      if (this.currentTabId) {
         this.loadExistingDiagram();
       }
-    });
+    }
+  }, 7000);
 
-    // Fallback 7 วินาที
-    setTimeout(() => {
-      if (!this.drawioReady) {
-        console.warn('[Draw.io] Fallback: force ready after 7s');
-        this.drawioReady = true;
-        if (this.currentTabId) {
-          this.loadExistingDiagram();
-        }
-      }
-    }, 7000);
+  // ✅ รับ queryParams จาก URL
+  this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+    const newTabId = params['tabId'] || params['diagramId'] || null;
+    const newProjectId = params['projectId'] || null;
 
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      this.currentTabId = params['tabId'] || params['diagramId'] || null;
-      this.projectId = params['projectId'] || null;
+    if (!newProjectId) {
+      console.warn('[Route] No projectId, redirecting');
+      this.router.navigate(['/projects']);
+      return;
+    }
 
-      if (!this.projectId) {
-        console.warn('No projectId provided, redirecting to project selection');
-        this.router.navigate(['/projects']);
-        return;
-      }
-
+    // ✅ ถ้า projectId เปลี่ยน → โหลด Tabs ใหม่
+    if (newProjectId !== this.projectId) {
+      this.projectId = newProjectId;
+      this.currentTabId = null;
+      this.currentDiagram = null;
       this.loadProjectName();
-
-      // ✅ โหลด Tabs ทั้งหมด
       this.loadTabs();
+      return;
+    }
 
-      // ✅ ถ้ามี currentTabId และ Draw.io พร้อม → โหลด diagram
-      if (this.currentTabId && this.drawioReady) {
+    // ✅ ถ้า tabId เปลี่ยน → โหลด Diagram ใหม่
+    if (newTabId !== this.currentTabId) {
+      this.currentTabId = newTabId;
+      this.currentDiagram = null;
+      if (this.drawioReady) {
         this.loadExistingDiagram();
       }
-    });
-  }
+    } else if (!this.currentTabId) {
+      // ✅ ถ้ายังไม่มี tabId → โหลด Tabs แล้วเลือกอันแรก
+      this.loadTabs();
+    }
+  });
+}
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -84481,38 +84574,49 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Tabs Management =====
   loadTabs(): void {
-    if (!this.projectId) return;
-    this.isLoadingTabs = true;
+  if (!this.projectId) return;
+  this.isLoadingTabs = true;
 
-    this.diagramService.getTabs(this.projectId).subscribe({
-      next: (tabs) => {
-        this.tabs.set(tabs);
-        this.isLoadingTabs = false;
+  this.diagramService.getTabs(this.projectId).subscribe({
+    next: (tabs) => {
+      this.tabs.set(tabs);
+      this.isLoadingTabs = false;
 
-        // ถ้าไม่มี currentTabId → เลือก Tab แรก
-        if (!this.currentTabId && tabs.length > 0) {
-          this.currentTabId = tabs[0].id;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
-          }
+      // ✅ ถ้ายังไม่มี currentTabId แต่มี Tabs → เลือกอันแรก
+      if (!this.currentTabId && tabs.length > 0) {
+        this.currentTabId = tabs[0].id;
+        // ✅ อัปเดต URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { tabId: this.currentTabId, projectId: this.projectId },
+          queryParamsHandling: 'merge',
+        });
+        // ✅ โหลด Diagram (ถ้า Draw.io พร้อม)
+        if (this.drawioReady) {
+          this.loadExistingDiagram();
         }
+      }
 
-        // ถ้าไม่มี Tab เลย → สร้าง DFD เริ่มต้น?
-        if (tabs.length === 0) {
-          this.createDefaultTab();
-        }
-      },
-      error: () => {
-        this.isLoadingTabs = false;
-        this.tabs.set([]);
-      },
-    });
-  }
+      if (tabs.length === 0) {
+        this.createDefaultTab();
+      }
+    },
+    error: () => {
+      this.isLoadingTabs = false;
+      this.tabs.set([]);
+    },
+  });
+}
 
   createDefaultTab(): void {
     if (!this.projectId) return;
     this.diagramService
-      .createTab(this.projectId, 'DFD - Main', 'DFD', 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]')
+      .createTab(
+        this.projectId,
+        'DFD - Main',
+        'DFD',
+        'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
+      )
       .subscribe({
         next: (newTab) => {
           this.tabs.update((t) => [...t, newTab]);
@@ -84530,33 +84634,29 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   createNewTab(): void {
     if (!this.projectId) return;
 
-    // ใช้ Dialog แทน prompt (สวยกว่า)
     const name = prompt('Enter diagram name:', 'New Diagram');
     if (!name) return;
 
-    // ให้เลือกประเภท
     const typeOptions = ['DFD', 'ER', 'Flowchart', 'Sequence', 'Class', 'State', 'Gantt'];
     const type = prompt(
       'Enter diagram type (DFD, ER, Flowchart, Sequence, Class, State, Gantt):',
-      'DFD'
+      'DFD',
     );
     if (!type) return;
 
-    const selectedType = typeOptions.find(t => t.toLowerCase() === type.toLowerCase()) || 'DFD';
+    const selectedType = typeOptions.find((t) => t.toLowerCase() === type.toLowerCase()) || 'DFD';
 
-    this.diagramService
-      .createTab(this.projectId, name, selectedType as any, '')
-      .subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-          this.dialogService.success('Created', `Tab "${name}" created successfully.`);
-        },
-        error: (err) => {
-          console.error('Failed to create tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create tab.');
-        },
-      });
+    this.diagramService.createTab(this.projectId, name, selectedType as any, '').subscribe({
+      next: (newTab) => {
+        this.tabs.update((t) => [...t, newTab]);
+        this.switchTab(newTab.id);
+        this.dialogService.success('Created', `Tab "${name}" created successfully.`);
+      },
+      error: (err) => {
+        console.error('Failed to create tab:', err);
+        this.dialogService.error('Failed', err.error?.message || 'Could not create tab.');
+      },
+    });
   }
 
   switchTab(tabId: string): void {
@@ -84564,7 +84664,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     this.currentTabId = tabId;
     this.currentDiagram = null;
 
-    // อัปเดต URL
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tabId: tabId, projectId: this.projectId },
@@ -84578,7 +84677,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   deleteTab(tabId: string, event: Event): void {
     event.stopPropagation();
-    const tab = this.tabs().find(t => t.id === tabId);
+    const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
 
     this.dialogService
@@ -84607,6 +84706,75 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
+  // ===== Rename methods =====
+  startRename(tabId: string, event: Event): void {
+    event.stopPropagation();
+    this.editingTabId.set(tabId);
+    setTimeout(() => {
+      const input = document.getElementById(`rename-input-${tabId}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  finishRename(tabId: string, newName: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.editingTabId() !== tabId) return;
+
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    const tab = this.tabs().find((t) => t.id === tabId);
+    if (!tab) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    if (trimmed === tab.name) {
+      this.editingTabId.set(null);
+      return;
+    }
+
+    const updatedTab = {
+      ...tab,
+      name: trimmed,
+      state: 3,
+      rowVersion: tab.rowVersion || 0,
+    };
+
+    this.diagramService.updateTab(updatedTab as any).subscribe({
+      next: (res) => {
+        this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+        if (this.currentTabId === tabId) {
+          this.currentDiagram = res;
+        }
+        this.editingTabId.set(null);
+        this.dialogService.success('เปลี่ยนชื่อสำเร็จ', `เปลี่ยนชื่อเป็น "${res.name}"`);
+      },
+      error: (err) => {
+        console.error('Rename failed:', err);
+        this.dialogService.error(
+          'เปลี่ยนชื่อไม่สำเร็จ',
+          err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
+        );
+        this.editingTabId.set(null);
+      },
+    });
+  }
+
+  cancelRename(tabId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.editingTabId() === tabId) {
+      this.editingTabId.set(null);
+    }
+  }
+
+  // ===== Helpers =====
   getTabIcon(type: string): string {
     const map: Record<string, string> = {
       DFD: 'bi-diagram-3',
@@ -84637,7 +84805,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     return map[type] || 'text-gray-500';
   }
 
-  // ===== Project Name =====
   loadProjectName(): void {
     if (!this.projectId) return;
     this.diagramService.getProjectName(this.projectId).subscribe({
@@ -84646,7 +84813,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // ===== Draw.io Integration =====
   @HostListener('window:message', ['$event'])
   onMessage(event: MessageEvent) {
     this.drawioService.handleMessage(event);
@@ -84680,27 +84846,24 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     if (!this.pendingMermaid) return;
     const { script, name, type } = this.pendingMermaid;
 
-    // ✅ สร้าง Tab ใหม่สำหรับ AI Diagram แทนที่จะเพิ่มหน้าในไฟล์เดิม
     if (this.projectId) {
       const tabName = name || 'AI Diagram';
       const tabType = type || 'Flowchart';
-      this.diagramService
-        .createTab(this.projectId, tabName, tabType as any, script)
-        .subscribe({
-          next: (newTab) => {
-            this.tabs.update((t) => [...t, newTab]);
-            this.switchTab(newTab.id);
-            this.showImportDialog.set(false);
-            this.pendingMermaid = null;
-            this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
-          },
-          error: (err) => {
-            console.error('Failed to create AI diagram tab:', err);
-            this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
-            this.showImportDialog.set(false);
-            this.pendingMermaid = null;
-          },
-        });
+      this.diagramService.createTab(this.projectId, tabName, tabType as any, script).subscribe({
+        next: (newTab) => {
+          this.tabs.update((t) => [...t, newTab]);
+          this.switchTab(newTab.id);
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+          this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+        },
+        error: (err) => {
+          console.error('Failed to create AI diagram tab:', err);
+          this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
+          this.showImportDialog.set(false);
+          this.pendingMermaid = null;
+        },
+      });
     } else {
       this.showImportDialog.set(false);
       this.pendingMermaid = null;
@@ -84713,53 +84876,75 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Diagram CRUD =====
-  loadExistingDiagram(): void {
-    if (!this.currentTabId || this.isLoadingDiagram) return;
-    this.isLoadingDiagram = true;
-    this.isLoading = true;
+ loadExistingDiagram(): void {
+  if (!this.currentTabId) {
+    console.warn('[Diagram] No tabId to load');
+    return;
+  }
 
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
-      next: (diagram) => {
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          alert('❌ This diagram does not belong to the selected project.');
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
-          this.drawioService.loadXml('');
-          return;
-        }
-        this.currentDiagram = diagram;
-        const xml = diagram.graphData?.xml || '';
-        this.drawioService.loadXml(xml);
-        this.isLoading = false;
-        this.isLoadingDiagram = false;
-      },
-      error: (err) => {
-        console.error('Failed to load diagram:', err);
+  if (this.isLoadingDiagram) {
+    console.warn('[Diagram] Already loading, skip');
+    return;
+  }
+
+  this.isLoadingDiagram = true;
+  this.isLoading = true;
+  console.log('[Diagram] Loading diagram:', this.currentTabId);
+
+  this.diagramService.getDiagram(this.currentTabId).subscribe({
+    next: (diagram) => {
+      console.log('[Diagram] Loaded diagram data:', diagram);
+
+      if (this.projectId && diagram.projectId !== this.projectId) {
+        console.warn('[Diagram] Project mismatch');
+        this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
         this.isLoading = false;
         this.isLoadingDiagram = false;
         this.drawioService.loadXml('');
-      },
-    });
-  }
+        return;
+      }
 
+      this.currentDiagram = diagram;
+
+      // ✅ ดึง XML จาก graphData (ถ้ามี) หรือใช้ค่าปริยาย
+      const xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+      console.log('[Diagram] XML length:', xml.length);
+
+      // ✅ ใช้ setTimeout เพื่อให้ Draw.io พร้อมรับ XML อย่างเต็มที่
+      setTimeout(() => {
+        this.drawioService.loadXml(xml, true);
+      }, 300);
+
+      this.isLoading = false;
+      this.isLoadingDiagram = false;
+    },
+    error: (err) => {
+      console.error('[Diagram] Failed to load diagram:', err);
+      this.isLoading = false;
+      this.isLoadingDiagram = false;
+      // ✅ โหลด Diagram ว่างเปล่าเพื่อให้ UI ไม่ค้าง
+      setTimeout(() => {
+        this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
+      }, 300);
+      this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+    },
+  });
+}
   saveDiagram(): void {
     if (!this.currentTabId) {
-      // ถ้าไม่มี Tab → สร้างใหม่
       if (this.projectId) {
-        this.diagramService
-          .createTab(this.projectId, 'New Diagram', 'Flowchart', '')
-          .subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.currentTabId = newTab.id;
-              this.currentDiagram = newTab;
-              this.saveDiagramInternal();
-            },
-            error: (err) => {
-              alert('❌ Could not create new tab.');
-              console.error(err);
-            },
-          });
+        this.diagramService.createTab(this.projectId, 'New Diagram', 'Flowchart', '').subscribe({
+          next: (newTab) => {
+            this.tabs.update((t) => [...t, newTab]);
+            this.currentTabId = newTab.id;
+            this.currentDiagram = newTab;
+            this.saveDiagramInternal();
+          },
+          error: (err) => {
+            alert('❌ Could not create new tab.');
+            console.error(err);
+          },
+        });
       }
       return;
     }
@@ -84795,14 +84980,13 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         projectId,
         graphData: { xml },
         mermaidScript: this.currentDiagram?.mermaidScript || null,
-        state: 3, // MODIFIED
+        state: 3,
         rowVersion: this.currentDiagram?.rowVersion || 0,
       };
 
       this.diagramService.updateTab(updatedTab as any).subscribe({
         next: (res) => {
           this.currentDiagram = res;
-          // อัปเดตใน tabs list
           this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
           this.dialogService.success('Saved', 'Diagram saved successfully.');
         },
@@ -84845,43 +85029,26 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // ===== Trace Links for DFD/ER =====
-  /**
-   * เรียกใช้เมื่อสร้าง DFD Tab ใหม่
-   * Frontend จะส่ง relatedRequirementIds ไปให้ Backend สร้าง Trace Link
-   */
+  // ===== Trace Links =====
   createDfdTab(name: string, relatedRequirementIds: string[]): void {
     if (!this.projectId) return;
 
-    this.diagramService
-      .createTab(this.projectId, name, 'DFD', '')
-      .subscribe({
-        next: (newTab) => {
-          // ✅ หลังจากได้ tabId แล้ว สร้าง Trace Link ผ่าน Backend (ทำใน createTab อยู่แล้ว)
-          // แต่ถ้าต้องการส่ง relatedRequirementIds ไปด้วย ต้องแก้ createTab ให้รับ parameter
-          // หรือเรียก API แยกเพื่อสร้าง Trace Link
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-
-          // ถ้าต้องการสร้าง Trace Link แยก (กรณี createTab ไม่รองรับ)
-          this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
-        },
-        error: (err) => {
-          console.error('Failed to create DFD tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
-        },
-      });
+    this.diagramService.createTab(this.projectId, name, 'DFD', '').subscribe({
+      next: (newTab) => {
+        this.tabs.update((t) => [...t, newTab]);
+        this.switchTab(newTab.id);
+        this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
+      },
+      error: (err) => {
+        console.error('Failed to create DFD tab:', err);
+        this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
+      },
+    });
   }
 
-  /**
-   * สร้าง Trace Links แยก (กรณี Backend ไม่รองรับ)
-   */
   createTraceLinksForTab(tabId: string, type: string, relatedIds: string[]): void {
     if (!this.projectId || !tabId || !relatedIds.length) return;
 
-    // TODO: เรียก API /api/trace/create แยก
-    // หรือใช้ endpoint ที่มีอยู่แล้วใน PmDiagramTabService
-    // ตัวอย่าง: POST /api/diagram/tabs/{tabId}/trace-links
     this.http
       .post(`/api/diagram/tabs/${tabId}/trace-links`, {
         sourceType: type === 'DFD' ? 'REQUIREMENT' : 'DFD',
@@ -84899,18 +85066,12 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
-  // ============================================================
-  // ⭐ NEW: API for Trace Links from Frontend
-  // ============================================================
-  /**
-   * สร้าง Trace Link จาก DFD/ER ไปยัง Requirement หรือ DFD
-   */
   createTraceLink(
     sourceType: string,
     sourceId: string,
     targetType: string,
     targetId: string,
-    relationshipType: string
+    relationshipType: string,
   ): void {
     this.http
       .post('/api/trace/links', {
@@ -84923,12 +85084,59 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       })
       .subscribe({
         next: () => {
-          console.log(`✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`);
+          console.log(
+            `✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`,
+          );
         },
         error: (err) => {
           console.error('Failed to create trace link:', err);
         },
       });
+  }
+  renameTab(tabId: string, currentName: string, event: Event): void {
+    event.stopPropagation();
+    const newName = prompt('ป้อนชื่อใหม่สำหรับ Diagram:', currentName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
+
+    this.diagramService.getDiagram(tabId).subscribe({
+      next: (latest) => {
+        // ✅ แปลงเป็น DiagramModel ที่มี rowVersion
+        const updatedTab: any = {
+          id: latest.id,
+          name: newName.trim(),
+          diagramType: latest.diagramType,
+          projectId: latest.projectId,
+          mermaidScript: latest.mermaidScript || '',
+          graphData: latest.graphData || {},
+          metadata: latest.metadata || {},
+          sortOrder: latest.sortOrder || 0,
+          isActive: latest.isActive ?? true,
+          state: 3, // Modified
+          rowVersion: latest.rowVersion ?? 0, // ใช้ค่าจริงจากฐานข้อมูล
+        };
+
+        this.diagramService.updateTab(updatedTab).subscribe({
+          next: (res) => {
+            this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+            if (this.currentTabId === tabId) this.currentDiagram = res;
+            this.dialogService.success(
+              'เปลี่ยนชื่อสำเร็จ',
+              `เปลี่ยนชื่อ Diagram เป็น "${res.name}"`,
+            );
+          },
+          error: (err) => {
+            console.error('เปลี่ยนชื่อล้มเหลว:', err);
+            this.dialogService.error(
+              'เปลี่ยนชื่อไม่สำเร็จ',
+              err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
+            );
+          },
+        });
+      },
+      error: (err) => {
+        this.dialogService.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดข้อมูล Diagram ปัจจุบันได้');
+      },
+    });
   }
 }
 </file>
