@@ -1,4 +1,3 @@
-// src/main/java/com/softinter/sicapi/entity/pm/PmSpecification.java
 package com.softinter.sicapi.entity.pm;
 
 import com.softinter.sicapi.entity.base.BaseEntity;
@@ -14,14 +13,23 @@ import java.util.UUID;
 @Table(name = "pm_specification")
 public class PmSpecification extends BaseEntity {
 
+    // ===== Business ID (จาก BaseBusinessEntity แต่ BaseEntity ไม่มี) =====
+    // ถ้าใช้ BaseBusinessEntity ให้ extends BaseBusinessEntity
+    // ถ้าใช้ BaseEntity ให้เพิ่ม field นี้
+    @Column(name = "business_id")
+    private UUID businessId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;
 
-    // ✅ 新增: FK ไปยัง Requirement (เชื่อมตรง ๆ)
+    // ✅ เพิ่ม FK ไปยัง Requirement
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requirement_id")
     private PmRequirement requirement;
+
+    @Column(name = "project_id", insertable = false, updatable = false)
+    private UUID projectId;  // ✅ เพิ่ม getter ให้ใช้ใน Service
 
     @Column(name = "spec_code", nullable = false, length = 30)
     private String specCode;
@@ -35,7 +43,7 @@ public class PmSpecification extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "related_requirement", columnDefinition = "TEXT") // เก็บไว้เพื่อแสดงผล แต่ใช้ FK เป็นหลัก
+    @Column(name = "related_requirement", columnDefinition = "TEXT")
     private String relatedRequirement;
 
     @Column(name = "related_er", columnDefinition = "TEXT")
@@ -58,4 +66,21 @@ public class PmSpecification extends BaseEntity {
 
     @Column(name = "status", length = 20)
     private String status = "Draft";
+
+    // ===== Helper Methods =====
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
+    }
+
+    public UUID getBusinessId() {
+        return businessId;
+    }
+
+    public void setBusinessId(UUID businessId) {
+        this.businessId = businessId;
+    }
 }

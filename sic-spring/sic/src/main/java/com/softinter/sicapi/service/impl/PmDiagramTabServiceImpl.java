@@ -5,13 +5,17 @@ import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
 import com.softinter.sicapi.entity.pm.PmDiagramVersion;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
+import com.softinter.sicapi.service.TraceLinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +34,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmDiagramTabRepository tabRepository;
     private final PmDiagramVersionRepository versionRepository;
     private final CurrentUserService currentUserService;
-    private final PmCustomerProjectRepository customerProjectRepository; 
+    private final PmCustomerProjectRepository customerProjectRepository;
+    private final PmRequirementRepository requirementRepository;
+
+    // ===== Inject TraceLinkService =====
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -83,12 +91,59 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript());
         tab.setMetadata(request.getMetadata());
-        tab.setGraphData(request.getGraphData()); // ✅ ตั้งค่า graphData
+        tab.setGraphData(request.getGraphData());
         tab.setSortOrder(maxSort + 1);
         tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Initial version");
+
+        // ============================================================
+        // 🚀 CREATE TRACE LINKS (ตามแนวทางที่ 1)
+        // ============================================================
+        UUID projectId = request.getProjectId();
+        String diagramType = request.getDiagramType().toUpperCase();
+
+        if ("DFD".equals(diagramType) || "FLOWCHART".equals(diagramType)) {
+            // DFD → เชื่อมกับ Requirement
+            if (request.getRelatedRequirementIds() != null) {
+                for (UUID reqId : request.getRelatedRequirementIds()) {
+                    if (requirementRepository.existsById(reqId)) {
+                        traceLinkService.createLink(
+                            projectId,
+                            "REQUIREMENT", reqId,
+                            "DFD", saved.getId(),
+                            TraceRelationship.DESIGNED_BY.name()
+                        );
+                    }
+                }
+            }
+        } else if ("ER".equals(diagramType)) {
+            // ER → เชื่อมกับ DFD
+            if (request.getRelatedDfdIds() != null) {
+                for (UUID dfdId : request.getRelatedDfdIds()) {
+                    traceLinkService.createLink(
+                        projectId,
+                        "DFD", dfdId,
+                        "ER", saved.getId(),
+                        TraceRelationship.IMPLEMENTED_BY.name()
+                    );
+                }
+            }
+            // ER → เชื่อมกับ Requirement (ถ้ามี)
+            if (request.getRelatedRequirementIdsForEr() != null) {
+                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
+                    if (requirementRepository.existsById(reqId)) {
+                        traceLinkService.createLink(
+                            projectId,
+                            "REQUIREMENT", reqId,
+                            "ER", saved.getId(),
+                            TraceRelationship.DESIGNED_BY.name()
+                        );
+                    }
+                }
+            }
+        }
 
         return toResponse(saved);
     }
@@ -99,33 +154,56 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found"));
 
-        if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
-            throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
+
+        if (state == EntityState.MODIFIED) {
+            // Check rowVersion
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
+                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            }
+
+            if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
+                throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+            }
+
+            if (request.getName() != null) {
+                tab.setName(request.getName());
+            }
+            if (request.getDiagramType() != null) {
+                tab.setDiagramType(request.getDiagramType());
+            }
+            if (request.getMermaidScript() != null) {
+                tab.setMermaidScript(request.getMermaidScript());
+                createVersion(tab, "Auto-save");
+            }
+            if (request.getMetadata() != null) {
+                tab.setMetadata(request.getMetadata());
+            }
+            if (request.getGraphData() != null) {
+                tab.setGraphData(request.getGraphData());
+            }
+            if (request.getIsActive() != null) {
+                tab.setIsActive(request.getIsActive());
+            }
+
+            PmDiagramTab saved = tabRepository.save(tab);
+
+            // ============================================================
+            // 🚀 UPDATE TRACE LINKS (ถ้าต้องการ)
+            // ง่ายสุด: ลบเก่าทั้งหมดแล้วสร้างใหม่
+            // ============================================================
+            // TODO: ถ้าต้องการอัปเดต Trace Links เมื่อแก้ไข diagram type
+            // เราไม่แก้ trace links ในรอบนี้
+
+            return toResponse(saved);
+        } else if (state == EntityState.DELETED) {
+            tab.setIsDelete(true);
+            tab.setDeleteDate(Instant.now());
+            tabRepository.save(tab);
+            return toResponse(tab);
         }
 
-        if (request.getName() != null) {
-            tab.setName(request.getName());
-        }
-        if (request.getDiagramType() != null) {
-            tab.setDiagramType(request.getDiagramType());
-        }
-        if (request.getMermaidScript() != null) {
-            tab.setMermaidScript(request.getMermaidScript());
-            createVersion(tab, "Auto-save");
-        }
-        if (request.getMetadata() != null) {
-            tab.setMetadata(request.getMetadata());
-        }
-        // ✅ บันทึก graphData
-        if (request.getGraphData() != null) {
-            tab.setGraphData(request.getGraphData());
-        }
-        if (request.getIsActive() != null) {
-            tab.setIsActive(request.getIsActive());
-        }
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        return toResponse(saved);
+        return toResponse(tab);
     }
 
     @Override
@@ -152,12 +230,18 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
         duplicate.setMetadata(original.getMetadata());
-        duplicate.setGraphData(original.getGraphData()); // ✅ คัดลอก graphData
+        duplicate.setGraphData(original.getGraphData());
         duplicate.setSortOrder(original.getSortOrder() + 1);
         duplicate.setIsActive(true);
 
         PmDiagramTab saved = tabRepository.save(duplicate);
         createVersion(saved, "Duplicated from " + original.getName());
+
+        // ============================================================
+        // 🚀 COPY TRACE LINKS
+        // ============================================================
+        // TODO: คัดลอก Trace Links จากต้นฉบับไปยังตัวใหม่
+        // ยังไม่ต้องทำในรอบนี้
 
         return toResponse(saved);
     }
@@ -190,8 +274,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         PmDiagramTab tab = version.getDiagram();
         tab.setMermaidScript(version.getMermaidScript());
-        // ✅ เมื่อ restore version ควรตั้ง graphData เป็น null หรือคงเดิม? (เลือกคงเดิม)
-        // tab.setGraphData(null); // ถ้าต้องการให้ใช้ Mermaid อย่างเดียว
 
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Restored from version " + version.getVersionNumber());
@@ -234,10 +316,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             dto.setDiagramType(tab.getDiagramType());
             dto.setMermaidScript(tab.getMermaidScript());
             dto.setMetadata(tab.getMetadata());
-            dto.setGraphData(tab.getGraphData()); // ✅ ส่ง graphData กลับ
+            dto.setGraphData(tab.getGraphData());
             dto.setProjectId(tab.getProjectId());
 
-            // ดึง projectName (ถ้ามี)
             try {
                 customerProjectRepository.findById(tab.getProjectId())
                         .ifPresent(p -> dto.setProjectName(p.getProjectName()));
@@ -251,7 +332,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             dto.setCreatedDate(tab.getCreatedDate());
             dto.setUpdatedDate(tab.getUpdatedDate());
 
-            // ดึง version count
             try {
                 dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
             } catch (Exception e) {
@@ -262,14 +342,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             return dto;
         } catch (Exception e) {
             log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
-            // Fallback: ส่ง response แบบ minimal (ไม่มี projectName, versionCount)
             PmDiagramTabResponse fallback = new PmDiagramTabResponse();
             fallback.setId(tab.getId());
             fallback.setName(tab.getName());
             fallback.setDiagramType(tab.getDiagramType());
             fallback.setMermaidScript(tab.getMermaidScript());
             fallback.setMetadata(tab.getMetadata());
-            fallback.setGraphData(tab.getGraphData()); // ✅ fallback ก็ส่ง graphData
+            fallback.setGraphData(tab.getGraphData());
             fallback.setProjectId(tab.getProjectId());
             fallback.setSortOrder(tab.getSortOrder());
             fallback.setIsActive(tab.getIsActive());

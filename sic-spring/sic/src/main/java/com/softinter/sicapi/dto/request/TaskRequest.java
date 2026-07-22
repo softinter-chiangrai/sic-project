@@ -1,10 +1,10 @@
 package com.softinter.sicapi.dto.request;
 
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import lombok.Data;
 
 @Data
 public class TaskRequest {
@@ -19,4 +19,7 @@ public class TaskRequest {
     private String priority;
     private String color;
     private List<String> assigneeIds;
+
+    // ===== เพิ่มสำหรับ Traceability =====
+    private UUID specificationId;   // เชื่อมกับ Specification
 }

@@ -1,24 +1,19 @@
 <style>
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 </style>
 
 <div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
-  <!-- Toolbar -->
+
+  <!-- ===== Toolbar ===== -->
   <div
     class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
   >
     <div class="flex items-center gap-3">
       @if (projectName) {
-        <span
-          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
-        >
+        <span class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
           {{ projectName }}
         </span>
       }
@@ -42,9 +37,7 @@
         <i class="bi bi-chat-dots-fill text-lg"></i>
         <span>Chat</span>
         @if (unreadCount > 0) {
-          <span
-            class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
-          >
+          <span class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]">
             {{ unreadCount }}
           </span>
         }
@@ -70,7 +63,55 @@
     </div>
   </div>
 
-  <!-- Status Bar -->
+  <!-- ===== Tab Bar (NEW) ===== -->
+  <div
+    class="flex items-center gap-1 px-4 py-1.5 bg-[var(--sidebar)] border-b border-[var(--border)] overflow-x-auto flex-shrink-0 min-h-[44px]"
+  >
+    @if (isLoadingTabs) {
+      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
+        <div class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        Loading tabs...
+      </div>
+    }
+
+    @for (tab of tabs(); track tab.id) {
+      <button
+        (click)="switchTab(tab.id)"
+        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
+        [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
+        [class.text-white]="currentTabId === tab.id"
+        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+      >
+        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
+        <span>{{ tab.name }}</span>
+        <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
+          {{ tab.diagramType }}
+        </span>
+
+        <!-- ปุ่มลบ -->
+        <button
+          (click)="deleteTab(tab.id, $event)"
+          class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          [class.opacity-100]="currentTabId === tab.id"
+          title="Delete tab"
+        >
+          <i class="bi bi-x text-sm"></i>
+        </button>
+      </button>
+    }
+
+    <button
+      (click)="createNewTab()"
+      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] transition-all whitespace-nowrap"
+    >
+      <i class="bi bi-plus-lg"></i>
+      New Diagram
+    </button>
+  </div>
+
+  <!-- ===== Status Bar ===== -->
   <div
     class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5"
   >
@@ -80,18 +121,21 @@
         [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
       ></span>
       <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
+      @if (currentTabId) {
+        <span class="text-[var(--text-muted)] mx-2">|</span>
+        <span class="font-mono text-[0.6rem] text-[var(--text-muted)]">ID: {{ currentTabId.slice(0, 8) }}</span>
+      }
+    </div>
+    <div class="flex items-center gap-3">
+      <span>{{ tabs().length }} diagram(s)</span>
     </div>
   </div>
 
-  <!-- Draw.io Editor -->
+  <!-- ===== Draw.io Editor ===== -->
   <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
     @if (isLoading) {
-      <div
-        class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
-      >
-        <div
-          class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
-        ></div>
+      <div class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm">
+        <div class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"></div>
         <span>Loading diagram…</span>
       </div>
     }
@@ -104,14 +148,12 @@
     ></iframe>
   </div>
 
-  <!-- Chat Sidebar -->
+  <!-- ===== Chat Sidebar ===== -->
   <div
     class="fixed top-0 w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full chat-sidebar"
     [class.open]="chatOpen()"
   >
-    <div
-      class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]"
-    >
+    <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]">
       <span class="flex items-center gap-2">
         <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
         AI Assistant
@@ -133,11 +175,35 @@
     </div>
   </div>
 
-  <!-- Overlay -->
+  <!-- ===== Overlay ===== -->
   @if (chatOpen()) {
-    <div
-      class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
-      (click)="toggleChat()"
-    ></div>
+    <div class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]" (click)="toggleChat()"></div>
+  }
+
+  <!-- ===== Import Dialog ===== -->
+  @if (showImportDialog()) {
+    <div class="fixed inset-0 z-[1060] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div class="bg-[var(--bg)] rounded-2xl border border-[var(--border)] shadow-2xl p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold text-[var(--text-active)] mb-2">Import AI Diagram</h3>
+        <p class="text-sm text-[var(--text-muted)] mb-4">
+          AI has generated a new diagram. This will be created as a new tab.
+        </p>
+        <div class="flex gap-3 justify-end">
+          <button
+            (click)="cancelImport()"
+            class="px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="importMermaid()"
+            class="px-4 py-2 rounded-lg text-sm bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/80 transition-all"
+          >
+            <i class="bi bi-plus-lg mr-1"></i>
+            Create as New Tab
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

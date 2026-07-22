@@ -4,6 +4,7 @@ package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.request.TaskRequest;
 import com.softinter.sicapi.dto.response.TaskResponse;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmMilestone;
 import com.softinter.sicapi.entity.pm.PmPhase;
 import com.softinter.sicapi.entity.pm.PmTask;
@@ -17,6 +18,7 @@ import com.softinter.sicapi.repository.pm.PmWorkPackageRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.TaskService;
+import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,36 +40,48 @@ public class TaskServiceImpl implements TaskService {
     private final PmTaskAssigneeRepository taskAssigneeRepository;
     private final SuUserBusinessRepository userBusinessRepository;
     private final SuProfileRepository profileRepository;
+    private final TraceLinkService traceLinkService;
 
     // ===== CREATE =====
     @Override
-    @Transactional
-    public TaskResponse createTask(TaskRequest request) {
-        PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+@Transactional
+public TaskResponse createTask(TaskRequest request) {
+    PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
+            .orElseThrow(() -> new RuntimeException("Work Package not found"));
 
-        PmTask task = new PmTask();
-        task.setWorkPackage(wp);
-        task.setBusinessId(wp.getBusinessId());
-        task.setTaskCode(request.getTaskCode());
-        task.setTaskName(request.getTaskName());
-        task.setDescription(request.getDescription());
-        task.setAssignedTo(request.getAssignedTo());
-        task.setStartDate(request.getStartDate());
-        task.setEndDate(request.getEndDate());
-        task.setEstimateManday(request.getEstimateManday());
-        task.setPriority(request.getPriority());
-        task.setStatus("Todo");
-        task.setColor(request.getColor());
+    PmTask task = new PmTask();
+    task.setWorkPackage(wp);
+    task.setBusinessId(wp.getBusinessId());
+    task.setTaskCode(request.getTaskCode());
+    task.setTaskName(request.getTaskName());
+    task.setDescription(request.getDescription());
+    task.setAssignedTo(request.getAssignedTo());
+    task.setStartDate(request.getStartDate());
+    task.setEndDate(request.getEndDate());
+    task.setEstimateManday(request.getEstimateManday());
+    task.setPriority(request.getPriority());
+    task.setStatus("Todo");
+    task.setColor(request.getColor());
 
-        task = taskRepository.save(task);
+    task = taskRepository.save(task);
 
-        // ✅ บันทึกผู้รับผิดชอบร่วม (assignees)
-        saveAssignees(task, request.getAssigneeIds());
+    // บันทึกผู้รับผิดชอบร่วม
+    saveAssignees(task, request.getAssigneeIds());
 
-        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
-        return toResponse(task);
+    // ===== สร้าง Trace Link =====
+    UUID projectId = wp.getMilestone().getPhase().getProject().getId();
+    if (request.getSpecificationId() != null) {
+        traceLinkService.createLink(
+            projectId,
+            "SPECIFICATION", request.getSpecificationId(),
+            "TASK", task.getId(),
+            TraceRelationship.IMPLEMENTED_BY.name()
+        );
     }
+
+    updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+    return toResponse(task);
+}
 
     // ===== UPDATE =====
     @Override

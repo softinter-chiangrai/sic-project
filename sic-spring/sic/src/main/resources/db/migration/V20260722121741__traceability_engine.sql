@@ -1,0 +1,35 @@
+
+CREATE TYPE trace_relationship AS ENUM (
+    'DESIGNED_BY',
+    'IMPLEMENTED_BY',
+    'DOCUMENTED_BY',
+    'VERIFIED_BY',
+    'FAILED_BY',
+    'AFFECTED_BY',
+    'RELATED_TO'
+);
+
+CREATE TABLE pm_trace_link (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL,
+    source_type VARCHAR(50) NOT NULL,
+    source_id UUID NOT NULL,
+    target_type VARCHAR(50) NOT NULL,
+    target_id UUID NOT NULL,
+    relationship_type trace_relationship NOT NULL,
+    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
+    created_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
+    updated_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    delete_by VARCHAR(100),
+    delete_date TIMESTAMPTZ
+);
+
+CREATE INDEX idx_trace_source ON pm_trace_link (source_type, source_id);
+CREATE INDEX idx_trace_target ON pm_trace_link (target_type, target_id);
+CREATE INDEX idx_trace_project ON pm_trace_link (project_id);
+CREATE INDEX idx_trace_relationship ON pm_trace_link (relationship_type);
+
+ALTER TABLE pm_trace_link ADD CONSTRAINT fk_trace_project
+    FOREIGN KEY (project_id) REFERENCES pm_customer_project(id);

@@ -1,4 +1,3 @@
-// src/main/java/com/softinter/sicapi/service/ImpactAnalysisService.java
 package com.softinter.sicapi.service;
 
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
@@ -12,7 +11,11 @@ public interface ImpactAnalysisService {
 
     UUID save(SaveImpactAnalysisRequest request);
 
+    // ✅ เพิ่ม method autoDetect() เพื่อให้สอดคล้องกับ Impl
     ImpactAnalysisResponse autoDetect(UUID changeRequestId);
+
+    // ✅ ใหม่: ใช้ Traceability Engine
+    ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId);
 
     void delete(UUID id);
 }

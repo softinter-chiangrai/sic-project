@@ -1,4 +1,3 @@
-// src/main/java/com/softinter/sicapi/controller/pm/ImpactAnalysisController.java
 package com.softinter.sicapi.controller.pm;
 
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
@@ -22,35 +21,42 @@ import java.util.UUID;
 @Tag(name = "Impact Analysis", description = "Impact Analysis for Change Requests")
 public class ImpactAnalysisController {
 
-    private final ImpactAnalysisService service;
+    // ✅ ใช้ชื่อ field ให้ตรงกับ error
+    private final ImpactAnalysisService impactAnalysisService;
 
     @GetMapping("/change-request/{changeRequestId}")
     @Operation(summary = "Get impact analysis by Change Request ID")
     public ResponseEntity<ImpactAnalysisResponse> getByChangeRequest(@PathVariable UUID changeRequestId) {
-        ImpactAnalysisResponse data = service.getByChangeRequest(changeRequestId);
+        ImpactAnalysisResponse data = impactAnalysisService.getByChangeRequest(changeRequestId);
         return data != null ? ResponseEntity.ok(data) : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/save")
     @Operation(summary = "Save impact analysis (manual or auto)")
     public ResponseEntity<UUID> save(@Valid @RequestBody SaveImpactAnalysisRequest request) {
-        UUID id = service.save(request);
+        UUID id = impactAnalysisService.save(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @PostMapping("/auto-detect/{changeRequestId}")
-    @Operation(summary = "Auto-detect impact from Change Request using database function")
+    @Operation(summary = "Auto-detect impact using database function (legacy)")
     public ResponseEntity<ImpactAnalysisResponse> autoDetect(@PathVariable UUID changeRequestId) {
-        ImpactAnalysisResponse response = service.autoDetect(changeRequestId);
-        return response != null
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().build();
+        ImpactAnalysisResponse response = impactAnalysisService.autoDetect(changeRequestId);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
+    }
+
+    // ✅ ใหม่: ใช้ Traceability Engine
+    @PostMapping("/auto-detect-trace/{changeRequestId}")
+    @Operation(summary = "Auto-detect impact using Traceability Engine")
+    public ResponseEntity<ImpactAnalysisResponse> autoDetectUsingTrace(@PathVariable UUID changeRequestId) {
+        ImpactAnalysisResponse response = impactAnalysisService.autoDetectUsingTrace(changeRequestId);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete impact analysis")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        service.delete(id);
+        impactAnalysisService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,12 +1,4 @@
-// src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java
-
 package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
 import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
@@ -16,9 +8,16 @@ import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ImpactAnalysisService;
-
+import com.softinter.sicapi.service.TraceLinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -28,6 +27,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     private final ChangeImpactAnalysisRepository repository;
     private final PmRequirementChangeRequestRepository changeRequestRepository;
     private final CurrentUserService currentUserService;
+
+    // ===== Inject TraceLinkService =====
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,7 +42,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     @Override
     @Transactional
     public UUID save(SaveImpactAnalysisRequest request) {
-        // ใช้เฉพาะกรณี Manual หรือบันทึกทั่วไป (ไม่ใช้ใน autoDetect)
         PmRequirementChangeRequest changeRequest = changeRequestRepository
                 .findById(request.getChangeRequestId())
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
@@ -78,125 +79,74 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     // ============================================================
-    // ✅ แก้ไข autoDetect – บันทึกเพียงครั้งเดียว
+    // ✅ Implement: autoDetect() (method เดิม)
     // ============================================================
     @Override
     @Transactional
     public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
-        log.info("Starting auto-detect for change request: {}", changeRequestId);
+        log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
 
-        // 1. โหลด Change Request (เพื่อใช้อ้างอิง)
+        // เรียก autoDetectUsingTrace() แทน (ใช้ Trace Engine)
+        return autoDetectUsingTrace(changeRequestId);
+    }
+
+    // ============================================================
+    // ✅ Implement: autoDetectUsingTrace() (ใหม่)
+    // ============================================================
+    @Override
+    @Transactional
+    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
+        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
+
+        // 1. โหลด Change Request
         PmRequirementChangeRequest changeRequest = changeRequestRepository
                 .findById(changeRequestId)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
 
-        // 2. ดึงหรือสร้าง Entity
+        UUID requirementId = changeRequest.getRequirement().getId();
+
+        // 2. ใช้ TraceLinkService หา Impact
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems("REQUIREMENT", requirementId);
+
+        // 3. ดึงข้อมูลจาก traceResult
+        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
+
+        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
+        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
+        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
+        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
+        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
+
+        // 4. บันทึก Impact Analysis
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(changeRequestId)
                 .orElse(new ChangeImpactAnalysis());
 
-        // 3. เรียก PostgreSQL function เพื่อหา impacted ids
-        try {
-            Object[] result = repository.autoDetectByChangeRequest(changeRequestId);
-            UUID[] reqIds = new UUID[0];
-            UUID[] specIds = new UUID[0];
-            UUID[] taskIds = new UUID[0];
-            UUID[] testCaseIds = new UUID[0];
-            UUID[] bugIds = new UUID[0];
+        analysis.setChangeRequest(changeRequest);
+        analysis.setImpactedRequirementIds(reqIds);
+        analysis.setImpactedSpecIds(specIds);
+        analysis.setImpactedTaskIds(taskIds);
+        analysis.setImpactedTestCaseIds(testCaseIds);
+        analysis.setImpactedBugIds(bugIds);
+        analysis.setImpactedTableNames(new String[0]);
+        analysis.setAnalysisStatus("AUTO");
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
 
-            if (result != null && result.length > 0) {
-                Object first = result[0];
-                if (first instanceof Object[]) {
-                    Object[] arrays = (Object[]) first;
-                    if (arrays.length >= 5) {
-                        reqIds = convertToUuidArray(arrays[0]);
-                        specIds = convertToUuidArray(arrays[1]);
-                        taskIds = convertToUuidArray(arrays[2]);
-                        testCaseIds = convertToUuidArray(arrays[3]);
-                        bugIds = convertToUuidArray(arrays[4]);
-                    }
-                } else if (result.length >= 5) {
-                    reqIds = convertToUuidArray(result[0]);
-                    specIds = convertToUuidArray(result[1]);
-                    taskIds = convertToUuidArray(result[2]);
-                    testCaseIds = convertToUuidArray(result[3]);
-                    bugIds = convertToUuidArray(result[4]);
-                } else {
-                    // fallback
-                    reqIds = convertToUuidArray(result[0]);
-                }
-            }
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Auto-detect using Trace completed and saved for change request: {}", changeRequestId);
 
-            // 4. ตั้งค่าข้อมูลลง entity
-            analysis.setChangeRequest(changeRequest);
-            analysis.setImpactedRequirementIds(reqIds);
-            analysis.setImpactedSpecIds(specIds);
-            analysis.setImpactedTaskIds(taskIds);
-            analysis.setImpactedTestCaseIds(testCaseIds);
-            analysis.setImpactedBugIds(bugIds);
-
-            // 5. ตั้งสถานะ AUTO และเวลาวิเคราะห์
-            analysis.setAnalysisStatus("AUTO");
-            analysis.setAnalyzedAt(Instant.now());
-            analysis.setAnalyzedBy(currentUserService.getUserId());
-
-            // 6. ✅ บันทึกครั้งเดียว (ไม่ต้องเรียก save() ซ้อน)
-            ChangeImpactAnalysis saved = repository.save(analysis);
-            log.info("Auto-detect completed and saved for change request: {}", changeRequestId);
-
-            // 7. สร้าง Response
-            return toResponse(saved);
-
-        } catch (Exception e) {
-            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
-            throw new RuntimeException("Auto-detect failed: " + e.getMessage(), e);
-        }
+        return toResponse(saved);
     }
 
-    // ===== Helper: convert object to UUID array =====
-    private UUID[] convertToUuidArray(Object obj) {
-        if (obj == null) return new UUID[0];
-        try {
-            if (obj instanceof java.sql.Array) {
-                Object[] elements = (Object[]) ((java.sql.Array) obj).getArray();
-                return convertToUuidArray(elements);
-            }
-            if (obj instanceof Object[]) {
-                Object[] elements = (Object[]) obj;
-                UUID[] result = new UUID[elements.length];
-                for (int i = 0; i < elements.length; i++) {
-                    if (elements[i] != null) {
-                        result[i] = UUID.fromString(elements[i].toString());
-                    }
-                }
-                return result;
-            }
-            if (obj instanceof String) {
-                String str = (String) obj;
-                if (str.startsWith("{") && str.endsWith("}")) {
-                    String content = str.substring(1, str.length() - 1);
-                    if (content.isEmpty()) return new UUID[0];
-                    String[] parts = content.split(",");
-                    UUID[] result = new UUID[parts.length];
-                    for (int i = 0; i < parts.length; i++) {
-                        result[i] = UUID.fromString(parts[i].trim());
-                    }
-                    return result;
-                }
-                try {
-                    return new UUID[]{UUID.fromString(str)};
-                } catch (IllegalArgumentException e) {
-                    return new UUID[0];
-                }
-            }
-            return new UUID[0];
-        } catch (Exception e) {
-            log.warn("Failed to convert to UUID array: {}", e.getMessage());
-            return new UUID[0];
-        }
+    @Override
+    @Transactional
+    public void delete(UUID id) {
+        repository.deleteById(id);
+        log.info("Impact Analysis deleted: {}", id);
     }
 
-    // ===== toResponse =====
+    // ===== Helper Methods =====
     private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
         ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
         dto.setId(entity.getId());
@@ -219,12 +169,5 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         dto.setAnalyzedAt(entity.getAnalyzedAt());
         dto.setAnalyzedBy(entity.getAnalyzedBy());
         return dto;
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        repository.deleteById(id);
-        log.info("Impact Analysis deleted: {}", id);
     }
 }

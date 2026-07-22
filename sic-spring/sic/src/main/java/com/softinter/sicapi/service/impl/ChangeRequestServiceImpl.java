@@ -10,6 +10,7 @@ import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.ChangeRequestService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.ImpactAnalysisService;
 import com.softinter.sicapi.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmRequirementChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
     private final CurrentUserService currentUserService;
+     private final ImpactAnalysisService impactAnalysisService;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,7 +66,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Override
     @Transactional
     public UUID createChangeRequest(ChangeRequestRequest request) {
-        // ไม่ต้องใช้ businessId เพราะ entity ไม่มี field businessId
         PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
                 .orElseThrow(() -> new RuntimeException("Requirement not found"));
 
@@ -80,6 +81,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         PmRequirementChangeRequest saved = changeRequestRepository.save(entity);
         log.info("Created Change Request with id: {}", saved.getId());
+        
+        try {
+            impactAnalysisService.autoDetect(saved.getId());
+            log.info("Auto-detect impact completed for change request: {}", saved.getId());
+        } catch (Exception e) {
+            log.warn("Auto-detect impact failed for change request: {}", saved.getId(), e);
+        }
+
         return saved.getId();
     }
 
