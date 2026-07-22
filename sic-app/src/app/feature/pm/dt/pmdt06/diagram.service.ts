@@ -1,3 +1,4 @@
+// src/app/feature/pm/dt/pmdt06/diagram.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
@@ -94,17 +95,20 @@ export class DiagramService {
       .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
   }
 
+  // ✅ แก้ไข: เพิ่ม requirementId
   createTab(
     projectId: string,
     name: string,
     type: DiagramType,
     script?: string,
+    requirementId?: string  // ✅ เพิ่มพารามิเตอร์
   ): Observable<DiagramModel> {
     const payload = {
       projectId,
       name,
       diagramType: type,
       mermaidScript: script || '',
+      requirementId: requirementId || null,  // ✅ ส่งไป Backend
       metadata: {},
       sortOrder: this.tabsSubject.value.length + 1,
     };

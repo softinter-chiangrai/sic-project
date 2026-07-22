@@ -156,28 +156,35 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   createDefaultTab(): void {
     if (!this.projectId) return;
-    this.diagramService
-      .createTab(
-        this.projectId,
-        'DFD - Main',
-        'DFD',
-        'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
-      )
-      .subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.currentTabId = newTab.id;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
+    // ✅ สร้าง Default Tab โดยไม่ต้องระบุ requirementId (อาจจะให้เลือกทีหลัง)
+    // หรือจะให้ Dialog เลือก requirement ก็ได้
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
           }
+          this.diagramService.createTab(this.projectId!, name, type as any, '', requirementId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
         },
-        error: (err) => {
-          console.error('Failed to create default tab:', err);
-        },
-      });
+      },
+    });
   }
 
-  // ===== สร้างใหม่ (ใช้ Dialog) =====
+  // ✅ สร้างใหม่ (ใช้ Dialog)
   createNewTab(): void {
     if (!this.projectId) return;
 
@@ -185,9 +192,14 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
+        projectId: this.projectId,
         editData: null,
-        onSave: (name: string, type: string, editData?: DiagramEditData) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '').subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
+          }
+          this.diagramService.createTab(this.projectId!, name, type as any, '', requirementId).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -207,6 +219,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
 
+    // ✅ สำหรับแก้ไข เรายังไม่บังคับให้เปลี่ยน requirementId (แต่ถ้าต้องการให้เปลี่ยนได้ก็เพิ่ม Combobox)
     const editData: DiagramEditData = {
       id: tab.id,
       name: tab.name,
@@ -218,10 +231,10 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
+        projectId: this.projectId,
         editData: editData,
-        onSave: (name: string, type: string, data?: DiagramEditData) => {
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, requirementId: string) => {
           if (!data) return;
-          // อัปเดตข้อมูล
           const updatedTab = {
             ...tab,
             name: name,
@@ -361,32 +374,43 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     }
   }
 
+  // ✅ importMermaid() – สร้าง Diagram ใหม่พร้อม requirementId
   importMermaid(): void {
-    if (!this.pendingMermaid) return;
+    if (!this.pendingMermaid || !this.projectId) return;
     const { script, name, type } = this.pendingMermaid;
 
-    if (this.projectId) {
-      const tabName = name || 'AI Diagram';
-      const tabType = type || 'Flowchart';
-      this.diagramService.createTab(this.projectId, tabName, tabType as any, script).subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-          this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+    // ✅ เปิด Dialog ให้เลือก Requirement ก่อน Import
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        onSave: (diagramName: string, diagramType: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
+          }
+          const tabName = diagramName || name || 'AI Diagram';
+          const tabType = diagramType || type || 'Flowchart';
+          this.diagramService.createTab(this.projectId!, tabName, tabType as any, script, requirementId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.showImportDialog.set(false);
+              this.pendingMermaid = null;
+              this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+            },
+            error: (err) => {
+              console.error('Failed to create AI diagram tab:', err);
+              this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
+              this.showImportDialog.set(false);
+              this.pendingMermaid = null;
+            },
+          });
         },
-        error: (err) => {
-          console.error('Failed to create AI diagram tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-        },
-      });
-    } else {
-      this.showImportDialog.set(false);
-      this.pendingMermaid = null;
-    }
+      },
+    });
   }
 
   cancelImport(): void {
@@ -473,18 +497,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   saveDiagram(): void {
     if (!this.currentTabId) {
       if (this.projectId) {
-        this.diagramService.createTab(this.projectId, 'New Diagram', 'Flowchart', '').subscribe({
-          next: (newTab) => {
-            this.tabs.update((t) => [...t, newTab]);
-            this.currentTabId = newTab.id;
-            this.currentDiagram = newTab;
-            this.saveDiagramInternal();
-          },
-          error: (err) => {
-            alert('❌ Could not create new tab.');
-            console.error(err);
-          },
-        });
+        // ✅ เปิด Dialog เพื่อสร้างใหม่พร้อม Requirement
+        this.createNewTab();
       }
       return;
     }
@@ -494,7 +508,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   private saveDiagramInternal(): void {
     if (!this.currentTabId) {
-      alert('❌ No diagram ID to save.');
+      this.dialogService.warn('ไม่มี Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
       return;
     }
 
@@ -508,7 +522,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       const projectId = this.currentDiagram?.projectId || this.projectId;
 
       if (!projectId) {
-        alert('❌ Missing Project ID.');
+        this.dialogService.warn('Missing Project ID', 'ไม่พบ Project ID');
         return;
       }
 
@@ -573,37 +587,30 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   createDfdTab(name: string, relatedRequirementIds: string[]): void {
     if (!this.projectId) return;
 
-    this.diagramService.createTab(this.projectId, name, 'DFD', '').subscribe({
+    // ✅ ใช้ requirementId ตัวแรกเป็นต้นทาง (หรือให้เลือก)
+    const requirementId = relatedRequirementIds.length > 0 ? relatedRequirementIds[0] : null;
+    if (!requirementId) {
+      this.dialogService.warn('ไม่พบ Requirement', 'ต้องเลือก Requirement เพื่อสร้าง DFD');
+      return;
+    }
+
+    this.diagramService.createTab(this.projectId, name, 'DFD', '', requirementId).subscribe({
       next: (newTab) => {
         this.tabs.update((t) => [...t, newTab]);
         this.switchTab(newTab.id);
-        this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
+        // ✅ สร้าง Trace Links เพิ่มเติม (ถ้ามีหลาย requirement)
+        for (const reqId of relatedRequirementIds) {
+          if (reqId !== requirementId) {
+            this.createTraceLink('REQUIREMENT', reqId, 'DFD', newTab.id, 'DESIGNED_BY');
+          }
+        }
+        this.dialogService.success('สร้าง DFD สำเร็จ', `สร้าง DFD "${name}" เรียบร้อย`);
       },
       error: (err) => {
         console.error('Failed to create DFD tab:', err);
         this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
       },
     });
-  }
-
-  createTraceLinksForTab(tabId: string, type: string, relatedIds: string[]): void {
-    if (!this.projectId || !tabId || !relatedIds.length) return;
-
-    this.http
-      .post(`/api/diagram/tabs/${tabId}/trace-links`, {
-        sourceType: type === 'DFD' ? 'REQUIREMENT' : 'DFD',
-        targetType: type,
-        relatedIds: relatedIds,
-        projectId: this.projectId,
-      })
-      .subscribe({
-        next: () => {
-          console.log(`✅ Trace links created for ${type} tab: ${tabId}`);
-        },
-        error: (err) => {
-          console.error('Failed to create trace links:', err);
-        },
-      });
   }
 
   createTraceLink(
@@ -613,6 +620,11 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     targetId: string,
     relationshipType: string,
   ): void {
+    if (!this.projectId) {
+      console.warn('No projectId, cannot create trace link');
+      return;
+    }
+
     this.http
       .post('/api/trace/links', {
         projectId: this.projectId,

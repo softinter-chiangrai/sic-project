@@ -1,3 +1,4 @@
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
@@ -9,6 +10,7 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
 import com.softinter.sicapi.entity.pm.PmDiagramVersion;
+import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
@@ -35,48 +37,29 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmDiagramVersionRepository versionRepository;
     private final CurrentUserService currentUserService;
     private final PmCustomerProjectRepository customerProjectRepository;
-    private final PmRequirementRepository requirementRepository;
+    private final PmRequirementRepository requirementRepository;  // ✅ inject
 
-    // ===== Inject TraceLinkService =====
     private final TraceLinkService traceLinkService;
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
-        try {
-            String userId = currentUserService.getUserId();
-            List<PmDiagramTab> tabs;
-            if (projectId != null) {
-                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-            } else {
-                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
-            }
-            return tabs.stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error in getTabs for projectId: {}", projectId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDiagramTabResponse getTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        return toResponse(tab);
-    }
-
+    // ===== CREATE =====
     @Override
     @Transactional
     public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID businessId = BusinessContextHolder.getBusinessId();
-
+        // 1. Validate Project
         if (!customerProjectRepository.existsById(request.getProjectId())) {
             throw new RuntimeException("Project not found: " + request.getProjectId());
         }
+
+        // 2. ✅ Validate Requirement (บังคับ)
+        if (request.getRequirementId() == null) {
+            throw new IllegalArgumentException("Requirement ID is required for traceability.");
+        }
+        PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
+                .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
+
+        // 3. สร้าง Diagram
+        String userId = currentUserService.getUserId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
 
         List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
                 request.getProjectId()
@@ -98,44 +81,61 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Initial version");
 
-        // ============================================================
-        // 🚀 CREATE TRACE LINKS (ตามแนวทางที่ 1)
-        // ============================================================
-        UUID projectId = request.getProjectId();
+        // 4. ✅ สร้าง Trace Link: Requirement → Diagram
         String diagramType = request.getDiagramType().toUpperCase();
+        traceLinkService.createLink(
+            request.getProjectId(),
+            "REQUIREMENT", request.getRequirementId(),
+            diagramType, saved.getId(),
+            TraceRelationship.DESIGNED_BY.name()
+        );
 
-        if ("DFD".equals(diagramType) || "FLOWCHART".equals(diagramType)) {
-            // DFD → เชื่อมกับ Requirement
-            if (request.getRelatedRequirementIds() != null) {
-                for (UUID reqId : request.getRelatedRequirementIds()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                            projectId,
-                            "REQUIREMENT", reqId,
-                            "DFD", saved.getId(),
-                            TraceRelationship.DESIGNED_BY.name()
-                        );
-                    }
+        // 5. ✅ สร้าง Trace Link เพิ่มเติม (ถ้ามี relatedRequirementIds)
+        if (request.getRelatedRequirementIds() != null) {
+            for (UUID reqId : request.getRelatedRequirementIds()) {
+                if (reqId.equals(request.getRequirementId())) {
+                    continue; // ข้ามตัวหลัก (สร้างไปแล้ว)
+                }
+                if (requirementRepository.existsById(reqId)) {
+                    traceLinkService.createLink(
+                        request.getProjectId(),
+                        "REQUIREMENT", reqId,
+                        diagramType, saved.getId(),
+                        TraceRelationship.DESIGNED_BY.name()
+                    );
                 }
             }
-        } else if ("ER".equals(diagramType)) {
-            // ER → เชื่อมกับ DFD
+        }
+
+        // 6. DFD → เชื่อมกับ DFD อื่นๆ (ถ้ามี)
+        if ("DFD".equals(diagramType) && request.getRelatedDfdIds() != null) {
+            for (UUID dfdId : request.getRelatedDfdIds()) {
+                traceLinkService.createLink(
+                    request.getProjectId(),
+                    "DFD", dfdId,
+                    "DFD", saved.getId(),
+                    TraceRelationship.RELATED_TO.name()
+                );
+            }
+        }
+
+        // 7. ER → เชื่อมกับ DFD และ Requirement (ถ้ามี)
+        if ("ER".equals(diagramType)) {
             if (request.getRelatedDfdIds() != null) {
                 for (UUID dfdId : request.getRelatedDfdIds()) {
                     traceLinkService.createLink(
-                        projectId,
+                        request.getProjectId(),
                         "DFD", dfdId,
                         "ER", saved.getId(),
                         TraceRelationship.IMPLEMENTED_BY.name()
                     );
                 }
             }
-            // ER → เชื่อมกับ Requirement (ถ้ามี)
             if (request.getRelatedRequirementIdsForEr() != null) {
                 for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
                     if (requirementRepository.existsById(reqId)) {
                         traceLinkService.createLink(
-                            projectId,
+                            request.getProjectId(),
                             "REQUIREMENT", reqId,
                             "ER", saved.getId(),
                             TraceRelationship.DESIGNED_BY.name()
@@ -148,16 +148,37 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(saved);
     }
 
+    // ===== UPDATE =====
     @Override
     @Transactional
     public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
         PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
 
+        // ✅ ตรวจสอบว่ามี requirementId หรือไม่ (ถ้ามีให้อัปเดต)
+        if (request.getRequirementId() != null) {
+            // ตรวจสอบว่า Requirement มีอยู่จริง
+            PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
+                    .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
+
+            // ลบ Trace Link เก่า (ถ้ามี) ก่อนสร้างใหม่
+            // (ต้องมี method ใน TraceLinkService)
+            // traceLinkService.deleteLinksBySourceAndTarget("REQUIREMENT", oldRequirementId, "DIAGRAM", tab.getId());
+
+            // สร้าง Trace Link ใหม่
+            String diagramType = tab.getDiagramType().toUpperCase();
+            traceLinkService.createLink(
+                tab.getProjectId(),
+                "REQUIREMENT", request.getRequirementId(),
+                diagramType, tab.getId(),
+                TraceRelationship.DESIGNED_BY.name()
+            );
+        }
+
+        // อัปเดตข้อมูล Diagram
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
 
         if (state == EntityState.MODIFIED) {
-            // Check rowVersion
             if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
                 throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
             }
@@ -187,14 +208,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
 
             PmDiagramTab saved = tabRepository.save(tab);
-
-            // ============================================================
-            // 🚀 UPDATE TRACE LINKS (ถ้าต้องการ)
-            // ง่ายสุด: ลบเก่าทั้งหมดแล้วสร้างใหม่
-            // ============================================================
-            // TODO: ถ้าต้องการอัปเดต Trace Links เมื่อแก้ไข diagram type
-            // เราไม่แก้ trace links ในรอบนี้
-
             return toResponse(saved);
         } else if (state == EntityState.DELETED) {
             tab.setIsDelete(true);
@@ -206,21 +219,23 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return toResponse(tab);
     }
 
+    // ===== DELETE =====
     @Override
     @Transactional
     public void deleteTab(UUID id) {
         PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
         tab.setIsDelete(true);
         tab.setDeleteDate(Instant.now());
         tabRepository.save(tab);
     }
 
+    // ===== DUPLICATE =====
     @Override
     @Transactional
     public PmDiagramTabResponse duplicateTab(UUID id) {
         PmDiagramTab original = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
 
         PmDiagramTab duplicate = new PmDiagramTab();
         duplicate.setUserId(original.getUserId());
@@ -237,15 +252,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab saved = tabRepository.save(duplicate);
         createVersion(saved, "Duplicated from " + original.getName());
 
-        // ============================================================
-        // 🚀 COPY TRACE LINKS
-        // ============================================================
-        // TODO: คัดลอก Trace Links จากต้นฉบับไปยังตัวใหม่
-        // ยังไม่ต้องทำในรอบนี้
+        // ✅ คัดลอก Trace Links จากต้นฉบับ (ถ้าต้องการ)
+        // TODO: คัดลอก Trace Links
 
         return toResponse(saved);
     }
 
+    // ===== REORDER =====
     @Override
     @Transactional
     public void reorderTabs(PmDiagramReorderRequest request) {
@@ -255,6 +268,35 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             tab.setSortOrder(order.getSortOrder());
             tabRepository.save(tab);
         }
+    }
+
+    // ===== GET =====
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
+        try {
+            String userId = currentUserService.getUserId();
+            List<PmDiagramTab> tabs;
+            if (projectId != null) {
+                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            } else {
+                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+            }
+            return tabs.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in getTabs for projectId: {}", projectId, e);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDiagramTabResponse getTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+        return toResponse(tab);
     }
 
     @Override
@@ -270,7 +312,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     @Transactional
     public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
         PmDiagramVersion version = versionRepository.findById(versionId)
-                .orElseThrow(() -> new RuntimeException("Version not found"));
+                .orElseThrow(() -> new RuntimeException("Version not found: " + versionId));
 
         PmDiagramTab tab = version.getDiagram();
         tab.setMermaidScript(version.getMermaidScript());

@@ -1,4 +1,4 @@
-// src/app/core/models/diagram.model.ts
+// src/app/feature/pm/dt/pmdt06/diagram.model.ts
 export interface DiagramProject {
   id: string;
   name: string;

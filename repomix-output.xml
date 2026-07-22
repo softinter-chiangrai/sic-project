@@ -331,6 +331,7 @@ sic-app/
               diagram.model.ts
               diagram.service.ts
               drawio-connector.service.ts
+              new-diagram-dialog.component.ts
               pmdt06.component.html
               pmdt06.component.ts
               project.model.ts
@@ -1013,7 +1014,6 @@ sic-spring/
                 SicApiApplication.java
     mvnw
     mvnw.cmd
-pmrt_route
 popup.zip
 .repomixignore
 </directory_structure>
@@ -21141,6 +21141,118 @@ public class LovResponse {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MenuProgramResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import java.util.UUID;
+
+@Data
+public class MenuProgramResponse {
+
+    private UUID id;
+    private UUID parentProgramId;
+    private String programCode;
+    private String icon;
+    private String nameEn;
+    private String nameLocal;
+    private String routePath;
+    private Integer sortOrder;
+    private Boolean isActive;
+    private Integer rowVersion;
+    private Integer state;
+
+    // ✅ ใช้ @JsonProperty ให้ชื่อ field ตรงกับ .NET
+    @JsonProperty("isAdd")
+    private boolean add;
+
+    @JsonProperty("isBack")
+    private boolean back;
+
+    @JsonProperty("isPrint")
+    private boolean print;
+
+    @JsonProperty("isRemove")
+    private boolean remove;
+
+    @JsonProperty("isSave")
+    private boolean save;
+
+    @JsonProperty("isSearch")
+    private boolean search;
+
+    // Constructor
+    public MenuProgramResponse(UUID id, UUID parentProgramId, String programCode, String icon,
+                               String nameEn, String nameLocal, String routePath, Integer sortOrder,
+                               Boolean isActive, Integer rowVersion, int state,
+                               boolean isAdd, boolean isBack, boolean isPrint, boolean isRemove,
+                               boolean isSave, boolean isSearch) {
+        this.id = id;
+        this.parentProgramId = parentProgramId;
+        this.programCode = programCode;
+        this.icon = icon;
+        this.nameEn = nameEn;
+        this.nameLocal = nameLocal;
+        this.routePath = routePath;
+        this.sortOrder = sortOrder;
+        this.isActive = isActive;
+        this.rowVersion = rowVersion;
+        this.state = state;
+        this.add = isAdd;
+        this.back = isBack;
+        this.print = isPrint;
+        this.remove = isRemove;
+        this.save = isSave;
+        this.search = isSearch;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MenuResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MenuResponse {
+    private String name;
+    private String icon;
+    private String path;
+    private String code;
+    private List<MenuResponse> children = new ArrayList<>();
+
+    private Integer state;
+    private Integer rowVersion;
+     @JsonProperty("isAdd")
+    private boolean add;
+
+    @JsonProperty("isBack")
+    private boolean back;
+
+    @JsonProperty("isPrint")
+    private boolean print;
+
+    @JsonProperty("isRemove")
+    private boolean remove;
+
+    @JsonProperty("isSave")
+    private boolean save;
+
+    @JsonProperty("isSearch")
+    private boolean search;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MessageResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -22132,6 +22244,64 @@ public class SuBusiness extends BaseEntity {
 
     @OneToMany(mappedBy = "business", fetch = FetchType.LAZY)
     private List<SuBusinessAudit> businessAudits = new ArrayList<>();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuBusinessRoleProgram.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_business_role_program",
+       indexes = {
+           @Index(name = "idx_business_role_program", columnList = "business_role_id, program_id", unique = true)
+       })
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuBusinessRoleProgram extends BaseEntity {
+
+    @Column(name = "business_role_id", insertable = false, updatable = false)
+    private UUID businessRoleId;
+
+    @Column(name = "program_id", insertable = false, updatable = false)
+    private UUID programId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_role_id", nullable = false)
+    private SuBusinessRole businessRole;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "program_id", nullable = false)
+    private SuProgram program;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @Column(name = "is_add")
+    private boolean isAdd;
+
+    @Column(name = "is_back")
+    private boolean isBack;
+
+    @Column(name = "is_print")
+    private boolean isPrint;
+
+    @Column(name = "is_remove")
+    private boolean isRemove;
+
+    @Column(name = "is_save")
+    private boolean isSave;
+
+    @Column(name = "is_search")
+    private boolean isSearch;
 }
 </file>
 
@@ -34094,6 +34264,105 @@ export class AiDiagramService {
         }
       });
     });
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts">
+// src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts
+import { Component, inject, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { DialogService } from '../../../../core/services/dialog.service';
+
+export interface DiagramEditData {
+  id: string;
+  name: string;
+  type: string;
+  rowVersion?: number;
+}
+
+@Component({
+  selector: 'app-new-diagram-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent],
+  template: `
+    <div class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
+      <div class="border-b px-5 py-4" style="border-color: var(--border);">
+        <h3 class="text-base font-semibold text-[var(--text-active)]">
+          {{ editData ? 'แก้ไข Diagram' : 'สร้าง Diagram ใหม่' }}
+        </h3>
+      </div>
+
+      <div class="space-y-4 px-5 py-4">
+        <sic-input
+          label="ชื่อ Diagram"
+          [(ngModel)]="name"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ป้อนชื่อ diagram"
+        ></sic-input>
+
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท Diagram</label>
+          <select
+            [(ngModel)]="type"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            <option value="DFD">DFD</option>
+            <option value="ER">ER</option>
+            <option value="Flowchart">Flowchart</option>
+            <option value="Sequence">Sequence</option>
+            <option value="Class">Class</option>
+            <option value="State">State</option>
+            <option value="Gantt">Gantt</option>
+            <option value="Mindmap">Mindmap</option>
+            <option value="Journey">Journey</option>
+            <option value="Pie">Pie</option>
+            <option value="C4">C4</option>
+            <option value="Use Case">Use Case</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
+        <sic-button variant="secondary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
+        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">
+          {{ editData ? 'บันทึก' : 'สร้าง' }}
+        </sic-button>
+      </div>
+    </div>
+  `
+})
+export class NewDiagramDialogComponent implements OnInit {
+  @Input() onSave!: (name: string, type: string, editData?: DiagramEditData) => void;
+  @Input() editData: DiagramEditData | null = null;
+
+  name = '';
+  type = 'DFD';
+
+  private dialogService = inject(DialogService);
+
+  ngOnInit(): void {
+    if (this.editData) {
+      this.name = this.editData.name;
+      this.type = this.editData.type;
+    }
+  }
+
+  get canSave(): boolean {
+    return this.name.trim().length > 0 && this.type.length > 0;
+  }
+
+  save(): void {
+    if (!this.canSave) return;
+    this.onSave(this.name.trim(), this.type, this.editData || undefined);
+    this.dialogService.close(true);
+  }
+
+  cancel(): void {
+    this.dialogService.close(false);
   }
 }
 </file>
@@ -56218,118 +56487,6 @@ public class JoinBusinessResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MenuProgramResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import java.util.UUID;
-
-@Data
-public class MenuProgramResponse {
-
-    private UUID id;
-    private UUID parentProgramId;
-    private String programCode;
-    private String icon;
-    private String nameEn;
-    private String nameLocal;
-    private String routePath;
-    private Integer sortOrder;
-    private Boolean isActive;
-    private Integer rowVersion;
-    private Integer state;
-
-    // ✅ ใช้ @JsonProperty ให้ชื่อ field ตรงกับ .NET
-    @JsonProperty("isAdd")
-    private boolean add;
-
-    @JsonProperty("isBack")
-    private boolean back;
-
-    @JsonProperty("isPrint")
-    private boolean print;
-
-    @JsonProperty("isRemove")
-    private boolean remove;
-
-    @JsonProperty("isSave")
-    private boolean save;
-
-    @JsonProperty("isSearch")
-    private boolean search;
-
-    // Constructor
-    public MenuProgramResponse(UUID id, UUID parentProgramId, String programCode, String icon,
-                               String nameEn, String nameLocal, String routePath, Integer sortOrder,
-                               Boolean isActive, Integer rowVersion, int state,
-                               boolean isAdd, boolean isBack, boolean isPrint, boolean isRemove,
-                               boolean isSave, boolean isSearch) {
-        this.id = id;
-        this.parentProgramId = parentProgramId;
-        this.programCode = programCode;
-        this.icon = icon;
-        this.nameEn = nameEn;
-        this.nameLocal = nameLocal;
-        this.routePath = routePath;
-        this.sortOrder = sortOrder;
-        this.isActive = isActive;
-        this.rowVersion = rowVersion;
-        this.state = state;
-        this.add = isAdd;
-        this.back = isBack;
-        this.print = isPrint;
-        this.remove = isRemove;
-        this.save = isSave;
-        this.search = isSearch;
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/MenuResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class MenuResponse {
-    private String name;
-    private String icon;
-    private String path;
-    private String code;
-    private List<MenuResponse> children = new ArrayList<>();
-
-    private Integer state;
-    private Integer rowVersion;
-     @JsonProperty("isAdd")
-    private boolean add;
-
-    @JsonProperty("isBack")
-    private boolean back;
-
-    @JsonProperty("isPrint")
-    private boolean print;
-
-    @JsonProperty("isRemove")
-    private boolean remove;
-
-    @JsonProperty("isSave")
-    private boolean save;
-
-    @JsonProperty("isSearch")
-    private boolean search;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmAiChatResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -57550,64 +57707,6 @@ public class SuBusinessRole extends BaseEntity {
 
     @OneToMany(mappedBy = "suBusinessRole", fetch = FetchType.LAZY)
     private List<SuBusinessInvite> invites = new ArrayList<>();
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuBusinessRoleProgram.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_business_role_program",
-       indexes = {
-           @Index(name = "idx_business_role_program", columnList = "business_role_id, program_id", unique = true)
-       })
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuBusinessRoleProgram extends BaseEntity {
-
-    @Column(name = "business_role_id", insertable = false, updatable = false)
-    private UUID businessRoleId;
-
-    @Column(name = "program_id", insertable = false, updatable = false)
-    private UUID programId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_role_id", nullable = false)
-    private SuBusinessRole businessRole;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "program_id", nullable = false)
-    private SuProgram program;
-
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
-
-    @Column(name = "is_add")
-    private boolean isAdd;
-
-    @Column(name = "is_back")
-    private boolean isBack;
-
-    @Column(name = "is_print")
-    private boolean isPrint;
-
-    @Column(name = "is_remove")
-    private boolean isRemove;
-
-    @Column(name = "is_save")
-    private boolean isSave;
-
-    @Column(name = "is_search")
-    private boolean isSearch;
 }
 </file>
 
@@ -59029,6 +59128,104 @@ public void sendTemplatedMail(String to, String templateCode, Object... template
             }
             mailQueueRepository.save(mail);
         }
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/MenuServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.response.MenuProgramResponse;
+import com.softinter.sicapi.dto.response.MenuResponse;
+import com.softinter.sicapi.repository.su.SuProgramRepository;
+import com.softinter.sicapi.service.BusinessAccessService;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.MenuService;
+import com.softinter.sicapi.util.LocalizationHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MenuServiceImpl implements MenuService {
+
+    private final SuProgramRepository programRepository;
+    private final BusinessAccessService businessAccessService;
+    private final CurrentUserService currentUserService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MenuResponse> getMenu() {
+        UUID businessId = businessAccessService.getBusinessId();
+        String userId = currentUserService.getUserId();
+
+        log.info("getMenu called: businessId = {}, userId = {}", businessId, userId);
+
+        if (businessId == null || userId == null) {
+            log.warn("BusinessId or UserId is null, cannot fetch menu.");
+            return Collections.emptyList();
+        }
+
+        List<MenuProgramResponse> programs = programRepository.findAccessibleProgramsWithPermission(businessId, userId);
+
+        if (programs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Build tree
+        Map<UUID, List<MenuProgramResponse>> childrenMap = new HashMap<>();
+        for (MenuProgramResponse p : programs) {
+            UUID parentId = p.getParentProgramId();
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(p);
+        }
+
+        List<MenuProgramResponse> roots = new ArrayList<>(childrenMap.getOrDefault(null, Collections.emptyList()));
+        roots.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(MenuProgramResponse::getProgramCode));
+
+        List<MenuResponse> menuList = new ArrayList<>();
+        for (MenuProgramResponse root : roots) {
+            menuList.add(buildNode(root, childrenMap));
+        }
+        return menuList;
+    }
+
+    private MenuResponse buildNode(MenuProgramResponse program, Map<UUID, List<MenuProgramResponse>> childrenMap) {
+        MenuResponse node = new MenuResponse();
+
+        // ✅ ใช้ LocalizationHelper.getMenuProgramName()
+        String programName = LocalizationHelper.getMenuProgramName(program);
+        node.setName(programName != null ? programName : program.getNameEn());
+
+        node.setIcon(program.getIcon());
+        node.setPath(program.getRoutePath());
+        node.setCode(program.getProgramCode());
+
+        node.setState(program.getState() != null ? program.getState() : 0);
+        node.setRowVersion(program.getRowVersion());
+
+        node.setAdd(program.isAdd());
+        node.setBack(program.isBack());
+        node.setPrint(program.isPrint());
+        node.setRemove(program.isRemove());
+        node.setSave(program.isSave());
+        node.setSearch(program.isSearch());
+
+        // Children
+        List<MenuProgramResponse> children = new ArrayList<>(childrenMap.getOrDefault(program.getId(), Collections.emptyList()));
+        children.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(MenuProgramResponse::getProgramCode));
+
+        for (MenuProgramResponse child : children) {
+            node.getChildren().add(buildNode(child, childrenMap));
+        }
+
+        return node;
     }
 }
 </file>
@@ -60596,38 +60793,6 @@ public final class UniquenessValidator {
         });
     }
 }
-</file>
-
-<file path="pmrt_route">
-รหัสหน้า	ชื่อ	หน้าที่
-PMRT01	รายการลูกค้า	แสดงรายการลูกค้าทั้งหมด ค้นหา กรอง และจัดการลูกค้า (เพิ่ม/แก้ไข/ลบ)
-PMRT01A	ฟอร์มลูกค้า	ฟอร์มสร้าง/แก้ไขข้อมูลลูกค้า (ชื่อ, ที่อยู่, เบอร์ติดต่อ, เลขภาษี)
-PMRT02	รายการโครงการ	แสดงรายการโครงการทั้งหมด ค้นหา กรอง และจัดการโครงการ (เพิ่ม/แก้ไข)
-PMRT02A	ฟอร์มโครงการ	ฟอร์มสร้าง/แก้ไขโครงการ (ชื่อ, ลูกค้า, สัญญา, PM, BA, SA, วันที่, งบประมาณ)
-PMRT03	แดชบอร์ดโครงการ	หน้า Dashboard รายละเอียดของโครงการเดียว: แสดง Phase, Tasks, Requirements, Bugs, Manday, เมนูด่วน, Phase/งานล่าสุด
-PMRT04	รายการสัญญา	แสดงรายการสัญญาทั้งหมด (Development, MA, Change Request, Extension) และจัดการสัญญา
-PMRT04A	ฟอร์มสัญญา	ฟอร์มสร้าง/แก้ไขสัญญา (เลขที่, ลูกค้า, โครงการ, ประเภท, วันที่, มูลค่า, ไฟล์สัญญา)
-PMRT04B	ต่ออายุสัญญา	หน้าสำหรับต่ออายุสัญญา (Renewal) หรือขยายระยะเวลา
-PMRT05	รายการ Requirement	แสดง Requirement ของโครงการ, ค้นหา กรอง และจัดการ Requirement
-PMRT06	รายการ Change Request	แสดง Change Request (คำขอเปลี่ยนแปลง) และจัดการคำขอ
-PMRT10	รายการ Specification	แสดง Specification (เอกสารกำหนดคุณลักษณะ) และจัดการ
-PMRT11	รายการ Design Review	แสดงรายการรีวิวงานออกแบบ (DFD, ER, UI, Spec) และจัดการรีวิว
-PMRT12	รายการ Task (แบบตาราง)	แสดง Task ทั้งหมดในโครงการ (Tasks) และจัดการ (เพิ่ม/แก้ไข/ลบ)
-PMRT13	งานของฉัน	แสดง Task ที่มอบหมายให้ผู้ใช้ปัจจุบัน (My Tasks) และจัดการสถานะ
-PMRT14	Gantt Chart	แสดงแผนภาพ Gantt (Timeline) ของ Tasks ทั้งโครงการ พร้อมตัวกรองและปรับแก้กำหนดการ
-PMRT15	รายการ Phase	แสดง Phase และ Milestones ของโครงการ (จัดการ Phase)
-PMRT16	รายละเอียด Phase	แสดงรายละเอียด Phase: Milestones, Work Packages, Tasks พร้อม CRUD และขยายดูรายละเอียด
-PMRT17	รายการ Bug	แสดง Bug/Issue ทั้งหมดของโครงการ ค้นหา กรอง และจัดการ Bug
-PMRT18	รายการ Delivery	แสดงเอกสารส่งมอบ (Delivery) และจัดการ (สร้าง/แก้ไข/ดู)
-PMRT19	รายการคู่มือผู้ใช้	แสดงรายการ User Manual (คู่มือ) และจัดการ (สร้าง/แก้ไข/ดู/ส่งออก PDF)
-PMRT20	รายการ Invoice	แสดงใบแจ้งหนี้ทั้งหมด ค้นหา กรอง และจัดการ Invoice
-PMRT20A	รายการ Payment	แสดงประวัติการชำระเงิน (Payment) และจัดการ
-PMRT21	รายการ MA Ticket	แสดง MA Ticket (งานหลังการขาย) และจัดการ (แจ้ง/แก้ไข/ดู)
-PMRT22	สัญญาใกล้หมดอายุ	แสดงสัญญาที่กำลังจะหมดอายุ (Renewal) เพื่อเตรียมต่ออายุ
-PMRT23	ศูนย์อนุมัติ	แสดงรายการที่รออนุมัติ (Approval Center) ทั้งหมด เช่น Requirement, Spec, Delivery, Invoice
-PMRT24	แดชบอร์ดผู้ดูแลระบบ	Dashboard สำหรับ Admin: สรุปสถิติ โครงการ, Bug, Invoice, MA Ticket, สุขภาพโครงการ, กิจกรรมล่าสุด, ระบบสถานะ
-PMRT25	ควบคุมเวอร์ชันเอกสาร	แสดงประวัติเวอร์ชันของเอกสารสำคัญ (Requirement, DFD, ER, Spec, Test Case, Manual ฯลฯ)
-PMRT26	Audit Log	แสดงบันทึกการตรวจสอบ (Audit Log) ทุกการกระทำในระบบ (ผู้ใช้, การกระทำ, โมดูล, รายละเอียด, IP, สถานะ)
 </file>
 
 <file path="sic-app/src/app/core/component/sic-calendar/sic-calendar.component.ts">
@@ -67666,104 +67831,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/MenuServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.response.MenuProgramResponse;
-import com.softinter.sicapi.dto.response.MenuResponse;
-import com.softinter.sicapi.repository.su.SuProgramRepository;
-import com.softinter.sicapi.service.BusinessAccessService;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.MenuService;
-import com.softinter.sicapi.util.LocalizationHelper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class MenuServiceImpl implements MenuService {
-
-    private final SuProgramRepository programRepository;
-    private final BusinessAccessService businessAccessService;
-    private final CurrentUserService currentUserService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<MenuResponse> getMenu() {
-        UUID businessId = businessAccessService.getBusinessId();
-        String userId = currentUserService.getUserId();
-
-        log.info("getMenu called: businessId = {}, userId = {}", businessId, userId);
-
-        if (businessId == null || userId == null) {
-            log.warn("BusinessId or UserId is null, cannot fetch menu.");
-            return Collections.emptyList();
-        }
-
-        List<MenuProgramResponse> programs = programRepository.findAccessibleProgramsWithPermission(businessId, userId);
-
-        if (programs.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // Build tree
-        Map<UUID, List<MenuProgramResponse>> childrenMap = new HashMap<>();
-        for (MenuProgramResponse p : programs) {
-            UUID parentId = p.getParentProgramId();
-            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(p);
-        }
-
-        List<MenuProgramResponse> roots = new ArrayList<>(childrenMap.getOrDefault(null, Collections.emptyList()));
-        roots.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
-                .thenComparing(MenuProgramResponse::getProgramCode));
-
-        List<MenuResponse> menuList = new ArrayList<>();
-        for (MenuProgramResponse root : roots) {
-            menuList.add(buildNode(root, childrenMap));
-        }
-        return menuList;
-    }
-
-    private MenuResponse buildNode(MenuProgramResponse program, Map<UUID, List<MenuProgramResponse>> childrenMap) {
-        MenuResponse node = new MenuResponse();
-
-        // ✅ ใช้ LocalizationHelper.getMenuProgramName()
-        String programName = LocalizationHelper.getMenuProgramName(program);
-        node.setName(programName != null ? programName : program.getNameEn());
-
-        node.setIcon(program.getIcon());
-        node.setPath(program.getRoutePath());
-        node.setCode(program.getProgramCode());
-
-        node.setState(program.getState() != null ? program.getState() : 0);
-        node.setRowVersion(program.getRowVersion());
-
-        node.setAdd(program.isAdd());
-        node.setBack(program.isBack());
-        node.setPrint(program.isPrint());
-        node.setRemove(program.isRemove());
-        node.setSave(program.isSave());
-        node.setSearch(program.isSearch());
-
-        // Children
-        List<MenuProgramResponse> children = new ArrayList<>(childrenMap.getOrDefault(program.getId(), Collections.emptyList()));
-        children.sort(Comparator.comparing(MenuProgramResponse::getSortOrder, Comparator.nullsLast(Integer::compareTo))
-                .thenComparing(MenuProgramResponse::getProgramCode));
-
-        for (MenuProgramResponse child : children) {
-            node.getChildren().add(buildNode(child, childrenMap));
-        }
-
-        return node;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmAiProviderServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -70454,6 +70521,141 @@ export const appConfig: ApplicationConfig = {
 };
 </file>
 
+<file path="sic-app/src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { AuthCallbackComponent } from './core/auth/auth-callback.component';
+import { authGuard } from './core/auth/auth.guard';
+import { profileGuard } from './core/auth/profile.guard';
+import { profileResolver } from './management/profile/profile.resolver';
+import { businessGuard } from './core/auth/business.guard';
+import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
+import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
+import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
+import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
+
+export const routes: Routes = [
+  {
+    path: 'auth/callback',
+    component: AuthCallbackComponent,
+  },
+  {
+    path: '',
+    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
+      },
+      {
+        path: 'product',
+        loadComponent: () =>
+          import('./main/index/product/product.component').then((m) => m.Product),
+      },
+      {
+        path: 'blog',
+        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
+      },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./main/index/contact/contact.component').then((m) => m.Contact),
+      },
+    ],
+  },
+  {
+    path: 'feature',
+    canActivate: [authGuard, profileGuard, businessGuard],
+    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
+      {
+        path: 'bu',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'db',
+        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
+      },
+      {
+        path: 'su',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'pm',
+        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
+      },
+    ],
+  },
+  {
+    path: 'management',
+    canActivate: [authGuard],
+    loadComponent: () => import('./management/management.component').then((m) => m.Management),
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./management/profile/profile.component').then((m) => m.Profile),
+        resolve: { form: profileResolver },
+      },
+      {
+        path: 'business',
+        loadComponent: () =>
+          import('./management/business/business.component').then((m) => m.BusinessComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./management/business/business-options/business-options.component').then(
+                (m) => m.BusinessOptionsComponent,
+              ),
+          },
+          {
+            path: 'create',
+            loadComponent: () =>
+              import('./management/business/business-create/business-create.component').then(
+                (m) => m.BusinessCreateComponent,
+              ),
+            resolve: { form: businessCreateResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'join',
+            loadComponent: () =>
+              import('./management/business/business-join/business-join.component').then(
+                (m) => m.BusinessJoinComponent,
+              ),
+            resolve: { form: businessJoinResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'invite',
+            loadComponent: () =>
+              import('./management/business/business-invite/business-invite.component').then(
+                (m) => m.BusinessInviteComponent,
+              ),
+            resolve: { form: businessInviteResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'tutorial',
+    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
+  },
+];
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ComboboxController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -71187,6 +71389,90 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
     List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.dto.response.MenuProgramResponse;
+import com.softinter.sicapi.entity.su.SuProgram;
+
+@Repository
+public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
+
+    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
+    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActive();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActiveForPage();
+
+    @Query("SELECT DISTINCT p FROM SuProgram p " +
+           "JOIN p.suBusinessRolePrograms brp " +
+           "JOIN brp.businessRole br " +
+           "JOIN br.userBusinessRoles ubr " +
+           "JOIN ubr.userBusiness ub " +
+           "WHERE ub.businessId = :businessId " +
+           "AND ub.userId = :userId " +
+           "AND ub.isActive = true " +
+           "AND br.isActive = true " +
+           "AND brp.isActive = true " +
+           "AND ubr.isActive = true " +
+           "AND p.isActive = true " +
+           "ORDER BY p.sortOrder ASC, p.programCode ASC")
+    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
+                                           @Param("userId") String userId);
+
+    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
+    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
+
+    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
+       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
+       "0, " +  // state = 0 (Detached)
+       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
+       "FROM SuProgram p " +
+       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
+       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
+       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
+       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
+       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
+       "AND p.isActive = true AND p.isDelete = false " +
+       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
+       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
+       "ORDER BY p.sortOrder ASC")
+List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
+
+
+    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findRootPrograms();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
+
+    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
+    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -75362,305 +75648,6 @@ export class DrawioConnectorService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
-// src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { DialogService } from '../../../../core/services/dialog.service';
-
-interface DiagramPage {
-  id: string;
-  name: string;
-  xml: string;
-}
-
-@Component({
-  selector: 'app-sql-export-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent],
-  template: `
-    <div
-      class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"
-    >
-      <!-- Header -->
-      <div
-        class="flex items-center justify-between border-b px-5 py-4"
-        style="border-color: var(--border);"
-      >
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
-          Generate SQL
-        </h3>
-        <button
-          type="button"
-          class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-          (click)="close()"
-        >
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <!-- Body -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-4">
-        <!-- Select Page -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-            >Select ER Diagram Page</label
-          >
-          <select
-            [(ngModel)]="selectedPageId"
-            (change)="onPageChange()"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            @for (page of pages(); track page.id) {
-              <option [value]="page.id">{{ page.name }}</option>
-            }
-          </select>
-          @if (pages().length === 0) {
-            <p class="text-xs text-[var(--text-muted)] mt-1">
-              ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER,er)
-            </p>
-          }
-        </div>
-
-        <!-- Vendor Selector -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-            >Database Vendor</label
-          >
-          <select
-            [(ngModel)]="vendor"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            <option value="postgresql">PostgreSQL</option>
-            <option value="mysql">MySQL</option>
-          </select>
-        </div>
-
-        <!-- ⭐ NEW: Engine Selection (Parser vs AI) -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Engine</label>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
-              <span class="text-sm"></span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
-              <span class="text-sm"></span>
-            </label>
-          </div>
-          @if (engine === 'ai') {
-            <p class="text-xs text-amber-500 mt-1">
-              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve
-              naming.
-            </p>
-          }
-        </div>
-
-        <!-- Generate Button -->
-        <div>
-          <sic-button
-            variant="primary"
-            size="sm"
-            [disabled]="loading() || !selectedPageId"
-            (click)="generate()"
-          >
-            @if (loading()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-play-fill"></i>
-            }
-            {{ loading() ? 'Generating...' : 'Generate SQL' }}
-          </sic-button>
-        </div>
-
-        <!-- SQL Output -->
-        @if (sql()) {
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm font-medium text-[var(--text-active)]">Generated SQL</span>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
-                  (click)="copyToClipboard()"
-                >
-                  <i class="bi bi-clipboard"></i> Copy
-                </button>
-                <button
-                  type="button"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
-                  (click)="download()"
-                >
-                  <i class="bi bi-download"></i> Download .sql
-                </button>
-              </div>
-            </div>
-            <pre
-              class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap"
-              >{{ sql() }}</pre
-            >
-          </div>
-        }
-      </div>
-
-      <!-- Footer -->
-      <div class="border-t px-5 py-4 flex justify-end" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="close()">Close</sic-button>
-      </div>
-    </div>
-  `,
-})
-export class SqlExportDialogComponent implements OnInit {
-  private http = inject(HttpClient);
-  private dialogService = inject(DialogService);
-
-  @Input() xml: string = '';
-
-  pages = signal<DiagramPage[]>([]);
-  selectedPageId: string | null = null;
-  vendor = 'postgresql';
-  engine: 'parser' | 'ai' = 'parser';
-  sql = signal<string>('');
-  loading = signal(false);
-
-  ngOnInit() {
-    this.extractPages(this.xml);
-    if (this.pages().length > 0) {
-      this.selectedPageId = this.pages()[0].id;
-    }
-  }
-
-  private extractPages(xml: string) {
-    if (!xml) return;
-
-    const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
-    const allPages: DiagramPage[] = [];
-    let match;
-
-    while ((match = regex.exec(xml)) !== null) {
-      const fullTag = match[0];
-      const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
-      const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
-
-      const id = idMatch ? idMatch[1] : `page-${allPages.length + 1}`;
-      const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
-      const name = this.decodeHtmlEntities(rawName);
-
-      if (this.isErDiagramPage(name)) {
-        allPages.push({ id, name, xml: fullTag });
-      }
-    }
-
-    this.pages.set(allPages);
-  }
-
-  private isErDiagramPage(name: string): boolean {
-    const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
-    const upperName = name.toUpperCase();
-    return erKeywords.some((keyword) => upperName.includes(keyword.toUpperCase()));
-  }
-
-  private decodeHtmlEntities(text: string): string {
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-  }
-
-  onPageChange() {
-    this.sql.set('');
-  }
-
-  generate() {
-    if (!this.selectedPageId) {
-      this.dialogService.warn('No page selected', 'Please select a diagram page.');
-      return;
-    }
-
-    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
-    if (!selectedPage) {
-      this.dialogService.warn('Page not found', 'Selected page does not exist.');
-      return;
-    }
-
-    this.loading.set(true);
-
-    const endpoint =
-      this.engine === 'ai'
-        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
-        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
-
-    // ✅ Build payload object
-    const payload = {
-      xml: selectedPage.xml,
-      vendor: this.vendor,
-      pageName: selectedPage.name,
-    };
-
-    // ✅ Log payload to console (for debugging)
-    console.log('📤 Sending to AI (engine: ' + this.engine + '):', payload);
-
-    this.http.post<{ sql: string }>(endpoint, payload).subscribe({
-      next: (res) => {
-        console.log('✅ AI Response:', res);
-        this.sql.set(res.sql);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('❌ AI Error:', err);
-        this.loading.set(false);
-        const msg = err.error?.message || err.message || 'Could not generate SQL.';
-        this.dialogService.error('Generation Failed', msg);
-      },
-    });
-  }
-
-  copyToClipboard() {
-    const sqlText = this.sql();
-    if (!sqlText) return;
-
-    navigator.clipboard
-      ?.writeText(sqlText)
-      .then(() => {
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
-      })
-      .catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = sqlText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
-      });
-  }
-
-  download() {
-    const sqlText = this.sql();
-    if (!sqlText) return;
-
-    const blob = new Blob([sqlText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  close() {
-    this.dialogService.close();
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.html">
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02.component.html -->
 <div class="space-y-5 p-0.5">
@@ -76363,141 +76350,6 @@ export class SqlExportDialogComponent implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { AuthCallbackComponent } from './core/auth/auth-callback.component';
-import { authGuard } from './core/auth/auth.guard';
-import { profileGuard } from './core/auth/profile.guard';
-import { profileResolver } from './management/profile/profile.resolver';
-import { businessGuard } from './core/auth/business.guard';
-import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
-import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
-import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
-import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
-
-export const routes: Routes = [
-  {
-    path: 'auth/callback',
-    component: AuthCallbackComponent,
-  },
-  {
-    path: '',
-    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
-      },
-      {
-        path: 'product',
-        loadComponent: () =>
-          import('./main/index/product/product.component').then((m) => m.Product),
-      },
-      {
-        path: 'blog',
-        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
-      },
-      {
-        path: 'contact',
-        loadComponent: () =>
-          import('./main/index/contact/contact.component').then((m) => m.Contact),
-      },
-    ],
-  },
-  {
-    path: 'feature',
-    canActivate: [authGuard, profileGuard, businessGuard],
-    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
-    children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'bu',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'db',
-        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
-      },
-      {
-        path: 'su',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'pm',
-        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
-      },
-    ],
-  },
-  {
-    path: 'management',
-    canActivate: [authGuard],
-    loadComponent: () => import('./management/management.component').then((m) => m.Management),
-    children: [
-      {
-        path: 'profile',
-        loadComponent: () =>
-          import('./management/profile/profile.component').then((m) => m.Profile),
-        resolve: { form: profileResolver },
-      },
-      {
-        path: 'business',
-        loadComponent: () =>
-          import('./management/business/business.component').then((m) => m.BusinessComponent),
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./management/business/business-options/business-options.component').then(
-                (m) => m.BusinessOptionsComponent,
-              ),
-          },
-          {
-            path: 'create',
-            loadComponent: () =>
-              import('./management/business/business-create/business-create.component').then(
-                (m) => m.BusinessCreateComponent,
-              ),
-            resolve: { form: businessCreateResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'join',
-            loadComponent: () =>
-              import('./management/business/business-join/business-join.component').then(
-                (m) => m.BusinessJoinComponent,
-              ),
-            resolve: { form: businessJoinResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'invite',
-            loadComponent: () =>
-              import('./management/business/business-invite/business-invite.component').then(
-                (m) => m.BusinessInviteComponent,
-              ),
-            resolve: { form: businessInviteResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    path: 'tutorial',
-    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
-  },
-];
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuBusinessRoleProgramController.java">
 package com.softinter.sicapi.controller.su;
 
@@ -77053,90 +76905,6 @@ public interface SuBusinessRoleRepository extends JpaRepository<SuBusinessRole, 
   
 
   
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.dto.response.MenuProgramResponse;
-import com.softinter.sicapi.entity.su.SuProgram;
-
-@Repository
-public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
-
-    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
-    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActive();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActiveForPage();
-
-    @Query("SELECT DISTINCT p FROM SuProgram p " +
-           "JOIN p.suBusinessRolePrograms brp " +
-           "JOIN brp.businessRole br " +
-           "JOIN br.userBusinessRoles ubr " +
-           "JOIN ubr.userBusiness ub " +
-           "WHERE ub.businessId = :businessId " +
-           "AND ub.userId = :userId " +
-           "AND ub.isActive = true " +
-           "AND br.isActive = true " +
-           "AND brp.isActive = true " +
-           "AND ubr.isActive = true " +
-           "AND p.isActive = true " +
-           "ORDER BY p.sortOrder ASC, p.programCode ASC")
-    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
-                                           @Param("userId") String userId);
-
-    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
-    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
-
-    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
-       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
-       "0, " +  // state = 0 (Detached)
-       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
-       "FROM SuProgram p " +
-       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
-       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
-       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
-       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
-       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
-       "AND p.isActive = true AND p.isDelete = false " +
-       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
-       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
-       "ORDER BY p.sortOrder ASC")
-List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
-
-
-    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findRootPrograms();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
-
-    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
-    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -79039,6 +78807,305 @@ export class DiagramService {
 
   getDiagram(id: string): Observable<DiagramModel> {
     return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
+// src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { DialogService } from '../../../../core/services/dialog.service';
+
+interface DiagramPage {
+  id: string;
+  name: string;
+  xml: string;
+}
+
+@Component({
+  selector: 'app-sql-export-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SicButtonComponent],
+  template: `
+    <div
+      class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"
+    >
+      <!-- Header -->
+      <div
+        class="flex items-center justify-between border-b px-5 py-4"
+        style="border-color: var(--border);"
+      >
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
+          Generate SQL
+        </h3>
+        <button
+          type="button"
+          class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+          (click)="close()"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Select Page -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Select ER Diagram Page</label
+          >
+          <select
+            [(ngModel)]="selectedPageId"
+            (change)="onPageChange()"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            @for (page of pages(); track page.id) {
+              <option [value]="page.id">{{ page.name }}</option>
+            }
+          </select>
+          @if (pages().length === 0) {
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER,er)
+            </p>
+          }
+        </div>
+
+        <!-- Vendor Selector -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Database Vendor</label
+          >
+          <select
+            [(ngModel)]="vendor"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            <option value="postgresql">PostgreSQL</option>
+            <option value="mysql">MySQL</option>
+          </select>
+        </div>
+
+        <!-- ⭐ NEW: Engine Selection (Parser vs AI) -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Engine</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
+              <span class="text-sm">Parser</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
+              <span class="text-sm">AI</span>
+            </label>
+          </div>
+          @if (engine === 'ai') {
+            <p class="text-xs text-amber-500 mt-1">
+              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve
+              naming.
+            </p>
+          }
+        </div>
+
+        <!-- Generate Button -->
+        <div>
+          <sic-button
+            variant="primary"
+            size="sm"
+            [disabled]="loading() || !selectedPageId"
+            (click)="generate()"
+          >
+            @if (loading()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-play-fill"></i>
+            }
+            {{ loading() ? 'Generating...' : 'Generate SQL' }}
+          </sic-button>
+        </div>
+
+        <!-- SQL Output -->
+        @if (sql()) {
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium text-[var(--text-active)]">Generated SQL</span>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
+                  (click)="copyToClipboard()"
+                >
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button
+                  type="button"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
+                  (click)="download()"
+                >
+                  <i class="bi bi-download"></i> Download .sql
+                </button>
+              </div>
+            </div>
+            <pre
+              class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap"
+              >{{ sql() }}</pre
+            >
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t px-5 py-4 flex justify-end" style="border-color: var(--border);">
+        <sic-button variant="secondary" size="sm" (click)="close()">Close</sic-button>
+      </div>
+    </div>
+  `,
+})
+export class SqlExportDialogComponent implements OnInit {
+  private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
+
+  @Input() xml: string = '';
+
+  pages = signal<DiagramPage[]>([]);
+  selectedPageId: string | null = null;
+  vendor = 'postgresql';
+  engine: 'parser' | 'ai' = 'parser';
+  sql = signal<string>('');
+  loading = signal(false);
+
+  ngOnInit() {
+    this.extractPages(this.xml);
+    if (this.pages().length > 0) {
+      this.selectedPageId = this.pages()[0].id;
+    }
+  }
+
+  private extractPages(xml: string) {
+    if (!xml) return;
+
+    const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
+    const allPages: DiagramPage[] = [];
+    let match;
+
+    while ((match = regex.exec(xml)) !== null) {
+      const fullTag = match[0];
+      const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
+      const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
+
+      const id = idMatch ? idMatch[1] : `page-${allPages.length + 1}`;
+      const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
+      const name = this.decodeHtmlEntities(rawName);
+
+      if (this.isErDiagramPage(name)) {
+        allPages.push({ id, name, xml: fullTag });
+      }
+    }
+
+    this.pages.set(allPages);
+  }
+
+  private isErDiagramPage(name: string): boolean {
+    const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
+    const upperName = name.toUpperCase();
+    return erKeywords.some((keyword) => upperName.includes(keyword.toUpperCase()));
+  }
+
+  private decodeHtmlEntities(text: string): string {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  onPageChange() {
+    this.sql.set('');
+  }
+
+  generate() {
+    if (!this.selectedPageId) {
+      this.dialogService.warn('No page selected', 'Please select a diagram page.');
+      return;
+    }
+
+    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
+    if (!selectedPage) {
+      this.dialogService.warn('Page not found', 'Selected page does not exist.');
+      return;
+    }
+
+    this.loading.set(true);
+
+    const endpoint =
+      this.engine === 'ai'
+        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
+        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
+
+    // ✅ Build payload object
+    const payload = {
+      xml: selectedPage.xml,
+      vendor: this.vendor,
+      pageName: selectedPage.name,
+    };
+
+    // ✅ Log payload to console (for debugging)
+    console.log('📤 Sending to AI (engine: ' + this.engine + '):', payload);
+
+    this.http.post<{ sql: string }>(endpoint, payload).subscribe({
+      next: (res) => {
+        console.log('✅ AI Response:', res);
+        this.sql.set(res.sql);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('❌ AI Error:', err);
+        this.loading.set(false);
+        const msg = err.error?.message || err.message || 'Could not generate SQL.';
+        this.dialogService.error('Generation Failed', msg);
+      },
+    });
+  }
+
+  copyToClipboard() {
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    navigator.clipboard
+      ?.writeText(sqlText)
+      .then(() => {
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      })
+      .catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = sqlText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      });
+  }
+
+  download() {
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    const blob = new Blob([sqlText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  close() {
+    this.dialogService.close();
   }
 }
 </file>
@@ -84253,7 +84320,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     </div>
   </div>
 
-  <!-- ===== Tab Bar (NEW) ===== -->
+  <!-- ===== Tab Bar ===== -->
   <div
     class="flex items-center gap-1 px-4 py-1.5 bg-[var(--sidebar)] border-b border-[var(--border)] overflow-x-auto flex-shrink-0 min-h-[44px]"
   >
@@ -84267,55 +84334,39 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     }
 
     @for (tab of tabs(); track tab.id) {
-      <!-- ในลูป @for (tab of tabs(); track tab.id) -->
-<button
-  (click)="switchTab(tab.id)"
-  class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
-  [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
-  [class.text-white]="currentTabId === tab.id"
-  [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
-  [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
-  [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
->
-  <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
+      <!-- ✅ Active = ขอบเขียว (border-2 border-[var(--crm-success)]) -->
+      <button
+        (click)="switchTab(tab.id)"
+        (dblclick)="editTab(tab.id)"
+        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer"
+        [class.border-[var(--crm-success)]]="currentTabId === tab.id"
+        [class.text-[var(--text-active)]]="currentTabId === tab.id"
+        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+      >
+        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-  <!-- ชื่อ Tab: แสดงเป็น Input เมื่อกำลังแก้ไข -->
-  @if (editingTabId() === tab.id) {
-    <input
-      [id]="'rename-input-' + tab.id"
-      type="text"
-      [value]="tab.name"
-      (blur)="finishRename(tab.id, $any($event.target).value)"
-      (keydown.enter)="finishRename(tab.id, $any($event.target).value)"
-      (keydown.escape)="cancelRename(tab.id)"
-      (click)="$event.stopPropagation()"
-      class="bg-transparent border-b border-white/50 outline-none text-white w-auto min-w-[60px] max-w-[150px] px-0 py-0 text-sm"
-      autofocus
-    />
-  } @else {
-    <span
-      (dblclick)="startRename(tab.id, $event)"
-      class="cursor-pointer hover:text-[var(--crm-primary)] transition-colors"
-      title="Double-click to rename"
-    >
-      {{ tab.name }}
-    </span>
-  }
+        <!-- ชื่อ -->
+        <span class="text-sm">
+          {{ tab.name }}
+        </span>
 
-  <span class="text-[0.6rem] opacity-60" [class]="getTabTypeColor(tab.diagramType)">
-    {{ tab.diagramType }}
-  </span>
+        <!-- ✅ ป้ายประเภท: ใช้สีเทาเดียวกันทั้งหมด ไม่แยกตามประเภท -->
+        <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
+          {{ tab.diagramType }}
+        </span>
 
-  <!-- ปุ่มลบ -->
-  <button
-    (click)="deleteTab(tab.id, $event)"
-    class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-    [class.opacity-100]="currentTabId === tab.id"
-    title="ลบ"
-  >
-    <i class="bi bi-x text-sm"></i>
-  </button>
-</button>
+        <!-- ปุ่มลบ -->
+        <button
+          (click)="deleteTab(tab.id, $event)"
+          class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+          [class.opacity-100]="currentTabId === tab.id"
+          title="ลบ"
+        >
+          <i class="bi bi-x text-sm"></i>
+        </button>
+      </button>
     }
 
     <button
@@ -84442,7 +84493,6 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.ts">
 // src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
-
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -84464,6 +84514,7 @@ import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
+import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
 
 @Component({
   selector: 'app-pmdt06',
@@ -84497,9 +84548,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
-  // ===== Rename state =====
-  editingTabId = signal<string | null>(null);
-
   // ===== Import Dialog =====
   showImportDialog = signal(false);
   pendingMermaid: { script: string; name?: string; type?: string } | null = null;
@@ -84508,64 +84556,59 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
-  this.drawioService.init(this.iframe.nativeElement);
+    this.drawioService.init(this.iframe.nativeElement);
 
-  let isFirstReady = true;
+    let isFirstReady = true;
 
-  this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
-    this.drawioReady = ready;
-    console.log('[Draw.io] Ready status:', ready);
-    if (ready && this.currentTabId && isFirstReady) {
-      isFirstReady = false;
-      this.loadExistingDiagram();
-    }
-  });
-
-  // ✅ Fallback: ถ้า Draw.io ไม่พร้อมภายใน 7 วินาที ให้ force load
-  setTimeout(() => {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Fallback: force ready after 7s');
-      this.drawioReady = true;
-      if (this.currentTabId) {
+    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+      this.drawioReady = ready;
+      console.log('[Draw.io] Ready status:', ready);
+      if (ready && this.currentTabId && isFirstReady) {
+        isFirstReady = false;
         this.loadExistingDiagram();
       }
-    }
-  }, 7000);
+    });
 
-  // ✅ รับ queryParams จาก URL
-  this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-    const newTabId = params['tabId'] || params['diagramId'] || null;
-    const newProjectId = params['projectId'] || null;
-
-    if (!newProjectId) {
-      console.warn('[Route] No projectId, redirecting');
-      this.router.navigate(['/projects']);
-      return;
-    }
-
-    // ✅ ถ้า projectId เปลี่ยน → โหลด Tabs ใหม่
-    if (newProjectId !== this.projectId) {
-      this.projectId = newProjectId;
-      this.currentTabId = null;
-      this.currentDiagram = null;
-      this.loadProjectName();
-      this.loadTabs();
-      return;
-    }
-
-    // ✅ ถ้า tabId เปลี่ยน → โหลด Diagram ใหม่
-    if (newTabId !== this.currentTabId) {
-      this.currentTabId = newTabId;
-      this.currentDiagram = null;
-      if (this.drawioReady) {
-        this.loadExistingDiagram();
+    setTimeout(() => {
+      if (!this.drawioReady) {
+        console.warn('[Draw.io] Fallback: force ready after 7s');
+        this.drawioReady = true;
+        if (this.currentTabId) {
+          this.loadExistingDiagram();
+        }
       }
-    } else if (!this.currentTabId) {
-      // ✅ ถ้ายังไม่มี tabId → โหลด Tabs แล้วเลือกอันแรก
-      this.loadTabs();
-    }
-  });
-}
+    }, 7000);
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const newTabId = params['tabId'] || params['diagramId'] || null;
+      const newProjectId = params['projectId'] || null;
+
+      if (!newProjectId) {
+        console.warn('[Route] No projectId, redirecting');
+        this.router.navigate(['/projects']);
+        return;
+      }
+
+      if (newProjectId !== this.projectId) {
+        this.projectId = newProjectId;
+        this.currentTabId = null;
+        this.currentDiagram = null;
+        this.loadProjectName();
+        this.loadTabs();
+        return;
+      }
+
+      if (newTabId !== this.currentTabId) {
+        this.currentTabId = newTabId;
+        this.currentDiagram = null;
+        if (this.drawioReady) {
+          this.loadExistingDiagram();
+        }
+      } else if (!this.currentTabId) {
+        this.loadTabs();
+      }
+    });
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -84574,39 +84617,36 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   // ===== Tabs Management =====
   loadTabs(): void {
-  if (!this.projectId) return;
-  this.isLoadingTabs = true;
+    if (!this.projectId) return;
+    this.isLoadingTabs = true;
 
-  this.diagramService.getTabs(this.projectId).subscribe({
-    next: (tabs) => {
-      this.tabs.set(tabs);
-      this.isLoadingTabs = false;
+    this.diagramService.getTabs(this.projectId).subscribe({
+      next: (tabs) => {
+        this.tabs.set(tabs);
+        this.isLoadingTabs = false;
 
-      // ✅ ถ้ายังไม่มี currentTabId แต่มี Tabs → เลือกอันแรก
-      if (!this.currentTabId && tabs.length > 0) {
-        this.currentTabId = tabs[0].id;
-        // ✅ อัปเดต URL
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { tabId: this.currentTabId, projectId: this.projectId },
-          queryParamsHandling: 'merge',
-        });
-        // ✅ โหลด Diagram (ถ้า Draw.io พร้อม)
-        if (this.drawioReady) {
-          this.loadExistingDiagram();
+        if (!this.currentTabId && tabs.length > 0) {
+          this.currentTabId = tabs[0].id;
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { tabId: this.currentTabId, projectId: this.projectId },
+            queryParamsHandling: 'merge',
+          });
+          if (this.drawioReady) {
+            this.loadExistingDiagram();
+          }
         }
-      }
 
-      if (tabs.length === 0) {
-        this.createDefaultTab();
-      }
-    },
-    error: () => {
-      this.isLoadingTabs = false;
-      this.tabs.set([]);
-    },
-  });
-}
+        if (tabs.length === 0) {
+          this.createDefaultTab();
+        }
+      },
+      error: () => {
+        this.isLoadingTabs = false;
+        this.tabs.set([]);
+      },
+    });
+  }
 
   createDefaultTab(): void {
     if (!this.projectId) return;
@@ -84631,30 +84671,69 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
+  // ===== สร้างใหม่ (ใช้ Dialog) =====
   createNewTab(): void {
     if (!this.projectId) return;
 
-    const name = prompt('Enter diagram name:', 'New Diagram');
-    if (!name) return;
-
-    const typeOptions = ['DFD', 'ER', 'Flowchart', 'Sequence', 'Class', 'State', 'Gantt'];
-    const type = prompt(
-      'Enter diagram type (DFD, ER, Flowchart, Sequence, Class, State, Gantt):',
-      'DFD',
-    );
-    if (!type) return;
-
-    const selectedType = typeOptions.find((t) => t.toLowerCase() === type.toLowerCase()) || 'DFD';
-
-    this.diagramService.createTab(this.projectId, name, selectedType as any, '').subscribe({
-      next: (newTab) => {
-        this.tabs.update((t) => [...t, newTab]);
-        this.switchTab(newTab.id);
-        this.dialogService.success('Created', `Tab "${name}" created successfully.`);
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        editData: null,
+        onSave: (name: string, type: string, editData?: DiagramEditData) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '').subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
       },
-      error: (err) => {
-        console.error('Failed to create tab:', err);
-        this.dialogService.error('Failed', err.error?.message || 'Could not create tab.');
+    });
+  }
+
+  // ===== แก้ไข Diagram (ใช้ Dialog เดียวกัน) =====
+  editTab(tabId: string): void {
+    const tab = this.tabs().find((t) => t.id === tabId);
+    if (!tab) return;
+
+    const editData: DiagramEditData = {
+      id: tab.id,
+      name: tab.name,
+      type: tab.diagramType,
+      rowVersion: tab.rowVersion || 0,
+    };
+
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        editData: editData,
+        onSave: (name: string, type: string, data?: DiagramEditData) => {
+          if (!data) return;
+          // อัปเดตข้อมูล
+          const updatedTab = {
+            ...tab,
+            name: name,
+            diagramType: type,
+            state: 3,
+            rowVersion: data.rowVersion || 0,
+          };
+          this.diagramService.updateTab(updatedTab as any).subscribe({
+            next: (res) => {
+              this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+              if (this.currentTabId === tabId) this.currentDiagram = res;
+              this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
       },
     });
   }
@@ -84706,74 +84785,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
-  // ===== Rename methods =====
-  startRename(tabId: string, event: Event): void {
-    event.stopPropagation();
-    this.editingTabId.set(tabId);
-    setTimeout(() => {
-      const input = document.getElementById(`rename-input-${tabId}`) as HTMLInputElement;
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }, 0);
-  }
-
-  finishRename(tabId: string, newName: string, event?: Event): void {
-    if (event) event.stopPropagation();
-    if (this.editingTabId() !== tabId) return;
-
-    const trimmed = newName.trim();
-    if (!trimmed) {
-      this.editingTabId.set(null);
-      return;
-    }
-
-    const tab = this.tabs().find((t) => t.id === tabId);
-    if (!tab) {
-      this.editingTabId.set(null);
-      return;
-    }
-
-    if (trimmed === tab.name) {
-      this.editingTabId.set(null);
-      return;
-    }
-
-    const updatedTab = {
-      ...tab,
-      name: trimmed,
-      state: 3,
-      rowVersion: tab.rowVersion || 0,
-    };
-
-    this.diagramService.updateTab(updatedTab as any).subscribe({
-      next: (res) => {
-        this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-        if (this.currentTabId === tabId) {
-          this.currentDiagram = res;
-        }
-        this.editingTabId.set(null);
-        this.dialogService.success('เปลี่ยนชื่อสำเร็จ', `เปลี่ยนชื่อเป็น "${res.name}"`);
-      },
-      error: (err) => {
-        console.error('Rename failed:', err);
-        this.dialogService.error(
-          'เปลี่ยนชื่อไม่สำเร็จ',
-          err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
-        );
-        this.editingTabId.set(null);
-      },
-    });
-  }
-
-  cancelRename(tabId: string, event?: Event): void {
-    if (event) event.stopPropagation();
-    if (this.editingTabId() === tabId) {
-      this.editingTabId.set(null);
-    }
-  }
-
   // ===== Helpers =====
   getTabIcon(type: string): string {
     const map: Record<string, string> = {
@@ -84788,6 +84799,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       Journey: 'bi-map',
       Pie: 'bi-pie-chart',
       C4: 'bi-box',
+      'Use Case': 'bi-people',
     };
     return map[type] || 'bi-file-earmark';
   }
@@ -84801,6 +84813,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       Class: 'text-rose-500',
       State: 'text-cyan-500',
       Gantt: 'text-indigo-500',
+      'Use Case': 'text-pink-500',
     };
     return map[type] || 'text-gray-500';
   }
@@ -84876,60 +84889,81 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Diagram CRUD =====
- loadExistingDiagram(): void {
-  if (!this.currentTabId) {
-    console.warn('[Diagram] No tabId to load');
-    return;
+  private ensureValidDrawioXml(xml: string): string {
+    if (!xml || xml.trim().length === 0) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    const trimmed = xml.trim();
+    if (!trimmed.includes('<mxfile') && !trimmed.includes('<mxGraphModel')) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    if (trimmed.includes('<mxGraphModel') && !trimmed.includes('<root>')) {
+      const empty = this.drawioService.getEmptyDiagramXml();
+      const diagramMatch = trimmed.match(/<diagram[^>]*>([\s\S]*?)<\/diagram>/);
+      if (diagramMatch) {
+        return empty.replace(
+          /(<diagram[^>]*>)([\s\S]*?)(<\/diagram>)/,
+          `$1${diagramMatch[1]}$3`,
+        );
+      }
+      return empty;
+    }
+    return trimmed;
   }
 
-  if (this.isLoadingDiagram) {
-    console.warn('[Diagram] Already loading, skip');
-    return;
-  }
+  loadExistingDiagram(): void {
+    if (!this.currentTabId) {
+      console.warn('[Diagram] No tabId to load');
+      return;
+    }
 
-  this.isLoadingDiagram = true;
-  this.isLoading = true;
-  console.log('[Diagram] Loading diagram:', this.currentTabId);
+    if (this.isLoadingDiagram) {
+      console.warn('[Diagram] Already loading, skip');
+      return;
+    }
 
-  this.diagramService.getDiagram(this.currentTabId).subscribe({
-    next: (diagram) => {
-      console.log('[Diagram] Loaded diagram data:', diagram);
+    this.isLoadingDiagram = true;
+    this.isLoading = true;
+    console.log('[Diagram] Loading diagram:', this.currentTabId);
 
-      if (this.projectId && diagram.projectId !== this.projectId) {
-        console.warn('[Diagram] Project mismatch');
-        this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
+    this.diagramService.getDiagram(this.currentTabId).subscribe({
+      next: (diagram) => {
+        console.log('[Diagram] Loaded diagram data:', diagram);
+
+        if (this.projectId && diagram.projectId !== this.projectId) {
+          console.warn('[Diagram] Project mismatch');
+          this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
+          this.isLoading = false;
+          this.isLoadingDiagram = false;
+          this.drawioService.loadXml('');
+          return;
+        }
+
+        this.currentDiagram = diagram;
+
+        let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+        xml = this.ensureValidDrawioXml(xml);
+        console.log('[Diagram] XML length after validation:', xml.length);
+
+        setTimeout(() => {
+          this.drawioService.loadXml(xml, true);
+        }, 300);
+
         this.isLoading = false;
         this.isLoadingDiagram = false;
-        this.drawioService.loadXml('');
-        return;
-      }
+      },
+      error: (err) => {
+        console.error('[Diagram] Failed to load diagram:', err);
+        this.isLoading = false;
+        this.isLoadingDiagram = false;
+        setTimeout(() => {
+          this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
+        }, 300);
+        this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+      },
+    });
+  }
 
-      this.currentDiagram = diagram;
-
-      // ✅ ดึง XML จาก graphData (ถ้ามี) หรือใช้ค่าปริยาย
-      const xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
-      console.log('[Diagram] XML length:', xml.length);
-
-      // ✅ ใช้ setTimeout เพื่อให้ Draw.io พร้อมรับ XML อย่างเต็มที่
-      setTimeout(() => {
-        this.drawioService.loadXml(xml, true);
-      }, 300);
-
-      this.isLoading = false;
-      this.isLoadingDiagram = false;
-    },
-    error: (err) => {
-      console.error('[Diagram] Failed to load diagram:', err);
-      this.isLoading = false;
-      this.isLoadingDiagram = false;
-      // ✅ โหลด Diagram ว่างเปล่าเพื่อให้ UI ไม่ค้าง
-      setTimeout(() => {
-        this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
-      }, 300);
-      this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-    },
-  });
-}
   saveDiagram(): void {
     if (!this.currentTabId) {
       if (this.projectId) {
@@ -85092,51 +85126,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
           console.error('Failed to create trace link:', err);
         },
       });
-  }
-  renameTab(tabId: string, currentName: string, event: Event): void {
-    event.stopPropagation();
-    const newName = prompt('ป้อนชื่อใหม่สำหรับ Diagram:', currentName);
-    if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
-
-    this.diagramService.getDiagram(tabId).subscribe({
-      next: (latest) => {
-        // ✅ แปลงเป็น DiagramModel ที่มี rowVersion
-        const updatedTab: any = {
-          id: latest.id,
-          name: newName.trim(),
-          diagramType: latest.diagramType,
-          projectId: latest.projectId,
-          mermaidScript: latest.mermaidScript || '',
-          graphData: latest.graphData || {},
-          metadata: latest.metadata || {},
-          sortOrder: latest.sortOrder || 0,
-          isActive: latest.isActive ?? true,
-          state: 3, // Modified
-          rowVersion: latest.rowVersion ?? 0, // ใช้ค่าจริงจากฐานข้อมูล
-        };
-
-        this.diagramService.updateTab(updatedTab).subscribe({
-          next: (res) => {
-            this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-            if (this.currentTabId === tabId) this.currentDiagram = res;
-            this.dialogService.success(
-              'เปลี่ยนชื่อสำเร็จ',
-              `เปลี่ยนชื่อ Diagram เป็น "${res.name}"`,
-            );
-          },
-          error: (err) => {
-            console.error('เปลี่ยนชื่อล้มเหลว:', err);
-            this.dialogService.error(
-              'เปลี่ยนชื่อไม่สำเร็จ',
-              err.error?.message || 'ไม่สามารถเปลี่ยนชื่อ Diagram ได้',
-            );
-          },
-        });
-      },
-      error: (err) => {
-        this.dialogService.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดข้อมูล Diagram ปัจจุบันได้');
-      },
-    });
   }
 }
 </file>

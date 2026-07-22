@@ -1,3 +1,4 @@
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/TraceLinkService.java
 package com.softinter.sicapi.service;
 
 import com.softinter.sicapi.entity.pm.PmTraceLink;
@@ -17,6 +18,9 @@ public interface TraceLinkService {
 
     void deleteLink(UUID linkId);
 
+    // ✅ เพิ่ม method สำหรับลบตาม Source + Target (ใช้ใน updateTab)
+    void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId);
+
     List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId);
 
     List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId);
@@ -24,7 +28,6 @@ public interface TraceLinkService {
     List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId);
 
     ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId);
-
 
     void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent);
 

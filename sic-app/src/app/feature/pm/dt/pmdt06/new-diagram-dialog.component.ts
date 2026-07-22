@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
 
 export interface DiagramEditData {
   id: string;
@@ -16,7 +18,7 @@ export interface DiagramEditData {
 @Component({
   selector: 'app-new-diagram-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent],
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent],
   template: `
     <div class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4" style="border-color: var(--border);">
@@ -26,13 +28,16 @@ export interface DiagramEditData {
       </div>
 
       <div class="space-y-4 px-5 py-4">
+        <!-- ชื่อ Diagram -->
         <sic-input
           label="ชื่อ Diagram"
           [(ngModel)]="name"
           [ngModelOptions]="{ standalone: true }"
           placeholder="ป้อนชื่อ diagram"
+          [required]="true"
         ></sic-input>
 
+        <!-- ประเภท Diagram -->
         <div>
           <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท Diagram</label>
           <select
@@ -53,6 +58,26 @@ export interface DiagramEditData {
             <option value="Use Case">Use Case</option>
           </select>
         </div>
+
+        <!-- ✅ Requirement ต้นทาง (บังคับ) -->
+        <sic-combobox
+          label="Requirement ต้นทาง"
+          [apiUrl]="requirementApiUrl"
+          [params]="{ projectId: projectId }"
+          valueField="id"
+          textField="title"
+          [required]="true"
+          [(ngModel)]="selectedRequirementId"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ค้นหาและเลือก Requirement..."
+          [errorMessages]="{ required: 'กรุณาเลือก Requirement ที่เกี่ยวข้อง' }"
+        ></sic-combobox>
+
+        <!-- คำอธิบาย -->
+        <p class="text-xs text-[var(--text-muted)]">
+          <i class="bi bi-info-circle"></i>
+          Diagram นี้จะเชื่อมโยงกับ Requirement ที่เลือก เพื่อให้ระบบสามารถวิเคราะห์ผลกระทบเมื่อมีการเปลี่ยนแปลง
+        </p>
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
@@ -65,28 +90,55 @@ export interface DiagramEditData {
   `
 })
 export class NewDiagramDialogComponent implements OnInit {
-  @Input() onSave!: (name: string, type: string, editData?: DiagramEditData) => void;
+  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => void;
   @Input() editData: DiagramEditData | null = null;
+  @Input() projectId!: string; // ✅ รับ projectId จาก parent
 
   name = '';
   type = 'DFD';
+  selectedRequirementId = '';
 
   private dialogService = inject(DialogService);
+  private apiBaseUrl = environment.apiBaseUrl;
+
+  get requirementApiUrl(): string {
+    return `${this.apiBaseUrl}/api/pm/requirement/combobox`;
+  }
 
   ngOnInit(): void {
     if (this.editData) {
       this.name = this.editData.name;
       this.type = this.editData.type;
     }
+
+    // ✅ ตรวจสอบว่า projectId ถูกส่งมาหรือไม่
+    if (!this.projectId) {
+      console.error('[NewDiagramDialog] projectId is required but not provided!');
+      this.dialogService.error('ข้อผิดพลาด', 'ไม่พบ projectId กรุณาลองใหม่');
+      this.cancel();
+    }
   }
 
   get canSave(): boolean {
-    return this.name.trim().length > 0 && this.type.length > 0;
+    return (
+      this.name.trim().length > 0 &&
+      this.type.length > 0 &&
+      this.selectedRequirementId.trim().length > 0
+    );
   }
 
   save(): void {
     if (!this.canSave) return;
-    this.onSave(this.name.trim(), this.type, this.editData || undefined);
+    if (!this.selectedRequirementId) {
+      this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement ต้นทางเพื่อสร้าง Diagram');
+      return;
+    }
+    this.onSave(
+      this.name.trim(),
+      this.type,
+      this.editData || undefined,
+      this.selectedRequirementId.trim()
+    );
     this.dialogService.close(true);
   }
 

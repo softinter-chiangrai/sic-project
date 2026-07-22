@@ -1,3 +1,4 @@
+// sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java
 package com.softinter.sicapi.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
@@ -23,19 +24,18 @@ public class PmDiagramTabRequest {
     @NotNull(message = "Project ID is required")
     private UUID projectId;
 
+    // ===== ✅ 新增: Requirement ID (สำหรับ Traceability) =====
+    @NotNull(message = "Requirement ID is required for traceability")
+    private UUID requirementId;
+
     private Map<String, Object> metadata;
     private Map<String, Object> graphData;
     private Integer sortOrder;
     private Boolean isActive;
 
-    // ===== Traceability Fields =====
-    // สำหรับ DFD: เชื่อมกับ Requirement
+    // ===== Traceability Fields (optional) =====
     private List<UUID> relatedRequirementIds;
-
-    // สำหรับ ER: เชื่อมกับ DFD
     private List<UUID> relatedDfdIds;
-
-    // ทั่วไป: ER เชื่อมกับ Requirement โดยตรง
     private List<UUID> relatedRequirementIdsForEr;
 
     private Integer state;

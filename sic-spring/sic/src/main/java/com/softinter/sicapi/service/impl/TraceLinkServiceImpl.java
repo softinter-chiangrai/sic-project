@@ -1,3 +1,4 @@
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.entity.pm.PmTraceLink;
@@ -16,8 +17,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.*;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class TraceLinkServiceImpl implements TraceLinkService {
 
@@ -43,11 +44,23 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         return traceLinkRepository.save(link);
     }
 
+    // ✅ Implement: deleteLinksBySourceAndTarget
+    @Override
+    @Transactional
+    public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
+        List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        for (PmTraceLink link : links) {
+            link.setIsDelete(true);
+            traceLinkRepository.save(link);
+        }
+        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType, targetId);
+    }
+
     @Override
     @Transactional
     public void deleteLink(UUID linkId) {
         PmTraceLink link = traceLinkRepository.findById(linkId)
-                .orElseThrow(() -> new RuntimeException("Trace link not found"));
+                .orElseThrow(() -> new RuntimeException("Trace link not found: " + linkId));
         link.setIsDelete(true);
         traceLinkRepository.save(link);
     }
@@ -95,9 +108,6 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         return result;
     }
 
-    // ============================================================
-    // ✅ Implement: createLinksFromDiagramXml
-    // ============================================================
     @Override
     @Transactional
     public void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent) {
@@ -107,14 +117,11 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         }
 
         try {
-            // 1. Parse XML เพื่อดึง entity names จาก draw.io
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xmlContent)));
 
-            // ดึงทุก <mxCell> ที่เป็น vertex (table/entity)
             NodeList cells = doc.getElementsByTagName("mxCell");
-
-            Map<String, String> entityNames = new HashMap<>(); // id -> name
+            Map<String, String> entityNames = new HashMap<>();
 
             for (int i = 0; i < cells.getLength(); i++) {
                 Element cell = (Element) cells.item(i);
@@ -122,7 +129,6 @@ public class TraceLinkServiceImpl implements TraceLinkService {
                 String value = cell.getAttribute("value");
 
                 if ("1".equals(vertex) && value != null && !value.trim().isEmpty()) {
-                    // ตัดเฉพาะชื่อตาราง (เอาเฉพาะบรรทัดแรก)
                     String[] lines = value.trim().split("\n");
                     String entityName = lines[0].trim();
                     if (!entityName.isEmpty()) {
@@ -131,18 +137,12 @@ public class TraceLinkServiceImpl implements TraceLinkService {
                 }
             }
 
-            // 2. สร้าง Trace Links สำหรับแต่ละ entity ที่พบ
-            //    source: DFD/ER (diagramTabId), target: ENTITY (ใช้ชื่อ)
-            //    หรืออาจจะสร้างเป็น ENTITY_<name> แทน
             for (String entityId : entityNames.keySet()) {
                 String entityName = entityNames.get(entityId);
                 String targetType = "ENTITY";
                 String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
-
-                // สร้าง UUID จากชื่อ entity (ใช้ UUID.nameUUIDFromBytes)
                 UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
 
-                // ใช้ relationship DESIGNED_BY หรือ IMPLEMENTED_BY ตามประเภท
                 String relType = "DFD".equalsIgnoreCase(diagramType)
                         ? "DESIGNED_BY"
                         : "IMPLEMENTED_BY";
@@ -160,7 +160,6 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
         } catch (Exception e) {
             log.error("Failed to parse XML for trace links: {}", diagramTabId, e);
-            // ไม่ throw exception เพื่อให้ Diagram ทำงานต่อได้
         }
     }
 }
