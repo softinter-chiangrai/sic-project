@@ -84,39 +84,33 @@
     }
 
     @for (tab of tabs(); track tab.id) {
+      <!-- ✅ Active = ขอบเขียว (border-2 border-[var(--crm-success)]) -->
       <button
         (click)="switchTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border border-transparent"
-        [class.bg-[var(--crm-primary)]]="currentTabId === tab.id"
-        [class.text-white]="currentTabId === tab.id"
+        (dblclick)="editTab(tab.id)"
+        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer"
+        [class.border-[var(--crm-success)]]="currentTabId === tab.id"
+        [class.text-[var(--text-active)]]="currentTabId === tab.id"
         [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
         [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
         [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
       >
         <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <!-- ✅ แก้ไข: ใช้ double-click เพื่อเปิด Dialog -->
-        <span
-          (dblclick)="openEditDialog(tab.id, $event)"
-          class="cursor-pointer hover:text-[var(--crm-primary)] transition-colors"
-          title="Double-click to edit"
-        >
+        <!-- ชื่อ -->
+        <span class="text-sm">
           {{ tab.name }}
         </span>
 
-        <!-- ✅ ป้ายประเภท (double-click ก็เปิด Dialog เดียวกัน) -->
-        <span
-          (dblclick)="openEditDialog(tab.id, $event)"
-          class="text-[0.6rem] opacity-60 cursor-pointer hover:opacity-100 transition-opacity"
-          [class]="getTabTypeColor(tab.diagramType)"
-        >
+        <!-- ✅ ป้ายประเภท: ใช้สีเทาเดียวกันทั้งหมด ไม่แยกตามประเภท -->
+        <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
           {{ tab.diagramType }}
         </span>
 
         <!-- ปุ่มลบ -->
         <button
           (click)="deleteTab(tab.id, $event)"
-          class="ml-1 text-white/60 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
           [class.opacity-100]="currentTabId === tab.id"
           title="ลบ"
         >

@@ -177,6 +177,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       });
   }
 
+  // ===== สร้างใหม่ (ใช้ Dialog) =====
   createNewTab(): void {
     if (!this.projectId) return;
 
@@ -184,7 +185,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
-        onSave: (name: string, type: string) => {
+        editData: null,
+        onSave: (name: string, type: string, editData?: DiagramEditData) => {
           this.diagramService.createTab(this.projectId!, name, type as any, '').subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
@@ -193,16 +195,15 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
             },
             error: (err) => {
               this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            }
+            },
           });
-        }
-      }
+        },
+      },
     });
   }
 
-  // ✅ เปิด Dialog แก้ไข
-  openEditDialog(tabId: string, event: Event): void {
-    event.stopPropagation();
+  // ===== แก้ไข Diagram (ใช้ Dialog เดียวกัน) =====
+  editTab(tabId: string): void {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
 
@@ -220,6 +221,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         editData: editData,
         onSave: (name: string, type: string, data?: DiagramEditData) => {
           if (!data) return;
+          // อัปเดตข้อมูล
           const updatedTab = {
             ...tab,
             name: name,
@@ -227,21 +229,18 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
             state: 3,
             rowVersion: data.rowVersion || 0,
           };
-
           this.diagramService.updateTab(updatedTab as any).subscribe({
             next: (res) => {
               this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-              if (this.currentTabId === tabId) {
-                this.currentDiagram = res;
-              }
-              this.dialogService.success('แก้ไขสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+              if (this.currentTabId === tabId) this.currentDiagram = res;
+              this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
             },
             error: (err) => {
-              this.dialogService.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            }
+              this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
           });
-        }
-      }
+        },
+      },
     });
   }
 
@@ -306,6 +305,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       Journey: 'bi-map',
       Pie: 'bi-pie-chart',
       C4: 'bi-box',
+      'Use Case': 'bi-people',
     };
     return map[type] || 'bi-file-earmark';
   }
@@ -319,6 +319,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       Class: 'text-rose-500',
       State: 'text-cyan-500',
       Gantt: 'text-indigo-500',
+      'Use Case': 'text-pink-500',
     };
     return map[type] || 'text-gray-500';
   }
@@ -394,6 +395,28 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Diagram CRUD =====
+  private ensureValidDrawioXml(xml: string): string {
+    if (!xml || xml.trim().length === 0) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    const trimmed = xml.trim();
+    if (!trimmed.includes('<mxfile') && !trimmed.includes('<mxGraphModel')) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    if (trimmed.includes('<mxGraphModel') && !trimmed.includes('<root>')) {
+      const empty = this.drawioService.getEmptyDiagramXml();
+      const diagramMatch = trimmed.match(/<diagram[^>]*>([\s\S]*?)<\/diagram>/);
+      if (diagramMatch) {
+        return empty.replace(
+          /(<diagram[^>]*>)([\s\S]*?)(<\/diagram>)/,
+          `$1${diagramMatch[1]}$3`,
+        );
+      }
+      return empty;
+    }
+    return trimmed;
+  }
+
   loadExistingDiagram(): void {
     if (!this.currentTabId) {
       console.warn('[Diagram] No tabId to load');
@@ -425,7 +448,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         this.currentDiagram = diagram;
 
         let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
-        // ✅ ตรวจสอบและตกแต่ง XML
         xml = this.ensureValidDrawioXml(xml);
         console.log('[Diagram] XML length after validation:', xml.length);
 
@@ -446,39 +468,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
     });
-  }
-
-  /**
-   * ตรวจสอบและแปลง XML ให้เป็น Draw.io XML ที่ถูกต้อง
-   */
-  private ensureValidDrawioXml(xml: string): string {
-    if (!xml || xml.trim().length === 0) {
-      console.warn('[Diagram] XML is empty, using empty diagram');
-      return this.drawioService.getEmptyDiagramXml();
-    }
-
-    const trimmed = xml.trim();
-    if (!trimmed.includes('<mxfile') && !trimmed.includes('<mxGraphModel')) {
-      console.warn('[Diagram] XML does not contain mxfile or mxGraphModel, using empty diagram');
-      return this.drawioService.getEmptyDiagramXml();
-    }
-
-    // ถ้ามี mxGraphModel แต่ไม่มี root ให้เพิ่ม root
-    if (trimmed.includes('<mxGraphModel') && !trimmed.includes('<root>')) {
-      console.warn('[Diagram] XML missing <root>, adding default root');
-      const empty = this.drawioService.getEmptyDiagramXml();
-      const diagramMatch = trimmed.match(/<diagram[^>]*>([\s\S]*?)<\/diagram>/);
-      if (diagramMatch) {
-        const newXml = empty.replace(
-          /(<diagram[^>]*>)([\s\S]*?)(<\/diagram>)/,
-          `$1${diagramMatch[1]}$3`
-        );
-        return newXml;
-      }
-      return empty;
-    }
-
-    return trimmed;
   }
 
   saveDiagram(): void {

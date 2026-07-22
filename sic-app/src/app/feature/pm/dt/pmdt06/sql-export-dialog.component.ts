@@ -82,11 +82,11 @@ interface DiagramPage {
           <div class="flex gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
-              <span class="text-sm"></span>
+              <span class="text-sm">Parser</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
-              <span class="text-sm"></span>
+              <span class="text-sm">AI</span>
             </label>
           </div>
           @if (engine === 'ai') {
