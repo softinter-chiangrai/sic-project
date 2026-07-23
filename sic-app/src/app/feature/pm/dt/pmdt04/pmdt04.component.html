@@ -150,14 +150,9 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
-                  <button (click)="goToView(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all" title="ดู">
-                    <i class="bi bi-eye"></i>
+                  <button (click)="goToView(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all" title="ดู Dashboard">
+                    <i class="bi bi-speedometer2"></i>
                   </button>
-                  @if (req.status === 'In Review' || req.status === 'Draft') {
-                    <button (click)="goToApproval(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all" title="อนุมัติ">
-                      <i class="bi bi-check2-circle"></i>
-                    </button>
-                  }
                   <button (click)="goToEdit(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all" title="แก้ไข">
                     <i class="bi bi-pencil"></i>
                   </button>

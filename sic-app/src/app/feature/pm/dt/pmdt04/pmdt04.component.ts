@@ -104,7 +104,7 @@ export class Pmdt04Component implements OnInit {
       .set('projectId', projectId);
 
     this.http
-      .get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
+      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
@@ -178,25 +178,25 @@ export class Pmdt04Component implements OnInit {
   }
 
   goToAdd() {
-    this.navigation.navigate(['/feature/pm/requirement/new']);
+    this.navigation.navigate(['/feature/pm/pmdt04/new']);
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/pmdt04', id, 'edit']);
   }
 
+  // ✅ ปรับ goToView ให้ไปที่ pmrt05 พร้อม requirementId และ projectId
   goToView(id: string) {
-    this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
-  }
-
-  goToApproval(id: string) {
-    this.navigation.navigate(['/feature/pm/approval', id]);
+    const projectId = this.customerState.getProjectId();
+    this.navigation.navigate(['/feature/pm/pmrt05'], {
+      queryParams: { requirementId: id, projectId: projectId }
+    });
   }
 
   deleteRequirement(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
       if (ok) {
-        this.http.delete(`${environment.apiBaseUrl}/api/requirement/${id}`).subscribe({
+        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
           next: () => {
             this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
             this.loadRequirements();

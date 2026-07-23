@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, Injectable, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -13,10 +13,8 @@ import { SicInputAreaComponent } from '../../../../core/component/sic-input-area
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
-
-
+import { ApprovalService } from '../pmdt03/approval.service';
 
 // ===== Model =====
 export interface RequirementModel {
@@ -95,10 +93,10 @@ export class Pmdt05Service {
     },
   ];
 
-  apiGetComboboxProject = '/api/requirement/combobox-project';
-  apiGetLovRequirementType = '/api/requirement/lov-type';
-  apiGetLovPriority = '/api/requirement/lov-priority';
-  apiGetLovStatus = '/api/requirement/lov-status';
+  apiGetComboboxProject = '/api/pm/requirement/combobox-project';
+  apiGetLovRequirementType = '/api/pm/requirement/lov-type';
+  apiGetLovPriority = '/api/pm/requirement/lov-priority';
+  apiGetLovStatus = '/api/pm/requirement/lov-status';
 
   save(req: RequirementModel): Observable<string> {
     console.log('📝 Saving requirement:', req);
@@ -157,7 +155,7 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt05Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
-  private readonly approvalService = inject(ApprovalService); 
+  private readonly approvalService = inject(ApprovalService);
 
   form!: FormGroup;
   isEdit = false;
@@ -253,7 +251,10 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
       })
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.dialog.success(
+            'ส่งขออนุมัติสำเร็จ',
+            'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว',
+          );
           // อัปเดตสถานะเอกสาร (ถ้าต้องการ)
           this.form.patchValue({ status: 'Pending Approval' });
           // อาจ redirect ไปยังหน้า approval detail

@@ -22678,6 +22678,83 @@ public class SuProfile extends BaseEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuProgram.java">
+package com.softinter.sicapi.entity.su;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Table(name = "su_program",
+       indexes = {
+           @Index(name = "idx_program_code", columnList = "program_code", unique = true)
+       })
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class SuProgram extends BaseEntity {
+
+    @Column(name = "parent_program_id", insertable = false, updatable = false)
+    private UUID parentProgramId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_program_id")
+    private SuProgram parentProgram;
+
+    @Column(name = "program_code", nullable = false, length = 50)
+    private String programCode;
+
+    @Column(name = "icon", length = 100)
+    private String icon;
+
+    @Column(name = "name_en", nullable = false, length = 255)
+    private String nameEn;
+
+    @Column(name = "name_local", nullable = false, length = 255)
+    private String nameLocal;
+
+    @Column(name = "route_path", length = 500)
+    private String routePath;
+
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @OneToMany(mappedBy = "parentProgram", fetch = FetchType.LAZY)
+    private List<SuProgram> childPrograms = new ArrayList<>();
+
+    @OneToMany(mappedBy = "program", fetch = FetchType.LAZY)
+    private List<SuBusinessRoleProgram> suBusinessRolePrograms = new ArrayList<>();
+
+     @Column(name = "is_add")
+    private boolean isAdd;
+
+    @Column(name = "is_back")
+    private boolean isBack;
+
+    @Column(name = "is_print")
+    private boolean isPrint;
+
+    @Column(name = "is_remove")
+    private boolean isRemove;
+
+    @Column(name = "is_save")
+    private boolean isSave;
+
+    @Column(name = "is_search")
+    private boolean isSearch;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuTask.java">
 package com.softinter.sicapi.entity.su;
 
@@ -34268,105 +34345,6 @@ export class AiDiagramService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts">
-// src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts
-import { Component, inject, Input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { DialogService } from '../../../../core/services/dialog.service';
-
-export interface DiagramEditData {
-  id: string;
-  name: string;
-  type: string;
-  rowVersion?: number;
-}
-
-@Component({
-  selector: 'app-new-diagram-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent],
-  template: `
-    <div class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
-      <div class="border-b px-5 py-4" style="border-color: var(--border);">
-        <h3 class="text-base font-semibold text-[var(--text-active)]">
-          {{ editData ? 'แก้ไข Diagram' : 'สร้าง Diagram ใหม่' }}
-        </h3>
-      </div>
-
-      <div class="space-y-4 px-5 py-4">
-        <sic-input
-          label="ชื่อ Diagram"
-          [(ngModel)]="name"
-          [ngModelOptions]="{ standalone: true }"
-          placeholder="ป้อนชื่อ diagram"
-        ></sic-input>
-
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท Diagram</label>
-          <select
-            [(ngModel)]="type"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            <option value="DFD">DFD</option>
-            <option value="ER">ER</option>
-            <option value="Flowchart">Flowchart</option>
-            <option value="Sequence">Sequence</option>
-            <option value="Class">Class</option>
-            <option value="State">State</option>
-            <option value="Gantt">Gantt</option>
-            <option value="Mindmap">Mindmap</option>
-            <option value="Journey">Journey</option>
-            <option value="Pie">Pie</option>
-            <option value="C4">C4</option>
-            <option value="Use Case">Use Case</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">
-          {{ editData ? 'บันทึก' : 'สร้าง' }}
-        </sic-button>
-      </div>
-    </div>
-  `
-})
-export class NewDiagramDialogComponent implements OnInit {
-  @Input() onSave!: (name: string, type: string, editData?: DiagramEditData) => void;
-  @Input() editData: DiagramEditData | null = null;
-
-  name = '';
-  type = 'DFD';
-
-  private dialogService = inject(DialogService);
-
-  ngOnInit(): void {
-    if (this.editData) {
-      this.name = this.editData.name;
-      this.type = this.editData.type;
-    }
-  }
-
-  get canSave(): boolean {
-    return this.name.trim().length > 0 && this.type.length > 0;
-  }
-
-  save(): void {
-    if (!this.canSave) return;
-    this.onSave(this.name.trim(), this.type, this.editData || undefined);
-    this.dialogService.close(true);
-  }
-
-  cancel(): void {
-    this.dialogService.close(false);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/project.model.ts">
 // src/app/core/models/project.model.ts
 export interface Project {
@@ -43007,6 +42985,109 @@ import { Component } from '@angular/core';
 })
 export class Pmdt30Component {
 
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts">
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
+export interface pmrt01 {
+  id: string;
+  code: string;
+  firstNameEn: string;
+  lastNameEn: string;
+  firstNameLocal?: string;
+  lastNameLocal?: string;
+  email: string;
+  phoneNumber?: string;
+  isActive: boolean;
+  taxId?: string;
+  addressEn?: string;
+  addressLocal?: string;
+  countryId?: string;
+  provinceId?: string;
+  districtId?: string;
+  subDistrictId?: string;
+  zipCode?: string;
+  uploadGroupId?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+}
+
+export interface pmrt01FilterParams {
+  keyword?: string;
+  status?: 'all' | 'active' | 'inactive';
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  projectId?: string;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class Pmrt01Service {
+  private http = inject(HttpClient);
+  private baseUrl = '/api/pmrt01s';
+
+  getpmrt01s(params: pmrt01FilterParams): Observable<PaginatedResponse<pmrt01>> {
+    let httpParams = new HttpParams()
+      .set('page', params.page?.toString() || '1')
+      .set('size', params.size?.toString() || '10');
+
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.status && params.status !== 'all')
+      httpParams = httpParams.set('status', params.status);
+    if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
+    if (params.sortDir) httpParams = httpParams.set('sortDir', params.sortDir);
+    if (params.projectId) httpParams = httpParams.set('projectId', params.projectId);
+
+    return this.http.get<PaginatedResponse<pmrt01>>(this.baseUrl, { params: httpParams });
+  }
+
+  getpmrt01ById(id: string): Observable<pmrt01> {
+    return this.http.get<pmrt01>(`${this.baseUrl}/${id}`);
+  }
+
+  createpmrt01(data: Partial<pmrt01>): Observable<pmrt01> {
+    return this.http.post<pmrt01>(this.baseUrl, data);
+  }
+
+  updatepmrt01(id: string, data: Partial<pmrt01>): Observable<pmrt01> {
+    return this.http.put<pmrt01>(`${this.baseUrl}/${id}`, data);
+  }
+
+  deletepmrt01(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  toggleActive(id: string, isActive: boolean): Observable<pmrt01> {
+    return this.http.patch<pmrt01>(`${this.baseUrl}/${id}/toggle`, { isActive });
+  }
+
+  exportpmrt01s(params: pmrt01FilterParams): Observable<Blob> {
+    let httpParams = new HttpParams();
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.status && params.status !== 'all')
+      httpParams = httpParams.set('status', params.status);
+    return this.http.get(`${this.baseUrl}/export`, {
+      params: httpParams,
+      responseType: 'blob',
+    });
+  }
 }
 </file>
 
@@ -57710,83 +57791,6 @@ public class SuBusinessRole extends BaseEntity {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/su/SuProgram.java">
-package com.softinter.sicapi.entity.su;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-@Entity
-@Table(name = "su_program",
-       indexes = {
-           @Index(name = "idx_program_code", columnList = "program_code", unique = true)
-       })
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class SuProgram extends BaseEntity {
-
-    @Column(name = "parent_program_id", insertable = false, updatable = false)
-    private UUID parentProgramId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_program_id")
-    private SuProgram parentProgram;
-
-    @Column(name = "program_code", nullable = false, length = 50)
-    private String programCode;
-
-    @Column(name = "icon", length = 100)
-    private String icon;
-
-    @Column(name = "name_en", nullable = false, length = 255)
-    private String nameEn;
-
-    @Column(name = "name_local", nullable = false, length = 255)
-    private String nameLocal;
-
-    @Column(name = "route_path", length = 500)
-    private String routePath;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder;
-
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
-
-    @OneToMany(mappedBy = "parentProgram", fetch = FetchType.LAZY)
-    private List<SuProgram> childPrograms = new ArrayList<>();
-
-    @OneToMany(mappedBy = "program", fetch = FetchType.LAZY)
-    private List<SuBusinessRoleProgram> suBusinessRolePrograms = new ArrayList<>();
-
-     @Column(name = "is_add")
-    private boolean isAdd;
-
-    @Column(name = "is_back")
-    private boolean isBack;
-
-    @Column(name = "is_print")
-    private boolean isPrint;
-
-    @Column(name = "is_remove")
-    private boolean isRemove;
-
-    @Column(name = "is_save")
-    private boolean isSave;
-
-    @Column(name = "is_search")
-    private boolean isSearch;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/ChangeImpactAnalysisRepository.java">
 // src/main/java/com/softinter/sicapi/repository/pm/ChangeImpactAnalysisRepository.java
 package com.softinter.sicapi.repository.pm;
@@ -58193,54 +58197,6 @@ import java.util.UUID;
 
 @Repository
 public interface PmTestScenarioRepository extends JpaRepository<PmTestScenario, UUID> {
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> {
-
-    List<PmTraceLink> findBySourceTypeAndSourceId(String sourceType, UUID sourceId);
-
-    List<PmTraceLink> findByTargetTypeAndTargetId(String targetType, UUID targetId);
-
-    List<PmTraceLink> findByProjectIdAndSourceTypeAndSourceId(UUID projectId, String sourceType, UUID sourceId);
-
-    @Query(value = """
-        WITH RECURSIVE trace AS (
-            SELECT source_type, source_id, target_type, target_id, relationship_type
-            FROM pm_trace_link
-            WHERE source_type = :sourceType AND source_id = :sourceId AND is_delete = false
-            UNION ALL
-            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type
-            FROM pm_trace_link l
-            INNER JOIN trace t ON t.target_type = l.source_type AND t.target_id = l.source_id
-            WHERE l.is_delete = false
-        )
-        SELECT * FROM trace
-        """, nativeQuery = true)
-    List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
-                                 @Param("sourceId") UUID sourceId);
-
-    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
-    List<PmTraceLink> findExistingLink(@Param("sourceType") String sourceType,
-                                       @Param("sourceId") UUID sourceId,
-                                       @Param("targetType") String targetType,
-                                       @Param("targetId") UUID targetId);
-
-    @Query("SELECT t FROM PmTraceLink t WHERE t.projectId = :projectId AND t.isDelete = false")
-    List<PmTraceLink> findAllByProjectId(@Param("projectId") UUID projectId);
 }
 </file>
 
@@ -60030,175 +59986,6 @@ public class SuBusinessServiceImpl implements SuBusinessService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
-import java.util.*;
-
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class TraceLinkServiceImpl implements TraceLinkService {
-
-    private final PmTraceLinkRepository traceLinkRepository;
-
-    @Override
-    @Transactional
-    public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
-                                  String targetType, UUID targetId, String relationshipType) {
-        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
-        if (!existing.isEmpty()) {
-            log.debug("Link already exists: {} -> {}", sourceId, targetId);
-            return existing.get(0);
-        }
-
-        PmTraceLink link = new PmTraceLink();
-        link.setProjectId(projectId);
-        link.setSourceType(sourceType);
-        link.setSourceId(sourceId);
-        link.setTargetType(targetType);
-        link.setTargetId(targetId);
-        link.setRelationshipType(relationshipType);
-        return traceLinkRepository.save(link);
-    }
-
-    @Override
-    @Transactional
-    public void deleteLink(UUID linkId) {
-        PmTraceLink link = traceLinkRepository.findById(linkId)
-                .orElseThrow(() -> new RuntimeException("Trace link not found"));
-        link.setIsDelete(true);
-        traceLinkRepository.save(link);
-    }
-
-    @Override
-    public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
-        return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
-    }
-
-    @Override
-    public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
-        return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
-    }
-
-    @Override
-    public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
-        List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
-        List<PmTraceLink> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            PmTraceLink link = new PmTraceLink();
-            link.setSourceType((String) row[0]);
-            link.setSourceId((UUID) row[1]);
-            link.setTargetType((String) row[2]);
-            link.setTargetId((UUID) row[3]);
-            link.setRelationshipType((String) row[4]);
-            result.add(link);
-        }
-        return result;
-    }
-
-    @Override
-    public ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId) {
-        List<PmTraceLink> trace = getFullTrace(sourceType, sourceId);
-        Map<String, Set<UUID>> impactedMap = new HashMap<>();
-
-        for (PmTraceLink link : trace) {
-            impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
-                       .add(link.getTargetId());
-        }
-
-        ImpactTraceResult result = new ImpactTraceResult();
-        result.setSourceType(sourceType);
-        result.setSourceId(sourceId);
-        result.setImpacted(impactedMap);
-        return result;
-    }
-
-    // ============================================================
-    // ✅ Implement: createLinksFromDiagramXml
-    // ============================================================
-    @Override
-    @Transactional
-    public void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent) {
-        if (xmlContent == null || xmlContent.trim().isEmpty()) {
-            log.debug("No XML content to parse for diagram: {}", diagramTabId);
-            return;
-        }
-
-        try {
-            // 1. Parse XML เพื่อดึง entity names จาก draw.io
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xmlContent)));
-
-            // ดึงทุก <mxCell> ที่เป็น vertex (table/entity)
-            NodeList cells = doc.getElementsByTagName("mxCell");
-
-            Map<String, String> entityNames = new HashMap<>(); // id -> name
-
-            for (int i = 0; i < cells.getLength(); i++) {
-                Element cell = (Element) cells.item(i);
-                String vertex = cell.getAttribute("vertex");
-                String value = cell.getAttribute("value");
-
-                if ("1".equals(vertex) && value != null && !value.trim().isEmpty()) {
-                    // ตัดเฉพาะชื่อตาราง (เอาเฉพาะบรรทัดแรก)
-                    String[] lines = value.trim().split("\n");
-                    String entityName = lines[0].trim();
-                    if (!entityName.isEmpty()) {
-                        entityNames.put(cell.getAttribute("id"), entityName);
-                    }
-                }
-            }
-
-            // 2. สร้าง Trace Links สำหรับแต่ละ entity ที่พบ
-            //    source: DFD/ER (diagramTabId), target: ENTITY (ใช้ชื่อ)
-            //    หรืออาจจะสร้างเป็น ENTITY_<name> แทน
-            for (String entityId : entityNames.keySet()) {
-                String entityName = entityNames.get(entityId);
-                String targetType = "ENTITY";
-                String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
-
-                // สร้าง UUID จากชื่อ entity (ใช้ UUID.nameUUIDFromBytes)
-                UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
-
-                // ใช้ relationship DESIGNED_BY หรือ IMPLEMENTED_BY ตามประเภท
-                String relType = "DFD".equalsIgnoreCase(diagramType)
-                        ? "DESIGNED_BY"
-                        : "IMPLEMENTED_BY";
-
-                this.createLink(
-                    projectId,
-                    diagramType.toUpperCase(), diagramTabId,
-                    targetType, targetUuid,
-                    relType
-                );
-            }
-
-            log.info("Created {} trace links from diagram {} (type: {})",
-                    entityNames.size(), diagramTabId, diagramType);
-
-        } catch (Exception e) {
-            log.error("Failed to parse XML for trace links: {}", diagramTabId, e);
-            // ไม่ throw exception เพื่อให้ Diagram ทำงานต่อได้
-        }
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/AiSqlGeneratorService.java">
 package com.softinter.sicapi.service;
 
@@ -60630,55 +60417,6 @@ public interface TaskService {
     TaskResponse updateTask(UUID taskId, TaskRequest request);
     void deleteTask(UUID taskId);
     List<TaskResponse> getAllTasksByProjectId(UUID projectId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/TraceLinkService.java">
-package com.softinter.sicapi.service;
-
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-public interface TraceLinkService {
-
-    // ===== Core Methods =====
-    PmTraceLink createLink(UUID projectId,
-                           String sourceType, UUID sourceId,
-                           String targetType, UUID targetId,
-                           String relationshipType);
-
-    void deleteLink(UUID linkId);
-
-    List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId);
-
-    List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId);
-
-    List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId);
-
-    ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId);
-
-
-    void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent);
-
-    // ===== DTO =====
-    class ImpactTraceResult {
-        private String sourceType;
-        private UUID sourceId;
-        private Map<String, Set<UUID>> impacted;
-
-        public String getSourceType() { return sourceType; }
-        public void setSourceType(String sourceType) { this.sourceType = sourceType; }
-
-        public UUID getSourceId() { return sourceId; }
-        public void setSourceId(UUID sourceId) { this.sourceId = sourceId; }
-
-        public Map<String, Set<UUID>> getImpacted() { return impacted; }
-        public void setImpacted(Map<String, Set<UUID>> impacted) { this.impacted = impacted; }
-    }
 }
 </file>
 
@@ -63223,7 +62961,7 @@ export class Pmdt02BComponent implements OnInit {
 // src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, Injectable, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -63235,10 +62973,8 @@ import { SicInputAreaComponent } from '../../../../core/component/sic-input-area
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
-
-
+import { ApprovalService } from '../pmdt03/approval.service';
 
 // ===== Model =====
 export interface RequirementModel {
@@ -63317,10 +63053,10 @@ export class Pmdt05Service {
     },
   ];
 
-  apiGetComboboxProject = '/api/requirement/combobox-project';
-  apiGetLovRequirementType = '/api/requirement/lov-type';
-  apiGetLovPriority = '/api/requirement/lov-priority';
-  apiGetLovStatus = '/api/requirement/lov-status';
+  apiGetComboboxProject = '/api/pm/requirement/combobox-project';
+  apiGetLovRequirementType = '/api/pm/requirement/lov-type';
+  apiGetLovPriority = '/api/pm/requirement/lov-priority';
+  apiGetLovStatus = '/api/pm/requirement/lov-status';
 
   save(req: RequirementModel): Observable<string> {
     console.log('📝 Saving requirement:', req);
@@ -63379,7 +63115,7 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt05Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
-  private readonly approvalService = inject(ApprovalService); 
+  private readonly approvalService = inject(ApprovalService);
 
   form!: FormGroup;
   isEdit = false;
@@ -63475,7 +63211,10 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
       })
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.dialog.success(
+            'ส่งขออนุมัติสำเร็จ',
+            'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว',
+          );
           // อัปเดตสถานะเอกสาร (ถ้าต้องการ)
           this.form.patchValue({ status: 'Pending Approval' });
           // อาจ redirect ไปยังหน้า approval detail
@@ -63513,6 +63252,157 @@ export class Pmdt05Component implements OnInit, CanComponentDeactivate {
 }
 
 export default Pmdt05Component;
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts">
+// src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts
+import { Component, inject, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { environment } from '../../../../../environments/environment';
+
+export interface DiagramEditData {
+  id: string;
+  name: string;
+  type: string;
+  rowVersion?: number;
+}
+
+@Component({
+  selector: 'app-new-diagram-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent],
+  template: `
+    <div class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
+      <div class="border-b px-5 py-4" style="border-color: var(--border);">
+        <h3 class="text-base font-semibold text-[var(--text-active)]">
+          {{ editData ? 'แก้ไข Diagram' : 'สร้าง Diagram ใหม่' }}
+        </h3>
+      </div>
+
+      <div class="space-y-4 px-5 py-4">
+        <!-- ชื่อ Diagram -->
+        <sic-input
+          label="ชื่อ Diagram"
+          [(ngModel)]="name"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ป้อนชื่อ diagram"
+          [required]="true"
+        ></sic-input>
+
+        <!-- ประเภท Diagram -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท Diagram</label>
+          <select
+            [(ngModel)]="type"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            <option value="DFD">DFD</option>
+            <option value="ER">ER</option>
+            <option value="Flowchart">Flowchart</option>
+            <option value="Sequence">Sequence</option>
+            <option value="Class">Class</option>
+            <option value="State">State</option>
+            <option value="Gantt">Gantt</option>
+            <option value="Mindmap">Mindmap</option>
+            <option value="Journey">Journey</option>
+            <option value="Pie">Pie</option>
+            <option value="C4">C4</option>
+            <option value="Use Case">Use Case</option>
+          </select>
+        </div>
+
+        <!-- ✅ Requirement ต้นทาง (บังคับ) -->
+        <sic-combobox
+          label="Requirement ต้นทาง"
+          [apiUrl]="requirementApiUrl"
+          [params]="{ projectId: projectId }"
+          valueField="id"
+          textField="title"
+          [required]="true"
+          [(ngModel)]="selectedRequirementId"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ค้นหาและเลือก Requirement..."
+          [errorMessages]="{ required: 'กรุณาเลือก Requirement ที่เกี่ยวข้อง' }"
+        ></sic-combobox>
+
+        <!-- คำอธิบาย -->
+        <p class="text-xs text-[var(--text-muted)]">
+          <i class="bi bi-info-circle"></i>
+          Diagram นี้จะเชื่อมโยงกับ Requirement ที่เลือก เพื่อให้ระบบสามารถวิเคราะห์ผลกระทบเมื่อมีการเปลี่ยนแปลง
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
+        <sic-button variant="secondary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
+        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">
+          {{ editData ? 'บันทึก' : 'สร้าง' }}
+        </sic-button>
+      </div>
+    </div>
+  `
+})
+export class NewDiagramDialogComponent implements OnInit {
+  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => void;
+  @Input() editData: DiagramEditData | null = null;
+  @Input() projectId!: string; // ✅ รับ projectId จาก parent
+
+  name = '';
+  type = 'DFD';
+  selectedRequirementId = '';
+
+  private dialogService = inject(DialogService);
+  private apiBaseUrl = environment.apiBaseUrl;
+
+  get requirementApiUrl(): string {
+    return `${this.apiBaseUrl}/api/pm/requirement/combobox`;
+  }
+
+  ngOnInit(): void {
+    if (this.editData) {
+      this.name = this.editData.name;
+      this.type = this.editData.type;
+    }
+
+    // ✅ ตรวจสอบว่า projectId ถูกส่งมาหรือไม่
+    if (!this.projectId) {
+      console.error('[NewDiagramDialog] projectId is required but not provided!');
+      this.dialogService.error('ข้อผิดพลาด', 'ไม่พบ projectId กรุณาลองใหม่');
+      this.cancel();
+    }
+  }
+
+  get canSave(): boolean {
+    return (
+      this.name.trim().length > 0 &&
+      this.type.length > 0 &&
+      this.selectedRequirementId.trim().length > 0
+    );
+  }
+
+  save(): void {
+    if (!this.canSave) return;
+    if (!this.selectedRequirementId) {
+      this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement ต้นทางเพื่อสร้าง Diagram');
+      return;
+    }
+    this.onSave(
+      this.name.trim(),
+      this.type,
+      this.editData || undefined,
+      this.selectedRequirementId.trim()
+    );
+    this.dialogService.close(true);
+  }
+
+  cancel(): void {
+    this.dialogService.close(false);
+  }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.html">
@@ -64016,109 +63906,6 @@ export class Pmrt01AService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts">
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-
-export interface pmrt01 {
-  id: string;
-  code: string;
-  firstNameEn: string;
-  lastNameEn: string;
-  firstNameLocal?: string;
-  lastNameLocal?: string;
-  email: string;
-  phoneNumber?: string;
-  isActive: boolean;
-  taxId?: string;
-  addressEn?: string;
-  addressLocal?: string;
-  countryId?: string;
-  provinceId?: string;
-  districtId?: string;
-  subDistrictId?: string;
-  zipCode?: string;
-  uploadGroupId?: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  size: number;
-  totalPages: number;
-}
-
-export interface pmrt01FilterParams {
-  keyword?: string;
-  status?: 'all' | 'active' | 'inactive';
-  page?: number;
-  size?: number;
-  sortBy?: string;
-  sortDir?: 'asc' | 'desc';
-  projectId?: string;
-}
-
-@Injectable({
-  providedIn: 'root',
-})
-export class Pmrt01Service {
-  private http = inject(HttpClient);
-  private baseUrl = '/api/pmrt01s';
-
-  getpmrt01s(params: pmrt01FilterParams): Observable<PaginatedResponse<pmrt01>> {
-    let httpParams = new HttpParams()
-      .set('page', params.page?.toString() || '1')
-      .set('size', params.size?.toString() || '10');
-
-    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
-    if (params.status && params.status !== 'all')
-      httpParams = httpParams.set('status', params.status);
-    if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
-    if (params.sortDir) httpParams = httpParams.set('sortDir', params.sortDir);
-    if (params.projectId) httpParams = httpParams.set('projectId', params.projectId);
-
-    return this.http.get<PaginatedResponse<pmrt01>>(this.baseUrl, { params: httpParams });
-  }
-
-  getpmrt01ById(id: string): Observable<pmrt01> {
-    return this.http.get<pmrt01>(`${this.baseUrl}/${id}`);
-  }
-
-  createpmrt01(data: Partial<pmrt01>): Observable<pmrt01> {
-    return this.http.post<pmrt01>(this.baseUrl, data);
-  }
-
-  updatepmrt01(id: string, data: Partial<pmrt01>): Observable<pmrt01> {
-    return this.http.put<pmrt01>(`${this.baseUrl}/${id}`, data);
-  }
-
-  deletepmrt01(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
-  }
-
-  toggleActive(id: string, isActive: boolean): Observable<pmrt01> {
-    return this.http.patch<pmrt01>(`${this.baseUrl}/${id}/toggle`, { isActive });
-  }
-
-  exportpmrt01s(params: pmrt01FilterParams): Observable<Blob> {
-    let httpParams = new HttpParams();
-    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
-    if (params.status && params.status !== 'all')
-      httpParams = httpParams.set('status', params.status);
-    return this.http.get(`${this.baseUrl}/export`, {
-      params: httpParams,
-      responseType: 'blob',
-    });
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.service.ts">
 // src/app/feature/pm/rt/pmrt02/pmrt02.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -64570,6 +64357,141 @@ export class Pmrt02Service {
     </form>
   </div>
 }
+</file>
+
+<file path="sic-app/src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { AuthCallbackComponent } from './core/auth/auth-callback.component';
+import { authGuard } from './core/auth/auth.guard';
+import { profileGuard } from './core/auth/profile.guard';
+import { profileResolver } from './management/profile/profile.resolver';
+import { businessGuard } from './core/auth/business.guard';
+import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
+import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
+import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
+import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
+
+export const routes: Routes = [
+  {
+    path: 'auth/callback',
+    component: AuthCallbackComponent,
+  },
+  {
+    path: '',
+    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
+      },
+      {
+        path: 'product',
+        loadComponent: () =>
+          import('./main/index/product/product.component').then((m) => m.Product),
+      },
+      {
+        path: 'blog',
+        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
+      },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./main/index/contact/contact.component').then((m) => m.Contact),
+      },
+    ],
+  },
+  {
+    path: 'feature',
+    canActivate: [authGuard, profileGuard, businessGuard],
+    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
+      {
+        path: 'bu',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'db',
+        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
+      },
+      {
+        path: 'su',
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+      },
+      {
+        path: 'pm',
+        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
+      },
+    ],
+  },
+  {
+    path: 'management',
+    canActivate: [authGuard],
+    loadComponent: () => import('./management/management.component').then((m) => m.Management),
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./management/profile/profile.component').then((m) => m.Profile),
+        resolve: { form: profileResolver },
+      },
+      {
+        path: 'business',
+        loadComponent: () =>
+          import('./management/business/business.component').then((m) => m.BusinessComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./management/business/business-options/business-options.component').then(
+                (m) => m.BusinessOptionsComponent,
+              ),
+          },
+          {
+            path: 'create',
+            loadComponent: () =>
+              import('./management/business/business-create/business-create.component').then(
+                (m) => m.BusinessCreateComponent,
+              ),
+            resolve: { form: businessCreateResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'join',
+            loadComponent: () =>
+              import('./management/business/business-join/business-join.component').then(
+                (m) => m.BusinessJoinComponent,
+              ),
+            resolve: { form: businessJoinResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+          {
+            path: 'invite',
+            loadComponent: () =>
+              import('./management/business/business-invite/business-invite.component').then(
+                (m) => m.BusinessInviteComponent,
+              ),
+            resolve: { form: businessInviteResolver },
+            canDeactivate: [CanDeactivateGuard],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'tutorial',
+    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
+  },
+];
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/auth/AuthController.java">
@@ -66732,6 +66654,55 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
+package com.softinter.sicapi.repository.pm;
+
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> {
+
+    List<PmTraceLink> findBySourceTypeAndSourceId(String sourceType, UUID sourceId);
+
+    List<PmTraceLink> findByTargetTypeAndTargetId(String targetType, UUID targetId);
+
+    List<PmTraceLink> findByProjectIdAndSourceTypeAndSourceId(UUID projectId, String sourceType, UUID sourceId);
+
+    @Query(value = """
+        WITH RECURSIVE trace AS (
+            SELECT source_type, source_id, target_type, target_id, relationship_type
+            FROM pm_trace_link
+            WHERE source_type = :sourceType AND source_id = :sourceId AND is_delete = false
+            UNION ALL
+            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type
+            FROM pm_trace_link l
+            INNER JOIN trace t ON t.target_type = l.source_type AND t.target_id = l.source_id
+            WHERE l.is_delete = false
+        )
+        SELECT * FROM trace
+        """, nativeQuery = true)
+    List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
+                                 @Param("sourceId") UUID sourceId);
+
+    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
+    List<PmTraceLink> findExistingLink(@Param("sourceType") String sourceType,
+                                       @Param("sourceId") UUID sourceId,
+                                       @Param("targetType") String targetType,
+                                       @Param("targetId") UUID targetId);
+
+    @Query("SELECT t FROM PmTraceLink t WHERE t.projectId = :projectId AND t.isDelete = false")
+    List<PmTraceLink> findAllByProjectId(@Param("projectId") UUID projectId);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuBusinessRoleProgramRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -66803,6 +66774,90 @@ public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
 
     @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
     List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.dto.response.MenuProgramResponse;
+import com.softinter.sicapi.entity.su.SuProgram;
+
+@Repository
+public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
+
+    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
+    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActive();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActiveForPage();
+
+    @Query("SELECT DISTINCT p FROM SuProgram p " +
+           "JOIN p.suBusinessRolePrograms brp " +
+           "JOIN brp.businessRole br " +
+           "JOIN br.userBusinessRoles ubr " +
+           "JOIN ubr.userBusiness ub " +
+           "WHERE ub.businessId = :businessId " +
+           "AND ub.userId = :userId " +
+           "AND ub.isActive = true " +
+           "AND br.isActive = true " +
+           "AND brp.isActive = true " +
+           "AND ubr.isActive = true " +
+           "AND p.isActive = true " +
+           "ORDER BY p.sortOrder ASC, p.programCode ASC")
+    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
+                                           @Param("userId") String userId);
+
+    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
+    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
+
+    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
+       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
+       "0, " +  // state = 0 (Detached)
+       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
+       "FROM SuProgram p " +
+       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
+       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
+       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
+       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
+       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
+       "AND p.isActive = true AND p.isDelete = false " +
+       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
+       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
+       "ORDER BY p.sortOrder ASC")
+List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
+
+
+    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findRootPrograms();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
+
+    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
+    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -68717,6 +68772,174 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.TraceLinkService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringReader;
+import java.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TraceLinkServiceImpl implements TraceLinkService {
+
+    private final PmTraceLinkRepository traceLinkRepository;
+
+    @Override
+    @Transactional
+    public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
+                                  String targetType, UUID targetId, String relationshipType) {
+        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        if (!existing.isEmpty()) {
+            log.debug("Link already exists: {} -> {}", sourceId, targetId);
+            return existing.get(0);
+        }
+
+        PmTraceLink link = new PmTraceLink();
+        link.setProjectId(projectId);
+        link.setSourceType(sourceType);
+        link.setSourceId(sourceId);
+        link.setTargetType(targetType);
+        link.setTargetId(targetId);
+        link.setRelationshipType(relationshipType);
+        return traceLinkRepository.save(link);
+    }
+
+    // ✅ Implement: deleteLinksBySourceAndTarget
+    @Override
+    @Transactional
+    public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
+        List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        for (PmTraceLink link : links) {
+            link.setIsDelete(true);
+            traceLinkRepository.save(link);
+        }
+        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType, targetId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLink(UUID linkId) {
+        PmTraceLink link = traceLinkRepository.findById(linkId)
+                .orElseThrow(() -> new RuntimeException("Trace link not found: " + linkId));
+        link.setIsDelete(true);
+        traceLinkRepository.save(link);
+    }
+
+    @Override
+    public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
+        return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
+    }
+
+    @Override
+    public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
+        return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
+    }
+
+    @Override
+    public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
+        List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
+        List<PmTraceLink> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            PmTraceLink link = new PmTraceLink();
+            link.setSourceType((String) row[0]);
+            link.setSourceId((UUID) row[1]);
+            link.setTargetType((String) row[2]);
+            link.setTargetId((UUID) row[3]);
+            link.setRelationshipType((String) row[4]);
+            result.add(link);
+        }
+        return result;
+    }
+
+    @Override
+    public ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId) {
+        List<PmTraceLink> trace = getFullTrace(sourceType, sourceId);
+        Map<String, Set<UUID>> impactedMap = new HashMap<>();
+
+        for (PmTraceLink link : trace) {
+            impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
+                       .add(link.getTargetId());
+        }
+
+        ImpactTraceResult result = new ImpactTraceResult();
+        result.setSourceType(sourceType);
+        result.setSourceId(sourceId);
+        result.setImpacted(impactedMap);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent) {
+        if (xmlContent == null || xmlContent.trim().isEmpty()) {
+            log.debug("No XML content to parse for diagram: {}", diagramTabId);
+            return;
+        }
+
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xmlContent)));
+
+            NodeList cells = doc.getElementsByTagName("mxCell");
+            Map<String, String> entityNames = new HashMap<>();
+
+            for (int i = 0; i < cells.getLength(); i++) {
+                Element cell = (Element) cells.item(i);
+                String vertex = cell.getAttribute("vertex");
+                String value = cell.getAttribute("value");
+
+                if ("1".equals(vertex) && value != null && !value.trim().isEmpty()) {
+                    String[] lines = value.trim().split("\n");
+                    String entityName = lines[0].trim();
+                    if (!entityName.isEmpty()) {
+                        entityNames.put(cell.getAttribute("id"), entityName);
+                    }
+                }
+            }
+
+            for (String entityId : entityNames.keySet()) {
+                String entityName = entityNames.get(entityId);
+                String targetType = "ENTITY";
+                String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+                UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
+
+                String relType = "DFD".equalsIgnoreCase(diagramType)
+                        ? "DESIGNED_BY"
+                        : "IMPLEMENTED_BY";
+
+                this.createLink(
+                    projectId,
+                    diagramType.toUpperCase(), diagramTabId,
+                    targetType, targetUuid,
+                    relType
+                );
+            }
+
+            log.info("Created {} trace links from diagram {} (type: {})",
+                    entityNames.size(), diagramTabId, diagramType);
+
+        } catch (Exception e) {
+            log.error("Failed to parse XML for trace links: {}", diagramTabId, e);
+        }
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ApprovalFlowService.java">
 package com.softinter.sicapi.service;
 
@@ -68822,6 +69045,58 @@ public interface PmCustomerContractService {
 
     // ✅ Combobox Project (กรองตาม customerId)
     List<ComboboxResponse> getComboboxProjects(UUID businessId, UUID customerId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/TraceLinkService.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/TraceLinkService.java
+package com.softinter.sicapi.service;
+
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+public interface TraceLinkService {
+
+    // ===== Core Methods =====
+    PmTraceLink createLink(UUID projectId,
+                           String sourceType, UUID sourceId,
+                           String targetType, UUID targetId,
+                           String relationshipType);
+
+    void deleteLink(UUID linkId);
+
+    // ✅ เพิ่ม method สำหรับลบตาม Source + Target (ใช้ใน updateTab)
+    void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId);
+
+    List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId);
+
+    List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId);
+
+    List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId);
+
+    ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId);
+
+    void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent);
+
+    // ===== DTO =====
+    class ImpactTraceResult {
+        private String sourceType;
+        private UUID sourceId;
+        private Map<String, Set<UUID>> impacted;
+
+        public String getSourceType() { return sourceType; }
+        public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+
+        public UUID getSourceId() { return sourceId; }
+        public void setSourceId(UUID sourceId) { this.sourceId = sourceId; }
+
+        public Map<String, Set<UUID>> getImpacted() { return impacted; }
+        public void setImpacted(Map<String, Set<UUID>> impacted) { this.impacted = impacted; }
+    }
 }
 </file>
 
@@ -70521,141 +70796,6 @@ export const appConfig: ApplicationConfig = {
 };
 </file>
 
-<file path="sic-app/src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { AuthCallbackComponent } from './core/auth/auth-callback.component';
-import { authGuard } from './core/auth/auth.guard';
-import { profileGuard } from './core/auth/profile.guard';
-import { profileResolver } from './management/profile/profile.resolver';
-import { businessGuard } from './core/auth/business.guard';
-import { businessCreateResolver } from './management/business/business-create/business-create.resolver';
-import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
-import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
-import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
-
-export const routes: Routes = [
-  {
-    path: 'auth/callback',
-    component: AuthCallbackComponent,
-  },
-  {
-    path: '',
-    loadComponent: () => import('./main/index/index.component').then((m) => m.Index),
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./main/index/home/home.component').then((m) => m.Home),
-      },
-      {
-        path: 'product',
-        loadComponent: () =>
-          import('./main/index/product/product.component').then((m) => m.Product),
-      },
-      {
-        path: 'blog',
-        loadComponent: () => import('./main/index/blog/blog.component').then((m) => m.Blog),
-      },
-      {
-        path: 'contact',
-        loadComponent: () =>
-          import('./main/index/contact/contact.component').then((m) => m.Contact),
-      },
-    ],
-  },
-  {
-    path: 'feature',
-    canActivate: [authGuard, profileGuard, businessGuard],
-    loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
-    children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'bu',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'db',
-        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
-      },
-      {
-        path: 'su',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
-      },
-      {
-        path: 'pm',
-        loadChildren: () => import('./feature/pm/pm.routes').then((m) => m.PM_ROUTES),
-      },
-    ],
-  },
-  {
-    path: 'management',
-    canActivate: [authGuard],
-    loadComponent: () => import('./management/management.component').then((m) => m.Management),
-    children: [
-      {
-        path: 'profile',
-        loadComponent: () =>
-          import('./management/profile/profile.component').then((m) => m.Profile),
-        resolve: { form: profileResolver },
-      },
-      {
-        path: 'business',
-        loadComponent: () =>
-          import('./management/business/business.component').then((m) => m.BusinessComponent),
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./management/business/business-options/business-options.component').then(
-                (m) => m.BusinessOptionsComponent,
-              ),
-          },
-          {
-            path: 'create',
-            loadComponent: () =>
-              import('./management/business/business-create/business-create.component').then(
-                (m) => m.BusinessCreateComponent,
-              ),
-            resolve: { form: businessCreateResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'join',
-            loadComponent: () =>
-              import('./management/business/business-join/business-join.component').then(
-                (m) => m.BusinessJoinComponent,
-              ),
-            resolve: { form: businessJoinResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-          {
-            path: 'invite',
-            loadComponent: () =>
-              import('./management/business/business-invite/business-invite.component').then(
-                (m) => m.BusinessInviteComponent,
-              ),
-            resolve: { form: businessInviteResolver },
-            canDeactivate: [CanDeactivateGuard],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    path: 'tutorial',
-    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
-  },
-];
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/basic/ComboboxController.java">
 package com.softinter.sicapi.controller.basic;
 
@@ -71389,90 +71529,6 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
     List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.dto.response.MenuProgramResponse;
-import com.softinter.sicapi.entity.su.SuProgram;
-
-@Repository
-public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
-
-    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
-    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActive();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActiveForPage();
-
-    @Query("SELECT DISTINCT p FROM SuProgram p " +
-           "JOIN p.suBusinessRolePrograms brp " +
-           "JOIN brp.businessRole br " +
-           "JOIN br.userBusinessRoles ubr " +
-           "JOIN ubr.userBusiness ub " +
-           "WHERE ub.businessId = :businessId " +
-           "AND ub.userId = :userId " +
-           "AND ub.isActive = true " +
-           "AND br.isActive = true " +
-           "AND brp.isActive = true " +
-           "AND ubr.isActive = true " +
-           "AND p.isActive = true " +
-           "ORDER BY p.sortOrder ASC, p.programCode ASC")
-    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
-                                           @Param("userId") String userId);
-
-    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
-    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
-
-    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
-       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
-       "0, " +  // state = 0 (Detached)
-       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
-       "FROM SuProgram p " +
-       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
-       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
-       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
-       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
-       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
-       "AND p.isActive = true AND p.isDelete = false " +
-       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
-       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
-       "ORDER BY p.sortOrder ASC")
-List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
-
-
-    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findRootPrograms();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
-
-    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
-    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -75367,118 +75423,6 @@ export class Pmdt03Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.model.ts">
-// src/app/core/models/diagram.model.ts
-export interface DiagramProject {
-  id: string;
-  name: string;
-  description?: string;
-  isFavorite: boolean;
-  lastOpened?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DiagramModel {
-  id: string;
-  name: string;
-  diagramType: string;
-  mermaidScript: string;
-  metadata: any;
-  graphData: any;
-  projectId: string;
-  projectName?: string;
-  userId: string;
-  sortOrder: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  state?: number;
-  rowVersion?: number;
-}
-
-export interface DiagramVersion {
-  id: string;
-  diagramId: string;
-  mermaidScript: string;
-  versionNumber: number;
-  changeComment?: string;
-  createdAt: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  diagramId: string;
-  userId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  contextData?: any;
-  createdAt: string;
-}
-
-export type DiagramType =
-  | 'Flowchart'
-  | 'Sequence'
-  | 'Class'
-  | 'ER'
-  | 'DFD'
-  | 'State'
-  | 'Journey'
-  | 'Mindmap'
-  | 'Timeline'
-  | 'Requirement'
-  | 'C4'
-  | 'Git Graph'
-  | 'Pie'
-  | 'Gantt'
-  | 'Use Case';
-
-export const DIAGRAM_TYPES: DiagramType[] = [
-  'Flowchart',
-  'Sequence',
-  'Class',
-  'ER',
-  'DFD',
-  'State',
-  'Journey',
-  'Mindmap',
-  'Timeline',
-  'Requirement',
-  'C4',
-  'Git Graph',
-  'Pie',
-  'Gantt',
-  'Use Case',
-];
-
-export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
-  Flowchart: 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
-  Sequence:
-    'sequenceDiagram\n  participant User\n  participant System\n  User->>System: Request\n  System-->>User: Response',
-  Class: 'classDiagram\n  class Person {\n    +String name\n    +int age\n    +greet()\n  }',
-  ER: 'erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE_ITEM : contains',
-  DFD: 'graph TD\n  A[User] -->|Login| B[Auth System]\n  B --> C[Database]',
-  State:
-    'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Processing : start\n  Processing --> Done : complete\n  Done --> [*]',
-  Journey:
-    'journey\n  section Login\n    Enter credentials: 5: User\n    Click login: 3: User\n    Verify account: 1: System',
-  Mindmap:
-    'mindmap\n  root((Project))\n    Planning\n      Requirements\n      Design\n    Development\n      Coding\n      Testing',
-  Timeline:
-    'timeline\n  title Project Timeline\n  2024 Q1 : Planning\n  2024 Q2 : Development\n  2024 Q3 : Testing\n  2024 Q4 : Launch',
-  Requirement:
-    'requirementDiagram\n  requirement req1 {\n    id: REQ-001\n    text: User login\n  }\n  element elem1 {\n    type: feature\n  }\n  req1 - elem1',
-  C4: 'C4Context\n  Person(user, "User")\n  System(system, "System")\n  Rel(user, system, "Uses")',
-  'Git Graph':
-    'gitGraph\n  commit\n  branch develop\n  checkout develop\n  commit\n  checkout main\n  merge develop',
-  Pie: 'pie\n  "Development" : 45\n  "Testing" : 25\n  "Design" : 20\n  "Planning" : 10',
-  Gantt:
-    'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
-  'Use Case':
-    'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
-};
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
 // src/app/core/component/sic-drawio/drawio-connector.service.ts
 
@@ -76092,37 +76036,6 @@ export class DrawioConnectorService {
           <i class="bi bi-clipboard-check text-xl text-[var(--crm-primary)]"></i>
           <span>Requirement</span>
         </button>
-        <!-- Change Request -->
-        <button
-          (click)="goToChangeRequests()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-arrow-left-right text-xl text-[var(--crm-warning)]"></i>
-          <span>Change Request</span>
-        </button>
-        <!-- Specification -->
-        <button
-          (click)="goToSpecifications()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
-          <span>Specification</span>
-        </button>
-        <button
-          (click)="goToDiagram()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-diagram-2 text-xl text-[var(--crm-primary)]"></i>
-          <span>Diagram</span>
-        </button>
-        <!-- Design Review -->
-        <button
-          (click)="goToDesignReviews()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-eye text-xl text-[var(--crm-primary)]"></i>
-          <span>Design Review</span>
-        </button>
         <!-- Planning / Manday -->
         <button
           (click)="goToPlanning()"
@@ -76131,14 +76044,6 @@ export class DrawioConnectorService {
           <i class="bi bi-calendar-check text-xl text-[var(--crm-primary)]"></i>
           <span>Planning</span>
         </button>
-        <!-- Tasks -->
-        <button
-          (click)="goToTasks()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
-          <span>Tasks</span>
-        </button>
         <!-- Discussion -->
         <button
           (click)="goToDiscussion()"
@@ -76146,38 +76051,6 @@ export class DrawioConnectorService {
         >
           <i class="bi bi-chat-dots text-xl text-[var(--crm-primary)]"></i>
           <span>Discussion</span>
-        </button>
-        <!-- Test Case -->
-        <button
-          (click)="goToTestCases()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
-          <span>Test Case</span>
-        </button>
-        <!-- Bug -->
-        <button
-          (click)="goToBugs()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
-          <span>Bug</span>
-        </button>
-        <!-- Delivery -->
-        <button
-          (click)="goToDeliveries()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-box-seam text-xl text-[var(--crm-primary)]"></i>
-          <span>Delivery</span>
-        </button>
-        <!-- Manual -->
-        <button
-          (click)="goToManuals()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-book text-xl text-[var(--crm-primary)]"></i>
-          <span>Manual</span>
         </button>
         <!-- Contract -->
         <button
@@ -76202,14 +76075,6 @@ export class DrawioConnectorService {
         >
           <i class="bi bi-headset text-xl text-[var(--crm-primary)]"></i>
           <span>MA Ticket</span>
-        </button>
-        <!-- Renewal -->
-        <button
-          (click)="goToRenewals()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-arrow-repeat text-xl text-[var(--crm-primary)]"></i>
-          <span>Renewal</span>
         </button>
         <!-- Approval -->
         <button
@@ -76566,52 +76431,6 @@ public class SuBusinessRoleProgramController {
     response.setRowVersion(brp.getRowVersion());
     return response;
 }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class PmDiagramTabRequest {
-    private UUID id;
-
-    @NotBlank(message = "Diagram name is required")
-    private String name;
-
-    @NotBlank(message = "Diagram type is required")
-    private String diagramType;  // "DFD", "ER", "Flowchart", etc.
-
-    private String mermaidScript;
-
-    @NotNull(message = "Project ID is required")
-    private UUID projectId;
-
-    private Map<String, Object> metadata;
-    private Map<String, Object> graphData;
-    private Integer sortOrder;
-    private Boolean isActive;
-
-    // ===== Traceability Fields =====
-    // สำหรับ DFD: เชื่อมกับ Requirement
-    private List<UUID> relatedRequirementIds;
-
-    // สำหรับ ER: เชื่อมกับ DFD
-    private List<UUID> relatedDfdIds;
-
-    // ทั่วไป: ER เชื่อมกับ Requirement โดยตรง
-    private List<UUID> relatedRequirementIdsForEr;
-
-    private Integer state;
-    private Integer rowVersion;
 }
 </file>
 
@@ -77993,12 +77812,12 @@ import { SicButtonComponent } from '../../../../../core/component/sic-button/sic
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt02Service } from '../../../rt/pmrt02/pmrt02.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { ApprovalService } from '../../pmdt03/approval.service';
-import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 
 interface Requirement {
   id?: string;
@@ -78060,9 +77879,9 @@ export class Pmdt04AComponent implements OnInit {
   isLoadingFlows = false;
 
   // Combobox URLs
-  priorityApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-priority`;
-  statusApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-status`;
-  businessValueApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-business-value`;
+  priorityApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
+  statusApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
+  businessValueApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-business-value`;
   documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
 
   // User combobox
@@ -78147,7 +77966,7 @@ export class Pmdt04AComponent implements OnInit {
   loadRequirement(id: string) {
     this.isLoading = true;
     this.http
-      .get<Requirement>(`${environment.apiBaseUrl}/api/requirement/${id}`)
+      .get<Requirement>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (data) => {
@@ -78205,14 +78024,15 @@ export class Pmdt04AComponent implements OnInit {
     // เอา projectName ออกจาก data (disabled ไม่ถูกส่ง)
     delete data.projectName;
 
-    const url = `${environment.apiBaseUrl}/api/requirement/save`;
+    const url = `${environment.apiBaseUrl}/api/pm/requirement/save`;
 
     this.http
       .post(url, data)
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: (res: any) => {
-          const id = (typeof res === 'string' ? res : (res?.id || res?.data?.id)) || data.id || this.reqId;
+          const id =
+            (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
           this.form.markAsPristine();
 
@@ -78254,7 +78074,10 @@ export class Pmdt04AComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.dialog.success(
+            'ส่งขออนุมัติสำเร็จ',
+            'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว',
+          );
           this.form.patchValue({ status: 'In Review' });
           // ✅ ส่ง projectId กลับไป
           this.navigateBackToRequirementList();
@@ -78268,7 +78091,7 @@ export class Pmdt04AComponent implements OnInit {
     const projectId = this.projectId;
     if (projectId) {
       this.router.navigate(['/feature/pm/requirement'], {
-        queryParams: { projectId }
+        queryParams: { projectId },
       });
     } else {
       this.router.navigate(['/feature/pm/requirement']);
@@ -78388,7 +78211,7 @@ export class Pmdt04Component implements OnInit {
       .set('projectId', projectId);
 
     this.http
-      .get<any>(`${environment.apiBaseUrl}/api/requirement`, { params })
+      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
@@ -78480,7 +78303,7 @@ export class Pmdt04Component implements OnInit {
   deleteRequirement(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
       if (ok) {
-        this.http.delete(`${environment.apiBaseUrl}/api/requirement/${id}`).subscribe({
+        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
           next: () => {
             this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
             this.loadRequirements();
@@ -78562,253 +78385,116 @@ export class Pmdt04Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type {
-  ChatMessage,
-  DiagramModel,
-  DiagramProject,
-  DiagramType,
-  DiagramVersion,
-} from './diagram.model';
-import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.model.ts">
+// src/app/feature/pm/dt/pmdt06/diagram.model.ts
+export interface DiagramProject {
+  id: string;
+  name: string;
+  description?: string;
+  isFavorite: boolean;
+  lastOpened?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface PmChatResponse {
+export interface DiagramModel {
+  id: string;
+  name: string;
+  diagramType: string;
+  mermaidScript: string;
+  metadata: any;
+  graphData: any;
+  projectId: string;
+  projectName?: string;
+  userId: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  state?: number;
+  rowVersion?: number;
+}
+
+export interface DiagramVersion {
   id: string;
   diagramId: string;
+  mermaidScript: string;
+  versionNumber: number;
+  changeComment?: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  diagramId: string;
+  userId: string;
   role: 'user' | 'assistant';
   content: string;
-  contextData: any;
-  createdBy: string;
-  createdDate: string;
+  contextData?: any;
+  createdAt: string;
 }
 
-@Injectable({ providedIn: 'root' })
-export class DiagramService {
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiBaseUrl;
+export type DiagramType =
+  | 'Flowchart'
+  | 'Sequence'
+  | 'Class'
+  | 'ER'
+  | 'DFD'
+  | 'State'
+  | 'Journey'
+  | 'Mindmap'
+  | 'Timeline'
+  | 'Requirement'
+  | 'C4'
+  | 'Git Graph'
+  | 'Pie'
+  | 'Gantt'
+  | 'Use Case';
 
-  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
-  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
-  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
-  private pmrt02Service = inject(Pmrt02Service);
+export const DIAGRAM_TYPES: DiagramType[] = [
+  'Flowchart',
+  'Sequence',
+  'Class',
+  'ER',
+  'DFD',
+  'State',
+  'Journey',
+  'Mindmap',
+  'Timeline',
+  'Requirement',
+  'C4',
+  'Git Graph',
+  'Pie',
+  'Gantt',
+  'Use Case',
+];
 
-  projects$ = this.projectsSubject.asObservable();
-  tabs$ = this.tabsSubject.asObservable();
-  activeTabId$ = this.activeTabIdSubject.asObservable();
-
-  getProjectName(projectId: string): Observable<string> {
-    return this.pmrt02Service.getProject(projectId).pipe(
-      map(project => project.projectName)
-    );
-  }
-
-  getProjects(): Observable<DiagramProject[]> {
-    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
-      .pipe(
-        map(response => {
-          const items = response?.content || response?.data || [];
-          return items.map((p: any) => ({
-            id: p.id,
-            name: p.projectName,
-            description: p.description,
-            isFavorite: false,
-            lastOpened: p.updatedDate || p.createdDate,
-            createdAt: p.createdDate,
-            updatedAt: p.updatedDate
-          }));
-        })
-      );
-  }
-
-  createProject(name: string, description?: string): Observable<DiagramProject> {
-    return this.http
-      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
-      .pipe(
-        tap((project) => {
-          const current = this.projectsSubject.value;
-          this.projectsSubject.next([...current, project]);
-        }),
-      );
-  }
-
-  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
-    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
-      tap((updated) => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
-      }),
-    );
-  }
-
-  deleteProject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
-      tap(() => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.filter((p) => p.id !== id));
-      }),
-    );
-  }
-
-  getTabs(projectId: string): Observable<DiagramModel[]> {
-    return this.http
-      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
-      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
-  }
-
-  createTab(
-    projectId: string,
-    name: string,
-    type: DiagramType,
-    script?: string,
-  ): Observable<DiagramModel> {
-    const payload = {
-      projectId,
-      name,
-      diagramType: type,
-      mermaidScript: script || '',
-      metadata: {},
-      sortOrder: this.tabsSubject.value.length + 1,
-    };
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
-      tap((tab) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next([...current, tab]);
-      }),
-    );
-  }
-
-  updateTab(tab: DiagramModel): Observable<DiagramModel> {
-    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
-      tap((updated) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
-      }),
-    );
-  }
-
-  deleteTab(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.filter((t) => t.id !== id));
-      }),
-    );
-  }
-
-  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        const updated = current.map((t) => {
-          const order = tabs.find((o) => o.id === t.id);
-          return order ? { ...t, sortOrder: order.sortOrder } : t;
-        });
-        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
-      }),
-    );
-  }
-
-  duplicateTab(id: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
-  }
-
-  getVersions(tabId: string): Observable<DiagramVersion[]> {
-    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
-  }
-
-  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(
-      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
-      {},
-    );
-  }
-
-  getChatHistory(tabId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  sendChatMessage(
-    tabId: string,
-    message: string,
-  ): Observable<PmChatResponse> {
-    return this.http.post<PmChatResponse>(
-      `${this.apiUrl}/api/diagram/chat`,
-      { diagramId: tabId, message }
-    );
-  }
-
-  clearChatHistory(tabId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  generateDiagram(
-    prompt: string,
-    context?: any,
-  ): Observable<{ script: string; type: DiagramType; name: string }> {
-    return this.http.post<{ script: string; type: DiagramType; name: string }>(
-      `${this.apiUrl}/api/diagram/ai/generate`,
-      { prompt, context },
-    );
-  }
-
-  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
-      script,
-      instruction,
-    });
-  }
-
-  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
-      script,
-      errorMessage,
-    });
-  }
-
-  convertDiagram(
-    script: string,
-    targetType: DiagramType,
-  ): Observable<{ script: string; type: DiagramType }> {
-    return this.http.post<{ script: string; type: DiagramType }>(
-      `${this.apiUrl}/api/diagram/ai/convert`,
-      { script, targetType },
-    );
-  }
-
-  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
-      responseType: 'blob',
-    });
-  }
-
-  exportProject(projectId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
-      responseType: 'blob',
-    });
-  }
-
-  setActiveTab(tabId: string | null) {
-    this.activeTabIdSubject.next(tabId);
-  }
-
-  getActiveTab(): string | null {
-    return this.activeTabIdSubject.value;
-  }
-
-  clearState() {
-    this.projectsSubject.next([]);
-    this.tabsSubject.next([]);
-    this.activeTabIdSubject.next(null);
-  }
-
-  getDiagram(id: string): Observable<DiagramModel> {
-    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
-  }
-}
+export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
+  Flowchart: 'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
+  Sequence:
+    'sequenceDiagram\n  participant User\n  participant System\n  User->>System: Request\n  System-->>User: Response',
+  Class: 'classDiagram\n  class Person {\n    +String name\n    +int age\n    +greet()\n  }',
+  ER: 'erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE_ITEM : contains',
+  DFD: 'graph TD\n  A[User] -->|Login| B[Auth System]\n  B --> C[Database]',
+  State:
+    'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Processing : start\n  Processing --> Done : complete\n  Done --> [*]',
+  Journey:
+    'journey\n  section Login\n    Enter credentials: 5: User\n    Click login: 3: User\n    Verify account: 1: System',
+  Mindmap:
+    'mindmap\n  root((Project))\n    Planning\n      Requirements\n      Design\n    Development\n      Coding\n      Testing',
+  Timeline:
+    'timeline\n  title Project Timeline\n  2024 Q1 : Planning\n  2024 Q2 : Development\n  2024 Q3 : Testing\n  2024 Q4 : Launch',
+  Requirement:
+    'requirementDiagram\n  requirement req1 {\n    id: REQ-001\n    text: User login\n  }\n  element elem1 {\n    type: feature\n  }\n  req1 - elem1',
+  C4: 'C4Context\n  Person(user, "User")\n  System(system, "System")\n  Rel(user, system, "Uses")',
+  'Git Graph':
+    'gitGraph\n  commit\n  branch develop\n  checkout develop\n  commit\n  checkout main\n  merge develop',
+  Pie: 'pie\n  "Development" : 45\n  "Testing" : 25\n  "Design" : 20\n  "Planning" : 10',
+  Gantt:
+    'gantt\n  title Project Plan\n  section Design\n    UI Design :a1, 2024-01-01, 7d\n    Database :a2, after a1, 5d\n  section Development\n    API :b1, after a2, 10d',
+  'Use Case':
+    'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
+};
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
@@ -79597,6 +79283,334 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     }
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
+<!-- src/app/feature/pm/rt/pmrt01/pmrt01.component.html -->
+
+<div class="space-y-5 p-0.5">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
+        รายการลูกค้า
+      </h1>
+      <span
+        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
+      >
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
+    </button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i
+        class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
+      ></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร หรือรหัส..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="custom-select px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">🌐 ทั้งหมด</option>
+      <option value="active">✅ ใช้งาน</option>
+      <option value="inactive">⛔ ไม่ใช้งาน</option>
+    </select>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div
+      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
+    >
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th
+              (click)="onSortChange('customerCode')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
+            >
+              รหัส
+              @if (sortBy() === 'customerCode') {
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('companyNameEn')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[220px]"
+            >
+              ชื่อบริษัท
+              @if (sortBy() === 'companyNameEn') {
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('email')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[200px]"
+            >
+              อีเมล
+              @if (sortBy() === 'email') {
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]"
+            >
+              เบอร์โทร
+            </th>
+            <th
+              (click)="onSortChange('isActive')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px]"
+            >
+              สถานะ
+              @if (sortBy() === 'isActive') {
+                <i
+                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                  [class.bi-chevron-up]="sortDir() === 'asc'"
+                  [class.bi-chevron-down]="sortDir() === 'desc'"
+                ></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
+            >
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (customer of paginatedCustomers(); track customer.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <!-- รหัส -->
+              <td class="px-4 py-3">
+                <span
+                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
+                >
+                  {{ customer.customerCode }}
+                </span>
+              </td>
+
+              <!-- ชื่อบริษัท -->
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  @if (customer.uploadGroupData && customer.uploadGroupData.length > 0) {
+                    <img
+                      [src]="getImageUrl(customer)"
+                      alt="{{ customer.companyNameEn }}"
+                      class="w-9 h-9 rounded-full object-cover border border-[var(--border)] flex-shrink-0"
+                      (error)="onImageError($event)"
+                    />
+                  } @else {
+                    <div
+                      class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase"
+                    >
+                      {{ getInitials(customer.companyNameEn) }}
+                    </div>
+                  }
+                  <div class="min-w-0">
+                    <div class="font-medium text-[var(--text-active)] truncate">
+                      {{ customer.companyNameEn }}
+                    </div>
+                    @if (customer.companyNameLocal) {
+                      <div class="text-xs text-[var(--text-muted)] truncate">
+                        {{ customer.companyNameLocal }}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </td>
+
+              <!-- อีเมล -->
+              <td class="px-4 py-3">
+                <a
+                  [href]="'mailto:' + customer.email"
+                  class="text-[var(--crm-primary)] hover:underline transition-colors"
+                >
+                  {{ customer.email }}
+                </a>
+              </td>
+
+              <!-- เบอร์โทร -->
+              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
+                {{ customer.phoneNumber || '-' }}
+              </td>
+
+              <!-- สถานะ -->
+              <td class="px-4 py-3">
+                <span
+                  [class]="
+                    getStatusClass(customer.isActive) +
+                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+                  "
+                >
+                  {{ getStatusText(customer.isActive) }}
+                </span>
+              </td>
+
+              <!-- จัดการ -->
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    (click)="goToProjects(customer)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="ดูโครงการทั้งหมดของลูกค้ารายนี้"
+                  >
+                    <i class="bi bi-briefcase"></i>
+                  </button>
+                  <button
+                    (click)="goToEdit(customer.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    (click)="toggleActive(customer)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                    [class.text-emerald-500]="customer.isActive"
+                    [class.text-gray-400]="!customer.isActive"
+                    [class.hover:bg-emerald-50]="customer.isActive"
+                    [class.hover:bg-gray-100]="!customer.isActive"
+                    [class.dark:hover:bg-emerald-500/10]="customer.isActive"
+                    [class.dark:hover:bg-gray-700]="!customer.isActive"
+                    [title]="customer.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-check-circle-fill]="customer.isActive"
+                      [class.bi-x-circle]="!customer.isActive"
+                    ></i>
+                  </button>
+                  <button
+                    (click)="deleteCustomer(customer.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบ"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลลูกค้า</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มลูกค้าใหม่</p>
+                  <button
+                    [routerLink]="['/feature/pm/pmrt01/new']"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- PAGINATION -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{
+          (currentPage() - 1) * pageSize() + 1
+        }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{
+          Math.min(currentPage() * pageSize(), totalItems())
+        }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
+      </div>
+
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="
+              page === currentPage()
+                ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+                : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
+            "
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts">
@@ -80444,6 +80458,52 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmDiagramTabRequest.java
+package com.softinter.sicapi.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class PmDiagramTabRequest {
+    private UUID id;
+
+    @NotBlank(message = "Diagram name is required")
+    private String name;
+
+    @NotBlank(message = "Diagram type is required")
+    private String diagramType;  // "DFD", "ER", "Flowchart", etc.
+
+    private String mermaidScript;
+
+    @NotNull(message = "Project ID is required")
+    private UUID projectId;
+
+    // ===== ✅ 新增: Requirement ID (สำหรับ Traceability) =====
+    @NotNull(message = "Requirement ID is required for traceability")
+    private UUID requirementId;
+
+    private Map<String, Object> metadata;
+    private Map<String, Object> graphData;
+    private Integer sortOrder;
+    private Boolean isActive;
+
+    // ===== Traceability Fields (optional) =====
+    private List<UUID> relatedRequirementIds;
+    private List<UUID> relatedDfdIds;
+    private List<UUID> relatedRequirementIdsForEr;
+
+    private Integer state;
+    private Integer rowVersion;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuUserBusinessRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -80787,332 +80847,516 @@ public/images/
 **/node_modules/
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
-<!-- src/app/feature/pm/rt/pmrt01/pmrt01.component.html -->
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
+// src/app/feature/pm/dt/pmdt06/diagram.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type {
+  ChatMessage,
+  DiagramModel,
+  DiagramProject,
+  DiagramType,
+  DiagramVersion,
+} from './diagram.model';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 
-<div class="space-y-5 p-0.5">
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
-        รายการลูกค้า
-      </h1>
-      <span
-        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
-      >
-        {{ totalItems() }} รายการ
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
-    </button>
-  </div>
+export interface PmChatResponse {
+  id: string;
+  diagramId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  contextData: any;
+  createdBy: string;
+  createdDate: string;
+}
 
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <i
-        class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
-      ></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร หรือรหัส..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
+@Injectable({ providedIn: 'root' })
+export class DiagramService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiBaseUrl;
+
+  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
+  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
+  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
+  private pmrt02Service = inject(Pmrt02Service);
+
+  projects$ = this.projectsSubject.asObservable();
+  tabs$ = this.tabsSubject.asObservable();
+  activeTabId$ = this.activeTabIdSubject.asObservable();
+
+  getProjectName(projectId: string): Observable<string> {
+    return this.pmrt02Service.getProject(projectId).pipe(
+      map(project => project.projectName)
+    );
+  }
+
+  getProjects(): Observable<DiagramProject[]> {
+    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
+      .pipe(
+        map(response => {
+          const items = response?.content || response?.data || [];
+          return items.map((p: any) => ({
+            id: p.id,
+            name: p.projectName,
+            description: p.description,
+            isFavorite: false,
+            lastOpened: p.updatedDate || p.createdDate,
+            createdAt: p.createdDate,
+            updatedAt: p.updatedDate
+          }));
+        })
+      );
+  }
+
+  createProject(name: string, description?: string): Observable<DiagramProject> {
+    return this.http
+      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
+      .pipe(
+        tap((project) => {
+          const current = this.projectsSubject.value;
+          this.projectsSubject.next([...current, project]);
+        }),
+      );
+  }
+
+  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
+    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
+      tap((updated) => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
+      }),
+    );
+  }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
+      tap(() => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.filter((p) => p.id !== id));
+      }),
+    );
+  }
+
+  getTabs(projectId: string): Observable<DiagramModel[]> {
+    return this.http
+      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
+      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
+  }
+
+  // ✅ แก้ไข: เพิ่ม requirementId
+  createTab(
+    projectId: string,
+    name: string,
+    type: DiagramType,
+    script?: string,
+    requirementId?: string  // ✅ เพิ่มพารามิเตอร์
+  ): Observable<DiagramModel> {
+    const payload = {
+      projectId,
+      name,
+      diagramType: type,
+      mermaidScript: script || '',
+      requirementId: requirementId || null,  // ✅ ส่งไป Backend
+      metadata: {},
+      sortOrder: this.tabsSubject.value.length + 1,
+    };
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
+      tap((tab) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next([...current, tab]);
+      }),
+    );
+  }
+
+  updateTab(tab: DiagramModel): Observable<DiagramModel> {
+    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
+      tap((updated) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
+      }),
+    );
+  }
+
+  deleteTab(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.filter((t) => t.id !== id));
+      }),
+    );
+  }
+
+  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        const updated = current.map((t) => {
+          const order = tabs.find((o) => o.id === t.id);
+          return order ? { ...t, sortOrder: order.sortOrder } : t;
+        });
+        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
+      }),
+    );
+  }
+
+  duplicateTab(id: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
+  }
+
+  getVersions(tabId: string): Observable<DiagramVersion[]> {
+    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
+  }
+
+  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(
+      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
+      {},
+    );
+  }
+
+  getChatHistory(tabId: string): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  sendChatMessage(
+    tabId: string,
+    message: string,
+  ): Observable<PmChatResponse> {
+    return this.http.post<PmChatResponse>(
+      `${this.apiUrl}/api/diagram/chat`,
+      { diagramId: tabId, message }
+    );
+  }
+
+  clearChatHistory(tabId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  generateDiagram(
+    prompt: string,
+    context?: any,
+  ): Observable<{ script: string; type: DiagramType; name: string }> {
+    return this.http.post<{ script: string; type: DiagramType; name: string }>(
+      `${this.apiUrl}/api/diagram/ai/generate`,
+      { prompt, context },
+    );
+  }
+
+  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
+      script,
+      instruction,
+    });
+  }
+
+  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
+      script,
+      errorMessage,
+    });
+  }
+
+  convertDiagram(
+    script: string,
+    targetType: DiagramType,
+  ): Observable<{ script: string; type: DiagramType }> {
+    return this.http.post<{ script: string; type: DiagramType }>(
+      `${this.apiUrl}/api/diagram/ai/convert`,
+      { script, targetType },
+    );
+  }
+
+  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      responseType: 'blob',
+    });
+  }
+
+  exportProject(projectId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
+      responseType: 'blob',
+    });
+  }
+
+  setActiveTab(tabId: string | null) {
+    this.activeTabIdSubject.next(tabId);
+  }
+
+  getActiveTab(): string | null {
+    return this.activeTabIdSubject.value;
+  }
+
+  clearState() {
+    this.projectsSubject.next([]);
+    this.tabsSubject.next([]);
+    this.activeTabIdSubject.next(null);
+  }
+
+  getDiagram(id: string): Observable<DiagramModel> {
+    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
+// src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
+
+import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
+import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
+
+@Component({
+  selector: 'app-pmrt01',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './pmrt01.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Pmrt01Component implements OnInit {
+  private router = inject(Router);
+  private service = inject(Pmrt01AService);
+  private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
+  private navigation = inject(NavigationService);
+
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('customerCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+  protected customers = signal<CustomerModel[]>([]);
+  protected totalItems = signal(0);
+  protected businessId = '';
+
+  // ===== Computed =====
+  protected filteredCustomers = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const status = this.filterStatus();
+    let result = this.customers();
+    if (term) {
+      result = result.filter(
+        (c) =>
+          c.customerCode?.toLowerCase().includes(term) ||
+          c.companyNameEn?.toLowerCase().includes(term) ||
+          c.companyNameLocal?.toLowerCase().includes(term) ||
+          c.email?.toLowerCase().includes(term) ||
+          c.contactPerson?.toLowerCase().includes(term),
+      );
+    }
+    if (status === 'active') result = result.filter((c) => c.isActive);
+    else if (status === 'inactive') result = result.filter((c) => !c.isActive);
+
+    const sortField = this.sortBy();
+    const direction = this.sortDir();
+    result = [...result].sort((a, b) => {
+      const aVal = a[sortField as keyof CustomerModel] ?? '';
+      const bVal = b[sortField as keyof CustomerModel] ?? '';
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return result;
+  });
+
+  protected paginatedCustomers = computed(() => {
+    const all = this.filteredCustomers();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return all.slice(start, start + this.pageSize());
+  });
+
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  protected Math = Math;
+
+  ngOnInit() {
+    this.businessId = localStorage.getItem('businessId') || '';
+    if (this.businessId) {
+      this.loadCustomers();
+    }
+  }
+
+  loadCustomers() {
+    this.isLoading.set(true);
+    const page = this.currentPage() - 1;
+    this.service
+      .getCustomers(this.businessId, page, this.pageSize(), this.searchTerm() || undefined)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (pageData) => {
+          this.customers.set(pageData.content);
+          this.totalItems.set(pageData.totalElements);
+        },
+        error: (err) => {
+          console.error('Load customers error', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
+        },
+      });
+  }
+
+  // ===== Event Handlers =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadCustomers(); // โหลดข้อมูลใหม่
+  }
+
+  goToAdd() {
+     this.navigation.navigate(['/feature/pm/pmrt01/new']);
+  }
+
+  goToEdit(id: string | undefined) {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']); 
+  }
+
+  toggleActive(customer: CustomerModel) {
+    if (!customer.id) return;
+    const updated = { ...customer, isActive: !customer.isActive };
+    this.service.updateCustomer(customer.id, updated).subscribe({
+      next: () => {
+        this.loadCustomers();
+        this.dialog.success(
+          'อัปเดตสถานะสำเร็จ',
+          `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
+        );
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
+      },
+    });
+  }
+
+  deleteCustomer(id: string | undefined) {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
+      return;
+    }
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        this.service.deleteCustomer(id).subscribe({
+          next: () => {
+            this.loadCustomers();
+            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
+          },
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
+          },
+        });
       }
-    </div>
-
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="custom-select px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">🌐 ทั้งหมด</option>
-      <option value="active">✅ ใช้งาน</option>
-      <option value="inactive">⛔ ไม่ใช้งาน</option>
-    </select>
-  </div>
-
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
+    });
   }
 
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div
-      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
-    >
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th
-              (click)="onSortChange('customerCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              รหัส
-              @if (sortBy() === 'customerCode') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('companyNameEn')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[220px]"
-            >
-              ชื่อบริษัท
-              @if (sortBy() === 'companyNameEn') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('email')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[200px]"
-            >
-              อีเมล
-              @if (sortBy() === 'email') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]"
-            >
-              เบอร์โทร
-            </th>
-            <th
-              (click)="onSortChange('isActive')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px]"
-            >
-              สถานะ
-              @if (sortBy() === 'isActive') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
-            >
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (customer of paginatedCustomers(); track customer.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <!-- รหัส -->
-              <td class="px-4 py-3">
-                <span
-                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
-                >
-                  {{ customer.customerCode }}
-                </span>
-              </td>
-
-              <!-- ชื่อบริษัท -->
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  @if (customer.uploadGroupData && customer.uploadGroupData.length > 0) {
-                    <img
-                      [src]="getImageUrl(customer)"
-                      alt="{{ customer.companyNameEn }}"
-                      class="w-9 h-9 rounded-full object-cover border border-[var(--border)] flex-shrink-0"
-                      (error)="onImageError($event)"
-                    />
-                  } @else {
-                    <div
-                      class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase"
-                    >
-                      {{ getInitials(customer.companyNameEn) }}
-                    </div>
-                  }
-                  <div class="min-w-0">
-                    <div class="font-medium text-[var(--text-active)] truncate">
-                      {{ customer.companyNameEn }}
-                    </div>
-                    @if (customer.companyNameLocal) {
-                      <div class="text-xs text-[var(--text-muted)] truncate">
-                        {{ customer.companyNameLocal }}
-                      </div>
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <!-- อีเมล -->
-              <td class="px-4 py-3">
-                <a
-                  [href]="'mailto:' + customer.email"
-                  class="text-[var(--crm-primary)] hover:underline transition-colors"
-                >
-                  {{ customer.email }}
-                </a>
-              </td>
-
-              <!-- เบอร์โทร -->
-              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
-                {{ customer.phoneNumber || '-' }}
-              </td>
-
-              <!-- สถานะ -->
-              <td class="px-4 py-3">
-                <span
-                  [class]="
-                    getStatusClass(customer.isActive) +
-                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                  "
-                >
-                  {{ getStatusText(customer.isActive) }}
-                </span>
-              </td>
-
-              <!-- จัดการ -->
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1">
-                  <button
-                    (click)="goToProjects(customer)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="ดูโครงการทั้งหมดของลูกค้ารายนี้"
-                  >
-                    <i class="bi bi-briefcase"></i>
-                  </button>
-                  <button
-                    (click)="goToEdit(customer.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button
-                    (click)="toggleActive(customer)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-                    [class.text-emerald-500]="customer.isActive"
-                    [class.text-gray-400]="!customer.isActive"
-                    [class.hover:bg-emerald-50]="customer.isActive"
-                    [class.hover:bg-gray-100]="!customer.isActive"
-                    [class.dark:hover:bg-emerald-500/10]="customer.isActive"
-                    [class.dark:hover:bg-gray-700]="!customer.isActive"
-                    [title]="customer.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
-                  >
-                    <i
-                      class="bi"
-                      [class.bi-check-circle-fill]="customer.isActive"
-                      [class.bi-x-circle]="!customer.isActive"
-                    ></i>
-                  </button>
-                  <button
-                    (click)="deleteCustomer(customer.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลลูกค้า</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มลูกค้าใหม่</p>
-                  <button
-                    [routerLink]="['/feature/pm/pmrt01/new']"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+  // ===== Utility Methods =====
+  getStatusClass(isActive: boolean | undefined): string {
+    return isActive
+      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
   }
 
-  <!-- PAGINATION -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{
-          (currentPage() - 1) * pageSize() + 1
-        }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{
-          Math.min(currentPage() * pageSize(), totalItems())
-        }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
-      </div>
-
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="
-              page === currentPage()
-                ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-                : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
-            "
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
+  getStatusText(isActive: boolean | undefined): string {
+    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
-</div>
+
+  getInitials(companyName: string | undefined): string {
+    if (!companyName) return '?';
+    return companyName.charAt(0).toUpperCase();
+  }
+
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+  getImageUrl(customer: CustomerModel): string {
+    if (!customer.uploadGroupId) {
+      return '';
+    }
+    return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
+  }
+  goToProjects(customer: CustomerModel) {
+  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
+  this.navigation.navigate(['/feature/pm/pmrt02'], {
+    queryParams: { customerId: customer.id }
+  });
+}
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04.component.ts">
@@ -81826,265 +82070,6 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
-// src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
-
-import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-
-import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
-import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
-
-@Component({
-  selector: 'app-pmrt01',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt01.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class Pmrt01Component implements OnInit {
-  private router = inject(Router);
-  private service = inject(Pmrt01AService);
-  private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
-  private navigation = inject(NavigationService);
-
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('customerCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
-  protected customers = signal<CustomerModel[]>([]);
-  protected totalItems = signal(0);
-  protected businessId = '';
-
-  // ===== Computed =====
-  protected filteredCustomers = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    let result = this.customers();
-    if (term) {
-      result = result.filter(
-        (c) =>
-          c.customerCode?.toLowerCase().includes(term) ||
-          c.companyNameEn?.toLowerCase().includes(term) ||
-          c.companyNameLocal?.toLowerCase().includes(term) ||
-          c.email?.toLowerCase().includes(term) ||
-          c.contactPerson?.toLowerCase().includes(term),
-      );
-    }
-    if (status === 'active') result = result.filter((c) => c.isActive);
-    else if (status === 'inactive') result = result.filter((c) => !c.isActive);
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof CustomerModel] ?? '';
-      const bVal = b[sortField as keyof CustomerModel] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return result;
-  });
-
-  protected paginatedCustomers = computed(() => {
-    const all = this.filteredCustomers();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
-
-  ngOnInit() {
-    this.businessId = localStorage.getItem('businessId') || '';
-    if (this.businessId) {
-      this.loadCustomers();
-    }
-  }
-
-  loadCustomers() {
-    this.isLoading.set(true);
-    const page = this.currentPage() - 1;
-    this.service
-      .getCustomers(this.businessId, page, this.pageSize(), this.searchTerm() || undefined)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (pageData) => {
-          this.customers.set(pageData.content);
-          this.totalItems.set(pageData.totalElements);
-        },
-        error: (err) => {
-          console.error('Load customers error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
-        },
-      });
-  }
-
-  // ===== Event Handlers =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadCustomers(); // โหลดข้อมูลใหม่
-  }
-
-  goToAdd() {
-     this.navigation.navigate(['/feature/pm/pmrt01/new']);
-  }
-
-  goToEdit(id: string | undefined) {
-    if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']); 
-  }
-
-  toggleActive(customer: CustomerModel) {
-    if (!customer.id) return;
-    const updated = { ...customer, isActive: !customer.isActive };
-    this.service.updateCustomer(customer.id, updated).subscribe({
-      next: () => {
-        this.loadCustomers();
-        this.dialog.success(
-          'อัปเดตสถานะสำเร็จ',
-          `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
-        );
-      },
-      error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
-      },
-    });
-  }
-
-  deleteCustomer(id: string | undefined) {
-    if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
-      return;
-    }
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
-      if (confirmed) {
-        this.service.deleteCustomer(id).subscribe({
-          next: () => {
-            this.loadCustomers();
-            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
-          },
-          error: (err) => {
-            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
-          },
-        });
-      }
-    });
-  }
-
-  // ===== Utility Methods =====
-  getStatusClass(isActive: boolean | undefined): string {
-    return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
-  }
-
-  getStatusText(isActive: boolean | undefined): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-
-  getInitials(companyName: string | undefined): string {
-    if (!companyName) return '?';
-    return companyName.charAt(0).toUpperCase();
-  }
-
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-
-  onImageError(event: Event) {
-    const img = event.target as HTMLImageElement;
-    img.style.display = 'none';
-  }
-  getImageUrl(customer: CustomerModel): string {
-    if (!customer.uploadGroupId) {
-      return '';
-    }
-    return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
-  }
-  goToProjects(customer: CustomerModel) {
-  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-  this.navigation.navigate(['/feature/pm/pmrt02'], {
-    queryParams: { customerId: customer.id }
-  });
-}
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.ts">
 // src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
 import { CommonModule } from '@angular/common';
@@ -82667,384 +82652,6 @@ ngOnInit(): void {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.config.BusinessContextHolder;
-import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
-import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
-import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
-import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.TraceRelationship;
-import com.softinter.sicapi.entity.pm.PmDiagramTab;
-import com.softinter.sicapi.entity.pm.PmDiagramVersion;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
-import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.PmDiagramTabService;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmDiagramTabServiceImpl implements PmDiagramTabService {
-
-    private final PmDiagramTabRepository tabRepository;
-    private final PmDiagramVersionRepository versionRepository;
-    private final CurrentUserService currentUserService;
-    private final PmCustomerProjectRepository customerProjectRepository;
-    private final PmRequirementRepository requirementRepository;
-
-    // ===== Inject TraceLinkService =====
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
-        try {
-            String userId = currentUserService.getUserId();
-            List<PmDiagramTab> tabs;
-            if (projectId != null) {
-                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-            } else {
-                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
-            }
-            return tabs.stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error in getTabs for projectId: {}", projectId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDiagramTabResponse getTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        return toResponse(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
-        String userId = currentUserService.getUserId();
-        UUID businessId = BusinessContextHolder.getBusinessId();
-
-        if (!customerProjectRepository.existsById(request.getProjectId())) {
-            throw new RuntimeException("Project not found: " + request.getProjectId());
-        }
-
-        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
-                request.getProjectId()
-        );
-        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
-
-        PmDiagramTab tab = new PmDiagramTab();
-        tab.setUserId(userId);
-        tab.setBusinessId(businessId);
-        tab.setProjectId(request.getProjectId());
-        tab.setName(request.getName());
-        tab.setDiagramType(request.getDiagramType());
-        tab.setMermaidScript(request.getMermaidScript());
-        tab.setMetadata(request.getMetadata());
-        tab.setGraphData(request.getGraphData());
-        tab.setSortOrder(maxSort + 1);
-        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Initial version");
-
-        // ============================================================
-        // 🚀 CREATE TRACE LINKS (ตามแนวทางที่ 1)
-        // ============================================================
-        UUID projectId = request.getProjectId();
-        String diagramType = request.getDiagramType().toUpperCase();
-
-        if ("DFD".equals(diagramType) || "FLOWCHART".equals(diagramType)) {
-            // DFD → เชื่อมกับ Requirement
-            if (request.getRelatedRequirementIds() != null) {
-                for (UUID reqId : request.getRelatedRequirementIds()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                            projectId,
-                            "REQUIREMENT", reqId,
-                            "DFD", saved.getId(),
-                            TraceRelationship.DESIGNED_BY.name()
-                        );
-                    }
-                }
-            }
-        } else if ("ER".equals(diagramType)) {
-            // ER → เชื่อมกับ DFD
-            if (request.getRelatedDfdIds() != null) {
-                for (UUID dfdId : request.getRelatedDfdIds()) {
-                    traceLinkService.createLink(
-                        projectId,
-                        "DFD", dfdId,
-                        "ER", saved.getId(),
-                        TraceRelationship.IMPLEMENTED_BY.name()
-                    );
-                }
-            }
-            // ER → เชื่อมกับ Requirement (ถ้ามี)
-            if (request.getRelatedRequirementIdsForEr() != null) {
-                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                            projectId,
-                            "REQUIREMENT", reqId,
-                            "ER", saved.getId(),
-                            TraceRelationship.DESIGNED_BY.name()
-                        );
-                    }
-                }
-            }
-        }
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
-
-        if (state == EntityState.MODIFIED) {
-            // Check rowVersion
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
-                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
-            }
-
-            if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
-                throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
-            }
-
-            if (request.getName() != null) {
-                tab.setName(request.getName());
-            }
-            if (request.getDiagramType() != null) {
-                tab.setDiagramType(request.getDiagramType());
-            }
-            if (request.getMermaidScript() != null) {
-                tab.setMermaidScript(request.getMermaidScript());
-                createVersion(tab, "Auto-save");
-            }
-            if (request.getMetadata() != null) {
-                tab.setMetadata(request.getMetadata());
-            }
-            if (request.getGraphData() != null) {
-                tab.setGraphData(request.getGraphData());
-            }
-            if (request.getIsActive() != null) {
-                tab.setIsActive(request.getIsActive());
-            }
-
-            PmDiagramTab saved = tabRepository.save(tab);
-
-            // ============================================================
-            // 🚀 UPDATE TRACE LINKS (ถ้าต้องการ)
-            // ง่ายสุด: ลบเก่าทั้งหมดแล้วสร้างใหม่
-            // ============================================================
-            // TODO: ถ้าต้องการอัปเดต Trace Links เมื่อแก้ไข diagram type
-            // เราไม่แก้ trace links ในรอบนี้
-
-            return toResponse(saved);
-        } else if (state == EntityState.DELETED) {
-            tab.setIsDelete(true);
-            tab.setDeleteDate(Instant.now());
-            tabRepository.save(tab);
-            return toResponse(tab);
-        }
-
-        return toResponse(tab);
-    }
-
-    @Override
-    @Transactional
-    public void deleteTab(UUID id) {
-        PmDiagramTab tab = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-        tab.setIsDelete(true);
-        tab.setDeleteDate(Instant.now());
-        tabRepository.save(tab);
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse duplicateTab(UUID id) {
-        PmDiagramTab original = tabRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tab not found"));
-
-        PmDiagramTab duplicate = new PmDiagramTab();
-        duplicate.setUserId(original.getUserId());
-        duplicate.setBusinessId(original.getBusinessId());
-        duplicate.setProjectId(original.getProjectId());
-        duplicate.setName(original.getName() + " (Copy)");
-        duplicate.setDiagramType(original.getDiagramType());
-        duplicate.setMermaidScript(original.getMermaidScript());
-        duplicate.setMetadata(original.getMetadata());
-        duplicate.setGraphData(original.getGraphData());
-        duplicate.setSortOrder(original.getSortOrder() + 1);
-        duplicate.setIsActive(true);
-
-        PmDiagramTab saved = tabRepository.save(duplicate);
-        createVersion(saved, "Duplicated from " + original.getName());
-
-        // ============================================================
-        // 🚀 COPY TRACE LINKS
-        // ============================================================
-        // TODO: คัดลอก Trace Links จากต้นฉบับไปยังตัวใหม่
-        // ยังไม่ต้องทำในรอบนี้
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void reorderTabs(PmDiagramReorderRequest request) {
-        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
-            PmDiagramTab tab = tabRepository.findById(order.getId())
-                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
-            tab.setSortOrder(order.getSortOrder());
-            tabRepository.save(tab);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
-        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
-                .stream()
-                .map(this::toVersionResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
-        PmDiagramVersion version = versionRepository.findById(versionId)
-                .orElseThrow(() -> new RuntimeException("Version not found"));
-
-        PmDiagramTab tab = version.getDiagram();
-        tab.setMermaidScript(version.getMermaidScript());
-
-        PmDiagramTab saved = tabRepository.save(tab);
-        createVersion(saved, "Restored from version " + version.getVersionNumber());
-
-        return toResponse(saved);
-    }
-
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    private void createVersion(PmDiagramTab tab, String comment) {
-        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
-        int nextVersion = versionCount + 1;
-
-        if (versionCount >= 50) {
-            List<PmDiagramVersion> oldestVersions = versionRepository
-                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
-            if (!oldestVersions.isEmpty()) {
-                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
-                oldest.setIsDelete(true);
-                versionRepository.save(oldest);
-            }
-        }
-
-        PmDiagramVersion version = new PmDiagramVersion();
-        version.setBusinessId(tab.getBusinessId());
-        version.setDiagram(tab);
-        version.setMermaidScript(tab.getMermaidScript());
-        version.setVersionNumber(nextVersion);
-        version.setChangeComment(comment);
-        versionRepository.save(version);
-    }
-
-    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
-        try {
-            PmDiagramTabResponse dto = new PmDiagramTabResponse();
-            dto.setId(tab.getId());
-            dto.setName(tab.getName());
-            dto.setDiagramType(tab.getDiagramType());
-            dto.setMermaidScript(tab.getMermaidScript());
-            dto.setMetadata(tab.getMetadata());
-            dto.setGraphData(tab.getGraphData());
-            dto.setProjectId(tab.getProjectId());
-
-            try {
-                customerProjectRepository.findById(tab.getProjectId())
-                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
-            } catch (Exception e) {
-                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
-                dto.setProjectName(null);
-            }
-
-            dto.setSortOrder(tab.getSortOrder());
-            dto.setIsActive(tab.getIsActive());
-            dto.setCreatedDate(tab.getCreatedDate());
-            dto.setUpdatedDate(tab.getUpdatedDate());
-            dto.setRowVersion(tab.getRowVersion());
-
-            try {
-                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
-            } catch (Exception e) {
-                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
-                dto.setVersionCount(0);
-            }
-
-            return dto;
-        } catch (Exception e) {
-            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
-            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
-            fallback.setId(tab.getId());
-            fallback.setName(tab.getName());
-            fallback.setDiagramType(tab.getDiagramType());
-            fallback.setMermaidScript(tab.getMermaidScript());
-            fallback.setMetadata(tab.getMetadata());
-            fallback.setGraphData(tab.getGraphData());
-            fallback.setProjectId(tab.getProjectId());
-            fallback.setSortOrder(tab.getSortOrder());
-            fallback.setIsActive(tab.getIsActive());
-            fallback.setCreatedDate(tab.getCreatedDate());
-            fallback.setUpdatedDate(tab.getUpdatedDate());
-            fallback.setVersionCount(0);
-            fallback.setRowVersion(tab.getRowVersion());
-            return fallback;
-        }
-    }
-
-    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
-        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
-        dto.setId(version.getId());
-        dto.setDiagramId(version.getDiagram().getId());
-        dto.setMermaidScript(version.getMermaidScript());
-        dto.setVersionNumber(version.getVersionNumber());
-        dto.setChangeComment(version.getChangeComment());
-        dto.setCreatedBy(version.getCreatedBy());
-        dto.setCreatedDate(version.getCreatedDate());
-        return dto;
-    }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts">
 // src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
 import { CommonModule } from '@angular/common';
@@ -83600,6 +83207,426 @@ export class Pmdt02Component implements OnInit {
 </div>
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
+import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
+import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
+import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+import com.softinter.sicapi.entity.pm.PmDiagramTab;
+import com.softinter.sicapi.entity.pm.PmDiagramVersion;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmDiagramTabService;
+import com.softinter.sicapi.service.TraceLinkService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmDiagramTabServiceImpl implements PmDiagramTabService {
+
+    private final PmDiagramTabRepository tabRepository;
+    private final PmDiagramVersionRepository versionRepository;
+    private final CurrentUserService currentUserService;
+    private final PmCustomerProjectRepository customerProjectRepository;
+    private final PmRequirementRepository requirementRepository;  // ✅ inject
+
+    private final TraceLinkService traceLinkService;
+
+    // ===== CREATE =====
+    @Override
+    @Transactional
+    public PmDiagramTabResponse createTab(PmDiagramTabRequest request) {
+        // 1. Validate Project
+        if (!customerProjectRepository.existsById(request.getProjectId())) {
+            throw new RuntimeException("Project not found: " + request.getProjectId());
+        }
+
+        // 2. ✅ Validate Requirement (บังคับ)
+        if (request.getRequirementId() == null) {
+            throw new IllegalArgumentException("Requirement ID is required for traceability.");
+        }
+        PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
+                .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
+
+        // 3. สร้าง Diagram
+        String userId = currentUserService.getUserId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
+
+        List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
+                request.getProjectId()
+        );
+        int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
+
+        PmDiagramTab tab = new PmDiagramTab();
+        tab.setUserId(userId);
+        tab.setBusinessId(businessId);
+        tab.setProjectId(request.getProjectId());
+        tab.setName(request.getName());
+        tab.setDiagramType(request.getDiagramType());
+        tab.setMermaidScript(request.getMermaidScript());
+        tab.setMetadata(request.getMetadata());
+        tab.setGraphData(request.getGraphData());
+        tab.setSortOrder(maxSort + 1);
+        tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Initial version");
+
+        // 4. ✅ สร้าง Trace Link: Requirement → Diagram
+        String diagramType = request.getDiagramType().toUpperCase();
+        traceLinkService.createLink(
+            request.getProjectId(),
+            "REQUIREMENT", request.getRequirementId(),
+            diagramType, saved.getId(),
+            TraceRelationship.DESIGNED_BY.name()
+        );
+
+        // 5. ✅ สร้าง Trace Link เพิ่มเติม (ถ้ามี relatedRequirementIds)
+        if (request.getRelatedRequirementIds() != null) {
+            for (UUID reqId : request.getRelatedRequirementIds()) {
+                if (reqId.equals(request.getRequirementId())) {
+                    continue; // ข้ามตัวหลัก (สร้างไปแล้ว)
+                }
+                if (requirementRepository.existsById(reqId)) {
+                    traceLinkService.createLink(
+                        request.getProjectId(),
+                        "REQUIREMENT", reqId,
+                        diagramType, saved.getId(),
+                        TraceRelationship.DESIGNED_BY.name()
+                    );
+                }
+            }
+        }
+
+        // 6. DFD → เชื่อมกับ DFD อื่นๆ (ถ้ามี)
+        if ("DFD".equals(diagramType) && request.getRelatedDfdIds() != null) {
+            for (UUID dfdId : request.getRelatedDfdIds()) {
+                traceLinkService.createLink(
+                    request.getProjectId(),
+                    "DFD", dfdId,
+                    "DFD", saved.getId(),
+                    TraceRelationship.RELATED_TO.name()
+                );
+            }
+        }
+
+        // 7. ER → เชื่อมกับ DFD และ Requirement (ถ้ามี)
+        if ("ER".equals(diagramType)) {
+            if (request.getRelatedDfdIds() != null) {
+                for (UUID dfdId : request.getRelatedDfdIds()) {
+                    traceLinkService.createLink(
+                        request.getProjectId(),
+                        "DFD", dfdId,
+                        "ER", saved.getId(),
+                        TraceRelationship.IMPLEMENTED_BY.name()
+                    );
+                }
+            }
+            if (request.getRelatedRequirementIdsForEr() != null) {
+                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
+                    if (requirementRepository.existsById(reqId)) {
+                        traceLinkService.createLink(
+                            request.getProjectId(),
+                            "REQUIREMENT", reqId,
+                            "ER", saved.getId(),
+                            TraceRelationship.DESIGNED_BY.name()
+                        );
+                    }
+                }
+            }
+        }
+
+        return toResponse(saved);
+    }
+
+    // ===== UPDATE =====
+    @Override
+    @Transactional
+    public PmDiagramTabResponse updateTab(UUID id, PmDiagramTabRequest request) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+
+        // ✅ ตรวจสอบว่ามี requirementId หรือไม่ (ถ้ามีให้อัปเดต)
+        if (request.getRequirementId() != null) {
+            // ตรวจสอบว่า Requirement มีอยู่จริง
+            PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
+                    .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
+
+            // ลบ Trace Link เก่า (ถ้ามี) ก่อนสร้างใหม่
+            // (ต้องมี method ใน TraceLinkService)
+            // traceLinkService.deleteLinksBySourceAndTarget("REQUIREMENT", oldRequirementId, "DIAGRAM", tab.getId());
+
+            // สร้าง Trace Link ใหม่
+            String diagramType = tab.getDiagramType().toUpperCase();
+            traceLinkService.createLink(
+                tab.getProjectId(),
+                "REQUIREMENT", request.getRequirementId(),
+                diagramType, tab.getId(),
+                TraceRelationship.DESIGNED_BY.name()
+            );
+        }
+
+        // อัปเดตข้อมูล Diagram
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
+
+        if (state == EntityState.MODIFIED) {
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
+                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            }
+
+            if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
+                throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
+            }
+
+            if (request.getName() != null) {
+                tab.setName(request.getName());
+            }
+            if (request.getDiagramType() != null) {
+                tab.setDiagramType(request.getDiagramType());
+            }
+            if (request.getMermaidScript() != null) {
+                tab.setMermaidScript(request.getMermaidScript());
+                createVersion(tab, "Auto-save");
+            }
+            if (request.getMetadata() != null) {
+                tab.setMetadata(request.getMetadata());
+            }
+            if (request.getGraphData() != null) {
+                tab.setGraphData(request.getGraphData());
+            }
+            if (request.getIsActive() != null) {
+                tab.setIsActive(request.getIsActive());
+            }
+
+            PmDiagramTab saved = tabRepository.save(tab);
+            return toResponse(saved);
+        } else if (state == EntityState.DELETED) {
+            tab.setIsDelete(true);
+            tab.setDeleteDate(Instant.now());
+            tabRepository.save(tab);
+            return toResponse(tab);
+        }
+
+        return toResponse(tab);
+    }
+
+    // ===== DELETE =====
+    @Override
+    @Transactional
+    public void deleteTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+        tab.setIsDelete(true);
+        tab.setDeleteDate(Instant.now());
+        tabRepository.save(tab);
+    }
+
+    // ===== DUPLICATE =====
+    @Override
+    @Transactional
+    public PmDiagramTabResponse duplicateTab(UUID id) {
+        PmDiagramTab original = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+
+        PmDiagramTab duplicate = new PmDiagramTab();
+        duplicate.setUserId(original.getUserId());
+        duplicate.setBusinessId(original.getBusinessId());
+        duplicate.setProjectId(original.getProjectId());
+        duplicate.setName(original.getName() + " (Copy)");
+        duplicate.setDiagramType(original.getDiagramType());
+        duplicate.setMermaidScript(original.getMermaidScript());
+        duplicate.setMetadata(original.getMetadata());
+        duplicate.setGraphData(original.getGraphData());
+        duplicate.setSortOrder(original.getSortOrder() + 1);
+        duplicate.setIsActive(true);
+
+        PmDiagramTab saved = tabRepository.save(duplicate);
+        createVersion(saved, "Duplicated from " + original.getName());
+
+        // ✅ คัดลอก Trace Links จากต้นฉบับ (ถ้าต้องการ)
+        // TODO: คัดลอก Trace Links
+
+        return toResponse(saved);
+    }
+
+    // ===== REORDER =====
+    @Override
+    @Transactional
+    public void reorderTabs(PmDiagramReorderRequest request) {
+        for (PmDiagramReorderRequest.TabOrder order : request.getTabs()) {
+            PmDiagramTab tab = tabRepository.findById(order.getId())
+                    .orElseThrow(() -> new RuntimeException("Tab not found: " + order.getId()));
+            tab.setSortOrder(order.getSortOrder());
+            tabRepository.save(tab);
+        }
+    }
+
+    // ===== GET =====
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramTabResponse> getTabs(UUID projectId) {
+        try {
+            String userId = currentUserService.getUserId();
+            List<PmDiagramTab> tabs;
+            if (projectId != null) {
+                tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            } else {
+                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+            }
+            return tabs.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in getTabs for projectId: {}", projectId, e);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDiagramTabResponse getTab(UUID id) {
+        PmDiagramTab tab = tabRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+        return toResponse(tab);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmDiagramVersionResponse> getVersions(UUID tabId) {
+        return versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tabId)
+                .stream()
+                .map(this::toVersionResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId) {
+        PmDiagramVersion version = versionRepository.findById(versionId)
+                .orElseThrow(() -> new RuntimeException("Version not found: " + versionId));
+
+        PmDiagramTab tab = version.getDiagram();
+        tab.setMermaidScript(version.getMermaidScript());
+
+        PmDiagramTab saved = tabRepository.save(tab);
+        createVersion(saved, "Restored from version " + version.getVersionNumber());
+
+        return toResponse(saved);
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    private void createVersion(PmDiagramTab tab, String comment) {
+        int versionCount = versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId());
+        int nextVersion = versionCount + 1;
+
+        if (versionCount >= 50) {
+            List<PmDiagramVersion> oldestVersions = versionRepository
+                    .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
+            if (!oldestVersions.isEmpty()) {
+                PmDiagramVersion oldest = oldestVersions.get(oldestVersions.size() - 1);
+                oldest.setIsDelete(true);
+                versionRepository.save(oldest);
+            }
+        }
+
+        PmDiagramVersion version = new PmDiagramVersion();
+        version.setBusinessId(tab.getBusinessId());
+        version.setDiagram(tab);
+        version.setMermaidScript(tab.getMermaidScript());
+        version.setVersionNumber(nextVersion);
+        version.setChangeComment(comment);
+        versionRepository.save(version);
+    }
+
+    private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
+        try {
+            PmDiagramTabResponse dto = new PmDiagramTabResponse();
+            dto.setId(tab.getId());
+            dto.setName(tab.getName());
+            dto.setDiagramType(tab.getDiagramType());
+            dto.setMermaidScript(tab.getMermaidScript());
+            dto.setMetadata(tab.getMetadata());
+            dto.setGraphData(tab.getGraphData());
+            dto.setProjectId(tab.getProjectId());
+
+            try {
+                customerProjectRepository.findById(tab.getProjectId())
+                        .ifPresent(p -> dto.setProjectName(p.getProjectName()));
+            } catch (Exception e) {
+                log.warn("Could not fetch project name for projectId: {}", tab.getProjectId(), e);
+                dto.setProjectName(null);
+            }
+
+            dto.setSortOrder(tab.getSortOrder());
+            dto.setIsActive(tab.getIsActive());
+            dto.setCreatedDate(tab.getCreatedDate());
+            dto.setUpdatedDate(tab.getUpdatedDate());
+            dto.setRowVersion(tab.getRowVersion());
+
+            try {
+                dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
+            } catch (Exception e) {
+                log.warn("Could not fetch version count for tabId: {}", tab.getId(), e);
+                dto.setVersionCount(0);
+            }
+
+            return dto;
+        } catch (Exception e) {
+            log.error("Error mapping PmDiagramTab to response: {}", tab.getId(), e);
+            PmDiagramTabResponse fallback = new PmDiagramTabResponse();
+            fallback.setId(tab.getId());
+            fallback.setName(tab.getName());
+            fallback.setDiagramType(tab.getDiagramType());
+            fallback.setMermaidScript(tab.getMermaidScript());
+            fallback.setMetadata(tab.getMetadata());
+            fallback.setGraphData(tab.getGraphData());
+            fallback.setProjectId(tab.getProjectId());
+            fallback.setSortOrder(tab.getSortOrder());
+            fallback.setIsActive(tab.getIsActive());
+            fallback.setCreatedDate(tab.getCreatedDate());
+            fallback.setUpdatedDate(tab.getUpdatedDate());
+            fallback.setVersionCount(0);
+            fallback.setRowVersion(tab.getRowVersion());
+            return fallback;
+        }
+    }
+
+    private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
+        PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
+        dto.setId(version.getId());
+        dto.setDiagramId(version.getDiagram().getId());
+        dto.setMermaidScript(version.getMermaidScript());
+        dto.setVersionNumber(version.getVersionNumber());
+        dto.setChangeComment(version.getChangeComment());
+        dto.setCreatedBy(version.getCreatedBy());
+        dto.setCreatedDate(version.getCreatedDate());
+        return dto;
+    }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.ts">
 // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
 
@@ -83832,11 +83859,6 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
   }
 
-  goToBugs() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
-  }
-
   goToGantt() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
@@ -83845,27 +83867,6 @@ export class Pmrt03Component implements OnInit {
   goToContracts() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
-  }
-
-  // ---- เพิ่ม Navigation สำหรับ Module อื่นๆ ----
-  goToChangeRequests() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/pmdt07'], { queryParams: { projectId: id } });
-  }
-
-  goToSpecifications() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId: id } });
-  }
-
-  goToDiagram() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/diagram'], { queryParams: { projectId: id } });
-  }
-
-  goToDesignReviews() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/design-review'], { queryParams: { projectId: id } });
   }
 
   goToPlanning() {
@@ -83877,11 +83878,6 @@ export class Pmrt03Component implements OnInit {
   goToDiscussion() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/discussion'], { queryParams: { projectId: id } });
-  }
-
-  goToTestCases() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/test-case'], { queryParams: { projectId: id } });
   }
 
   goToDeliveries() {
@@ -83902,11 +83898,6 @@ export class Pmrt03Component implements OnInit {
   goToMATickets() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/ma-ticket'], { queryParams: { projectId: id } });
-  }
-
-  goToRenewals() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/renewal'], { queryParams: { projectId: id } });
   }
 
   goToApprovals() {
@@ -84650,28 +84641,35 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   createDefaultTab(): void {
     if (!this.projectId) return;
-    this.diagramService
-      .createTab(
-        this.projectId,
-        'DFD - Main',
-        'DFD',
-        'graph TD\n  A[Start] --> B[Process]\n  B --> C[End]',
-      )
-      .subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.currentTabId = newTab.id;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
+    // ✅ สร้าง Default Tab โดยไม่ต้องระบุ requirementId (อาจจะให้เลือกทีหลัง)
+    // หรือจะให้ Dialog เลือก requirement ก็ได้
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
           }
+          this.diagramService.createTab(this.projectId!, name, type as any, '', requirementId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
         },
-        error: (err) => {
-          console.error('Failed to create default tab:', err);
-        },
-      });
+      },
+    });
   }
 
-  // ===== สร้างใหม่ (ใช้ Dialog) =====
+  // ✅ สร้างใหม่ (ใช้ Dialog)
   createNewTab(): void {
     if (!this.projectId) return;
 
@@ -84679,9 +84677,14 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
+        projectId: this.projectId,
         editData: null,
-        onSave: (name: string, type: string, editData?: DiagramEditData) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '').subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
+          }
+          this.diagramService.createTab(this.projectId!, name, type as any, '', requirementId).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -84701,6 +84704,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
 
+    // ✅ สำหรับแก้ไข เรายังไม่บังคับให้เปลี่ยน requirementId (แต่ถ้าต้องการให้เปลี่ยนได้ก็เพิ่ม Combobox)
     const editData: DiagramEditData = {
       id: tab.id,
       name: tab.name,
@@ -84712,10 +84716,10 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
+        projectId: this.projectId,
         editData: editData,
-        onSave: (name: string, type: string, data?: DiagramEditData) => {
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, requirementId: string) => {
           if (!data) return;
-          // อัปเดตข้อมูล
           const updatedTab = {
             ...tab,
             name: name,
@@ -84855,32 +84859,43 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     }
   }
 
+  // ✅ importMermaid() – สร้าง Diagram ใหม่พร้อม requirementId
   importMermaid(): void {
-    if (!this.pendingMermaid) return;
+    if (!this.pendingMermaid || !this.projectId) return;
     const { script, name, type } = this.pendingMermaid;
 
-    if (this.projectId) {
-      const tabName = name || 'AI Diagram';
-      const tabType = type || 'Flowchart';
-      this.diagramService.createTab(this.projectId, tabName, tabType as any, script).subscribe({
-        next: (newTab) => {
-          this.tabs.update((t) => [...t, newTab]);
-          this.switchTab(newTab.id);
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-          this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+    // ✅ เปิด Dialog ให้เลือก Requirement ก่อน Import
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        onSave: (diagramName: string, diagramType: string, editData: DiagramEditData | undefined, requirementId: string) => {
+          if (!requirementId) {
+            this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement เพื่อสร้าง Diagram');
+            return;
+          }
+          const tabName = diagramName || name || 'AI Diagram';
+          const tabType = diagramType || type || 'Flowchart';
+          this.diagramService.createTab(this.projectId!, tabName, tabType as any, script, requirementId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.showImportDialog.set(false);
+              this.pendingMermaid = null;
+              this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
+            },
+            error: (err) => {
+              console.error('Failed to create AI diagram tab:', err);
+              this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
+              this.showImportDialog.set(false);
+              this.pendingMermaid = null;
+            },
+          });
         },
-        error: (err) => {
-          console.error('Failed to create AI diagram tab:', err);
-          this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
-          this.showImportDialog.set(false);
-          this.pendingMermaid = null;
-        },
-      });
-    } else {
-      this.showImportDialog.set(false);
-      this.pendingMermaid = null;
-    }
+      },
+    });
   }
 
   cancelImport(): void {
@@ -84967,18 +84982,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   saveDiagram(): void {
     if (!this.currentTabId) {
       if (this.projectId) {
-        this.diagramService.createTab(this.projectId, 'New Diagram', 'Flowchart', '').subscribe({
-          next: (newTab) => {
-            this.tabs.update((t) => [...t, newTab]);
-            this.currentTabId = newTab.id;
-            this.currentDiagram = newTab;
-            this.saveDiagramInternal();
-          },
-          error: (err) => {
-            alert('❌ Could not create new tab.');
-            console.error(err);
-          },
-        });
+        // ✅ เปิด Dialog เพื่อสร้างใหม่พร้อม Requirement
+        this.createNewTab();
       }
       return;
     }
@@ -84988,7 +84993,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   private saveDiagramInternal(): void {
     if (!this.currentTabId) {
-      alert('❌ No diagram ID to save.');
+      this.dialogService.warn('ไม่มี Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
       return;
     }
 
@@ -85002,7 +85007,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       const projectId = this.currentDiagram?.projectId || this.projectId;
 
       if (!projectId) {
-        alert('❌ Missing Project ID.');
+        this.dialogService.warn('Missing Project ID', 'ไม่พบ Project ID');
         return;
       }
 
@@ -85067,37 +85072,30 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   createDfdTab(name: string, relatedRequirementIds: string[]): void {
     if (!this.projectId) return;
 
-    this.diagramService.createTab(this.projectId, name, 'DFD', '').subscribe({
+    // ✅ ใช้ requirementId ตัวแรกเป็นต้นทาง (หรือให้เลือก)
+    const requirementId = relatedRequirementIds.length > 0 ? relatedRequirementIds[0] : null;
+    if (!requirementId) {
+      this.dialogService.warn('ไม่พบ Requirement', 'ต้องเลือก Requirement เพื่อสร้าง DFD');
+      return;
+    }
+
+    this.diagramService.createTab(this.projectId, name, 'DFD', '', requirementId).subscribe({
       next: (newTab) => {
         this.tabs.update((t) => [...t, newTab]);
         this.switchTab(newTab.id);
-        this.createTraceLinksForTab(newTab.id, 'DFD', relatedRequirementIds);
+        // ✅ สร้าง Trace Links เพิ่มเติม (ถ้ามีหลาย requirement)
+        for (const reqId of relatedRequirementIds) {
+          if (reqId !== requirementId) {
+            this.createTraceLink('REQUIREMENT', reqId, 'DFD', newTab.id, 'DESIGNED_BY');
+          }
+        }
+        this.dialogService.success('สร้าง DFD สำเร็จ', `สร้าง DFD "${name}" เรียบร้อย`);
       },
       error: (err) => {
         console.error('Failed to create DFD tab:', err);
         this.dialogService.error('Failed', err.error?.message || 'Could not create DFD.');
       },
     });
-  }
-
-  createTraceLinksForTab(tabId: string, type: string, relatedIds: string[]): void {
-    if (!this.projectId || !tabId || !relatedIds.length) return;
-
-    this.http
-      .post(`/api/diagram/tabs/${tabId}/trace-links`, {
-        sourceType: type === 'DFD' ? 'REQUIREMENT' : 'DFD',
-        targetType: type,
-        relatedIds: relatedIds,
-        projectId: this.projectId,
-      })
-      .subscribe({
-        next: () => {
-          console.log(`✅ Trace links created for ${type} tab: ${tabId}`);
-        },
-        error: (err) => {
-          console.error('Failed to create trace links:', err);
-        },
-      });
   }
 
   createTraceLink(
@@ -85107,6 +85105,11 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     targetId: string,
     relationshipType: string,
   ): void {
+    if (!this.projectId) {
+      console.warn('No projectId, cannot create trace link');
+      return;
+    }
+
     this.http
       .post('/api/trace/links', {
         projectId: this.projectId,

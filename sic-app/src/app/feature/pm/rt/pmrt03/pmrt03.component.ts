@@ -229,11 +229,6 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
   }
 
-  goToBugs() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/bug'], { queryParams: { projectId: id } });
-  }
-
   goToGantt() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
@@ -242,27 +237,6 @@ export class Pmrt03Component implements OnInit {
   goToContracts() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
-  }
-
-  // ---- เพิ่ม Navigation สำหรับ Module อื่นๆ ----
-  goToChangeRequests() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/pmdt07'], { queryParams: { projectId: id } });
-  }
-
-  goToSpecifications() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId: id } });
-  }
-
-  goToDiagram() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/diagram'], { queryParams: { projectId: id } });
-  }
-
-  goToDesignReviews() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/design-review'], { queryParams: { projectId: id } });
   }
 
   goToPlanning() {
@@ -274,11 +248,6 @@ export class Pmrt03Component implements OnInit {
   goToDiscussion() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/discussion'], { queryParams: { projectId: id } });
-  }
-
-  goToTestCases() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/test-case'], { queryParams: { projectId: id } });
   }
 
   goToDeliveries() {
@@ -299,11 +268,6 @@ export class Pmrt03Component implements OnInit {
   goToMATickets() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/ma-ticket'], { queryParams: { projectId: id } });
-  }
-
-  goToRenewals() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/renewal'], { queryParams: { projectId: id } });
   }
 
   goToApprovals() {

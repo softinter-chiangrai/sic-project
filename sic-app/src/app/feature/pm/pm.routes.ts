@@ -4,6 +4,7 @@ import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
 import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
+import { requirementGuard } from '../../core/guard/requirement.guard';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -174,6 +175,11 @@ export const PM_ROUTES: Routes = [
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
   },
+  {
+  path: 'pmrt05',
+  loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
 
   // ===== Diagram =====
   {

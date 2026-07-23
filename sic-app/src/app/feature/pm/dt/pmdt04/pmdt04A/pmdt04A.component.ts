@@ -1,3 +1,5 @@
+// src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
+
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
@@ -9,12 +11,12 @@ import { SicButtonComponent } from '../../../../../core/component/sic-button/sic
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt02Service } from '../../../rt/pmrt02/pmrt02.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { ApprovalService } from '../../pmdt03/approval.service';
-import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 
 interface Requirement {
   id?: string;
@@ -76,9 +78,9 @@ export class Pmdt04AComponent implements OnInit {
   isLoadingFlows = false;
 
   // Combobox URLs
-  priorityApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-priority`;
-  statusApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-status`;
-  businessValueApiUrl = `${environment.apiBaseUrl}/api/requirement/lov-business-value`;
+  priorityApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
+  statusApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
+  businessValueApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-business-value`;
   documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
 
   // User combobox
@@ -163,7 +165,7 @@ export class Pmdt04AComponent implements OnInit {
   loadRequirement(id: string) {
     this.isLoading = true;
     this.http
-      .get<Requirement>(`${environment.apiBaseUrl}/api/requirement/${id}`)
+      .get<Requirement>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (data) => {
@@ -180,7 +182,7 @@ export class Pmdt04AComponent implements OnInit {
         },
         error: () => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
-          this.router.navigate(['/feature/pm/requirement']);
+          this.router.navigate(['/feature/pm/pmdt04']);
         },
       });
   }
@@ -221,14 +223,15 @@ export class Pmdt04AComponent implements OnInit {
     // เอา projectName ออกจาก data (disabled ไม่ถูกส่ง)
     delete data.projectName;
 
-    const url = `${environment.apiBaseUrl}/api/requirement/save`;
+    const url = `${environment.apiBaseUrl}/api/pm/requirement/save`;
 
     this.http
       .post(url, data)
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: (res: any) => {
-          const id = (typeof res === 'string' ? res : (res?.id || res?.data?.id)) || data.id || this.reqId;
+          const id =
+            (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
           this.form.markAsPristine();
 
@@ -270,7 +273,10 @@ export class Pmdt04AComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.dialog.success(
+            'ส่งขออนุมัติสำเร็จ',
+            'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว',
+          );
           this.form.patchValue({ status: 'In Review' });
           // ✅ ส่ง projectId กลับไป
           this.navigateBackToRequirementList();
@@ -280,14 +286,15 @@ export class Pmdt04AComponent implements OnInit {
         },
       });
   }
+
   private navigateBackToRequirementList() {
     const projectId = this.projectId;
     if (projectId) {
-      this.router.navigate(['/feature/pm/requirement'], {
-        queryParams: { projectId }
+      this.router.navigate(['/feature/pm/pmdt04'], {
+        queryParams: { projectId },
       });
     } else {
-      this.router.navigate(['/feature/pm/requirement']);
+      this.router.navigate(['/feature/pm/pmdt04']);
     }
   }
 

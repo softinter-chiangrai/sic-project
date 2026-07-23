@@ -111,11 +111,12 @@
         ></sic-combobox>
       </div>
 
-      <!-- Version -->
+      <!-- Version (disabled - auto calculated) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
           label="เวอร์ชัน"
           formControlName="version"
+          [disabled]="true"
           placeholder="v1.0"
         ></sic-input>
       </div>
@@ -146,7 +147,7 @@
         </div>
         <sic-combobox
           label="เลือกกระบวนการอนุมัติ"
-          [apiUrl]= "documenttypeapiUrl"
+          [apiUrl]="documenttypeapiUrl"
           valueField="id"
           textField="flowName"
           placeholder="เลือกกระบวนการอนุมัติ"
