@@ -1,5 +1,14 @@
 package com.softinter.sicapi.service.impl;
 
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
 import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
 import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
@@ -9,15 +18,9 @@ import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ImpactAnalysisService;
 import com.softinter.sicapi.service.TraceLinkService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -27,8 +30,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     private final ChangeImpactAnalysisRepository repository;
     private final PmRequirementChangeRequestRepository changeRequestRepository;
     private final CurrentUserService currentUserService;
-
-    // ===== Inject TraceLinkService =====
     private final TraceLinkService traceLinkService;
 
     @Override
@@ -78,37 +79,31 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         return saved.getId();
     }
 
-    // ============================================================
-    // ✅ Implement: autoDetect() (method เดิม)
-    // ============================================================
+    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
-        log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
-
-        // เรียก autoDetectUsingTrace() แทน (ใช้ Trace Engine)
-        return autoDetectUsingTrace(changeRequestId);
+        try {
+            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
+            return autoDetectUsingTrace(changeRequestId);
+        } catch (Exception e) {
+            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
+            return null;
+        }
     }
 
-    // ============================================================
-    // ✅ Implement: autoDetectUsingTrace() (ใหม่)
-    // ============================================================
     @Override
-    @Transactional
     public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
         log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
 
-        // 1. โหลด Change Request
         PmRequirementChangeRequest changeRequest = changeRequestRepository
                 .findById(changeRequestId)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
 
         UUID requirementId = changeRequest.getRequirement().getId();
 
-        // 2. ใช้ TraceLinkService หา Impact
         TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems("REQUIREMENT", requirementId);
 
-        // 3. ดึงข้อมูลจาก traceResult
         Map<String, Set<UUID>> impacted = traceResult.getImpacted();
 
         UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
@@ -117,7 +112,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
         UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
 
-        // 4. บันทึก Impact Analysis
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(changeRequestId)
                 .orElse(new ChangeImpactAnalysis());
@@ -146,7 +140,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         log.info("Impact Analysis deleted: {}", id);
     }
 
-    // ===== Helper Methods =====
     private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
         ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
         dto.setId(entity.getId());

@@ -33,7 +33,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmRequirementChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
     private final CurrentUserService currentUserService;
-     private final ImpactAnalysisService impactAnalysisService;
+    private final ImpactAnalysisService impactAnalysisService;
 
     @Override
     @Transactional(readOnly = true)
@@ -82,6 +82,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         PmRequirementChangeRequest saved = changeRequestRepository.save(entity);
         log.info("Created Change Request with id: {}", saved.getId());
         
+        // ✅ เรียก auto-detect (แต่ถ้าเกิด exception จะไม่กระทบ transaction หลัก)
         try {
             impactAnalysisService.autoDetect(saved.getId());
             log.info("Auto-detect impact completed for change request: {}", saved.getId());
@@ -106,7 +107,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         entity.setChangeDescription(request.getChangeDescription());
         entity.setImpactSummary(request.getImpactSummary());
         entity.setEstimatedManday(request.getEstimatedManday());
-        entity.setStatus(request.getStatus());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            entity.setStatus(request.getStatus());
+        } else if (entity.getStatus() == null) {
+            entity.setStatus("Draft");
+        }
         entity.setUpdatedBy(currentUserService.getUserId());
         entity.setUpdatedDate(Instant.now());
 
@@ -120,12 +125,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public void deleteChangeRequest(UUID id) {
         PmRequirementChangeRequest entity = changeRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
         entity.setIsDelete(true);
-        entity.setDeleteBy(currentUserService.getUserId());
-        entity.setDeleteDate(Instant.now());
-        // ไม่มีฟิลด์ isActive
-
+        entity.setUpdatedBy(currentUserService.getUserId());
+        entity.setUpdatedDate(Instant.now());
         changeRequestRepository.save(entity);
         log.info("Soft-deleted Change Request with id: {}", id);
     }
@@ -137,7 +139,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         dto.setChangeDescription(entity.getChangeDescription());
         dto.setImpactSummary(entity.getImpactSummary());
         dto.setEstimatedManday(entity.getEstimatedManday());
-        dto.setStatus(entity.getStatus());
+        dto.setStatus(entity.getStatus() != null ? entity.getStatus() : "Draft");
         dto.setCreatedDate(entity.getCreatedDate());
 
         if (entity.getRequirement() != null) {

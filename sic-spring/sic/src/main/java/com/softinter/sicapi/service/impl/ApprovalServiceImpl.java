@@ -28,12 +28,16 @@ import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.pm.PmApprovalLog;
 import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.entity.pm.PmRequirementChangeRequest;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
@@ -62,6 +66,10 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final CurrentUserService currentUserService;
     private final ApprovalFlowService flowService;
     private final ApprovalNotificationService notificationService;
+
+    // ✅ Inject repositories สำหรับอัปเดตสถานะเอกสาร
+    private final PmRequirementChangeRequestRepository changeRequestRepository;
+    private final PmRequirementRepository requirementRepository;
 
     // ============================================================
     // 1. Submit for Approval (FIXED Optimistic Locking)
@@ -197,7 +205,10 @@ public class ApprovalServiceImpl implements ApprovalService {
         // 10. Log (after save)
         createLog(approval, null, "SUBMIT", userId, userName, "Submitted for approval", null, ApprovalStatus.PENDING);
 
-        // 11. Notify
+        // 11. ✅ อัปเดตสถานะเอกสารเป็น "In Review" หรือ "Pending"
+        updateDocumentStatusOnSubmit(approval);
+
+        // 12. Notify
         notificationService.notifySubmitted(approval);
 
         return toResponse(approval);
@@ -292,7 +303,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 3. Actions (no changes)
+    // 3. Actions
     // ============================================================
     @Override
     @Transactional
@@ -350,6 +361,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                     ApprovalStatus.PARTIALLY_APPROVED, ApprovalStatus.APPROVED);
 
             notificationService.notifyApproved(approval, pendingStep.getStep().getStepName());
+
+            // ✅ อัปเดตสถานะเอกสารเป็น Approved
+            updateDocumentStatus(approval, "Approved");
 
         } else {
             // Move to next step (for CHAIN mode)
@@ -425,6 +439,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         notificationService.notifyRejected(approval, pendingStep.getStep().getStepName());
 
+        // ✅ อัปเดตสถานะเอกสารเป็น Rejected
+        updateDocumentStatus(approval, "Rejected");
+
         return toResponse(approval);
     }
 
@@ -470,6 +487,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                 ApprovalStatus.PENDING, ApprovalStatus.NEED_REVISION);
 
         notificationService.notifyRevisionRequested(approval);
+
+        // ✅ อัปเดตสถานะเอกสารเป็น Need Revision
+        updateDocumentStatus(approval, "Need Revision");
 
         return toResponse(approval);
     }
@@ -535,7 +555,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     // ============================================================
-    // 4. Utility (no changes)
+    // 4. Utility
     // ============================================================
     @Override
     public boolean canApprove(UUID approvalId, String userId) {
@@ -591,9 +611,12 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     public void validateDocument(String documentType, UUID documentId) {
         // TODO: Implement validation for each document type
-        // Check if document exists, if document is in correct status, etc.
         log.info("Validating document: type={}, id={}", documentType, documentId);
     }
+
+    // ============================================================
+    // 5. Private Helpers
+    // ============================================================
 
     private String getUserName(String userId) {
         if (userId == null) return null;
@@ -602,9 +625,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 .orElse(userId);
     }
 
-    // ============================================================
-    // 5. Private Helpers (no changes)
-    // ============================================================
     private void createLog(PmApproval approval, PmApprovalStepStatus stepStatus, String action,
                            String actor, String actorName, String comment,
                            ApprovalStatus oldStatus, ApprovalStatus newStatus) {
@@ -625,8 +645,75 @@ public class ApprovalServiceImpl implements ApprovalService {
         return false;
     }
 
+    // ✅ Helper: อัปเดตสถานะเอกสารตามประเภท
+    private void updateDocumentStatus(PmApproval approval, String newStatus) {
+        String docType = approval.getDocumentType();
+        UUID docId = approval.getDocumentId();
+        String actor = approval.getUpdatedBy() != null ? approval.getUpdatedBy() : currentUserService.getUserId();
+
+        try {
+            if ("CHANGE_REQUEST".equals(docType)) {
+                PmRequirementChangeRequest changeRequest = changeRequestRepository.findById(docId)
+                        .orElse(null);
+                if (changeRequest != null) {
+                    changeRequest.setStatus(newStatus);
+                    changeRequest.setUpdatedBy(actor);
+                    changeRequest.setUpdatedDate(Instant.now());
+                    changeRequestRepository.save(changeRequest);
+                    log.info("Updated Change Request {} status to {}", docId, newStatus);
+                }
+            } else if ("REQUIREMENT".equals(docType)) {
+                PmRequirement requirement = requirementRepository.findById(docId)
+                        .orElse(null);
+                if (requirement != null) {
+                    requirement.setStatus(newStatus);
+                    requirement.setUpdatedBy(actor);
+                    requirement.setUpdatedDate(Instant.now());
+                    requirementRepository.save(requirement);
+                    log.info("Updated Requirement {} status to {}", docId, newStatus);
+                }
+            }
+            // สามารถเพิ่ม Document Type อื่นๆ ได้ที่นี่ (SPECIFICATION, DELIVERY, etc.)
+        } catch (Exception e) {
+            log.error("Failed to update document status for {}/{}: {}", docType, docId, e.getMessage(), e);
+        }
+    }
+
+    // ✅ Helper: อัปเดตสถานะเอกสารเมื่อส่งขออนุมัติ
+    private void updateDocumentStatusOnSubmit(PmApproval approval) {
+        String docType = approval.getDocumentType();
+        UUID docId = approval.getDocumentId();
+        String actor = approval.getRequestedBy();
+
+        try {
+            if ("CHANGE_REQUEST".equals(docType)) {
+                PmRequirementChangeRequest changeRequest = changeRequestRepository.findById(docId)
+                        .orElse(null);
+                if (changeRequest != null) {
+                    changeRequest.setStatus("In Review");
+                    changeRequest.setUpdatedBy(actor);
+                    changeRequest.setUpdatedDate(Instant.now());
+                    changeRequestRepository.save(changeRequest);
+                    log.info("Change Request {} status set to In Review on submit", docId);
+                }
+            } else if ("REQUIREMENT".equals(docType)) {
+                PmRequirement requirement = requirementRepository.findById(docId)
+                        .orElse(null);
+                if (requirement != null) {
+                    requirement.setStatus("In Review");
+                    requirement.setUpdatedBy(actor);
+                    requirement.setUpdatedDate(Instant.now());
+                    requirementRepository.save(requirement);
+                    log.info("Requirement {} status set to In Review on submit", docId);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to update document status on submit for {}/{}: {}", docType, docId, e.getMessage(), e);
+        }
+    }
+
     // ============================================================
-    // 6. Response Mapping (no changes)
+    // 6. Response Mapping
     // ============================================================
     private ApprovalResponse toResponse(PmApproval approval) {
         ApprovalResponse response = new ApprovalResponse();

@@ -58,24 +58,11 @@
           ></sic-number>
         </div>
 
-        <!-- Status -->
-        <div>
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov'"
-            [params]="{ group: 'COMMON', parameterCode: 'DOC_STATUS' }"
-            valueField="value"
-            textField="text"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-
         <!-- Hidden projectId -->
         <input type="hidden" formControlName="projectId" />
       </div>
 
-      <!-- ✅ Approval Flow Selection -->
+      <!-- ✅ Approval Flow Selection (เฉพาะ combobox ไม่มีปุ่มส่ง) -->
       <div class="border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
@@ -92,27 +79,13 @@
             [clearable]="true"
             (selectionChanged)="selectedFlowId = $event?.id"
           ></sic-combobox>
-
-          <!-- ✅ ปุ่มส่งขออนุมัติ (แสดงเมื่อมี id และเลือก flow แล้ว) -->
-          <div class="flex items-end">
-            <sic-button
-              variant="primary"
-              [fullWidth]="false"
-              [disabled]="!selectedFlowId || !form.get('id')?.value || isSaving"
-              (click)="submitForApproval(form.get('id')?.value)"
-              class="mb-1"
-            >
-              <i class="bi bi-send"></i>
-              ส่งขออนุมัติ
-            </sic-button>
-          </div>
+          <!-- ไม่มีปุ่มส่งขออนุมัติ -->
         </div>
 
         @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ</p>
-        }
-        @if (!form.get('id')?.value) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาบันทึก Change Request ก่อนส่งขออนุมัติ</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
+          </p>
         }
       </div>
 
@@ -120,9 +93,15 @@
       <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
         <sic-button type="submit" variant="primary" [disabled]="isSaving">
           @if (isSaving) {
-            <i class="bi bi-arrow-repeat animate-spin"></i>
+            <i class="bi bi-arrow-repeat animate-spin me-1"></i>
           }
-          {{ isSaving ? 'กำลังบันทึก...' : isEdit ? 'บันทึก' : 'สร้าง' }}
+          {{
+            isSaving
+              ? 'กำลังบันทึก...'
+              : selectedFlowId
+                ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                : (isEdit ? 'บันทึก' : 'สร้าง')
+          }}
         </sic-button>
         <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
       </div>

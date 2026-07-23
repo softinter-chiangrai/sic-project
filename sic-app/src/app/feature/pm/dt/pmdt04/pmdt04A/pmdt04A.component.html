@@ -123,15 +123,7 @@
         <p class="text-xs text-[var(--text-muted)] mt-1">* คำนวณอัตโนมัติตามจำนวนการแก้ไข</p>
       </div>
 
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="statusApiUrl"
-          [required]="true"
-        ></sic-combobox>
-      </div>
+      <!-- ✅ ไม่มีฟิลด์ Status ให้เลือกเองแล้ว -->
 
       <!-- Active -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
@@ -141,7 +133,7 @@
         </label>
       </div>
 
-      <!-- Approval Flow Selection (ใช้ formControlName) -->
+      <!-- Approval Flow Selection -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
@@ -158,7 +150,7 @@
           (selectionChanged)="selectedFlowId = $event?.id"
         ></sic-combobox>
         @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)</p>
         }
       </div>
 

@@ -23,14 +23,13 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 
-
 interface ChangeRequest {
   id?: string;
   requirementId: string;
   changeDescription: string;
   impactSummary?: string;
   estimatedManday?: number;
-  status: string;
+  status?: string;
   projectId?: string;
   rowVersion?: number;
 }
@@ -72,19 +71,18 @@ export class Pmdt07AComponent implements OnInit {
   isSaving = false;
   projectId: string | null = null;
 
-  // ✅ Approval Flow
+  // ✅ Approval Flow (เฉพาะ combobox ไม่มีปุ่มส่ง)
   flows: ApprovalFlow[] = [];
   selectedFlowId: string | null = null;
   isLoadingFlows = false;
 
-  // ฟอร์มหลัก
+  // ฟอร์มหลัก (ไม่มี status)
   form: FormGroup = this.fb.group({
     id: [null],
     requirementId: [null, Validators.required],
     changeDescription: [null, Validators.required],
     impactSummary: [null],
     estimatedManday: [null, [Validators.min(0)]],
-    status: ['Draft', Validators.required],
     projectId: [null],
     rowVersion: [null],
   });
@@ -123,7 +121,6 @@ export class Pmdt07AComponent implements OnInit {
       .subscribe({
         next: (flows) => {
           this.flows = flows;
-          // ถ้ามี flow เดียว เลือกให้อัตโนมัติ
           if (flows.length === 1) {
             this.selectedFlowId = flows[0].id;
           }
@@ -145,10 +142,6 @@ export class Pmdt07AComponent implements OnInit {
           if (data.projectId) {
             this.projectId = data.projectId;
           }
-
-          // ✅ โหลด approval flow ที่เลือกไว้ (ถ้ามี)
-          this.loadApprovalFlowForChangeRequest(id);
-
           this.isLoading = false;
         },
         error: () => {
@@ -158,23 +151,7 @@ export class Pmdt07AComponent implements OnInit {
       });
   }
 
-  // ✅ โหลด approval flow ที่เคยใช้
-  loadApprovalFlowForChangeRequest(changeRequestId: string) {
-    this.approvalService.getDocumentStatus('CHANGE_REQUEST', changeRequestId).subscribe({
-      next: (approval) => {
-        if (approval && (approval as any).flowId) {
-          this.selectedFlowId = (approval as any).flowId;
-        } else if (approval && (approval as any).flow?.id) {
-          this.selectedFlowId = (approval as any).flow.id;
-        }
-      },
-      error: () => {
-        // ไม่มี approval หรือ error – ไม่ต้องทำอะไร
-      }
-    });
-  }
-
-  // ✅ บันทึก Change Request
+  // ✅ บันทึก Change Request (และส่งขออนุมัติอัตโนมัติหากมีการเลือก Approval Flow)
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -198,60 +175,46 @@ export class Pmdt07AComponent implements OnInit {
       data.rowVersion = 0;
     }
 
-    const request = this.isEdit && this.changeRequestId
+    const saveRequest = this.isEdit && this.changeRequestId
       ? this.http.put(`${this.baseUrl}/${this.changeRequestId}`, data)
       : this.http.post(this.baseUrl, data);
 
-    request.pipe(finalize(() => (this.isSaving = false))).subscribe({
+    saveRequest.subscribe({
       next: (res: any) => {
-        const id = res?.id || this.changeRequestId;
-        this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
+        const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
 
-        // ✅ ถ้ามีการเลือก Approval Flow ให้ส่งขออนุมัติอัตโนมัติ
+        // ถ้าเลือก Approval Flow ไว้ ให้ส่งขออนุมัติทันที
         if (this.selectedFlowId && id) {
-          this.submitForApproval(id);
+          this.approvalService
+            .submitForApproval({
+              documentType: 'CHANGE_REQUEST',
+              documentId: id,
+              documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
+              documentTitle: data.changeDescription || 'คำขอเปลี่ยนแปลง Requirement',
+              flowId: this.selectedFlowId,
+              comment: 'ส่งขออนุมัติ Change Request',
+            })
+            .pipe(finalize(() => (this.isSaving = false)))
+            .subscribe({
+              next: () => {
+                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อยแล้ว');
+                this.navigateBack();
+              },
+              error: (err) => {
+                this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+              },
+            });
         } else {
-          // ถ้าไม่มี flow ให้กลับไปหน้ารายการ
+          this.isSaving = false;
+          this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
           this.navigateBack();
         }
       },
       error: (err) => {
+        this.isSaving = false;
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
     });
-  }
-
-  // ✅ ส่งขออนุมัติ
-  submitForApproval(changeRequestId: string) {
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือก Approval Flow', 'คุณต้องเลือกกระบวนการอนุมัติก่อนส่ง');
-      return;
-    }
-
-    const data = this.form.value;
-    this.isSaving = true;
-
-    this.approvalService
-      .submitForApproval({
-        documentType: 'CHANGE_REQUEST',
-        documentId: changeRequestId,
-        documentCode: `CR-${changeRequestId.slice(0, 8)}`,
-        documentTitle: data.changeDescription?.slice(0, 100) || 'Change Request',
-        version: 'v1.0',
-        flowId: this.selectedFlowId,
-        comment: 'ส่งขออนุมัติ Change Request',
-      })
-      .pipe(finalize(() => (this.isSaving = false)))
-      .subscribe({
-        next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Change Request ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
-          this.form.patchValue({ status: 'Submitted' });
-          this.navigateBack();
-        },
-        error: (err) => {
-          this.dialog.error('ส่งไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
   }
 
   private navigateBack() {

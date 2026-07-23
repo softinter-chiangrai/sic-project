@@ -32,7 +32,7 @@ interface Requirement {
   baConfirmStatus: string;
   customerConfirmStatus: string;
   version: string;
-  status: string;
+  status?: string;
   isActive: boolean;
   state?: number;
   rowVersion?: number;
@@ -80,7 +80,6 @@ export class Pmdt04AComponent implements OnInit {
 
   // Combobox URLs
   priorityApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
-  statusApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
   businessValueApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-business-value`;
   documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
 
@@ -142,11 +141,10 @@ export class Pmdt04AComponent implements OnInit {
       baConfirmStatus: ['Pending'],
       customerConfirmStatus: ['Pending'],
       version: [{ value: 'v1.0', disabled: true }],
-      status: ['Draft', [Validators.required]],
+      // ✅ ไม่มี status แล้ว
       isActive: [true],
       state: [null],
       rowVersion: [null],
-      // ✅ เพิ่ม approvalFlowId
       approvalFlowId: [null],
     });
   }
@@ -185,9 +183,7 @@ export class Pmdt04AComponent implements OnInit {
             this.form.patchValue({ version: 'v1.0' });
           }
 
-          // ✅ โหลด approval flow ที่เลือกไว้ (ถ้ามี)
           this.loadApprovalFlowForRequirement(id);
-
           this.cdr.detectChanges();
         },
         error: () => {
@@ -264,53 +260,10 @@ export class Pmdt04AComponent implements OnInit {
           const id = (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
           this.form.markAsPristine();
-
-          // ✅ ถ้ามีการเลือก Approval Flow -> ส่งขออนุมัติ
-          const flowId = data.approvalFlowId || this.selectedFlowId;
-          if (flowId) {
-            this.submitForApproval(id, flowId);
-          } else {
-            this.navigateBackToRequirementList();
-          }
-        },
-        error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  submitForApproval(requirementId: string, flowId: string) {
-    if (!flowId) {
-      this.dialog.warn('กรุณาเลือก Approval Flow', 'คุณต้องเลือกกระบวนการอนุมัติก่อนส่ง');
-      return;
-    }
-
-    const data = this.form.value as Requirement;
-    if (!requirementId) {
-      this.dialog.warn('ยังไม่ได้บันทึก', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
-      return;
-    }
-
-    this.isSaving = true;
-    this.approvalService
-      .submitForApproval({
-        documentType: 'REQUIREMENT',
-        documentId: requirementId,
-        documentCode: data.requirementCode,
-        documentTitle: data.title,
-        version: data.version,
-        flowId: flowId,
-        comment: 'ส่งขออนุมัติอัตโนมัติ',
-      })
-      .pipe(finalize(() => (this.isSaving = false)))
-      .subscribe({
-        next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
-          this.form.patchValue({ status: 'In Review' });
           this.navigateBackToRequirementList();
         },
         error: (err) => {
-          this.dialog.error('ส่งไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
         },
       });
   }

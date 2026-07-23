@@ -30,12 +30,16 @@ public class PmChangeRequestController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID projectId) {
 
         Specification<PmRequirementChangeRequest> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.isFalse(root.get("isDelete")));
 
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("requirement").get("project").get("id"), projectId));
+            }
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.toLowerCase() + "%";
                 predicates.add(cb.or(
