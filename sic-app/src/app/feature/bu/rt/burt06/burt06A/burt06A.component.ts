@@ -1,15 +1,25 @@
 // src/app/feature/bu/rt/burt06/burt06A/burt06A.component.ts
 
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -17,7 +27,6 @@ import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt06.service';
 import { listAnimation } from '../list.animations';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
 interface UserOption {
   value: string;
@@ -89,12 +98,14 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         .map((stepGroup, index) => ({ index, stepGroup }))
         .filter(({ stepGroup }) => {
           const approverRole = stepGroup.get('approverRole')?.value;
-          const selectedUserIds = stepGroup.get('selectedUserIds')?.value as string[] || [];
-          return !approverRole && selectedUserIds.length === 0;
+          const selectedUserIds = (stepGroup.get('selectedUserIds')?.value as string[]) || [];
+          // ❌ เก่า: !approverRole && selectedUserIds.length === 0
+          // ✅ ใหม่: ต้องมีทั้งบทบาท AND ต้องมีผู้ใช้
+          return !approverRole || selectedUserIds.length === 0;
         });
 
       if (invalidSteps.length > 0) {
-        return { missingApprover: true, invalidIndices: invalidSteps.map(s => s.index) };
+        return { missingApprover: true, invalidIndices: invalidSteps.map((s) => s.index) };
       }
       return null;
     };
@@ -156,7 +167,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
   private parseUserIds(csv?: string): string[] {
     if (!csv || !csv.trim()) return [];
-    return csv.split(',').map(s => s.trim()).filter(Boolean);
+    return csv
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   addStep(): void {
@@ -236,12 +250,14 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     this.http
       .get<{ value: string; text: string }[]>(
         `${this.apiBaseUrl}/api/su/business-roles/${businessId}/users-by-role`,
-        { params: { roleCode } }
+        { params: { roleCode } },
       )
-      .pipe(finalize(() => {
-        this.stepUsersLoading[index] = false;
-        this.cdr.detectChanges();
-      }))
+      .pipe(
+        finalize(() => {
+          this.stepUsersLoading[index] = false;
+          this.cdr.detectChanges();
+        }),
+      )
       .subscribe({
         next: (users) => {
           this.stepUsersCache[index] = users;
@@ -256,7 +272,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const stepGroup = this.steps.at(index) as FormGroup;
     const current: string[] = stepGroup.get('selectedUserIds')?.value ?? [];
     const next = current.includes(userId)
-      ? current.filter(id => id !== userId)
+      ? current.filter((id) => id !== userId)
       : [...current, userId];
     stepGroup.get('selectedUserIds')?.setValue(next);
     stepGroup.get('approverUserId')?.setValue(next.join(','));
@@ -280,8 +296,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     for (let i = 0; i < stepControls.length; i++) {
       const group = stepControls[i];
       const role = group.get('approverRole')?.value;
-      const userIds = group.get('selectedUserIds')?.value as string[] || [];
-      if (!role && userIds.length === 0) {
+      const userIds = (group.get('selectedUserIds')?.value as string[]) || [];
+      // ✅ ต้องมีทั้งบทบาท AND ต้องมีผู้ใช้
+      if (!role || userIds.length === 0) {
         return true;
       }
     }
@@ -306,7 +323,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     if (this.hasMissingApprover()) {
       this.dialog.warn(
         'ยังไม่สมบูรณ์',
-        'ทุกขั้นตอนต้องมีผู้อนุมัติอย่างน้อย 1 คน (บทบาท หรือเลือกผู้ใช้)'
+        'ทุกขั้นตอนต้องมีผู้อนุมัติอย่างน้อย 1 คน (บทบาท หรือเลือกผู้ใช้)',
       );
       return;
     }
@@ -320,9 +337,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving = true;
     const raw = this.form.value;
 
-    const steps = (raw.steps as any[])?.map(s => ({
+    const steps = (raw.steps as any[])?.map((s) => ({
       ...s,
-      approverUserId: (s.selectedUserIds as string[] ?? []).join(',') || s.approverUserId || '',
+      approverUserId: ((s.selectedUserIds as string[]) ?? []).join(',') || s.approverUserId || '',
     }));
 
     const hasEmptyStepName = steps?.some((s: any) => !s.stepName?.trim());
@@ -359,7 +376,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   get approvalModeComboboxConfig() {
     return {
       apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov`,
-      params: { group: 'PM', parameterCode: 'APPROVAL_MODE' }
+      params: { group: 'PM', parameterCode: 'APPROVAL_MODE' },
     };
   }
 }
