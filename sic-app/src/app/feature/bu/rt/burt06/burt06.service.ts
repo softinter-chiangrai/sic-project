@@ -1,4 +1,5 @@
-// sic-app/src/app/feature/bu/rt/burt06/burt06.service.ts
+// src/app/feature/bu/rt/burt06/burt06.service.ts
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -21,7 +22,7 @@ export interface ApprovalFlowStep {
   stepOrder: number;
   stepName: string;
   approverRole?: string;
-  approverUserId?: string;   // comma-separated user IDs
+  approverUserId?: string;
   isRequired: boolean;
   timeoutDays?: number;
   canSkip: boolean;

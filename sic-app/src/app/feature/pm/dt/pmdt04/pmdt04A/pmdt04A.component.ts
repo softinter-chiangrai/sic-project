@@ -1,5 +1,4 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
-
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
@@ -11,6 +10,7 @@ import { SicButtonComponent } from '../../../../../core/component/sic-button/sic
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -49,6 +49,7 @@ interface Requirement {
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    SicNumberComponent,
   ],
   templateUrl: './pmdt04A.component.html',
 })
@@ -87,7 +88,6 @@ export class Pmdt04AComponent implements OnInit {
   userApiUrl = '';
   businessId: string | null = null;
 
-  // ✅ ใช้ SicEntityState ใน Component
   readonly ENTITY_STATE = SicEntityState;
 
   ngOnInit(): void {
@@ -141,11 +141,13 @@ export class Pmdt04AComponent implements OnInit {
       createdBy: [null],
       baConfirmStatus: ['Pending'],
       customerConfirmStatus: ['Pending'],
-      version: ['v1.0'],
+      version: [{ value: 'v1.0', disabled: true }],
       status: ['Draft', [Validators.required]],
       isActive: [true],
       state: [null],
       rowVersion: [null],
+      // ✅ เพิ่ม approvalFlowId
+      approvalFlowId: [null],
     });
   }
 
@@ -178,13 +180,42 @@ export class Pmdt04AComponent implements OnInit {
             this.projectName = data.projectName;
             this.form.patchValue({ projectName: data.projectName });
           }
+
+          if (!data.version) {
+            this.form.patchValue({ version: 'v1.0' });
+          }
+
+          // ✅ โหลด approval flow ที่เลือกไว้ (ถ้ามี)
+          this.loadApprovalFlowForRequirement(id);
+
           this.cdr.detectChanges();
         },
         error: () => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
-          this.router.navigate(['/feature/pm/pmdt04']);
+          this.router.navigate(['/feature/pm/requirement']);
         },
       });
+  }
+
+  loadApprovalFlowForRequirement(requirementId: string) {
+    this.approvalService.getDocumentStatus('REQUIREMENT', requirementId).subscribe({
+      next: (approval) => {
+        let flowId: string | null = null;
+        if (approval && (approval as any).flowId) {
+          flowId = (approval as any).flowId;
+        } else if (approval && (approval as any).flow?.id) {
+          flowId = (approval as any).flow.id;
+        }
+        if (flowId) {
+          this.selectedFlowId = flowId;
+          this.form.patchValue({ approvalFlowId: flowId });
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // ไม่มี approval หรือ error – ไม่ต้องทำอะไร
+      }
+    });
   }
 
   loadFlows() {
@@ -195,13 +226,15 @@ export class Pmdt04AComponent implements OnInit {
       .subscribe({
         next: (flows) => {
           this.flows = flows;
-          if (flows.length === 1) this.selectedFlowId = flows[0].id;
+          if (flows.length === 1) {
+            this.selectedFlowId = flows[0].id;
+            this.form.patchValue({ approvalFlowId: flows[0].id });
+          }
         },
         error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
       });
   }
 
-  // ✅ แก้ไข submit() ให้ส่ง state และ rowVersion อย่างถูกต้อง และส่ง projectId กลับไป
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -212,7 +245,6 @@ export class Pmdt04AComponent implements OnInit {
     this.isSaving = true;
     const data = this.form.value;
 
-    // ✅ กำหนด state และ rowVersion ให้ถูกต้อง
     if (this.isEdit) {
       data.state = this.ENTITY_STATE.Modified;
     } else {
@@ -220,7 +252,6 @@ export class Pmdt04AComponent implements OnInit {
       data.rowVersion = 0;
     }
 
-    // เอา projectName ออกจาก data (disabled ไม่ถูกส่ง)
     delete data.projectName;
 
     const url = `${environment.apiBaseUrl}/api/pm/requirement/save`;
@@ -230,13 +261,14 @@ export class Pmdt04AComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: (res: any) => {
-          const id =
-            (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
+          const id = (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
           this.form.markAsPristine();
 
-          if (this.selectedFlowId) {
-            this.submitForApproval(id);
+          // ✅ ถ้ามีการเลือก Approval Flow -> ส่งขออนุมัติ
+          const flowId = data.approvalFlowId || this.selectedFlowId;
+          if (flowId) {
+            this.submitForApproval(id, flowId);
           } else {
             this.navigateBackToRequirementList();
           }
@@ -247,8 +279,8 @@ export class Pmdt04AComponent implements OnInit {
       });
   }
 
-  submitForApproval(requirementId: string) {
-    if (!this.selectedFlowId) {
+  submitForApproval(requirementId: string, flowId: string) {
+    if (!flowId) {
       this.dialog.warn('กรุณาเลือก Approval Flow', 'คุณต้องเลือกกระบวนการอนุมัติก่อนส่ง');
       return;
     }
@@ -267,18 +299,14 @@ export class Pmdt04AComponent implements OnInit {
         documentCode: data.requirementCode,
         documentTitle: data.title,
         version: data.version,
-        flowId: this.selectedFlowId,
+        flowId: flowId,
         comment: 'ส่งขออนุมัติอัตโนมัติ',
       })
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: () => {
-          this.dialog.success(
-            'ส่งขออนุมัติสำเร็จ',
-            'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว',
-          );
+          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
           this.form.patchValue({ status: 'In Review' });
-          // ✅ ส่ง projectId กลับไป
           this.navigateBackToRequirementList();
         },
         error: (err) => {
@@ -290,11 +318,11 @@ export class Pmdt04AComponent implements OnInit {
   private navigateBackToRequirementList() {
     const projectId = this.projectId;
     if (projectId) {
-      this.router.navigate(['/feature/pm/pmdt04'], {
+      this.router.navigate(['/feature/pm/requirement'], {
         queryParams: { projectId },
       });
     } else {
-      this.router.navigate(['/feature/pm/pmdt04']);
+      this.router.navigate(['/feature/pm/requirement']);
     }
   }
 

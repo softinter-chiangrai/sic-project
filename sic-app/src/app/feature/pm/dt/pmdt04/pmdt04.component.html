@@ -1,6 +1,6 @@
 <!-- src/app/feature/pm/dt/pmdt04/pmdt04.component.html -->
-
 <div class="space-y-5 p-0.5">
+
   <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
@@ -104,7 +104,7 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px] hidden md:table-cell">
               เวอร์ชัน
             </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[180px]">
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
               จัดการ
             </th>
           </tr>
@@ -150,13 +150,29 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
-                  <button (click)="goToView(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all" title="ดู Dashboard">
+                  <!-- ปุ่ม View ไป pmrt05 -->
+                  <button
+                    (click)="goToView(req.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดู Dashboard"
+                  >
                     <i class="bi bi-speedometer2"></i>
                   </button>
-                  <button (click)="goToEdit(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all" title="แก้ไข">
+                  <!-- ปุ่ม Edit ใช้ routerLink -->
+                  <a
+                    [routerLink]="['/feature/pm/requirement', req.id, 'edit']"
+                    [queryParams]="{ projectId: customerState.getProjectId() }"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                    title="แก้ไข"
+                  >
                     <i class="bi bi-pencil"></i>
-                  </button>
-                  <button (click)="deleteRequirement(req.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="ลบ">
+                  </a>
+                  <!-- ปุ่มลบ -->
+                  <button
+                    (click)="deleteRequirement(req.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบ"
+                  >
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>

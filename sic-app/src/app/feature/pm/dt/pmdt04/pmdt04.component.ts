@@ -1,5 +1,4 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
-
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
@@ -48,7 +47,7 @@ export class Pmdt04Component implements OnInit {
   private dialog = inject(DialogService);
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
-  private customerState = inject(CustomerStateService);
+  public customerState = inject(CustomerStateService); // ✅ เปลี่ยนเป็น public
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -84,7 +83,7 @@ export class Pmdt04Component implements OnInit {
     this.loadRequirements();
   }
 
-  // ===== โหลดข้อมูลจาก API จริง =====
+  // ===== Load Data =====
   loadRequirements() {
     const projectId = this.customerState.getProjectId();
     if (!projectId) {
@@ -111,7 +110,6 @@ export class Pmdt04Component implements OnInit {
           const data = res.data || [];
           this.requirements.set(data);
           this.totalItems.set(res.totalElements || 0);
-          // โหลดสถานะอนุมัติของแต่ละรายการ
           this.loadApprovalStatuses(data);
         },
         error: () => {
@@ -122,7 +120,6 @@ export class Pmdt04Component implements OnInit {
       });
   }
 
-  // ===== โหลดสถานะอนุมัติของแต่ละ Requirement =====
   loadApprovalStatuses(requirements: Requirement[]) {
     requirements.forEach((req) => {
       this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
@@ -177,19 +174,24 @@ export class Pmdt04Component implements OnInit {
     this.loadRequirements();
   }
 
+  // ===== Navigation =====
   goToAdd() {
-    this.navigation.navigate(['/feature/pm/pmdt04/new']);
+    this.navigation.navigate(['/feature/pm/requirement/new']);
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt04', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
   }
 
-  // ✅ ปรับ goToView ให้ไปที่ pmrt05 พร้อม requirementId และ projectId
   goToView(id: string) {
     const projectId = this.customerState.getProjectId();
+    const requirement = this.requirements().find(r => r.id === id);
     this.navigation.navigate(['/feature/pm/pmrt05'], {
-      queryParams: { requirementId: id, projectId: projectId }
+      queryParams: {
+        requirementId: id,
+        projectId: projectId,
+        requirementTitle: requirement?.title || ''
+      }
     });
   }
 

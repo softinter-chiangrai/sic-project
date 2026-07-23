@@ -15,6 +15,7 @@
           {{ isEdit ? 'แก้ไขข้อมูล Requirement' : 'เพิ่มข้อมูล Requirement' }}
         </h2>
       </div>
+
       <!-- Project Name (read-only) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
@@ -111,7 +112,7 @@
         ></sic-combobox>
       </div>
 
-      <!-- Version (disabled - auto calculated) -->
+      <!-- Version (read-only, backend คำนวณ) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
           label="เวอร์ชัน"
@@ -119,6 +120,7 @@
           [disabled]="true"
           placeholder="v1.0"
         ></sic-input>
+        <p class="text-xs text-[var(--text-muted)] mt-1">* คำนวณอัตโนมัติตามจำนวนการแก้ไข</p>
       </div>
 
       <!-- Status -->
@@ -139,7 +141,7 @@
         </label>
       </div>
 
-      <!-- Approval Flow Selection -->
+      <!-- Approval Flow Selection (ใช้ formControlName) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
@@ -152,6 +154,7 @@
           textField="flowName"
           placeholder="เลือกกระบวนการอนุมัติ"
           [clearable]="true"
+          formControlName="approvalFlowId"
           (selectionChanged)="selectedFlowId = $event?.id"
         ></sic-combobox>
         @if (!selectedFlowId && flows.length > 0) {

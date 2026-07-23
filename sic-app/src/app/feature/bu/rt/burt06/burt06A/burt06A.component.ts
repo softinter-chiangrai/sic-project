@@ -1,7 +1,8 @@
-// sic-app/src/app/feature/bu/rt/burt06/burt06A.component.ts
+// src/app/feature/bu/rt/burt06/burt06A/burt06A.component.ts
+
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -18,10 +19,9 @@ import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt
 import { listAnimation } from '../list.animations';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
-/** ตัวเลือกผู้ใช้งานใน role ที่เลือก */
 interface UserOption {
-  value: string;   // userId
-  text: string;    // displayName
+  value: string;
+  text: string;
 }
 
 @Component({
@@ -58,31 +58,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   isLoading = false;
   isSaving = false;
 
-  /** cache ผู้ใช้งานของแต่ละ step index -> UserOption[] */
   stepUsersCache: Record<number, UserOption[]> = {};
-  /** กำลังโหลดผู้ใช้งานของ step ไหน */
   stepUsersLoading: Record<number, boolean> = {};
-
-  documentTypeOptions = [
-    { value: 'REQUIREMENT', text: 'Requirement' },
-    { value: 'SPECIFICATION', text: 'Specification' },
-    { value: 'DFD', text: 'DFD' },
-    { value: 'ER', text: 'ER Diagram' },
-    { value: 'DELIVERY', text: 'Delivery' },
-    { value: 'INVOICE', text: 'Invoice' },
-    { value: 'MA_RENEWAL', text: 'MA Renewal' },
-    { value: 'CHANGE_REQUEST', text: 'Change Request' },
-    { value: 'TEST_PLAN', text: 'Test Plan' },
-    { value: 'UAT', text: 'UAT' },
-    { value: 'TASK', text: 'Task' },
-  ];
-
-  approvalModeOptions = [
-    { value: 'CHAIN', text: 'เรียงลำดับ (Chain)' },
-    { value: 'PARALLEL', text: 'พร้อมกัน (Parallel)' },
-    { value: 'ANY', text: 'ใครก็ได้ (Any)' },
-    { value: 'SINGLE', text: 'คนเดียว (Single)' },
-  ];
 
   form = this.fb.group({
     id: [null],
@@ -92,7 +69,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     approvalMode: ['CHAIN', [Validators.required]],
     description: [''],
     isActive: [true],
-    steps: this.fb.array<FormGroup>([]),
+    steps: this.fb.array<FormGroup>([], [this.stepValidator()]),
     rowVersion: [null],
   });
 
@@ -101,6 +78,27 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   }
 
   pageDirty = () => this.form?.dirty ?? false;
+
+  stepValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!(control instanceof FormArray)) {
+        return null;
+      }
+      const formArray = control as FormArray;
+      const invalidSteps = formArray.controls
+        .map((stepGroup, index) => ({ index, stepGroup }))
+        .filter(({ stepGroup }) => {
+          const approverRole = stepGroup.get('approverRole')?.value;
+          const selectedUserIds = stepGroup.get('selectedUserIds')?.value as string[] || [];
+          return !approverRole && selectedUserIds.length === 0;
+        });
+
+      if (invalidSteps.length > 0) {
+        return { missingApprover: true, invalidIndices: invalidSteps.map(s => s.index) };
+      }
+      return null;
+    };
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.params['id'];
@@ -124,7 +122,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
           this.steps.clear();
           data.steps?.forEach((step, i) => {
             this.steps.push(this.createStepForm(step));
-            // โหลดผู้ใช้งานถ้าขั้นตอนมี role
             if (step.approverRole) {
               this.loadUsersForStep(i, step.approverRole);
             }
@@ -149,7 +146,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       stepName: [step?.stepName || '', [Validators.required, Validators.maxLength(255)]],
       approverRole: [step?.approverRole || ''],
       approverUserId: [step?.approverUserId || ''],
-      selectedUserIds: [this.parseUserIds(step?.approverUserId)],   // string[]
+      selectedUserIds: [this.parseUserIds(step?.approverUserId)],
       isRequired: [step?.isRequired !== false],
       timeoutDays: [step?.timeoutDays || null],
       canSkip: [step?.canSkip || false],
@@ -186,8 +183,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const stepGroup = stepsArray.at(index) as FormGroup;
     stepsArray.removeAt(index);
     stepsArray.insert(index - 1, stepGroup);
-    // swap cache
-    [this.stepUsersCache[index], this.stepUsersCache[index - 1]] = [this.stepUsersCache[index - 1], this.stepUsersCache[index]];
+    [this.stepUsersCache[index], this.stepUsersCache[index - 1]] = [
+      this.stepUsersCache[index - 1],
+      this.stepUsersCache[index],
+    ];
     this.reorderSteps();
     this.form.markAsDirty();
     this.cdr.detectChanges();
@@ -199,13 +198,15 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const stepGroup = stepsArray.at(index) as FormGroup;
     stepsArray.removeAt(index);
     stepsArray.insert(index + 1, stepGroup);
-    [this.stepUsersCache[index], this.stepUsersCache[index + 1]] = [this.stepUsersCache[index + 1], this.stepUsersCache[index]];
+    [this.stepUsersCache[index], this.stepUsersCache[index + 1]] = [
+      this.stepUsersCache[index + 1],
+      this.stepUsersCache[index],
+    ];
     this.reorderSteps();
     this.form.markAsDirty();
     this.cdr.detectChanges();
   }
 
-  /** เมื่อเลือก Role เปลี่ยน → โหลดรายชื่อผู้ใช้งานใหม่ */
   onRoleChange(event: Event, index: number): void {
     const select = event.target as HTMLSelectElement;
     const roleCode = select.value;
@@ -225,7 +226,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const businessId = this.businessService.getCurrentBusinessId();
     if (!businessId || !roleCode) return;
 
-    // Reset user selections when role changes
     const stepGroup = this.steps.at(index) as FormGroup;
     stepGroup.get('selectedUserIds')?.setValue([]);
     stepGroup.get('approverUserId')?.setValue('');
@@ -252,7 +252,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
-  /** Toggle user selection for a step */
   toggleUser(index: number, userId: string): void {
     const stepGroup = this.steps.at(index) as FormGroup;
     const current: string[] = stepGroup.get('selectedUserIds')?.value ?? [];
@@ -276,6 +275,19 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  private hasMissingApprover(): boolean {
+    const stepControls = this.steps.controls;
+    for (let i = 0; i < stepControls.length; i++) {
+      const group = stepControls[i];
+      const role = group.get('approverRole')?.value;
+      const userIds = group.get('selectedUserIds')?.value as string[] || [];
+      if (!role && userIds.length === 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   cancel(): void {
     if (this.form.dirty) {
       this.dialog
@@ -291,6 +303,14 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   }
 
   save(): void {
+    if (this.hasMissingApprover()) {
+      this.dialog.warn(
+        'ยังไม่สมบูรณ์',
+        'ทุกขั้นตอนต้องมีผู้อนุมัติอย่างน้อย 1 คน (บทบาท หรือเลือกผู้ใช้)'
+      );
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -300,7 +320,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving = true;
     const raw = this.form.value;
 
-    // Sync approverUserId จาก selectedUserIds ก่อน save
     const steps = (raw.steps as any[])?.map(s => ({
       ...s,
       approverUserId: (s.selectedUserIds as string[] ?? []).join(',') || s.approverUserId || '',
@@ -344,4 +363,3 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     };
   }
 }
-

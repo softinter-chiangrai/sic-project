@@ -1,4 +1,5 @@
-<!-- sic-app/src/app/feature/bu/rt/burt06/burt06A.component.html -->
+<!-- src/app/feature/bu/rt/burt06/burt06A/burt06A.component.html -->
+
 <div class="space-y-5 p-0.5">
   <!-- Breadcrumb + Header -->
   <div class="flex flex-wrap items-center justify-between gap-4">
@@ -67,7 +68,7 @@
           ></sic-combobox>
         </div>
 
-        <!-- === Approval Mode (combobox) === -->
+        <!-- Approval Mode -->
         <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
           <sic-combobox
             label="โหมดการอนุมัติ"
@@ -111,11 +112,20 @@
             </button>
           </div>
 
+          <!-- ✅ แสดงข้อความแจ้งเตือนถ้ามี Step ที่ไม่มีผู้อนุมัติ -->
+          @if (steps.hasError('missingApprover')) {
+            <div class="text-[var(--crm-danger)] text-sm mb-3 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>⚠️ ทุกขั้นตอนต้องมีผู้อนุมัติ (เลือกบทบาท หรือเลือกผู้ใช้)</span>
+            </div>
+          }
+
           <div formArrayName="steps" class="space-y-4" @listAnimation>
             @for (step of steps.controls; track step; let i = $index) {
               <div
                 [formGroupName]="i"
                 class="border border-[var(--border)] rounded-xl p-5 bg-[var(--sidebar)] shadow-sm"
+                [class.border-[var(--crm-danger)]]="steps.hasError('missingApprover') && step.get('approverRole')?.value === '' && step.get('selectedUserIds')?.value?.length === 0"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
@@ -180,7 +190,7 @@
                   ></sic-combobox>
                 </div>
 
-                <!-- ===== User multi-select ===== -->
+                <!-- User multi-select -->
                 @if (step.get('approverRole')?.value) {
                   <div class="mt-3">
                     <p class="text-sm font-medium text-[var(--text-active)] mb-2">
@@ -229,6 +239,14 @@
                         </button>
                       </p>
                     }
+                  </div>
+                }
+
+                <!-- ✅ แสดงข้อความเตือนถ้า Step นี้ไม่มีผู้อนุมัติ -->
+                @if (step.get('approverRole')?.value === '' && step.get('selectedUserIds')?.value?.length === 0) {
+                  <div class="text-[var(--crm-danger)] text-xs mt-1 flex items-center gap-1">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>กรุณาเลือกบทบาทหรือเลือกผู้ใช้สำหรับขั้นตอนนี้</span>
                   </div>
                 }
 

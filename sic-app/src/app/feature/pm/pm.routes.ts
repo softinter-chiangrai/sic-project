@@ -79,7 +79,7 @@ export const PM_ROUTES: Routes = [
   },
 
   // ============================================================
-  // ===== PHASE & MILESTONE MANAGEMENT (แก้ไข + เพิ่มใหม่) =====
+  // ===== PHASE & MILESTONE MANAGEMENT =====
   // ============================================================
 
   // ---- Phase List ----
@@ -109,7 +109,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ---- Milestone Form (ใช้ Pmdt02AComponent) ----
+  // ---- Milestone Form ----
   {
     path: 'milestone/new',
     loadComponent: () =>
@@ -123,7 +123,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ---- WorkPackage Form (ใช้ Pmdt02BComponent) ----
+  // ---- WorkPackage Form ----
   {
     path: 'work-package/new',
     loadComponent: () =>
@@ -137,7 +137,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ---- Task Form (ใช้ Pmdt02CComponent) ----
+  // ---- Task Form ----
   {
     path: 'task/new',
     loadComponent: () =>
@@ -151,7 +151,7 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
-  // ===== Requirement (ใหม่ ใช้ pmdt04) =====
+  // ===== Requirement =====
   {
     path: 'requirement',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
@@ -161,54 +161,56 @@ export const PM_ROUTES: Routes = [
     path: 'requirement/new',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
   {
     path: 'requirement/:id/edit',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
   {
     path: 'requirement/:id/approval',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
+
+  // ===== Requirement Dashboard (pmrt05) =====
   {
-  path: 'pmrt05',
-  loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
+    path: 'pmrt05',
+    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ มีอยู่แล้ว
+  },
 
   // ===== Diagram =====
   {
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
 
   // ===== Change Request =====
   {
-  path: 'pmdt07',
-  loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'pmdt07/new',
-  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'pmdt07/:id/edit',
-  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
-{
-  path: 'pmdt07/:id/view',
-  loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-  canActivate: [customerGuard, projectGuard],
-},
+    path: 'pmdt07',
+    loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+  },
+  {
+    path: 'pmdt07/new',
+    loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+  },
+  {
+    path: 'pmdt07/:id/edit',
+    loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+  },
+  {
+    path: 'pmdt07/:id/view',
+    loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+  },
 
   // ===== Specification =====
   {
@@ -219,12 +221,12 @@ export const PM_ROUTES: Routes = [
   {
     path: 'specification/new',
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
   {
     path: 'specification/:id/edit',
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
 
   // ===== Design Review =====
@@ -236,12 +238,12 @@ export const PM_ROUTES: Routes = [
   {
     path: 'design-review/new',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
   {
     path: 'design-review/:id/edit',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
 
   // ===== Task (เดิม) =====
