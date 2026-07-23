@@ -59,7 +59,7 @@ export interface DiagramEditData {
           </select>
         </div>
 
-        <!-- ✅ Requirement ต้นทาง (บังคับ) -->
+        <!-- Requirement ต้นทาง -->
         <sic-combobox
           label="Requirement ต้นทาง"
           [apiUrl]="requirementApiUrl"
@@ -73,7 +73,6 @@ export interface DiagramEditData {
           [errorMessages]="{ required: 'กรุณาเลือก Requirement ที่เกี่ยวข้อง' }"
         ></sic-combobox>
 
-        <!-- คำอธิบาย -->
         <p class="text-xs text-[var(--text-muted)]">
           <i class="bi bi-info-circle"></i>
           Diagram นี้จะเชื่อมโยงกับ Requirement ที่เลือก เพื่อให้ระบบสามารถวิเคราะห์ผลกระทบเมื่อมีการเปลี่ยนแปลง
@@ -92,11 +91,12 @@ export interface DiagramEditData {
 export class NewDiagramDialogComponent implements OnInit {
   @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string) => void;
   @Input() editData: DiagramEditData | null = null;
-  @Input() projectId!: string; // ✅ รับ projectId จาก parent
+  @Input() projectId!: string;
+  @Input() selectedRequirementId: string = '';   // <--- รับจาก parent
 
   name = '';
   type = 'DFD';
-  selectedRequirementId = '';
+  selectedRequirementIdLocal = '';
 
   private dialogService = inject(DialogService);
   private apiBaseUrl = environment.apiBaseUrl;
@@ -110,8 +110,10 @@ export class NewDiagramDialogComponent implements OnInit {
       this.name = this.editData.name;
       this.type = this.editData.type;
     }
-
-    // ✅ ตรวจสอบว่า projectId ถูกส่งมาหรือไม่
+    // ถ้ามี selectedRequirementId ส่งมาจาก parent ให้ใช้
+    if (this.selectedRequirementId) {
+      this.selectedRequirementIdLocal = this.selectedRequirementId;
+    }
     if (!this.projectId) {
       console.error('[NewDiagramDialog] projectId is required but not provided!');
       this.dialogService.error('ข้อผิดพลาด', 'ไม่พบ projectId กรุณาลองใหม่');
@@ -123,13 +125,13 @@ export class NewDiagramDialogComponent implements OnInit {
     return (
       this.name.trim().length > 0 &&
       this.type.length > 0 &&
-      this.selectedRequirementId.trim().length > 0
+      this.selectedRequirementIdLocal.trim().length > 0
     );
   }
 
   save(): void {
     if (!this.canSave) return;
-    if (!this.selectedRequirementId) {
+    if (!this.selectedRequirementIdLocal) {
       this.dialogService.warn('กรุณาเลือก Requirement', 'ต้องเลือก Requirement ต้นทางเพื่อสร้าง Diagram');
       return;
     }
@@ -137,7 +139,7 @@ export class NewDiagramDialogComponent implements OnInit {
       this.name.trim(),
       this.type,
       this.editData || undefined,
-      this.selectedRequirementId.trim()
+      this.selectedRequirementIdLocal.trim()
     );
     this.dialogService.close(true);
   }

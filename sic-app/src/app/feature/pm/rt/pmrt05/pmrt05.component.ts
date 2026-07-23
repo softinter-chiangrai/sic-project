@@ -1,16 +1,16 @@
 // src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 
 interface TraceLink {
   id: string;
@@ -54,14 +54,14 @@ interface RelatedItem {
   standalone: true,
   imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
   templateUrl: './pmrt05.component.html',
-  styleUrls: ['./pmrt05.component.css']
+  styleUrls: ['./pmrt05.component.css'],
 })
 export class Pmrt05Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
-  private navigation = inject(NavigationService);
+  private navigation = inject(NavigationService); // ✅ ใช้ navigation
   private customerState = inject(CustomerStateService);
 
   // ===== State =====
@@ -80,6 +80,13 @@ export class Pmrt05Component implements OnInit {
   bugList = signal<RelatedItem[]>([]);
   changeRequestList = signal<RelatedItem[]>([]);
   designReviewList = signal<RelatedItem[]>([]);
+
+  // ✅ รวม DFD + ER ไว้ด้วยกัน
+  diagrams = computed(() => {
+    const dfd = this.dfdList();
+    const er = this.erList();
+    return [...dfd, ...er].sort((a, b) => a.type.localeCompare(b.type));
+  });
 
   // ===== Lifecycle =====
   ngOnInit() {
@@ -101,7 +108,8 @@ export class Pmrt05Component implements OnInit {
   // ===== Load Data =====
   loadRequirement(id: string) {
     this.isLoading.set(true);
-    this.http.get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
+    this.http
+      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (data) => {
@@ -113,12 +121,13 @@ export class Pmrt05Component implements OnInit {
           console.error('Load requirement error:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
           this.navigation.navigate(['/feature/pm/pmrt02']);
-        }
+        },
       });
   }
 
   loadTraceLinks(reqId: string) {
-    this.http.get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
+    this.http
+      .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
       .subscribe({
         next: (links) => {
           this.traceLinks.set(links);
@@ -126,10 +135,9 @@ export class Pmrt05Component implements OnInit {
         },
         error: (err) => {
           console.error('Load trace links error:', err);
-          // ไม่ต้องแจ้งเตือนผู้ใช้ ถ้ายังไม่มีข้อมูล
           this.traceLinks.set([]);
           this.groupLinks([]);
-        }
+        },
       });
   }
 
@@ -143,20 +151,17 @@ export class Pmrt05Component implements OnInit {
     const cr: RelatedItem[] = [];
     const review: RelatedItem[] = [];
 
-    links.forEach(link => {
-      // เราสนใจเฉพาะ target ที่เป็นโมดูลต่างๆ (สมมติว่า source คือ REQUIREMENT)
-      // แต่ก็อาจมี target เป็น REQUIREMENT ได้ (ถ้ามีการเชื่อมโยงกลับ) – เราจะแสดงทั้งหมด
+    const projectId = this.projectId(); // ✅ ใช้ projectId จาก state
+
+    links.forEach((link) => {
       const type = link.targetType;
       const id = link.targetId;
-      const rel = link.relationshipType;
-
-      // สร้าง item พร้อมข้อมูลเพิ่มเติม (เรายังไม่มีชื่อ ให้ใช้ ID ก่อน)
       const item: RelatedItem = {
         id: id,
-        name: id, //  placeholder
+        name: id,
         type: type,
-        link: this.buildLink(type, id),
-        code: id.slice(0, 8)
+        link: this.buildLink(type, id, projectId), // ✅ ส่ง projectId
+        code: id.slice(0, 8),
       };
 
       switch (type) {
@@ -185,7 +190,6 @@ export class Pmrt05Component implements OnInit {
           review.push(item);
           break;
         default:
-          // ถ้าไม่รู้จัก ให้เก็บไว้ใน others
           break;
       }
     });
@@ -198,18 +202,15 @@ export class Pmrt05Component implements OnInit {
     this.bugList.set(bug);
     this.changeRequestList.set(cr);
     this.designReviewList.set(review);
-
-    // ถ้ามีรายการใด ให้ fetch ชื่อเพิ่มเติม (optional) – แต่เพื่อความง่ายเราจะใช้ ID แสดงก่อน
-    // ในอนาคตอาจเรียก API เพื่อดึงชื่อแต่ละตัว
   }
 
-  private buildLink(type: string, id: string): string {
-    // สร้าง route ไปยังหน้า edit/view ของแต่ละโมดูล
+  // ✅ แก้ไขให้รับ projectId และสร้าง URL ที่ถูกต้อง
+  private buildLink(type: string, id: string, projectId: string | null): string {
     const base = '/feature/pm';
     switch (type) {
       case 'DFD':
       case 'ER':
-        return `${base}/pmdt06?tabId=${id}`; // สมมติ pmdt06 ใช้ tabId
+        return `${base}/pmdt06?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
         return `${base}/specification/${id}/edit`;
       case 'TASK':
@@ -232,22 +233,20 @@ export class Pmrt05Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt02']);
   }
 
-  // ===== Create Actions (นำทางไปหน้า create พร้อม requirementId) =====
-  createDFD() {
+  // ✅ ปุ่มสร้าง Diagram (DFD / ER) แบบรวม
+  createDiagram(): void {
     const reqId = this.requirementId();
     const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt06'], {
-      queryParams: { projectId: projId, requirementId: reqId }
-    });
-  }
-
-  createER() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt06'], {
-      queryParams: { projectId: projId, requirementId: reqId, diagramType: 'ER' }
+    if (!reqId || !projId) {
+      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/diagram'], {
+      queryParams: {
+        projectId: projId,
+        requirementId: reqId,
+        openCreate: 'true',
+      },
     });
   }
 
@@ -256,7 +255,7 @@ export class Pmrt05Component implements OnInit {
     const projId = this.projectId();
     if (!reqId || !projId) return;
     this.navigation.navigate(['/feature/pm/pmdt10/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
@@ -265,7 +264,7 @@ export class Pmrt05Component implements OnInit {
     const projId = this.projectId();
     if (!reqId || !projId) return;
     this.navigation.navigate(['/feature/pm/pmdt07/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
@@ -274,25 +273,20 @@ export class Pmrt05Component implements OnInit {
     const projId = this.projectId();
     if (!reqId || !projId) return;
     this.navigation.navigate(['/feature/pm/pmdt11/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
-  // สร้าง Task ต้องมี Spec ก่อน – เราอาจให้เลือก Spec หรือไปหน้า Spec ก่อน
-  // แต่เราจะให้ปุ่มสร้าง Task โดยให้เลือก Spec ใน dialog หรือไปหน้า Task ที่อาจมี combobox ให้เลือก Spec
-  // เพื่อความง่าย เราจะนำทางไปหน้า task/new พร้อม projectId และ requirementId (แต่ backend ต้องรองรับ)
   createTask() {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    // ถ้ายังไม่มี Spec ควรเตือน
     if (this.specList().length === 0) {
       this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
       return;
     }
-    // ถ้ามี Spec ให้เลือกอันแรก หรือให้ผู้ใช้เลือก? เราจะให้เลือก Spec โดยไปหน้า Task ที่มี combobox
     this.navigation.navigate(['/feature/pm/pmdt12/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
@@ -305,7 +299,7 @@ export class Pmrt05Component implements OnInit {
       return;
     }
     this.navigation.navigate(['/feature/pm/pmdt16/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
@@ -318,7 +312,7 @@ export class Pmrt05Component implements OnInit {
       return;
     }
     this.navigation.navigate(['/feature/pm/pmdt17/new'], {
-      queryParams: { projectId: projId, requirementId: reqId }
+      queryParams: { projectId: projId, requirementId: reqId },
     });
   }
 
@@ -329,7 +323,7 @@ export class Pmrt05Component implements OnInit {
       'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
       Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
     return map[status] || 'bg-gray-100 text-gray-600';
   }
@@ -340,7 +334,7 @@ export class Pmrt05Component implements OnInit {
       'In Review': 'อยู่ระหว่างตรวจสอบ',
       Approved: 'อนุมัติแล้ว',
       Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก'
+      Cancelled: 'ยกเลิก',
     };
     return map[status] || status;
   }
@@ -350,7 +344,7 @@ export class Pmrt05Component implements OnInit {
       Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     };
     return map[priority] || map["Won't"];
   }
@@ -364,7 +358,7 @@ export class Pmrt05Component implements OnInit {
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch {
       return dateStr;
