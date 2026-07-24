@@ -61,7 +61,7 @@ export class Pmrt05Component implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
-  private navigation = inject(NavigationService); // ✅ ใช้ navigation
+  private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
 
   // ===== State =====
@@ -81,7 +81,6 @@ export class Pmrt05Component implements OnInit {
   changeRequestList = signal<RelatedItem[]>([]);
   designReviewList = signal<RelatedItem[]>([]);
 
-  // ✅ รวม DFD + ER ไว้ด้วยกัน
   diagrams = computed(() => {
     const dfd = this.dfdList();
     const er = this.erList();
@@ -114,7 +113,6 @@ export class Pmrt05Component implements OnInit {
       .subscribe({
         next: (data) => {
           this.requirement.set(data);
-          // เก็บ projectId เผื่อไม่ตรงกับ query param
           this.projectId.set(data.projectId);
         },
         error: (err) => {
@@ -151,7 +149,7 @@ export class Pmrt05Component implements OnInit {
     const cr: RelatedItem[] = [];
     const review: RelatedItem[] = [];
 
-    const projectId = this.projectId(); // ✅ ใช้ projectId จาก state
+    const projectId = this.projectId();
 
     links.forEach((link) => {
       const type = link.targetType;
@@ -160,7 +158,7 @@ export class Pmrt05Component implements OnInit {
         id: id,
         name: id,
         type: type,
-        link: this.buildLink(type, id, projectId), // ✅ ส่ง projectId
+        link: this.buildLink(type, id, projectId),
         code: id.slice(0, 8),
       };
 
@@ -204,13 +202,12 @@ export class Pmrt05Component implements OnInit {
     this.designReviewList.set(review);
   }
 
-  // ✅ แก้ไขให้รับ projectId และสร้าง URL ที่ถูกต้อง
   private buildLink(type: string, id: string, projectId: string | null): string {
     const base = '/feature/pm';
     switch (type) {
       case 'DFD':
       case 'ER':
-        return `${base}/pmdt06?tabId=${id}&projectId=${projectId || ''}`;
+        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
         return `${base}/specification/${id}/edit`;
       case 'TASK':
@@ -233,10 +230,11 @@ export class Pmrt05Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt02']);
   }
 
-  // ✅ ปุ่มสร้าง Diagram (DFD / ER) แบบรวม
+  // ✅ แก้ไขปุ่ม Diagram: ส่ง requirementTitle และเปลี่ยน path เป็น diagram
   createDiagram(): void {
     const reqId = this.requirementId();
     const projId = this.projectId();
+    const reqTitle = this.requirement()?.title || '';
     if (!reqId || !projId) {
       this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
       return;
@@ -245,6 +243,7 @@ export class Pmrt05Component implements OnInit {
       queryParams: {
         projectId: projId,
         requirementId: reqId,
+        requirementTitle: reqTitle,
         openCreate: 'true',
       },
     });
@@ -263,7 +262,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+    this.navigation.navigate(['/feature/pm/pmdt07'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

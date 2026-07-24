@@ -1,6 +1,7 @@
 // sic-spring/sic/src/main/java/com/softinter/sicapi/service/TraceLinkService.java
 package com.softinter.sicapi.service;
 
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmTraceLink;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public interface TraceLinkService {
     PmTraceLink createLink(UUID projectId,
                            String sourceType, UUID sourceId,
                            String targetType, UUID targetId,
-                           String relationshipType);
+                           TraceRelationship relationshipType);
 
     void deleteLink(UUID linkId);
 

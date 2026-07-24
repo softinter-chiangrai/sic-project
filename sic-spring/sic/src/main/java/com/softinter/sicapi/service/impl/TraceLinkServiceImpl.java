@@ -1,6 +1,7 @@
-// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
+// src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmTraceLink;
 import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
 import com.softinter.sicapi.service.TraceLinkService;
@@ -27,12 +28,17 @@ public class TraceLinkServiceImpl implements TraceLinkService {
     @Override
     @Transactional
     public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
-                                  String targetType, UUID targetId, String relationshipType) {
+            String targetType, UUID targetId, TraceRelationship relationshipType) {
+        // ✅ ตรวจสอบว่ามี link ที่ active อยู่แล้วหรือไม่ (isDelete = false)
         List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
         if (!existing.isEmpty()) {
-            log.debug("Link already exists: {} -> {}", sourceId, targetId);
+            log.debug("Active link already exists: {} -> {}", sourceId, targetId);
             return existing.get(0);
         }
+
+        // ✅ ตรวจสอบว่ามี link ที่ถูกลบ (isDelete = true) และต้องการกู้คืนหรือไม่
+        // (ถ้าต้องการกู้คืน ให้ set isDelete = false แทนการสร้างใหม่)
+        // แต่ถ้าไม่ต้องการกู้คืน ก็สร้างใหม่ตามปกติ
 
         PmTraceLink link = new PmTraceLink();
         link.setProjectId(projectId);
@@ -44,16 +50,17 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         return traceLinkRepository.save(link);
     }
 
-    // ✅ Implement: deleteLinksBySourceAndTarget
     @Override
     @Transactional
     public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false
         List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
         for (PmTraceLink link : links) {
             link.setIsDelete(true);
             traceLinkRepository.save(link);
         }
-        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType, targetId);
+        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType,
+                targetId);
     }
 
     @Override
@@ -67,16 +74,19 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
     @Override
     public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
         return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
     }
 
     @Override
     public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
         return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
     }
 
     @Override
     public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
         List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
         List<PmTraceLink> result = new ArrayList<>();
         for (Object[] row : rows) {
@@ -85,7 +95,7 @@ public class TraceLinkServiceImpl implements TraceLinkService {
             link.setSourceId((UUID) row[1]);
             link.setTargetType((String) row[2]);
             link.setTargetId((UUID) row[3]);
-            link.setRelationshipType((String) row[4]);
+            link.setRelationshipType(TraceRelationship.valueOf((String) row[4]));
             result.add(link);
         }
         return result;
@@ -98,7 +108,7 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
         for (PmTraceLink link : trace) {
             impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
-                       .add(link.getTargetId());
+                    .add(link.getTargetId());
         }
 
         ImpactTraceResult result = new ImpactTraceResult();
@@ -143,16 +153,15 @@ public class TraceLinkServiceImpl implements TraceLinkService {
                 String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
                 UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
 
-                String relType = "DFD".equalsIgnoreCase(diagramType)
-                        ? "DESIGNED_BY"
-                        : "IMPLEMENTED_BY";
+                TraceRelationship relType = "DFD".equalsIgnoreCase(diagramType)
+                        ? TraceRelationship.DESIGNED_BY
+                        : TraceRelationship.IMPLEMENTED_BY;
 
                 this.createLink(
-                    projectId,
-                    diagramType.toUpperCase(), diagramTabId,
-                    targetType, targetUuid,
-                    relType
-                );
+                        projectId,
+                        diagramType.toUpperCase(), diagramTabId,
+                        targetType, targetUuid,
+                        relType);
             }
 
             log.info("Created {} trace links from diagram {} (type: {})",

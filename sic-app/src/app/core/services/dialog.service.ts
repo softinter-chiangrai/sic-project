@@ -1,3 +1,4 @@
+// src/app/core/services/dialog.service.ts
 import { ApplicationRef, ComponentRef, createComponent, DOCUMENT, EnvironmentInjector, inject, Injectable, signal, Type } from '@angular/core';
 import { SicDialogComponent } from '../component/sic-dialog/sic-dialog.component';
 

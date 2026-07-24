@@ -86,6 +86,8 @@ logging:
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: ERROR
     org.springframework.security: DEBUG
-    org.flywaydb: DEBUG 
+    org.flywaydb: DEBUG
+    org.springframework.transaction: DEBUG
+    org.hibernate.SQL: DEBUG
 
 spring.main.banner-mode: off

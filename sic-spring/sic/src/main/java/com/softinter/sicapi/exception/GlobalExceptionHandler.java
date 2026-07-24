@@ -37,6 +37,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(org.springframework.transaction.UnexpectedRollbackException.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedRollbackException(org.springframework.transaction.UnexpectedRollbackException ex) {
+        log.error("Unexpected rollback exception: {}", ex.getMessage(), ex);
+        Throwable rootCause = ex.getMostSpecificCause();
+        String msg = (rootCause != null && rootCause.getMessage() != null) ? rootCause.getMessage() : ex.getMessage();
+        ErrorResponse response = new ErrorResponse(false, msg, HttpStatus.BAD_REQUEST.value());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception: {}", ex.getMessage(), ex);

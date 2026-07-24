@@ -70,7 +70,7 @@ public class PmBugServiceImpl implements PmBugService {
                     projectId,
                     "TASK", request.getTaskId(),
                     "BUG", bug.getId(),
-                    TraceRelationship.FAILED_BY.name()
+                    TraceRelationship.FAILED_BY
                 );
             }
 
@@ -79,7 +79,7 @@ public class PmBugServiceImpl implements PmBugService {
                     projectId,
                     "TEST_CASE", request.getTestCaseId(),
                     "BUG", bug.getId(),
-                    TraceRelationship.FAILED_BY.name()
+                    TraceRelationship.FAILED_BY
                 );
             }
 

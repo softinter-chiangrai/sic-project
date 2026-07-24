@@ -73,7 +73,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     projectId,
                     "REQUIREMENT", request.getRequirementId(),
                     "SPECIFICATION", spec.getId(),
-                    TraceRelationship.DOCUMENTED_BY.name()
+                    TraceRelationship.DOCUMENTED_BY
                 );
             }
 
@@ -83,7 +83,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     projectId,
                     "ER", request.getErId(),
                     "SPECIFICATION", spec.getId(),
-                    TraceRelationship.IMPLEMENTED_BY.name()
+                    TraceRelationship.IMPLEMENTED_BY
                 );
             }
 

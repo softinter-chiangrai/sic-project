@@ -1,4 +1,4 @@
-// sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
+// src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
 package com.softinter.sicapi.repository.pm;
 
 import com.softinter.sicapi.entity.pm.PmTraceLink;
@@ -13,12 +13,15 @@ import java.util.UUID;
 @Repository
 public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> {
 
-    List<PmTraceLink> findBySourceTypeAndSourceId(String sourceType, UUID sourceId);
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.isDelete = false")
+    List<PmTraceLink> findBySourceTypeAndSourceId(@Param("sourceType") String sourceType, @Param("sourceId") UUID sourceId);
 
-    List<PmTraceLink> findByTargetTypeAndTargetId(String targetType, UUID targetId);
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
+    List<PmTraceLink> findByTargetTypeAndTargetId(@Param("targetType") String targetType, @Param("targetId") UUID targetId);
 
-    List<PmTraceLink> findByProjectIdAndSourceTypeAndSourceId(UUID projectId, String sourceType, UUID sourceId);
-
+    // ✅ แก้ไข: เพิ่ม AND l.isDelete = false
     @Query(value = """
         WITH RECURSIVE trace AS (
             SELECT source_type, source_id, target_type, target_id, relationship_type
@@ -35,12 +38,14 @@ public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> 
     List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
                                  @Param("sourceId") UUID sourceId);
 
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
     @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
     List<PmTraceLink> findExistingLink(@Param("sourceType") String sourceType,
                                        @Param("sourceId") UUID sourceId,
                                        @Param("targetType") String targetType,
                                        @Param("targetId") UUID targetId);
 
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
     @Query("SELECT t FROM PmTraceLink t WHERE t.projectId = :projectId AND t.isDelete = false")
     List<PmTraceLink> findAllByProjectId(@Param("projectId") UUID projectId);
 }

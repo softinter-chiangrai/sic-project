@@ -1,11 +1,17 @@
 package com.softinter.sicapi.entity.pm;
 
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "pm_trace_link")
@@ -27,7 +33,7 @@ public class PmTraceLink extends BaseEntity {
 
     @Column(name = "target_id", nullable = false)
     private UUID targetId;
-
-    @Column(name = "relationship_type", nullable = false, length = 50)
-    private String relationshipType;
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "relationship_type", nullable = false)
+    private TraceRelationship relationshipType;
 }

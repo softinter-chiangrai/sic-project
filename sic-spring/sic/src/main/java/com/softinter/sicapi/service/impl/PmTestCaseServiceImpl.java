@@ -69,7 +69,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
                     projectId,
                     "TASK", request.getTaskId(),
                     "TEST_CASE", testCase.getId(),
-                    TraceRelationship.VERIFIED_BY.name()
+                    TraceRelationship.VERIFIED_BY
                 );
             }
 

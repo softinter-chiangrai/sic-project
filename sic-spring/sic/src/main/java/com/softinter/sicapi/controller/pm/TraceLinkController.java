@@ -1,5 +1,6 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.entity.enums.TraceRelationship;   // ✅ import enum
 import com.softinter.sicapi.entity.pm.PmTraceLink;
 import com.softinter.sicapi.service.TraceLinkService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +32,10 @@ public class TraceLinkController {
         UUID sourceId = UUID.fromString((String) request.get("sourceId"));
         String targetType = (String) request.get("targetType");
         UUID targetId = UUID.fromString((String) request.get("targetId"));
-        String relationshipType = (String) request.get("relationshipType");
+        
+        // ✅ แปลง String เป็น Enum
+        String relationshipTypeStr = (String) request.get("relationshipType");
+        TraceRelationship relationshipType = TraceRelationship.valueOf(relationshipTypeStr);
 
         PmTraceLink link = traceLinkService.createLink(
             projectId, sourceType, sourceId, targetType, targetId, relationshipType

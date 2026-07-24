@@ -1,5 +1,3 @@
-// src/main/java/com/softinter/sicapi/service/impl/TaskServiceImpl.java
-
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.request.TaskRequest;
@@ -44,44 +42,44 @@ public class TaskServiceImpl implements TaskService {
 
     // ===== CREATE =====
     @Override
-@Transactional
-public TaskResponse createTask(TaskRequest request) {
-    PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
-            .orElseThrow(() -> new RuntimeException("Work Package not found"));
+    @Transactional
+    public TaskResponse createTask(TaskRequest request) {
+        PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
+                .orElseThrow(() -> new RuntimeException("Work Package not found"));
 
-    PmTask task = new PmTask();
-    task.setWorkPackage(wp);
-    task.setBusinessId(wp.getBusinessId());
-    task.setTaskCode(request.getTaskCode());
-    task.setTaskName(request.getTaskName());
-    task.setDescription(request.getDescription());
-    task.setAssignedTo(request.getAssignedTo());
-    task.setStartDate(request.getStartDate());
-    task.setEndDate(request.getEndDate());
-    task.setEstimateManday(request.getEstimateManday());
-    task.setPriority(request.getPriority());
-    task.setStatus("Todo");
-    task.setColor(request.getColor());
+        PmTask task = new PmTask();
+        task.setWorkPackage(wp);
+        task.setBusinessId(wp.getBusinessId());
+        task.setTaskCode(request.getTaskCode());
+        task.setTaskName(request.getTaskName());
+        task.setDescription(request.getDescription());
+        task.setAssignedTo(request.getAssignedTo());
+        task.setStartDate(request.getStartDate());
+        task.setEndDate(request.getEndDate());
+        task.setEstimateManday(request.getEstimateManday());
+        task.setPriority(request.getPriority());
+        task.setStatus("Todo");
+        task.setColor(request.getColor());
 
-    task = taskRepository.save(task);
+        task = taskRepository.save(task);
 
-    // บันทึกผู้รับผิดชอบร่วม
-    saveAssignees(task, request.getAssigneeIds());
+        // บันทึกผู้รับผิดชอบร่วม
+        saveAssignees(task, request.getAssigneeIds());
 
-    // ===== สร้าง Trace Link =====
-    UUID projectId = wp.getMilestone().getPhase().getProject().getId();
-    if (request.getSpecificationId() != null) {
-        traceLinkService.createLink(
-            projectId,
-            "SPECIFICATION", request.getSpecificationId(),
-            "TASK", task.getId(),
-            TraceRelationship.IMPLEMENTED_BY.name()
-        );
+        // ===== สร้าง Trace Link =====
+        UUID projectId = wp.getMilestone().getPhase().getProject().getId();
+        if (request.getSpecificationId() != null) {
+            traceLinkService.createLink(
+                projectId,
+                "SPECIFICATION", request.getSpecificationId(),
+                "TASK", task.getId(),
+                TraceRelationship.IMPLEMENTED_BY   // ← แก้ไข: ใช้ Enum โดยตรง
+            );
+        }
+
+        updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+        return toResponse(task);
     }
-
-    updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
-    return toResponse(task);
-}
 
     // ===== UPDATE =====
     @Override
@@ -120,7 +118,6 @@ public TaskResponse createTask(TaskRequest request) {
             PmTaskAssignee assignee = new PmTaskAssignee();
             assignee.setTask(task);
             assignee.setUserId(userId);
-            // role_in_task ปล่อย null หรือกำหนดค่า default
             taskAssigneeRepository.save(assignee);
         }
     }
@@ -214,7 +211,6 @@ public TaskResponse createTask(TaskRequest request) {
         task.setIsDelete(true);
         task.setDeleteDate(Instant.now());
         taskRepository.save(task);
-        // อัปเดต progress ของ phase
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
     }
 
