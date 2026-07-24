@@ -46,3 +46,14 @@ ALTER TABLE pm_specification ADD CONSTRAINT fk_spec_requirement
 CREATE INDEX idx_spec_requirement ON pm_specification (requirement_id);
 
 ALTER TABLE pm_specification RENAME COLUMN related_er TO related_diagram;
+
+
+-- เพิ่มคอลัมน์ subject และ attachment_group_id ถ้ายังไม่มี
+ALTER TABLE pm_comment ADD COLUMN IF NOT EXISTS subject VARCHAR(255);
+ALTER TABLE pm_comment ADD COLUMN IF NOT EXISTS attachment_group_id UUID;
+
+-- สร้าง index สำหรับ parent_comment_id เพื่อเพิ่มประสิทธิภาพการ query
+CREATE INDEX IF NOT EXISTS idx_comment_parent ON pm_comment (parent_comment_id);
+
+-- (optional) ถ้าต้องการค้นหาตาม target_type, target_id และ parent null
+CREATE INDEX IF NOT EXISTS idx_comment_target_parent_null ON pm_comment (target_type, target_id) WHERE parent_comment_id IS NULL AND is_delete = FALSE;

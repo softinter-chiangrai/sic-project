@@ -233,6 +233,11 @@ export const PM_ROUTES: Routes = [
   canDeactivate: [CanDeactivateGuard],
   canActivate: [customerGuard, projectGuard, requirementGuard],
 },
+{
+  path: 'discussion',
+  loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
+  canActivate: [customerGuard, projectGuard],
+},
   // ===== Design Review =====
   {
     path: 'design-review',

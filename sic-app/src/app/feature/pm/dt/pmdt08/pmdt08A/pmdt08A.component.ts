@@ -18,12 +18,12 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt08Service } from '../pmdt08.service';
 import { Pmdt08FormData, SpecificationModel } from '../pmdt08.model';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { environment } from '../../../../../../environments/environment';
 import { Pmdt08Form } from '../pmdt08.form';
-
-
 
 
 @Component({
@@ -52,9 +52,11 @@ export class Pmdt08AComponent implements OnInit, CanComponentDeactivate {
   private approvalService = inject(ApprovalService);
   private customerState = inject(CustomerStateService);
 
+  // ✅ เพิ่ม apiBaseUrl สำหรับใช้ใน template
+  public apiBaseUrl = environment.apiBaseUrl;
+
   // ให้ service เข้าถึงใน template ได้
   public servicePublic = this.service;
-  
 
   formData!: SicFromData<SpecificationModel>;
   isEdit = false;
@@ -96,11 +98,8 @@ export class Pmdt08AComponent implements OnInit, CanComponentDeactivate {
   }
 
   loadProjectName(projectId: string): void {
-    // ใช้ CustomerStateService หรือ API เพื่อโหลดชื่อโครงการ
-    // ตัวอย่าง: เรียกจาก service ที่มีอยู่
-    // กรณีไม่มี API ให้ใช้ fallback
+    // TODO: ดึงชื่อโครงการจาก API หรือจาก state
     this.formData.formGroup.patchValue({ projectName: 'กำลังโหลด...' });
-    // TODO: เรียก API จริง
   }
 
   loadFlows(): void {

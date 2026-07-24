@@ -41,7 +41,7 @@
         <sic-combobox
           label="ประเภท Specification"
           formControlName="specType"
-          [apiUrl]="'api/db/parameter/lov'"
+          [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
           [params]="{ group: 'PM', parameterCode: 'SPEC_TYPE' }"
           valueField="value"
           textField="text"
@@ -95,7 +95,7 @@
         <sic-combobox
           label="สถานะ"
           formControlName="status"
-          [apiUrl]="'api/db/parameter/lov'"
+          [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
           [params]="{ group: 'COMMON', parameterCode: 'DOC_STATUS' }"
           valueField="value"
           textField="text"
@@ -118,7 +118,7 @@
         </div>
         <sic-combobox
           label="กระบวนการอนุมัติ"
-          [apiUrl]="'api/pm/approvals/flows/document-type/SPECIFICATION'"
+          [apiUrl]="apiBaseUrl + '/api/pm/approvals/flows/document-type/SPECIFICATION'"
           valueField="id"
           textField="flowName"
           placeholder="เลือกกระบวนการอนุมัติ"

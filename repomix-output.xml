@@ -347,8 +347,15 @@ sic-app/
               pmdt07.component.html
               pmdt07.component.ts
             pmdt08/
+              pmdt08A/
+                pmdt08A.component.html
+                pmdt08A.component.ts
               pmdt08.component.html
               pmdt08.component.ts
+              pmdt08.form.ts
+              pmdt08.model.ts
+              pmdt08.resolver.ts
+              pmdt08.service.ts
             pmdt09/
               pmdt09.component.html
               pmdt09.component.ts
@@ -631,6 +638,7 @@ sic-spring/
                     PmDiagramChatController.java
                     PmDiagramTabController.java
                     PmRequirementController.java
+                    PmSpecificationController.java
                     ProjectTaskController.java
                     TaskController.java
                     TraceLinkController.java
@@ -14766,24 +14774,6 @@ export class Pmdt01Service {
   // getCustomer(id: string): Observable<CustomerModel> {
   //   return this.http.get<CustomerModel>(`${this.apiCustomer}/${id}`);
   // }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.html">
-<p>pmdt08 works!</p>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.ts">
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-pmdt08',
-  imports: [],
-  templateUrl: './pmdt08.component.html',
-  styleUrl: './pmdt08.component.css',
-})
-export class Pmdt08Component {
-
 }
 </file>
 
@@ -37434,6 +37424,41 @@ public class SuTaskController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserController.java">
+package com.softinter.sicapi.controller.su;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.response.UserResponse;
+import com.softinter.sicapi.service.SuUserBusinessService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "User", description = "User API")
+public class SuUserController {
+
+    private final SuUserBusinessService userBusinessService;
+
+    @GetMapping("/available")
+    @Operation(summary = "Get available users for combobox")
+    public ResponseEntity<List<UserResponse>> getAvailableUsers() {
+        return ResponseEntity.ok(userBusinessService.getAvailableUsers());
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/BaseController.java">
 package com.softinter.sicapi.controller;
 
@@ -38518,6 +38543,25 @@ public class UserBusinessRoleResponse {
     private String businessRoleName;
     private boolean isActive;
     private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponse {
+    private String id;
+    private String name;
+    private String email;
 }
 </file>
 
@@ -41716,6 +41760,32 @@ public class ProgramAccessServiceImpl implements ProgramAccessService {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuBusinessServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.softinter.sicapi.entity.su.SuBusiness;
+import com.softinter.sicapi.repository.su.SuBusinessRepository;
+import com.softinter.sicapi.service.SuBusinessService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class SuBusinessServiceImpl implements SuBusinessService {
+    private final SuBusinessRepository businessRepository;
+
+    @Override
+    public SuBusiness findById(UUID id) {
+        return businessRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Business not found"));
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/UnauthorizedException.java">
 package com.softinter.sicapi.service.impl;
 
@@ -42165,6 +42235,44 @@ public interface ProgramAccessService {
     void removeAccessCache(String userId, UUID businessId);
     void removeAccessCacheByBusiness(UUID businessId);
     void removeAllAccessCache();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/SuBusinessService.java">
+package com.softinter.sicapi.service;
+
+import com.softinter.sicapi.entity.su.SuBusiness;
+import java.util.UUID;
+
+public interface SuBusinessService {
+    SuBusiness findById(UUID id);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/SuUserBusinessService.java">
+package com.softinter.sicapi.service;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import com.softinter.sicapi.dto.request.SaveUserBusinessRequest;
+import com.softinter.sicapi.dto.response.UserBusinessResponse;
+import com.softinter.sicapi.dto.response.UserResponse;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
+
+public interface SuUserBusinessService {
+    List<UserBusinessResponse> findAll(String userId);
+    Page<UserBusinessResponse> findAll(Specification<SuUserBusiness> spec, Pageable pageable);
+    SuUserBusiness findById(UUID id);
+    UserBusinessResponse getResponseById(UUID id);
+    UUID save(SaveUserBusinessRequest request);
+    void delete(UUID id);
+    List<UserBusinessResponse> findByUserId(String userId);
+    List<UserResponse> getAvailableUsers();
 }
 </file>
 
@@ -51768,6 +51876,855 @@ export class ImpactAnalysisService {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html">
+<!-- src/app/feature/pm/dt/pmdt08A/pmdt08A.component.html -->
+
+@if (formData) {
+  <form [formGroup]="formData.formGroup" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Specification' : 'เพิ่มข้อมูล Specification' }}
+        </h2>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="โครงการ" formControlName="projectName" [disabled]="true"></sic-input>
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="Requirement ที่เกี่ยวข้อง"
+          [apiUrl]="servicePublic.apiGetComboboxRequirement"
+          [params]="{ projectId: formData.formGroup.get('projectId')?.value }"
+          valueField="value"
+          textField="text"
+          placeholder="เลือก Requirement"
+          [clearable]="true"
+          (selectionChanged)="onRequirementSelect($event)">
+        </sic-combobox>
+        <input type="hidden" formControlName="requirementId" />
+        <input type="hidden" formControlName="requirementName" />
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="รหัส Specification" formControlName="specCode" [required]="true" placeholder="SPEC-001"></sic-input>
+        @if (formData.formGroup.get('specCode')?.touched && formData.formGroup.get('specCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภท Specification"
+          formControlName="specType"
+          [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
+          [params]="{ group: 'PM', parameterCode: 'SPEC_TYPE' }"
+          valueField="value"
+          textField="text"
+          [required]="true"
+        ></sic-combobox>
+        @if (formData.formGroup.get('specType')?.touched && formData.formGroup.get('specType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="ชื่อ Specification" formControlName="title" [required]="true" placeholder="ชื่อ"></sic-input>
+        @if (formData.formGroup.get('title')?.touched && formData.formGroup.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="คำอธิบาย" formControlName="description" [rows]="2" placeholder="คำอธิบาย"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Related Requirement (ข้อความ)" formControlName="relatedRequirement" [rows]="1" placeholder="ระบุ Requirement ที่เกี่ยวข้อง"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Related Diagram (ข้อความ)" formControlName="relatedDiagram" [rows]="1" placeholder="ระบุ Diagram ที่เกี่ยวข้อง"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="UI Actions" formControlName="uiAction" [rows]="1" placeholder="รายการ UI Actions"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Validation Rule" formControlName="validationRule" [rows]="1" placeholder="Validation Rules"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="Permission" formControlName="permission" placeholder="สิทธิ์"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-number label="Estimated Manday" formControlName="estimatedManday" placeholder="0" [decimal]="0"></sic-number>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="Dependency" formControlName="dependency" placeholder="สิ่งที่ต้องมีก่อน"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
+          [params]="{ group: 'COMMON', parameterCode: 'DOC_STATUS' }"
+          valueField="value"
+          textField="text"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+      </div>
+
+      <!-- Approval Section -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i> การอนุมัติ
+        </div>
+        <sic-combobox
+          label="กระบวนการอนุมัติ"
+          [apiUrl]="apiBaseUrl + '/api/pm/approvals/flows/document-type/SPECIFICATION'"
+          valueField="id"
+          textField="flowName"
+          placeholder="เลือกกระบวนการอนุมัติ"
+          [clearable]="true"
+          (selectionChanged)="selectedFlowId = $event?.id"
+        ></sic-combobox>
+        @if (isEdit && formData.value.approvalStatus) {
+          <div class="mt-2 text-sm">
+            <span class="text-[var(--text-muted)]">สถานะอนุมัติ: </span>
+            <span class="font-medium">{{ formData.value.approvalStatus }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts">
+// src/app/feature/pm/dt/pmdt08A/pmdt08A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { ApprovalFlow } from '../../pmdt03/approval.model';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
+
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { Pmdt08Service } from '../pmdt08.service';
+import { Pmdt08FormData, SpecificationModel } from '../pmdt08.model';
+import { environment } from '../../../../../../environments/environment';
+import { Pmdt08Form } from '../pmdt08.form';
+
+
+@Component({
+  selector: 'app-pmdt08a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicInputComponent,
+    SicInputAreaComponent,
+    SicComboboxComponent,
+    SicNumberComponent,
+    SicButtonComponent,
+    SicCheckboxComponent,
+  ],
+  templateUrl: './pmdt08A.component.html',
+})
+export class Pmdt08AComponent implements OnInit, CanComponentDeactivate {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private service = inject(Pmdt08Service);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private fb = inject(FormBuilder);
+  private approvalService = inject(ApprovalService);
+  private customerState = inject(CustomerStateService);
+
+  // ✅ เพิ่ม apiBaseUrl สำหรับใช้ใน template
+  public apiBaseUrl = environment.apiBaseUrl;
+
+  // ให้ service เข้าถึงใน template ได้
+  public servicePublic = this.service;
+
+  formData!: SicFromData<SpecificationModel>;
+  isEdit = false;
+  specId: string | null = null;
+  isLoading = false;
+  isSaving = false;
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+
+  pageDirty = () => this.formData?.dirty ?? false;
+
+  ngOnInit(): void {
+    const resolved: Pmdt08FormData = this.route.snapshot.data['form'];
+    if (resolved && resolved.specification) {
+      this.formData = resolved.specification;
+      if (this.formData.value.id) {
+        this.isEdit = true;
+        this.specId = this.formData.value.id;
+      }
+    } else {
+      const form = Pmdt08Form.createForm(this.fb);
+      this.formData = new SicFromData<SpecificationModel>(form);
+    }
+
+    // รับ projectId จาก queryParams (กรณีสร้างใหม่)
+    this.route.queryParams.subscribe(params => {
+      if (params['projectId'] && !this.isEdit) {
+        this.formData.formGroup.patchValue({ projectId: params['projectId'] });
+        this.loadProjectName(params['projectId']);
+      }
+    });
+
+    // ถ้าเป็นแก้ไขและมี projectId ให้โหลดชื่อโครงการ
+    if (this.isEdit && this.formData.value.projectId) {
+      this.loadProjectName(this.formData.value.projectId);
+    }
+
+    this.loadFlows();
+  }
+
+  loadProjectName(projectId: string): void {
+    // TODO: ดึงชื่อโครงการจาก API หรือจาก state
+    this.formData.formGroup.patchValue({ projectName: 'กำลังโหลด...' });
+  }
+
+  loadFlows(): void {
+    this.approvalService.getFlowsByDocumentType('SPECIFICATION')
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (flows) => {
+          this.flows = flows;
+          if (flows.length === 1) this.selectedFlowId = flows[0].id;
+        },
+        error: () => console.warn('Could not load approval flows'),
+      });
+  }
+
+  onBack(): void {
+    if (this.formData.dirty) {
+      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
+        .then((ok) => ok && this.navigateToList());
+    } else {
+      this.navigateToList();
+    }
+  }
+
+  navigateToList(): void {
+    const projectId = this.formData.value.projectId;
+    if (projectId) {
+      this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
+    } else {
+      this.navigation.navigate(['/feature/pm/pmdt08']);
+    }
+  }
+
+  submit(): void {
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    this.isSaving = true;
+    const data = this.formData.value;
+    data.state = this.isEdit ? 3 : 4;
+    if (!this.isEdit) data.rowVersion = 0;
+
+    this.service.save(data)
+      .pipe(finalize(() => this.isSaving = false))
+      .subscribe({
+        next: (id) => {
+          this.dialog.success('บันทึกสำเร็จ', 'Specification ถูกบันทึกเรียบร้อย');
+          this.formData.markAsPristine();
+          if (this.selectedFlowId && id) {
+            this.submitForApproval(id);
+          } else {
+            this.navigateToList();
+          }
+        },
+        error: (err) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  submitForApproval(specId: string): void {
+    const data = this.formData.value;
+    this.approvalService.submitForApproval({
+      documentType: 'SPECIFICATION',
+      documentId: specId,
+      documentCode: data.specCode,
+      documentTitle: data.title,
+      version: data.version,
+      flowId: this.selectedFlowId!,
+      comment: 'ส่งขออนุมัติ Specification',
+    }).subscribe({
+      next: () => {
+        this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Specification ถูกส่งเข้าสู่กระบวนการอนุมัติ');
+        this.navigateToList();
+      },
+      error: (err) => {
+        this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+      },
+    });
+  }
+
+  onRequirementSelect(item: any): void {
+    if (item) {
+      this.formData.formGroup.patchValue({
+        requirementId: item.value,
+        requirementName: item.text,
+      });
+    } else {
+      this.formData.formGroup.patchValue({
+        requirementId: null,
+        requirementName: null,
+      });
+    }
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.html">
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08.component.html -->
+
+<div class="space-y-5 p-0.5">
+
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
+        รายการ Specification
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md">
+      <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+    </button>
+  </div>
+
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input type="text" class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อ, โครงการ..." [value]="searchTerm()" (input)="onSearch($event)" />
+      @if (searchTerm()) {
+        <button (click)="clearSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors">
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+    <select (change)="onFilterChange($event)" [value]="filterStatus()" class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all">
+      <option value="all">📊 ทุกสถานะ</option>
+      @for (status of ['Draft','Review','Approved','Rejected']; track status) {
+        <option [value]="status">{{ status }}</option>
+      }
+    </select>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">ชื่อ</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">โครงการ</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">Requirement</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[160px]">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (spec of specs(); track spec.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ spec.specCode }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
+                <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ spec.description }}</div>
+              </td>
+              <td class="px-4 py-3">{{ spec.projectName }}</td>
+              <td class="px-4 py-3">{{ spec.requirementName || '-' }}</td>
+              <td class="px-4 py-3 text-[var(--text-muted)] font-mono">{{ spec.version }}</td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(spec.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(spec.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button (click)="goToEdit(spec.id!)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all" title="แก้ไข">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button (click)="deleteSpec(spec.id!)" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="ลบ">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Specification</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Specification ใหม่</p>
+                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
+                    <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        - <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
+      </div>
+      <div class="flex gap-1">
+        <button (click)="onPageChange(currentPage() - 1)" [disabled]="!hasPrevious()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (page of pageNumbers(); track page) {
+          <button (click)="onPageChange(page)" [class]="page === currentPage() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'">
+            {{ page }}
+          </button>
+        }
+        <button (click)="onPageChange(currentPage() + 1)" [disabled]="!hasNext()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.component.ts
+
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { Pmdt08Service } from './pmdt08.service';
+import { SpecificationModel } from './pmdt08.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+
+@Component({
+  selector: 'app-pmdt08',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './pmdt08.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Pmdt08Component implements OnInit {
+  private service = inject(Pmdt08Service);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+
+  isLoading = signal(false);
+  specs = signal<SpecificationModel[]>([]);
+  totalItems = signal(0);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  filterProjectId = signal<string | null>(null);
+
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  hasPrevious = computed(() => this.currentPage() > 1);
+  hasNext = computed(() => this.currentPage() < this.totalPages());
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  Math = Math;
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['projectId']) {
+        this.filterProjectId.set(params['projectId']);
+      }
+      this.loadData();
+    });
+  }
+
+  loadData(): void {
+    this.isLoading.set(true);
+    const params = {
+      projectId: this.filterProjectId() || undefined,
+      keyword: this.searchTerm() || undefined,
+      status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
+      page: this.currentPage() - 1,
+      size: this.pageSize(),
+      sortBy: 'createdDate',
+      sortDir: 'desc',
+    };
+    this.service.search(params)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res: PaginationResponse<SpecificationModel>) => {
+          this.specs.set(res.data);
+          this.totalItems.set(res.pageable.totalElements);
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดข้อมูลได้');
+          this.specs.set([]);
+          this.totalItems.set(0);
+        },
+      });
+  }
+
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  onFilterChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadData();
+  }
+
+  goToAdd(): void {
+    const projectId = this.filterProjectId();
+    if (projectId) {
+      this.navigation.navigate(['/feature/pm/pmdt08A/new'], { queryParams: { projectId } });
+    } else {
+      this.navigation.navigate(['/feature/pm/pmdt08A/new']);
+    }
+  }
+
+  goToEdit(id: string): void {
+    this.navigation.navigate(['/feature/pm/pmdt08A', id, 'edit']);
+  }
+
+  deleteSpec(id: string): void {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
+      .then((ok) => {
+        if (ok) {
+          this.service.delete(id).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
+              this.loadData();
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      Review: 'ตรวจสอบ',
+      Approved: 'อนุมัติ',
+      Rejected: 'ปฏิเสธ',
+    };
+    return map[status] || status;
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.form.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.form.ts
+
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToForm } from '../../../../core/types/form.type';
+import { SpecificationModel } from './pmdt08.model';
+
+export class Pmdt08Form {
+  static createForm(fb: FormBuilder): FormGroup<ToForm<SpecificationModel>> {
+    return fb.group<ToForm<SpecificationModel>>({
+      id: fb.control(null),
+      projectId: fb.control(null, [Validators.required]),
+      projectName: fb.control({ value: null, disabled: true }),
+      requirementId: fb.control(null),
+      requirementName: fb.control({ value: null, disabled: true }),
+      specCode: fb.control(null, [Validators.required, Validators.maxLength(30)]),
+      specType: fb.control(null, [Validators.required]),
+      title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
+      description: fb.control(null, [Validators.maxLength(2000)]),
+      relatedRequirement: fb.control(null),
+      relatedDiagram: fb.control(null),
+      uiAction: fb.control(null),
+      validationRule: fb.control(null),
+      permission: fb.control(null),
+      estimatedManday: fb.control(null, [Validators.min(0)]),
+      dependency: fb.control(null),
+      status: fb.control('Draft', [Validators.required]),
+      version: fb.control({ value: null, disabled: true }),
+      isActive: fb.control(true),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
+      approvalStatus: fb.control(null),
+    });
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.model.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.model.ts
+
+import { SicFromData } from '../../../../core/model/sic-from-data';
+
+export interface SpecificationModel {
+  id?: string;
+  projectId: string;
+  projectName?: string;
+  requirementId?: string;
+  requirementName?: string;
+  specCode: string;
+  specType: string;
+  title: string;
+  description?: string;
+  relatedRequirement?: string;
+  relatedDiagram?: string;
+  uiAction?: string;
+  validationRule?: string;
+  permission?: string;
+  estimatedManday?: number;
+  dependency?: string;
+  status: string;
+  version?: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+  approvalStatus?: string;
+}
+
+export interface Pmdt08FormData {
+  specification: SicFromData<SpecificationModel>;
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.resolver.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.resolver.ts
+
+import { inject } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
+import { ResolveFn, Router } from '@angular/router';
+import { catchError, EMPTY, map, tap } from 'rxjs';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+import { Pmdt08Form } from './pmdt08.form';
+import { SpecificationModel, Pmdt08FormData } from './pmdt08.model';
+import { Pmdt08Service } from './pmdt08.service';
+
+// pmdt08.resolver.ts (ปรับปรุง)
+
+export const pmdt08CreateResolver: ResolveFn<Pmdt08FormData> = (route) => {
+  const fb = inject(FormBuilder);
+  const form = Pmdt08Form.createForm(fb);
+  
+  // อ่าน queryParams
+  const requirementId = route.queryParams['requirementId'];
+  const projectId = route.queryParams['projectId'];
+  
+  if (requirementId) {
+    form.patchValue({ requirementId });
+  }
+  if (projectId) {
+    form.patchValue({ projectId });
+  }
+  
+  return { specification: new SicFromData<SpecificationModel>(form) };
+};
+
+export const pmdt08EditResolver: ResolveFn<Pmdt08FormData> = (route) => {
+  const fb = inject(FormBuilder);
+  const service = inject(Pmdt08Service);
+  const router = inject(Router);
+  const id = route.params['id'];
+  const form = Pmdt08Form.createForm(fb);
+
+  return service.getById(id).pipe(
+    tap((data) => {
+      form.patchValue(data);
+      form.updateValueAndValidity();
+    }),
+    map(() => ({
+      specification: new SicFromData<SpecificationModel>(form),
+    })),
+    catchError(() => {
+      router.navigate(['/feature/pm/pmdt08']);
+      return EMPTY;
+    })
+  );
+};
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.service.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.service.ts
+
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { SpecificationModel } from './pmdt08.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+
+export interface ComboboxItem {
+  value: string;
+  text: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class Pmdt08Service {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/pm/specification';
+
+  // ✅ เพิ่ม property สำหรับใช้ใน template
+  readonly apiGetComboboxRequirement = this.baseUrl + '/combobox-requirement';
+
+  search(params: {
+    projectId?: string;
+    keyword?: string;
+    status?: string;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    sortDir?: string;
+  }): Observable<PaginationResponse<SpecificationModel>> {
+    let httpParams = new HttpParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        httpParams = httpParams.set(key, String(value));
+      }
+    });
+    return this.http.get<PaginationResponse<SpecificationModel>>(`${this.baseUrl}/paging`, { params: httpParams });
+  }
+
+  getById(id: string): Observable<SpecificationModel> {
+    return this.http.get<SpecificationModel>(`${this.baseUrl}/${id}`);
+  }
+
+  save(data: SpecificationModel): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/save`, data);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  getComboboxRequirements(projectId: string): Observable<ComboboxItem[]> {
+    return this.http.get<ComboboxItem[]>(`${this.baseUrl}/combobox-requirement?projectId=${projectId}`);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts">
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -53784,6 +54741,123 @@ public class PmDiagramTabController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmSpecificationController.java">
+package com.softinter.sicapi.controller.pm;
+
+import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.PmSpecificationRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.PmSpecificationResponse;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmSpecificationService;
+import com.softinter.sicapi.util.PaginationUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/pm/specification")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Specification", description = "Specification Management API")
+public class PmSpecificationController {
+
+    private final PmSpecificationService specService;
+    private final CurrentUserService currentUserService;
+    private final PmRequirementRepository requirementRepository;
+    private final PmSpecificationRepository specRepository;
+
+    @GetMapping("/paging")
+    @Operation(summary = "Get specifications with pagination")
+    public ResponseEntity<PaginationResponse<PmSpecificationResponse>> getPaging(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+        Page<PmSpecificationResponse> pageResult = specService.findAll(businessId, projectId, keyword, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult.getContent(), page, size, pageResult.getTotalElements()));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get specification by ID")
+    public ResponseEntity<PmSpecificationResponse> getById(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(specService.findById(id, businessId));
+    }
+
+    @PostMapping("/save")
+    @Operation(summary = "Save specification")
+    public ResponseEntity<UUID> save(@Valid @RequestBody PmSpecificationRequest request) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        String userId = currentUserService.getUserId();
+        return ResponseEntity.ok(specService.save(request, businessId, userId));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete specification")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        String userId = currentUserService.getUserId();
+        specService.delete(id, businessId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/combobox-requirement")
+    @Operation(summary = "Get requirements for combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
+            @RequestParam(required = false) UUID projectId
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        List<PmRequirement> requirements;
+        if (projectId != null) {
+            requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        } else {
+            requirements = requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        }
+        List<ComboboxResponse> response = requirements.stream()
+                .map(r -> new ComboboxResponse(r.getId().toString(), r.getTitle()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/combobox-diagram")
+    @Operation(summary = "Get diagrams for combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxDiagrams(
+            @RequestParam UUID projectId,
+            @RequestParam(required = false) String type
+    ) {
+        // ดึง diagram จาก pm_diagram (ต้องมี repository ของ pm_diagram)
+        // สมมติว่ามี DiagramRepository
+        // แต่เราไม่มี DiagramRepository ในที่นี้ เราจะใช้ service อื่น หรือส่งค่าว่าง
+        // TODO: implement using DiagramService
+        return ResponseEntity.ok(List.of());
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/ProjectTaskController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -54260,41 +55334,6 @@ public class SuUserBusinessRoleController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuUserController.java">
-package com.softinter.sicapi.controller.su;
-
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.response.UserResponse;
-import com.softinter.sicapi.service.SuUserBusinessService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping("/api/users")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "User", description = "User API")
-public class SuUserController {
-
-    private final SuUserBusinessService userBusinessService;
-
-    @GetMapping("/available")
-    @Operation(summary = "Get available users for combobox")
-    public ResponseEntity<List<UserResponse>> getAvailableUsers() {
-        return ResponseEntity.ok(userBusinessService.getAvailableUsers());
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/AiSqlGeneratorController.java">
 package com.softinter.sicapi.controller;
 
@@ -54607,52 +55646,6 @@ public class PmRequirementRequest {
     private String version;
     private String status;
     private Boolean isActive;
-    private Integer state;
-    private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmSpecificationRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class PmSpecificationRequest {
-
-    private UUID id;
-
-    @NotNull(message = "Project ID is required")
-    private UUID projectId;
-
-    @NotBlank(message = "Spec code is required")
-    private String specCode;
-
-    @NotBlank(message = "Spec type is required")
-    private String specType;
-
-    @NotBlank(message = "Title is required")
-    private String title;
-
-    private String description;
-
-    // ===== Traceability =====
-    private UUID requirementId;      // เชื่อมกับ Requirement
-    private UUID erId;               // เชื่อมกับ ER Diagram
-
-    private String relatedRequirement; // เก็บข้อความ (ถ้ามี)
-    private String relatedEr;
-    private String uiAction;
-    private String validationRule;
-    private String permission;
-    private Integer estimatedManday;
-    private String dependency;
-    private String status;
-
     private Integer state;
     private Integer rowVersion;
 }
@@ -55295,37 +56288,6 @@ public class PmRequirementResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmSpecificationResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Data
-public class PmSpecificationResponse {
-    private UUID id;
-    private UUID projectId;
-    private String projectName;
-    private String specCode;
-    private String specType;
-    private String title;
-    private String description;
-    private String relatedRequirement;
-    private String relatedEr;
-    private String uiAction;
-    private String validationRule;
-    private String permission;
-    private Integer estimatedManday;
-    private String dependency;
-    private String status;
-    private Instant createdDate;
-    private Instant updatedDate;
-    private Integer rowVersion;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmTestCaseResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -55352,25 +56314,6 @@ public class PmTestCaseResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/UserResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserResponse {
-    private String id;
-    private String name;
-    private String email;
 }
 </file>
 
@@ -58111,28 +59054,147 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuBusinessServiceImpl.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.softinter.sicapi.dto.request.SaveUserBusinessRequest;
+import com.softinter.sicapi.dto.response.UserBusinessResponse;
+import com.softinter.sicapi.dto.response.UserResponse;
 import com.softinter.sicapi.entity.su.SuBusiness;
-import com.softinter.sicapi.repository.su.SuBusinessRepository;
+import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.SuBusinessService;
+import com.softinter.sicapi.service.SuUserBusinessService;
+import com.softinter.sicapi.util.LocalizationHelper; // ✅ import
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SuBusinessServiceImpl implements SuBusinessService {
-    private final SuBusinessRepository businessRepository;
+public class SuUserBusinessServiceImpl implements SuUserBusinessService {
+
+    private final SuUserBusinessRepository userBusinessRepository;
+    private final SuBusinessService businessService;
+    private final SuProfileRepository profileRepository;
 
     @Override
-    public SuBusiness findById(UUID id) {
-        return businessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Business not found"));
+    public List<UserBusinessResponse> findAll(String userId) {
+        List<SuUserBusiness> list;
+        if (userId != null) {
+            list = userBusinessRepository.findByUserIdAndIsActiveTrue(userId);
+        } else {
+            list = userBusinessRepository.findAll();
+        }
+        return list.stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<UserBusinessResponse> findAll(Specification<SuUserBusiness> spec, Pageable pageable) {
+        return userBusinessRepository.findAll(spec, pageable).map(this::toResponse);
+    }
+
+    @Override
+    public SuUserBusiness findById(UUID id) {
+        return userBusinessRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User business not found"));
+    }
+
+    @Override
+    public UserBusinessResponse getResponseById(UUID id) {
+        return toResponse(findById(id));
+    }
+
+    @Override
+    @Transactional
+    public UUID save(SaveUserBusinessRequest request) {
+        SuUserBusiness ub;
+        if (request.getId() != null) {
+            ub = findById(request.getId());
+        } else {
+            ub = new SuUserBusiness();
+        }
+        ub.setUserId(request.getUserId());
+        ub.setIsActive(request.isActive());
+        ub.setIsDefault(request.isDefault());
+
+        if (request.getBusinessId() != null) {
+            SuBusiness business = businessService.findById(request.getBusinessId());
+            ub.setBusiness(business);
+        } else {
+            ub.setBusiness(null);
+        }
+
+        userBusinessRepository.save(ub);
+        return ub.getId();
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id) {
+        SuUserBusiness ub = findById(id);
+        ub.setIsDelete(true);
+        ub.setIsActive(false);
+        userBusinessRepository.save(ub);
+    }
+
+    @Override
+    public List<UserBusinessResponse> findByUserId(String userId) {
+        return userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserResponse> getAvailableUsers() {
+        List<SuUserBusiness> userBusinesses = userBusinessRepository.findAll(); // แนะนำให้กรองที่ active
+        return userBusinesses.stream()
+                .filter(ub -> ub.getIsActive() != null && ub.getIsActive())
+                .map(SuUserBusiness::getUserId)
+                .distinct()
+                .map(userId -> {
+                    SuProfile profile = profileRepository.findByUserId(userId).orElse(null);
+                    String displayName = userId;
+                    String email = "";
+                    if (profile != null) {
+                        // ✅ ใช้ LocalizationHelper.getFullName(profile)
+                        String fullName = LocalizationHelper.getFullName(profile);
+                        if (fullName != null && !fullName.isBlank()) {
+                            displayName = fullName;
+                        }
+                        email = profile.getEmail() != null ? profile.getEmail() : "";
+                    }
+                    return UserResponse.builder()
+                            .id(userId)
+                            .name(displayName)
+                            .email(email)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private UserBusinessResponse toResponse(SuUserBusiness ub) {
+        UserBusinessResponse response = new UserBusinessResponse();
+        response.setId(ub.getId());
+        response.setUserId(ub.getUserId());
+        if (ub.getBusiness() != null) {
+            response.setBusinessId(ub.getBusiness().getId());
+            response.setBusinessCode(ub.getBusiness().getBusinessCode());
+        }
+        response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
+        response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
+        response.setRowVersion(ub.getRowVersion());
+        return response;
     }
 }
 </file>
@@ -58510,44 +59572,6 @@ public interface PmTestCaseService {
     UUID save(PmTestCaseRequest request, UUID businessId, String userId);
 
     void delete(UUID id, UUID businessId, String userId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/SuBusinessService.java">
-package com.softinter.sicapi.service;
-
-import com.softinter.sicapi.entity.su.SuBusiness;
-import java.util.UUID;
-
-public interface SuBusinessService {
-    SuBusiness findById(UUID id);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/SuUserBusinessService.java">
-package com.softinter.sicapi.service;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-
-import com.softinter.sicapi.dto.request.SaveUserBusinessRequest;
-import com.softinter.sicapi.dto.response.UserBusinessResponse;
-import com.softinter.sicapi.dto.response.UserResponse;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
-
-public interface SuUserBusinessService {
-    List<UserBusinessResponse> findAll(String userId);
-    Page<UserBusinessResponse> findAll(Specification<SuUserBusiness> spec, Pageable pageable);
-    SuUserBusiness findById(UUID id);
-    UserBusinessResponse getResponseById(UUID id);
-    UUID save(SaveUserBusinessRequest request);
-    void delete(UUID id);
-    List<UserBusinessResponse> findByUserId(String userId);
-    List<UserResponse> getAvailableUsers();
 }
 </file>
 
@@ -63483,6 +64507,49 @@ public class PmCustomerRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmSpecificationRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class PmSpecificationRequest {
+    private UUID id;
+    private Integer state;
+    private Integer rowVersion;
+
+    @NotNull(message = "Project ID is required")
+    private UUID projectId;
+
+    private UUID requirementId;   // optional
+
+    @NotBlank(message = "Spec code is required")
+    private String specCode;
+
+    @NotBlank(message = "Spec type is required")
+    private String specType;
+
+    @NotBlank(message = "Title is required")
+    private String title;
+
+    private String description;
+    private String relatedRequirement;
+    private String relatedDiagram;
+    private String uiAction;
+    private String validationRule;
+    private String permission;
+    private Integer estimatedManday;
+    private String dependency;
+    private String status;
+    private String version;
+    private Boolean isActive;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveApprovalFlowStepRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -63816,6 +64883,39 @@ public class PmCustomerResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmSpecificationResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class PmSpecificationResponse {
+    private UUID id;
+    private UUID projectId;
+    private String projectName;
+    private UUID requirementId;
+    private String requirementName;
+    private String specCode;
+    private String specType;
+    private String title;
+    private String description;
+    private String relatedRequirement;
+    private String relatedDiagram;
+    private String uiAction;
+    private String validationRule;
+    private String permission;
+    private Integer estimatedManday;
+    private String dependency;
+    private String status;
+    private String version;
+    private Boolean isActive;
+    private Integer rowVersion;
+    private String approvalStatus;  // maybe null if not submitted
 }
 </file>
 
@@ -64287,95 +65387,6 @@ public class PmMilestone extends BaseEntity {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmSpecification.java">
-package com.softinter.sicapi.entity.pm;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-import java.util.UUID;
-
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "pm_specification")
-public class PmSpecification extends BaseEntity {
-
-    // ===== Business ID (จาก BaseBusinessEntity แต่ BaseEntity ไม่มี) =====
-    // ถ้าใช้ BaseBusinessEntity ให้ extends BaseBusinessEntity
-    // ถ้าใช้ BaseEntity ให้เพิ่ม field นี้
-    @Column(name = "business_id")
-    private UUID businessId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private PmCustomerProject project;
-
-    // ✅ เพิ่ม FK ไปยัง Requirement
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requirement_id")
-    private PmRequirement requirement;
-
-    @Column(name = "project_id", insertable = false, updatable = false)
-    private UUID projectId;  // ✅ เพิ่ม getter ให้ใช้ใน Service
-
-    @Column(name = "spec_code", nullable = false, length = 30)
-    private String specCode;
-
-    @Column(name = "spec_type", nullable = false, length = 50)
-    private String specType;
-
-    @Column(name = "title", nullable = false, length = 255)
-    private String title;
-
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "related_requirement", columnDefinition = "TEXT")
-    private String relatedRequirement;
-
-    @Column(name = "related_er", columnDefinition = "TEXT")
-    private String relatedEr;
-
-    @Column(name = "ui_action", columnDefinition = "TEXT")
-    private String uiAction;
-
-    @Column(name = "validation_rule", columnDefinition = "TEXT")
-    private String validationRule;
-
-    @Column(name = "permission", columnDefinition = "TEXT")
-    private String permission;
-
-    @Column(name = "estimated_manday")
-    private Integer estimatedManday;
-
-    @Column(name = "dependency", columnDefinition = "TEXT")
-    private String dependency;
-
-    @Column(name = "status", length = 20)
-    private String status = "Draft";
-
-    // ===== Helper Methods =====
-    public UUID getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(UUID projectId) {
-        this.projectId = projectId;
-    }
-
-    public UUID getBusinessId() {
-        return businessId;
-    }
-
-    public void setBusinessId(UUID businessId) {
-        this.businessId = businessId;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmTestCase.java">
 package com.softinter.sicapi.entity.pm;
 
@@ -64601,49 +65612,6 @@ public interface PmDiagramTabRepository extends JpaRepository<PmDiagramTab, UUID
     List<PmDiagramTab> findByProjectIdAndDiagramType(@Param("projectId") UUID projectId, @Param("type") String type);
 
     int countByProjectIdAndIsDeleteFalse(UUID projectId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmSpecificationRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmSpecification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-public interface PmSpecificationRepository extends JpaRepository<PmSpecification, UUID>, JpaSpecificationExecutor<PmSpecification> {
-
-    // ===== ✅ เพิ่ม method ที่หายไป =====
-    Page<PmSpecification> findByProjectIdAndIsDeleteFalse(UUID projectId, Pageable pageable);
-
-    // ===== Other methods =====
-    List<PmSpecification> findByProjectIdAndIsDeleteFalse(UUID projectId);
-
-    Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.projectId = :projectId AND s.isDelete = false AND s.businessId = :businessId")
-    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(
-            @Param("projectId") UUID projectId,
-            @Param("businessId") UUID businessId,
-            Pageable pageable);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.isDelete = false AND s.businessId = :businessId")
-    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId, Pageable pageable);
-
-    List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.requirement.id = :requirementId AND s.isDelete = false")
-    List<PmSpecification> findByRequirementId(@Param("requirementId") UUID requirementId);
 }
 </file>
 
@@ -66106,183 +67074,6 @@ public class PmCustomerServiceImpl implements PmCustomerService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmSpecificationServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.request.PmSpecificationRequest;
-import com.softinter.sicapi.dto.response.PmSpecificationResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.TraceRelationship;
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
-import com.softinter.sicapi.entity.pm.PmRequirement;
-import com.softinter.sicapi.entity.pm.PmSpecification;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
-import com.softinter.sicapi.service.PmSpecificationService;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Service
-@RequiredArgsConstructor
-public class PmSpecificationServiceImpl implements PmSpecificationService {
-
-    private final PmSpecificationRepository specRepository;
-    private final PmCustomerProjectRepository projectRepository;
-    private final PmRequirementRepository requirementRepository;
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PmSpecificationResponse> findAll(UUID businessId, UUID projectId, String keyword, Pageable pageable) {
-        // ✅ ใช้ method ที่มีอยู่
-        return specRepository.findByProjectIdAndBusinessIdAndIsDeleteFalse(projectId, businessId, pageable)
-                .map(this::toResponse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmSpecificationResponse findById(UUID id, UUID businessId) {
-        PmSpecification spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Specification not found"));
-        return toResponse(spec);
-    }
-
-    @Override
-    @Transactional
-    public UUID save(PmSpecificationRequest request, UUID businessId, String userId) {
-        PmSpecification spec;
-        EntityState state = EntityState.values()[request.getState() != null ? request.getState() : 0];
-
-        if (state == EntityState.ADDED || request.getId() == null) {
-            spec = new PmSpecification();
-            // ✅ ใช้ setBusinessId (มีอยู่ใน Entity แล้ว)
-            spec.setBusinessId(businessId);
-            spec.setCreatedBy(userId);
-            spec.setCreatedDate(Instant.now());
-            spec.setIsDelete(false);
-            spec.setStatus("Draft");
-            mapRequestToEntity(request, spec);
-            spec = specRepository.save(spec);
-
-            // ===== สร้าง Trace Links =====
-            // ✅ ใช้ getProjectId() (มีอยู่ใน Entity แล้ว)
-            UUID projectId = spec.getProjectId();
-
-            // เชื่อมกับ Requirement
-            if (request.getRequirementId() != null) {
-                traceLinkService.createLink(
-                    projectId,
-                    "REQUIREMENT", request.getRequirementId(),
-                    "SPECIFICATION", spec.getId(),
-                    TraceRelationship.DOCUMENTED_BY
-                );
-            }
-
-            // เชื่อมกับ ER
-            if (request.getErId() != null) {
-                traceLinkService.createLink(
-                    projectId,
-                    "ER", request.getErId(),
-                    "SPECIFICATION", spec.getId(),
-                    TraceRelationship.IMPLEMENTED_BY
-                );
-            }
-
-        } else if (state == EntityState.MODIFIED) {
-            spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Specification not found"));
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
-                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
-            }
-            spec.setUpdatedBy(userId);
-            spec.setUpdatedDate(Instant.now());
-            mapRequestToEntity(request, spec);
-            spec = specRepository.save(spec);
-
-        } else if (state == EntityState.DELETED) {
-            spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Specification not found"));
-            spec.setIsDelete(true);
-            spec.setDeleteBy(userId);
-            spec.setDeleteDate(Instant.now());
-            specRepository.save(spec);
-            return spec.getId();
-
-        } else {
-            throw new IllegalArgumentException("Invalid state: " + state);
-        }
-
-        return spec.getId();
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id, UUID businessId, String userId) {
-        PmSpecification spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Specification not found"));
-        spec.setIsDelete(true);
-        spec.setDeleteBy(userId);
-        spec.setDeleteDate(Instant.now());
-        specRepository.save(spec);
-    }
-
-    private void mapRequestToEntity(PmSpecificationRequest request, PmSpecification entity) {
-        // ✅ ใช้ setProjectId (มีอยู่ใน Entity แล้ว)
-        entity.setProjectId(request.getProjectId());
-        entity.setSpecCode(request.getSpecCode());
-        entity.setSpecType(request.getSpecType());
-        entity.setTitle(request.getTitle());
-        entity.setDescription(request.getDescription());
-        entity.setRelatedRequirement(request.getRelatedRequirement());
-        entity.setRelatedEr(request.getRelatedEr());
-        entity.setUiAction(request.getUiAction());
-        entity.setValidationRule(request.getValidationRule());
-        entity.setPermission(request.getPermission());
-        entity.setEstimatedManday(request.getEstimatedManday());
-        entity.setDependency(request.getDependency());
-        entity.setStatus(request.getStatus() != null ? request.getStatus() : "Draft");
-
-        if (request.getRequirementId() != null) {
-            PmRequirement req = requirementRepository.findById(request.getRequirementId()).orElse(null);
-            entity.setRequirement(req);
-        }
-    }
-
-    private PmSpecificationResponse toResponse(PmSpecification entity) {
-        PmSpecificationResponse dto = new PmSpecificationResponse();
-        dto.setId(entity.getId());
-        dto.setProjectId(entity.getProjectId());
-        if (entity.getProject() != null) {
-            dto.setProjectName(entity.getProject().getProjectName());
-        }
-        dto.setSpecCode(entity.getSpecCode());
-        dto.setSpecType(entity.getSpecType());
-        dto.setTitle(entity.getTitle());
-        dto.setDescription(entity.getDescription());
-        dto.setRelatedRequirement(entity.getRelatedRequirement());
-        dto.setRelatedEr(entity.getRelatedEr());
-        dto.setUiAction(entity.getUiAction());
-        dto.setValidationRule(entity.getValidationRule());
-        dto.setPermission(entity.getPermission());
-        dto.setEstimatedManday(entity.getEstimatedManday());
-        dto.setDependency(entity.getDependency());
-        dto.setStatus(entity.getStatus());
-        dto.setCreatedDate(entity.getCreatedDate());
-        dto.setUpdatedDate(entity.getUpdatedDate());
-        dto.setRowVersion(entity.getRowVersion());
-        return dto;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmTestCaseServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -66763,151 +67554,6 @@ public class ProfileServiceImpl implements ProfileService {
             case PUBLIC: return "Public";
             default: return "Public";
         }
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/SuUserBusinessServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.request.SaveUserBusinessRequest;
-import com.softinter.sicapi.dto.response.UserBusinessResponse;
-import com.softinter.sicapi.dto.response.UserResponse;
-import com.softinter.sicapi.entity.su.SuBusiness;
-import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.entity.su.SuUserBusiness;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
-import com.softinter.sicapi.service.SuBusinessService;
-import com.softinter.sicapi.service.SuUserBusinessService;
-import com.softinter.sicapi.util.LocalizationHelper; // ✅ import
-
-import lombok.RequiredArgsConstructor;
-
-@Service
-@RequiredArgsConstructor
-public class SuUserBusinessServiceImpl implements SuUserBusinessService {
-
-    private final SuUserBusinessRepository userBusinessRepository;
-    private final SuBusinessService businessService;
-    private final SuProfileRepository profileRepository;
-
-    @Override
-    public List<UserBusinessResponse> findAll(String userId) {
-        List<SuUserBusiness> list;
-        if (userId != null) {
-            list = userBusinessRepository.findByUserIdAndIsActiveTrue(userId);
-        } else {
-            list = userBusinessRepository.findAll();
-        }
-        return list.stream().map(this::toResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    public Page<UserBusinessResponse> findAll(Specification<SuUserBusiness> spec, Pageable pageable) {
-        return userBusinessRepository.findAll(spec, pageable).map(this::toResponse);
-    }
-
-    @Override
-    public SuUserBusiness findById(UUID id) {
-        return userBusinessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User business not found"));
-    }
-
-    @Override
-    public UserBusinessResponse getResponseById(UUID id) {
-        return toResponse(findById(id));
-    }
-
-    @Override
-    @Transactional
-    public UUID save(SaveUserBusinessRequest request) {
-        SuUserBusiness ub;
-        if (request.getId() != null) {
-            ub = findById(request.getId());
-        } else {
-            ub = new SuUserBusiness();
-        }
-        ub.setUserId(request.getUserId());
-        ub.setIsActive(request.isActive());
-        ub.setIsDefault(request.isDefault());
-
-        if (request.getBusinessId() != null) {
-            SuBusiness business = businessService.findById(request.getBusinessId());
-            ub.setBusiness(business);
-        } else {
-            ub.setBusiness(null);
-        }
-
-        userBusinessRepository.save(ub);
-        return ub.getId();
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        SuUserBusiness ub = findById(id);
-        ub.setIsDelete(true);
-        ub.setIsActive(false);
-        userBusinessRepository.save(ub);
-    }
-
-    @Override
-    public List<UserBusinessResponse> findByUserId(String userId) {
-        return userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<UserResponse> getAvailableUsers() {
-        List<SuUserBusiness> userBusinesses = userBusinessRepository.findAll(); // แนะนำให้กรองที่ active
-        return userBusinesses.stream()
-                .filter(ub -> ub.getIsActive() != null && ub.getIsActive())
-                .map(SuUserBusiness::getUserId)
-                .distinct()
-                .map(userId -> {
-                    SuProfile profile = profileRepository.findByUserId(userId).orElse(null);
-                    String displayName = userId;
-                    String email = "";
-                    if (profile != null) {
-                        // ✅ ใช้ LocalizationHelper.getFullName(profile)
-                        String fullName = LocalizationHelper.getFullName(profile);
-                        if (fullName != null && !fullName.isBlank()) {
-                            displayName = fullName;
-                        }
-                        email = profile.getEmail() != null ? profile.getEmail() : "";
-                    }
-                    return UserResponse.builder()
-                            .id(userId)
-                            .name(displayName)
-                            .email(email)
-                            .build();
-                })
-                .collect(Collectors.toList());
-    }
-
-    private UserBusinessResponse toResponse(SuUserBusiness ub) {
-        UserBusinessResponse response = new UserBusinessResponse();
-        response.setId(ub.getId());
-        response.setUserId(ub.getUserId());
-        if (ub.getBusiness() != null) {
-            response.setBusinessId(ub.getBusiness().getId());
-            response.setBusinessCode(ub.getBusiness().getBusinessCode());
-        }
-        response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
-        response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));
-        response.setRowVersion(ub.getRowVersion());
-        return response;
     }
 }
 </file>
@@ -69552,375 +70198,6 @@ export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.ts">
-// src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-
-interface TraceLink {
-  id: string;
-  sourceType: string;
-  sourceId: string;
-  targetType: string;
-  targetId: string;
-  relationshipType: string;
-}
-
-interface RequirementDetail {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  status: string;
-  version: string;
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-}
-
-interface RelatedItem {
-  id: string;
-  name: string;
-  code?: string;
-  type: string;
-  link: string;
-  color?: string;
-}
-
-@Component({
-  selector: 'app-pmrt05',
-  standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
-  templateUrl: './pmrt05.component.html',
-  styleUrls: ['./pmrt05.component.css'],
-})
-export class Pmrt05Component implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private http = inject(HttpClient);
-  private dialog = inject(DialogService);
-  private navigation = inject(NavigationService);
-  private customerState = inject(CustomerStateService);
-
-  // ===== State =====
-  isLoading = signal(false);
-  requirement = signal<RequirementDetail | null>(null);
-  traceLinks = signal<TraceLink[]>([]);
-  projectId = signal<string | null>(null);
-  requirementId = signal<string | null>(null);
-
-  // ===== Computed groups =====
-  dfdList = signal<RelatedItem[]>([]);
-  erList = signal<RelatedItem[]>([]);
-  specList = signal<RelatedItem[]>([]);
-  taskList = signal<RelatedItem[]>([]);
-  testList = signal<RelatedItem[]>([]);
-  bugList = signal<RelatedItem[]>([]);
-  changeRequestList = signal<RelatedItem[]>([]);
-  designReviewList = signal<RelatedItem[]>([]);
-
-  diagrams = computed(() => {
-    const dfd = this.dfdList();
-    const er = this.erList();
-    return [...dfd, ...er].sort((a, b) => a.type.localeCompare(b.type));
-  });
-
-  // ===== Lifecycle =====
-  ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      const reqId = params['requirementId'];
-      const projId = params['projectId'];
-      if (!reqId || !projId) {
-        this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
-        this.navigation.navigate(['/feature/pm/pmrt02']);
-        return;
-      }
-      this.requirementId.set(reqId);
-      this.projectId.set(projId);
-      this.loadRequirement(reqId);
-      this.loadTraceLinks(reqId);
-    });
-  }
-
-  // ===== Load Data =====
-  loadRequirement(id: string) {
-    this.isLoading.set(true);
-    this.http
-      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (data) => {
-          this.requirement.set(data);
-          this.projectId.set(data.projectId);
-        },
-        error: (err) => {
-          console.error('Load requirement error:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
-        },
-      });
-  }
-
-  loadTraceLinks(reqId: string) {
-    this.http
-      .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
-      .subscribe({
-        next: (links) => {
-          this.traceLinks.set(links);
-          this.groupLinks(links);
-        },
-        error: (err) => {
-          console.error('Load trace links error:', err);
-          this.traceLinks.set([]);
-          this.groupLinks([]);
-        },
-      });
-  }
-
-  private groupLinks(links: TraceLink[]) {
-    const dfd: RelatedItem[] = [];
-    const er: RelatedItem[] = [];
-    const spec: RelatedItem[] = [];
-    const task: RelatedItem[] = [];
-    const test: RelatedItem[] = [];
-    const bug: RelatedItem[] = [];
-    const cr: RelatedItem[] = [];
-    const review: RelatedItem[] = [];
-
-    const projectId = this.projectId();
-
-    links.forEach((link) => {
-      const type = link.targetType;
-      const id = link.targetId;
-      const item: RelatedItem = {
-        id: id,
-        name: id,
-        type: type,
-        link: this.buildLink(type, id, projectId),
-        code: id.slice(0, 8),
-      };
-
-      switch (type) {
-        case 'DFD':
-          dfd.push(item);
-          break;
-        case 'ER':
-          er.push(item);
-          break;
-        case 'SPECIFICATION':
-          spec.push(item);
-          break;
-        case 'TASK':
-          task.push(item);
-          break;
-        case 'TEST_CASE':
-          test.push(item);
-          break;
-        case 'BUG':
-          bug.push(item);
-          break;
-        case 'CHANGE_REQUEST':
-          cr.push(item);
-          break;
-        case 'DESIGN_REVIEW':
-          review.push(item);
-          break;
-        default:
-          break;
-      }
-    });
-
-    this.dfdList.set(dfd);
-    this.erList.set(er);
-    this.specList.set(spec);
-    this.taskList.set(task);
-    this.testList.set(test);
-    this.bugList.set(bug);
-    this.changeRequestList.set(cr);
-    this.designReviewList.set(review);
-  }
-
-  private buildLink(type: string, id: string, projectId: string | null): string {
-    const base = '/feature/pm';
-    switch (type) {
-      case 'DFD':
-      case 'ER':
-        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
-      case 'SPECIFICATION':
-        return `${base}/specification/${id}/edit`;
-      case 'TASK':
-        return `${base}/task/${id}/edit`;
-      case 'TEST_CASE':
-        return `${base}/test-case/${id}/edit`;
-      case 'BUG':
-        return `${base}/bug/${id}/edit`;
-      case 'CHANGE_REQUEST':
-        return `${base}/pmdt07/${id}/edit`;
-      case 'DESIGN_REVIEW':
-        return `${base}/design-review/${id}/edit`;
-      default:
-        return '#';
-    }
-  }
-
-  // ===== Navigation Actions =====
-  goBack() {
-    this.navigation.navigate(['/feature/pm/pmrt02']);
-  }
-
-  // ✅ แก้ไขปุ่ม Diagram: ส่ง requirementTitle และเปลี่ยน path เป็น diagram
-  createDiagram(): void {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    const reqTitle = this.requirement()?.title || '';
-    if (!reqId || !projId) {
-      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/diagram'], {
-      queryParams: {
-        projectId: projId,
-        requirementId: reqId,
-        requirementTitle: reqTitle,
-        openCreate: 'true',
-      },
-    });
-  }
-
-  createSpec() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt10/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createChangeRequest() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createDesignReview() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt11/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createTask() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.specList().length === 0) {
-      this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt12/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createTest() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนสร้าง Test Case');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt16/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createBug() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนแจ้ง Bug');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt17/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  // ===== Helper =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
-  }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  getPriorityClass(priority: string): string {
-    const map: Record<string, string> = {
-      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return map[priority] || map["Won't"];
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-}
-</file>
-
 <file path="sic-app/src/app/app.component.html">
 <router-outlet></router-outlet>
 </file>
@@ -70636,6 +70913,101 @@ public class PmPhase extends BaseEntity {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmSpecification.java">
+package com.softinter.sicapi.entity.pm;
+
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "pm_specification")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class PmSpecification extends BaseEntity {
+
+    @Column(name = "business_id")
+    private UUID businessId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private PmCustomerProject project;
+
+    @Column(name = "project_id", insertable = false, updatable = false)
+    private UUID projectId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requirement_id")
+    private PmRequirement requirement;
+
+    @Column(name = "spec_code", nullable = false, length = 30)
+    private String specCode;
+
+    @Column(name = "spec_type", nullable = false, length = 50)
+    private String specType;
+
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "related_requirement", columnDefinition = "TEXT")
+    private String relatedRequirement;
+
+    @Column(name = "related_diagram", columnDefinition = "TEXT")
+    private String relatedDiagram;
+
+    @Column(name = "ui_action", columnDefinition = "TEXT")
+    private String uiAction;
+
+    @Column(name = "validation_rule", columnDefinition = "TEXT")
+    private String validationRule;
+
+    @Column(name = "permission", columnDefinition = "TEXT")
+    private String permission;
+
+    @Column(name = "estimated_manday")
+    private Integer estimatedManday;
+
+    @Column(name = "dependency", columnDefinition = "TEXT")
+    private String dependency;
+
+    @Column(name = "status", length = 20)
+    private String status = "Draft";
+
+    @Column(name = "version", length = 20)
+    private String version = "1.0";
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
+    }
+
+    public UUID getBusinessId() {
+        return businessId;
+    }
+
+    public void setBusinessId(UUID businessId) {
+        this.businessId = businessId;
+    }
+
+    // convenience method to get requirement id
+    public UUID getRequirementId() {
+        return requirement != null ? requirement.getId() : null;
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmWorkPackage.java">
 package com.softinter.sicapi.entity.pm;
 
@@ -70751,6 +71123,38 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
     List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmSpecificationRepository.java">
+package com.softinter.sicapi.repository.pm;
+
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PmSpecificationRepository extends JpaRepository<PmSpecification, UUID>, JpaSpecificationExecutor<PmSpecification> {
+
+    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(UUID projectId, UUID businessId, Pageable pageable);
+
+    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
+
+    Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
+
+    List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);
+
+    @Query("SELECT s FROM PmSpecification s LEFT JOIN FETCH s.project p LEFT JOIN FETCH s.requirement r WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
+    Optional<PmSpecification> findByIdWithDetails(@Param("id") UUID id, @Param("businessId") UUID businessId);
 }
 </file>
 
@@ -72115,6 +72519,240 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setUpdatedDate(project.getUpdatedDate());
         response.setRowVersion(project.getRowVersion());
         return response;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmSpecificationServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.request.PmSpecificationRequest;
+import com.softinter.sicapi.dto.response.PmSpecificationResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
+import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.PmSpecificationService;
+import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.util.LocalizationHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class PmSpecificationServiceImpl implements PmSpecificationService {
+
+    private final PmSpecificationRepository specRepository;
+    private final PmCustomerProjectRepository projectRepository;
+    private final PmRequirementRepository requirementRepository;
+    private final TraceLinkService traceLinkService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmSpecificationResponse> findAll(UUID businessId, UUID projectId, String keyword, Pageable pageable) {
+        Page<PmSpecification> page;
+        if (projectId != null) {
+            page = specRepository.findByProjectIdAndBusinessIdAndIsDeleteFalse(projectId, businessId, pageable);
+        } else {
+            page = specRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+        }
+        return page.map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmSpecificationResponse findById(UUID id, UUID businessId) {
+        PmSpecification spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
+                .orElseThrow(() -> new RuntimeException("Specification not found"));
+        return toResponse(spec);
+    }
+
+    @Override
+    @Transactional
+    public UUID save(PmSpecificationRequest request, UUID businessId, String userId) {
+        PmSpecification spec;
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
+
+        // Load requirement if provided
+        PmRequirement requirement = null;
+        if (request.getRequirementId() != null) {
+            requirement = requirementRepository.findById(request.getRequirementId())
+                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        }
+
+        if (state == EntityState.ADDED || request.getId() == null) {
+            // Create new
+            spec = new PmSpecification();
+            spec.setBusinessId(businessId);
+            spec.setCreatedBy(userId);
+            spec.setCreatedDate(Instant.now());
+            spec.setIsDelete(false);
+            spec.setStatus("Draft");
+            spec.setVersion("1.0");
+            spec.setIsActive(true);
+            mapRequestToEntity(request, spec, requirement);
+            spec = specRepository.save(spec);
+
+            // Create trace link to requirement (if any)
+            if (requirement != null) {
+                traceLinkService.createLink(
+                        request.getProjectId(),
+                        "REQUIREMENT", requirement.getId(),
+                        "SPECIFICATION", spec.getId(),
+                        TraceRelationship.DOCUMENTED_BY
+                );
+            }
+
+        } else if (state == EntityState.MODIFIED) {
+            spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("Specification not found"));
+
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
+                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            }
+
+            // Handle version increment
+            String currentVersion = spec.getVersion() != null ? spec.getVersion() : "1.0";
+            String newVersion = incrementVersion(currentVersion);
+            spec.setVersion(newVersion);
+
+            spec.setUpdatedBy(userId);
+            spec.setUpdatedDate(Instant.now());
+
+            // Remove old trace link to requirement if requirement changed
+            UUID oldRequirementId = spec.getRequirement() != null ? spec.getRequirement().getId() : null;
+            if (oldRequirementId != null && !oldRequirementId.equals(request.getRequirementId())) {
+                // Delete old link
+                traceLinkService.deleteLinksBySourceAndTarget(
+                        "REQUIREMENT", oldRequirementId,
+                        "SPECIFICATION", spec.getId()
+                );
+            }
+
+            mapRequestToEntity(request, spec, requirement);
+
+            // Create new trace link to requirement if provided and different
+            if (requirement != null && !requirement.getId().equals(oldRequirementId)) {
+                traceLinkService.createLink(
+                        request.getProjectId(),
+                        "REQUIREMENT", requirement.getId(),
+                        "SPECIFICATION", spec.getId(),
+                        TraceRelationship.DOCUMENTED_BY
+                );
+            }
+
+            spec = specRepository.save(spec);
+
+        } else if (state == EntityState.DELETED) {
+            spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("Specification not found"));
+            spec.setIsDelete(true);
+            spec.setIsActive(false);
+            spec.setDeleteBy(userId);
+            spec.setDeleteDate(Instant.now());
+            specRepository.save(spec);
+            return spec.getId();
+        } else {
+            throw new IllegalArgumentException("Invalid state: " + state);
+        }
+
+        return spec.getId();
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id, UUID businessId, String userId) {
+        PmSpecification spec = specRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
+                .orElseThrow(() -> new RuntimeException("Specification not found"));
+        spec.setIsDelete(true);
+        spec.setIsActive(false);
+        spec.setDeleteBy(userId);
+        spec.setDeleteDate(Instant.now());
+        specRepository.save(spec);
+    }
+
+    private void mapRequestToEntity(PmSpecificationRequest request, PmSpecification entity, PmRequirement requirement) {
+        entity.setProjectId(request.getProjectId());
+        entity.setRequirement(requirement);
+        entity.setSpecCode(request.getSpecCode());
+        entity.setSpecType(request.getSpecType());
+        entity.setTitle(request.getTitle());
+        entity.setDescription(request.getDescription());
+        entity.setRelatedRequirement(request.getRelatedRequirement());
+        entity.setRelatedDiagram(request.getRelatedDiagram());
+        entity.setUiAction(request.getUiAction());
+        entity.setValidationRule(request.getValidationRule());
+        entity.setPermission(request.getPermission());
+        entity.setEstimatedManday(request.getEstimatedManday());
+        entity.setDependency(request.getDependency());
+        if (request.getStatus() != null) {
+            entity.setStatus(request.getStatus());
+        }
+        if (request.getIsActive() != null) {
+            entity.setIsActive(request.getIsActive());
+        }
+        // version handled separately
+    }
+
+    private String incrementVersion(String version) {
+        try {
+            String numPart = version;
+            if (version.startsWith("v") || version.startsWith("V")) {
+                numPart = version.substring(1);
+            }
+            double val = Double.parseDouble(numPart);
+            val += 0.1;
+            String newNum = String.format("%.1f", val);
+            return (version.startsWith("v") || version.startsWith("V")) ? "v" + newNum : newNum;
+        } catch (NumberFormatException e) {
+            return "1.1";
+        }
+    }
+
+    private PmSpecificationResponse toResponse(PmSpecification entity) {
+        PmSpecificationResponse dto = new PmSpecificationResponse();
+        dto.setId(entity.getId());
+        dto.setProjectId(entity.getProjectId());
+        if (entity.getProject() != null) {
+            dto.setProjectName(entity.getProject().getProjectName());
+        }
+        if (entity.getRequirement() != null) {
+            dto.setRequirementId(entity.getRequirement().getId());
+            dto.setRequirementName(entity.getRequirement().getTitle());
+        }
+        dto.setSpecCode(entity.getSpecCode());
+        dto.setSpecType(entity.getSpecType());
+        dto.setTitle(entity.getTitle());
+        dto.setDescription(entity.getDescription());
+        dto.setRelatedRequirement(entity.getRelatedRequirement());
+        dto.setRelatedDiagram(entity.getRelatedDiagram());
+        dto.setUiAction(entity.getUiAction());
+        dto.setValidationRule(entity.getValidationRule());
+        dto.setPermission(entity.getPermission());
+        dto.setEstimatedManday(entity.getEstimatedManday());
+        dto.setDependency(entity.getDependency());
+        dto.setStatus(entity.getStatus());
+        dto.setVersion(entity.getVersion());
+        dto.setIsActive(entity.getIsActive());
+        dto.setRowVersion(entity.getRowVersion());
+
+        // approval status? not implemented yet, can be added later
+        return dto;
     }
 }
 </file>
@@ -75264,6 +75902,376 @@ export class NewDiagramDialogComponent implements OnInit {
     </div>
   }
 </div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.ts">
+// src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+
+interface TraceLink {
+  id: string;
+  sourceType: string;
+  sourceId: string;
+  targetType: string;
+  targetId: string;
+  relationshipType: string;
+}
+
+interface RequirementDetail {
+  id: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName: string;
+  customerId: string;
+  customerName: string;
+  status: string;
+  version: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+}
+
+interface RelatedItem {
+  id: string;
+  name: string;
+  code?: string;
+  type: string;
+  link: string;
+  color?: string;
+}
+
+@Component({
+  selector: 'app-pmrt05',
+  standalone: true,
+  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
+  templateUrl: './pmrt05.component.html',
+  styleUrls: ['./pmrt05.component.css'],
+})
+export class Pmrt05Component implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
+
+  // ===== State =====
+  isLoading = signal(false);
+  requirement = signal<RequirementDetail | null>(null);
+  traceLinks = signal<TraceLink[]>([]);
+  projectId = signal<string | null>(null);
+  requirementId = signal<string | null>(null);
+
+  // ===== Computed groups =====
+  dfdList = signal<RelatedItem[]>([]);
+  erList = signal<RelatedItem[]>([]);
+  specList = signal<RelatedItem[]>([]);
+  taskList = signal<RelatedItem[]>([]);
+  testList = signal<RelatedItem[]>([]);
+  bugList = signal<RelatedItem[]>([]);
+  changeRequestList = signal<RelatedItem[]>([]);
+  designReviewList = signal<RelatedItem[]>([]);
+
+  diagrams = computed(() => {
+    const dfd = this.dfdList();
+    const er = this.erList();
+    return [...dfd, ...er].sort((a, b) => a.type.localeCompare(b.type));
+  });
+
+  // ===== Lifecycle =====
+  ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      const reqId = params['requirementId'];
+      const projId = params['projectId'];
+      if (!reqId || !projId) {
+        this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
+        this.navigation.navigate(['/feature/pm/pmrt02']);
+        return;
+      }
+      this.requirementId.set(reqId);
+      this.projectId.set(projId);
+      this.loadRequirement(reqId);
+      this.loadTraceLinks(reqId);
+    });
+  }
+
+  // ===== Load Data =====
+  loadRequirement(id: string) {
+    this.isLoading.set(true);
+    this.http
+      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.requirement.set(data);
+          this.projectId.set(data.projectId);
+        },
+        error: (err) => {
+          console.error('Load requirement error:', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
+          this.navigation.navigate(['/feature/pm/pmrt02']);
+        },
+      });
+  }
+
+  loadTraceLinks(reqId: string) {
+    this.http
+      .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
+      .subscribe({
+        next: (links) => {
+          this.traceLinks.set(links);
+          this.groupLinks(links);
+        },
+        error: (err) => {
+          console.error('Load trace links error:', err);
+          this.traceLinks.set([]);
+          this.groupLinks([]);
+        },
+      });
+  }
+
+  private groupLinks(links: TraceLink[]) {
+    const dfd: RelatedItem[] = [];
+    const er: RelatedItem[] = [];
+    const spec: RelatedItem[] = [];
+    const task: RelatedItem[] = [];
+    const test: RelatedItem[] = [];
+    const bug: RelatedItem[] = [];
+    const cr: RelatedItem[] = [];
+    const review: RelatedItem[] = [];
+
+    const projectId = this.projectId();
+
+    links.forEach((link) => {
+      const type = link.targetType;
+      const id = link.targetId;
+      const item: RelatedItem = {
+        id: id,
+        name: id,
+        type: type,
+        link: this.buildLink(type, id, projectId),
+        code: id.slice(0, 8),
+      };
+
+      switch (type) {
+        case 'DFD':
+          dfd.push(item);
+          break;
+        case 'ER':
+          er.push(item);
+          break;
+        case 'SPECIFICATION':
+          spec.push(item);
+          break;
+        case 'TASK':
+          task.push(item);
+          break;
+        case 'TEST_CASE':
+          test.push(item);
+          break;
+        case 'BUG':
+          bug.push(item);
+          break;
+        case 'CHANGE_REQUEST':
+          cr.push(item);
+          break;
+        case 'DESIGN_REVIEW':
+          review.push(item);
+          break;
+        default:
+          break;
+      }
+    });
+
+    this.dfdList.set(dfd);
+    this.erList.set(er);
+    this.specList.set(spec);
+    this.taskList.set(task);
+    this.testList.set(test);
+    this.bugList.set(bug);
+    this.changeRequestList.set(cr);
+    this.designReviewList.set(review);
+  }
+
+  private buildLink(type: string, id: string, projectId: string | null): string {
+    const base = '/feature/pm';
+    switch (type) {
+      case 'DFD':
+      case 'ER':
+        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
+      case 'SPECIFICATION':
+        return `${base}/pmdt08A/${id}/edit`; // ✅ แก้ไข: ใช้ pmdt08A แทน pmdt10
+      case 'TASK':
+        return `${base}/task/${id}/edit`;
+      case 'TEST_CASE':
+        return `${base}/test-case/${id}/edit`;
+      case 'BUG':
+        return `${base}/bug/${id}/edit`;
+      case 'CHANGE_REQUEST':
+        return `${base}/pmdt07/${id}/edit`;
+      case 'DESIGN_REVIEW':
+        return `${base}/design-review/${id}/edit`;
+      default:
+        return '#';
+    }
+  }
+
+  // ===== Navigation Actions =====
+  goBack() {
+    this.navigation.navigate(['/feature/pm/pmrt02']);
+  }
+
+  // ✅ แก้ไข: สร้าง Specification -> ใช้ pmdt08A
+  createSpec() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createDiagram(): void {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    const reqTitle = this.requirement()?.title || '';
+    if (!reqId || !projId) {
+      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/diagram'], {
+      queryParams: {
+        projectId: projId,
+        requirementId: reqId,
+        requirementTitle: reqTitle,
+        openCreate: 'true',
+      },
+    });
+  }
+
+  createChangeRequest() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createDesignReview() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt11/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createTask() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.specList().length === 0) {
+      this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt12/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createTest() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.taskList().length === 0) {
+      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนสร้าง Test Case');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt16/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createBug() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.taskList().length === 0) {
+      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนแจ้ง Bug');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt17/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  // ===== Helper =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      Approved: 'อนุมัติแล้ว',
+      Changed: 'เปลี่ยนแปลง',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return map[priority] || map["Won't"];
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+}
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuBusinessRoleProgramController.java">
@@ -84873,6 +85881,7 @@ import { customerGuard } from '../../core/guard/customer.guard';
 import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
+import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -85080,23 +86089,26 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
 
-  // ===== Specification =====
-  {
-    path: 'specification',
-    loadComponent: () => import('./rt/pmrt10/pmrt10.component').then((m) => m.Pmrt10Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'specification/new',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
-  },
-  {
-    path: 'specification/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
-  },
-
+ // ===== Specification Management =====
+{
+  path: 'pmdt08',
+  loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
+{
+  path: 'pmdt08A/new',
+  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+  resolve: { form: pmdt08CreateResolver },
+  canDeactivate: [CanDeactivateGuard],
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
+{
+  path: 'pmdt08A/:id/edit',
+  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+  resolve: { form: pmdt08EditResolver },
+  canDeactivate: [CanDeactivateGuard],
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
   // ===== Design Review =====
   {
     path: 'design-review',
