@@ -8,11 +8,14 @@ import java.util.UUID;
 
 @Data
 public class PmSpecificationRequest {
-
     private UUID id;
+    private Integer state;
+    private Integer rowVersion;
 
     @NotNull(message = "Project ID is required")
     private UUID projectId;
+
+    private UUID requirementId;   // optional
 
     @NotBlank(message = "Spec code is required")
     private String specCode;
@@ -24,20 +27,14 @@ public class PmSpecificationRequest {
     private String title;
 
     private String description;
-
-    // ===== Traceability =====
-    private UUID requirementId;      // เชื่อมกับ Requirement
-    private UUID erId;               // เชื่อมกับ ER Diagram
-
-    private String relatedRequirement; // เก็บข้อความ (ถ้ามี)
-    private String relatedEr;
+    private String relatedRequirement;
+    private String relatedDiagram;
     private String uiAction;
     private String validationRule;
     private String permission;
     private Integer estimatedManday;
     private String dependency;
     private String status;
-
-    private Integer state;
-    private Integer rowVersion;
+    private String version;
+    private Boolean isActive;
 }

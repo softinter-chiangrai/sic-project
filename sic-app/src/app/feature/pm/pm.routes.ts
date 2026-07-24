@@ -5,6 +5,7 @@ import { customerGuard } from '../../core/guard/customer.guard';
 import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
+import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -212,23 +213,26 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
   },
 
-  // ===== Specification =====
-  {
-    path: 'specification',
-    loadComponent: () => import('./rt/pmrt10/pmrt10.component').then((m) => m.Pmrt10Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'specification/new',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
-  },
-  {
-    path: 'specification/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
-  },
-
+ // ===== Specification Management =====
+{
+  path: 'pmdt08',
+  loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
+{
+  path: 'pmdt08A/new',
+  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+  resolve: { form: pmdt08CreateResolver },
+  canDeactivate: [CanDeactivateGuard],
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
+{
+  path: 'pmdt08A/:id/edit',
+  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+  resolve: { form: pmdt08EditResolver },
+  canDeactivate: [CanDeactivateGuard],
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+},
   // ===== Design Review =====
   {
     path: 'design-review',

@@ -16,25 +16,14 @@ import java.util.UUID;
 @Repository
 public interface PmSpecificationRepository extends JpaRepository<PmSpecification, UUID>, JpaSpecificationExecutor<PmSpecification> {
 
-    // ===== ✅ เพิ่ม method ที่หายไป =====
-    Page<PmSpecification> findByProjectIdAndIsDeleteFalse(UUID projectId, Pageable pageable);
+    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(UUID projectId, UUID businessId, Pageable pageable);
 
-    // ===== Other methods =====
-    List<PmSpecification> findByProjectIdAndIsDeleteFalse(UUID projectId);
+    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
     Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
 
-    @Query("SELECT s FROM PmSpecification s WHERE s.projectId = :projectId AND s.isDelete = false AND s.businessId = :businessId")
-    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(
-            @Param("projectId") UUID projectId,
-            @Param("businessId") UUID businessId,
-            Pageable pageable);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.isDelete = false AND s.businessId = :businessId")
-    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId, Pageable pageable);
-
     List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);
 
-    @Query("SELECT s FROM PmSpecification s WHERE s.requirement.id = :requirementId AND s.isDelete = false")
-    List<PmSpecification> findByRequirementId(@Param("requirementId") UUID requirementId);
+    @Query("SELECT s FROM PmSpecification s LEFT JOIN FETCH s.project p LEFT JOIN FETCH s.requirement r WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
+    Optional<PmSpecification> findByIdWithDetails(@Param("id") UUID id, @Param("businessId") UUID businessId);
 }

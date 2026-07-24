@@ -7,15 +7,12 @@ import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "pm_specification")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class PmSpecification extends BaseEntity {
 
-    // ===== Business ID (จาก BaseBusinessEntity แต่ BaseEntity ไม่มี) =====
-    // ถ้าใช้ BaseBusinessEntity ให้ extends BaseBusinessEntity
-    // ถ้าใช้ BaseEntity ให้เพิ่ม field นี้
     @Column(name = "business_id")
     private UUID businessId;
 
@@ -23,13 +20,12 @@ public class PmSpecification extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;
 
-    // ✅ เพิ่ม FK ไปยัง Requirement
+    @Column(name = "project_id", insertable = false, updatable = false)
+    private UUID projectId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requirement_id")
     private PmRequirement requirement;
-
-    @Column(name = "project_id", insertable = false, updatable = false)
-    private UUID projectId;  // ✅ เพิ่ม getter ให้ใช้ใน Service
 
     @Column(name = "spec_code", nullable = false, length = 30)
     private String specCode;
@@ -46,8 +42,8 @@ public class PmSpecification extends BaseEntity {
     @Column(name = "related_requirement", columnDefinition = "TEXT")
     private String relatedRequirement;
 
-    @Column(name = "related_er", columnDefinition = "TEXT")
-    private String relatedEr;
+    @Column(name = "related_diagram", columnDefinition = "TEXT")
+    private String relatedDiagram;
 
     @Column(name = "ui_action", columnDefinition = "TEXT")
     private String uiAction;
@@ -67,7 +63,12 @@ public class PmSpecification extends BaseEntity {
     @Column(name = "status", length = 20)
     private String status = "Draft";
 
-    // ===== Helper Methods =====
+    @Column(name = "version", length = 20)
+    private String version = "1.0";
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
     public UUID getProjectId() {
         return projectId;
     }
@@ -82,5 +83,10 @@ public class PmSpecification extends BaseEntity {
 
     public void setBusinessId(UUID businessId) {
         this.businessId = businessId;
+    }
+
+    // convenience method to get requirement id
+    public UUID getRequirementId() {
+        return requirement != null ? requirement.getId() : null;
     }
 }

@@ -33,3 +33,16 @@ CREATE INDEX idx_trace_relationship ON pm_trace_link (relationship_type);
 
 ALTER TABLE pm_trace_link ADD CONSTRAINT fk_trace_project
     FOREIGN KEY (project_id) REFERENCES pm_customer_project(id);
+
+
+-- เพิ่มคอลัมน์ requirement_id, version, is_active
+ALTER TABLE pm_specification ADD COLUMN requirement_id UUID;
+ALTER TABLE pm_specification ADD COLUMN version VARCHAR(20) DEFAULT '1.0';
+ALTER TABLE pm_specification ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+
+-- เพิ่ม Foreign Key และ Index
+ALTER TABLE pm_specification ADD CONSTRAINT fk_spec_requirement 
+    FOREIGN KEY (requirement_id) REFERENCES pm_requirement(id);
+CREATE INDEX idx_spec_requirement ON pm_specification (requirement_id);
+
+ALTER TABLE pm_specification RENAME COLUMN related_er TO related_diagram;

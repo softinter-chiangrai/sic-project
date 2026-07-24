@@ -1,0 +1,156 @@
+<!-- src/app/feature/pm/dt/pmdt08A/pmdt08A.component.html -->
+
+@if (formData) {
+  <form [formGroup]="formData.formGroup" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Specification' : 'เพิ่มข้อมูล Specification' }}
+        </h2>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="โครงการ" formControlName="projectName" [disabled]="true"></sic-input>
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="Requirement ที่เกี่ยวข้อง"
+          [apiUrl]="servicePublic.apiGetComboboxRequirement"
+          [params]="{ projectId: formData.formGroup.get('projectId')?.value }"
+          valueField="value"
+          textField="text"
+          placeholder="เลือก Requirement"
+          [clearable]="true"
+          (selectionChanged)="onRequirementSelect($event)">
+        </sic-combobox>
+        <input type="hidden" formControlName="requirementId" />
+        <input type="hidden" formControlName="requirementName" />
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="รหัส Specification" formControlName="specCode" [required]="true" placeholder="SPEC-001"></sic-input>
+        @if (formData.formGroup.get('specCode')?.touched && formData.formGroup.get('specCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ประเภท Specification"
+          formControlName="specType"
+          [apiUrl]="'api/db/parameter/lov'"
+          [params]="{ group: 'PM', parameterCode: 'SPEC_TYPE' }"
+          valueField="value"
+          textField="text"
+          [required]="true"
+        ></sic-combobox>
+        @if (formData.formGroup.get('specType')?.touched && formData.formGroup.get('specType')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="ชื่อ Specification" formControlName="title" [required]="true" placeholder="ชื่อ"></sic-input>
+        @if (formData.formGroup.get('title')?.touched && formData.formGroup.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ</p>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="คำอธิบาย" formControlName="description" [rows]="2" placeholder="คำอธิบาย"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Related Requirement (ข้อความ)" formControlName="relatedRequirement" [rows]="1" placeholder="ระบุ Requirement ที่เกี่ยวข้อง"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Related Diagram (ข้อความ)" formControlName="relatedDiagram" [rows]="1" placeholder="ระบุ Diagram ที่เกี่ยวข้อง"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="UI Actions" formControlName="uiAction" [rows]="1" placeholder="รายการ UI Actions"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area label="Validation Rule" formControlName="validationRule" [rows]="1" placeholder="Validation Rules"></sic-input-area>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="Permission" formControlName="permission" placeholder="สิทธิ์"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-number label="Estimated Manday" formControlName="estimatedManday" placeholder="0" [decimal]="0"></sic-number>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="Dependency" formControlName="dependency" placeholder="สิ่งที่ต้องมีก่อน"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="สถานะ"
+          formControlName="status"
+          [apiUrl]="'api/db/parameter/lov'"
+          [params]="{ group: 'COMMON', parameterCode: 'DOC_STATUS' }"
+          valueField="value"
+          textField="text"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+      </div>
+
+      <!-- Approval Section -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i> การอนุมัติ
+        </div>
+        <sic-combobox
+          label="กระบวนการอนุมัติ"
+          [apiUrl]="'api/pm/approvals/flows/document-type/SPECIFICATION'"
+          valueField="id"
+          textField="flowName"
+          placeholder="เลือกกระบวนการอนุมัติ"
+          [clearable]="true"
+          (selectionChanged)="selectedFlowId = $event?.id"
+        ></sic-combobox>
+        @if (isEdit && formData.value.approvalStatus) {
+          <div class="mt-2 text-sm">
+            <span class="text-[var(--text-muted)]">สถานะอนุมัติ: </span>
+            <span class="font-medium">{{ formData.value.approvalStatus }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

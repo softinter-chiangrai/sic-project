@@ -3,4 +3,5 @@ sic-api/obj
 Migrations/
 
 *.txt
+*.log
 drawio-dev/

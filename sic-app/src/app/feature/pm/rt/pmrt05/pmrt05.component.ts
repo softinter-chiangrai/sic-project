@@ -1,4 +1,5 @@
 // src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
+
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
@@ -209,7 +210,7 @@ export class Pmrt05Component implements OnInit {
       case 'ER':
         return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
-        return `${base}/specification/${id}/edit`;
+        return `${base}/pmdt08A/${id}/edit`; // ✅ แก้ไข: ใช้ pmdt08A แทน pmdt10
       case 'TASK':
         return `${base}/task/${id}/edit`;
       case 'TEST_CASE':
@@ -230,7 +231,16 @@ export class Pmrt05Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt02']);
   }
 
-  // ✅ แก้ไขปุ่ม Diagram: ส่ง requirementTitle และเปลี่ยน path เป็น diagram
+  // ✅ แก้ไข: สร้าง Specification -> ใช้ pmdt08A
+  createSpec() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
   createDiagram(): void {
     const reqId = this.requirementId();
     const projId = this.projectId();
@@ -249,20 +259,11 @@ export class Pmrt05Component implements OnInit {
     });
   }
 
-  createSpec() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt10/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
   createChangeRequest() {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07'], {
+    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
