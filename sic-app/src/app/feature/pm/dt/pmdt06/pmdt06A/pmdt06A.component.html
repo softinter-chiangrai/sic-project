@@ -32,14 +32,19 @@
           </div>
           <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
             <span>{{ message.createdAt | date: 'shortTime' }}</span>
+            <!-- ✅ ปุ่ม Copy Mermaid ที่เปลี่ยนข้อความตามสถานะ -->
             @if (message.role === 'assistant' && getMermaidCode(message.content)) {
-              <button
-                (click)="copyMermaidCode(message.content)"
-                class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
-                title="คัดลอก Mermaid Code"
-              >
-                <i class="bi bi-clipboard"></i> Copy Mermaid
-              </button>
+              @if (copiedStatus()[message.id]) {
+                <span class="text-green-500 text-xs font-medium">Copied!</span>
+              } @else {
+                <button
+                  (click)="copyMermaidCode(message.content, message.id)"
+                  class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
+                  title="คัดลอก Mermaid Code"
+                >
+                  <i class="bi bi-clipboard"></i> Copy Mermaid
+                </button>
+              }
             }
           </div>
         </div>

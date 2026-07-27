@@ -49,6 +49,8 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   messages = signal<ChatMessage[]>([]);
   userInput = '';
   isLoading = signal(false);
+  // ✅ เพิ่ม signal เก็บสถานะการคัดลอกของแต่ละข้อความ (key = message.id)
+  copiedStatus = signal<Record<string, boolean>>({});
 
   chatContainer = viewChild<ElementRef>('chatContainer');
 
@@ -137,22 +139,45 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     return match ? match[1].trim() : null;
   }
 
-  // ฟังก์ชันคัดลอก Mermaid code
-  copyMermaidCode(content: string): void {
+  // ✅ ฟังก์ชันคัดลอก Mermaid code (รับ messageId ด้วย)
+  copyMermaidCode(content: string, messageId: string): void {
     const code = this.getMermaidCode(content);
     if (!code) return;
-    navigator.clipboard?.writeText(code)
-      .then(() => this.dialogService.success('Copied', 'Mermaid code copied to clipboard.'))
-      .catch(() => {
-        // fallback
-        const textarea = document.createElement('textarea');
-        textarea.value = code;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        this.dialogService.success('Copied', 'Mermaid code copied to clipboard.');
-      });
+
+    // ฟังก์ชันที่เรียกเมื่อคัดลอกสำเร็จ
+    const markAsCopied = () => {
+      this.copiedStatus.update((status) => ({ ...status, [messageId]: true }));
+      // เปลี่ยนกลับเป็น false หลังจาก 2 วินาที
+      setTimeout(() => {
+        this.copiedStatus.update((status) => ({ ...status, [messageId]: false }));
+      }, 2000);
+    };
+
+    // ใช้ Clipboard API ถ้ารองรับ
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(code)
+        .then(() => markAsCopied())
+        .catch(() => this.fallbackCopy(code, markAsCopied));
+    } else {
+      // fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
+      this.fallbackCopy(code, markAsCopied);
+    }
+  }
+
+  // ✅ fallback copy (รับ callback เมื่อสำเร็จ)
+  private fallbackCopy(text: string, onSuccess?: () => void): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      if (onSuccess) onSuccess();
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+    textarea.remove();
   }
 
   clearChat() {
