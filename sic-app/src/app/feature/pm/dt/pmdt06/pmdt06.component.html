@@ -50,10 +50,11 @@
         }
       </button>
 
+      <!-- ✅ ปุ่ม Save กลับมาแล้ว -->
       <button
         (click)="saveDiagram()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
-        title="Save diagram"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
+        title="Save diagram now"
       >
         <i class="bi bi-check-circle-fill text-lg"></i>
         <span>Save</span>
@@ -61,7 +62,7 @@
 
       <button
         (click)="loadExistingDiagram()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
         title="Reload from server"
       >
         <i class="bi bi-arrow-repeat text-lg"></i>
@@ -143,6 +144,8 @@
     </div>
     <div class="flex items-center gap-3">
       <span>{{ tabs().length }} diagram(s)</span>
+      <!-- ✅ แสดงสถานะ auto‑save / manual save -->
+      <span class="text-xs text-[var(--text-muted)]">{{ autoSaveStatus }}</span>
     </div>
   </div>
 
@@ -160,7 +163,7 @@
     }
     <iframe
       #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1"
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
       class="block w-full h-full border-none bg-white"
       frameborder="0"
       allowfullscreen
@@ -188,7 +191,6 @@
       </button>
     </div>
     <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-      <!-- ไม่มี (aiResponse) อีกต่อไป -->
       <app-pmdt06A
         [diagramId]="currentTabId"
         class="flex-1 flex flex-col h-full overflow-hidden"

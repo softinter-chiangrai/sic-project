@@ -13,7 +13,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, take, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil, interval } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { DialogService } from '../../../../core/services/dialog.service';
 import type { DiagramModel } from './diagram.model';
 import { DiagramService } from './diagram.service';
@@ -61,6 +62,11 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบ)
   private requirementId: string | null = null;
   private requirementTitle: string = '';
+
+  // ===== Auto‑Save =====
+  private lastSavedXml: string | null = null;
+  autoSaveStatus = '';
+  private saving = false;
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
@@ -170,6 +176,44 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         }
       }
     });
+
+    // ===== Auto‑Save: Poll XML ทุก 10 วินาที =====
+    interval(30000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (
+          this.drawioReady &&
+          this.currentTabId &&
+          !this.isLoading &&
+          !this.isLoadingDiagram
+        ) {
+          // ขอ XML จาก Draw.io เพื่อตรวจสอบการเปลี่ยนแปลง
+          this.drawioService.requestXml();
+        }
+      });
+
+    // ===== Auto‑Save: เมื่อได้รับ XML จาก Draw.io =====
+    this.drawioService.xml$
+      .pipe(
+        debounceTime(300), // หน่วงเล็กน้อยเพื่อป้องกันการยิงซ้ำ
+        takeUntil(this.destroy$)
+      )
+      .subscribe((xml: string) => {
+        if (!this.currentTabId) return;
+        if (!xml || xml.trim().length === 0) return;
+
+        const normalized = this.ensureValidDrawioXml(xml);
+
+        // ไม่มีการเปลี่ยนแปลง
+        if (normalized === this.lastSavedXml) {
+          return;
+        }
+
+        this.lastSavedXml = normalized;
+        console.log('[AutoSave] Diagram changed, saving...');
+
+        this.autoSaveDiagram(normalized);
+      });
   }
 
   ngOnDestroy(): void {
@@ -486,6 +530,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
         xml = this.ensureValidDrawioXml(xml);
         console.log('[Diagram] XML length after validation:', xml.length);
+        // ตั้งค่า lastSavedXml เป็น XML ที่โหลดมา เพื่อป้องกัน auto‑save ซ้ำ
+        this.lastSavedXml = xml;
         setTimeout(() => {
           this.drawioService.loadXml(xml, true);
         }, 300);
@@ -504,53 +550,108 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
     });
   }
 
+  // ===== Save (Manual) =====
   saveDiagram(): void {
     if (!this.currentTabId) {
-      if (this.projectId) {
-        this.createNewTab();
-      }
+      this.dialogService.warn('No Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
       return;
     }
-    this.saveDiagramInternal();
-  }
-
-  private saveDiagramInternal(): void {
-    if (!this.currentTabId) {
-      this.dialogService.warn('ไม่มี Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
-      return;
-    }
+    // ขอ XML ล่าสุดจาก Draw.io
     this.drawioService.requestXml();
-    this.drawioService.xml$.pipe(take(1)).subscribe((xml) => {
-      if (!xml || !this.currentTabId) return;
-      const name = this.currentDiagram?.name || 'Drawio Diagram';
-      const diagramType = this.currentDiagram?.diagramType || 'Flowchart';
-      const projectId = this.currentDiagram?.projectId || this.projectId;
-      if (!projectId) {
-        this.dialogService.warn('Missing Project ID', 'ไม่พบ Project ID');
+    // รอ XML แล้วบันทึกทันที (ใช้ take(1) เพื่อรับครั้งเดียว)
+    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe((xml: string) => {
+      if (!xml || xml.trim().length === 0) {
+        this.dialogService.warn('Empty Diagram', 'ไม่พบข้อมูล Diagram');
         return;
       }
-      const updatedTab = {
-        ...this.currentDiagram,
-        id: this.currentTabId,
-        name,
-        diagramType,
-        projectId,
-        graphData: { xml },
-        mermaidScript: this.currentDiagram?.mermaidScript || null,
-        state: 3,
-        rowVersion: this.currentDiagram?.rowVersion || 0,
-      };
-      this.diagramService.updateTab(updatedTab as any).subscribe({
-        next: (res) => {
-          this.currentDiagram = res;
-          this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-          this.dialogService.success('Saved', 'Diagram saved successfully.');
-        },
-        error: (err) => {
-          console.error('Save failed:', err);
-          this.dialogService.error('Save Failed', err.error?.message || 'Could not save diagram.');
-        },
-      });
+      const normalized = this.ensureValidDrawioXml(xml);
+      // บันทึกทันทีโดยไม่รอ auto-save
+      this.autoSaveDiagram(normalized, true); // ส่ง flag manual=true
+    });
+  }
+
+  // ===== Auto‑Save (Internal) =====
+  private autoSaveDiagram(xml: string, manual: boolean = false): void {
+    if (this.saving) {
+      if (manual) {
+        this.dialogService.warn('กำลังบันทึก', 'ระบบกำลังบันทึกอยู่ กรุณารอสักครู่');
+      }
+      return;
+    }
+
+    if (!this.currentTabId) {
+      return;
+    }
+
+    const diagram = this.tabs().find(t => t.id === this.currentTabId);
+    if (!diagram) {
+      console.warn('[AutoSave] No diagram found for current tab');
+      return;
+    }
+
+    // ตรวจสอบว่ามี requirementId หรือไม่ (ถ้าไม่มี ให้ใช้จาก currentDiagram หรือจาก query param)
+    let requirementId = diagram['requirementId'] || this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    if (!requirementId) {
+      // ถ้าไม่มี requirementId ให้ดึงจาก currentDiagram ที่โหลดไว้
+      if (this.currentDiagram && this.currentDiagram['requirementId']) {
+        requirementId = this.currentDiagram['requirementId'];
+      }
+    }
+
+    // ถ้ายังไม่มี requirementId ให้แจ้งเตือนและไม่บันทึก
+    if (!requirementId) {
+      console.warn('[AutoSave] No requirementId found for this diagram, cannot save.');
+      if (manual) {
+        this.dialogService.warn('Missing Requirement', 'ไม่พบ Requirement ID ที่เชื่อมโยง กรุณาสร้าง Diagram ใหม่ผ่าน Requirement');
+      }
+      return;
+    }
+
+    this.saving = true;
+
+    const updatedTab = {
+      ...diagram,
+      graphData: { xml },
+      requirementId: requirementId, // ส่ง requirementId ไปด้วย
+      state: 3,
+      rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null
+    };
+
+    this.diagramService.updateTab(updatedTab as any).subscribe({
+      next: (res) => {
+        this.currentDiagram = res;
+        this.tabs.update(items =>
+          items.map(i => i.id === res.id ? res : i)
+        );
+        this.lastSavedXml = res.graphData?.xml ?? xml;
+        const now = new Date().toLocaleTimeString();
+        this.autoSaveStatus = manual ? `✅ Saved manually at ${now}` : `✅ Auto-saved at ${now}`;
+        this.saving = false;
+        if (manual) {
+          this.dialogService.success('บันทึกสำเร็จ', 'Diagram ถูกบันทึกเรียบร้อย');
+        }
+      },
+      error: (err) => {
+        this.saving = false;
+        const msg = err.error?.message || 'เกิดข้อผิดพลาด';
+        this.autoSaveStatus = `❌ Save failed`;
+        if (manual) {
+          this.dialogService.error('บันทึกไม่สำเร็จ', msg);
+        } else {
+          console.error('[AutoSave] Failed:', err);
+        }
+        // ดึงข้อมูล Diagram ล่าสุดเพื่ออัปเดต rowVersion สำหรับการบันทึกครั้งถัดไป
+        if (this.currentTabId) {
+          this.diagramService.getDiagram(this.currentTabId).subscribe({
+            next: (latest) => {
+              this.currentDiagram = latest;
+              this.tabs.update(items =>
+                items.map(i => i.id === latest.id ? latest : i)
+              );
+            }
+          });
+        }
+      }
     });
   }
 

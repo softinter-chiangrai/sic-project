@@ -85,7 +85,6 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
-  // ✅ ใช้ action: 'mermaid' เพื่อแทรก Mermaid เป็น Page ใหม่
   insertMermaid(mermaidScript: string, pageName?: string): void {
     if (!this.drawioReady) {
       console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
@@ -125,10 +124,18 @@ export class DrawioConnectorService {
     console.log('[Draw.io] EVENT:', data);
 
     if (data.event === 'configure') {
-      const reply = { action: 'configure', config: { defaultFonts: [], defaultLibraries: true } };
+      // ✅ เปิดใช้งาน autosave ในการตอบกลับ configure
+      const reply = {
+        action: 'configure',
+        config: {
+          defaultFonts: [],
+          defaultLibraries: true,
+          autosave: true   // <--- สำคัญมาก
+        }
+      };
       try {
         event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
-        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok)');
+        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true');
       } catch (e) {
         console.error('[Draw.io] Configure response error:', e);
       }
@@ -140,6 +147,13 @@ export class DrawioConnectorService {
       this.drawioReady = true;
       this.isReadySubject.next(true);
       this.flushQueue();
+      return;
+    }
+
+    // ✅ จัดการ event save (ส่งโดย Draw.io เมื่อ autosave ทำงาน)
+    if (data.event === 'save') {
+      console.log('[Draw.io] ✅ SAVE event received – requesting XML for auto‑save...');
+      this.requestXml();
       return;
     }
 

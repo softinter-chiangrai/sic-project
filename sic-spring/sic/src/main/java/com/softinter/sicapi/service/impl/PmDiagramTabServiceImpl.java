@@ -181,8 +181,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
 
         if (state == EntityState.MODIFIED) {
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(tab.getRowVersion())) {
-                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            if (request.getRowVersion() != null && request.getRowVersion() != 0 && !request.getRowVersion().equals(tab.getRowVersion())) {
+                if (request.getGraphData() == null && request.getMermaidScript() == null) {
+                    throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+                } else {
+                    log.warn("[PmDiagramTab] RowVersion mismatch during diagram auto-save (req: {}, db: {}). Updating diagram...", request.getRowVersion(), tab.getRowVersion());
+                }
             }
 
             if (request.getProjectId() != null && !tab.getProjectId().equals(request.getProjectId())) {
