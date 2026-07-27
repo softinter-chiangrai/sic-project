@@ -5,7 +5,7 @@ import com.softinter.sicapi.dto.request.UploadSessionRequest;
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
 import com.softinter.sicapi.dto.response.UploadSessionResponse;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;   // ✅ แก้ตรงนี้
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
@@ -93,7 +93,7 @@ public class StorageController {
         return ResponseEntity.ok(Map.of("sessionId", sessionId));
     }
 
-    @PostMapping("/upload/sessions/{sessionId}/chunks/{chunkIndex}")
+    @PostMapping(value = "/upload/sessions/{sessionId}/chunks/{chunkIndex}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a chunk")
     public ResponseEntity<UploadSessionResponse> uploadChunk(
             @PathVariable UUID sessionId,
@@ -205,7 +205,6 @@ public class StorageController {
         String baseUrl = request.getScheme() + "://" + request.getServerName()
                 + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
 
-        // ✅ แปลง SuUpload → StorageUploadReference
         List<StorageUploadReference> refs = uploads.stream()
                 .map(u -> {
                     StorageUploadReference ref = new StorageUploadReference();
@@ -214,7 +213,6 @@ public class StorageController {
                     ref.setFileName(u.getFileName());
                     ref.setContentType(u.getContentType());
                     ref.setFileSize(u.getFileSize());
-                    // ✅ แปลง FileVisibility enum → String
                     ref.setVisibility(u.getVisibility().name());
                     ref.setAccessUrl(baseUrl + "/api/storage/download/" + u.getId());
                     ref.setIsActive(u.getIsActive());

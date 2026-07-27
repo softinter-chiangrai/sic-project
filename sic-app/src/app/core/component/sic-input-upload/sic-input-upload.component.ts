@@ -549,6 +549,10 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
       throw new Error('This file type is not supported.');
     }
 
+    if (!this.normalizeUploadGroupId(this.uploadGroupId)) {
+      this.uploadGroupId = this.createLocalId();
+    }
+
     return this.sendJsonRequest<SicUploadSessionState>('POST', this.buildSessionUrl(), {
       fileName: file.name,
       fileSize: file.size,
@@ -591,6 +595,10 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
     item.nextChunkIndex = state.nextChunkIndex;
     item.uploadedBytes = state.uploadedBytes;
     item.progress = Math.min(100, Math.round((state.uploadedBytes / item.size) * 100));
+    // ✅ sync uploadGroupId จาก Backend response เพื่อให้ทุกไฟล์ใช้ group เดียวกัน
+    if (state.uploadGroupId && !this.uploadGroupId) {
+      this.uploadGroupId = state.uploadGroupId;
+    }
   }
 
   private async ensureUploadSession(item: SicUploadItem): Promise<void> {

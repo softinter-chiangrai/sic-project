@@ -27,6 +27,7 @@ public interface FileStorageService {
     UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk);
     void cancelSession(UUID sessionId);
     void activateUpload(UUID uploadId);
+    void activateUploadGroup(UUID uploadGroupId); // ✅ activate ทุกไฟล์ในกลุ่ม
     StorageDownloadResponse downloadByKey(String bucketName, String objectKey);
     String getFileUrlByUploadGroupId(UUID uploadGroupId);
     void activateUpload(UUID uploadId, String userId);

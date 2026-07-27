@@ -1,8 +1,7 @@
-<!-- Facebook style Modal Overlay -->
+<!-- src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.html -->
+
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" (click)="closeModal()">
-  
-  <!-- Modal Dialog Container -->
-  <div 
+  <div
     class="bg-[var(--bg)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up"
     (click)="$event.stopPropagation()"
   >
@@ -11,8 +10,8 @@
       <h2 class="text-lg font-bold text-[var(--text-active)]">
         {{ isEdit ? 'แก้ไขโพสต์' : 'สร้างโพสต์ใหม่' }}
       </h2>
-      <button 
-        type="button" 
+      <button
+        type="button"
         (click)="closeModal()"
         class="absolute right-3.5 top-3.5 w-8 h-8 rounded-full bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         title="ปิด"
@@ -23,7 +22,7 @@
 
     <!-- Modal Body -->
     <div class="p-5 overflow-y-auto space-y-4 flex-1">
-      <!-- User Info Header -->
+      <!-- User Info -->
       <div class="flex items-center gap-3">
         <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
           @if (currentUserAvatar) {
@@ -42,7 +41,7 @@
         </div>
       </div>
 
-      <!-- Post Form -->
+      <!-- Form -->
       <form [formGroup]="postForm" (ngSubmit)="submitPost()" id="pmdt09aForm" class="space-y-3">
         <div>
           <sic-input
@@ -70,6 +69,7 @@
               แนบรูปภาพหรือเอกสาร
             </span>
           </div>
+          <!-- ✅ ใช้ uploadGroupId binding โดยตรง -->
           <sic-input-upload
             label=""
             formControlName="attachmentGroupId"
@@ -109,6 +109,5 @@
         }
       </sic-button>
     </div>
-
   </div>
 </div>

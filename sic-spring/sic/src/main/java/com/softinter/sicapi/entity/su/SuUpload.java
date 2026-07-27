@@ -13,11 +13,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "su_upload",
-       indexes = {
-           @Index(name = "idx_bucket_name", columnList = "bucket_name"),
-           @Index(name = "idx_object_key", columnList = "object_key")
-       })
+@Table(name = "su_upload", indexes = {
+        @Index(name = "idx_bucket_name", columnList = "bucket_name"),
+        @Index(name = "idx_object_key", columnList = "object_key")
+})
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -64,4 +63,6 @@ public class SuUpload extends BaseEntity {
 
     @Column(name = "temp_expires_at")
     private Instant tempExpiresAt;
+    @Column(name = "session_id")
+    private UUID sessionId;
 }

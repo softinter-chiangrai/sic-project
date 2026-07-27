@@ -39,40 +39,41 @@ public class SecurityConfig {
     private String realm;
 
     @Bean
-    public FilterRegistrationBean<BusinessContextFilter> businessContextFilterRegistration(BusinessContextFilter filter) {
+    public FilterRegistrationBean<BusinessContextFilter> businessContextFilterRegistration(
+            BusinessContextFilter filter) {
         FilterRegistrationBean<BusinessContextFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, BusinessContextFilter businessContextFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, BusinessContextFilter businessContextFilter)
+            throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/**", 
-                    "/api/public/**", 
-                    "/actuator/health",
-                    "/swagger-ui/**", 
-                    "/v3/api-docs/**", 
-                    "/swagger-ui.html",
-                    "/hubs/chat/**", 
-                    "/ws/**", 
-                    "/health",
-                    "/api/storage/avatar/**",
-                    "/api/storage/files/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                    .decoder(jwtDecoder())
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())   // ✅ เพิ่มตรงนี้!
-                )
-            )
-            .addFilterAfter(businessContextFilter, BearerTokenAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/public/**",
+                                "/actuator/health",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/hubs/chat/**",
+                                "/ws/**",
+                                "/health",
+                                "/api/storage/avatar/**",
+                                "/api/storage/files/**",
+                                "/api/storage/download/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder())
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()) // ✅ เพิ่มตรงนี้!
+                        ))
+                .addFilterAfter(businessContextFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }
@@ -90,10 +91,10 @@ public class SecurityConfig {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         // Converter หลัก: แปลง JWT → Authentication
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        
+
         // ✅ ตั้งค่า GrantedAuthoritiesConverter เพื่ออ่าน Roles จาก JWT
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakGrantedAuthoritiesConverter());
-        
+
         return converter;
     }
 

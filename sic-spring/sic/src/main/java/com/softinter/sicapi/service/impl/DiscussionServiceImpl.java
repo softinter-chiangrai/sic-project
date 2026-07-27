@@ -64,9 +64,10 @@ public class DiscussionServiceImpl implements DiscussionService {
 
         if (request.getAttachmentGroupId() != null) {
             try {
-                fileStorageService.activateUpload(request.getAttachmentGroupId());
+                // ✅ activate ทุกไฟล์ในกลุ่มนี้ (group) ไม่ใช่แค่ไฟล์เดียว
+                fileStorageService.activateUploadGroup(request.getAttachmentGroupId());
             } catch (Exception e) {
-                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+                log.warn("Could not activate upload group {}", request.getAttachmentGroupId(), e);
             }
         }
 
@@ -93,9 +94,10 @@ public class DiscussionServiceImpl implements DiscussionService {
 
         if (request.getAttachmentGroupId() != null) {
             try {
-                fileStorageService.activateUpload(request.getAttachmentGroupId());
+                // ✅ activate ทุกไฟล์ในกลุ่มนี้ (group) ไม่ใช่แค่ไฟล์เดียว
+                fileStorageService.activateUploadGroup(request.getAttachmentGroupId());
             } catch (Exception e) {
-                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+                log.warn("Could not activate upload group {}", request.getAttachmentGroupId(), e);
             }
         }
 

@@ -1,17 +1,16 @@
 // src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.ts
-import { Component, EventEmitter, Input, Output, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-
 import { Post } from '../discussion.model';
 import { DiscussionService } from '../discussion.service';
-
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
+
 
 @Component({
   selector: 'app-pmdt09a',
@@ -32,8 +31,9 @@ export class Pmdt09AComponent implements OnInit {
   private service = inject(DiscussionService);
   private dialog = inject(DialogService);
 
+  // ✅ Input properties - ต้องเป็น public (หรือไม่ใส่ modifier)
   @Input() projectId!: string;
-  @Input() postToEdit: Post | null = null;
+  @Input() postToEdit: Post | null = null;   // ✅ ไม่ต้องมี private
   @Input() currentUserAvatar: string | null = null;
   @Input() currentUserName: string = 'ผู้ใช้งาน';
 
@@ -68,18 +68,36 @@ export class Pmdt09AComponent implements OnInit {
     this.isSubmitting = true;
     const formValue = this.postForm.value;
 
+    // ✅ อ่าน attachmentGroupId จาก control โดยตรง
+    let attachmentGroupId: string | undefined = undefined;
+    const rawGroupId = formValue.attachmentGroupId;
+
+    if (Array.isArray(rawGroupId) && rawGroupId.length > 0) {
+      const firstFile = rawGroupId[0];
+      attachmentGroupId = firstFile?.uploadGroupId || firstFile?.id || null;
+    } else if (typeof rawGroupId === 'string' && rawGroupId.trim()) {
+      attachmentGroupId = rawGroupId;
+    } else if (rawGroupId && typeof rawGroupId === 'object' && rawGroupId.uploadGroupId) {
+      attachmentGroupId = rawGroupId.uploadGroupId;
+    }
+
+    if (!attachmentGroupId && this.postForm.get('attachmentGroupId')?.value) {
+      const val = this.postForm.get('attachmentGroupId')?.value;
+      if (typeof val === 'string') attachmentGroupId = val;
+    }
+
     if (this.isEdit && this.postToEdit) {
-      // แก้ไขโพสต์เดิม
+      // แก้ไขโพสต์
       this.service
         .updateComment(this.postToEdit.id, { content: formValue.content })
         .pipe(finalize(() => (this.isSubmitting = false)))
         .subscribe({
-          next: (updatedPost) => {
+          next: () => {
             const result: Post = {
               ...this.postToEdit!,
               subject: formValue.subject,
               content: formValue.content,
-              attachmentGroupId: formValue.attachmentGroupId,
+              attachmentGroupId: attachmentGroupId || this.postToEdit!.attachmentGroupId,
             };
             this.dialog.success('สำเร็จ', 'อัปเดตโพสต์เรียบร้อยแล้ว');
             this.saved.emit(result);
@@ -89,13 +107,7 @@ export class Pmdt09AComponent implements OnInit {
           },
         });
     } else {
-      let attachmentGroupId: string | undefined = undefined;
-      if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
-        attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
-      } else if (typeof formValue.attachmentGroupId === 'string') {
-        attachmentGroupId = formValue.attachmentGroupId;
-      }
-
+      // สร้างโพสต์ใหม่
       const request = {
         targetId: this.projectId,
         subject: formValue.subject,

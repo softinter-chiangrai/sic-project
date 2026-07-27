@@ -1,4 +1,5 @@
 <!-- src/app/feature/pm/dt/pmdt09/pmdt09.component.html -->
+
 <div class="max-w-4xl mx-auto space-y-5 p-2">
 
   <!-- HEADER -->
@@ -7,26 +8,22 @@
       <button
         (click)="goBack()"
         class="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
+        title="กลับ">
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-chat-square-quote-fill text-[var(--crm-primary)]"></i>
-          กระดานสนทนาโครงการ (Discussion Feed)
+          กระดานสนทนาโครงการ
         </h1>
-        <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          แชร์ความคิดเห็น คำถาม หรือติดตามข่าวสารสำคัญภายในโครงการ
-        </p>
+        <p class="text-xs text-[var(--text-muted)] mt-0.5">แชร์ความคิดเห็น คำถาม หรือติดตามข่าวสารสำคัญภายในโครงการ</p>
       </div>
     </div>
   </div>
 
-  <!-- FACEBOOK-LIKE "CREATE POST" TRIGGER BAR -->
+  <!-- ===== CREATE POST TRIGGER (เหมือนเดิม) ===== -->
   <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-4 shadow-sm">
     <div class="flex items-center gap-3">
-      <!-- Profile Avatar -->
       <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
         @if (currentUserAvatar()) {
           <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
@@ -36,24 +33,19 @@
           </span>
         }
       </div>
-
-      <!-- Trigger Input Button (Opens Dialog Pmdt09A) -->
       <button
         type="button"
         (click)="openCreateModal()"
-        class="flex-1 bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-left text-[var(--text-muted)] px-4 py-2.5 rounded-full border border-[var(--border)] transition-all cursor-pointer text-sm font-medium flex items-center justify-between"
-      >
+        class="flex-1 bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-left text-[var(--text-muted)] px-4 py-2.5 rounded-full border border-[var(--border)] transition-all cursor-pointer text-sm font-medium flex items-center justify-between">
         <span>คุณกำลังคิดอะไรอยู่, {{ currentUserName() }}?</span>
         <i class="bi bi-pencil-square text-base text-[var(--crm-primary)]"></i>
       </button>
     </div>
-
     <div class="border-t border-[var(--border)] mt-3 pt-3 flex items-center justify-around">
       <button
         type="button"
         (click)="openCreateModal()"
-        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all"
-      >
+        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all">
         <i class="bi bi-image text-emerald-500 text-lg"></i>
         <span>รูปภาพ / เอกสาร</span>
       </button>
@@ -61,15 +53,14 @@
       <button
         type="button"
         (click)="openCreateModal()"
-        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all"
-      >
+        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all">
         <i class="bi bi-chat-text text-amber-500 text-lg"></i>
         <span>สร้างหัวข้อสนทนา</span>
       </button>
     </div>
   </div>
 
-  <!-- LOADING SPINNER -->
+  <!-- ===== LOADING ===== -->
   @if (isLoading() && posts().length === 0) {
     <div class="flex flex-col items-center justify-center py-16 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
@@ -77,14 +68,13 @@
     </div>
   }
 
-  <!-- POSTS FEED LIST -->
+  <!-- ===== POSTS FEED ===== -->
   <div class="space-y-5">
     @for (post of posts(); track post.id) {
       <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden transition-all hover:border-[var(--crm-primary)]/30">
-        
-        <!-- Post Top Header -->
+
+        <!-- ===== POST HEADER ===== -->
         <div class="p-4 flex items-start gap-3">
-          <!-- Author Avatar -->
           <div class="w-10 h-10 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
             @if (post.userAvatarUrl) {
               <img [src]="getAvatarUrl(post.userAvatarUrl)" [alt]="post.createdByName" class="w-full h-full object-cover" />
@@ -94,8 +84,6 @@
               </span>
             }
           </div>
-
-          <!-- Author Info & Date -->
           <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-sm text-[var(--text-active)] flex items-center gap-1.5">
               <span>{{ post.createdByName }}</span>
@@ -109,55 +97,164 @@
               <i class="bi bi-globe text-[10px]"></i>
             </p>
           </div>
-
-          <!-- Edit / Delete Options (If Author) -->
           @if (isAuthor(post.createdBy)) {
             <div class="flex items-center gap-1">
               <button
                 (click)="openEditModal(post)"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-all"
-                title="แก้ไขโพสต์ (PMDT09A)"
-              >
+                title="แก้ไขโพสต์">
                 <i class="bi bi-pencil text-sm"></i>
               </button>
               <button
                 (click)="deletePost(post.id)"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
-                title="ลบโพสต์"
-              >
+                title="ลบโพสต์">
                 <i class="bi bi-trash text-sm"></i>
               </button>
             </div>
           }
         </div>
 
-        <!-- Post Subject Title -->
+        <!-- ===== POST SUBJECT ===== -->
         <div class="px-4 pb-1">
           <h2 class="text-base font-bold text-[var(--text-active)] tracking-wide">
             {{ post.subject }}
           </h2>
         </div>
 
-        <!-- Post Content Text -->
+        <!-- ===== POST CONTENT (text) ===== -->
         <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
           {{ post.content }}
         </div>
 
-        <!-- Post Attached Files Viewer -->
-        @if (post.attachmentGroupId) {
-          <div class="px-4 py-2 bg-[var(--bg)]/50 border-y border-[var(--border)]/50 my-2">
-            <span class="text-xs font-semibold text-[var(--text-muted)] block mb-1">
-              <i class="bi bi-paperclip"></i> เอกสารแนบ
-            </span>
-            <sic-input-upload
-              label=""
-              [uploadGroupId]="post.attachmentGroupId"
-              [readonly]="true"
-            ></sic-input-upload>
-          </div>
-        }
+        <!-- ============================================================ -->
+        <!-- ===== 🔥 ATTACHMENTS INLINE (แบบ Facebook) 🔥 ===== -->
+        <!-- ============================================================ -->
+        <!-- ส่วนแสดงไฟล์แนบในโพสต์ -->
+@if (post.attachmentGroupId) {
+  <div class="px-4 pb-3">
+    <div class="grid grid-cols-1 gap-2">
+      @for (file of getAttachments(post.attachmentGroupId); track file.id) {
+        <div
+          class="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/30 transition-all"
+          [class.cursor-pointer]="isImage(file) || isVideo(file)"
+          (click)="previewFile(file)"
+        >
+          <!-- ===== IMAGE ===== -->
+          @if (isImage(file)) {
+            <img
+              [src]="file.accessUrl"
+              [alt]="file.fileName"
+              class="w-full max-h-[400px] object-contain bg-black/5"
+              loading="lazy"
+            />
+            <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
+              <span class="flex items-center gap-1.5">
+                <i class="bi bi-image text-emerald-500"></i>
+                {{ file.fileName }}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span>{{ formatFileSize(file.fileSize) }}</span>
+                <button
+                  (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
+                  class="text-[var(--crm-primary)] hover:underline text-xs"
+                >
+                  <i class="bi bi-download"></i>
+                </button>
+              </span>
+            </div>
+          }
 
-        <!-- Post Stats Bar -->
+          <!-- ===== VIDEO ===== -->
+          @else if (isVideo(file)) {
+            <video
+              controls
+              preload="metadata"
+              class="w-full max-h-[400px] bg-black/5"
+              [src]="file.accessUrl"
+              playsinline
+            ></video>
+            <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
+              <span class="flex items-center gap-1.5">
+                <i class="bi bi-play-circle text-blue-500"></i>
+                {{ file.fileName }}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span>{{ formatFileSize(file.fileSize) }}</span>
+                <button
+                  (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
+                  class="text-[var(--crm-primary)] hover:underline text-xs"
+                >
+                  <i class="bi bi-download"></i>
+                </button>
+              </span>
+            </div>
+          }
+
+          <!-- ===== AUDIO ===== -->
+          @else if (isAudio(file)) {
+            <div class="p-4 bg-[var(--bg)]">
+              <audio controls class="w-full" [src]="file.accessUrl" preload="metadata"></audio>
+              <div class="mt-2 text-xs text-[var(--text-muted)] flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <i class="bi bi-music-note text-purple-500"></i>
+                  {{ file.fileName }}
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span>{{ formatFileSize(file.fileSize) }}</span>
+                  <button
+                    (click)="downloadFile(file.accessUrl, file.fileName)"
+                    class="text-[var(--crm-primary)] hover:underline text-xs"
+                  >
+                    <i class="bi bi-download"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+          }
+
+          <!-- ===== DOCUMENT ===== -->
+          @else {
+            <div class="flex items-center gap-3 p-3 hover:bg-[var(--sidebar-hover)] transition-colors">
+              <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                   [class.bg-red-100]="isPdf(file)"
+                   [class.bg-blue-100]="isWord(file)"
+                   [class.bg-green-100]="isExcel(file)"
+                   [class.bg-yellow-100]="isPowerPoint(file)"
+                   [class.bg-gray-100]="isOtherDocument(file)"
+              >
+                <i class="bi text-2xl"
+                   [class.bi-filetype-pdf]="isPdf(file)"
+                   [class.bi-file-word]="isWord(file)"
+                   [class.bi-file-excel]="isExcel(file)"
+                   [class.bi-file-ppt]="isPowerPoint(file)"
+                   [class.bi-file-earmark]="isOtherDocument(file)"
+                   [class.text-red-600]="isPdf(file)"
+                   [class.text-blue-600]="isWord(file)"
+                   [class.text-green-600]="isExcel(file)"
+                   [class.text-yellow-600]="isPowerPoint(file)"
+                   [class.text-gray-600]="isOtherDocument(file)"
+                ></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ file.fileName }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(file.fileSize) }}</p>
+              </div>
+              <button
+                (click)="downloadFile(file.accessUrl, file.fileName)"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+              >
+                <i class="bi bi-download"></i> ดาวน์โหลด
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+        <!-- ===== POST STATS ===== -->
         <div class="px-4 py-2 border-t border-[var(--border)]/60 flex items-center justify-between text-xs text-[var(--text-muted)]">
           <span class="flex items-center gap-1">
             <i class="bi bi-chat-left-text text-[var(--crm-primary)]"></i>
@@ -165,39 +262,34 @@
           </span>
         </div>
 
-        <!-- Action Bar: Comment / Reply Button -->
+        <!-- ===== ACTION BAR ===== -->
         <div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
           <button
             type="button"
             (click)="startReply(post.id)"
-            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all"
-          >
+            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
             <i class="bi bi-arrow-return-right text-sm"></i>
             <span>แสดงความคิดเห็น / ตอบกลับ</span>
           </button>
-          
           @if (post.replyCount > 0) {
             <button
               type="button"
               (click)="toggleExpand(post.id)"
-              class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all"
-            >
+              class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
               <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
               <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'ดูความคิดเห็นทั้งหมด' }}</span>
             </button>
           }
         </div>
 
-        <!-- COMMENTS & REPLIES SECTION -->
+        <!-- ===== COMMENTS SECTION (เหมือนเดิม) ===== -->
         @if (expandedPostId() === post.id || replyingPostId() === post.id) {
           <div class="p-4 bg-[var(--bg)]/40 border-t border-[var(--border)] space-y-4">
-            
-            <!-- List of existing comments/replies -->
+            <!-- Comments list -->
             @if (post.replies && post.replies.length > 0) {
               <div class="space-y-3">
                 @for (reply of post.replies; track reply.id) {
                   <div class="flex items-start gap-2.5">
-                    <!-- Commenter Avatar -->
                     <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                       @if (reply.userAvatarUrl) {
                         <img [src]="getAvatarUrl(reply.userAvatarUrl)" [alt]="reply.createdByName" class="w-full h-full object-cover" />
@@ -207,75 +299,33 @@
                         </span>
                       }
                     </div>
-
-                    <!-- Comment Bubble -->
                     <div class="flex-1 min-w-0">
                       @if (editingCommentId() === reply.id) {
-                        <!-- Inline Edit Comment Form -->
                         <div class="bg-[var(--sidebar)] p-3 rounded-2xl border border-[var(--border)]">
                           <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
-                            <sic-input-area
-                              formControlName="content"
-                              [rows]="2"
-                              [required]="true"
-                            ></sic-input-area>
+                            <sic-input-area formControlName="content" [rows]="2" [required]="true"></sic-input-area>
                             <div class="flex justify-end gap-2 mt-2">
-                              <button
-                                type="button"
-                                (click)="cancelEdit()"
-                                class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
-                              >
-                                ยกเลิก
-                              </button>
-                              <button
-                                type="submit"
-                                class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90"
-                                [disabled]="isSubmitting()"
-                              >
-                                บันทึก
-                              </button>
+                              <button type="button" (click)="cancelEdit()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">ยกเลิก</button>
+                              <button type="submit" class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90" [disabled]="isSubmitting()">บันทึก</button>
                             </div>
                           </form>
                         </div>
                       } @else {
-                        <!-- Comment Details -->
                         <div class="bg-[var(--sidebar)] px-3.5 py-2 rounded-2xl border border-[var(--border)] inline-block max-w-full">
                           <div class="flex items-center justify-between gap-4">
                             <span class="font-semibold text-xs text-[var(--text-active)]">{{ reply.createdByName }}</span>
                           </div>
-                          <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">
-                            {{ reply.content }}
-                          </p>
+                          <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">{{ reply.content }}</p>
                         </div>
-
-                        <!-- Comment Footer Actions (Reply link / Date / Delete) -->
                         <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
                           <span>{{ formatDate(reply.createdDate) }}</span>
                           <span>•</span>
-                          <button
-                            type="button"
-                            (click)="startReply(post.id, reply.createdByName)"
-                            class="font-semibold hover:underline hover:text-[var(--crm-primary)]"
-                          >
-                            ตอบกลับ (Reply)
-                          </button>
+                          <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">ตอบกลับ (Reply)</button>
                           @if (isAuthor(reply.createdBy)) {
                             <span>•</span>
-                            <button
-                              type="button"
-                              (click)="startEditReply(post.id, reply.id)"
-                              class="hover:underline hover:text-amber-500"
-                            >
-                              แก้ไข
-                            </button>
+                            <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">แก้ไข</button>
                             <span>•</span>
-                            <button
-                              type="button"
-                              (click)="deleteReply(post.id, reply.id)"
-                              class="hover:underline hover:text-red-500"
-                            >
-                              ลบ
-                            </button>
+                            <button type="button" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">ลบ</button>
                           }
                         </div>
                       }
@@ -285,7 +335,7 @@
               </div>
             }
 
-            <!-- Facebook Input Box for Adding Reply / Comment -->
+            <!-- Reply input -->
             <div class="flex items-start gap-2.5 pt-2">
               <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
                 @if (currentUserAvatar()) {
@@ -296,7 +346,6 @@
                   </span>
                 }
               </div>
-
               <div class="flex-1 min-w-0">
                 <form [formGroup]="replyForm" (ngSubmit)="submitReply()" class="space-y-2">
                   <div class="relative">
@@ -307,29 +356,17 @@
                       [required]="true"
                     ></sic-input-area>
                   </div>
-
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-[var(--text-muted)]">
                       @if (replyToUser()) {
                         ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
                       }
                     </span>
-
                     <div class="flex items-center gap-2">
                       @if (replyingPostId() === post.id) {
-                        <button
-                          type="button"
-                          (click)="cancelReply()"
-                          class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
-                        >
-                          ยกเลิก
-                        </button>
+                        <button type="button" (click)="cancelReply()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">ยกเลิก</button>
                       }
-                      <button
-                        type="submit"
-                        class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
-                        [disabled]="isSubmitting() || replyForm.invalid"
-                      >
+                      <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1" [disabled]="isSubmitting() || replyForm.invalid">
                         @if (isSubmitting()) {
                           <i class="bi bi-arrow-repeat animate-spin"></i>
                         } @else {
@@ -342,10 +379,8 @@
                 </form>
               </div>
             </div>
-
           </div>
         }
-
       </div>
     } @empty {
       @if (!isLoading()) {
@@ -365,7 +400,7 @@
     }
   </div>
 
-  <!-- LOAD MORE PAGINATION -->
+  <!-- ===== LOAD MORE ===== -->
   @if (totalElements() > 0 && currentPage() < totalPages() - 1) {
     <div class="flex justify-center pt-2">
       <button
@@ -382,7 +417,7 @@
     </div>
   }
 
-  <!-- PMDT09A MODAL DIALOG (Create / Edit Post) -->
+  <!-- ===== PMDT09A MODAL ===== -->
   @if (isModalOpen()) {
     <app-pmdt09a
       [projectId]="projectId()!"

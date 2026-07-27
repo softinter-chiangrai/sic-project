@@ -1,3 +1,4 @@
+// SuUploadRepository.java
 package com.softinter.sicapi.repository.su;
 
 import java.time.Instant;
@@ -14,6 +15,10 @@ import com.softinter.sicapi.entity.su.SuUpload;
 
 public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
     Optional<SuUpload> findByIdAndIsActiveTrue(UUID id);
+    
+    // 🔥 ใช้ findFirst... เพื่อให้ได้ record เดียว (เรียงตาม createdDate DESC)
+    Optional<SuUpload> findFirstByUploadGroupIdAndIsActiveFalseOrderByCreatedDateDesc(UUID uploadGroupId);
+    
     Optional<SuUpload> findByUploadGroupIdAndIsActiveFalse(UUID uploadGroupId);
     Optional<SuUpload> findByObjectKey(String objectKey);
     Optional<SuUpload> findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(UUID uploadGroupId);
@@ -22,6 +27,9 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
     @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = true ORDER BY u.createdDate DESC")
     List<SuUpload> findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(@Param("groupId") UUID uploadGroupId);
 
+    @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = false")
+    List<SuUpload> findAllByUploadGroupIdAndIsActiveFalse(@Param("groupId") UUID uploadGroupId);
+
     @Modifying
     @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
            "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
@@ -29,5 +37,4 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
                                 @Param("deleteBy") String deleteBy,
                                 @Param("deleteDate") Instant deleteDate,
                                 @Param("now") Instant now);
-
 }

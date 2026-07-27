@@ -10,11 +10,20 @@ import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-si
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
 import { Post, Reply } from './discussion.model';
 import { DiscussionService } from './discussion.service';
 import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
 import { environment } from '../../../../../environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+
+interface AttachmentFile {
+  id: string;
+  fileName: string;
+  accessUrl: string;
+  fileSize: number;
+  contentType: string;
+  uploadGroupId: string;
+}
 
 @Component({
   selector: 'app-pmdt09',
@@ -25,11 +34,10 @@ import { environment } from '../../../../../environments/environment';
     SicButtonComponent,
     SicInputAreaComponent,
     SicDatePipe,
-    SicInputUploadComponent,
     Pmdt09AComponent,
   ],
   templateUrl: './pmdt09.component.html',
-  styleUrl: './pmdt09.component.css',
+  styleUrls: ['./pmdt09.component.css'],
 })
 export class Pmdt09Component implements OnInit {
   private fb = inject(FormBuilder);
@@ -39,6 +47,7 @@ export class Pmdt09Component implements OnInit {
   private dialog = inject(DialogService);
   private authService = inject(AuthService);
   private sidebarService = inject(SicSidebarService);
+  private http = inject(HttpClient);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -47,33 +56,30 @@ export class Pmdt09Component implements OnInit {
   isSubmitting = signal(false);
   projectId = signal<string | null>(null);
   expandedPostId = signal<string | null>(null);
-  
-  // Facebook Style Comment & Reply state
+
   editingCommentId = signal<string | null>(null);
   replyingPostId = signal<string | null>(null);
   replyToUser = signal<string | null>(null);
 
-  // Dialog Pmdt09A Modal state
   isModalOpen = signal(false);
   postToEdit = signal<Post | null>(null);
 
-  // User info
   currentUserId = signal<string | null>(null);
   currentUserName = signal<string>('ผู้ใช้งาน');
   currentUserAvatar = signal<string | null>(null);
 
-  // Pagination
   currentPage = signal(0);
   pageSize = signal(10);
   totalElements = signal(0);
   totalPages = signal(0);
 
-  // Forms for replies and quick edit inline
   replyForm!: FormGroup;
   editForm!: FormGroup;
 
+  // 🔥 Cache for attachments (key = groupId)
+  private attachmentCache = new Map<string, AttachmentFile[]>();
+
   ngOnInit(): void {
-    // โหลดข้อมูลผู้ใช้จริง
     this.currentUserId.set(this.authService.getUserId());
     this.sidebarService.getProfile().subscribe({
       next: (profile) => {
@@ -121,6 +127,12 @@ export class Pmdt09Component implements OnInit {
           this.posts.set(response.content || []);
           this.totalElements.set(response.totalElements || 0);
           this.totalPages.set(response.totalPages || 0);
+          // 🔥 Preload attachments
+          this.posts().forEach(post => {
+            if (post.attachmentGroupId) {
+              this.loadAttachments(post.attachmentGroupId);
+            }
+          });
         },
         error: (err) => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
@@ -128,6 +140,101 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
+  // ===== 🔥 Load attachments with Authorization header =====
+  loadAttachments(groupId: string): void {
+    if (this.attachmentCache.has(groupId)) return;
+
+    // สร้าง headers พร้อม token (Interceptor อาจไม่ทำงาน กรณีนี้เพิ่มเอง)
+    const token = this.authService.getAccessToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http
+      .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
+      .subscribe({
+        next: (files) => {
+          this.attachmentCache.set(groupId, files);
+        },
+        error: (err) => {
+          console.error('Failed to load attachments:', err);
+          // ถ้า 401 ให้ลองโหลดแบบไม่มี token (เผื่อกรณี public)
+          this.http
+            .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
+            .subscribe({
+              next: (files) => this.attachmentCache.set(groupId, files),
+              error: () => this.attachmentCache.set(groupId, []),
+            });
+        },
+      });
+  }
+
+  // ===== 🔥 Get attachments from cache =====
+  getAttachments(groupId: string): AttachmentFile[] {
+    return this.attachmentCache.get(groupId) || [];
+  }
+
+  // ===== 🔥 File type helpers =====
+  isImage(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('image/') ?? false;
+  }
+
+  isVideo(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('video/') ?? false;
+  }
+
+  isAudio(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('audio/') ?? false;
+  }
+
+  isPdf(file: AttachmentFile): boolean {
+    return file.contentType === 'application/pdf' || file.fileName?.endsWith('.pdf');
+  }
+
+  isWord(file: AttachmentFile): boolean {
+    return file.contentType?.includes('word') || file.fileName?.match(/\.(doc|docx)$/i) !== null;
+  }
+
+  isExcel(file: AttachmentFile): boolean {
+    return file.contentType?.includes('excel') || file.fileName?.match(/\.(xls|xlsx)$/i) !== null;
+  }
+
+  isPowerPoint(file: AttachmentFile): boolean {
+    return file.contentType?.includes('powerpoint') || file.fileName?.match(/\.(ppt|pptx)$/i) !== null;
+  }
+
+  isOtherDocument(file: AttachmentFile): boolean {
+    return !this.isImage(file) && !this.isVideo(file) && !this.isAudio(file) &&
+           !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+
+  previewFile(file: AttachmentFile): void {
+    if (this.isImage(file) || this.isVideo(file)) {
+      window.open(file.accessUrl, '_blank');
+    }
+  }
+
+  downloadFile(url: string, fileName?: string): void {
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'download';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // ===== Load Replies =====
   loadReplies(postId: string): void {
     this.service.getReplies(postId).subscribe({
       next: (replies) => {
@@ -139,6 +246,7 @@ export class Pmdt09Component implements OnInit {
     });
   }
 
+  // ===== Toggle Expand =====
   toggleExpand(postId: string): void {
     if (this.expandedPostId() === postId) {
       this.expandedPostId.set(null);
@@ -151,7 +259,7 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  // --- Dialog (Pmdt09A) Actions ---
+  // ===== Dialog Actions =====
   openCreateModal(): void {
     this.postToEdit.set(null);
     this.isModalOpen.set(true);
@@ -171,25 +279,24 @@ export class Pmdt09Component implements OnInit {
     this.closeModal();
     const existing = this.posts().find((p) => p.id === savedPost.id);
     if (existing) {
-      // อัปเดตรายการเดิม
       this.posts.update((posts) =>
         posts.map((p) => (p.id === savedPost.id ? { ...p, ...savedPost } : p))
       );
     } else {
-      // โพสต์ใหม่ เติม userAvatarUrl
       savedPost.userAvatarUrl = this.currentUserAvatar() || undefined;
       savedPost.createdByName = savedPost.createdByName || this.currentUserName();
       this.posts.update((posts) => [savedPost, ...posts]);
+      if (savedPost.attachmentGroupId) {
+        this.loadAttachments(savedPost.attachmentGroupId);
+      }
     }
   }
 
-  // --- Reply & Comment Actions ---
+  // ===== Reply Actions =====
   startReply(postId: string, replyToUser?: string): void {
     this.replyingPostId.set(postId);
     this.replyToUser.set(replyToUser || null);
     this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
-    
-    // Auto expand
     if (this.expandedPostId() !== postId) {
       this.expandedPostId.set(postId);
       const post = this.posts().find((p) => p.id === postId);
@@ -237,14 +344,12 @@ export class Pmdt09Component implements OnInit {
           this.replyingPostId.set(null);
           this.replyToUser.set(null);
           this.replyForm.reset();
-          
           if (!newReply.userAvatarUrl && this.currentUserAvatar()) {
             newReply.userAvatarUrl = this.currentUserAvatar() || undefined;
           }
           if (!newReply.createdByName) {
             newReply.createdByName = this.currentUserName();
           }
-
           this.posts.update((posts) =>
             posts.map((p) =>
               p.id === postId
@@ -259,6 +364,7 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
+  // ===== Edit Reply =====
   startEditReply(postId: string, replyId: string): void {
     const post = this.posts().find((p) => p.id === postId);
     if (!post) return;
@@ -295,7 +401,6 @@ export class Pmdt09Component implements OnInit {
           const postId = (this.editForm as any).__postId;
           this.editForm.reset();
           (this.editForm as any).__postId = null;
-
           if (postId) {
             this.posts.update((posts) =>
               posts.map((p) => {
@@ -320,6 +425,7 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
+  // ===== Delete =====
   deletePost(postId: string): void {
     this.dialog
       .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
@@ -375,7 +481,6 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  // ตรวจสอบว่าเป็นเจ้าของโพสต์/ตอบกลับจริง
   isAuthor(createdBy: string): boolean {
     const currentId = this.currentUserId();
     if (currentId && createdBy === currentId) {
@@ -384,7 +489,6 @@ export class Pmdt09Component implements OnInit {
     return createdBy === this.currentUserName();
   }
 
-  // แปลงรูป Avatar URL เป็น Full URL (ถ้าเป็น relative)
   getAvatarUrl(url?: string): string | null {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) {

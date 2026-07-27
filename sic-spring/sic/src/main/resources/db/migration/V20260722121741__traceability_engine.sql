@@ -59,3 +59,6 @@ CREATE INDEX IF NOT EXISTS idx_comment_parent ON pm_comment (parent_comment_id);
 
 -- (optional) ถ้าต้องการค้นหาตาม target_type, target_id และ parent null
 CREATE INDEX IF NOT EXISTS idx_comment_target_parent_null ON pm_comment (target_type, target_id) WHERE parent_comment_id IS NULL AND is_delete = FALSE;
+
+ALTER TABLE su_upload ADD COLUMN session_id UUID;
+CREATE INDEX idx_session_id ON su_upload(session_id);
