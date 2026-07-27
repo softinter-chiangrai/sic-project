@@ -276,21 +276,10 @@ export class Pmdt09Component implements OnInit {
   }
 
   onPostSaved(savedPost: Post): void {
-    this.closeModal();
-    const existing = this.posts().find((p) => p.id === savedPost.id);
-    if (existing) {
-      this.posts.update((posts) =>
-        posts.map((p) => (p.id === savedPost.id ? { ...p, ...savedPost } : p))
-      );
-    } else {
-      savedPost.userAvatarUrl = this.currentUserAvatar() || undefined;
-      savedPost.createdByName = savedPost.createdByName || this.currentUserName();
-      this.posts.update((posts) => [savedPost, ...posts]);
-      if (savedPost.attachmentGroupId) {
-        this.loadAttachments(savedPost.attachmentGroupId);
-      }
-    }
-  }
+  this.closeModal();
+  this.currentPage.set(0);
+  this.loadPosts();
+}
 
   // ===== Reply Actions =====
   startReply(postId: string, replyToUser?: string): void {

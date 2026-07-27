@@ -41,23 +41,6 @@
         <i class="bi bi-pencil-square text-base text-[var(--crm-primary)]"></i>
       </button>
     </div>
-    <div class="border-t border-[var(--border)] mt-3 pt-3 flex items-center justify-around">
-      <button
-        type="button"
-        (click)="openCreateModal()"
-        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all">
-        <i class="bi bi-image text-emerald-500 text-lg"></i>
-        <span>รูปภาพ / เอกสาร</span>
-      </button>
-      <div class="h-4 w-[1px] bg-[var(--border)]"></div>
-      <button
-        type="button"
-        (click)="openCreateModal()"
-        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all">
-        <i class="bi bi-chat-text text-amber-500 text-lg"></i>
-        <span>สร้างหัวข้อสนทนา</span>
-      </button>
-    </div>
   </div>
 
   <!-- ===== LOADING ===== -->
@@ -257,8 +240,7 @@
         <!-- ===== POST STATS ===== -->
         <div class="px-4 py-2 border-t border-[var(--border)]/60 flex items-center justify-between text-xs text-[var(--text-muted)]">
           <span class="flex items-center gap-1">
-            <i class="bi bi-chat-left-text text-[var(--crm-primary)]"></i>
-            {{ post.replyCount }} ความคิดเห็น
+           ความคิดเห็น
           </span>
         </div>
 
@@ -269,7 +251,7 @@
             (click)="startReply(post.id)"
             class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
             <i class="bi bi-arrow-return-right text-sm"></i>
-            <span>แสดงความคิดเห็น / ตอบกลับ</span>
+            <span>แสดงความคิดเห็น</span>
           </button>
           @if (post.replyCount > 0) {
             <button
