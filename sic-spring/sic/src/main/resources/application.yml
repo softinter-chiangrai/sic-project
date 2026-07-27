@@ -3,24 +3,23 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54320/sic_app # ✅ ใช้ชื่อ DB ที่คุณมีอยู่
-    username: sic-app # ✅ ใช้ user ที่คุณมี
+    url: jdbc:postgresql://localhost:54320/sic_app
+    username: sic-app
     password: SicApp2026
     driver-class-name: org.postgresql.Driver
 
-  # ===== ✅ เพิ่ม Flyway Configuration =====
   flyway:
     enabled: true
-    baseline-on-migrate: true # ✅ บอก Flyway ว่า DB มี Schema อยู่แล้ว
-    baseline-version: "1" # ✅ กำหนด Baseline Version
-    validate-on-migrate: false # ✅ ข้ามการ Validate (เพราะ schema มาจาก .NET)
-    locations: classpath:db/migration # ✅ โฟลเดอร์ที่เก็บไฟล์ SQL
-    schemas: public # ✅ Schema ที่ใช้
-    table: flyway_schema_history # ✅ ชื่อตาราง History (ค่าเริ่มต้น)
+    baseline-on-migrate: true
+    baseline-version: "1"
+    validate-on-migrate: false
+    locations: classpath:db/migration
+    schemas: public
+    table: flyway_schema_history
 
   jpa:
     hibernate:
-      ddl-auto: none # ✅ ถูกต้องแล้ว (ไม่ให้ Hibernate แก้ไข Schema)
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -29,6 +28,11 @@ spring:
         jdbc:
           batch_size: 20
     open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   web:
     cors:
