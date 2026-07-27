@@ -357,7 +357,7 @@ sic-app/
               pmdt08.resolver.ts
               pmdt08.service.ts
             pmdt09/
-              pmdt09/
+              pmdt09A/
                 pmdt09A.component.html
                 pmdt09A.component.ts
               discussion.model.ts
@@ -650,7 +650,6 @@ sic-spring/
                     TraceLinkController.java
                     WorkPackageController.java
                   storage/
-                    FileGroupController.java
                     StorageController.java
                   su/
                     ChatController.java
@@ -7365,12 +7364,10 @@ export class SicInputPhoneComponent implements ControlValueAccessor {
     (click)="$event.stopPropagation()"
     (keydown)="$event.stopPropagation()">
     <div class="sic-input-upload__item-menu-title">{{ activeMenuItem.fileName }}</div>
-    @if (isPreviewableItem(activeMenuItem)) {
-      <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="previewItemAction(activeMenuItem)">
-        <i class="bi bi-eye" aria-hidden="true"></i>
-        <span>Preview</span>
-      </button>
-    }
+    <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="previewItemAction(activeMenuItem)">
+      <i class="bi bi-eye" aria-hidden="true"></i>
+      <span>เปิดดู / แสดงผล (Preview)</span>
+    </button>
     <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="downloadItem(activeMenuItem)">
       <i class="bi bi-download" aria-hidden="true"></i>
       <span>Download</span>
@@ -7400,6 +7397,19 @@ export class SicInputPhoneComponent implements ControlValueAccessor {
           <video class="sic-input-upload__lightbox-media" [src]="previewUrl" controls autoplay muted playsinline>
             <track [src]="emptyTrackSrc" kind="captions" srclang="en" label="Captions unavailable" default />
           </video>
+        } @else {
+          <div class="flex flex-col items-center justify-center p-8 text-center bg-zinc-900 rounded-xl my-4 text-white">
+            <i class="bi bi-file-earmark-text text-6xl text-amber-400 mb-3"></i>
+            <p class="font-semibold text-lg">{{ previewItem.fileName }}</p>
+            <p class="text-xs text-zinc-400 mt-1 mb-4">เอกสารแนบ ({{ (previewItem.size / 1024).toFixed(1) }} KB)</p>
+            <button
+              type="button"
+              class="px-5 py-2.5 rounded-full bg-[var(--crm-primary)] hover:opacity-90 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
+              (click)="downloadItem(previewItem)"
+            >
+              <i class="bi bi-download"></i> ดาวน์โหลด / เปิดดูไฟล์เอกสาร
+            </button>
+          </div>
         }
       }
     </div>
@@ -7417,9 +7427,11 @@ import {
   HostListener,
   Injector,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  SimpleChanges,
   ViewChild,
   forwardRef,
   inject,
@@ -7473,7 +7485,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
     },
   ],
 })
-export class SicInputUploadComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class SicInputUploadComponent implements ControlValueAccessor, OnInit, OnChanges, OnDestroy {
   @Input() label?: string;
   @Input() placeholder = 'Upload files';
   @Input() hint?: string;
@@ -7517,6 +7529,31 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
     this.ngControl = this.injector.get(NgControl, null);
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
+    }
+    if (this.uploadGroupId && this.items.length === 0) {
+      void this.loadGroupFiles(this.uploadGroupId);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['uploadGroupId'] && changes['uploadGroupId'].currentValue) {
+      const gid = changes['uploadGroupId'].currentValue;
+      if (gid && this.items.length === 0) {
+        void this.loadGroupFiles(gid);
+      }
+    }
+  }
+
+  private async loadGroupFiles(groupId: string): Promise<void> {
+    if (!this.isBrowser) return;
+    try {
+      const url = `${environment.apiBaseUrl}/api/storage/group/${groupId}`;
+      const refs = await this.sendJsonRequest<StorageUploadReference[]>('GET', url);
+      if (refs && Array.isArray(refs)) {
+        this.writeValue(refs);
+      }
+    } catch {
+      // ignore
     }
   }
 
@@ -14793,36 +14830,138 @@ export class Pmdt01Service {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09/pmdt09A.component.html">
+<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.html">
+<!-- Facebook style Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" (click)="closeModal()">
+  
+  <!-- Modal Dialog Container -->
+  <div 
+    class="bg-[var(--bg)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Modal Header -->
+    <div class="relative flex items-center justify-center px-4 py-3.5 border-b border-[var(--border)] bg-[var(--sidebar)]">
+      <h2 class="text-lg font-bold text-[var(--text-active)]">
+        {{ isEdit ? 'แก้ไขโพสต์' : 'สร้างโพสต์ใหม่' }}
+      </h2>
+      <button 
+        type="button" 
+        (click)="closeModal()"
+        class="absolute right-3.5 top-3.5 w-8 h-8 rounded-full bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        title="ปิด"
+      >
+        <i class="bi bi-x-lg text-base"></i>
+      </button>
+    </div>
 
+    <!-- Modal Body -->
+    <div class="p-5 overflow-y-auto space-y-4 flex-1">
+      <!-- User Info Header -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+          @if (currentUserAvatar) {
+            <img [src]="currentUserAvatar" [alt]="currentUserName" class="w-full h-full object-cover" />
+          } @else {
+            <span class="text-base font-bold text-[var(--crm-primary)]">
+              {{ currentUserName.charAt(0) || 'U' }}
+            </span>
+          }
+        </div>
+        <div>
+          <h3 class="font-semibold text-sm text-[var(--text-active)]">{{ currentUserName }}</h3>
+          <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-[var(--sidebar-hover)] text-[var(--text-muted)]">
+            <i class="bi bi-globe"></i> สาธารณะในโครงการ
+          </span>
+        </div>
+      </div>
+
+      <!-- Post Form -->
+      <form [formGroup]="postForm" (ngSubmit)="submitPost()" id="pmdt09aForm" class="space-y-3">
+        <div>
+          <sic-input
+            label="หัวข้อเรื่อง"
+            formControlName="subject"
+            placeholder="ตั้งหัวข้อสำหรับการพูดคุย..."
+            [required]="true"
+          ></sic-input>
+        </div>
+
+        <div>
+          <sic-input-area
+            label="รายละเอียด"
+            formControlName="content"
+            [rows]="4"
+            placeholder="คุณกำลังคิดอะไรอยู่? แชร์ความคิดเห็นหรือสอบถามกับทีม..."
+            [required]="true"
+          ></sic-input-area>
+        </div>
+
+        <div class="border border-[var(--border)] rounded-xl p-3 bg-[var(--sidebar)]/50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-[var(--text-muted)] flex items-center gap-1.5">
+              <i class="bi bi-paperclip text-sm text-[var(--crm-primary)]"></i>
+              แนบรูปภาพหรือเอกสาร
+            </span>
+          </div>
+          <sic-input-upload
+            label=""
+            formControlName="attachmentGroupId"
+            [multiple]="true"
+            category="all"
+            [visibility]="1"
+            [uploadGroupId]="postToEdit?.attachmentGroupId || null"
+            [helperText]="'คลิกหรือลากไฟล์เพื่อแนบไฟล์ประกอบโพสต์'"
+          ></sic-input-upload>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-5 py-3.5 border-t border-[var(--border)] bg-[var(--sidebar)] flex items-center justify-end gap-2">
+      <sic-button
+        [fullWidth]="false"
+        type="button"
+        variant="outline"
+        (click)="closeModal()"
+        [disabled]="isSubmitting"
+      >
+        ยกเลิก
+      </sic-button>
+      <sic-button
+        [fullWidth]="false"
+        type="submit"
+        form="pmdt09aForm"
+        variant="primary"
+        (click)="submitPost()"
+        [disabled]="isSubmitting || postForm.invalid"
+      >
+        @if (isSubmitting) {
+          <i class="bi bi-arrow-repeat animate-spin mr-1"></i> กำลังบันทึก...
+        } @else {
+          <i class="bi bi-check2 mr-1"></i> {{ isEdit ? 'บันทึกการแก้ไข' : 'โพสต์' }}
+        }
+      </sic-button>
+    </div>
+
+  </div>
+</div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09/pmdt09A.component.ts">
-// src/app/feature/pm/dt/pmdt09/pmdt09/pmdt09A.component.ts
-import { Component, inject, OnInit } from '@angular/core';
+<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.ts">
+// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.ts
+import { Component, EventEmitter, Input, Output, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { finalize } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { Post, Reply } from '../discussion.model';
+
+import { Post } from '../discussion.model';
+import { DiscussionService } from '../discussion.service';
+
+import { finalize } from 'rxjs';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
-import { DiscussionService } from '../discussion.service';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { AuthService } from '../../../../../core/auth/auth.service';
-
-export interface Pmdt09ADialogData {
-  mode: 'create' | 'editPost' | 'reply' | 'editReply';
-  projectId?: string;
-  post?: Post;
-  postId?: string;
-  reply?: Reply;
-  replyToUserId?: string;
-  replyToUserName?: string;
-}
 
 @Component({
   selector: 'app-pmdt09a',
@@ -14836,186 +14975,97 @@ export interface Pmdt09ADialogData {
     SicInputUploadComponent,
   ],
   templateUrl: './pmdt09A.component.html',
+  styleUrl: './pmdt09A.component.css',
 })
 export class Pmdt09AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(DiscussionService);
   private dialog = inject(DialogService);
-  private dialogRef = inject(MatDialogRef<Pmdt09AComponent>);
-  data = inject<Pmdt09ADialogData>(MAT_DIALOG_DATA);
-  private authService = inject(AuthService);
 
-  form!: FormGroup;
+  @Input() projectId!: string;
+  @Input() postToEdit: Post | null = null;
+  @Input() currentUserAvatar: string | null = null;
+  @Input() currentUserName: string = 'ผู้ใช้งาน';
+
+  @Output() saved = new EventEmitter<Post>();
+  @Output() closed = new EventEmitter<void>();
+
+  postForm!: FormGroup;
   isSubmitting = false;
-  title = '';
 
-  // ใช้สำหรับเก็บ uploadGroupId ที่จะส่งไป Backend
-  uploadGroupId: string | null = null;
+  get isEdit(): boolean {
+    return !!this.postToEdit;
+  }
 
   ngOnInit(): void {
-    this.title = this.getTitle();
-    this.buildForm();
-
-    // กำหนด uploadGroupId ตามโหมด
-    if (this.data.mode === 'editPost' && this.data.post?.attachmentGroupId) {
-      this.uploadGroupId = this.data.post.attachmentGroupId;
-    } else if (this.data.mode === 'editReply' && this.data.reply?.attachmentGroupId) {
-      this.uploadGroupId = this.data.reply.attachmentGroupId;
-    } else {
-      // สำหรับ create, reply และกรณีที่ไม่มี groupId เดิม
-      this.uploadGroupId = crypto.randomUUID();
-    }
+    this.postForm = this.fb.group({
+      subject: [this.postToEdit?.subject || '', Validators.required],
+      content: [this.postToEdit?.content || '', Validators.required],
+      attachmentGroupId: [this.postToEdit?.attachmentGroupId || null],
+    });
   }
 
-  private buildForm(): void {
-    const group: any = {
-      content: ['', Validators.required],
-      attachmentGroupId: [null],
-    };
-
-    if (this.data.mode === 'create' || this.data.mode === 'editPost') {
-      group.subject = ['', Validators.required];
-    } else {
-      group.subject = [{ value: '', disabled: true }];
-    }
-
-    this.form = this.fb.group(group);
-
-    if (this.data.mode === 'editPost' && this.data.post) {
-      this.form.patchValue({
-        subject: this.data.post.subject,
-        content: this.data.post.content,
-        attachmentGroupId: this.data.post.attachmentGroupId || null,
-      });
-    } else if (this.data.mode === 'editReply' && this.data.reply) {
-      this.form.patchValue({
-        content: this.data.reply.content,
-        attachmentGroupId: this.data.reply.attachmentGroupId || null,
-      });
-    }
+  closeModal(): void {
+    this.closed.emit();
   }
 
-  private getTitle(): string {
-    switch (this.data.mode) {
-      case 'create':   return 'สร้างโพสต์ใหม่';
-      case 'editPost': return 'แก้ไขโพสต์';
-      case 'reply':    return this.data.replyToUserName ? `ตอบกลับ @${this.data.replyToUserName}` : 'ตอบกลับ';
-      case 'editReply':return 'แก้ไขข้อความตอบกลับ';
-      default:         return '';
-    }
-  }
-
-  isAuthor(createdBy: string): boolean {
-    const currentUserId = this.authService.getUserId();
-    return currentUserId === createdBy;
-  }
-
-  submit(): void {
-    if (this.form.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูล', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+  submitPost(): void {
+    if (this.postForm.invalid) {
+      this.dialog.warn('กรุณากรอกข้อมูลให้ครบถ้วน', 'กรุณาระบุหัวข้อและเนื้อหาข้อความ');
       return;
     }
 
     this.isSubmitting = true;
-    const raw = this.form.getRawValue();
+    const formValue = this.postForm.value;
 
-    // ใช้ uploadGroupId ที่เราจัดการ
-    const attachmentGroupId = this.uploadGroupId;
+    if (this.isEdit && this.postToEdit) {
+      // แก้ไขโพสต์เดิม
+      this.service
+        .updateComment(this.postToEdit.id, { content: formValue.content })
+        .pipe(finalize(() => (this.isSubmitting = false)))
+        .subscribe({
+          next: (updatedPost) => {
+            const result: Post = {
+              ...this.postToEdit!,
+              subject: formValue.subject,
+              content: formValue.content,
+              attachmentGroupId: formValue.attachmentGroupId,
+            };
+            this.dialog.success('สำเร็จ', 'อัปเดตโพสต์เรียบร้อยแล้ว');
+            this.saved.emit(result);
+          },
+          error: (err) => {
+            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถบันทึกข้อมูลได้');
+          },
+        });
+    } else {
+      let attachmentGroupId: string | undefined = undefined;
+      if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+        attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
+      } else if (typeof formValue.attachmentGroupId === 'string') {
+        attachmentGroupId = formValue.attachmentGroupId;
+      }
 
-    const { content, subject } = raw;
+      const request = {
+        targetId: this.projectId,
+        subject: formValue.subject,
+        content: formValue.content,
+        attachmentGroupId: attachmentGroupId,
+      };
 
-    let request$: Observable<any>;
-    let successMsg = '';
-    let resultData: any;
-
-    switch (this.data.mode) {
-      case 'create': {
-        const payload = {
-          targetId: this.data.projectId!,
-          subject,
-          content,
-          attachmentGroupId: attachmentGroupId || undefined,
-        };
-        request$ = this.service.createPost(payload);
-        successMsg = 'สร้างโพสต์สำเร็จ';
-        break;
-      }
-      case 'editPost': {
-        const payload = {
-          subject,
-          content,
-          attachmentGroupId: attachmentGroupId || undefined,
-        };
-        request$ = this.service.updateComment(this.data.post!.id, payload);
-        successMsg = 'แก้ไขโพสต์สำเร็จ';
-        break;
-      }
-      case 'reply': {
-        const payload = {
-          postId: this.data.postId!,
-          content,
-          attachmentGroupId: attachmentGroupId || undefined,
-          replyToUserId: this.data.replyToUserId,
-          replyToUserName: this.data.replyToUserName,
-        };
-        request$ = this.service.createReply(payload);
-        successMsg = 'ตอบกลับสำเร็จ';
-        break;
-      }
-      case 'editReply': {
-        const payload = {
-          content,
-          attachmentGroupId: attachmentGroupId || undefined,
-        };
-        request$ = this.service.updateComment(this.data.reply!.id, payload);
-        successMsg = 'แก้ไขข้อความสำเร็จ';
-        break;
-      }
-      default: {
-        this.dialog.error('เกิดข้อผิดพลาด', 'โหมดไม่ถูกต้อง');
-        this.isSubmitting = false;
-        return;
-      }
+      this.service
+        .createPost(request)
+        .pipe(finalize(() => (this.isSubmitting = false)))
+        .subscribe({
+          next: (newPost) => {
+            this.dialog.success('สำเร็จ', 'สร้างโพสต์ใหม่เรียบร้อยแล้ว');
+            this.saved.emit(newPost);
+          },
+          error: (err) => {
+            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถสร้างโพสต์ได้');
+          },
+        });
     }
-
-    request$
-      .pipe(finalize(() => (this.isSubmitting = false)))
-      .subscribe({
-        next: (res: any) => {
-          this.dialog.success(successMsg, '');
-
-          if (this.data.mode === 'create') {
-            resultData = { action: 'created', post: res };
-          } else if (this.data.mode === 'reply') {
-            resultData = { action: 'replied', postId: this.data.postId, reply: res };
-          } else if (this.data.mode === 'editPost') {
-            resultData = {
-              action: 'updatedPost',
-              postId: this.data.post!.id,
-              subject,
-              content,
-              attachmentGroupId: attachmentGroupId || undefined,
-            };
-          } else if (this.data.mode === 'editReply') {
-            resultData = {
-              action: 'updatedReply',
-              postId: this.data.postId!,
-              replyId: this.data.reply!.id,
-              content,
-              attachmentGroupId: attachmentGroupId || undefined,
-            };
-          }
-
-          this.dialogRef.close(resultData);
-        },
-        error: (err: any) => {
-          this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถดำเนินการได้');
-        },
-      });
-  }
-
-  cancel(): void {
-    this.dialogRef.close();
   }
 }
 </file>
@@ -37583,9 +37633,7 @@ public class SecurityConfig {
                     "/ws/**", 
                     "/health",
                     "/api/storage/avatar/**",
-                    "/api/storage/files/**",
-                    "/api/storage/group/**",
-                    "/api/files/**"
+                    "/api/storage/files/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
@@ -38111,55 +38159,6 @@ public class ExExampleController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/storage/FileGroupController.java">
-package com.softinter.sicapi.controller.storage;
-
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@RestController
-@RequestMapping("/api/files")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Files", description = "File Group API")
-public class FileGroupController {
-
-    private final SuUploadRepository uploadRepository;
-
-    @GetMapping("/group/{groupId}")
-    @Operation(summary = "Get list of active files by upload group ID")
-    public ResponseEntity<List<Map<String, Object>>> getFilesByGroupId(@PathVariable UUID groupId) {
-        List<SuUpload> uploads = uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId);
-        if (uploads.isEmpty()) {
-            uploads = uploadRepository.findByUploadGroupId(groupId);
-        }
-        List<Map<String, Object>> result = uploads.stream().map(u -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", u.getId().toString());
-            map.put("fileName", u.getFileName() != null ? u.getFileName() : "");
-            map.put("originalName", u.getFileName() != null ? u.getFileName() : "");
-            map.put("filePath", u.getAccessUrl() != null && !u.getAccessUrl().isBlank() ? u.getAccessUrl() : (u.getStorageUrl() != null ? u.getStorageUrl() : ""));
-            map.put("fileSize", u.getFileSize() != null ? u.getFileSize() : 0L);
-            map.put("contentType", u.getContentType() != null ? u.getContentType() : "application/octet-stream");
-            return map;
-        }).collect(Collectors.toList());
-        return ResponseEntity.ok(result);
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/storage/StorageController.java">
 package com.softinter.sicapi.controller.storage;
 
@@ -38185,10 +38184,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/storage")
@@ -38302,17 +38299,14 @@ public class StorageController {
         return ResponseEntity.ok(response);
     }
 
-    // ========== Download / Display ==========
+    // ========== Download ==========
     @GetMapping("/download/{fileId}")
     @Operation(summary = "Download file by ID")
     public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID fileId) {
         StorageDownloadResponse download = fileStorageService.downloadFile(fileId);
         InputStreamResource resource = new InputStreamResource(download.getInputStream());
-        String disposition = (download.getContentType() != null && 
-                (download.getContentType().startsWith("image/") || download.getContentType().startsWith("video/") || download.getContentType().equals("application/pdf")))
-                ? "inline" : "attachment";
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + download.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
                 .contentType(MediaType.parseMediaType(download.getContentType()))
                 .contentLength(download.getFileSize())
                 .body(resource);
@@ -38327,11 +38321,8 @@ public class StorageController {
                                                                               HttpServletRequest request) {
         StorageDownloadResponse download = fileStorageService.downloadByKey(bucketName, objectKey);
         InputStreamResource resource = new InputStreamResource(download.getInputStream());
-        String disposition = (download.getContentType() != null && 
-                (download.getContentType().startsWith("image/") || download.getContentType().startsWith("video/") || download.getContentType().equals("application/pdf")))
-                ? "inline" : "attachment";
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + download.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFileName() + "\"")
                 .contentType(MediaType.parseMediaType(download.getContentType()))
                 .contentLength(download.getFileSize())
                 .body(resource);
@@ -38366,18 +38357,33 @@ public class StorageController {
     }
 
     @GetMapping("/group/{groupId}")
-    @Operation(summary = "Get list of active files by upload group ID")
-    public ResponseEntity<List<Map<String, Object>>> getFilesByGroupId(@PathVariable UUID groupId) {
-        List<SuUpload> uploads = uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId);
-        List<Map<String, Object>> result = uploads.stream().map(u -> Map.<String, Object>of(
-                "id", u.getId().toString(),
-                "fileName", u.getFileName() != null ? u.getFileName() : "",
-                "originalName", u.getFileName() != null ? u.getFileName() : "",
-                "filePath", u.getAccessUrl() != null ? u.getAccessUrl() : (u.getStorageUrl() != null ? u.getStorageUrl() : ""),
-                "fileSize", u.getFileSize() != null ? u.getFileSize() : 0L,
-                "contentType", u.getContentType() != null ? u.getContentType() : "application/octet-stream"
-        )).collect(Collectors.toList());
-        return ResponseEntity.ok(result);
+    @Operation(summary = "Get list of files by upload group ID")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.StorageUploadReference>> getGroupFiles(
+            @PathVariable UUID groupId,
+            HttpServletRequest request) {
+        java.util.List<SuUpload> uploads = uploadRepository
+                .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId);
+
+        String baseUrl = request.getScheme() + "://" + request.getServerName()
+                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+
+        // แก้ไขปัญหา type inference โดยเพิ่ม <com.softinter.sicapi.dto.response.StorageUploadReference> ไว้หน้า map
+        java.util.List<com.softinter.sicapi.dto.response.StorageUploadReference> refs = uploads.stream()
+                .<com.softinter.sicapi.dto.response.StorageUploadReference>map(u -> {
+                    com.softinter.sicapi.dto.response.StorageUploadReference ref = new com.softinter.sicapi.dto.response.StorageUploadReference();
+                    ref.setId(u.getId());
+                    ref.setUploadGroupId(u.getUploadGroupId());
+                    ref.setFileName(u.getFileName());
+                    ref.setContentType(u.getContentType());
+                    ref.setFileSize(u.getFileSize());
+                    ref.setVisibility(u.getVisibility());
+                    ref.setAccessUrl(baseUrl + "/api/storage/download/" + u.getId());
+                    ref.setIsActive(u.getIsActive());
+                    return ref;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(refs);
     }
 }
 </file>
@@ -40618,8 +40624,7 @@ public enum FileVisibility {
     UPLOADER_ONLY(1),
     BUSINESS_ONLY(2),
     ANYONE_WITH_LINK(3),
-    PUBLIC(4),
-    PRIVATE(5);
+    PUBLIC(4);
 
     private final int fileVisibilityCode;
 
@@ -42444,18 +42449,17 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     // ==================== Single file ====================
     @Override
-    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility,
-            UUID uploadGroupId) {
+    public StorageUploadResponse uploadFile(MultipartFile file, String category, String visibility, UUID uploadGroupId) {
         try {
             String fileName = file.getOriginalFilename();
             String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
 
             try {
                 s3Client.putObject(PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .contentType(file.getContentType())
-                        .build(),
+                                .bucket(bucketName)
+                                .key(key)
+                                .contentType(file.getContentType())
+                                .build(),
                         RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
             } catch (S3Exception e) {
                 log.error("S3 upload failed for file {}", fileName, e);
@@ -42511,41 +42515,24 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public UploadSessionResponse createUploadSession(UploadSessionRequest request) {
         try {
-            if (request == null) {
-                throw new IllegalArgumentException("Upload session request cannot be null");
-            }
-            UUID uploadGroupId = request.getUploadGroupId();
-            String fileName = request.getFileName() != null ? request.getFileName()
-                    : "file_" + System.currentTimeMillis();
-            long fileSize = request.getFileSize() != null ? request.getFileSize() : 0L;
-            String contentType = request.getContentType() != null ? request.getContentType()
-                    : "application/octet-stream";
+            UUID sessionId = UUID.randomUUID();
+            String fileName = request.getFileName();
+            long fileSize = request.getFileSize();
+            String contentType = request.getContentType();
 
-            int catCode = (request.getCategory() != null && request.getCategory() >= 0
-                    && request.getCategory() < FileCategory.values().length)
-                            ? request.getCategory()
-                            : 0;
-            FileCategory categoryEnum = FileCategory.values()[catCode];
+            FileCategory categoryEnum = FileCategory.values()[request.getCategory()];
+            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(request.getVisibility());
 
-            int visCode = request.getVisibility() != null ? request.getVisibility() : 1;
-            FileVisibility visibilityEnum = FileVisibilityConverter.fromCode(visCode);
-            if (visibilityEnum == null) {
-                visibilityEnum = FileVisibility.PRIVATE;
-            }
-
-            int chunkSize = (request.getChunkSize() != null && request.getChunkSize() > 0) ? request.getChunkSize()
-                    : DEFAULT_CHUNK_SIZE;
-            int totalChunks = fileSize > 0 ? (int) Math.ceil((double) fileSize / chunkSize) : 1;
-            String username = currentUserService.getUsername() != null ? currentUserService.getUsername() : "system";
+            int totalChunks = (int) Math.ceil((double) fileSize / DEFAULT_CHUNK_SIZE);
+            String tempKeyPrefix = "temp/sessions/" + sessionId + "/";
+            String username = currentUserService.getUsername();
 
             SuUpload sessionRecord = new SuUpload();
-            if (uploadGroupId != null) {
-                sessionRecord.setUploadGroupId(uploadGroupId);
-            }
+            sessionRecord.setUploadGroupId(sessionId);
             sessionRecord.setFileName(fileName);
             sessionRecord.setFileSize(fileSize);
             sessionRecord.setContentType(contentType);
-            sessionRecord.setObjectKey("temp/sessions/pending/");
+            sessionRecord.setObjectKey(tempKeyPrefix);
             sessionRecord.setBucketName(bucketName);
             sessionRecord.setCategory(categoryEnum);
             sessionRecord.setVisibility(visibilityEnum);
@@ -42558,30 +42545,23 @@ public class FileStorageServiceImpl implements FileStorageService {
             sessionRecord.setUpdatedBy(username);
 
             try {
-                sessionRecord = uploadRepository.save(sessionRecord);
-                UUID sessionId = sessionRecord.getId();
-                if (uploadGroupId == null) {
-                    sessionRecord.setUploadGroupId(sessionId);
-                }
-                sessionRecord.setObjectKey("temp/sessions/" + sessionId + "/");
                 uploadRepository.save(sessionRecord);
             } catch (Exception e) {
-                log.error("Failed to save upload session record for file {}", fileName, e);
-                throw new RuntimeException("Failed to save session metadata: " + e.getMessage(), e);
+                log.error("Failed to create upload session for file {}", fileName, e);
+                throw new RuntimeException("Failed to create upload session", e);
             }
 
-            UUID sessionId = sessionRecord.getId();
             return UploadSessionResponse.builder()
                     .sessionId(sessionId.toString())
                     .uploadUrl("/api/storage/upload/sessions/" + sessionId + "/chunks/{chunkIndex}")
-                    .chunkSize(chunkSize)
+                    .chunkSize(DEFAULT_CHUNK_SIZE)
                     .totalChunks(totalChunks)
                     .nextChunkIndex(0)
                     .uploadedBytes(0L)
                     .build();
         } catch (Exception e) {
             log.error("Unexpected error creating upload session", e);
-            throw new RuntimeException("Failed to create upload session: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to create upload session", e);
         }
     }
 
@@ -42612,8 +42592,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
         SuUpload session;
         try {
-            session = uploadRepository.findById(sessionId)
-                    .or(() -> uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId))
+            session = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
                     .orElseThrow(() -> new RuntimeException("Session not found"));
         } catch (Exception e) {
             log.error("Failed to find upload session {}", sessionId, e);
@@ -42641,8 +42620,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     public StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request) {
         SuUpload sessionRecord;
         try {
-            sessionRecord = uploadRepository.findById(sessionId)
-                    .or(() -> uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId))
+            sessionRecord = uploadRepository.findByUploadGroupIdAndIsActiveFalse(sessionId)
                     .orElseThrow(() -> new RuntimeException("Upload session not found or already completed"));
         } catch (Exception e) {
             log.error("Failed to find upload session {}", sessionId, e);
@@ -42724,8 +42702,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
             } catch (S3Exception e) {
                 log.error("Multipart upload failed for session {}", sessionId, e);
-                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(),
-                        e);
+                throw new RuntimeException("Failed to complete upload session: " + e.awsErrorDetails().errorMessage(), e);
             } catch (Exception e) {
                 log.error("Unexpected error during multipart upload completion", e);
                 throw new RuntimeException("Failed to complete upload session", e);
@@ -42764,7 +42741,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         response.setFileUrl(sessionRecord.getStorageUrl());
         response.setFileSize(sessionRecord.getFileSize());
         response.setContentType(sessionRecord.getContentType());
-        response.setUploadGroupId(sessionRecord.getUploadGroupId());
+        response.setUploadGroupId(sessionId);
         return response;
     }
 
@@ -42864,39 +42841,38 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     // ==================== Cleanup Expired Temporary Uploads ====================
     @Override
-    @Transactional
-    public void cleanupExpiredTemporaryUploads() {
-        Instant now = Instant.now();
-        List<SuUpload> expired;
+@Transactional
+public void cleanupExpiredTemporaryUploads() {
+    Instant now = Instant.now();
+    List<SuUpload> expired;
+    try {
+        expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
+    } catch (Exception e) {
+        log.error("Failed to query expired temporary uploads", e);
+        return;
+    }
+
+    if (expired.isEmpty()) {
+        log.debug("No expired temporary uploads to clean up");
+        return;
+    }
+
+    log.info("Found {} expired temporary uploads to clean up", expired.size());
+    for (SuUpload upload : expired) {
         try {
-            expired = uploadRepository.findAllByIsActiveFalseAndTempExpiresAtBefore(now);
-        } catch (Exception e) {
-            log.error("Failed to query expired temporary uploads", e);
-            return;
-        }
-
-        if (expired.isEmpty()) {
-            log.debug("No expired temporary uploads to clean up");
-            return;
-        }
-
-        log.info("Found {} expired temporary uploads to clean up", expired.size());
-        for (SuUpload upload : expired) {
-            try {
-                deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
-                int updated = uploadRepository.softDeleteExpiredUpload(
-                        upload.getId(), "system-cleanup", Instant.now(), now);
-                if (updated == 0) {
-                    log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
-                } else {
-                    log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(),
-                            upload.getUploadGroupId());
-                }
-            } catch (Exception e) {
-                log.error("Failed to delete expired upload: id={}", upload.getId(), e);
+            deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
+            int updated = uploadRepository.softDeleteExpiredUpload(
+                upload.getId(), "system-cleanup", Instant.now(), now);
+            if (updated == 0) {
+                log.warn("Could not soft delete expired upload id={} (maybe already deleted)", upload.getId());
+            } else {
+                log.info("Deleted expired temporary upload: id={}, groupId={}", upload.getId(), upload.getUploadGroupId());
             }
+        } catch (Exception e) {
+            log.error("Failed to delete expired upload: id={}", upload.getId(), e);
         }
     }
+}
 
     private void deletePhysicalFile(String bucketName, String objectKey) {
         try {
@@ -42926,8 +42902,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             }
         } catch (S3Exception e) {
             if (e.statusCode() != 404) {
-                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey,
-                        e.awsErrorDetails().errorMessage());
+                log.warn("Failed to delete physical file: {}/{} - {}", bucketName, objectKey, e.awsErrorDetails().errorMessage());
             }
         } catch (Exception e) {
             log.warn("Unexpected error while deleting physical file: {}/{}", bucketName, objectKey, e);
@@ -42936,8 +42911,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public String getFileUrlByUploadGroupId(UUID uploadGroupId) {
-        if (uploadGroupId == null)
-            return null;
+        if (uploadGroupId == null) return null;
         try {
             return uploadRepository
                     .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId)
@@ -43036,8 +43010,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             log.error("Failed to find upload {} for deletion", uploadId, e);
             return;
         }
-        if (upload == null)
-            return;
+        if (upload == null) return;
         deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
         try {
             uploadRepository.delete(upload);
@@ -47220,6 +47193,95 @@ export class SicGanttchartComponent {
     };
     return map[status] || 'var(--crm-secondary)';
   }
+}
+</file>
+
+<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.component.html">
+<!-- sic-organizational-chart.component.html -->
+<div class="sic-organizational-chart" *ngIf="root">
+  <div class="sic-organizational-chart__tree">
+    <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: root }"></ng-container>
+  </div>
+</div>
+
+<ng-template #nodeTemplate let-node="node">
+  <div class="sic-organizational-chart__node-container">
+    <div class="sic-organizational-chart__node-shell">
+      <button
+        type="button"
+        class="sic-organizational-chart__node"
+        [style.--node-color]="node.color"
+        [class.sic-organizational-chart__node--readonly]="node.editable === false"
+        (click)="onNodeClick(node)" 
+        title="Edit key: name_local / name_en"
+        aria-label="Edit keys name_local and name_en for {{ node.name_en }}">
+        <span class="sic-organizational-chart__node-badge">
+          {{ resolveNodeLabel(node) }}
+        </span>
+      </button>
+
+      @if (node.editable !== false) {
+        <div class="sic-organizational-chart__node-controls">
+          <button
+            type="button"
+            class="sic-organizational-chart__btn sic-organizational-chart__btn--add"
+            (click)="addChild(node)"
+            title="Add item to key: children[]"
+            aria-label="Add child to children for {{ node.name_en }}">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (node.children.length > 0) {
+      <div class="sic-organizational-chart__connector-vertical"></div>
+
+      <div class="sic-organizational-chart__children">
+        @if (node.children.length > 1) {
+          <div class="sic-organizational-chart__connector-horizontal"></div>
+        }
+
+        @for (child of node.children; track trackById($index, child); let last = $last; let first = $first) {
+          <div class="sic-organizational-chart__child-wrapper" [class.sic-organizational-chart__child-wrapper--first]="first" [class.sic-organizational-chart__child-wrapper--last]="last">
+            <div class="sic-organizational-chart__connector-branch"></div>
+
+            <div class="sic-organizational-chart__child-content">
+              <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: child }"></ng-container>
+
+              @if (child.editable !== false) {
+                <button
+                  type="button"
+                  class="sic-organizational-chart__btn sic-organizational-chart__btn--remove"
+                  (click)="removeChild(node, child.id, $index)"
+                  title="Remove item from key: children[]"
+                  aria-label="Remove child from children for {{ child.name_en }}">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+</file>
+
+<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.model.ts">
+// src/app/core/component/sic-organizational-chart/sic-organizational-chart.model.ts
+export interface SicOrganizationalChartNode {
+  id: string;
+  roleCode?: string;        // ✅ เพิ่ม
+  nameEn: string;
+  nameLocal: string;
+  color: string;
+  editable?: boolean;
+  children: SicOrganizationalChartNode[];
+  // ฟิลด์เสริม (optional)
+  _roleCode?: string;
+  _sortOrder?: number;
+  _roleLevel?: string;
 }
 </file>
 
@@ -54292,19 +54354,17 @@ export class Pmdt08Service {
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt09/discussion.model.ts">
-// src/app/feature/pm/dt/pmdt09/discussion.model.ts
-
 export interface Post {
   id: string;
   subject: string;
   content: string;
   createdBy: string;
   createdByName: string;
-  createdByAvatarUrl?: string;
   createdDate: string;
-  attachmentGroupId?: string | null;  // ✅ เพิ่ม null
+  attachmentGroupId?: string;
   pinned: boolean;
   replyCount: number;
+  userAvatarUrl?: string;
   replies?: Reply[];
   isEditing?: boolean;
 }
@@ -54314,11 +54374,10 @@ export interface Reply {
   content: string;
   createdBy: string;
   createdByName: string;
-  createdByAvatarUrl?: string;
   createdDate: string;
-  attachmentGroupId?: string | null;  // ✅ เพิ่ม null
-  replyToUserId?: string;
-  replyToUserName?: string;
+  attachmentGroupId?: string;
+  userAvatarUrl?: string;
+  replyToUser?: string;
   isEditing?: boolean;
 }
 
@@ -54326,27 +54385,22 @@ export interface CreatePostRequest {
   targetId: string;
   subject: string;
   content: string;
-  attachmentGroupId?: string | null;  // ✅ เพิ่ม null
+  attachmentGroupId?: string;
   pinned?: boolean;
 }
 
 export interface CreateReplyRequest {
   postId: string;
   content: string;
-  attachmentGroupId?: string | null;  // ✅ เพิ่ม null
-  replyToUserId?: string;
-  replyToUserName?: string;
+  attachmentGroupId?: string;
 }
 
 export interface UpdateCommentRequest {
-  subject?: string;
   content: string;
-  attachmentGroupId?: string | null;  // ✅ เพิ่ม null
 }
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt09/discussion.service.ts">
-// src/app/feature/pm/dt/pmdt09/discussion.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -54359,16 +54413,6 @@ export interface PageResponse<T> {
   totalPages: number;
   size: number;
   number: number;
-}
-
-// ✅ เพิ่ม interface สำหรับไฟล์
-export interface AttachmentFile {
-  id: string;
-  fileName: string;
-  originalName?: string;
-  filePath: string;
-  fileSize?: number;
-  contentType?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -54400,103 +54444,136 @@ export class DiscussionService {
   deleteComment(commentId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/comment/${commentId}`);
   }
-
-  // ✅ เพิ่ม: ดึงรายการไฟล์จาก attachmentGroupId
-  getFilesByGroupId(groupId: string): Observable<AttachmentFile[]> {
-    return this.http.get<AttachmentFile[]>(
-      `${environment.apiBaseUrl}/api/files/group/${groupId}`
-    );
-  }
 }
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.component.html">
 <!-- src/app/feature/pm/dt/pmdt09/pmdt09.component.html -->
-<div class="space-y-5 p-0.5 max-w-3xl mx-auto">
+<div class="max-w-4xl mx-auto space-y-5 p-2">
+
   <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
+  <div class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--border)]">
     <div class="flex items-center gap-3">
       <button
         (click)="goBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        class="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
         title="กลับ"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
-        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-chat-dots text-[var(--crm-primary)]"></i>
-          ฟีดข่าวสาร
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-chat-square-quote-fill text-[var(--crm-primary)]"></i>
+          กระดานสนทนาโครงการ (Discussion Feed)
         </h1>
-        <p class="text-sm text-[var(--text-muted)] mt-0.5">
-          {{ totalElements() }} โพสต์
+        <p class="text-xs text-[var(--text-muted)] mt-0.5">
+          แชร์ความคิดเห็น คำถาม หรือติดตามข่าวสารสำคัญภายในโครงการ
         </p>
       </div>
     </div>
-    <button
-      (click)="openCreatePostDialog()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white font-medium hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm"
-    >
-      <i class="bi bi-plus-circle"></i>
-      สร้างโพสต์
-    </button>
   </div>
 
-  <!-- LOADING -->
+  <!-- FACEBOOK-LIKE "CREATE POST" TRIGGER BAR -->
+  <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-4 shadow-sm">
+    <div class="flex items-center gap-3">
+      <!-- Profile Avatar -->
+      <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+        @if (currentUserAvatar()) {
+          <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+        } @else {
+          <span class="text-base font-bold text-[var(--crm-primary)]">
+            {{ currentUserName().charAt(0) || 'U' }}
+          </span>
+        }
+      </div>
+
+      <!-- Trigger Input Button (Opens Dialog Pmdt09A) -->
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex-1 bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-left text-[var(--text-muted)] px-4 py-2.5 rounded-full border border-[var(--border)] transition-all cursor-pointer text-sm font-medium flex items-center justify-between"
+      >
+        <span>คุณกำลังคิดอะไรอยู่, {{ currentUserName() }}?</span>
+        <i class="bi bi-pencil-square text-base text-[var(--crm-primary)]"></i>
+      </button>
+    </div>
+
+    <div class="border-t border-[var(--border)] mt-3 pt-3 flex items-center justify-around">
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all"
+      >
+        <i class="bi bi-image text-emerald-500 text-lg"></i>
+        <span>รูปภาพ / เอกสาร</span>
+      </button>
+      <div class="h-4 w-[1px] bg-[var(--border)]"></div>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex-1 py-1.5 rounded-xl hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-active)] transition-all"
+      >
+        <i class="bi bi-chat-text text-amber-500 text-lg"></i>
+        <span>สร้างหัวข้อสนทนา</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING SPINNER -->
   @if (isLoading() && posts().length === 0) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
+    <div class="flex flex-col items-center justify-center py-16 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อความ...</p>
+      <p class="text-sm text-[var(--text-muted)]">กำลังดึงข้อมูลโพสต์ทั้งหมด...</p>
     </div>
   }
 
-  <!-- POSTS -->
-  <div class="space-y-4">
+  <!-- POSTS FEED LIST -->
+  <div class="space-y-5">
     @for (post of posts(); track post.id) {
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm transition hover:shadow-md">
-        <!-- Post Header -->
-        <div class="flex items-start gap-3">
-          @if (post.createdByAvatarUrl && !hasAvatarError('post-' + post.id)) {
-            <img
-              [src]="getAvatarUrl(post.createdByAvatarUrl)"
-              (error)="onAvatarError('post-' + post.id, $event)"
-              class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-[var(--border)]"
-              alt="Profile"
-            />
-          } @else {
-            <div class="w-10 h-10 rounded-full bg-[var(--crm-primary)]/20 flex items-center justify-center flex-shrink-0 text-[var(--crm-primary)] font-bold text-sm">
-              {{ post.createdByName?.charAt(0) || '?' }}
-            </div>
-          }
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center flex-wrap gap-x-2 gap-y-1">
-              <span class="font-semibold text-[var(--text-active)]">{{ post.createdByName }}</span>
-              <span class="text-xs text-[var(--text-muted)]">•</span>
-              <span class="text-xs text-[var(--text-muted)]">{{ formatDate(post.createdDate) }}</span>
-              @if (post.attachmentGroupId) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--bg)] text-xs text-[var(--text-muted)]">
-                  <i class="bi bi-paperclip"></i>
-                  ไฟล์แนบ
-                </span>
-              }
-            </div>
-            <h3 class="text-lg font-semibold text-[var(--text-active)] mt-1 leading-tight">
-              {{ post.subject }}
-            </h3>
+      <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden transition-all hover:border-[var(--crm-primary)]/30">
+        
+        <!-- Post Top Header -->
+        <div class="p-4 flex items-start gap-3">
+          <!-- Author Avatar -->
+          <div class="w-10 h-10 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+            @if (post.userAvatarUrl) {
+              <img [src]="getAvatarUrl(post.userAvatarUrl)" [alt]="post.createdByName" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-sm font-bold text-[var(--crm-primary)]">
+                {{ post.createdByName?.charAt(0) || '?' }}
+              </span>
+            }
           </div>
+
+          <!-- Author Info & Date -->
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm text-[var(--text-active)] flex items-center gap-1.5">
+              <span>{{ post.createdByName }}</span>
+              @if (post.pinned) {
+                <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 font-normal">📌 ปักหมุด</span>
+              }
+            </h3>
+            <p class="text-xs text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
+              <span>{{ formatDate(post.createdDate) }}</span>
+              <span>•</span>
+              <i class="bi bi-globe text-[10px]"></i>
+            </p>
+          </div>
+
+          <!-- Edit / Delete Options (If Author) -->
           @if (isAuthor(post.createdBy)) {
-            <div class="flex gap-1 flex-shrink-0">
+            <div class="flex items-center gap-1">
               <button
-                (click)="openEditPostDialog(post)"
-                class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                title="แก้ไข"
+                (click)="openEditModal(post)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-all"
+                title="แก้ไขโพสต์ (PMDT09A)"
               >
                 <i class="bi bi-pencil text-sm"></i>
               </button>
               <button
                 (click)="deletePost(post.id)"
-                class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                title="ลบ"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
+                title="ลบโพสต์"
               >
                 <i class="bi bi-trash text-sm"></i>
               </button>
@@ -54504,190 +54581,269 @@ export class DiscussionService {
           }
         </div>
 
-        <!-- Post Content -->
-        <div class="mt-3 text-[var(--text)] whitespace-pre-wrap">
+        <!-- Post Subject Title -->
+        <div class="px-4 pb-1">
+          <h2 class="text-base font-bold text-[var(--text-active)] tracking-wide">
+            {{ post.subject }}
+          </h2>
+        </div>
+
+        <!-- Post Content Text -->
+        <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
           {{ post.content }}
         </div>
 
-        <!-- ✅ ไฟล์แนบ: แสดงรูปภาพ/ไฟล์ แทน sic-upload -->
-        @if (post.attachmentGroupId && getFiles(post.attachmentGroupId).length > 0) {
-          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-            @for (file of getFiles(post.attachmentGroupId); track file.id) {
-              @if (isImage(file)) {
-                <div class="relative group rounded-lg overflow-hidden border border-[var(--border)]">
-                  <img
-                    [src]="getFileUrl(file)"
-                    [alt]="file.fileName"
-                    class="w-full h-36 object-cover transition group-hover:scale-105"
-                  />
-                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                    <a
-                      [href]="getFileUrl(file)"
-                      target="_blank"
-                      class="opacity-0 group-hover:opacity-100 transition w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-gray-700 shadow"
-                    >
-                      <i class="bi bi-zoom-in"></i>
-                    </a>
-                  </div>
-                </div>
-              } @else {
-                <a
-                  [href]="getFileUrl(file)"
-                  target="_blank"
-                  class="flex items-center gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition text-sm text-[var(--text)]"
-                >
-                  <i class="bi bi-file-earmark text-lg text-[var(--text-muted)]"></i>
-                  <span class="truncate">{{ file.fileName }}</span>
-                </a>
-              }
-            }
+        <!-- Post Attached Files Viewer -->
+        @if (post.attachmentGroupId) {
+          <div class="px-4 py-2 bg-[var(--bg)]/50 border-y border-[var(--border)]/50 my-2">
+            <span class="text-xs font-semibold text-[var(--text-muted)] block mb-1">
+              <i class="bi bi-paperclip"></i> เอกสารแนบ
+            </span>
+            <sic-input-upload
+              label=""
+              [uploadGroupId]="post.attachmentGroupId"
+              [readonly]="true"
+            ></sic-input-upload>
           </div>
         }
 
-        <!-- Actions -->
-        <div class="mt-4 flex items-center gap-4 text-sm text-[var(--text-muted)] border-t border-[var(--border)] pt-3">
-          <button
-            (click)="openReplyDialog(post.id)"
-            class="flex items-center gap-1 hover:text-[var(--crm-primary)] transition-colors"
-          >
-            <i class="bi bi-reply"></i>
-            ตอบกลับ
-          </button>
-          <button
-            (click)="toggleExpand(post.id)"
-            class="flex items-center gap-1 hover:text-[var(--crm-primary)] transition-colors"
-          >
-            <i class="bi" [class.bi-chevron-down]="expandedPostId() === post.id" [class.bi-chevron-right]="expandedPostId() !== post.id"></i>
+        <!-- Post Stats Bar -->
+        <div class="px-4 py-2 border-t border-[var(--border)]/60 flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <span class="flex items-center gap-1">
+            <i class="bi bi-chat-left-text text-[var(--crm-primary)]"></i>
             {{ post.replyCount }} ความคิดเห็น
-          </button>
+          </span>
         </div>
 
-        <!-- Replies -->
-        @if (expandedPostId() === post.id) {
-          <div class="mt-3 border-l-2 border-[var(--border)] pl-4 space-y-3">
+        <!-- Action Bar: Comment / Reply Button -->
+        <div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
+          <button
+            type="button"
+            (click)="startReply(post.id)"
+            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all"
+          >
+            <i class="bi bi-arrow-return-right text-sm"></i>
+            <span>แสดงความคิดเห็น / ตอบกลับ</span>
+          </button>
+          
+          @if (post.replyCount > 0) {
+            <button
+              type="button"
+              (click)="toggleExpand(post.id)"
+              class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all"
+            >
+              <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
+              <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'ดูความคิดเห็นทั้งหมด' }}</span>
+            </button>
+          }
+        </div>
+
+        <!-- COMMENTS & REPLIES SECTION -->
+        @if (expandedPostId() === post.id || replyingPostId() === post.id) {
+          <div class="p-4 bg-[var(--bg)]/40 border-t border-[var(--border)] space-y-4">
+            
+            <!-- List of existing comments/replies -->
             @if (post.replies && post.replies.length > 0) {
-              @for (reply of post.replies; track reply.id) {
-                <div class="flex items-start gap-2 group">
-                  @if (reply.createdByAvatarUrl && !hasAvatarError('reply-' + reply.id)) {
-                    <img
-                      [src]="getAvatarUrl(reply.createdByAvatarUrl)"
-                      (error)="onAvatarError('reply-' + reply.id, $event)"
-                      class="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[var(--border)]"
-                      alt="Profile"
-                    />
-                  } @else {
-                    <div class="w-8 h-8 rounded-full bg-[var(--crm-primary)]/15 flex items-center justify-center flex-shrink-0 text-[var(--crm-primary)] font-bold text-xs">
-                      {{ reply.createdByName?.charAt(0) || '?' }}
-                    </div>
-                  }
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-                      <span class="font-semibold text-sm text-[var(--text-active)]">{{ reply.createdByName }}</span>
-                      @if (reply.replyToUserName) {
-                        <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
-                          ตอบกลับ @{{ reply.replyToUserName }}
+              <div class="space-y-3">
+                @for (reply of post.replies; track reply.id) {
+                  <div class="flex items-start gap-2.5">
+                    <!-- Commenter Avatar -->
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      @if (reply.userAvatarUrl) {
+                        <img [src]="getAvatarUrl(reply.userAvatarUrl)" [alt]="reply.createdByName" class="w-full h-full object-cover" />
+                      } @else {
+                        <span class="text-xs font-bold text-[var(--crm-primary)]">
+                          {{ reply.createdByName?.charAt(0) || '?' }}
                         </span>
                       }
-                      <span class="text-xs text-[var(--text-muted)]">•</span>
-                      <span class="text-xs text-[var(--text-muted)]">{{ formatDate(reply.createdDate) }}</span>
-                      <div class="flex gap-1 ml-auto">
-                        <button
-                          (click)="openReplyDialog(post.id, { userId: reply.createdBy, userName: reply.createdByName })"
-                          class="w-5 h-5 rounded flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                          title="ตอบกลับความคิดเห็นนี้"
-                        >
-                          <i class="bi bi-reply text-xs"></i>
-                        </button>
-                        @if (isAuthor(reply.createdBy)) {
-                          <button
-                            (click)="openEditReplyDialog(post.id, reply)"
-                            class="w-5 h-5 rounded flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                            title="แก้ไข"
-                          >
-                            <i class="bi bi-pencil text-xs"></i>
-                          </button>
-                          <button
-                            (click)="deleteReply(post.id, reply.id)"
-                            class="w-5 h-5 rounded flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                            title="ลบ"
-                          >
-                            <i class="bi bi-trash text-xs"></i>
-                          </button>
-                        }
-                      </div>
                     </div>
-                    <p class="text-sm text-[var(--text)] mt-1 whitespace-pre-wrap">{{ reply.content }}</p>
 
-                    <!-- ✅ ไฟล์แนบ reply: แสดงรูปภาพ/ไฟล์ แทน sic-upload -->
-                    @if (reply.attachmentGroupId && getFiles(reply.attachmentGroupId).length > 0) {
-                      <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        @for (file of getFiles(reply.attachmentGroupId); track file.id) {
-                          @if (isImage(file)) {
-                            <div class="relative group rounded-lg overflow-hidden border border-[var(--border)]">
-                              <img
-                                [src]="getFileUrl(file)"
-                                [alt]="file.fileName"
-                                class="w-full h-24 object-cover transition group-hover:scale-105"
-                              />
-                              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                                <a
-                                  [href]="getFileUrl(file)"
-                                  target="_blank"
-                                  class="opacity-0 group-hover:opacity-100 transition w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-gray-700 shadow"
-                                >
-                                  <i class="bi bi-zoom-in text-sm"></i>
-                                </a>
-                              </div>
+                    <!-- Comment Bubble -->
+                    <div class="flex-1 min-w-0">
+                      @if (editingCommentId() === reply.id) {
+                        <!-- Inline Edit Comment Form -->
+                        <div class="bg-[var(--sidebar)] p-3 rounded-2xl border border-[var(--border)]">
+                          <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
+                            <sic-input-area
+                              formControlName="content"
+                              [rows]="2"
+                              [required]="true"
+                            ></sic-input-area>
+                            <div class="flex justify-end gap-2 mt-2">
+                              <button
+                                type="button"
+                                (click)="cancelEdit()"
+                                class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
+                              >
+                                ยกเลิก
+                              </button>
+                              <button
+                                type="submit"
+                                class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90"
+                                [disabled]="isSubmitting()"
+                              >
+                                บันทึก
+                              </button>
                             </div>
-                          } @else {
-                            <a
-                              [href]="getFileUrl(file)"
-                              target="_blank"
-                              class="flex items-center gap-1.5 p-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition text-xs text-[var(--text)]"
+                          </form>
+                        </div>
+                      } @else {
+                        <!-- Comment Details -->
+                        <div class="bg-[var(--sidebar)] px-3.5 py-2 rounded-2xl border border-[var(--border)] inline-block max-w-full">
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="font-semibold text-xs text-[var(--text-active)]">{{ reply.createdByName }}</span>
+                          </div>
+                          <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">
+                            {{ reply.content }}
+                          </p>
+                        </div>
+
+                        <!-- Comment Footer Actions (Reply link / Date / Delete) -->
+                        <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
+                          <span>{{ formatDate(reply.createdDate) }}</span>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            (click)="startReply(post.id, reply.createdByName)"
+                            class="font-semibold hover:underline hover:text-[var(--crm-primary)]"
+                          >
+                            ตอบกลับ (Reply)
+                          </button>
+                          @if (isAuthor(reply.createdBy)) {
+                            <span>•</span>
+                            <button
+                              type="button"
+                              (click)="startEditReply(post.id, reply.id)"
+                              class="hover:underline hover:text-amber-500"
                             >
-                              <i class="bi bi-file-earmark text-[var(--text-muted)]"></i>
-                              <span class="truncate">{{ file.fileName }}</span>
-                            </a>
+                              แก้ไข
+                            </button>
+                            <span>•</span>
+                            <button
+                              type="button"
+                              (click)="deleteReply(post.id, reply.id)"
+                              class="hover:underline hover:text-red-500"
+                            >
+                              ลบ
+                            </button>
                           }
-                        }
-                      </div>
-                    }
+                        </div>
+                      }
+                    </div>
                   </div>
-                </div>
-              }
-            } @else {
-              <p class="text-sm text-[var(--text-muted)]">ยังไม่มีความคิดเห็น</p>
+                }
+              </div>
             }
+
+            <!-- Facebook Input Box for Adding Reply / Comment -->
+            <div class="flex items-start gap-2.5 pt-2">
+              <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                @if (currentUserAvatar()) {
+                  <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-xs font-bold text-[var(--crm-primary)]">
+                    {{ currentUserName().charAt(0) || 'U' }}
+                  </span>
+                }
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <form [formGroup]="replyForm" (ngSubmit)="submitReply()" class="space-y-2">
+                  <div class="relative">
+                    <sic-input-area
+                      formControlName="content"
+                      [rows]="2"
+                      placeholder="เขียนความคิดเห็นของคุณ..."
+                      [required]="true"
+                    ></sic-input-area>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-[var(--text-muted)]">
+                      @if (replyToUser()) {
+                        ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
+                      }
+                    </span>
+
+                    <div class="flex items-center gap-2">
+                      @if (replyingPostId() === post.id) {
+                        <button
+                          type="button"
+                          (click)="cancelReply()"
+                          class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
+                        >
+                          ยกเลิก
+                        </button>
+                      }
+                      <button
+                        type="submit"
+                        class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
+                        [disabled]="isSubmitting() || replyForm.invalid"
+                      >
+                        @if (isSubmitting()) {
+                          <i class="bi bi-arrow-repeat animate-spin"></i>
+                        } @else {
+                          <i class="bi bi-send"></i>
+                        }
+                        ส่งความคิดเห็น
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
           </div>
         }
+
       </div>
     } @empty {
       @if (!isLoading()) {
-        <div class="text-center py-12 text-[var(--text-muted)]">
-          <i class="bi bi-chat text-4xl block mb-3 opacity-30"></i>
-          <p>ยังไม่มีโพสต์</p>
-          <p class="text-sm">กดปุ่ม "สร้างโพสต์" เพื่อเริ่มต้น</p>
+        <div class="text-center py-16 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)]">
+          <i class="bi bi-chat-square-dots text-5xl block mb-3 text-[var(--crm-primary)]/40"></i>
+          <p class="text-base font-semibold text-[var(--text-active)]">ยังไม่มีหัวข้อพูดคุยในโครงการนี้</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">มาร่วมเริ่มสร้างโพสต์แรกเพื่อแลกเปลี่ยนความคิดเห็นกับทีมงาน</p>
+          <button
+            type="button"
+            (click)="openCreateModal()"
+            class="mt-4 px-5 py-2 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 inline-flex items-center gap-1.5 transition-all"
+          >
+            <i class="bi bi-plus-circle"></i> สร้างโพสต์แรก
+          </button>
         </div>
       }
     }
   </div>
 
-  <!-- LOAD MORE -->
+  <!-- LOAD MORE PAGINATION -->
   @if (totalElements() > 0 && currentPage() < totalPages() - 1) {
-    <div class="flex justify-center">
+    <div class="flex justify-center pt-2">
       <button
         (click)="loadMore()"
-        class="px-4 py-2 rounded-lg text-sm border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        class="px-6 py-2.5 rounded-full text-xs font-semibold border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all shadow-sm flex items-center gap-2"
         [disabled]="isLoading()"
       >
         @if (isLoading()) {
-          <i class="bi bi-arrow-repeat animate-spin"></i>
+          <i class="bi bi-arrow-repeat animate-spin"></i> Loading...
         } @else {
-          โหลดเพิ่ม
+          <i class="bi bi-arrow-down-circle"></i> โหลดโพสต์เพิ่มเติม
         }
       </button>
     </div>
   }
+
+  <!-- PMDT09A MODAL DIALOG (Create / Edit Post) -->
+  @if (isModalOpen()) {
+    <app-pmdt09a
+      [projectId]="projectId()!"
+      [postToEdit]="postToEdit()"
+      [currentUserAvatar]="getAvatarUrl(currentUserAvatar()!)"
+      [currentUserName]="currentUserName()"
+      (saved)="onPostSaved($event)"
+      (closed)="closeModal()"
+    ></app-pmdt09a>
+  }
+
 </div>
 </file>
 
@@ -54695,18 +54851,19 @@ export class DiscussionService {
 // src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-// ❌ เอา SicUploadComponent ออก
 import { AuthService } from '../../../../core/auth/auth.service';
+import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
 import { Post, Reply } from './discussion.model';
-import { DiscussionService, AttachmentFile } from './discussion.service';
-import { Pmdt09AComponent, Pmdt09ADialogData } from './pmdt09/pmdt09A.component';
+import { DiscussionService } from './discussion.service';
+import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -54714,27 +54871,46 @@ import { environment } from '../../../../../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     SicButtonComponent,
+    SicInputAreaComponent,
     SicDatePipe,
-    // ❌ เอา SicUploadComponent ออก
+    SicInputUploadComponent,
+    Pmdt09AComponent,
   ],
   templateUrl: './pmdt09.component.html',
-  styleUrls: ['./pmdt09.component.css'],
+  styleUrl: './pmdt09.component.css',
 })
 export class Pmdt09Component implements OnInit {
+  private fb = inject(FormBuilder);
   private service = inject(DiscussionService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private dialog = inject(DialogService);
-  private matDialog = inject(MatDialog);
-  private customerState = inject(CustomerStateService);
   private authService = inject(AuthService);
+  private sidebarService = inject(SicSidebarService);
+
+  readonly apiBaseUrl = environment.apiBaseUrl;
 
   posts = signal<Post[]>([]);
   isLoading = signal(false);
+  isSubmitting = signal(false);
   projectId = signal<string | null>(null);
   expandedPostId = signal<string | null>(null);
-  avatarErrorMap = new Map<string, boolean>();
+  
+  // Facebook Style Comment & Reply state
+  editingCommentId = signal<string | null>(null);
+  replyingPostId = signal<string | null>(null);
+  replyToUser = signal<string | null>(null);
+
+  // Dialog Pmdt09A Modal state
+  isModalOpen = signal(false);
+  postToEdit = signal<Post | null>(null);
+
+  // User info
+  currentUserId = signal<string | null>(null);
+  currentUserName = signal<string>('ผู้ใช้งาน');
+  currentUserAvatar = signal<string | null>(null);
 
   // Pagination
   currentPage = signal(0);
@@ -54742,10 +54918,26 @@ export class Pmdt09Component implements OnInit {
   totalElements = signal(0);
   totalPages = signal(0);
 
-  // ✅ เพิ่ม: เก็บไฟล์แนบของแต่ละ attachmentGroupId
-  filesMap = signal<Record<string, AttachmentFile[]>>({});
+  // Forms for replies and quick edit inline
+  replyForm!: FormGroup;
+  editForm!: FormGroup;
 
   ngOnInit(): void {
+    // โหลดข้อมูลผู้ใช้จริง
+    this.currentUserId.set(this.authService.getUserId());
+    this.sidebarService.getProfile().subscribe({
+      next: (profile) => {
+        if (profile) {
+          const name = profile.name || profile.id || 'ผู้ใช้';
+          this.currentUserName.set(name);
+          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
+            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
+          }
+        }
+      },
+      error: () => {},
+    });
+
     this.route.queryParams.subscribe((params) => {
       const pid = params['projectId'];
       if (pid) {
@@ -54756,58 +54948,17 @@ export class Pmdt09Component implements OnInit {
         this.router.navigate(['/feature/pm/pmrt02']);
       }
     });
-  }
 
-  // ─── Avatar Helpers ──────────────────────────────────────────
-  getAvatarUrl(avatarPath?: string): string | null {
-    if (!avatarPath) return null;
-    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-      return avatarPath;
-    }
-    return `${environment.apiBaseUrl}${avatarPath}`;
-  }
+    this.replyForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
 
-  onAvatarError(key: string, event: Event): void {
-    this.avatarErrorMap.set(key, true);
-    const target = event.target as HTMLElement;
-    if (target) {
-      target.style.display = 'none';
-    }
-  }
-
-  hasAvatarError(key: string): boolean {
-    return this.avatarErrorMap.get(key) === true;
-  }
-
-  // ─── ✅ Attachment Helpers ────────────────────────────────────
-  loadAttachmentFiles(groupId: string): void {
-    if (this.filesMap()[groupId]) return; // โหลดแล้วไม่โหลดซ้ำ
-    this.service.getFilesByGroupId(groupId).subscribe({
-      next: (files) => {
-        this.filesMap.update((m) => ({ ...m, [groupId]: files }));
-      },
-      error: () => {
-        this.filesMap.update((m) => ({ ...m, [groupId]: [] }));
-      },
+    this.editForm = this.fb.group({
+      content: ['', Validators.required],
     });
   }
 
-  getFiles(groupId: string): AttachmentFile[] {
-    return this.filesMap()[groupId] || [];
-  }
-
-  getFileUrl(file: AttachmentFile): string {
-    const url = file.filePath || '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `${environment.apiBaseUrl}${url}`;
-  }
-
-  isImage(file: AttachmentFile): boolean {
-    const name = (file.fileName || file.originalName || '').toLowerCase();
-    return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
-  }
-
-  // ─── โหลดข้อมูล ───────────────────────────────────────────────
   loadPosts(): void {
     const projectId = this.projectId();
     if (!projectId) return;
@@ -54820,12 +54971,6 @@ export class Pmdt09Component implements OnInit {
           this.posts.set(response.content || []);
           this.totalElements.set(response.totalElements || 0);
           this.totalPages.set(response.totalPages || 0);
-          // ✅ โหลดไฟล์แนบของแต่ละ post
-          response.content?.forEach((post) => {
-            if (post.attachmentGroupId) {
-              this.loadAttachmentFiles(post.attachmentGroupId);
-            }
-          });
         },
         error: (err) => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
@@ -54839,27 +54984,11 @@ export class Pmdt09Component implements OnInit {
         this.posts.update((posts) =>
           posts.map((p) => (p.id === postId ? { ...p, replies } : p))
         );
-        // ✅ โหลดไฟล์แนบของแต่ละ reply
-        replies.forEach((reply) => {
-          if (reply.attachmentGroupId) {
-            this.loadAttachmentFiles(reply.attachmentGroupId);
-          }
-        });
       },
-      error: () => {
-        // silent fail
-      },
+      error: () => {},
     });
   }
 
-  loadMore(): void {
-    if (this.currentPage() < this.totalPages() - 1) {
-      this.currentPage.set(this.currentPage() + 1);
-      this.loadPosts();
-    }
-  }
-
-  // ─── Expand / Collapse replies ──────────────────────────────
   toggleExpand(postId: string): void {
     if (this.expandedPostId() === postId) {
       this.expandedPostId.set(null);
@@ -54872,136 +55001,175 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  // ─── Dialog Openers ──────────────────────────────────────────
-  openCreatePostDialog(): void {
-    const data: Pmdt09ADialogData = {
-      mode: 'create',
-      projectId: this.projectId()!,
-    };
-    this.openDialog(data, (result) => {
-      if (result?.action === 'created') {
-        this.posts.update((posts) => [result.post, ...posts]);
-        this.totalElements.update((v) => v + 1);
-        // ✅ โหลดไฟล์แนบของ post ใหม่
-        if (result.post?.attachmentGroupId) {
-          this.loadAttachmentFiles(result.post.attachmentGroupId);
-        }
-      }
-    });
+  // --- Dialog (Pmdt09A) Actions ---
+  openCreateModal(): void {
+    this.postToEdit.set(null);
+    this.isModalOpen.set(true);
   }
 
-  openEditPostDialog(post: Post): void {
-    const data: Pmdt09ADialogData = {
-      mode: 'editPost',
-      post,
+  openEditModal(post: Post): void {
+    this.postToEdit.set(post);
+    this.isModalOpen.set(true);
+  }
+
+  closeModal(): void {
+    this.isModalOpen.set(false);
+    this.postToEdit.set(null);
+  }
+
+  onPostSaved(savedPost: Post): void {
+    this.closeModal();
+    const existing = this.posts().find((p) => p.id === savedPost.id);
+    if (existing) {
+      // อัปเดตรายการเดิม
+      this.posts.update((posts) =>
+        posts.map((p) => (p.id === savedPost.id ? { ...p, ...savedPost } : p))
+      );
+    } else {
+      // โพสต์ใหม่ เติม userAvatarUrl
+      savedPost.userAvatarUrl = this.currentUserAvatar() || undefined;
+      savedPost.createdByName = savedPost.createdByName || this.currentUserName();
+      this.posts.update((posts) => [savedPost, ...posts]);
+    }
+  }
+
+  // --- Reply & Comment Actions ---
+  startReply(postId: string, replyToUser?: string): void {
+    this.replyingPostId.set(postId);
+    this.replyToUser.set(replyToUser || null);
+    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
+    
+    // Auto expand
+    if (this.expandedPostId() !== postId) {
+      this.expandedPostId.set(postId);
+      const post = this.posts().find((p) => p.id === postId);
+      if (post && !post.replies) {
+        this.loadReplies(postId);
+      }
+    }
+  }
+
+  cancelReply(): void {
+    this.replyingPostId.set(null);
+    this.replyToUser.set(null);
+    this.replyForm.reset();
+  }
+
+  submitReply(): void {
+    if (this.replyForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      return;
+    }
+    const postId = this.replyingPostId();
+    if (!postId) return;
+
+    this.isSubmitting.set(true);
+    const formValue = this.replyForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content,
+      attachmentGroupId: attachmentGroupId,
     };
-    this.openDialog(data, (result) => {
-      if (result?.action === 'updatedPost') {
-        this.posts.update((posts) =>
-          posts.map((p) =>
-            p.id === result.postId
-              ? {
-                  ...p,
-                  subject: result.subject,
-                  content: result.content,
-                  attachmentGroupId: result.attachmentGroupId,
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.replyingPostId.set(null);
+          this.replyToUser.set(null);
+          this.replyForm.reset();
+          
+          if (!newReply.userAvatarUrl && this.currentUserAvatar()) {
+            newReply.userAvatarUrl = this.currentUserAvatar() || undefined;
+          }
+          if (!newReply.createdByName) {
+            newReply.createdByName = this.currentUserName();
+          }
+
+          this.posts.update((posts) =>
+            posts.map((p) =>
+              p.id === postId
+                ? { ...p, replyCount: p.replyCount + 1, replies: [...(p.replies || []), newReply] }
+                : p
+            )
+          );
+        },
+        error: (err) => {
+          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  startEditReply(postId: string, replyId: string): void {
+    const post = this.posts().find((p) => p.id === postId);
+    if (!post) return;
+    const reply = post.replies?.find((r) => r.id === replyId);
+    if (!reply) return;
+    this.editingCommentId.set(replyId);
+    this.editForm.patchValue({ content: reply.content });
+    (this.editForm as any).__postId = postId;
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId.set(null);
+    this.editForm.reset();
+    (this.editForm as any).__postId = null;
+  }
+
+  submitEdit(): void {
+    if (this.editForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
+      return;
+    }
+    const commentId = this.editingCommentId();
+    if (!commentId) return;
+    const content = this.editForm.value.content;
+
+    this.isSubmitting.set(true);
+    this.service
+      .updateComment(commentId, { content })
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
+          this.editingCommentId.set(null);
+          const postId = (this.editForm as any).__postId;
+          this.editForm.reset();
+          (this.editForm as any).__postId = null;
+
+          if (postId) {
+            this.posts.update((posts) =>
+              posts.map((p) => {
+                if (p.id === postId) {
+                  const updatedReplies = p.replies?.map((r) =>
+                    r.id === commentId ? { ...r, content } : r
+                  );
+                  return { ...p, replies: updatedReplies };
                 }
-              : p
-          )
-        );
-        // ✅ รีโหลดไฟล์แนบหลังแก้ไข
-        if (result.attachmentGroupId) {
-          this.filesMap.update((m) => {
-            const copy = { ...m };
-            delete copy[result.attachmentGroupId];
-            return copy;
-          });
-          this.loadAttachmentFiles(result.attachmentGroupId);
-        }
-      }
-    });
+                return p;
+              })
+            );
+          } else {
+            this.posts.update((posts) =>
+              posts.map((p) => (p.id === commentId ? { ...p, content } : p))
+            );
+          }
+        },
+        error: (err) => {
+          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
   }
 
-  openReplyDialog(postId: string, replyToUser?: { userId: string; userName: string }): void {
-    const data: Pmdt09ADialogData = {
-      mode: 'reply',
-      postId,
-      replyToUserId: replyToUser?.userId,
-      replyToUserName: replyToUser?.userName,
-    };
-    this.openDialog(data, (result) => {
-      if (result?.action === 'replied') {
-        this.posts.update((posts) =>
-          posts.map((p) => {
-            if (p.id === result.postId) {
-              return {
-                ...p,
-                replyCount: p.replyCount + 1,
-                replies: [...(p.replies || []), result.reply],
-              };
-            }
-            return p;
-          })
-        );
-        // ✅ โหลดไฟล์แนบของ reply ใหม่
-        if (result.reply?.attachmentGroupId) {
-          this.loadAttachmentFiles(result.reply.attachmentGroupId);
-        }
-      }
-    });
-  }
-
-  openEditReplyDialog(postId: string, reply: Reply): void {
-    const data: Pmdt09ADialogData = {
-      mode: 'editReply',
-      postId,
-      reply,
-    };
-    this.openDialog(data, (result) => {
-      if (result?.action === 'updatedReply') {
-        this.posts.update((posts) =>
-          posts.map((p) => {
-            if (p.id === result.postId) {
-              const updatedReplies = p.replies?.map((r) =>
-                r.id === result.replyId
-                  ? { ...r, content: result.content, attachmentGroupId: result.attachmentGroupId }
-                  : r
-              );
-              return { ...p, replies: updatedReplies };
-            }
-            return p;
-          })
-        );
-        // ✅ รีโหลดไฟล์แนบหลังแก้ไข reply
-        if (result.attachmentGroupId) {
-          this.filesMap.update((m) => {
-            const copy = { ...m };
-            delete copy[result.attachmentGroupId];
-            return copy;
-          });
-          this.loadAttachmentFiles(result.attachmentGroupId);
-        }
-      }
-    });
-  }
-
-  private openDialog(
-    data: Pmdt09ADialogData,
-    afterClosed: (result: any) => void
-  ): void {
-    const dialogRef = this.matDialog.open(Pmdt09AComponent, {
-      width: '600px',
-      maxWidth: '95vw',
-      data,
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        afterClosed(result);
-      }
-    });
-  }
-
-  // ─── Delete ──────────────────────────────────────────────────
   deletePost(postId: string): void {
     this.dialog
       .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
@@ -55011,7 +55179,6 @@ export class Pmdt09Component implements OnInit {
             next: () => {
               this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
               this.posts.update((posts) => posts.filter((p) => p.id !== postId));
-              this.totalElements.update((v) => v - 1);
             },
             error: (err) => {
               this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
@@ -55033,7 +55200,7 @@ export class Pmdt09Component implements OnInit {
                 posts.map((p) => {
                   if (p.id === postId) {
                     const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
-                    return { ...p, replies: updatedReplies, replyCount: updatedReplies.length };
+                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
                   }
                   return p;
                 })
@@ -55047,14 +55214,33 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
-  // ─── Utilities ──────────────────────────────────────────────
   goBack(): void {
     this.router.navigate(['/feature/pm/pmrt02']);
   }
 
+  loadMore(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.set(this.currentPage() + 1);
+      this.loadPosts();
+    }
+  }
+
+  // ตรวจสอบว่าเป็นเจ้าของโพสต์/ตอบกลับจริง
   isAuthor(createdBy: string): boolean {
-    const currentUserId = this.authService.getUserId();
-    return currentUserId === createdBy;
+    const currentId = this.currentUserId();
+    if (currentId && createdBy === currentId) {
+      return true;
+    }
+    return createdBy === this.currentUserName();
+  }
+
+  // แปลงรูป Avatar URL เป็น Full URL (ถ้าเป็น relative)
+  getAvatarUrl(url?: string): string | null {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${this.apiBaseUrl}${url}`;
   }
 
   formatDate(dateStr: string): string {
@@ -57179,9 +57365,6 @@ public class ReplyRequest {
     private String content;
 
     private UUID attachmentGroupId;
-
-    private String replyToUserId;
-    private String replyToUserName;
 }
 </file>
 
@@ -57290,16 +57473,10 @@ package com.softinter.sicapi.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.util.UUID;
-
 @Data
 public class UpdateCommentRequest {
-    private String subject;
-
     @NotBlank(message = "Content is required")
     private String content;
-
-    private UUID attachmentGroupId;
 }
 </file>
 
@@ -57744,10 +57921,10 @@ public class PostResponse {
     private String createdByName;
     private Instant createdDate;
     private UUID attachmentGroupId;
-    private String createdByAvatarUrl;
     private Boolean pinned;
     private long replyCount;
-    private List<ReplyResponse> replies; // ตัวเลือก: อาจไม่ต้องดึงมาในครั้งแรก
+    private String userAvatarUrl;
+    private List<ReplyResponse> replies;
 }
 </file>
 
@@ -57767,9 +57944,7 @@ public class ReplyResponse {
     private String createdByName;
     private Instant createdDate;
     private UUID attachmentGroupId;
-    private String createdByAvatarUrl;
-    private String replyToUserId;
-    private String replyToUserName;
+    private String userAvatarUrl;
 }
 </file>
 
@@ -59637,8 +59812,6 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
     @Query("SELECT u FROM SuUpload u WHERE u.uploadGroupId = :groupId AND u.isActive = true ORDER BY u.createdDate DESC")
     List<SuUpload> findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(@Param("groupId") UUID uploadGroupId);
 
-    List<SuUpload> findByUploadGroupId(UUID uploadGroupId);
-
     @Modifying
     @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
            "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
@@ -60859,6 +61032,7 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     private final PmCommentRepository commentRepository;
     private final SuProfileRepository profileRepository;
+    private final com.softinter.sicapi.service.FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -60890,6 +61064,14 @@ public class DiscussionServiceImpl implements DiscussionService {
         post.setCreatedDate(Instant.now());
         post.setIsDelete(false);
 
+        if (request.getAttachmentGroupId() != null) {
+            try {
+                fileStorageService.activateUpload(request.getAttachmentGroupId());
+            } catch (Exception e) {
+                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+            }
+        }
+
         PmComment saved = commentRepository.save(post);
         return toPostResponse(saved);
     }
@@ -60907,10 +61089,17 @@ public class DiscussionServiceImpl implements DiscussionService {
         reply.setParentComment(parent);
         reply.setContent(request.getContent());
         reply.setAttachmentGroupId(request.getAttachmentGroupId());
-        reply.setMentionUserId(request.getReplyToUserId());
         reply.setCreatedBy(userId);
         reply.setCreatedDate(Instant.now());
         reply.setIsDelete(false);
+
+        if (request.getAttachmentGroupId() != null) {
+            try {
+                fileStorageService.activateUpload(request.getAttachmentGroupId());
+            } catch (Exception e) {
+                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+            }
+        }
 
         PmComment saved = commentRepository.save(reply);
         return toReplyResponse(saved);
@@ -60920,13 +61109,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     @Transactional
     public PostResponse updatePost(UUID commentId, UpdateCommentRequest request, String userId) {
         PmComment comment = findAndAuthorize(commentId, userId);
-        if (request.getSubject() != null) {
-            comment.setSubject(request.getSubject());
-        }
         comment.setContent(request.getContent());
-        if (request.getAttachmentGroupId() != null) {
-            comment.setAttachmentGroupId(request.getAttachmentGroupId());
-        }
         comment.setUpdatedBy(userId);
         comment.setUpdatedDate(Instant.now());
         PmComment saved = commentRepository.save(comment);
@@ -60938,9 +61121,6 @@ public class DiscussionServiceImpl implements DiscussionService {
     public ReplyResponse updateReply(UUID commentId, UpdateCommentRequest request, String userId) {
         PmComment comment = findAndAuthorize(commentId, userId);
         comment.setContent(request.getContent());
-        if (request.getAttachmentGroupId() != null) {
-            comment.setAttachmentGroupId(request.getAttachmentGroupId());
-        }
         comment.setUpdatedBy(userId);
         comment.setUpdatedDate(Instant.now());
         PmComment saved = commentRepository.save(comment);
@@ -60979,10 +61159,10 @@ public class DiscussionServiceImpl implements DiscussionService {
         response.setContent(comment.getContent());
         response.setCreatedBy(comment.getCreatedBy());
         response.setCreatedByName(getUserName(comment.getCreatedBy()));
-        response.setCreatedByAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         response.setCreatedDate(comment.getCreatedDate());
         response.setAttachmentGroupId(comment.getAttachmentGroupId());
         response.setPinned(comment.getPinned());
+        response.setUserAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         long replyCount = commentRepository.countByParentCommentIdAndIsDeleteFalse(comment.getId());
         response.setReplyCount(replyCount);
         return response;
@@ -60994,27 +61174,21 @@ public class DiscussionServiceImpl implements DiscussionService {
         response.setContent(comment.getContent());
         response.setCreatedBy(comment.getCreatedBy());
         response.setCreatedByName(getUserName(comment.getCreatedBy()));
-        response.setCreatedByAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         response.setCreatedDate(comment.getCreatedDate());
         response.setAttachmentGroupId(comment.getAttachmentGroupId());
-        if (comment.getMentionUserId() != null) {
-            response.setReplyToUserId(comment.getMentionUserId());
-            response.setReplyToUserName(getUserName(comment.getMentionUserId()));
-        }
+        response.setUserAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         return response;
     }
 
     private String getUserName(String userId) {
-        if (userId == null) return null;
         return profileRepository.findByUserId(userId)
                 .map(LocalizationHelper::getFullName)
                 .orElse(userId);
     }
 
     private String getUserAvatarUrl(String userId) {
-        if (userId == null) return null;
         return profileRepository.findByUserId(userId)
-                .map(profile -> profile.getUploadGroupId() != null ? "/api/storage/avatar/" + profile.getUploadGroupId() : null)
+                .map(p -> p.getUploadGroupId() != null ? "/api/storage/avatar/" + p.getUploadGroupId() : null)
                 .orElse(null);
     }
 }
@@ -63123,92 +63297,389 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
 }
 </file>
 
-<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.component.html">
-<!-- sic-organizational-chart.component.html -->
-<div class="sic-organizational-chart" *ngIf="root">
-  <div class="sic-organizational-chart__tree">
-    <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: root }"></ng-container>
-  </div>
-</div>
+<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.component.ts">
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  AfterViewInit,
+  Input as AngularInput,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  NgZone,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  PLATFORM_ID,
+  SimpleChanges,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { DialogService } from '../../services/dialog.service';
+import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.component';
+import { SicInputComponent } from '../sic-input/sic-input.component';
+import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
 
-<ng-template #nodeTemplate let-node="node">
-  <div class="sic-organizational-chart__node-container">
-    <div class="sic-organizational-chart__node-shell">
-      <button
-        type="button"
-        class="sic-organizational-chart__node"
-        [style.--node-color]="node.color"
-        [class.sic-organizational-chart__node--readonly]="node.editable === false"
-        (click)="onNodeClick(node)" 
-        title="Edit key: name_local / name_en"
-        aria-label="Edit keys name_local and name_en for {{ node.name_en }}">
-        <span class="sic-organizational-chart__node-badge">
-          {{ resolveNodeLabel(node) }}
-        </span>
-      </button>
-
-      @if (node.editable !== false) {
-        <div class="sic-organizational-chart__node-controls">
-          <button
-            type="button"
-            class="sic-organizational-chart__btn sic-organizational-chart__btn--add"
-            (click)="addChild(node)"
-            title="Add item to key: children[]"
-            aria-label="Add child to children for {{ node.name_en }}">
-            <i class="bi bi-plus-circle"></i>
-          </button>
-        </div>
-      }
-    </div>
-
-    @if (node.children.length > 0) {
-      <div class="sic-organizational-chart__connector-vertical"></div>
-
-      <div class="sic-organizational-chart__children">
-        @if (node.children.length > 1) {
-          <div class="sic-organizational-chart__connector-horizontal"></div>
-        }
-
-        @for (child of node.children; track trackById($index, child); let last = $last; let first = $first) {
-          <div class="sic-organizational-chart__child-wrapper" [class.sic-organizational-chart__child-wrapper--first]="first" [class.sic-organizational-chart__child-wrapper--last]="last">
-            <div class="sic-organizational-chart__connector-branch"></div>
-
-            <div class="sic-organizational-chart__child-content">
-              <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: child }"></ng-container>
-
-              @if (child.editable !== false) {
-                <button
-                  type="button"
-                  class="sic-organizational-chart__btn sic-organizational-chart__btn--remove"
-                  (click)="removeChild(node, child.id, $index)"
-                  title="Remove item from key: children[]"
-                  aria-label="Remove child from children for {{ child.name_en }}">
-                  <i class="bi bi-x-circle"></i>
-                </button>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </div>
-</ng-template>
-</file>
-
-<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.model.ts">
-// src/app/core/component/sic-organizational-chart/sic-organizational-chart.model.ts
-export interface SicOrganizationalChartNode {
-  id: string;
-  roleCode?: string;        // ✅ เพิ่ม
+type NodeEditPayload = {
+  roleCode: string; // ✅ เพิ่มบรรทัดนี้
   nameEn: string;
   nameLocal: string;
   color: string;
-  editable?: boolean;
-  children: SicOrganizationalChartNode[];
-  // ฟิลด์เสริม (optional)
-  _roleCode?: string;
-  _sortOrder?: number;
-  _roleLevel?: string;
+};
+
+@Component({
+  selector: 'sic-organizational-chart-edit-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    SicButtonComponent,
+    SicInputComponent,
+    SicColorpickerComponent,
+  ],
+  template: `
+    <div
+      class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"
+      style="border-color: var(--border);"
+    >
+      <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+        <h3 class="text-base font-semibold text-[var(--text-active)]">Edit Node</h3>
+      </div>
+
+      <div class="space-y-3 px-5 py-4">
+        <sic-input
+          label="role_code"
+          [required]="true"
+          [(ngModel)]="roleCode"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ADMIN, PM, DEV"
+        ></sic-input>
+        <sic-input
+          label="name_en"
+          [required]="true"
+          [(ngModel)]="nameEn"
+          [ngModelOptions]="{ standalone: true }"
+        ></sic-input>
+
+        <sic-input
+          label="name_local"
+          [required]="true"
+          [(ngModel)]="nameLocal"
+          [ngModelOptions]="{ standalone: true }"
+        ></sic-input>
+
+        <sic-colorpicker
+          label="color"
+          [required]="true"
+          [(ngModel)]="color"
+          [ngModelOptions]="{ standalone: true }"
+        ></sic-colorpicker>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
+        <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
+        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()"
+          >Save</sic-button
+        >
+      </div>
+    </div>
+  `,
+})
+export class SicOrganizationalChartEditDialog implements OnInit {
+  @AngularInput({ required: true }) node!: SicOrganizationalChartNode;
+  @AngularInput({ required: true }) onSave!: (payload: NodeEditPayload) => void;
+
+  roleCode = '';
+  nameEn = '';
+  nameLocal = '';
+  color = '';
+
+  constructor(private readonly dialogService: DialogService) {}
+
+  ngOnInit(): void {
+    this.roleCode = this.node.roleCode || '';
+    this.nameEn = this.node.nameEn;
+    this.nameLocal = this.node.nameLocal;
+    this.color = this.node.color;
+  }
+
+  get canSave(): boolean {
+    return (
+      this.roleCode.trim().length > 0 &&
+      this.nameEn.trim().length > 0 &&
+      this.nameLocal.trim().length > 0 &&
+      this.color.trim().length > 0
+    );
+  }
+
+  save(): void {
+    if (!this.canSave) {
+      return;
+    }
+
+    this.onSave({
+      roleCode: this.roleCode.trim().toUpperCase(),
+      nameEn: this.nameEn.trim(),
+      nameLocal: this.nameLocal.trim(),
+      color: this.color.trim(),
+    });
+
+    this.dialogService.close(true);
+  }
+
+  cancel(): void {
+    this.dialogService.close(false);
+  }
+}
+
+@Component({
+  selector: 'sic-organizational-chart',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './sic-organizational-chart.component.html',
+  styleUrl: './sic-organizational-chart.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges, OnDestroy {
+  @Input() root!: SicOrganizationalChartNode;
+  @Output() nodeAdded = new EventEmitter<{ parentId: string; node: SicOrganizationalChartNode }>();
+  @Output() nodeRemoved = new EventEmitter<{ parentId: string; nodeId: string }>();
+  @Output() nodeUpdated = new EventEmitter<{ nodeId: string; node: SicOrganizationalChartNode }>();
+  @Output() dataChanged = new EventEmitter<SicOrganizationalChartNode>();
+
+  private resizeObserver?: ResizeObserver;
+  private hasCenteredInitialScroll = false;
+  private languageChangeSubscription: Subscription | null = null;
+  private currentLanguage: 'th' | 'en' = 'en';
+  private readonly isBrowser: boolean;
+
+  constructor(
+    private readonly hostElementRef: ElementRef<HTMLElement>,
+    private readonly ngZone: NgZone,
+    private readonly translate: TranslateService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly dialogService: DialogService,
+    @Inject(PLATFORM_ID) platformId: object,
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    // ✅ ตั้งค่าภาษาเริ่มต้นให้ถูกต้องตั้งแต่เริ่ม
+    this.currentLanguage = this.resolveLanguage(
+      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
+    );
+  }
+
+  ngAfterViewInit(): void {
+    // ✅ อัปเดตภาษาซ้ำเพื่อความปลอดภัย (เผื่อมีการเปลี่ยนแปลงระหว่าง constructor กับ afterViewInit)
+    const newLang = this.resolveLanguage(
+      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
+    );
+    if (this.currentLanguage !== newLang) {
+      this.currentLanguage = newLang;
+      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดตทันที
+    }
+
+    this.languageChangeSubscription = this.translate.onLangChange.subscribe(({ lang }) => {
+      this.ngZone.run(() => {
+        this.currentLanguage = this.resolveLanguage(lang);
+        this.cdr.detectChanges(); // ✅ มีอยู่แล้ว แต่ยืนยันว่าทำงาน
+      });
+    });
+
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.scheduleConnectorLayout(true);
+
+    this.ngZone.runOutsideAngular(() => {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.scheduleConnectorLayout();
+      });
+
+      this.resizeObserver.observe(this.hostElementRef.nativeElement);
+    });
+  }
+
+  ngOnChanges(_changes: SimpleChanges): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.scheduleConnectorLayout();
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    this.languageChangeSubscription?.unsubscribe();
+  }
+
+  resolveNodeLabel(node: SicOrganizationalChartNode): string {
+    if (this.currentLanguage === 'th') {
+      const localLabel = node.nameLocal?.trim();
+      return localLabel || node.nameEn || '';
+    }
+
+    const englishLabel = node.nameEn?.trim();
+    return englishLabel || node.nameLocal || '';
+  }
+
+  addChild(parentNode: SicOrganizationalChartNode): void {
+    const draftNode: SicOrganizationalChartNode = {
+      id: this.generateId(),
+      nameEn: '',
+      nameLocal: '',
+      color: this.getRandomColor(),
+      children: [],
+    };
+
+    this.dialogService.open({
+      type: 'confirm',
+      component: SicOrganizationalChartEditDialog,
+      componentInputs: {
+        node: draftNode,
+        onSave: (payload: NodeEditPayload) => {
+          const newChild: SicOrganizationalChartNode = {
+            ...draftNode,
+            nameEn: payload.nameEn,
+            nameLocal: payload.nameLocal,
+            color: payload.color,
+          };
+          parentNode.children.push(newChild);
+          this.nodeAdded.emit({ parentId: parentNode.id, node: newChild });
+          this.dataChanged.emit(this.root);
+          this.scheduleConnectorLayout();
+        },
+      },
+    });
+  }
+
+  removeChild(parentNode: SicOrganizationalChartNode, childId: string, childIndex: number): void {
+    parentNode.children.splice(childIndex, 1);
+    this.nodeRemoved.emit({ parentId: parentNode.id, nodeId: childId });
+    this.dataChanged.emit(this.root);
+    this.scheduleConnectorLayout();
+  }
+
+  editNode(node: SicOrganizationalChartNode): void {
+    this.dialogService.open({
+      type: 'confirm',
+      component: SicOrganizationalChartEditDialog,
+      componentInputs: {
+        node,
+        onSave: (payload: NodeEditPayload) => {
+          this.updateNode(node, {
+            nameLocal: payload.nameLocal,
+            nameEn: payload.nameEn,
+            color: payload.color,
+          });
+        },
+      },
+    });
+  }
+
+  updateNode(node: SicOrganizationalChartNode, updates: Partial<SicOrganizationalChartNode>): void {
+    Object.assign(node, updates);
+    this.nodeUpdated.emit({ nodeId: node.id, node });
+    this.dataChanged.emit(this.root);
+    this.scheduleConnectorLayout();
+  }
+
+  private scheduleConnectorLayout(centerScroll = false): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.layoutHorizontalConnectors();
+          if (centerScroll && !this.hasCenteredInitialScroll) {
+            this.centerHorizontalScroll();
+            this.hasCenteredInitialScroll = true;
+          }
+        });
+      });
+    });
+  }
+
+  private centerHorizontalScroll(): void {
+    const host = this.hostElementRef.nativeElement;
+    if (host.scrollWidth <= host.clientWidth) {
+      return;
+    }
+
+    host.scrollLeft = (host.scrollWidth - host.clientWidth) / 2;
+  }
+
+  private layoutHorizontalConnectors(): void {
+    const host = this.hostElementRef.nativeElement;
+    const childrenContainers = host.querySelectorAll<HTMLElement>(
+      '.sic-organizational-chart__children',
+    );
+
+    childrenContainers.forEach((childrenContainer) => {
+      const horizontalConnector = childrenContainer.querySelector<HTMLElement>(
+        ':scope > .sic-organizational-chart__connector-horizontal',
+      );
+      if (!horizontalConnector) {
+        return;
+      }
+
+      const childNodes = childrenContainer.querySelectorAll<HTMLElement>(
+        ':scope > .sic-organizational-chart__child-wrapper > .sic-organizational-chart__child-content > .sic-organizational-chart__node-container > .sic-organizational-chart__node-shell > .sic-organizational-chart__node',
+      );
+
+      if (childNodes.length < 2) {
+        horizontalConnector.style.width = '0px';
+        return;
+      }
+
+      const lineSizeRaw = getComputedStyle(host)
+        .getPropertyValue('--sic-organizational-line-size')
+        .trim();
+      const lineSize = Number.parseFloat(lineSizeRaw) || 2;
+
+      const containerRect = childrenContainer.getBoundingClientRect();
+      const firstNodeRect = childNodes[0].getBoundingClientRect();
+      const lastNodeRect = childNodes[childNodes.length - 1].getBoundingClientRect();
+
+      const firstCenterX = firstNodeRect.left + firstNodeRect.width / 2 - containerRect.left;
+      const lastCenterX = lastNodeRect.left + lastNodeRect.width / 2 - containerRect.left;
+
+      horizontalConnector.style.left = `${firstCenterX - lineSize / 2}px`;
+      horizontalConnector.style.width = `${lastCenterX - firstCenterX + lineSize}px`;
+      horizontalConnector.style.transform = 'none';
+    });
+  }
+
+  private generateId(): string {
+    return crypto.randomUUID();
+  }
+
+  private getRandomColor(): string {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  private resolveLanguage(lang: string | null | undefined): 'th' | 'en' {
+    const normalized = String(lang ?? '').toLowerCase();
+    return normalized.startsWith('th') ? 'th' : 'en';
+  }
+
+  trackById = (_index: number, node: SicOrganizationalChartNode): string => node.id;
+
+  @Output() nodeClick = new EventEmitter<SicOrganizationalChartNode>();
+
+  // ✅ เพิ่ม method
+  onNodeClick(node: SicOrganizationalChartNode): void {
+    this.nodeClick.emit(node);
+  }
 }
 </file>
 
@@ -69776,392 +70247,6 @@ public interface SuUserBusinessMemberService {
 
     SuUserBusinessMemberResponse getMemberById(UUID userBusinessId);
 
-}
-</file>
-
-<file path="sic-app/src/app/core/component/sic-organizational-chart/sic-organizational-chart.component.ts">
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import {
-  AfterViewInit,
-  Input as AngularInput,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  EventEmitter,
-  Inject,
-  Input,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  Output,
-  PLATFORM_ID,
-  SimpleChanges,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { DialogService } from '../../services/dialog.service';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.component';
-import { SicInputComponent } from '../sic-input/sic-input.component';
-import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
-
-type NodeEditPayload = {
-  roleCode: string; // ✅ เพิ่มบรรทัดนี้
-  nameEn: string;
-  nameLocal: string;
-  color: string;
-};
-
-@Component({
-  selector: 'sic-organizational-chart-edit-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    SicButtonComponent,
-    SicInputComponent,
-    SicColorpickerComponent,
-  ],
-  template: `
-    <div
-      class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"
-      style="border-color: var(--border);"
-    >
-      <div class="px-5 py-4 border-b" style="border-color: var(--border);">
-        <h3 class="text-base font-semibold text-[var(--text-active)]">Edit Node</h3>
-      </div>
-
-      <div class="space-y-3 px-5 py-4">
-        <sic-input
-          label="role_code"
-          [required]="true"
-          [(ngModel)]="roleCode"
-          [ngModelOptions]="{ standalone: true }"
-          placeholder="ADMIN, PM, DEV"
-        ></sic-input>
-        <sic-input
-          label="name_en"
-          [required]="true"
-          [(ngModel)]="nameEn"
-          [ngModelOptions]="{ standalone: true }"
-        ></sic-input>
-
-        <sic-input
-          label="name_local"
-          [required]="true"
-          [(ngModel)]="nameLocal"
-          [ngModelOptions]="{ standalone: true }"
-        ></sic-input>
-
-        <sic-colorpicker
-          label="color"
-          [required]="true"
-          [(ngModel)]="color"
-          [ngModelOptions]="{ standalone: true }"
-        ></sic-colorpicker>
-      </div>
-
-      <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()"
-          >Save</sic-button
-        >
-      </div>
-    </div>
-  `,
-})
-export class SicOrganizationalChartEditDialog implements OnInit {
-  @AngularInput({ required: true }) node!: SicOrganizationalChartNode;
-  @AngularInput({ required: true }) onSave!: (payload: NodeEditPayload) => void;
-
-  roleCode = '';
-  nameEn = '';
-  nameLocal = '';
-  color = '';
-
-  constructor(private readonly dialogService: DialogService) {}
-
-  ngOnInit(): void {
-    this.roleCode = this.node.roleCode || '';
-    this.nameEn = this.node.nameEn;
-    this.nameLocal = this.node.nameLocal;
-    this.color = this.node.color;
-  }
-
-  get canSave(): boolean {
-    return (
-      this.roleCode.trim().length > 0 &&
-      this.nameEn.trim().length > 0 &&
-      this.nameLocal.trim().length > 0 &&
-      this.color.trim().length > 0
-    );
-  }
-
-  save(): void {
-    if (!this.canSave) {
-      return;
-    }
-
-    this.onSave({
-      roleCode: this.roleCode.trim().toUpperCase(),
-      nameEn: this.nameEn.trim(),
-      nameLocal: this.nameLocal.trim(),
-      color: this.color.trim(),
-    });
-
-    this.dialogService.close(true);
-  }
-
-  cancel(): void {
-    this.dialogService.close(false);
-  }
-}
-
-@Component({
-  selector: 'sic-organizational-chart',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './sic-organizational-chart.component.html',
-  styleUrl: './sic-organizational-chart.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() root!: SicOrganizationalChartNode;
-  @Output() nodeAdded = new EventEmitter<{ parentId: string; node: SicOrganizationalChartNode }>();
-  @Output() nodeRemoved = new EventEmitter<{ parentId: string; nodeId: string }>();
-  @Output() nodeUpdated = new EventEmitter<{ nodeId: string; node: SicOrganizationalChartNode }>();
-  @Output() dataChanged = new EventEmitter<SicOrganizationalChartNode>();
-
-  private resizeObserver?: ResizeObserver;
-  private hasCenteredInitialScroll = false;
-  private languageChangeSubscription: Subscription | null = null;
-  private currentLanguage: 'th' | 'en' = 'en';
-  private readonly isBrowser: boolean;
-
-  constructor(
-    private readonly hostElementRef: ElementRef<HTMLElement>,
-    private readonly ngZone: NgZone,
-    private readonly translate: TranslateService,
-    private readonly cdr: ChangeDetectorRef,
-    private readonly dialogService: DialogService,
-    @Inject(PLATFORM_ID) platformId: object,
-  ) {
-    this.isBrowser = isPlatformBrowser(platformId);
-    // ✅ ตั้งค่าภาษาเริ่มต้นให้ถูกต้องตั้งแต่เริ่ม
-    this.currentLanguage = this.resolveLanguage(
-      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
-    );
-  }
-
-  ngAfterViewInit(): void {
-    // ✅ อัปเดตภาษาซ้ำเพื่อความปลอดภัย (เผื่อมีการเปลี่ยนแปลงระหว่าง constructor กับ afterViewInit)
-    const newLang = this.resolveLanguage(
-      this.translate.currentLang || this.translate.getDefaultLang() || 'en',
-    );
-    if (this.currentLanguage !== newLang) {
-      this.currentLanguage = newLang;
-      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดตทันที
-    }
-
-    this.languageChangeSubscription = this.translate.onLangChange.subscribe(({ lang }) => {
-      this.ngZone.run(() => {
-        this.currentLanguage = this.resolveLanguage(lang);
-        this.cdr.detectChanges(); // ✅ มีอยู่แล้ว แต่ยืนยันว่าทำงาน
-      });
-    });
-
-    if (!this.isBrowser) {
-      return;
-    }
-
-    this.scheduleConnectorLayout(true);
-
-    this.ngZone.runOutsideAngular(() => {
-      this.resizeObserver = new ResizeObserver(() => {
-        this.scheduleConnectorLayout();
-      });
-
-      this.resizeObserver.observe(this.hostElementRef.nativeElement);
-    });
-  }
-
-  ngOnChanges(_changes: SimpleChanges): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
-    this.scheduleConnectorLayout();
-  }
-
-  ngOnDestroy(): void {
-    this.resizeObserver?.disconnect();
-    this.languageChangeSubscription?.unsubscribe();
-  }
-
-  resolveNodeLabel(node: SicOrganizationalChartNode): string {
-    if (this.currentLanguage === 'th') {
-      const localLabel = node.nameLocal?.trim();
-      return localLabel || node.nameEn || '';
-    }
-
-    const englishLabel = node.nameEn?.trim();
-    return englishLabel || node.nameLocal || '';
-  }
-
-  addChild(parentNode: SicOrganizationalChartNode): void {
-    const draftNode: SicOrganizationalChartNode = {
-      id: this.generateId(),
-      nameEn: '',
-      nameLocal: '',
-      color: this.getRandomColor(),
-      children: [],
-    };
-
-    this.dialogService.open({
-      type: 'confirm',
-      component: SicOrganizationalChartEditDialog,
-      componentInputs: {
-        node: draftNode,
-        onSave: (payload: NodeEditPayload) => {
-          const newChild: SicOrganizationalChartNode = {
-            ...draftNode,
-            nameEn: payload.nameEn,
-            nameLocal: payload.nameLocal,
-            color: payload.color,
-          };
-          parentNode.children.push(newChild);
-          this.nodeAdded.emit({ parentId: parentNode.id, node: newChild });
-          this.dataChanged.emit(this.root);
-          this.scheduleConnectorLayout();
-        },
-      },
-    });
-  }
-
-  removeChild(parentNode: SicOrganizationalChartNode, childId: string, childIndex: number): void {
-    parentNode.children.splice(childIndex, 1);
-    this.nodeRemoved.emit({ parentId: parentNode.id, nodeId: childId });
-    this.dataChanged.emit(this.root);
-    this.scheduleConnectorLayout();
-  }
-
-  editNode(node: SicOrganizationalChartNode): void {
-    this.dialogService.open({
-      type: 'confirm',
-      component: SicOrganizationalChartEditDialog,
-      componentInputs: {
-        node,
-        onSave: (payload: NodeEditPayload) => {
-          this.updateNode(node, {
-            nameLocal: payload.nameLocal,
-            nameEn: payload.nameEn,
-            color: payload.color,
-          });
-        },
-      },
-    });
-  }
-
-  updateNode(node: SicOrganizationalChartNode, updates: Partial<SicOrganizationalChartNode>): void {
-    Object.assign(node, updates);
-    this.nodeUpdated.emit({ nodeId: node.id, node });
-    this.dataChanged.emit(this.root);
-    this.scheduleConnectorLayout();
-  }
-
-  private scheduleConnectorLayout(centerScroll = false): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
-    this.ngZone.runOutsideAngular(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          this.layoutHorizontalConnectors();
-          if (centerScroll && !this.hasCenteredInitialScroll) {
-            this.centerHorizontalScroll();
-            this.hasCenteredInitialScroll = true;
-          }
-        });
-      });
-    });
-  }
-
-  private centerHorizontalScroll(): void {
-    const host = this.hostElementRef.nativeElement;
-    if (host.scrollWidth <= host.clientWidth) {
-      return;
-    }
-
-    host.scrollLeft = (host.scrollWidth - host.clientWidth) / 2;
-  }
-
-  private layoutHorizontalConnectors(): void {
-    const host = this.hostElementRef.nativeElement;
-    const childrenContainers = host.querySelectorAll<HTMLElement>(
-      '.sic-organizational-chart__children',
-    );
-
-    childrenContainers.forEach((childrenContainer) => {
-      const horizontalConnector = childrenContainer.querySelector<HTMLElement>(
-        ':scope > .sic-organizational-chart__connector-horizontal',
-      );
-      if (!horizontalConnector) {
-        return;
-      }
-
-      const childNodes = childrenContainer.querySelectorAll<HTMLElement>(
-        ':scope > .sic-organizational-chart__child-wrapper > .sic-organizational-chart__child-content > .sic-organizational-chart__node-container > .sic-organizational-chart__node-shell > .sic-organizational-chart__node',
-      );
-
-      if (childNodes.length < 2) {
-        horizontalConnector.style.width = '0px';
-        return;
-      }
-
-      const lineSizeRaw = getComputedStyle(host)
-        .getPropertyValue('--sic-organizational-line-size')
-        .trim();
-      const lineSize = Number.parseFloat(lineSizeRaw) || 2;
-
-      const containerRect = childrenContainer.getBoundingClientRect();
-      const firstNodeRect = childNodes[0].getBoundingClientRect();
-      const lastNodeRect = childNodes[childNodes.length - 1].getBoundingClientRect();
-
-      const firstCenterX = firstNodeRect.left + firstNodeRect.width / 2 - containerRect.left;
-      const lastCenterX = lastNodeRect.left + lastNodeRect.width / 2 - containerRect.left;
-
-      horizontalConnector.style.left = `${firstCenterX - lineSize / 2}px`;
-      horizontalConnector.style.width = `${lastCenterX - firstCenterX + lineSize}px`;
-      horizontalConnector.style.transform = 'none';
-    });
-  }
-
-  private generateId(): string {
-    return crypto.randomUUID();
-  }
-
-  private getRandomColor(): string {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
-    return colors[Math.floor(Math.random() * colors.length)];
-  }
-
-  private resolveLanguage(lang: string | null | undefined): 'th' | 'en' {
-    const normalized = String(lang ?? '').toLowerCase();
-    return normalized.startsWith('th') ? 'th' : 'en';
-  }
-
-  trackById = (_index: number, node: SicOrganizationalChartNode): string => node.id;
-
-  @Output() nodeClick = new EventEmitter<SicOrganizationalChartNode>();
-
-  // ✅ เพิ่ม method
-  onNodeClick(node: SicOrganizationalChartNode): void {
-    this.nodeClick.emit(node);
-  }
 }
 </file>
 

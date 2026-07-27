@@ -1,11 +1,11 @@
 package com.softinter.sicapi.controller.storage;
 
-import com.nimbusds.jose.util.Resource;
 import com.softinter.sicapi.dto.request.CompleteUploadSessionRequest;
 import com.softinter.sicapi.dto.request.UploadSessionRequest;
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
 import com.softinter.sicapi.dto.response.UploadSessionResponse;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;   // ✅ แก้ตรงนี้
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
@@ -16,14 +16,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/storage")
@@ -89,7 +90,6 @@ public class StorageController {
     @GetMapping("/upload/sessions/{sessionId}")
     @Operation(summary = "Get session status")
     public ResponseEntity<Map<String, Object>> getSessionStatus(@PathVariable UUID sessionId) {
-        // TODO: implement status response
         return ResponseEntity.ok(Map.of("sessionId", sessionId));
     }
 
@@ -125,7 +125,6 @@ public class StorageController {
         return ResponseEntity.noContent().build();
     }
 
-    // ========== Legacy endpoint: complete session using request body (sessionId) ==========
     @PostMapping("/upload/sessions/complete")
     @Operation(summary = "Complete upload session (using sessionId in request body)")
     public ResponseEntity<?> completeUploadSessionLegacy(@RequestBody CompleteUploadSessionRequest request,
@@ -180,11 +179,11 @@ public class StorageController {
         return ResponseEntity.ok(url);
     }
 
-   @GetMapping("/avatar/{groupId}")
+    @GetMapping("/avatar/{groupId}")
     public ResponseEntity<InputStreamResource> getAvatar(@PathVariable UUID groupId) {
         SuUpload upload = uploadRepository
-            .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
-            .orElseThrow(() -> new RuntimeException("Avatar not found"));
+                .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
+                .orElseThrow(() -> new RuntimeException("Avatar not found"));
 
         StorageDownloadResponse download = fileStorageService.downloadFile(upload.getId());
         InputStreamResource resource = new InputStreamResource(download.getInputStream());
@@ -192,5 +191,37 @@ public class StorageController {
                 .contentType(MediaType.parseMediaType(download.getContentType()))
                 .contentLength(download.getFileSize())
                 .body(resource);
+    }
+
+    @GetMapping("/group/{groupId}")
+    @Operation(summary = "Get list of files by upload group ID")
+    public ResponseEntity<List<StorageUploadReference>> getGroupFiles(
+            @PathVariable UUID groupId,
+            HttpServletRequest request) {
+
+        List<SuUpload> uploads = uploadRepository
+                .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId);
+
+        String baseUrl = request.getScheme() + "://" + request.getServerName()
+                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+
+        // ✅ แปลง SuUpload → StorageUploadReference
+        List<StorageUploadReference> refs = uploads.stream()
+                .map(u -> {
+                    StorageUploadReference ref = new StorageUploadReference();
+                    ref.setId(u.getId());
+                    ref.setUploadGroupId(u.getUploadGroupId());
+                    ref.setFileName(u.getFileName());
+                    ref.setContentType(u.getContentType());
+                    ref.setFileSize(u.getFileSize());
+                    // ✅ แปลง FileVisibility enum → String
+                    ref.setVisibility(u.getVisibility().name());
+                    ref.setAccessUrl(baseUrl + "/api/storage/download/" + u.getId());
+                    ref.setIsActive(u.getIsActive());
+                    return ref;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(refs);
     }
 }

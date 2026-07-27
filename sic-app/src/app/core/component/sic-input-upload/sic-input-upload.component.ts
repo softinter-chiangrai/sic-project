@@ -7,9 +7,11 @@ import {
   HostListener,
   Injector,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  SimpleChanges,
   ViewChild,
   forwardRef,
   inject,
@@ -63,7 +65,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
     },
   ],
 })
-export class SicInputUploadComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class SicInputUploadComponent implements ControlValueAccessor, OnInit, OnChanges, OnDestroy {
   @Input() label?: string;
   @Input() placeholder = 'Upload files';
   @Input() hint?: string;
@@ -107,6 +109,31 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
     this.ngControl = this.injector.get(NgControl, null);
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
+    }
+    if (this.uploadGroupId && this.items.length === 0) {
+      void this.loadGroupFiles(this.uploadGroupId);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['uploadGroupId'] && changes['uploadGroupId'].currentValue) {
+      const gid = changes['uploadGroupId'].currentValue;
+      if (gid && this.items.length === 0) {
+        void this.loadGroupFiles(gid);
+      }
+    }
+  }
+
+  private async loadGroupFiles(groupId: string): Promise<void> {
+    if (!this.isBrowser) return;
+    try {
+      const url = `${environment.apiBaseUrl}/api/storage/group/${groupId}`;
+      const refs = await this.sendJsonRequest<StorageUploadReference[]>('GET', url);
+      if (refs && Array.isArray(refs)) {
+        this.writeValue(refs);
+      }
+    } catch {
+      // ignore
     }
   }
 

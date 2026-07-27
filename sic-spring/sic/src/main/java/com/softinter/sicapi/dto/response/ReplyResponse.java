@@ -13,4 +13,5 @@ public class ReplyResponse {
     private String createdByName;
     private Instant createdDate;
     private UUID attachmentGroupId;
+    private String userAvatarUrl;
 }

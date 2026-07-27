@@ -3,6 +3,7 @@ package com.softinter.sicapi.entity.ex;
 import java.util.UUID;
 
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.FileVisibility;
 
 import lombok.Data;
 

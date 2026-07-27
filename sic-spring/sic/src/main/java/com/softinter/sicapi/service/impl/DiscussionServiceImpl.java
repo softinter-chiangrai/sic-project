@@ -30,6 +30,7 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     private final PmCommentRepository commentRepository;
     private final SuProfileRepository profileRepository;
+    private final com.softinter.sicapi.service.FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,6 +62,14 @@ public class DiscussionServiceImpl implements DiscussionService {
         post.setCreatedDate(Instant.now());
         post.setIsDelete(false);
 
+        if (request.getAttachmentGroupId() != null) {
+            try {
+                fileStorageService.activateUpload(request.getAttachmentGroupId());
+            } catch (Exception e) {
+                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+            }
+        }
+
         PmComment saved = commentRepository.save(post);
         return toPostResponse(saved);
     }
@@ -81,6 +90,14 @@ public class DiscussionServiceImpl implements DiscussionService {
         reply.setCreatedBy(userId);
         reply.setCreatedDate(Instant.now());
         reply.setIsDelete(false);
+
+        if (request.getAttachmentGroupId() != null) {
+            try {
+                fileStorageService.activateUpload(request.getAttachmentGroupId());
+            } catch (Exception e) {
+                log.warn("Could not activate upload {}", request.getAttachmentGroupId(), e);
+            }
+        }
 
         PmComment saved = commentRepository.save(reply);
         return toReplyResponse(saved);
@@ -143,6 +160,7 @@ public class DiscussionServiceImpl implements DiscussionService {
         response.setCreatedDate(comment.getCreatedDate());
         response.setAttachmentGroupId(comment.getAttachmentGroupId());
         response.setPinned(comment.getPinned());
+        response.setUserAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         long replyCount = commentRepository.countByParentCommentIdAndIsDeleteFalse(comment.getId());
         response.setReplyCount(replyCount);
         return response;
@@ -156,6 +174,7 @@ public class DiscussionServiceImpl implements DiscussionService {
         response.setCreatedByName(getUserName(comment.getCreatedBy()));
         response.setCreatedDate(comment.getCreatedDate());
         response.setAttachmentGroupId(comment.getAttachmentGroupId());
+        response.setUserAvatarUrl(getUserAvatarUrl(comment.getCreatedBy()));
         return response;
     }
 
@@ -163,5 +182,11 @@ public class DiscussionServiceImpl implements DiscussionService {
         return profileRepository.findByUserId(userId)
                 .map(LocalizationHelper::getFullName)
                 .orElse(userId);
+    }
+
+    private String getUserAvatarUrl(String userId) {
+        return profileRepository.findByUserId(userId)
+                .map(p -> p.getUploadGroupId() != null ? "/api/storage/avatar/" + p.getUploadGroupId() : null)
+                .orElse(null);
     }
 }

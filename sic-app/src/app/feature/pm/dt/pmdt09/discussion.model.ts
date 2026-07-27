@@ -8,6 +8,7 @@ export interface Post {
   attachmentGroupId?: string;
   pinned: boolean;
   replyCount: number;
+  userAvatarUrl?: string;
   replies?: Reply[];
   isEditing?: boolean;
 }
@@ -19,6 +20,8 @@ export interface Reply {
   createdByName: string;
   createdDate: string;
   attachmentGroupId?: string;
+  userAvatarUrl?: string;
+  replyToUser?: string;
   isEditing?: boolean;
 }
 

@@ -17,5 +17,6 @@ public class PostResponse {
     private UUID attachmentGroupId;
     private Boolean pinned;
     private long replyCount;
-    private List<ReplyResponse> replies; // ตัวเลือก: อาจไม่ต้องดึงมาในครั้งแรก
+    private String userAvatarUrl;
+    private List<ReplyResponse> replies;
 }

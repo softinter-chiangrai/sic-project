@@ -5,15 +5,16 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
-import { Post } from './discussion.model';
+import { Post, Reply } from './discussion.model';
 import { DiscussionService } from './discussion.service';
+import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmdt09',
@@ -22,11 +23,10 @@ import { DiscussionService } from './discussion.service';
     CommonModule,
     ReactiveFormsModule,
     SicButtonComponent,
-    SicInputComponent,
     SicInputAreaComponent,
-    SicCardComponent,
     SicDatePipe,
     SicInputUploadComponent,
+    Pmdt09AComponent,
   ],
   templateUrl: './pmdt09.component.html',
   styleUrl: './pmdt09.component.css',
@@ -37,15 +37,30 @@ export class Pmdt09Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
+  private authService = inject(AuthService);
+  private sidebarService = inject(SicSidebarService);
+
+  readonly apiBaseUrl = environment.apiBaseUrl;
 
   posts = signal<Post[]>([]);
   isLoading = signal(false);
   isSubmitting = signal(false);
   projectId = signal<string | null>(null);
   expandedPostId = signal<string | null>(null);
+  
+  // Facebook Style Comment & Reply state
   editingCommentId = signal<string | null>(null);
   replyingPostId = signal<string | null>(null);
+  replyToUser = signal<string | null>(null);
+
+  // Dialog Pmdt09A Modal state
+  isModalOpen = signal(false);
+  postToEdit = signal<Post | null>(null);
+
+  // User info
+  currentUserId = signal<string | null>(null);
+  currentUserName = signal<string>('ผู้ใช้งาน');
+  currentUserAvatar = signal<string | null>(null);
 
   // Pagination
   currentPage = signal(0);
@@ -53,12 +68,26 @@ export class Pmdt09Component implements OnInit {
   totalElements = signal(0);
   totalPages = signal(0);
 
-  // Forms
-  postForm!: FormGroup;
+  // Forms for replies and quick edit inline
   replyForm!: FormGroup;
   editForm!: FormGroup;
 
   ngOnInit(): void {
+    // โหลดข้อมูลผู้ใช้จริง
+    this.currentUserId.set(this.authService.getUserId());
+    this.sidebarService.getProfile().subscribe({
+      next: (profile) => {
+        if (profile) {
+          const name = profile.name || profile.id || 'ผู้ใช้';
+          this.currentUserName.set(name);
+          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
+            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
+          }
+        }
+      },
+      error: () => {},
+    });
+
     this.route.queryParams.subscribe((params) => {
       const pid = params['projectId'];
       if (pid) {
@@ -68,12 +97,6 @@ export class Pmdt09Component implements OnInit {
         this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
         this.router.navigate(['/feature/pm/pmrt02']);
       }
-    });
-
-    this.postForm = this.fb.group({
-      subject: ['', Validators.required],
-      content: ['', Validators.required],
-      attachmentGroupId: [null],
     });
 
     this.replyForm = this.fb.group({
@@ -112,9 +135,7 @@ export class Pmdt09Component implements OnInit {
           posts.map((p) => (p.id === postId ? { ...p, replies } : p))
         );
       },
-      error: () => {
-        // silent fail
-      },
+      error: () => {},
     });
   }
 
@@ -130,13 +151,58 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  startReply(postId: string): void {
+  // --- Dialog (Pmdt09A) Actions ---
+  openCreateModal(): void {
+    this.postToEdit.set(null);
+    this.isModalOpen.set(true);
+  }
+
+  openEditModal(post: Post): void {
+    this.postToEdit.set(post);
+    this.isModalOpen.set(true);
+  }
+
+  closeModal(): void {
+    this.isModalOpen.set(false);
+    this.postToEdit.set(null);
+  }
+
+  onPostSaved(savedPost: Post): void {
+    this.closeModal();
+    const existing = this.posts().find((p) => p.id === savedPost.id);
+    if (existing) {
+      // อัปเดตรายการเดิม
+      this.posts.update((posts) =>
+        posts.map((p) => (p.id === savedPost.id ? { ...p, ...savedPost } : p))
+      );
+    } else {
+      // โพสต์ใหม่ เติม userAvatarUrl
+      savedPost.userAvatarUrl = this.currentUserAvatar() || undefined;
+      savedPost.createdByName = savedPost.createdByName || this.currentUserName();
+      this.posts.update((posts) => [savedPost, ...posts]);
+    }
+  }
+
+  // --- Reply & Comment Actions ---
+  startReply(postId: string, replyToUser?: string): void {
     this.replyingPostId.set(postId);
-    this.replyForm.reset({ content: '', attachmentGroupId: null });
+    this.replyToUser.set(replyToUser || null);
+    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
+    
+    // Auto expand
+    if (this.expandedPostId() !== postId) {
+      this.expandedPostId.set(postId);
+      const post = this.posts().find((p) => p.id === postId);
+      if (post && !post.replies) {
+        this.loadReplies(postId);
+      }
+    }
   }
 
   cancelReply(): void {
     this.replyingPostId.set(null);
+    this.replyToUser.set(null);
+    this.replyForm.reset();
   }
 
   submitReply(): void {
@@ -148,8 +214,19 @@ export class Pmdt09Component implements OnInit {
     if (!postId) return;
 
     this.isSubmitting.set(true);
-    const request = this.replyForm.value;
-    request.postId = postId;
+    const formValue = this.replyForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content,
+      attachmentGroupId: attachmentGroupId,
+    };
 
     this.service
       .createReply(request)
@@ -158,8 +235,16 @@ export class Pmdt09Component implements OnInit {
         next: (newReply) => {
           this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
           this.replyingPostId.set(null);
+          this.replyToUser.set(null);
           this.replyForm.reset();
-          // เพิ่ม reply ใน local
+          
+          if (!newReply.userAvatarUrl && this.currentUserAvatar()) {
+            newReply.userAvatarUrl = this.currentUserAvatar() || undefined;
+          }
+          if (!newReply.createdByName) {
+            newReply.createdByName = this.currentUserName();
+          }
+
           this.posts.update((posts) =>
             posts.map((p) =>
               p.id === postId
@@ -174,49 +259,13 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
-  submitPost(): void {
-    if (this.postForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อมูล', 'ต้องระบุหัวข้อและเนื้อหา');
-      return;
-    }
-    const projectId = this.projectId();
-    if (!projectId) return;
-
-    this.isSubmitting.set(true);
-    const request = { ...this.postForm.value, projectId };
-
-    this.service
-      .createPost(request)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (newPost) => {
-          this.dialog.success('โพสต์สำเร็จ', 'ข้อความของคุณถูกเผยแพร่แล้ว');
-          this.postForm.reset();
-          // เพิ่มโพสต์ใหม่ที่ด้านบน
-          this.posts.update((posts) => [newPost, ...posts]);
-        },
-        error: (err) => {
-          this.dialog.error('โพสต์ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  startEdit(postId: string): void {
-    const post = this.posts().find((p) => p.id === postId);
-    if (!post) return;
-    this.editingCommentId.set(postId);
-    this.editForm.patchValue({ content: post.content });
-  }
-
   startEditReply(postId: string, replyId: string): void {
-    // เราจะใช้ editingCommentId เป็น `replyId` และเก็บ postId ไว้ใน editForm context
     const post = this.posts().find((p) => p.id === postId);
     if (!post) return;
     const reply = post.replies?.find((r) => r.id === replyId);
     if (!reply) return;
     this.editingCommentId.set(replyId);
     this.editForm.patchValue({ content: reply.content });
-    // เก็บ postId ไว้ใน custom property ของ form (หรือใช้ตัวแปร)
     (this.editForm as any).__postId = postId;
   }
 
@@ -237,15 +286,16 @@ export class Pmdt09Component implements OnInit {
 
     this.isSubmitting.set(true);
     this.service
-      .updateComment(commentId, content)
+      .updateComment(commentId, { content })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
           this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
           this.editingCommentId.set(null);
-          this.editForm.reset();
-          // อัปเดต local
           const postId = (this.editForm as any).__postId;
+          this.editForm.reset();
+          (this.editForm as any).__postId = null;
+
           if (postId) {
             this.posts.update((posts) =>
               posts.map((p) => {
@@ -259,7 +309,6 @@ export class Pmdt09Component implements OnInit {
               })
             );
           } else {
-            // ถ้าเป็นโพสต์หลัก
             this.posts.update((posts) =>
               posts.map((p) => (p.id === commentId ? { ...p, content } : p))
             );
@@ -301,7 +350,7 @@ export class Pmdt09Component implements OnInit {
                 posts.map((p) => {
                   if (p.id === postId) {
                     const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
-                    return { ...p, replies: updatedReplies, replyCount: updatedReplies.length };
+                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
                   }
                   return p;
                 })
@@ -326,12 +375,22 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  // ตรวจสอบว่าเป็นเจ้าของ (ใช้ชื่อผู้ใช้)
+  // ตรวจสอบว่าเป็นเจ้าของโพสต์/ตอบกลับจริง
   isAuthor(createdBy: string): boolean {
-    // TODO: เปรียบเทียบกับ user id ของ current user (จาก AuthService)
-    // ใช้ mock ชั่วคราว: สมมติว่า "สมชาย ใจดี" เป็นเจ้าของ (เพื่อทดสอบ)
-    // ควรใช้ AuthService จริง
-    return createdBy === 'สมชาย ใจดี' || createdBy === 'system';
+    const currentId = this.currentUserId();
+    if (currentId && createdBy === currentId) {
+      return true;
+    }
+    return createdBy === this.currentUserName();
+  }
+
+  // แปลงรูป Avatar URL เป็น Full URL (ถ้าเป็น relative)
+  getAvatarUrl(url?: string): string | null {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${this.apiBaseUrl}${url}`;
   }
 
   formatDate(dateStr: string): string {

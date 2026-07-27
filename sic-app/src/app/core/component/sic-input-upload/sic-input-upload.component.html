@@ -84,12 +84,10 @@
     (click)="$event.stopPropagation()"
     (keydown)="$event.stopPropagation()">
     <div class="sic-input-upload__item-menu-title">{{ activeMenuItem.fileName }}</div>
-    @if (isPreviewableItem(activeMenuItem)) {
-      <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="previewItemAction(activeMenuItem)">
-        <i class="bi bi-eye" aria-hidden="true"></i>
-        <span>Preview</span>
-      </button>
-    }
+    <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="previewItemAction(activeMenuItem)">
+      <i class="bi bi-eye" aria-hidden="true"></i>
+      <span>เปิดดู / แสดงผล (Preview)</span>
+    </button>
     <button type="button" class="sic-input-upload__item-action" role="menuitem" (click)="downloadItem(activeMenuItem)">
       <i class="bi bi-download" aria-hidden="true"></i>
       <span>Download</span>
@@ -119,6 +117,19 @@
           <video class="sic-input-upload__lightbox-media" [src]="previewUrl" controls autoplay muted playsinline>
             <track [src]="emptyTrackSrc" kind="captions" srclang="en" label="Captions unavailable" default />
           </video>
+        } @else {
+          <div class="flex flex-col items-center justify-center p-8 text-center bg-zinc-900 rounded-xl my-4 text-white">
+            <i class="bi bi-file-earmark-text text-6xl text-amber-400 mb-3"></i>
+            <p class="font-semibold text-lg">{{ previewItem.fileName }}</p>
+            <p class="text-xs text-zinc-400 mt-1 mb-4">เอกสารแนบ ({{ (previewItem.size / 1024).toFixed(1) }} KB)</p>
+            <button
+              type="button"
+              class="px-5 py-2.5 rounded-full bg-[var(--crm-primary)] hover:opacity-90 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
+              (click)="downloadItem(previewItem)"
+            >
+              <i class="bi bi-download"></i> ดาวน์โหลด / เปิดดูไฟล์เอกสาร
+            </button>
+          </div>
         }
       }
     </div>
