@@ -458,7 +458,7 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
     return extension.slice(0, 4).toUpperCase();
   }
 
-  protected addFiles(files: File[]): void {
+  protected async addFiles(files: File[]): Promise<void> {
     this.markTouched();
 
     const filteredFiles = this.filterAcceptedFiles(files);
@@ -467,6 +467,7 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
       this.softDeleteExistingItems();
     }
 
+    const newItems: SicUploadItem[] = [];
     for (const file of acceptedFiles) {
       const item: SicUploadItem = {
         localId: this.createLocalId(),
@@ -491,10 +492,13 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
       };
 
       this.items.push(item);
-      void this.uploadItem(item);
+      newItems.push(item);
     }
-
     this.cdr.markForCheck();
+
+    for (const item of newItems) {
+      await this.uploadItem(item);
+    }
   }
 
   private softDeleteExistingItems(): void {
