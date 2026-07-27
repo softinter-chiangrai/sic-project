@@ -84,7 +84,6 @@
     }
 
     @for (tab of tabs(); track tab.id) {
-      <!-- ✅ Active = ขอบเขียว (border-2 border-[var(--crm-success)]) -->
       <button
         (click)="switchTab(tab.id)"
         (dblclick)="editTab(tab.id)"
@@ -97,17 +96,14 @@
       >
         <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <!-- ชื่อ -->
         <span class="text-sm">
           {{ tab.name }}
         </span>
 
-        <!-- ✅ ป้ายประเภท: ใช้สีเทาเดียวกันทั้งหมด ไม่แยกตามประเภท -->
         <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
           {{ tab.diagramType }}
         </span>
 
-        <!-- ปุ่มลบ -->
         <button
           (click)="deleteTab(tab.id, $event)"
           class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
@@ -192,9 +188,9 @@
       </button>
     </div>
     <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+      <!-- ไม่มี (aiResponse) อีกต่อไป -->
       <app-pmdt06A
         [diagramId]="currentTabId"
-        (aiResponse)="handleAiResponse($event)"
         class="flex-1 flex flex-col h-full overflow-hidden"
       ></app-pmdt06A>
     </div>
@@ -206,36 +202,5 @@
       class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
       (click)="toggleChat()"
     ></div>
-  }
-
-  <!-- ===== Import Dialog ===== -->
-  @if (showImportDialog()) {
-    <div
-      class="fixed inset-0 z-[1060] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-    >
-      <div
-        class="bg-[var(--bg)] rounded-2xl border border-[var(--border)] shadow-2xl p-6 max-w-md w-full"
-      >
-        <h3 class="text-lg font-semibold text-[var(--text-active)] mb-2">Import AI Diagram</h3>
-        <p class="text-sm text-[var(--text-muted)] mb-4">
-          AI has generated a new diagram. This will be created as a new tab.
-        </p>
-        <div class="flex gap-3 justify-end">
-          <button
-            (click)="cancelImport()"
-            class="px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            (click)="importMermaid()"
-            class="px-4 py-2 rounded-lg text-sm bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/80 transition-all"
-          >
-            <i class="bi bi-plus-lg mr-1"></i>
-            Create as New Tab
-          </button>
-        </div>
-      </div>
-    </div>
   }
 </div>

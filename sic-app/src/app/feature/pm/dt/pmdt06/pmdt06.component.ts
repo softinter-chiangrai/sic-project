@@ -55,12 +55,12 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
-  // ===== Import Dialog =====
-  showImportDialog = signal(false);
-  pendingMermaid: { script: string; name?: string; type?: string } | null = null;
-
   private isLoadingDiagram = false;
   private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
+
+  // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบ)
+  private requirementId: string | null = null;
+  private requirementTitle: string = '';
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
@@ -89,86 +89,88 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
     // รับ query params
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-    const newTabId = params['tabId'] || params['diagramId'] || null;
-    const newProjectId = params['projectId'] || null;
-    const shouldOpenCreate = params['openCreate'] === 'true';
-    const requirementId = params['requirementId'] || null;
-    const requirementTitle = params['requirementTitle'] || '';
+      const newTabId = params['tabId'] || params['diagramId'] || null;
+      const newProjectId = params['projectId'] || null;
+      const shouldOpenCreate = params['openCreate'] === 'true';
+      const reqId = params['requirementId'] || null;
+      const reqTitle = params['requirementTitle'] || '';
 
-    if (!newProjectId) {
-      this.router.navigate(['/projects']);
-      return;
-    }
-
-    // ถ้า projectId เปลี่ยน ให้โหลดใหม่
-    if (newProjectId !== this.projectId) {
-      this.projectId = newProjectId;
-      this.currentTabId = null;
-      this.currentDiagram = null;
-      this.loadProjectName();
-      this.loadTabs();
-      // ถ้ามี openCreate และ requirementId ให้เก็บไว้เปิดทีหลัง
-      if (shouldOpenCreate && requirementId) {
-        this.pendingCreate = { requirementId, requirementTitle };
-        // ลบ query params ทันที
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { openCreate: null, requirementId: null, requirementTitle: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
+      // เก็บ requirementId/Title ไว้ในตัวแปร component
+      if (reqId) {
+        this.requirementId = reqId;
+        this.requirementTitle = reqTitle;
       }
-      return;
-    }
 
-    // ถ้ามี tabId ให้โหลด diagram
-    if (newTabId) {
-      if (newTabId !== this.currentTabId) {
-        this.currentTabId = newTabId;
+      if (!newProjectId) {
+        this.router.navigate(['/projects']);
+        return;
+      }
+
+      // ถ้า projectId เปลี่ยน ให้โหลดใหม่
+      if (newProjectId !== this.projectId) {
+        this.projectId = newProjectId;
+        this.currentTabId = null;
         this.currentDiagram = null;
-        if (this.drawioReady) {
-          this.loadExistingDiagram();
-        }
-      }
-      // ถ้ามี openCreate และ requirementId แต่มี tabId อยู่แล้ว -> ไม่ต้องเปิด dialog
-      if (shouldOpenCreate && requirementId) {
-        // ลบ query params ทิ้ง
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { openCreate: null, requirementId: null, requirementTitle: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }
-    } else {
-      // ถ้าไม่มี tabId ให้โหลด tabs
-      this.loadTabs();
-      // ถ้ามี openCreate และ requirementId และยังไม่มี tabs ให้เปิด dialog
-      if (shouldOpenCreate && requirementId && !this.isCreateDialogOpened) {
-        // ตรวจสอบว่ามี tabs หรือยัง ถ้ายังไม่มีให้เปิด
-        if (this.tabs().length === 0) {
-          this.isCreateDialogOpened = true;
-          this.openCreateDialogWithRequirement(requirementId, requirementTitle);
-          // ลบ query params
+        this.loadProjectName();
+        this.loadTabs();
+        // ถ้ามี openCreate และ requirementId ให้เก็บไว้เปิดทีหลัง
+        if (shouldOpenCreate && reqId) {
+          this.pendingCreate = { requirementId: reqId, requirementTitle: reqTitle };
+          // ลบเฉพาะ openCreate ออกจาก URL (เก็บ requirementId ไว้)
           this.router.navigate([], {
             relativeTo: this.route,
-            queryParams: { openCreate: null, requirementId: null, requirementTitle: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        } else {
-          // ถ้ามี tabs อยู่แล้ว ไม่ต้องเปิด
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { openCreate: null, requirementId: null, requirementTitle: null },
+            queryParams: { openCreate: null },
             queryParamsHandling: 'merge',
             replaceUrl: true,
           });
         }
+        return;
       }
-    }
-  });
-}
+
+      // ถ้ามี tabId ให้โหลด diagram
+      if (newTabId) {
+        if (newTabId !== this.currentTabId) {
+          this.currentTabId = newTabId;
+          this.currentDiagram = null;
+          if (this.drawioReady) {
+            this.loadExistingDiagram();
+          }
+        }
+        // ถ้ามี openCreate และ requirementId แต่มี tabId อยู่แล้ว
+        if (shouldOpenCreate && reqId) {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { openCreate: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
+      } else {
+        // ถ้าไม่มี tabId ให้โหลด tabs
+        this.loadTabs();
+        // ถ้ามี openCreate และ requirementId และยังไม่มี tabs ให้เปิด dialog
+        if (shouldOpenCreate && reqId && !this.isCreateDialogOpened) {
+          if (this.tabs().length === 0) {
+            this.isCreateDialogOpened = true;
+            this.openCreateDialogWithRequirement(reqId, reqTitle);
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { openCreate: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true,
+            });
+          } else {
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { openCreate: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true,
+            });
+          }
+        }
+      }
+    });
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -198,7 +200,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         }
 
         if (tabs.length === 0) {
-          // ถ้าไม่มี tab และมี pendingCreate ให้เปิด dialog
           if (this.pendingCreate) {
             this.openCreateDialogWithRequirement(
               this.pendingCreate.requirementId,
@@ -206,11 +207,9 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
             );
             this.pendingCreate = null;
           } else {
-            // ถ้าไม่มี pendingCreate ให้สร้าง default
             this.createDefaultTab();
           }
         } else {
-          // ถ้ามี tab อยู่แล้ว และมี pendingCreate ให้ยกเลิก pending (ไม่ต้องเปิด)
           if (this.pendingCreate) {
             console.log('[Diagram] Tabs already exist, skip create dialog');
             this.pendingCreate = null;
@@ -226,8 +225,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   createDefaultTab(): void {
     if (!this.projectId) return;
-    const requirementId = this.route.snapshot.queryParams['requirementId'] || '';
-    const requirementTitle = this.route.snapshot.queryParams['requirementTitle'] || '';
+    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
     this.dialogService.open({
       type: 'confirm',
@@ -235,8 +234,8 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       componentInputs: {
         projectId: this.projectId,
         editData: null,
-        selectedRequirementId: requirementId,
-        requirementTitle: requirementTitle,
+        selectedRequirementId: reqId,
+        requirementTitle: reqTitle,
         onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
           this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
             next: (newTab) => {
@@ -255,10 +254,37 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
 
   createNewTab(): void {
     if (!this.projectId) return;
-    const requirementId = this.route.snapshot.queryParams['requirementId'] || '';
-    const requirementTitle = this.route.snapshot.queryParams['requirementTitle'] || '';
+    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
     this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        selectedRequirementId: reqId,
+        requirementTitle: reqTitle,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
+      },
+    });
+  }
+
+  private openCreateDialogWithRequirement(requirementId: string, requirementTitle: string): void {
+    if (!this.projectId || !requirementId) return;
+
+    const promise = this.dialogService.open({
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
@@ -280,40 +306,11 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
         },
       },
     });
+
+    promise.finally(() => {
+      this.pendingCreate = null;
+    });
   }
-
- private openCreateDialogWithRequirement(requirementId: string, requirementTitle: string): void {
-  if (!this.projectId || !requirementId) return;
-
-  // เปิด dialog และรับ Promise
-  const promise = this.dialogService.open({
-    type: 'confirm',
-    component: NewDiagramDialogComponent,
-    componentInputs: {
-      projectId: this.projectId,
-      editData: null,
-      selectedRequirementId: requirementId,
-      requirementTitle: requirementTitle,
-      onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-        this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
-          next: (newTab) => {
-            this.tabs.update((t) => [...t, newTab]);
-            this.switchTab(newTab.id);
-            this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
-          },
-          error: (err) => {
-            this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-          },
-        });
-      },
-    },
-  });
-
-  // เมื่อ dialog ปิด (ไม่ว่า success หรือ cancel) ให้รีเซ็ต pendingCreate
-  promise.finally(() => {
-    this.pendingCreate = null;
-  });
-}
 
   editTab(tabId: string): void {
     const tab = this.tabs().find((t) => t.id === tabId);
@@ -330,7 +327,7 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
       componentInputs: {
         projectId: this.projectId,
         editData: editData,
-        selectedRequirementId: '', // ไม่ต้องใช้
+        selectedRequirementId: '',
         requirementTitle: '',
         onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string) => {
           if (!data) return;
@@ -436,60 +433,6 @@ export class Pmdt06Component implements AfterViewInit, OnDestroy {
   toggleChat(): void {
     this.chatOpen.update((v) => !v);
     if (this.chatOpen()) this.unreadCount = 0;
-  }
-
-  handleAiResponse(response: { action: string; script?: string; name?: string; type?: string }): void {
-    console.log('AI Response from chat:', response);
-    if (response.action === 'update' && response.script) {
-      this.pendingMermaid = {
-        script: response.script,
-        name: response.name || 'AI Generated Diagram',
-        type: response.type || 'Flowchart',
-      };
-      this.showImportDialog.set(true);
-    }
-  }
-
-  importMermaid(): void {
-    if (!this.pendingMermaid || !this.projectId) return;
-    const { script, name, type } = this.pendingMermaid;
-    const requirementId = this.route.snapshot.queryParams['requirementId'] || '';
-    const requirementTitle = this.route.snapshot.queryParams['requirementTitle'] || '';
-
-    this.dialogService.open({
-      type: 'confirm',
-      component: NewDiagramDialogComponent,
-      componentInputs: {
-        projectId: this.projectId,
-        editData: null,
-        selectedRequirementId: requirementId,
-        requirementTitle: requirementTitle,
-        onSave: (diagramName: string, diagramType: string, editData: DiagramEditData | undefined, reqId: string) => {
-          const tabName = diagramName || name || 'AI Diagram';
-          const tabType = diagramType || type || 'Flowchart';
-          this.diagramService.createTab(this.projectId!, tabName, tabType as any, script, reqId).subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.switchTab(newTab.id);
-              this.showImportDialog.set(false);
-              this.pendingMermaid = null;
-              this.dialogService.success('Imported', `Diagram "${tabName}" created.`);
-            },
-            error: (err) => {
-              console.error('Failed to create AI diagram tab:', err);
-              this.dialogService.error('Failed', err.error?.message || 'Could not create diagram.');
-              this.showImportDialog.set(false);
-              this.pendingMermaid = null;
-            },
-          });
-        },
-      },
-    });
-  }
-
-  cancelImport(): void {
-    this.showImportDialog.set(false);
-    this.pendingMermaid = null;
   }
 
   // ===== Diagram CRUD =====

@@ -51,6 +51,8 @@ ALTER TABLE pm_specification RENAME COLUMN related_er TO related_diagram;
 -- เพิ่มคอลัมน์ subject และ attachment_group_id ถ้ายังไม่มี
 ALTER TABLE pm_comment ADD COLUMN IF NOT EXISTS subject VARCHAR(255);
 ALTER TABLE pm_comment ADD COLUMN IF NOT EXISTS attachment_group_id UUID;
+ALTER TABLE pm_comment ADD COLUMN IF NOT EXISTS extra_data JSONB;
+
 
 -- สร้าง index สำหรับ parent_comment_id เพื่อเพิ่มประสิทธิภาพการ query
 CREATE INDEX IF NOT EXISTS idx_comment_parent ON pm_comment (parent_comment_id);

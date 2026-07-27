@@ -5,10 +5,8 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
-  EventEmitter,
   Input,
   OnDestroy,
-  Output,
   inject,
   signal,
   viewChild,
@@ -18,6 +16,8 @@ import { MarkdownModule } from 'ngx-markdown';
 import { Subject, takeUntil } from 'rxjs';
 import type { ChatMessage } from '../diagram.model';
 import { DiagramService, PmChatResponse } from '../diagram.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
 
 @Component({
   selector: 'app-pmdt06A',
@@ -27,16 +27,13 @@ import { DiagramService, PmChatResponse } from '../diagram.service';
   styleUrls: ['./pmdt06A.component.css'],
 })
 export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  // ✅ ใช้ setter เพื่อให้ตอบสนองเมื่อ diagramId เปลี่ยน (รวมถึงตอนรีเฟรช)
   private _diagramId: string | null = null;
   @Input()
   set diagramId(value: string | null) {
-    // ถ้าค่าเปลี่ยนไปและมีค่าจริง → โหลดประวัติ
     if (value && value !== this._diagramId) {
       this._diagramId = value;
       this.loadChatHistory(value);
     } else if (!value) {
-      // ถ้าไม่มี diagramId ให้ clear ข้อความ
       this._diagramId = null;
       this.messages.set([]);
     }
@@ -45,14 +42,8 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
     return this._diagramId;
   }
 
-  @Output() aiResponse = new EventEmitter<{
-    action: string;
-    script?: string;
-    name?: string;
-    type?: string;
-  }>();
-
   private diagramService = inject(DiagramService);
+  private dialogService = inject(DialogService);
   private destroy$ = new Subject<void>();
 
   messages = signal<ChatMessage[]>([]);
@@ -62,9 +53,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
   chatContainer = viewChild<ElementRef>('chatContainer');
 
   ngAfterViewInit() {
-    // ไม่ต้องทำอะไรเพิ่ม เพราะ setter จะถูกเรียกเมื่อ parent กำหนดค่า
-    // แต่ถ้าตอนเริ่มต้น diagramId มีค่าอยู่แล้ว (เช่นจาก route) setter จะทำงาน
-    // ถ้าไม่มีค่า ก็จะไม่โหลด
+    // Nothing extra needed
   }
 
   ngOnDestroy() {
@@ -83,7 +72,6 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
           this.scrollToBottom();
         },
         error: () => {
-          // silent fail – อาจแสดงข้อความ error หรือไม่ก็ได้
           console.warn('Failed to load chat history for diagram:', diagramId);
           this.messages.set([]);
         },
@@ -124,23 +112,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
           this.messages.update((m) => [...m, assistantMsg]);
           this.isLoading.set(false);
           this.scrollToBottom();
-
-          const content = assistantMsg.content;
-          const mermaidMatch = content.match(/```mermaid\s*([\s\S]*?)```/);
-          if (mermaidMatch) {
-            const script = mermaidMatch[1].trim();
-            const nameMatch = content.match(/(?:name|title)\s*[:：]\s*(.+)/i);
-            const name = nameMatch ? nameMatch[1].trim() : 'AI Generated Diagram';
-            const type = this.detectDiagramType(script);
-            this.aiResponse.emit({
-              action: 'update',
-              script,
-              name,
-              type,
-            });
-          } else {
-            this.aiResponse.emit({ action: 'message' });
-          }
+          // No automatic import anymore
         },
         error: (err) => {
           console.error('Chat error:', err);
@@ -159,22 +131,28 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
       });
   }
 
-  private detectDiagramType(script: string): string {
-    const lower = script.toLowerCase().trim();
-    if (lower.startsWith('sequence')) return 'Sequence';
-    if (lower.startsWith('classdiagram')) return 'Class';
-    if (lower.startsWith('erdiagram') || lower.startsWith('er')) return 'ER';
-    if (lower.startsWith('state')) return 'State';
-    if (lower.startsWith('journey')) return 'Journey';
-    if (lower.startsWith('mindmap')) return 'Mindmap';
-    if (lower.startsWith('timeline')) return 'Timeline';
-    if (lower.startsWith('requirement')) return 'Requirement';
-    if (lower.startsWith('c4')) return 'C4';
-    if (lower.startsWith('git')) return 'Git Graph';
-    if (lower.startsWith('pie')) return 'Pie';
-    if (lower.startsWith('gantt')) return 'Gantt';
-    if (lower.includes('graph') || lower.includes('flowchart')) return 'Flowchart';
-    return 'ER';
+  // ฟังก์ชันดึง Mermaid code จากข้อความ
+  getMermaidCode(content: string): string | null {
+    const match = content.match(/```mermaid\s*([\s\S]*?)```/);
+    return match ? match[1].trim() : null;
+  }
+
+  // ฟังก์ชันคัดลอก Mermaid code
+  copyMermaidCode(content: string): void {
+    const code = this.getMermaidCode(content);
+    if (!code) return;
+    navigator.clipboard?.writeText(code)
+      .then(() => this.dialogService.success('Copied', 'Mermaid code copied to clipboard.'))
+      .catch(() => {
+        // fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        this.dialogService.success('Copied', 'Mermaid code copied to clipboard.');
+      });
   }
 
   clearChat() {

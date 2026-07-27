@@ -1,4 +1,5 @@
-<!-- src/app/features/pmdt06/pmdt06A/pmdt06A.component.html -->
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
+
 <div class="h-full flex flex-col bg-[var(--bg)]">
   <div
     class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
@@ -15,7 +16,7 @@
     @for (message of messages(); track message.id) {
       <div class="flex" [class.justify-end]="message.role === 'user'">
         <div
-          class="max-w-[80%] px-4 py-2 rounded-xl"
+          class="max-w-[80%] px-4 py-2 rounded-xl relative"
           [class.bg-[var(--crm-primary)]]="message.role === 'user'"
           [class.text-white]="message.role === 'user'"
           [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
@@ -29,7 +30,18 @@
               [class.text-white]="message.role === 'user'"
             ></markdown>
           </div>
-          <div class="text-xs mt-1 opacity-60">{{ message.createdAt | date: 'shortTime' }}</div>
+          <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
+            <span>{{ message.createdAt | date: 'shortTime' }}</span>
+            @if (message.role === 'assistant' && getMermaidCode(message.content)) {
+              <button
+                (click)="copyMermaidCode(message.content)"
+                class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
+                title="คัดลอก Mermaid Code"
+              >
+                <i class="bi bi-clipboard"></i> Copy Mermaid
+              </button>
+            }
+          </div>
         </div>
       </div>
     }
