@@ -36,7 +36,7 @@ interface AttachmentFile {
     SicInputAreaComponent,
     SicDatePipe,
     Pmdt09AComponent,
-    SicInputUploadComponent,   // ✅ สำหรับ upload ใน reply
+    SicInputUploadComponent,
   ],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
@@ -75,6 +75,9 @@ export class Pmdt09Component implements OnInit {
   totalElements = signal(0);
   totalPages = signal(0);
 
+  // ฟอร์มสำหรับแสดงความคิดเห็น (comment) – ใช้เมื่อกด "แสดงความคิดเห็น"
+  commentForm!: FormGroup;
+  // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
   replyForm!: FormGroup;
   editForm!: FormGroup;
 
@@ -107,7 +110,13 @@ export class Pmdt09Component implements OnInit {
       }
     });
 
-    // ✅ replyForm มี attachmentGroupId สำหรับแนบไฟล์
+    // ฟอร์มสำหรับแสดงความคิดเห็น (comment)
+    this.commentForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
+
+    // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
     this.replyForm = this.fb.group({
       content: ['', Validators.required],
       attachmentGroupId: [null],
@@ -240,14 +249,14 @@ export class Pmdt09Component implements OnInit {
   loadReplies(postId: string): void {
     this.service.getReplies(postId).subscribe({
       next: (replies) => {
-        // ✅ โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
+        // โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
         replies.forEach(reply => {
           if (reply.attachmentGroupId) {
             this.loadAttachments(reply.attachmentGroupId);
           }
         });
         this.posts.update((posts) =>
-          posts.map((p) => (p.id === postId ? { ...p, replies } : p))
+          posts.map((p) => (p.id === postId ? { ...p, replies: replies || [], replyCount: (replies || []).length } : p))
         );
       },
       error: () => {},
@@ -260,10 +269,7 @@ export class Pmdt09Component implements OnInit {
       this.expandedPostId.set(null);
     } else {
       this.expandedPostId.set(postId);
-      const post = this.posts().find((p) => p.id === postId);
-      if (post && !post.replies) {
-        this.loadReplies(postId);
-      }
+      this.loadReplies(postId);
     }
   }
 
@@ -289,40 +295,66 @@ export class Pmdt09Component implements OnInit {
     this.loadPosts();
   }
 
-  // ===== Reply Actions =====
-  startReply(postId: string, replyToUser?: string): void {
-    this.replyingPostId.set(postId);
-    this.replyToUser.set(replyToUser || null);
-    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
-    if (this.expandedPostId() !== postId) {
-      this.expandedPostId.set(postId);
-      const post = this.posts().find((p) => p.id === postId);
-      if (post && !post.replies) {
-        this.loadReplies(postId);
-      }
+  // ===== ฟังก์ชันสำหรับแสดงความคิดเห็น (comment) – ใช้ expandedPostId =====
+  submitComment(): void {
+    this.commentForm.updateValueAndValidity();
+    this.commentForm.markAllAsTouched();
+
+    if (this.commentForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการแสดงความคิดเห็น');
+      return;
     }
+
+    const postId = this.expandedPostId();
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการแสดงความคิดเห็น');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const formValue = this.commentForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content?.trim() || '',
+      attachmentGroupId: attachmentGroupId,
+    };
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('แสดงความคิดเห็นสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.commentForm.reset({ content: '', attachmentGroupId: null });
+          if (newReply?.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
+          }
+          this.loadReplies(postId);
+        },
+        error: (err) => {
+          this.dialog.error('แสดงความคิดเห็นไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
   }
 
-  cancelReply(): void {
-    this.replyingPostId.set(null);
-    this.replyToUser.set(null);
-    this.replyForm.reset();
-  }
-
+  // ===== ฟังก์ชันสำหรับตอบกลับ (reply) – ใช้ replyingPostId =====
   submitReply(): void {
-    // ✅ บังคับให้ฟอร์มอัปเดตค่าและความถูกต้อง
     this.replyForm.updateValueAndValidity();
     this.replyForm.markAllAsTouched();
 
-    // ✅ ตรวจสอบอีกครั้งด้วยค่า current
     if (this.replyForm.invalid) {
-      // ตรวจสอบว่า content มีค่าหรือไม่
-      const content = this.replyForm.get('content')?.value;
-      if (!content || content.trim() === '') {
-        this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
-      } else {
-        this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาตรวจสอบข้อมูลให้ครบถ้วน');
-      }
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
       return;
     }
 
@@ -336,7 +368,6 @@ export class Pmdt09Component implements OnInit {
     const formValue = this.replyForm.value;
     let attachmentGroupId: string | undefined = undefined;
 
-    // ✅ อ่านค่า attachmentGroupId ให้ปลอดภัย
     if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
       const first = formValue.attachmentGroupId[0];
       attachmentGroupId = first?.uploadGroupId || first?.id || null;
@@ -361,23 +392,36 @@ export class Pmdt09Component implements OnInit {
           this.replyingPostId.set(null);
           this.replyToUser.set(null);
           this.replyForm.reset({ content: '', attachmentGroupId: null });
-          // โหลด attachments ของ reply ใหม่
-          if (newReply.attachmentGroupId) {
+          if (newReply?.attachmentGroupId) {
             this.loadAttachments(newReply.attachmentGroupId);
           }
-          // อัปเดต posts
-          this.posts.update((posts) =>
-            posts.map((p) =>
-              p.id === postId
-                ? { ...p, replyCount: p.replyCount + 1, replies: [...(p.replies || []), newReply] }
-                : p
-            )
-          );
+          this.loadReplies(postId);
         },
         error: (err) => {
           this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
         },
       });
+  }
+
+  // ===== ฟังก์ชันสำหรับเริ่มตอบกลับ (reply) =====
+  startReply(postId: string, replyToUser?: string): void {
+    this.replyingPostId.set(postId);
+    this.replyToUser.set(replyToUser || null);
+    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
+    // ถ้ายังไม่ได้ขยายโพสต์ ให้ขยายอัตโนมัติ
+    if (this.expandedPostId() !== postId) {
+      this.expandedPostId.set(postId);
+      const post = this.posts().find((p) => p.id === postId);
+      if (post && !post.replies) {
+        this.loadReplies(postId);
+      }
+    }
+  }
+
+  cancelReply(): void {
+    this.replyingPostId.set(null);
+    this.replyToUser.set(null);
+    this.replyForm.reset();
   }
 
   // ===== Edit Reply =====

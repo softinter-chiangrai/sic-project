@@ -104,12 +104,12 @@
           </h2>
         </div>
 
-        <!-- ===== POST CONTENT (text) ===== -->
+        <!-- ===== POST CONTENT ===== -->
         <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
           {{ post.content }}
         </div>
 
-        <!-- ===== ATTACHMENTS INLINE (แบบ Facebook) ===== -->
+        <!-- ===== ATTACHMENTS ===== -->
         @if (post.attachmentGroupId) {
           <div class="px-4 pb-3">
             <div class="grid grid-cols-1 gap-2">
@@ -119,7 +119,6 @@
                   [class.cursor-pointer]="isImage(file) || isVideo(file)"
                   (click)="previewFile(file)"
                 >
-                  <!-- IMAGE -->
                   @if (isImage(file)) {
                     <img
                       [src]="file.accessUrl"
@@ -142,10 +141,7 @@
                         </button>
                       </span>
                     </div>
-                  }
-
-                  <!-- VIDEO -->
-                  @else if (isVideo(file)) {
+                  } @else if (isVideo(file)) {
                     <video
                       controls
                       preload="metadata"
@@ -168,10 +164,7 @@
                         </button>
                       </span>
                     </div>
-                  }
-
-                  <!-- AUDIO -->
-                  @else if (isAudio(file)) {
+                  } @else if (isAudio(file)) {
                     <div class="p-4 bg-[var(--bg)]">
                       <audio controls class="w-full" [src]="file.accessUrl" preload="metadata"></audio>
                       <div class="mt-2 text-xs text-[var(--text-muted)] flex items-center justify-between">
@@ -190,10 +183,7 @@
                         </span>
                       </div>
                     </div>
-                  }
-
-                  <!-- DOCUMENT -->
-                  @else {
+                  } @else {
                     <div class="flex items-center gap-3 p-3 hover:bg-[var(--sidebar-hover)] transition-colors">
                       <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                            [class.bg-red-100]="isPdf(file)"
@@ -240,21 +230,20 @@
 
         <!-- ===== ACTION BAR ===== -->
         <div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
-          @if (post.replyCount > 0) {
-            <button
-              type="button"
-              (click)="toggleExpand(post.id)"
-              class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
-              <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
-              <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'เเสดงคิดเห็น' }}</span>
-            </button>
-          }
+          <button
+            type="button"
+            (click)="toggleExpand(post.id)"
+            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
+            <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
+            <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'แสดงความคิดเห็น' }}</span>
+          </button>
         </div>
 
         <!-- ===== COMMENTS SECTION ===== -->
-        @if (expandedPostId() === post.id || replyingPostId() === post.id) {
+        @if (expandedPostId() === post.id) {
           <div class="p-4 bg-[var(--bg)]/40 border-t border-[var(--border)] space-y-4">
-            <!-- Comments list -->
+
+            <!-- รายการความคิดเห็น -->
             @if (post.replies && post.replies.length > 0) {
               <div class="space-y-3">
                 @for (reply of post.replies; track reply.id) {
@@ -287,7 +276,7 @@
                           <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">{{ reply.content }}</p>
                         </div>
 
-                        <!-- ✅ แสดงไฟล์แนบของ reply (ถ้ามี) -->
+                        <!-- แสดงไฟล์แนบของ reply -->
                         @if (reply.attachmentGroupId) {
                           <div class="mt-1.5 ml-2">
                             @for (file of getAttachments(reply.attachmentGroupId); track file.id) {
@@ -311,11 +300,11 @@
                         }
                       }
 
-                      <!-- Reply metadata & actions -->
+                      <!-- ปุ่ม action ของ reply -->
                       <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
                         <span>{{ formatDate(reply.createdDate) }}</span>
                         <span>•</span>
-                        <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">ตอบกลับ (Reply)</button>
+                        <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">ตอบกลับ</button>
                         @if (isAuthor(reply.createdBy)) {
                           <span>•</span>
                           <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">แก้ไข</button>
@@ -329,8 +318,8 @@
               </div>
             }
 
-            <!-- Reply input -->
-            <div class="flex items-start gap-2.5 pt-2">
+            <!-- ===== ฟอร์มแสดงความคิดเห็น (comment) ===== -->
+            <div class="flex items-start gap-2.5 pt-2 border-t border-[var(--border)]/50">
               <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
                 @if (currentUserAvatar()) {
                   <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
@@ -341,8 +330,7 @@
                 }
               </div>
               <div class="flex-1 min-w-0">
-                <!-- ✅ เปลี่ยนจาก (ngSubmit) เป็นไม่มี onSubmit และปุ่มเป็น type="button" -->
-                <form [formGroup]="replyForm" class="space-y-2">
+                <form [formGroup]="commentForm" class="space-y-2">
                   <div class="relative">
                     <sic-input-area
                       formControlName="content"
@@ -352,7 +340,7 @@
                     ></sic-input-area>
                   </div>
 
-                  <!-- ✅ ส่วนแนบไฟล์ (ใช้ sic-input-upload) -->
+                  <!-- แนบไฟล์ -->
                   <div class="mt-1">
                     <sic-input-upload
                       label=""
@@ -365,40 +353,98 @@
                     ></sic-input-upload>
                   </div>
 
-                  <!-- ปุ่มดำเนินการ -->
-                  <div class="flex items-center justify-between gap-2 pt-1">
-                    <span class="text-xs text-[var(--text-muted)]">
-                      @if (replyToUser()) {
-                        ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      (click)="submitComment()"
+                      class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
+                      [disabled]="isSubmitting() || commentForm.invalid"
+                    >
+                      @if (isSubmitting()) {
+                        <i class="bi bi-arrow-repeat animate-spin"></i>
+                      } @else {
+                        <i class="bi bi-send"></i>
                       }
-                    </span>
-                    <div class="flex items-center gap-2">
-                      @if (replyingPostId() === post.id) {
-                        <button type="button" (click)="cancelReply()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">
-                          ยกเลิก
-                        </button>
-                      }
-                      <!-- ✅ เปลี่ยนเป็น type="button" และเรียก submitReply() โดยตรง -->
-                      <button
-                        type="button"
-                        (click)="submitReply()"
-                        class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
-                        [disabled]="isSubmitting() || replyForm.invalid"
-                      >
-                        @if (isSubmitting()) {
-                          <i class="bi bi-arrow-repeat animate-spin"></i>
-                        } @else {
-                          <i class="bi bi-send"></i>
-                        }
-                        ส่งความคิดเห็น
-                      </button>
-                    </div>
+                      ส่งความคิดเห็น
+                    </button>
                   </div>
                 </form>
               </div>
             </div>
+
+            <!-- ===== ฟอร์มตอบกลับ (reply) – แสดงเฉพาะเมื่อ replyingPostId ตรงกับ post.id ===== -->
+            @if (replyingPostId() === post.id) {
+              <div class="flex items-start gap-2.5 pt-2 border-t border-[var(--border)]/50 pl-8">
+                <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  @if (currentUserAvatar()) {
+                    <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-xs font-bold text-[var(--crm-primary)]">
+                      {{ currentUserName().charAt(0) || 'U' }}
+                    </span>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <form [formGroup]="replyForm" class="space-y-2">
+                    <div class="relative">
+                      <sic-input-area
+                        formControlName="content"
+                        [rows]="2"
+                        placeholder="พิมพ์ข้อความตอบกลับ..."
+                        [required]="true"
+                      ></sic-input-area>
+                    </div>
+
+                    <!-- แนบไฟล์ -->
+                    <div class="mt-1">
+                      <sic-input-upload
+                        label=""
+                        formControlName="attachmentGroupId"
+                        [multiple]="true"
+                        category="all"
+                        [visibility]="1"
+                        helperText=""
+                        emptyText="คลิกเพื่อแนบไฟล์"
+                      ></sic-input-upload>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-xs text-[var(--text-muted)]">
+                        @if (replyToUser()) {
+                          ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
+                        }
+                      </span>
+                      <div class="flex items-center gap-2">
+                        <button
+                          type="button"
+                          (click)="cancelReply()"
+                          class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="button"
+                          (click)="submitReply()"
+                          class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
+                          [disabled]="isSubmitting() || replyForm.invalid"
+                        >
+                          @if (isSubmitting()) {
+                            <i class="bi bi-arrow-repeat animate-spin"></i>
+                          } @else {
+                            <i class="bi bi-send"></i>
+                          }
+                          ตอบกลับ
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            }
+
           </div>
         }
+
       </div>
     } @empty {
       @if (!isLoading()) {
