@@ -244,25 +244,18 @@
           </span>
         </div>
 
-        <!-- ===== ACTION BAR ===== -->
-        <div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
-          <button
-            type="button"
-            (click)="startReply(post.id)"
-            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
-            <i class="bi bi-arrow-return-right text-sm"></i>
-            <span>แสดงความคิดเห็น</span>
-          </button>
-          @if (post.replyCount > 0) {
-            <button
-              type="button"
-              (click)="toggleExpand(post.id)"
-              class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
-              <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
-              <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'ดูความคิดเห็นทั้งหมด' }}</span>
-            </button>
-          }
-        </div>
+      <!-- ===== ACTION BAR ===== -->
+<div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
+  @if (post.replyCount > 0) {
+    <button
+      type="button"
+      (click)="toggleExpand(post.id)"
+      class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
+      <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
+      <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'เเสดงคิดเห็น' }}</span>
+    </button>
+  }
+</div>
 
         <!-- ===== COMMENTS SECTION (เหมือนเดิม) ===== -->
         @if (expandedPostId() === post.id || replyingPostId() === post.id) {
