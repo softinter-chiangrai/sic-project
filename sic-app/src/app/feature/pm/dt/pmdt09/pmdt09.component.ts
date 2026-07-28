@@ -15,6 +15,7 @@ import { DiscussionService } from './discussion.service';
 import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
 
 interface AttachmentFile {
   id: string;
@@ -35,6 +36,7 @@ interface AttachmentFile {
     SicInputAreaComponent,
     SicDatePipe,
     Pmdt09AComponent,
+    SicInputUploadComponent,   // ✅ สำหรับ upload ใน reply
   ],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
@@ -76,7 +78,7 @@ export class Pmdt09Component implements OnInit {
   replyForm!: FormGroup;
   editForm!: FormGroup;
 
-  // 🔥 Cache for attachments (key = groupId)
+  // Cache for attachments (key = groupId)
   private attachmentCache = new Map<string, AttachmentFile[]>();
 
   ngOnInit(): void {
@@ -105,6 +107,7 @@ export class Pmdt09Component implements OnInit {
       }
     });
 
+    // ✅ replyForm มี attachmentGroupId สำหรับแนบไฟล์
     this.replyForm = this.fb.group({
       content: ['', Validators.required],
       attachmentGroupId: [null],
@@ -127,7 +130,7 @@ export class Pmdt09Component implements OnInit {
           this.posts.set(response.content || []);
           this.totalElements.set(response.totalElements || 0);
           this.totalPages.set(response.totalPages || 0);
-          // 🔥 Preload attachments
+          // Preload attachments
           this.posts().forEach(post => {
             if (post.attachmentGroupId) {
               this.loadAttachments(post.attachmentGroupId);
@@ -140,11 +143,10 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
-  // ===== 🔥 Load attachments with Authorization header =====
+  // ===== Load attachments with Authorization header =====
   loadAttachments(groupId: string): void {
     if (this.attachmentCache.has(groupId)) return;
 
-    // สร้าง headers พร้อม token (Interceptor อาจไม่ทำงาน กรณีนี้เพิ่มเอง)
     const token = this.authService.getAccessToken();
     let headers = new HttpHeaders();
     if (token) {
@@ -159,7 +161,7 @@ export class Pmdt09Component implements OnInit {
         },
         error: (err) => {
           console.error('Failed to load attachments:', err);
-          // ถ้า 401 ให้ลองโหลดแบบไม่มี token (เผื่อกรณี public)
+          // fallback without token
           this.http
             .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
             .subscribe({
@@ -170,12 +172,12 @@ export class Pmdt09Component implements OnInit {
       });
   }
 
-  // ===== 🔥 Get attachments from cache =====
+  // ===== Get attachments from cache =====
   getAttachments(groupId: string): AttachmentFile[] {
     return this.attachmentCache.get(groupId) || [];
   }
 
-  // ===== 🔥 File type helpers =====
+  // ===== File type helpers =====
   isImage(file: AttachmentFile): boolean {
     return file.contentType?.startsWith('image/') ?? false;
   }
@@ -238,6 +240,12 @@ export class Pmdt09Component implements OnInit {
   loadReplies(postId: string): void {
     this.service.getReplies(postId).subscribe({
       next: (replies) => {
+        // ✅ โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
+        replies.forEach(reply => {
+          if (reply.attachmentGroupId) {
+            this.loadAttachments(reply.attachmentGroupId);
+          }
+        });
         this.posts.update((posts) =>
           posts.map((p) => (p.id === postId ? { ...p, replies } : p))
         );
@@ -276,10 +284,10 @@ export class Pmdt09Component implements OnInit {
   }
 
   onPostSaved(savedPost: Post): void {
-  this.closeModal();
-  this.currentPage.set(0);
-  this.loadPosts();
-}
+    this.closeModal();
+    this.currentPage.set(0);
+    this.loadPosts();
+  }
 
   // ===== Reply Actions =====
   startReply(postId: string, replyToUser?: string): void {
@@ -302,25 +310,45 @@ export class Pmdt09Component implements OnInit {
   }
 
   submitReply(): void {
+    // ✅ บังคับให้ฟอร์มอัปเดตค่าและความถูกต้อง
+    this.replyForm.updateValueAndValidity();
+    this.replyForm.markAllAsTouched();
+
+    // ✅ ตรวจสอบอีกครั้งด้วยค่า current
     if (this.replyForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      // ตรวจสอบว่า content มีค่าหรือไม่
+      const content = this.replyForm.get('content')?.value;
+      if (!content || content.trim() === '') {
+        this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      } else {
+        this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาตรวจสอบข้อมูลให้ครบถ้วน');
+      }
       return;
     }
+
     const postId = this.replyingPostId();
-    if (!postId) return;
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการตอบกลับ');
+      return;
+    }
 
     this.isSubmitting.set(true);
     const formValue = this.replyForm.value;
     let attachmentGroupId: string | undefined = undefined;
+
+    // ✅ อ่านค่า attachmentGroupId ให้ปลอดภัย
     if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
-      attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
     } else if (typeof formValue.attachmentGroupId === 'string') {
       attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
     }
 
     const request = {
       postId: postId,
-      content: formValue.content,
+      content: formValue.content?.trim() || '',
       attachmentGroupId: attachmentGroupId,
     };
 
@@ -332,13 +360,12 @@ export class Pmdt09Component implements OnInit {
           this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
           this.replyingPostId.set(null);
           this.replyToUser.set(null);
-          this.replyForm.reset();
-          if (!newReply.userAvatarUrl && this.currentUserAvatar()) {
-            newReply.userAvatarUrl = this.currentUserAvatar() || undefined;
+          this.replyForm.reset({ content: '', attachmentGroupId: null });
+          // โหลด attachments ของ reply ใหม่
+          if (newReply.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
           }
-          if (!newReply.createdByName) {
-            newReply.createdByName = this.currentUserName();
-          }
+          // อัปเดต posts
           this.posts.update((posts) =>
             posts.map((p) =>
               p.id === postId
