@@ -19,24 +19,6 @@
     </button>
   </div>
 
-  <!-- Tab Switcher -->
-  <div class="flex gap-1 border-b border-[var(--border)]">
-    <button
-      (click)="viewMode.set('list')"
-      class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
-      [class]="viewMode() === 'list' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-    >
-      <i class="bi bi-grid-3x3-gap-fill mr-1"></i> รายการ
-    </button>
-    <button
-      (click)="viewMode.set('gantt')"
-      class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
-      [class]="viewMode() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-    >
-      <i class="bi bi-bar-chart-fill mr-1"></i> Gantt
-    </button>
-  </div>
-
   <!-- Loading -->
   @if (isLoading()) {
     <div class="flex justify-center py-12">
@@ -45,7 +27,7 @@
   }
 
   <!-- ===== LIST VIEW ===== -->
-  @if (!isLoading() && viewMode() === 'list') {
+  @if (!isLoading()) {
     @if (phases().length > 0) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (phase of phases(); track phase.id) {
@@ -104,63 +86,6 @@
         <i class="bi bi-inbox text-5xl block mb-3 opacity-30"></i>
         <p>ยังไม่มี Phase ในโครงการนี้</p>
         <p class="text-sm">คลิก "เพิ่ม Phase" เพื่อเริ่มต้น</p>
-      </div>
-    }
-  }
-
-  <!-- ===== GANTT VIEW ===== -->
-  @if (!isLoading() && viewMode() === 'gantt') {
-    @if (phases().length > 0) {
-      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <div class="min-w-[600px]">
-          <!-- Header: Date labels (simplified) -->
-          <div class="flex border-b border-[var(--border)] bg-[var(--bg)]">
-            <div class="w-48 flex-shrink-0 px-4 py-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              Phase
-            </div>
-            <div class="flex-1 relative px-4 py-2">
-              <div class="flex text-xs text-[var(--text-muted)]">
-                @for (i of [].constructor(12); track i) {
-                  <span class="flex-1 text-center">{{ i + 1 }}</span>
-                }
-              </div>
-            </div>
-          </div>
-          <!-- Rows -->
-          @for (phase of phases(); track phase.id) {
-            <div class="flex border-b border-[var(--border)] hover:bg-[var(--sidebar-hover)] cursor-pointer" (click)="goToDetail(phase.id)">
-              <div class="w-48 flex-shrink-0 px-4 py-3 flex items-center">
-                <span class="text-sm font-medium text-[var(--text-active)] truncate">{{ phase.phaseName }}</span>
-              </div>
-              <div class="flex-1 relative px-4 py-3">
-                <div class="relative h-8 w-full bg-[var(--bg)] rounded overflow-hidden">
-                  <div
-                    class="absolute top-1 h-6 rounded transition-all"
-                    [style.left.%]="getBarPosition(phase).left"
-                    [style.width.%]="getBarPosition(phase).width"
-                    [style.background]="phase.status === 'Done' ? 'var(--crm-success)' : phase.status === 'Delayed' ? 'var(--crm-danger)' : 'var(--crm-primary)'"
-                    [style.opacity]="0.8"
-                  >
-                    <span class="absolute inset-0 flex items-center justify-center text-xs text-white font-medium truncate px-1">
-                      {{ phase.phaseName }}
-                    </span>
-                  </div>
-                  <!-- Milestone flags (fake) -->
-                  @for (ms of phase.milestones; track ms.id) {
-                    <div class="absolute top-1 text-sm" [style.left.%]="getBarPosition(phase).left + (getBarPosition(phase).width * 0.5)" title="{{ ms.milestoneName }}">
-                      🚩
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    } @else {
-      <div class="text-center py-12 text-[var(--text-muted)]">
-        <i class="bi bi-bar-chart text-5xl block mb-3 opacity-30"></i>
-        <p>ไม่มีข้อมูลสำหรับแสดงใน Gantt</p>
       </div>
     }
   }

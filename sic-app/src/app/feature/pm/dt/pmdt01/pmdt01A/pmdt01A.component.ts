@@ -1,14 +1,17 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../../environments/environment';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import type { PhaseRequest, PhaseResponse } from '../../../../../core/model/phase.model';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { PhaseService } from '../../../../../core/services/phase.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 
 @Component({
   selector: 'app-pmdt01A',
@@ -18,7 +21,8 @@ import { PhaseService } from '../../../../../core/services/phase.service';
     ReactiveFormsModule,
     SicDatepickerComponent,
     SicTimepickerComponent,
-    SicColorpickerComponent,   // ✅ import
+    SicColorpickerComponent,
+    SicComboboxComponent,
     RouterModule,
   ],
   templateUrl: './pmdt01A.component.html',
@@ -29,13 +33,17 @@ export class Pmdt01AComponent implements OnInit {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private businessService = inject(BusinessService);
+
+  @ViewChild('ownerCombobox') ownerCombobox!: SicComboboxComponent;
 
   projectId = '';
   phaseId: string | null = null;
   isEdit = false;
   data: PhaseResponse | null = null;
+  userApiUrl = '';
+  selectedOwners: { id: string; name: string }[] = [];
 
-  // ✅ เพิ่ม color ในฟอร์ม
   form = this.fb.group({
     phaseName: ['', Validators.required],
     description: [''],
@@ -43,12 +51,19 @@ export class Pmdt01AComponent implements OnInit {
     startTime: ['', Validators.required],
     endDate: ['', Validators.required],
     endTime: ['', Validators.required],
-    owner: [''],
-    dependencyId: [''],
-    color: [''], // ✅ เพิ่มบรรทัดนี้
+    color: [''],
   });
 
+  get excludeOwnerValues(): string[] {
+    return this.selectedOwners.map((o) => o.id);
+  }
+
   ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
+    }
+
     this.route.queryParams.subscribe((params) => {
       this.projectId = params['projectId'] || '';
     });
@@ -81,6 +96,17 @@ export class Pmdt01AComponent implements OnInit {
     const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
+    if (data.owner) {
+      this.selectedOwners = data.owner
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((val) => ({ id: val, name: val }));
+    } else {
+      this.selectedOwners = [];
+    }
+
     this.form.patchValue({
       phaseName: data.phaseName,
       description: data.description,
@@ -88,10 +114,25 @@ export class Pmdt01AComponent implements OnInit {
       startTime: startTime,
       endDate: endDate,
       endTime: endTime,
-      owner: data.owner,
-      dependencyId: data.dependencyId || '',
-      color: data.color || '', // ✅ patch ค่าสี
+      color: data.color || '',
     });
+  }
+
+  onOwnerSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const userName = item.text;
+    if (this.selectedOwners.some((o) => o.id === userId || o.name === userName)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      if (this.ownerCombobox) this.ownerCombobox.clearSelection();
+      return;
+    }
+    this.selectedOwners.push({ id: userId, name: userName });
+    if (this.ownerCombobox) this.ownerCombobox.clearSelection();
+  }
+
+  removeOwner(index: number) {
+    this.selectedOwners.splice(index, 1);
   }
 
   private buildISOString(date: any, time: string): string {
@@ -109,15 +150,16 @@ export class Pmdt01AComponent implements OnInit {
     }
 
     const raw = this.form.value;
+    const ownerString = this.selectedOwners.map((o) => o.name).join(', ');
+
     const data: PhaseRequest = {
       projectId: this.projectId,
       phaseName: raw.phaseName!,
       description: raw.description || undefined,
       startDate: this.buildISOString(raw.startDate, raw.startTime!),
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
-      owner: raw.owner || undefined,
-      dependencyId: raw.dependencyId || undefined,
-      color: raw.color || undefined, // ✅ ส่งค่าสี
+      owner: ownerString || undefined,
+      color: raw.color || undefined,
     };
 
     const request =
@@ -144,4 +186,4 @@ export class Pmdt01AComponent implements OnInit {
       queryParams: { projectId: this.projectId },
     });
   }
-}
+}

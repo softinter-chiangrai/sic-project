@@ -22,7 +22,6 @@ export class Pmdt01Component implements OnInit {
   projectId = signal<string>('');
   phases = signal<PhaseResponse[]>([]);
   isLoading = signal(false);
-  viewMode = signal<'list' | 'gantt'>('list');
 
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
@@ -114,22 +113,5 @@ export class Pmdt01Component implements OnInit {
     } catch {
       return dateStr;
     }
-  }
-
-  getBarPosition(phase: PhaseResponse): { left: number; width: number } {
-    const allDates = this.phases().flatMap((p) => [
-      new Date(p.startDate).getTime(),
-      new Date(p.endDate).getTime(),
-    ]);
-    if (allDates.length === 0) return { left: 0, width: 100 };
-    const min = Math.min(...allDates);
-    const max = Math.max(...allDates);
-    const total = max - min || 1;
-    const start = new Date(phase.startDate).getTime();
-    const end = new Date(phase.endDate).getTime();
-    return {
-      left: ((start - min) / total) * 100,
-      width: ((end - start) / total) * 100,
-    };
   }
 }
