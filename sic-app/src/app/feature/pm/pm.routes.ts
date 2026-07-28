@@ -293,9 +293,7 @@ export const PM_ROUTES: Routes = [
   {
     path: 'gantt',
     loadComponent: () =>
-      import('../../core/component/sic-ganttchart/ganttchart.component').then(
-        (m) => m.SicGanttchartComponent,
-      ),
+      import('../../core/component/sic-ganttchart/dhtmlx-gantt.component').then((m) => m.DhtmlxGanttComponent),
     canActivate: [customerGuard, projectGuard],
   },
   {

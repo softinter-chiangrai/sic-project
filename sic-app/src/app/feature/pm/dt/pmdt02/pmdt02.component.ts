@@ -15,22 +15,22 @@ import { MilestoneService } from '../../../../core/services/milestone.service';
 import { PhaseService } from '../../../../core/services/phase.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { WorkPackageService } from '../../../../core/services/work-package.service';
+import { DhtmlxGanttComponent, DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
+import { CalendarItem, SicCalendarComponent } from '../../../../core/component/sic-calendar/sic-calendar.component';
 
-import {
-  GanttTask,
-  SicGanttchartComponent,
-} from '../../../../core/component/sic-ganttchart/ganttchart.component';
 
-// ✅ import จาก sic-calendar.component
-import {
-  CalendarItem,
-  SicCalendarComponent,
-} from '../../../../core/component/sic-calendar/sic-calendar.component';
+
 
 @Component({
   selector: 'app-pmdt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicGanttchartComponent, SicCalendarComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    DhtmlxGanttComponent,
+    SicCalendarComponent,
+    DhtmlxGanttComponent
+],
   templateUrl: './pmdt02.component.html',
 })
 export class Pmdt02Component implements OnInit {
@@ -51,42 +51,80 @@ export class Pmdt02Component implements OnInit {
   expandedWorkPackage = signal<string | null>(null);
   rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
 
-  // ===== GANTT TASKS (ใช้ใน template) =====
-  protected ganttTasks = computed<GanttTask[]>(() => {
+  // ===== DHTMLX GANTT TASKS =====
+  protected dhtmlxTasks = computed<DhtmlxGanttTask[]>(() => {
     const p = this.phase();
     if (!p) return [];
-    const tasks: GanttTask[] = [];
+
+    const result: DhtmlxGanttTask[] = [];
+
+    // 1. Phase
+    result.push({
+      id: `phase-${p.id}`,
+      text: `📍 ${p.phaseName}`,
+      start_date: this.formatDateForDhtmlx(p.startDate),
+      end_date: this.formatDateForDhtmlx(p.endDate),
+      progress: p.progress / 100,
+      open: true,
+      color: p.color || '#4A90D9'
+    });
+
+    // 2. Milestones
     p.milestones?.forEach((ms) => {
+      const msId = `ms-${ms.id}`;
+      result.push({
+        id: msId,
+        text: `📌 ${ms.milestoneName}`,
+        start_date: this.formatDateForDhtmlx(ms.dueDate),
+        end_date: this.formatDateForDhtmlx(ms.dueDate),
+        progress: ms.status === 'Done' ? 1 : 0.5,
+        parent: `phase-${p.id}`,
+        color: ms.color || '#E67E22'
+      });
+
+      // 3. Work Packages
       ms.workPackages?.forEach((wp) => {
-        wp.tasks?.forEach((t) => {
-          if (!t.startDate || !t.endDate) return;
-          tasks.push({
-            id: t.id,
-            taskCode: t.taskCode,
-            taskName: t.taskName,
-            projectId: this.projectId(),
-            projectName: p.phaseName,
-            assignedTo: t.assignedTo || '-',
-            startDate: t.startDate,
-            endDate: t.endDate,
-            status: t.status,
-            priority: t.priority,
-            estimateManday: t.estimateManday,
-            actualManday: t.actualManday,
+        const wpId = `wp-${wp.id}`;
+        if (wp.startDate && wp.endDate) {
+          result.push({
+            id: wpId,
+            text: `📦 ${wp.packageName}`,
+            start_date: this.formatDateForDhtmlx(wp.startDate),
+            end_date: this.formatDateForDhtmlx(wp.endDate),
+            progress: this.calculateWpProgress(wp),
+            parent: msId,
+            color: wp.color || '#8E44AD'
           });
+        }
+
+        // 4. Tasks
+        wp.tasks?.forEach((task) => {
+          if (task.startDate) {
+            result.push({
+              id: task.id,
+              text: `🔹 ${task.taskName}`,
+              start_date: this.formatDateForDhtmlx(task.startDate),
+              end_date: task.endDate ? this.formatDateForDhtmlx(task.endDate) : this.formatDateForDhtmlx(task.startDate),
+              progress: task.status === 'Done' ? 1 :
+                       task.status === 'In Progress' ? 0.5 : 0,
+              parent: `wp-${wp.id}`,
+              color: task.color || '#2ECC71'
+            });
+          }
         });
       });
     });
-    return tasks;
+
+    return result;
   });
 
-  // ===== CALENDAR ITEMS (ใช้ใน template) =====
+  // ===== CALENDAR ITEMS =====
   calendarItems = computed<CalendarItem[]>(() => {
     const p = this.phase();
     if (!p) return [];
     const result: CalendarItem[] = [];
 
-    // ✅ Phase
+    // Phase
     if (p.startDate && p.endDate) {
       const start = dayjs.utc(p.startDate);
       const end = dayjs.utc(p.endDate);
@@ -97,27 +135,27 @@ export class Pmdt02Component implements OnInit {
           id: p.id,
           type: 'phase',
           title: p.phaseName,
-          color: p.color || '#4A90D9', // ✅ อ่านจาก p.color
+          color: p.color || '#4A90D9',
           date: date.toISOString(),
           completed: false,
         });
       }
     }
 
-    // ✅ Milestone
+    // Milestones
     p.milestones?.forEach((ms) => {
       if (ms.dueDate) {
         result.push({
           id: ms.id,
           type: 'milestone',
           title: ms.milestoneName,
-          color: ms.color || '#E67E22', // ✅ อ่านจาก ms.color
+          color: ms.color || '#E67E22',
           date: dayjs.utc(ms.dueDate).toISOString(),
           completed: false,
         });
       }
 
-      // ✅ WorkPackage
+      // WorkPackages
       ms.workPackages?.forEach((wp) => {
         if (wp.startDate && wp.endDate) {
           const start = dayjs.utc(wp.startDate);
@@ -129,21 +167,21 @@ export class Pmdt02Component implements OnInit {
               id: wp.id,
               type: 'workpackage',
               title: wp.packageName,
-              color: wp.color || '#8E44AD', // ✅ อ่านจาก wp.color
+              color: wp.color || '#8E44AD',
               date: date.toISOString(),
               completed: false,
             });
           }
         }
 
-        // ✅ Task
+        // Tasks
         wp.tasks?.forEach((task) => {
           if (task.startDate) {
             result.push({
               id: task.id,
               type: 'task',
               title: task.taskName,
-              color: task.color || '#2ECC71', // ✅ อ่านจาก task.color
+              color: task.color || '#2ECC71',
               date: dayjs.utc(task.startDate).toISOString(),
               completed: task.status === 'Done',
               extra: { workPackageId: wp.id },
@@ -156,37 +194,20 @@ export class Pmdt02Component implements OnInit {
     return result;
   });
 
-  // ===== HANDLER: คลิกรายการในปฏิทิน =====
-  onCalendarItemClick(item: CalendarItem): void {
-    const projectId = this.projectId();
-    const phaseId = this.currentPhaseId();
+  // ===== HELPERS =====
+  private formatDateForDhtmlx(dateStr: string | undefined): string {
+    if (!dateStr) return '01-01-2024';
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
 
-    switch (item.type) {
-      case 'phase':
-        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
-          queryParams: { projectId },
-        });
-        break;
-      case 'milestone':
-        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
-          queryParams: { projectId, phaseId },
-        });
-        break;
-      case 'workpackage':
-        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
-          queryParams: { projectId, phaseId },
-        });
-        break;
-      case 'task':
-        // ✅ แก้ไข: ใช้ ['workPackageId'] แทน .workPackageId
-        const wpId = item.extra?.['workPackageId'] || '';
-        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
-          queryParams: { projectId, phaseId, workPackageId: wpId },
-        });
-        break;
-      default:
-        break;
-    }
+  private calculateWpProgress(wp: any): number {
+    if (!wp.tasks || wp.tasks.length === 0) return 0;
+    const done = wp.tasks.filter((t: any) => t.status === 'Done').length;
+    return done / wp.tasks.length;
   }
 
   // ===== LIFECYCLE =====
@@ -209,40 +230,38 @@ export class Pmdt02Component implements OnInit {
   }
 
   loadPhaseDetail(phaseId: string) {
-  this.isLoading.set(true);
-  this.phaseService.getPhaseById(phaseId).subscribe({
-    next: (data) => {
-      this.phase.set(data);
-      // ✅ เรียก loadMilestones ทุกครั้ง เพื่อให้ได้ข้อมูลล่าสุด (รวม color)
-      this.loadMilestones(phaseId);
-    },
-    error: (err) => {
-      console.error(err);
-      this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
-      this.router.navigate(['/feature/pm/pmdt01'], {
-        queryParams: { projectId: this.projectId() },
-      });
-    },
-    complete: () => this.isLoading.set(false),
-  });
-}
+    this.isLoading.set(true);
+    this.phaseService.getPhaseById(phaseId).subscribe({
+      next: (data) => {
+        this.phase.set(data);
+        this.loadMilestones(phaseId);
+      },
+      error: (err) => {
+        console.error(err);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
+        this.router.navigate(['/feature/pm/pmdt01'], {
+          queryParams: { projectId: this.projectId() },
+        });
+      },
+      complete: () => this.isLoading.set(false),
+    });
+  }
 
   loadMilestones(phaseId: string) {
-  this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
-    next: (milestones) => {
-      const current = this.phase();
-      if (current) {
-        // ✅ ใช้ spread สร้าง object ใหม่ trigger change detection
-        this.phase.set({
-          ...current,
-          milestones: milestones,
-        });
-        this.loadWorkPackagesForMilestones(milestones);
-      }
-    },
-    error: (err) => console.error(err),
-  });
-}
+    this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
+      next: (milestones) => {
+        const current = this.phase();
+        if (current) {
+          this.phase.set({
+            ...current,
+            milestones: milestones,
+          });
+          this.loadWorkPackagesForMilestones(milestones);
+        }
+      },
+      error: (err) => console.error(err),
+    });
+  }
 
   private loadWorkPackagesForMilestones(milestones: MilestoneResponse[]) {
     if (!milestones || milestones.length === 0) return;
@@ -437,6 +456,55 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
+  // ===== GANTT EVENTS =====
+  onGanttTaskUpdated(task: DhtmlxGanttTask): void {
+    console.log('[Gantt] Task updated:', task);
+    // TODO: Sync with backend
+  }
+
+  onGanttTaskDeleted(taskId: string): void {
+    console.log('[Gantt] Task deleted:', taskId);
+    // TODO: Delete from backend
+  }
+
+  onGanttTaskCreated(task: DhtmlxGanttTask): void {
+    console.log('[Gantt] Task created:', task);
+    // TODO: Create in backend
+  }
+
+  // ===== CALENDAR EVENT =====
+  onCalendarItemClick(item: CalendarItem): void {
+    const projectId = this.projectId();
+    const phaseId = this.currentPhaseId();
+
+    switch (item.type) {
+      case 'phase':
+        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
+          queryParams: { projectId },
+        });
+        break;
+      case 'milestone':
+        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'workpackage':
+        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'task':
+        const wpId = item.extra?.['workPackageId'] || '';
+        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: wpId },
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ===== NAVIGATION =====
   goBack() {
     this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId() } });
   }
