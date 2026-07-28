@@ -38079,6 +38079,46 @@ public class SaveBusinessRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleProgramRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveBusinessRoleProgramRequest {
+    private UUID id;
+    private UUID businessRoleId;
+    private UUID programId;
+
+    @JsonProperty("isActive")
+    private boolean active = true;
+
+    @JsonProperty("isAdd")
+    private boolean add;
+
+    @JsonProperty("isBack")
+    private boolean back;
+
+    @JsonProperty("isPrint")
+    private boolean print;
+
+    @JsonProperty("isRemove")
+    private boolean remove;
+
+    @JsonProperty("isSave")
+    private boolean save;
+
+    @JsonProperty("isSearch")
+    private boolean search;
+
+    Integer state;
+    private Integer rowVersion;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -38166,6 +38206,20 @@ public class SaveProfileRequest {
     private String referenceNumber;     
     private String verifyToken;    
     private String taxId;     
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveRolePermissionsRequest.java">
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class SaveRolePermissionsRequest {
+    private UUID roleId;
+    private List<SaveBusinessRoleProgramRequest> modules;
 }
 </file>
 
@@ -54143,53 +54197,6 @@ export class Pmdt08Service {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt09/discussion.service.ts">
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { CreatePostRequest, CreateReplyRequest, Post, Reply, UpdateCommentRequest } from './discussion.model';
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-@Injectable({ providedIn: 'root' })
-export class DiscussionService {
-  private http = inject(HttpClient);
-  private baseUrl = environment.apiBaseUrl + '/api/discussion';
-
-  getPosts(projectId: string, page = 0, size = 10): Observable<PageResponse<Post>> {
-    const params = new HttpParams().set('page', page).set('size', size);
-    return this.http.get<PageResponse<Post>>(`${this.baseUrl}/project/${projectId}`, { params });
-  }
-
-  getReplies(postId: string): Observable<Reply[]> {
-    return this.http.get<Reply[]>(`${this.baseUrl}/post/${postId}/replies`);
-  }
-
-  createPost(data: CreatePostRequest): Observable<Post> {
-    return this.http.post<Post>(`${this.baseUrl}/post`, data);
-  }
-
-  createReply(data: CreateReplyRequest): Observable<Reply> {
-    return this.http.post<Reply>(`${this.baseUrl}/reply`, data);
-  }
-
-  updateComment(commentId: string, data: UpdateCommentRequest): Observable<Post> {
-    return this.http.put<Post>(`${this.baseUrl}/comment/${commentId}`, data);
-  }
-
-  deleteComment(commentId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/comment/${commentId}`);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts">
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -56395,20 +56402,6 @@ public class SaveImpactAnalysisRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveRolePermissionsRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-import java.util.List;
-import java.util.UUID;
-
-@Data
-public class SaveRolePermissionsRequest {
-    private UUID roleId;
-    private List<SaveBusinessRoleProgramRequest> modules;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/UpdateCommentRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -56622,6 +56615,34 @@ public class AuthMeResponse {
     private UUID currentBusinessId;
     private String currentBusinessName;
     private String displayName;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleProgramResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class BusinessRoleProgramResponse {
+    private UUID id;
+    private UUID businessRoleId;
+    private String businessRoleCode;
+    private UUID programId;
+    private String programCode;
+    private String programNameEn;
+    private String programNameLocal;
+    private String programName;
+    private boolean isActive;
+    private boolean isAdd;
+    private boolean isBack;
+    private boolean isPrint;
+    private boolean isRemove;
+    private boolean isSave;
+    private boolean isSearch;
+    private Integer rowVersion;
 }
 </file>
 
@@ -58681,6 +58702,38 @@ public interface PmWorkPackageRepository extends JpaRepository<PmWorkPackage, UU
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuBusinessRoleProgramRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface SuBusinessRoleProgramRepository extends JpaRepository<SuBusinessRoleProgram, UUID>, JpaSpecificationExecutor<SuBusinessRoleProgram> {
+
+    @Query("SELECT brp FROM SuBusinessRoleProgram brp JOIN FETCH brp.program WHERE brp.businessRole.id = :businessRoleId AND brp.isDelete = false AND brp.isActive = true")
+    List<SuBusinessRoleProgram> findActiveByBusinessRoleId(@Param("businessRoleId") UUID businessRoleId);
+
+    List<SuBusinessRoleProgram> findByBusinessRoleIdAndIsDeleteFalse(UUID businessRoleId);
+
+     @Query("SELECT brp FROM SuBusinessRoleProgram brp " +
+           "JOIN FETCH brp.businessRole " +
+           "JOIN FETCH brp.program " +
+           "WHERE brp.isDelete = false " +
+           "AND (:businessRoleId IS NULL OR brp.businessRole.id = :businessRoleId)")
+    List<SuBusinessRoleProgram> findAllWithFetch(@Param("businessRoleId") UUID businessRoleId);
+
+     List<SuBusinessRoleProgram> findByProgramIdAndIsDeleteFalse(UUID programId);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuBusinessRoleRepository.java">
 package com.softinter.sicapi.repository.su;
 
@@ -58766,6 +58819,90 @@ public interface SuProfileRepository extends JpaRepository<SuProfile, UUID> {
 
     @Query("SELECT p FROM SuProfile p WHERE p.userId IN :userIds")
     List<SuProfile> findByUserIdIn(@Param("userIds") List<String> userIds);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
+package com.softinter.sicapi.repository.su;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.dto.response.MenuProgramResponse;
+import com.softinter.sicapi.entity.su.SuProgram;
+
+@Repository
+public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
+
+    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
+    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActive();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
+    List<SuProgram> findAllActiveForPage();
+
+    @Query("SELECT DISTINCT p FROM SuProgram p " +
+           "JOIN p.suBusinessRolePrograms brp " +
+           "JOIN brp.businessRole br " +
+           "JOIN br.userBusinessRoles ubr " +
+           "JOIN ubr.userBusiness ub " +
+           "WHERE ub.businessId = :businessId " +
+           "AND ub.userId = :userId " +
+           "AND ub.isActive = true " +
+           "AND br.isActive = true " +
+           "AND brp.isActive = true " +
+           "AND ubr.isActive = true " +
+           "AND p.isActive = true " +
+           "ORDER BY p.sortOrder ASC, p.programCode ASC")
+    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
+                                           @Param("userId") String userId);
+
+    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
+    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
+
+    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
+       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
+       "0, " +  // state = 0 (Detached)
+       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
+       "FROM SuProgram p " +
+       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
+       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
+       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
+       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
+       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
+       "AND p.isActive = true AND p.isDelete = false " +
+       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
+       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
+       "ORDER BY p.sortOrder ASC")
+List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
+
+
+    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findRootPrograms();
+
+    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
+    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
+
+    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
+
+    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
+    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -64049,6 +64186,66 @@ export interface UpdateCommentRequest {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt09/discussion.service.ts">
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { CreatePostRequest, CreateReplyRequest, Post, Reply, UpdateCommentRequest } from './discussion.model';
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DiscussionService {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/discussion';
+
+  getPosts(projectId: string, page = 0, size = 10): Observable<PageResponse<Post>> {
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<PageResponse<Post>>(`${this.baseUrl}/project/${projectId}`, { params });
+  }
+
+  getReplies(postId: string): Observable<Reply[]> {
+    return this.http.get<Reply[]>(`${this.baseUrl}/post/${postId}/replies`);
+  }
+
+  createPost(data: CreatePostRequest): Observable<Post> {
+    return this.http.post<ApiResponse<Post>>(`${this.baseUrl}/post`, data).pipe(
+      map((res: any) => res?.data ?? res)
+    );
+  }
+
+  createReply(data: CreateReplyRequest): Observable<Reply> {
+    return this.http.post<ApiResponse<Reply>>(`${this.baseUrl}/reply`, data).pipe(
+      map((res: any) => res?.data ?? res)
+    );
+  }
+
+  updateComment(commentId: string, data: UpdateCommentRequest): Observable<Post> {
+    return this.http.put<ApiResponse<Post>>(`${this.baseUrl}/comment/${commentId}`, data).pipe(
+      map((res: any) => res?.data ?? res)
+    );
+  }
+
+  deleteComment(commentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/comment/${commentId}`);
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.resolver.ts">
 // src/app/feature/pm/rt/pmrt01A/pmrt01A.resolver.ts
 
@@ -66233,6 +66430,225 @@ public class StorageController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuBusinessRoleProgramController.java">
+package com.softinter.sicapi.controller.su;
+
+import com.softinter.sicapi.dto.request.*;
+import com.softinter.sicapi.dto.response.*;
+import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
+import com.softinter.sicapi.entity.su.SuBusinessRole;
+import com.softinter.sicapi.entity.su.SuProgram;
+import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
+import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
+import com.softinter.sicapi.repository.su.SuProgramRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/su/business-role-programs")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Business Role Program", description = "Business Role Program Management API")
+public class SuBusinessRoleProgramController {
+
+    private final SuBusinessRoleProgramRepository brpRepository;
+    private final SuBusinessRoleRepository businessRoleRepository;
+    private final SuProgramRepository programRepository;
+
+     @GetMapping
+    @Operation(summary = "Get all business role programs")
+    public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
+            @RequestParam(required = false) UUID businessRoleId) {
+        // ใช้เมธอดใหม่ที่ JOIN FETCH ข้อมูล businessRole และ program
+        List<SuBusinessRoleProgram> list = brpRepository.findAllWithFetch(businessRoleId);
+        List<BusinessRoleProgramResponse> response = list.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/paging")
+    @Operation(summary = "Get business role programs with pagination")
+    public ResponseEntity<PaginationResponse<BusinessRoleProgramResponse>> paging(
+            @Valid @ModelAttribute BusinessRoleProgramPageRequest request) {
+        Pageable pageable = PageRequest.of(
+                request.getPageNumber() - 1,
+                request.getPageSize());
+
+        Specification<SuBusinessRoleProgram> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("isDelete"), false));
+            if (request.getBusinessRoleId() != null) {
+                predicates.add(cb.equal(root.get("businessRole").get("id"), request.getBusinessRoleId()));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<SuBusinessRoleProgram> page = brpRepository.findAll(spec, pageable);
+        List<BusinessRoleProgramResponse> data = page.getContent().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        PaginationResponse<BusinessRoleProgramResponse> response = new PaginationResponse<>();
+        response.setData(data);
+        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
+        pageableDto.setPageNumber(request.getPageNumber());
+        pageableDto.setPageSize(request.getPageSize());
+        pageableDto.setTotalElements(page.getTotalElements());
+        pageableDto.calculateTotalPages();
+        response.setPageable(pageableDto);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/lov")
+    @Operation(summary = "Get business role program LOV")
+    public ResponseEntity<List<LovResponse>> lov(@RequestParam UUID businessRoleId) {
+        List<LovResponse> lov = brpRepository.findActiveByBusinessRoleId(businessRoleId)
+                .stream()
+                .map(brp -> new LovResponse(brp.getProgram().getId(), brp.getProgram().getNameEn()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(lov);
+    }
+
+    @PostMapping("/save")
+    @Operation(summary = "Save business role program")
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleProgramRequest request) {
+        SuBusinessRoleProgram brp;
+        if (request.getId() != null) {
+            brp = brpRepository.findById(request.getId())
+                    .orElseThrow(() -> new RuntimeException("Business role program not found"));
+        } else {
+            brp = new SuBusinessRoleProgram();
+            if (request.getBusinessRoleId() != null) {
+                SuBusinessRole role = businessRoleRepository.findById(request.getBusinessRoleId())
+                        .orElseThrow(() -> new RuntimeException("Business role not found"));
+                brp.setBusinessRole(role);
+            }
+            if (request.getProgramId() != null) {
+                SuProgram program = programRepository.findById(request.getProgramId())
+                        .orElseThrow(() -> new RuntimeException("Program not found"));
+                brp.setProgram(program);
+            }
+        }
+        brp.setIsActive(request.isActive());
+        brp.setAdd(request.isAdd());
+        brp.setBack(request.isBack());
+        brp.setPrint(request.isPrint());
+        brp.setRemove(request.isRemove());
+        brp.setSave(request.isSave());
+        brp.setSearch(request.isSearch());
+        if (request.getRowVersion() != null) {
+            brp.setRowVersion(request.getRowVersion());
+        }
+        brpRepository.save(brp);
+        return ResponseEntity.ok(brp.getId());
+    }
+
+    @PostMapping("/bulk-save")
+    @Operation(summary = "Save all program permissions for a role")
+    public ResponseEntity<Void> bulkSave(@Valid @RequestBody SaveRolePermissionsRequest request) {
+        SuBusinessRole role = null;
+        if (request.getRoleId() != null) {
+            role = businessRoleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Business role not found"));
+        }
+
+        for (SaveBusinessRoleProgramRequest req : request.getModules()) {
+            SuBusinessRoleProgram brp;
+            if (req.getId() != null) {
+                brp = brpRepository.findById(req.getId())
+                        .orElseThrow(() -> new RuntimeException("Business role program not found"));
+            } else {
+                UUID bRoleId = req.getBusinessRoleId() != null ? req.getBusinessRoleId() : (role != null ? role.getId() : null);
+                if (bRoleId == null) {
+                    throw new RuntimeException("Business role ID must not be null");
+                }
+                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(bRoleId);
+                brp = existing.stream()
+                        .filter(x -> x.getProgram().getId().equals(req.getProgramId()))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (brp == null) {
+                    brp = new SuBusinessRoleProgram();
+                    SuBusinessRole moduleRole = businessRoleRepository.findById(bRoleId)
+                            .orElseThrow(() -> new RuntimeException("Business role not found"));
+                    brp.setBusinessRole(moduleRole);
+                    SuProgram program = programRepository.findById(req.getProgramId())
+                            .orElseThrow(() -> new RuntimeException("Program not found"));
+                    brp.setProgram(program);
+                }
+            }
+            brp.setIsActive(req.isActive());
+            brp.setAdd(req.isAdd());
+            brp.setBack(req.isBack());
+            brp.setPrint(req.isPrint());
+            brp.setRemove(req.isRemove());
+            brp.setSave(req.isSave());
+            brp.setSearch(req.isSearch());
+            if (req.getRowVersion() != null) {
+                brp.setRowVersion(req.getRowVersion());
+            }
+            brpRepository.save(brp);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete business role program")
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
+        SuBusinessRoleProgram brp = brpRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Business role program not found"));
+        brp.setIsDelete(true);
+        brp.setIsActive(false);
+        brpRepository.save(brp);
+        return ResponseEntity.noContent().build();
+    }
+
+    private BusinessRoleProgramResponse toResponse(SuBusinessRoleProgram brp) {
+    BusinessRoleProgramResponse response = new BusinessRoleProgramResponse();
+    response.setId(brp.getId());
+    if (brp.getBusinessRole() != null) {
+        response.setBusinessRoleId(brp.getBusinessRole().getId());
+        response.setBusinessRoleCode(brp.getBusinessRole().getRoleCode());
+    }
+    if (brp.getProgram() != null) {
+        response.setProgramId(brp.getProgram().getId());
+        response.setProgramCode(brp.getProgram().getProgramCode());
+        response.setProgramNameEn(brp.getProgram().getNameEn());
+        response.setProgramNameLocal(brp.getProgram().getNameLocal());
+        // ✅ เพิ่ม
+        response.setProgramName(LocalizationHelper.getProgramName(brp.getProgram()));
+    }
+    response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
+    response.setAdd(brp.isAdd());
+    response.setBack(brp.isBack());
+    response.setPrint(brp.isPrint());
+    response.setRemove(brp.isRemove());
+    response.setSave(brp.isSave());
+    response.setSearch(brp.isSearch());
+    response.setRowVersion(brp.getRowVersion());
+    return response;
+}
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/CreateProgramWithPermissionsRequest.java">
 // src/main/java/com/softinter/sicapi/dto/request/CreateProgramWithPermissionsRequest.java
 
@@ -66558,46 +66974,6 @@ public class SaveApprovalFlowStepRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveBusinessRoleProgramRequest.java">
-package com.softinter.sicapi.dto.request;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveBusinessRoleProgramRequest {
-    private UUID id;
-    private UUID businessRoleId;
-    private UUID programId;
-
-    @JsonProperty("isActive")
-    private boolean active = true;
-
-    @JsonProperty("isAdd")
-    private boolean add;
-
-    @JsonProperty("isBack")
-    private boolean back;
-
-    @JsonProperty("isPrint")
-    private boolean print;
-
-    @JsonProperty("isRemove")
-    private boolean remove;
-
-    @JsonProperty("isSave")
-    private boolean save;
-
-    @JsonProperty("isSearch")
-    private boolean search;
-
-    Integer state;
-    private Integer rowVersion;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java">
 // src/main/java/com/softinter/sicapi/dto/request/SaveProgramRequest.java
 
@@ -66642,34 +67018,6 @@ public class WorkPackageRequest {
     private Instant startDate;
     private Instant endDate;
     private String color;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/BusinessRoleProgramResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class BusinessRoleProgramResponse {
-    private UUID id;
-    private UUID businessRoleId;
-    private String businessRoleCode;
-    private UUID programId;
-    private String programCode;
-    private String programNameEn;
-    private String programNameLocal;
-    private String programName;
-    private boolean isActive;
-    private boolean isAdd;
-    private boolean isBack;
-    private boolean isPrint;
-    private boolean isRemove;
-    private boolean isSave;
-    private boolean isSearch;
-    private Integer rowVersion;
 }
 </file>
 
@@ -67397,122 +67745,6 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
     List<PmTask> findByWorkPackageIdAndIsDeleteFalse(UUID workPackageId);
 
     List<PmTask> findBySpecificationIdIn(List<UUID> specIds);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuBusinessRoleProgramRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
-
-@Repository
-public interface SuBusinessRoleProgramRepository extends JpaRepository<SuBusinessRoleProgram, UUID>, JpaSpecificationExecutor<SuBusinessRoleProgram> {
-
-    @Query("SELECT brp FROM SuBusinessRoleProgram brp JOIN FETCH brp.program WHERE brp.businessRole.id = :businessRoleId AND brp.isDelete = false AND brp.isActive = true")
-    List<SuBusinessRoleProgram> findActiveByBusinessRoleId(@Param("businessRoleId") UUID businessRoleId);
-
-    List<SuBusinessRoleProgram> findByBusinessRoleIdAndIsDeleteFalse(UUID businessRoleId);
-
-     @Query("SELECT brp FROM SuBusinessRoleProgram brp " +
-           "JOIN FETCH brp.businessRole " +
-           "JOIN FETCH brp.program " +
-           "WHERE brp.isDelete = false " +
-           "AND (:businessRoleId IS NULL OR brp.businessRole.id = :businessRoleId)")
-    List<SuBusinessRoleProgram> findAllWithFetch(@Param("businessRoleId") UUID businessRoleId);
-
-     List<SuBusinessRoleProgram> findByProgramIdAndIsDeleteFalse(UUID programId);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/su/SuProgramRepository.java">
-package com.softinter.sicapi.repository.su;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.dto.response.MenuProgramResponse;
-import com.softinter.sicapi.entity.su.SuProgram;
-
-@Repository
-public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, JpaSpecificationExecutor<SuProgram> {
-
-    @Query("SELECT p FROM SuProgram p LEFT JOIN FETCH p.parentProgram WHERE p.id = :id AND p.isDelete = false")
-    Optional<SuProgram> findByIdWithParent(@Param("id") UUID id);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActive();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isDelete = false ORDER BY p.sortOrder, p.programCode")
-    List<SuProgram> findAllActiveForPage();
-
-    @Query("SELECT DISTINCT p FROM SuProgram p " +
-           "JOIN p.suBusinessRolePrograms brp " +
-           "JOIN brp.businessRole br " +
-           "JOIN br.userBusinessRoles ubr " +
-           "JOIN ubr.userBusiness ub " +
-           "WHERE ub.businessId = :businessId " +
-           "AND ub.userId = :userId " +
-           "AND ub.isActive = true " +
-           "AND br.isActive = true " +
-           "AND brp.isActive = true " +
-           "AND ubr.isActive = true " +
-           "AND p.isActive = true " +
-           "ORDER BY p.sortOrder ASC, p.programCode ASC")
-    List<SuProgram> findAccessiblePrograms(@Param("businessId") UUID businessId,
-                                           @Param("userId") String userId);
-
-    @Query("SELECT p FROM SuProgram p WHERE (:parentProgramId IS NULL AND p.parentProgramId IS NULL OR p.parentProgramId = :parentProgramId) AND p.isActive = true AND p.isDelete = false")
-    List<SuProgram> findByParentProgramIdAndIsActiveTrue(@Param("parentProgramId") UUID parentProgramId);
-
-    @Query("SELECT new com.softinter.sicapi.dto.response.MenuProgramResponse(" +
-       "p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion, " +
-       "0, " +  // state = 0 (Detached)
-       "(SUM(CASE WHEN p.isAdd = true AND brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isBack = true AND brp.isBack = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isPrint = true AND brp.isPrint = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isRemove = true AND brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSave = true AND brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
-       "(SUM(CASE WHEN p.isSearch = true AND brp.isSearch = true THEN 1 ELSE 0 END) > 0)) " +
-       "FROM SuProgram p " +
-       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
-       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
-       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
-       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
-       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
-       "AND p.isActive = true AND p.isDelete = false " +
-       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
-       "GROUP BY p.id, p.parentProgramId, p.programCode, p.icon, p.nameEn, p.nameLocal, p.routePath, p.sortOrder, p.isActive, p.rowVersion " +
-       "ORDER BY p.sortOrder ASC")
-List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
-
-
-    List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findRootPrograms();
-
-    @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId = :parentId AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")
-    List<SuProgram> findChildrenByParentId(@Param("parentId") UUID parentId);
-
-    boolean existsByProgramCodeAndIsDeleteFalse(String programCode);
-
-    @Query("SELECT p FROM SuProgram p WHERE p.isActive = true AND p.isDelete = false ORDER BY p.sortOrder")
-    List<SuProgram> findByIsActiveTrueAndIsDeleteFalseOrderBySortOrder();
 }
 </file>
 
@@ -76728,919 +76960,6 @@ export class NewDiagramDialogComponent implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.component.html">
-<!-- src/app/feature/pm/dt/pmdt09/pmdt09.component.html -->
-
-<div class="max-w-4xl mx-auto space-y-5 p-2">
-
-  <!-- HEADER -->
-  <div class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--border)]">
-    <div class="flex items-center gap-3">
-      <button
-        (click)="goBack()"
-        class="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ">
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-chat-square-quote-fill text-[var(--crm-primary)]"></i>
-          กระดานสนทนาโครงการ
-        </h1>
-        <p class="text-xs text-[var(--text-muted)] mt-0.5">แชร์ความคิดเห็น คำถาม หรือติดตามข่าวสารสำคัญภายในโครงการ</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== CREATE POST TRIGGER (เหมือนเดิม) ===== -->
-  <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-4 shadow-sm">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
-        @if (currentUserAvatar()) {
-          <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
-        } @else {
-          <span class="text-base font-bold text-[var(--crm-primary)]">
-            {{ currentUserName().charAt(0) || 'U' }}
-          </span>
-        }
-      </div>
-      <button
-        type="button"
-        (click)="openCreateModal()"
-        class="flex-1 bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-left text-[var(--text-muted)] px-4 py-2.5 rounded-full border border-[var(--border)] transition-all cursor-pointer text-sm font-medium flex items-center justify-between">
-        <span>คุณกำลังคิดอะไรอยู่, {{ currentUserName() }}?</span>
-        <i class="bi bi-pencil-square text-base text-[var(--crm-primary)]"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== LOADING ===== -->
-  @if (isLoading() && posts().length === 0) {
-    <div class="flex flex-col items-center justify-center py-16 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังดึงข้อมูลโพสต์ทั้งหมด...</p>
-    </div>
-  }
-
-  <!-- ===== POSTS FEED ===== -->
-  <div class="space-y-5">
-    @for (post of posts(); track post.id) {
-      <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden transition-all hover:border-[var(--crm-primary)]/30">
-
-        <!-- ===== POST HEADER ===== -->
-        <div class="p-4 flex items-start gap-3">
-          <div class="w-10 h-10 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
-            @if (post.userAvatarUrl) {
-              <img [src]="getAvatarUrl(post.userAvatarUrl)" [alt]="post.createdByName" class="w-full h-full object-cover" />
-            } @else {
-              <span class="text-sm font-bold text-[var(--crm-primary)]">
-                {{ post.createdByName?.charAt(0) || '?' }}
-              </span>
-            }
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-sm text-[var(--text-active)] flex items-center gap-1.5">
-              <span>{{ post.createdByName }}</span>
-              @if (post.pinned) {
-                <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 font-normal">📌 ปักหมุด</span>
-              }
-            </h3>
-            <p class="text-xs text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
-              <span>{{ formatDate(post.createdDate) }}</span>
-              <span>•</span>
-              <i class="bi bi-globe text-[10px]"></i>
-            </p>
-          </div>
-          @if (isAuthor(post.createdBy)) {
-            <div class="flex items-center gap-1">
-              <button
-                (click)="openEditModal(post)"
-                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-all"
-                title="แก้ไขโพสต์">
-                <i class="bi bi-pencil text-sm"></i>
-              </button>
-              <button
-                (click)="deletePost(post.id)"
-                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
-                title="ลบโพสต์">
-                <i class="bi bi-trash text-sm"></i>
-              </button>
-            </div>
-          }
-        </div>
-
-        <!-- ===== POST SUBJECT ===== -->
-        <div class="px-4 pb-1">
-          <h2 class="text-base font-bold text-[var(--text-active)] tracking-wide">
-            {{ post.subject }}
-          </h2>
-        </div>
-
-        <!-- ===== POST CONTENT (text) ===== -->
-        <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
-          {{ post.content }}
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- ===== 🔥 ATTACHMENTS INLINE (แบบ Facebook) 🔥 ===== -->
-        <!-- ============================================================ -->
-        <!-- ส่วนแสดงไฟล์แนบในโพสต์ -->
-@if (post.attachmentGroupId) {
-  <div class="px-4 pb-3">
-    <div class="grid grid-cols-1 gap-2">
-      @for (file of getAttachments(post.attachmentGroupId); track file.id) {
-        <div
-          class="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/30 transition-all"
-          [class.cursor-pointer]="isImage(file) || isVideo(file)"
-          (click)="previewFile(file)"
-        >
-          <!-- ===== IMAGE ===== -->
-          @if (isImage(file)) {
-            <img
-              [src]="file.accessUrl"
-              [alt]="file.fileName"
-              class="w-full max-h-[400px] object-contain bg-black/5"
-              loading="lazy"
-            />
-            <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
-              <span class="flex items-center gap-1.5">
-                <i class="bi bi-image text-emerald-500"></i>
-                {{ file.fileName }}
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span>{{ formatFileSize(file.fileSize) }}</span>
-                <button
-                  (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
-                  class="text-[var(--crm-primary)] hover:underline text-xs"
-                >
-                  <i class="bi bi-download"></i>
-                </button>
-              </span>
-            </div>
-          }
-
-          <!-- ===== VIDEO ===== -->
-          @else if (isVideo(file)) {
-            <video
-              controls
-              preload="metadata"
-              class="w-full max-h-[400px] bg-black/5"
-              [src]="file.accessUrl"
-              playsinline
-            ></video>
-            <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
-              <span class="flex items-center gap-1.5">
-                <i class="bi bi-play-circle text-blue-500"></i>
-                {{ file.fileName }}
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span>{{ formatFileSize(file.fileSize) }}</span>
-                <button
-                  (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
-                  class="text-[var(--crm-primary)] hover:underline text-xs"
-                >
-                  <i class="bi bi-download"></i>
-                </button>
-              </span>
-            </div>
-          }
-
-          <!-- ===== AUDIO ===== -->
-          @else if (isAudio(file)) {
-            <div class="p-4 bg-[var(--bg)]">
-              <audio controls class="w-full" [src]="file.accessUrl" preload="metadata"></audio>
-              <div class="mt-2 text-xs text-[var(--text-muted)] flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
-                  <i class="bi bi-music-note text-purple-500"></i>
-                  {{ file.fileName }}
-                </span>
-                <span class="flex items-center gap-1.5">
-                  <span>{{ formatFileSize(file.fileSize) }}</span>
-                  <button
-                    (click)="downloadFile(file.accessUrl, file.fileName)"
-                    class="text-[var(--crm-primary)] hover:underline text-xs"
-                  >
-                    <i class="bi bi-download"></i>
-                  </button>
-                </span>
-              </div>
-            </div>
-          }
-
-          <!-- ===== DOCUMENT ===== -->
-          @else {
-            <div class="flex items-center gap-3 p-3 hover:bg-[var(--sidebar-hover)] transition-colors">
-              <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                   [class.bg-red-100]="isPdf(file)"
-                   [class.bg-blue-100]="isWord(file)"
-                   [class.bg-green-100]="isExcel(file)"
-                   [class.bg-yellow-100]="isPowerPoint(file)"
-                   [class.bg-gray-100]="isOtherDocument(file)"
-              >
-                <i class="bi text-2xl"
-                   [class.bi-filetype-pdf]="isPdf(file)"
-                   [class.bi-file-word]="isWord(file)"
-                   [class.bi-file-excel]="isExcel(file)"
-                   [class.bi-file-ppt]="isPowerPoint(file)"
-                   [class.bi-file-earmark]="isOtherDocument(file)"
-                   [class.text-red-600]="isPdf(file)"
-                   [class.text-blue-600]="isWord(file)"
-                   [class.text-green-600]="isExcel(file)"
-                   [class.text-yellow-600]="isPowerPoint(file)"
-                   [class.text-gray-600]="isOtherDocument(file)"
-                ></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ file.fileName }}</p>
-                <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(file.fileSize) }}</p>
-              </div>
-              <button
-                (click)="downloadFile(file.accessUrl, file.fileName)"
-                class="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-              >
-                <i class="bi bi-download"></i> ดาวน์โหลด
-              </button>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  </div>
-}
-
-        <!-- ===== POST STATS ===== -->
-        <div class="px-4 py-2 border-t border-[var(--border)]/60 flex items-center justify-between text-xs text-[var(--text-muted)]">
-          <span class="flex items-center gap-1">
-           ความคิดเห็น
-          </span>
-        </div>
-
-      <!-- ===== ACTION BAR ===== -->
-<div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
-  @if (post.replyCount > 0) {
-    <button
-      type="button"
-      (click)="toggleExpand(post.id)"
-      class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
-      <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
-      <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'เเสดงคิดเห็น' }}</span>
-    </button>
-  }
-</div>
-
-        <!-- ===== COMMENTS SECTION (เหมือนเดิม) ===== -->
-        @if (expandedPostId() === post.id || replyingPostId() === post.id) {
-          <div class="p-4 bg-[var(--bg)]/40 border-t border-[var(--border)] space-y-4">
-            <!-- Comments list -->
-            @if (post.replies && post.replies.length > 0) {
-              <div class="space-y-3">
-                @for (reply of post.replies; track reply.id) {
-                  <div class="flex items-start gap-2.5">
-                    <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      @if (reply.userAvatarUrl) {
-                        <img [src]="getAvatarUrl(reply.userAvatarUrl)" [alt]="reply.createdByName" class="w-full h-full object-cover" />
-                      } @else {
-                        <span class="text-xs font-bold text-[var(--crm-primary)]">
-                          {{ reply.createdByName?.charAt(0) || '?' }}
-                        </span>
-                      }
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      @if (editingCommentId() === reply.id) {
-                        <div class="bg-[var(--sidebar)] p-3 rounded-2xl border border-[var(--border)]">
-                          <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
-                            <sic-input-area formControlName="content" [rows]="2" [required]="true"></sic-input-area>
-                            <div class="flex justify-end gap-2 mt-2">
-                              <button type="button" (click)="cancelEdit()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">ยกเลิก</button>
-                              <button type="submit" class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90" [disabled]="isSubmitting()">บันทึก</button>
-                            </div>
-                          </form>
-                        </div>
-                      } @else {
-                        <div class="bg-[var(--sidebar)] px-3.5 py-2 rounded-2xl border border-[var(--border)] inline-block max-w-full">
-                          <div class="flex items-center justify-between gap-4">
-                            <span class="font-semibold text-xs text-[var(--text-active)]">{{ reply.createdByName }}</span>
-                          </div>
-                          <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">{{ reply.content }}</p>
-                        </div>
-                        <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
-                          <span>{{ formatDate(reply.createdDate) }}</span>
-                          <span>•</span>
-                          <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">ตอบกลับ (Reply)</button>
-                          @if (isAuthor(reply.createdBy)) {
-                            <span>•</span>
-                            <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">แก้ไข</button>
-                            <span>•</span>
-                            <button type="button" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">ลบ</button>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Reply input -->
-            <div class="flex items-start gap-2.5 pt-2">
-              <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
-                @if (currentUserAvatar()) {
-                  <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
-                } @else {
-                  <span class="text-xs font-bold text-[var(--crm-primary)]">
-                    {{ currentUserName().charAt(0) || 'U' }}
-                  </span>
-                }
-              </div>
-              <div class="flex-1 min-w-0">
-                <form [formGroup]="replyForm" (ngSubmit)="submitReply()" class="space-y-2">
-                  <div class="relative">
-                    <sic-input-area
-                      formControlName="content"
-                      [rows]="2"
-                      placeholder="เขียนความคิดเห็นของคุณ..."
-                      [required]="true"
-                    ></sic-input-area>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-[var(--text-muted)]">
-                      @if (replyToUser()) {
-                        ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
-                      }
-                    </span>
-                    <div class="flex items-center gap-2">
-                      @if (replyingPostId() === post.id) {
-                        <button type="button" (click)="cancelReply()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">ยกเลิก</button>
-                      }
-                      <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1" [disabled]="isSubmitting() || replyForm.invalid">
-                        @if (isSubmitting()) {
-                          <i class="bi bi-arrow-repeat animate-spin"></i>
-                        } @else {
-                          <i class="bi bi-send"></i>
-                        }
-                        ส่งความคิดเห็น
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-    } @empty {
-      @if (!isLoading()) {
-        <div class="text-center py-16 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)]">
-          <i class="bi bi-chat-square-dots text-5xl block mb-3 text-[var(--crm-primary)]/40"></i>
-          <p class="text-base font-semibold text-[var(--text-active)]">ยังไม่มีหัวข้อพูดคุยในโครงการนี้</p>
-          <p class="text-xs text-[var(--text-muted)] mt-1">มาร่วมเริ่มสร้างโพสต์แรกเพื่อแลกเปลี่ยนความคิดเห็นกับทีมงาน</p>
-          <button
-            type="button"
-            (click)="openCreateModal()"
-            class="mt-4 px-5 py-2 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 inline-flex items-center gap-1.5 transition-all"
-          >
-            <i class="bi bi-plus-circle"></i> สร้างโพสต์แรก
-          </button>
-        </div>
-      }
-    }
-  </div>
-
-  <!-- ===== LOAD MORE ===== -->
-  @if (totalElements() > 0 && currentPage() < totalPages() - 1) {
-    <div class="flex justify-center pt-2">
-      <button
-        (click)="loadMore()"
-        class="px-6 py-2.5 rounded-full text-xs font-semibold border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all shadow-sm flex items-center gap-2"
-        [disabled]="isLoading()"
-      >
-        @if (isLoading()) {
-          <i class="bi bi-arrow-repeat animate-spin"></i> Loading...
-        } @else {
-          <i class="bi bi-arrow-down-circle"></i> โหลดโพสต์เพิ่มเติม
-        }
-      </button>
-    </div>
-  }
-
-  <!-- ===== PMDT09A MODAL ===== -->
-  @if (isModalOpen()) {
-    <app-pmdt09a
-      [projectId]="projectId()!"
-      [postToEdit]="postToEdit()"
-      [currentUserAvatar]="getAvatarUrl(currentUserAvatar()!)"
-      [currentUserName]="currentUserName()"
-      (saved)="onPostSaved($event)"
-      (closed)="closeModal()"
-    ></app-pmdt09a>
-  }
-
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.component.ts">
-// src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { AuthService } from '../../../../core/auth/auth.service';
-import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { Post, Reply } from './discussion.model';
-import { DiscussionService } from './discussion.service';
-import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
-import { environment } from '../../../../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-
-interface AttachmentFile {
-  id: string;
-  fileName: string;
-  accessUrl: string;
-  fileSize: number;
-  contentType: string;
-  uploadGroupId: string;
-}
-
-@Component({
-  selector: 'app-pmdt09',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    SicButtonComponent,
-    SicInputAreaComponent,
-    SicDatePipe,
-    Pmdt09AComponent,
-  ],
-  templateUrl: './pmdt09.component.html',
-  styleUrls: ['./pmdt09.component.css'],
-})
-export class Pmdt09Component implements OnInit {
-  private fb = inject(FormBuilder);
-  private service = inject(DiscussionService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private authService = inject(AuthService);
-  private sidebarService = inject(SicSidebarService);
-  private http = inject(HttpClient);
-
-  readonly apiBaseUrl = environment.apiBaseUrl;
-
-  posts = signal<Post[]>([]);
-  isLoading = signal(false);
-  isSubmitting = signal(false);
-  projectId = signal<string | null>(null);
-  expandedPostId = signal<string | null>(null);
-
-  editingCommentId = signal<string | null>(null);
-  replyingPostId = signal<string | null>(null);
-  replyToUser = signal<string | null>(null);
-
-  isModalOpen = signal(false);
-  postToEdit = signal<Post | null>(null);
-
-  currentUserId = signal<string | null>(null);
-  currentUserName = signal<string>('ผู้ใช้งาน');
-  currentUserAvatar = signal<string | null>(null);
-
-  currentPage = signal(0);
-  pageSize = signal(10);
-  totalElements = signal(0);
-  totalPages = signal(0);
-
-  replyForm!: FormGroup;
-  editForm!: FormGroup;
-
-  // 🔥 Cache for attachments (key = groupId)
-  private attachmentCache = new Map<string, AttachmentFile[]>();
-
-  ngOnInit(): void {
-    this.currentUserId.set(this.authService.getUserId());
-    this.sidebarService.getProfile().subscribe({
-      next: (profile) => {
-        if (profile) {
-          const name = profile.name || profile.id || 'ผู้ใช้';
-          this.currentUserName.set(name);
-          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
-            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
-          }
-        }
-      },
-      error: () => {},
-    });
-
-    this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'];
-      if (pid) {
-        this.projectId.set(pid);
-        this.loadPosts();
-      } else {
-        this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
-        this.router.navigate(['/feature/pm/pmrt02']);
-      }
-    });
-
-    this.replyForm = this.fb.group({
-      content: ['', Validators.required],
-      attachmentGroupId: [null],
-    });
-
-    this.editForm = this.fb.group({
-      content: ['', Validators.required],
-    });
-  }
-
-  loadPosts(): void {
-    const projectId = this.projectId();
-    if (!projectId) return;
-    this.isLoading.set(true);
-    this.service
-      .getPosts(projectId, this.currentPage(), this.pageSize())
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (response) => {
-          this.posts.set(response.content || []);
-          this.totalElements.set(response.totalElements || 0);
-          this.totalPages.set(response.totalPages || 0);
-          // 🔥 Preload attachments
-          this.posts().forEach(post => {
-            if (post.attachmentGroupId) {
-              this.loadAttachments(post.attachmentGroupId);
-            }
-          });
-        },
-        error: (err) => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  // ===== 🔥 Load attachments with Authorization header =====
-  loadAttachments(groupId: string): void {
-    if (this.attachmentCache.has(groupId)) return;
-
-    // สร้าง headers พร้อม token (Interceptor อาจไม่ทำงาน กรณีนี้เพิ่มเอง)
-    const token = this.authService.getAccessToken();
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    this.http
-      .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
-      .subscribe({
-        next: (files) => {
-          this.attachmentCache.set(groupId, files);
-        },
-        error: (err) => {
-          console.error('Failed to load attachments:', err);
-          // ถ้า 401 ให้ลองโหลดแบบไม่มี token (เผื่อกรณี public)
-          this.http
-            .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
-            .subscribe({
-              next: (files) => this.attachmentCache.set(groupId, files),
-              error: () => this.attachmentCache.set(groupId, []),
-            });
-        },
-      });
-  }
-
-  // ===== 🔥 Get attachments from cache =====
-  getAttachments(groupId: string): AttachmentFile[] {
-    return this.attachmentCache.get(groupId) || [];
-  }
-
-  // ===== 🔥 File type helpers =====
-  isImage(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('image/') ?? false;
-  }
-
-  isVideo(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('video/') ?? false;
-  }
-
-  isAudio(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('audio/') ?? false;
-  }
-
-  isPdf(file: AttachmentFile): boolean {
-    return file.contentType === 'application/pdf' || file.fileName?.endsWith('.pdf');
-  }
-
-  isWord(file: AttachmentFile): boolean {
-    return file.contentType?.includes('word') || file.fileName?.match(/\.(doc|docx)$/i) !== null;
-  }
-
-  isExcel(file: AttachmentFile): boolean {
-    return file.contentType?.includes('excel') || file.fileName?.match(/\.(xls|xlsx)$/i) !== null;
-  }
-
-  isPowerPoint(file: AttachmentFile): boolean {
-    return file.contentType?.includes('powerpoint') || file.fileName?.match(/\.(ppt|pptx)$/i) !== null;
-  }
-
-  isOtherDocument(file: AttachmentFile): boolean {
-    return !this.isImage(file) && !this.isVideo(file) && !this.isAudio(file) &&
-           !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
-  }
-
-  formatFileSize(bytes: number): string {
-    if (!bytes) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-  }
-
-  previewFile(file: AttachmentFile): void {
-    if (this.isImage(file) || this.isVideo(file)) {
-      window.open(file.accessUrl, '_blank');
-    }
-  }
-
-  downloadFile(url: string, fileName?: string): void {
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName || 'download';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
-  // ===== Load Replies =====
-  loadReplies(postId: string): void {
-    this.service.getReplies(postId).subscribe({
-      next: (replies) => {
-        this.posts.update((posts) =>
-          posts.map((p) => (p.id === postId ? { ...p, replies } : p))
-        );
-      },
-      error: () => {},
-    });
-  }
-
-  // ===== Toggle Expand =====
-  toggleExpand(postId: string): void {
-    if (this.expandedPostId() === postId) {
-      this.expandedPostId.set(null);
-    } else {
-      this.expandedPostId.set(postId);
-      const post = this.posts().find((p) => p.id === postId);
-      if (post && !post.replies) {
-        this.loadReplies(postId);
-      }
-    }
-  }
-
-  // ===== Dialog Actions =====
-  openCreateModal(): void {
-    this.postToEdit.set(null);
-    this.isModalOpen.set(true);
-  }
-
-  openEditModal(post: Post): void {
-    this.postToEdit.set(post);
-    this.isModalOpen.set(true);
-  }
-
-  closeModal(): void {
-    this.isModalOpen.set(false);
-    this.postToEdit.set(null);
-  }
-
-  onPostSaved(savedPost: Post): void {
-  this.closeModal();
-  this.currentPage.set(0);
-  this.loadPosts();
-}
-
-  // ===== Reply Actions =====
-  startReply(postId: string, replyToUser?: string): void {
-    this.replyingPostId.set(postId);
-    this.replyToUser.set(replyToUser || null);
-    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
-    if (this.expandedPostId() !== postId) {
-      this.expandedPostId.set(postId);
-      const post = this.posts().find((p) => p.id === postId);
-      if (post && !post.replies) {
-        this.loadReplies(postId);
-      }
-    }
-  }
-
-  cancelReply(): void {
-    this.replyingPostId.set(null);
-    this.replyToUser.set(null);
-    this.replyForm.reset();
-  }
-
-  submitReply(): void {
-    if (this.replyForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
-      return;
-    }
-    const postId = this.replyingPostId();
-    if (!postId) return;
-
-    this.isSubmitting.set(true);
-    const formValue = this.replyForm.value;
-    let attachmentGroupId: string | undefined = undefined;
-    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
-      attachmentGroupId = formValue.attachmentGroupId[0]?.uploadGroupId || formValue.attachmentGroupId[0]?.id;
-    } else if (typeof formValue.attachmentGroupId === 'string') {
-      attachmentGroupId = formValue.attachmentGroupId;
-    }
-
-    const request = {
-      postId: postId,
-      content: formValue.content,
-      attachmentGroupId: attachmentGroupId,
-    };
-
-    this.service
-      .createReply(request)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (newReply) => {
-          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
-          this.replyingPostId.set(null);
-          this.replyToUser.set(null);
-          this.replyForm.reset();
-          if (!newReply.userAvatarUrl && this.currentUserAvatar()) {
-            newReply.userAvatarUrl = this.currentUserAvatar() || undefined;
-          }
-          if (!newReply.createdByName) {
-            newReply.createdByName = this.currentUserName();
-          }
-          this.posts.update((posts) =>
-            posts.map((p) =>
-              p.id === postId
-                ? { ...p, replyCount: p.replyCount + 1, replies: [...(p.replies || []), newReply] }
-                : p
-            )
-          );
-        },
-        error: (err) => {
-          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  // ===== Edit Reply =====
-  startEditReply(postId: string, replyId: string): void {
-    const post = this.posts().find((p) => p.id === postId);
-    if (!post) return;
-    const reply = post.replies?.find((r) => r.id === replyId);
-    if (!reply) return;
-    this.editingCommentId.set(replyId);
-    this.editForm.patchValue({ content: reply.content });
-    (this.editForm as any).__postId = postId;
-  }
-
-  cancelEdit(): void {
-    this.editingCommentId.set(null);
-    this.editForm.reset();
-    (this.editForm as any).__postId = null;
-  }
-
-  submitEdit(): void {
-    if (this.editForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
-      return;
-    }
-    const commentId = this.editingCommentId();
-    if (!commentId) return;
-    const content = this.editForm.value.content;
-
-    this.isSubmitting.set(true);
-    this.service
-      .updateComment(commentId, { content })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: () => {
-          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
-          this.editingCommentId.set(null);
-          const postId = (this.editForm as any).__postId;
-          this.editForm.reset();
-          (this.editForm as any).__postId = null;
-          if (postId) {
-            this.posts.update((posts) =>
-              posts.map((p) => {
-                if (p.id === postId) {
-                  const updatedReplies = p.replies?.map((r) =>
-                    r.id === commentId ? { ...r, content } : r
-                  );
-                  return { ...p, replies: updatedReplies };
-                }
-                return p;
-              })
-            );
-          } else {
-            this.posts.update((posts) =>
-              posts.map((p) => (p.id === commentId ? { ...p, content } : p))
-            );
-          }
-        },
-        error: (err) => {
-          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  // ===== Delete =====
-  deletePost(postId: string): void {
-    this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
-      .then((confirmed) => {
-        if (confirmed) {
-          this.service.deleteComment(postId).subscribe({
-            next: () => {
-              this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
-              this.posts.update((posts) => posts.filter((p) => p.id !== postId));
-            },
-            error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        }
-      });
-  }
-
-  deleteReply(postId: string, replyId: string): void {
-    this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบข้อความนี้ใช่หรือไม่?')
-      .then((confirmed) => {
-        if (confirmed) {
-          this.service.deleteComment(replyId).subscribe({
-            next: () => {
-              this.dialog.success('ลบสำเร็จ', 'ข้อความถูกลบแล้ว');
-              this.posts.update((posts) =>
-                posts.map((p) => {
-                  if (p.id === postId) {
-                    const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
-                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
-                  }
-                  return p;
-                })
-              );
-            },
-            error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        }
-      });
-  }
-
-  goBack(): void {
-    this.router.navigate(['/feature/pm/pmrt02']);
-  }
-
-  loadMore(): void {
-    if (this.currentPage() < this.totalPages() - 1) {
-      this.currentPage.set(this.currentPage() + 1);
-      this.loadPosts();
-    }
-  }
-
-  isAuthor(createdBy: string): boolean {
-    const currentId = this.currentUserId();
-    if (currentId && createdBy === currentId) {
-      return true;
-    }
-    return createdBy === this.currentUserName();
-  }
-
-  getAvatarUrl(url?: string): string | null {
-    if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return `${this.apiBaseUrl}${url}`;
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('th-TH', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
 <!-- src/app/feature/pm/rt/pmrt01/pmrt01.component.html -->
 
@@ -79031,225 +78350,6 @@ export class Pmrt05Component implements OnInit {
       return dateStr;
     }
   }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/su/SuBusinessRoleProgramController.java">
-package com.softinter.sicapi.controller.su;
-
-import com.softinter.sicapi.dto.request.*;
-import com.softinter.sicapi.dto.response.*;
-import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
-import com.softinter.sicapi.entity.su.SuBusinessRole;
-import com.softinter.sicapi.entity.su.SuProgram;
-import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
-import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
-import com.softinter.sicapi.repository.su.SuProgramRepository;
-import com.softinter.sicapi.util.LocalizationHelper;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@RestController
-@RequestMapping("/api/su/business-role-programs")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Business Role Program", description = "Business Role Program Management API")
-public class SuBusinessRoleProgramController {
-
-    private final SuBusinessRoleProgramRepository brpRepository;
-    private final SuBusinessRoleRepository businessRoleRepository;
-    private final SuProgramRepository programRepository;
-
-     @GetMapping
-    @Operation(summary = "Get all business role programs")
-    public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
-            @RequestParam(required = false) UUID businessRoleId) {
-        // ใช้เมธอดใหม่ที่ JOIN FETCH ข้อมูล businessRole และ program
-        List<SuBusinessRoleProgram> list = brpRepository.findAllWithFetch(businessRoleId);
-        List<BusinessRoleProgramResponse> response = list.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/paging")
-    @Operation(summary = "Get business role programs with pagination")
-    public ResponseEntity<PaginationResponse<BusinessRoleProgramResponse>> paging(
-            @Valid @ModelAttribute BusinessRoleProgramPageRequest request) {
-        Pageable pageable = PageRequest.of(
-                request.getPageNumber() - 1,
-                request.getPageSize());
-
-        Specification<SuBusinessRoleProgram> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("isDelete"), false));
-            if (request.getBusinessRoleId() != null) {
-                predicates.add(cb.equal(root.get("businessRole").get("id"), request.getBusinessRoleId()));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        Page<SuBusinessRoleProgram> page = brpRepository.findAll(spec, pageable);
-        List<BusinessRoleProgramResponse> data = page.getContent().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-
-        PaginationResponse<BusinessRoleProgramResponse> response = new PaginationResponse<>();
-        response.setData(data);
-        com.softinter.sicapi.dto.Pageable pageableDto = new com.softinter.sicapi.dto.Pageable();
-        pageableDto.setPageNumber(request.getPageNumber());
-        pageableDto.setPageSize(request.getPageSize());
-        pageableDto.setTotalElements(page.getTotalElements());
-        pageableDto.calculateTotalPages();
-        response.setPageable(pageableDto);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/lov")
-    @Operation(summary = "Get business role program LOV")
-    public ResponseEntity<List<LovResponse>> lov(@RequestParam UUID businessRoleId) {
-        List<LovResponse> lov = brpRepository.findActiveByBusinessRoleId(businessRoleId)
-                .stream()
-                .map(brp -> new LovResponse(brp.getProgram().getId(), brp.getProgram().getNameEn()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(lov);
-    }
-
-    @PostMapping("/save")
-    @Operation(summary = "Save business role program")
-    public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleProgramRequest request) {
-        SuBusinessRoleProgram brp;
-        if (request.getId() != null) {
-            brp = brpRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Business role program not found"));
-        } else {
-            brp = new SuBusinessRoleProgram();
-            if (request.getBusinessRoleId() != null) {
-                SuBusinessRole role = businessRoleRepository.findById(request.getBusinessRoleId())
-                        .orElseThrow(() -> new RuntimeException("Business role not found"));
-                brp.setBusinessRole(role);
-            }
-            if (request.getProgramId() != null) {
-                SuProgram program = programRepository.findById(request.getProgramId())
-                        .orElseThrow(() -> new RuntimeException("Program not found"));
-                brp.setProgram(program);
-            }
-        }
-        brp.setIsActive(request.isActive());
-        brp.setAdd(request.isAdd());
-        brp.setBack(request.isBack());
-        brp.setPrint(request.isPrint());
-        brp.setRemove(request.isRemove());
-        brp.setSave(request.isSave());
-        brp.setSearch(request.isSearch());
-        if (request.getRowVersion() != null) {
-            brp.setRowVersion(request.getRowVersion());
-        }
-        brpRepository.save(brp);
-        return ResponseEntity.ok(brp.getId());
-    }
-
-    @PostMapping("/bulk-save")
-    @Operation(summary = "Save all program permissions for a role")
-    public ResponseEntity<Void> bulkSave(@Valid @RequestBody SaveRolePermissionsRequest request) {
-        SuBusinessRole role = null;
-        if (request.getRoleId() != null) {
-            role = businessRoleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new RuntimeException("Business role not found"));
-        }
-
-        for (SaveBusinessRoleProgramRequest req : request.getModules()) {
-            SuBusinessRoleProgram brp;
-            if (req.getId() != null) {
-                brp = brpRepository.findById(req.getId())
-                        .orElseThrow(() -> new RuntimeException("Business role program not found"));
-            } else {
-                UUID bRoleId = req.getBusinessRoleId() != null ? req.getBusinessRoleId() : (role != null ? role.getId() : null);
-                if (bRoleId == null) {
-                    throw new RuntimeException("Business role ID must not be null");
-                }
-                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(bRoleId);
-                brp = existing.stream()
-                        .filter(x -> x.getProgram().getId().equals(req.getProgramId()))
-                        .findFirst()
-                        .orElse(null);
-                
-                if (brp == null) {
-                    brp = new SuBusinessRoleProgram();
-                    SuBusinessRole moduleRole = businessRoleRepository.findById(bRoleId)
-                            .orElseThrow(() -> new RuntimeException("Business role not found"));
-                    brp.setBusinessRole(moduleRole);
-                    SuProgram program = programRepository.findById(req.getProgramId())
-                            .orElseThrow(() -> new RuntimeException("Program not found"));
-                    brp.setProgram(program);
-                }
-            }
-            brp.setIsActive(req.isActive());
-            brp.setAdd(req.isAdd());
-            brp.setBack(req.isBack());
-            brp.setPrint(req.isPrint());
-            brp.setRemove(req.isRemove());
-            brp.setSave(req.isSave());
-            brp.setSearch(req.isSearch());
-            if (req.getRowVersion() != null) {
-                brp.setRowVersion(req.getRowVersion());
-            }
-            brpRepository.save(brp);
-        }
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete business role program")
-    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
-        SuBusinessRoleProgram brp = brpRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Business role program not found"));
-        brp.setIsDelete(true);
-        brp.setIsActive(false);
-        brpRepository.save(brp);
-        return ResponseEntity.noContent().build();
-    }
-
-    private BusinessRoleProgramResponse toResponse(SuBusinessRoleProgram brp) {
-    BusinessRoleProgramResponse response = new BusinessRoleProgramResponse();
-    response.setId(brp.getId());
-    if (brp.getBusinessRole() != null) {
-        response.setBusinessRoleId(brp.getBusinessRole().getId());
-        response.setBusinessRoleCode(brp.getBusinessRole().getRoleCode());
-    }
-    if (brp.getProgram() != null) {
-        response.setProgramId(brp.getProgram().getId());
-        response.setProgramCode(brp.getProgram().getProgramCode());
-        response.setProgramNameEn(brp.getProgram().getNameEn());
-        response.setProgramNameLocal(brp.getProgram().getNameLocal());
-        // ✅ เพิ่ม
-        response.setProgramName(LocalizationHelper.getProgramName(brp.getProgram()));
-    }
-    response.setActive(Boolean.TRUE.equals(brp.getIsActive()));
-    response.setAdd(brp.isAdd());
-    response.setBack(brp.isBack());
-    response.setPrint(brp.isPrint());
-    response.setRemove(brp.isRemove());
-    response.setSave(brp.isSave());
-    response.setSearch(brp.isSearch());
-    response.setRowVersion(brp.getRowVersion());
-    return response;
-}
 }
 </file>
 
@@ -84240,6 +83340,580 @@ export class DiagramService {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.component.ts">
+// src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { Post, Reply } from './discussion.model';
+import { DiscussionService } from './discussion.service';
+import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
+import { environment } from '../../../../../environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
+
+interface AttachmentFile {
+  id: string;
+  fileName: string;
+  accessUrl: string;
+  fileSize: number;
+  contentType: string;
+  uploadGroupId: string;
+}
+
+@Component({
+  selector: 'app-pmdt09',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SicButtonComponent,
+    SicInputAreaComponent,
+    SicDatePipe,
+    Pmdt09AComponent,
+    SicInputUploadComponent,
+  ],
+  templateUrl: './pmdt09.component.html',
+  styleUrls: ['./pmdt09.component.css'],
+})
+export class Pmdt09Component implements OnInit {
+  private fb = inject(FormBuilder);
+  private service = inject(DiscussionService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private authService = inject(AuthService);
+  private sidebarService = inject(SicSidebarService);
+  private http = inject(HttpClient);
+
+  readonly apiBaseUrl = environment.apiBaseUrl;
+
+  posts = signal<Post[]>([]);
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+  projectId = signal<string | null>(null);
+  expandedPostId = signal<string | null>(null);
+
+  editingCommentId = signal<string | null>(null);
+  replyingPostId = signal<string | null>(null);
+  replyToUser = signal<string | null>(null);
+
+  isModalOpen = signal(false);
+  postToEdit = signal<Post | null>(null);
+
+  currentUserId = signal<string | null>(null);
+  currentUserName = signal<string>('ผู้ใช้งาน');
+  currentUserAvatar = signal<string | null>(null);
+
+  currentPage = signal(0);
+  pageSize = signal(10);
+  totalElements = signal(0);
+  totalPages = signal(0);
+
+  // ฟอร์มสำหรับแสดงความคิดเห็น (comment) – ใช้เมื่อกด "แสดงความคิดเห็น"
+  commentForm!: FormGroup;
+  // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
+  replyForm!: FormGroup;
+  editForm!: FormGroup;
+
+  // Cache for attachments (key = groupId)
+  private attachmentCache = new Map<string, AttachmentFile[]>();
+
+  ngOnInit(): void {
+    this.currentUserId.set(this.authService.getUserId());
+    this.sidebarService.getProfile().subscribe({
+      next: (profile) => {
+        if (profile) {
+          const name = profile.name || profile.id || 'ผู้ใช้';
+          this.currentUserName.set(name);
+          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
+            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
+          }
+        }
+      },
+      error: () => {},
+    });
+
+    this.route.queryParams.subscribe((params) => {
+      const pid = params['projectId'];
+      if (pid) {
+        this.projectId.set(pid);
+        this.loadPosts();
+      } else {
+        this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
+        this.router.navigate(['/feature/pm/pmrt02']);
+      }
+    });
+
+    // ฟอร์มสำหรับแสดงความคิดเห็น (comment)
+    this.commentForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
+
+    // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
+    this.replyForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
+
+    this.editForm = this.fb.group({
+      content: ['', Validators.required],
+    });
+  }
+
+  loadPosts(): void {
+    const projectId = this.projectId();
+    if (!projectId) return;
+    this.isLoading.set(true);
+    this.service
+      .getPosts(projectId, this.currentPage(), this.pageSize())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.posts.set(response.content || []);
+          this.totalElements.set(response.totalElements || 0);
+          this.totalPages.set(response.totalPages || 0);
+          // Preload attachments
+          this.posts().forEach(post => {
+            if (post.attachmentGroupId) {
+              this.loadAttachments(post.attachmentGroupId);
+            }
+          });
+        },
+        error: (err) => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== Load attachments with Authorization header =====
+  loadAttachments(groupId: string): void {
+    if (this.attachmentCache.has(groupId)) return;
+
+    const token = this.authService.getAccessToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http
+      .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
+      .subscribe({
+        next: (files) => {
+          this.attachmentCache.set(groupId, files);
+        },
+        error: (err) => {
+          console.error('Failed to load attachments:', err);
+          // fallback without token
+          this.http
+            .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
+            .subscribe({
+              next: (files) => this.attachmentCache.set(groupId, files),
+              error: () => this.attachmentCache.set(groupId, []),
+            });
+        },
+      });
+  }
+
+  // ===== Get attachments from cache =====
+  getAttachments(groupId: string): AttachmentFile[] {
+    return this.attachmentCache.get(groupId) || [];
+  }
+
+  // ===== File type helpers =====
+  isImage(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('image/') ?? false;
+  }
+
+  isVideo(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('video/') ?? false;
+  }
+
+  isAudio(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('audio/') ?? false;
+  }
+
+  isPdf(file: AttachmentFile): boolean {
+    return file.contentType === 'application/pdf' || file.fileName?.endsWith('.pdf');
+  }
+
+  isWord(file: AttachmentFile): boolean {
+    return file.contentType?.includes('word') || file.fileName?.match(/\.(doc|docx)$/i) !== null;
+  }
+
+  isExcel(file: AttachmentFile): boolean {
+    return file.contentType?.includes('excel') || file.fileName?.match(/\.(xls|xlsx)$/i) !== null;
+  }
+
+  isPowerPoint(file: AttachmentFile): boolean {
+    return file.contentType?.includes('powerpoint') || file.fileName?.match(/\.(ppt|pptx)$/i) !== null;
+  }
+
+  isOtherDocument(file: AttachmentFile): boolean {
+    return !this.isImage(file) && !this.isVideo(file) && !this.isAudio(file) &&
+           !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+
+  previewFile(file: AttachmentFile): void {
+    if (this.isImage(file) || this.isVideo(file)) {
+      window.open(file.accessUrl, '_blank');
+    }
+  }
+
+  downloadFile(url: string, fileName?: string): void {
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'download';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // ===== Load Replies =====
+  loadReplies(postId: string): void {
+    this.service.getReplies(postId).subscribe({
+      next: (replies) => {
+        // โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
+        replies.forEach(reply => {
+          if (reply.attachmentGroupId) {
+            this.loadAttachments(reply.attachmentGroupId);
+          }
+        });
+        this.posts.update((posts) =>
+          posts.map((p) => (p.id === postId ? { ...p, replies: replies || [], replyCount: (replies || []).length } : p))
+        );
+      },
+      error: () => {},
+    });
+  }
+
+  // ===== Toggle Expand =====
+  toggleExpand(postId: string): void {
+    if (this.expandedPostId() === postId) {
+      this.expandedPostId.set(null);
+    } else {
+      this.expandedPostId.set(postId);
+      this.loadReplies(postId);
+    }
+  }
+
+  // ===== Dialog Actions =====
+  openCreateModal(): void {
+    this.postToEdit.set(null);
+    this.isModalOpen.set(true);
+  }
+
+  openEditModal(post: Post): void {
+    this.postToEdit.set(post);
+    this.isModalOpen.set(true);
+  }
+
+  closeModal(): void {
+    this.isModalOpen.set(false);
+    this.postToEdit.set(null);
+  }
+
+  onPostSaved(savedPost: Post): void {
+    this.closeModal();
+    this.currentPage.set(0);
+    this.loadPosts();
+  }
+
+  // ===== ฟังก์ชันสำหรับแสดงความคิดเห็น (comment) – ใช้ expandedPostId =====
+  submitComment(): void {
+    this.commentForm.updateValueAndValidity();
+    this.commentForm.markAllAsTouched();
+
+    if (this.commentForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการแสดงความคิดเห็น');
+      return;
+    }
+
+    const postId = this.expandedPostId();
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการแสดงความคิดเห็น');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const formValue = this.commentForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content?.trim() || '',
+      attachmentGroupId: attachmentGroupId,
+    };
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('แสดงความคิดเห็นสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.commentForm.reset({ content: '', attachmentGroupId: null });
+          if (newReply?.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
+          }
+          this.loadReplies(postId);
+        },
+        error: (err) => {
+          this.dialog.error('แสดงความคิดเห็นไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== ฟังก์ชันสำหรับตอบกลับ (reply) – ใช้ replyingPostId =====
+  submitReply(): void {
+    this.replyForm.updateValueAndValidity();
+    this.replyForm.markAllAsTouched();
+
+    if (this.replyForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      return;
+    }
+
+    const postId = this.replyingPostId();
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการตอบกลับ');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const formValue = this.replyForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content?.trim() || '',
+      attachmentGroupId: attachmentGroupId,
+    };
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.replyingPostId.set(null);
+          this.replyToUser.set(null);
+          this.replyForm.reset({ content: '', attachmentGroupId: null });
+          if (newReply?.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
+          }
+          this.loadReplies(postId);
+        },
+        error: (err) => {
+          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== ฟังก์ชันสำหรับเริ่มตอบกลับ (reply) =====
+  startReply(postId: string, replyToUser?: string): void {
+    this.replyingPostId.set(postId);
+    this.replyToUser.set(replyToUser || null);
+    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
+    // ถ้ายังไม่ได้ขยายโพสต์ ให้ขยายอัตโนมัติ
+    if (this.expandedPostId() !== postId) {
+      this.expandedPostId.set(postId);
+      const post = this.posts().find((p) => p.id === postId);
+      if (post && !post.replies) {
+        this.loadReplies(postId);
+      }
+    }
+  }
+
+  cancelReply(): void {
+    this.replyingPostId.set(null);
+    this.replyToUser.set(null);
+    this.replyForm.reset();
+  }
+
+  // ===== Edit Reply =====
+  startEditReply(postId: string, replyId: string): void {
+    const post = this.posts().find((p) => p.id === postId);
+    if (!post) return;
+    const reply = post.replies?.find((r) => r.id === replyId);
+    if (!reply) return;
+    this.editingCommentId.set(replyId);
+    this.editForm.patchValue({ content: reply.content });
+    (this.editForm as any).__postId = postId;
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId.set(null);
+    this.editForm.reset();
+    (this.editForm as any).__postId = null;
+  }
+
+  submitEdit(): void {
+    if (this.editForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
+      return;
+    }
+    const commentId = this.editingCommentId();
+    if (!commentId) return;
+    const content = this.editForm.value.content;
+
+    this.isSubmitting.set(true);
+    this.service
+      .updateComment(commentId, { content })
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
+          this.editingCommentId.set(null);
+          const postId = (this.editForm as any).__postId;
+          this.editForm.reset();
+          (this.editForm as any).__postId = null;
+          if (postId) {
+            this.posts.update((posts) =>
+              posts.map((p) => {
+                if (p.id === postId) {
+                  const updatedReplies = p.replies?.map((r) =>
+                    r.id === commentId ? { ...r, content } : r
+                  );
+                  return { ...p, replies: updatedReplies };
+                }
+                return p;
+              })
+            );
+          } else {
+            this.posts.update((posts) =>
+              posts.map((p) => (p.id === commentId ? { ...p, content } : p))
+            );
+          }
+        },
+        error: (err) => {
+          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== Delete =====
+  deletePost(postId: string): void {
+    this.dialog
+      .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteComment(postId).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
+              this.posts.update((posts) => posts.filter((p) => p.id !== postId));
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  deleteReply(postId: string, replyId: string): void {
+    this.dialog
+      .confirm('ยืนยันการลบ', 'คุณต้องการลบข้อความนี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteComment(replyId).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'ข้อความถูกลบแล้ว');
+              this.posts.update((posts) =>
+                posts.map((p) => {
+                  if (p.id === postId) {
+                    const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
+                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
+                  }
+                  return p;
+                })
+              );
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt02']);
+  }
+
+  loadMore(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.set(this.currentPage() + 1);
+      this.loadPosts();
+    }
+  }
+
+  isAuthor(createdBy: string): boolean {
+    const currentId = this.currentUserId();
+    if (currentId && createdBy === currentId) {
+      return true;
+    }
+    return createdBy === this.currentUserName();
+  }
+
+  getAvatarUrl(url?: string): string | null {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${this.apiBaseUrl}${url}`;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.component.ts">
 // src/app/feature/pm/rt/pmrt02/pmrt02.component.ts
 import { CommonModule } from '@angular/common';
@@ -85254,6 +84928,505 @@ export class Pmdt02Component implements OnInit {
     }
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.component.html">
+<!-- src/app/feature/pm/dt/pmdt09/pmdt09.component.html -->
+<div class="max-w-4xl mx-auto space-y-5 p-2">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--border)]">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="goBack()"
+        class="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ">
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-chat-square-quote-fill text-[var(--crm-primary)]"></i>
+          กระดานสนทนาโครงการ
+        </h1>
+        <p class="text-xs text-[var(--text-muted)] mt-0.5">แชร์ความคิดเห็น คำถาม หรือติดตามข่าวสารสำคัญภายในโครงการ</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CREATE POST TRIGGER ===== -->
+  <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-4 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+        @if (currentUserAvatar()) {
+          <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+        } @else {
+          <span class="text-base font-bold text-[var(--crm-primary)]">
+            {{ currentUserName().charAt(0) || 'U' }}
+          </span>
+        }
+      </div>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex-1 bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-left text-[var(--text-muted)] px-4 py-2.5 rounded-full border border-[var(--border)] transition-all cursor-pointer text-sm font-medium flex items-center justify-between">
+        <span>คุณกำลังคิดอะไรอยู่, {{ currentUserName() }}?</span>
+        <i class="bi bi-pencil-square text-base text-[var(--crm-primary)]"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading() && posts().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังดึงข้อมูลโพสต์ทั้งหมด...</p>
+    </div>
+  }
+
+  <!-- ===== POSTS FEED ===== -->
+  <div class="space-y-5">
+    @for (post of posts(); track post.id) {
+      <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden transition-all hover:border-[var(--crm-primary)]/30">
+
+        <!-- ===== POST HEADER ===== -->
+        <div class="p-4 flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
+            @if (post.userAvatarUrl) {
+              <img [src]="getAvatarUrl(post.userAvatarUrl)" [alt]="post.createdByName" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-sm font-bold text-[var(--crm-primary)]">
+                {{ post.createdByName?.charAt(0) || '?' }}
+              </span>
+            }
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm text-[var(--text-active)] flex items-center gap-1.5">
+              <span>{{ post.createdByName }}</span>
+              @if (post.pinned) {
+                <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 font-normal">📌 ปักหมุด</span>
+              }
+            </h3>
+            <p class="text-xs text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
+              <span>{{ formatDate(post.createdDate) }}</span>
+              <span>•</span>
+              <i class="bi bi-globe text-[10px]"></i>
+            </p>
+          </div>
+          @if (isAuthor(post.createdBy)) {
+            <div class="flex items-center gap-1">
+              <button
+                (click)="openEditModal(post)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-all"
+                title="แก้ไขโพสต์">
+                <i class="bi bi-pencil text-sm"></i>
+              </button>
+              <button
+                (click)="deletePost(post.id)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
+                title="ลบโพสต์">
+                <i class="bi bi-trash text-sm"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ===== POST SUBJECT ===== -->
+        <div class="px-4 pb-1">
+          <h2 class="text-base font-bold text-[var(--text-active)] tracking-wide">
+            {{ post.subject }}
+          </h2>
+        </div>
+
+        <!-- ===== POST CONTENT ===== -->
+        <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
+          {{ post.content }}
+        </div>
+
+        <!-- ===== ATTACHMENTS ===== -->
+        @if (post.attachmentGroupId) {
+          <div class="px-4 pb-3">
+            <div class="grid grid-cols-1 gap-2">
+              @for (file of getAttachments(post.attachmentGroupId); track file.id) {
+                <div
+                  class="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/30 transition-all"
+                  [class.cursor-pointer]="isImage(file) || isVideo(file)"
+                  (click)="previewFile(file)"
+                >
+                  @if (isImage(file)) {
+                    <img
+                      [src]="file.accessUrl"
+                      [alt]="file.fileName"
+                      class="w-full max-h-[400px] object-contain bg-black/5"
+                      loading="lazy"
+                    />
+                    <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-image text-emerald-500"></i>
+                        {{ file.fileName }}
+                      </span>
+                      <span class="flex items-center gap-1.5">
+                        <span>{{ formatFileSize(file.fileSize) }}</span>
+                        <button
+                          (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
+                          class="text-[var(--crm-primary)] hover:underline text-xs"
+                        >
+                          <i class="bi bi-download"></i>
+                        </button>
+                      </span>
+                    </div>
+                  } @else if (isVideo(file)) {
+                    <video
+                      controls
+                      preload="metadata"
+                      class="w-full max-h-[400px] bg-black/5"
+                      [src]="file.accessUrl"
+                      playsinline
+                    ></video>
+                    <div class="p-2 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/50">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-play-circle text-blue-500"></i>
+                        {{ file.fileName }}
+                      </span>
+                      <span class="flex items-center gap-1.5">
+                        <span>{{ formatFileSize(file.fileSize) }}</span>
+                        <button
+                          (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
+                          class="text-[var(--crm-primary)] hover:underline text-xs"
+                        >
+                          <i class="bi bi-download"></i>
+                        </button>
+                      </span>
+                    </div>
+                  } @else if (isAudio(file)) {
+                    <div class="p-4 bg-[var(--bg)]">
+                      <audio controls class="w-full" [src]="file.accessUrl" preload="metadata"></audio>
+                      <div class="mt-2 text-xs text-[var(--text-muted)] flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                          <i class="bi bi-music-note text-purple-500"></i>
+                          {{ file.fileName }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                          <span>{{ formatFileSize(file.fileSize) }}</span>
+                          <button
+                            (click)="downloadFile(file.accessUrl, file.fileName)"
+                            class="text-[var(--crm-primary)] hover:underline text-xs"
+                          >
+                            <i class="bi bi-download"></i>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="flex items-center gap-3 p-3 hover:bg-[var(--sidebar-hover)] transition-colors">
+                      <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                           [class.bg-red-100]="isPdf(file)"
+                           [class.bg-blue-100]="isWord(file)"
+                           [class.bg-green-100]="isExcel(file)"
+                           [class.bg-yellow-100]="isPowerPoint(file)"
+                           [class.bg-gray-100]="isOtherDocument(file)"
+                      >
+                        <i class="bi text-2xl"
+                           [class.bi-filetype-pdf]="isPdf(file)"
+                           [class.bi-file-word]="isWord(file)"
+                           [class.bi-file-excel]="isExcel(file)"
+                           [class.bi-file-ppt]="isPowerPoint(file)"
+                           [class.bi-file-earmark]="isOtherDocument(file)"
+                           [class.text-red-600]="isPdf(file)"
+                           [class.text-blue-600]="isWord(file)"
+                           [class.text-green-600]="isExcel(file)"
+                           [class.text-yellow-600]="isPowerPoint(file)"
+                           [class.text-gray-600]="isOtherDocument(file)"
+                        ></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-[var(--text-active)] truncate">{{ file.fileName }}</p>
+                        <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(file.fileSize) }}</p>
+                      </div>
+                      <button
+                        (click)="downloadFile(file.accessUrl, file.fileName)"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                      >
+                        <i class="bi bi-download"></i> ดาวน์โหลด
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- ===== POST STATS ===== -->
+        <div class="px-4 py-2 border-t border-[var(--border)]/60 flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <span class="flex items-center gap-1">ความคิดเห็น</span>
+        </div>
+
+        <!-- ===== ACTION BAR ===== -->
+        <div class="px-2 py-1 bg-[var(--bg)]/30 border-t border-[var(--border)] flex items-center gap-1">
+          <button
+            type="button"
+            (click)="toggleExpand(post.id)"
+            class="flex-1 py-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-all">
+            <i class="bi" [class.bi-chevron-up]="expandedPostId() === post.id" [class.bi-chevron-down]="expandedPostId() !== post.id"></i>
+            <span>{{ expandedPostId() === post.id ? 'ซ่อนความคิดเห็น' : 'แสดงความคิดเห็น' }}</span>
+          </button>
+        </div>
+
+        <!-- ===== COMMENTS SECTION ===== -->
+        @if (expandedPostId() === post.id) {
+          <div class="p-4 bg-[var(--bg)]/40 border-t border-[var(--border)] space-y-4">
+
+            <!-- รายการความคิดเห็น -->
+            @if (post.replies && post.replies.length > 0) {
+              <div class="space-y-3">
+                @for (reply of post.replies; track reply.id) {
+                  <div class="flex items-start gap-2.5">
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      @if (reply.userAvatarUrl) {
+                        <img [src]="getAvatarUrl(reply.userAvatarUrl)" [alt]="reply.createdByName" class="w-full h-full object-cover" />
+                      } @else {
+                        <span class="text-xs font-bold text-[var(--crm-primary)]">
+                          {{ reply.createdByName?.charAt(0) || '?' }}
+                        </span>
+                      }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      @if (editingCommentId() === reply.id) {
+                        <div class="bg-[var(--sidebar)] p-3 rounded-2xl border border-[var(--border)]">
+                          <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
+                            <sic-input-area formControlName="content" [rows]="2" [required]="true"></sic-input-area>
+                            <div class="flex justify-end gap-2 mt-2">
+                              <button type="button" (click)="cancelEdit()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">ยกเลิก</button>
+                              <button type="submit" class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90" [disabled]="isSubmitting()">บันทึก</button>
+                            </div>
+                          </form>
+                        </div>
+                      } @else {
+                        <div class="bg-[var(--sidebar)] px-3.5 py-2 rounded-2xl border border-[var(--border)] inline-block max-w-full">
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="font-semibold text-xs text-[var(--text-active)]">{{ reply.createdByName }}</span>
+                          </div>
+                          <p class="text-xs text-[var(--text-active)] mt-0.5 whitespace-pre-wrap leading-normal">{{ reply.content }}</p>
+                        </div>
+
+                        <!-- แสดงไฟล์แนบของ reply -->
+                        @if (reply.attachmentGroupId) {
+                          <div class="mt-1.5 ml-2">
+                            @for (file of getAttachments(reply.attachmentGroupId); track file.id) {
+                              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text-muted)] mr-1.5 mb-1">
+                                @if (isImage(file)) {
+                                  <img [src]="file.accessUrl" class="w-6 h-6 rounded object-cover" [alt]="file.fileName" />
+                                } @else {
+                                  <i class="bi" [class]="isVideo(file) ? 'bi-play-circle' : 'bi-file-earmark'"></i>
+                                }
+                                <span class="truncate max-w-[120px]">{{ file.fileName }}</span>
+                                <button
+                                  (click)="downloadFile(file.accessUrl, file.fileName)"
+                                  class="text-[var(--crm-primary)] hover:underline"
+                                  title="ดาวน์โหลด"
+                                >
+                                  <i class="bi bi-download"></i>
+                                </button>
+                              </div>
+                            }
+                          </div>
+                        }
+                      }
+
+                      <!-- ปุ่ม action ของ reply -->
+                      <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
+                        <span>{{ formatDate(reply.createdDate) }}</span>
+                        <span>•</span>
+                        <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">ตอบกลับ</button>
+                        @if (isAuthor(reply.createdBy)) {
+                          <span>•</span>
+                          <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">แก้ไข</button>
+                          <span>•</span>
+                          <button type="button" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">ลบ</button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ===== ฟอร์มแสดงความคิดเห็น (comment) ===== -->
+            <div class="flex items-start gap-2.5 pt-2 border-t border-[var(--border)]/50">
+              <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                @if (currentUserAvatar()) {
+                  <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-xs font-bold text-[var(--crm-primary)]">
+                    {{ currentUserName().charAt(0) || 'U' }}
+                  </span>
+                }
+              </div>
+              <div class="flex-1 min-w-0">
+                <form [formGroup]="commentForm" class="space-y-2">
+                  <div class="relative">
+                    <sic-input-area
+                      formControlName="content"
+                      [rows]="2"
+                      placeholder="เขียนความคิดเห็นของคุณ..."
+                      [required]="true"
+                    ></sic-input-area>
+                  </div>
+
+                  <!-- แนบไฟล์ -->
+                  <div class="mt-1">
+                    <sic-input-upload
+                      label=""
+                      formControlName="attachmentGroupId"
+                      [multiple]="true"
+                      category="all"
+                      [visibility]="1"
+                      helperText=""
+                      emptyText="คลิกเพื่อแนบไฟล์"
+                    ></sic-input-upload>
+                  </div>
+
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      (click)="submitComment()"
+                      class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
+                      [disabled]="isSubmitting() || commentForm.invalid"
+                    >
+                      @if (isSubmitting()) {
+                        <i class="bi bi-arrow-repeat animate-spin"></i>
+                      } @else {
+                        <i class="bi bi-send"></i>
+                      }
+                      ส่งความคิดเห็น
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- ===== ฟอร์มตอบกลับ (reply) – แสดงเฉพาะเมื่อ replyingPostId ตรงกับ post.id ===== -->
+            @if (replyingPostId() === post.id) {
+              <div class="flex items-start gap-2.5 pt-2 border-t border-[var(--border)]/50 pl-8">
+                <div class="w-8 h-8 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  @if (currentUserAvatar()) {
+                    <img [src]="getAvatarUrl(currentUserAvatar()!)" [alt]="currentUserName()" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-xs font-bold text-[var(--crm-primary)]">
+                      {{ currentUserName().charAt(0) || 'U' }}
+                    </span>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <form [formGroup]="replyForm" class="space-y-2">
+                    <div class="relative">
+                      <sic-input-area
+                        formControlName="content"
+                        [rows]="2"
+                        placeholder="พิมพ์ข้อความตอบกลับ..."
+                        [required]="true"
+                      ></sic-input-area>
+                    </div>
+
+                    <!-- แนบไฟล์ -->
+                    <div class="mt-1">
+                      <sic-input-upload
+                        label=""
+                        formControlName="attachmentGroupId"
+                        [multiple]="true"
+                        category="all"
+                        [visibility]="1"
+                        helperText=""
+                        emptyText="คลิกเพื่อแนบไฟล์"
+                      ></sic-input-upload>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-xs text-[var(--text-muted)]">
+                        @if (replyToUser()) {
+                          ตอบกลับไปยัง <b class="text-[var(--crm-primary)]">@{{ replyToUser() }}</b>
+                        }
+                      </span>
+                      <div class="flex items-center gap-2">
+                        <button
+                          type="button"
+                          (click)="cancelReply()"
+                          class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="button"
+                          (click)="submitReply()"
+                          class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
+                          [disabled]="isSubmitting() || replyForm.invalid"
+                        >
+                          @if (isSubmitting()) {
+                            <i class="bi bi-arrow-repeat animate-spin"></i>
+                          } @else {
+                            <i class="bi bi-send"></i>
+                          }
+                          ตอบกลับ
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            }
+
+          </div>
+        }
+
+      </div>
+    } @empty {
+      @if (!isLoading()) {
+        <div class="text-center py-16 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)]">
+          <i class="bi bi-chat-square-dots text-5xl block mb-3 text-[var(--crm-primary)]/40"></i>
+          <p class="text-base font-semibold text-[var(--text-active)]">ยังไม่มีหัวข้อพูดคุยในโครงการนี้</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">มาร่วมเริ่มสร้างโพสต์แรกเพื่อแลกเปลี่ยนความคิดเห็นกับทีมงาน</p>
+          <button
+            type="button"
+            (click)="openCreateModal()"
+            class="mt-4 px-5 py-2 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 inline-flex items-center gap-1.5 transition-all"
+          >
+            <i class="bi bi-plus-circle"></i> สร้างโพสต์แรก
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ===== LOAD MORE ===== -->
+  @if (totalElements() > 0 && currentPage() < totalPages() - 1) {
+    <div class="flex justify-center pt-2">
+      <button
+        (click)="loadMore()"
+        class="px-6 py-2.5 rounded-full text-xs font-semibold border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all shadow-sm flex items-center gap-2"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <i class="bi bi-arrow-repeat animate-spin"></i> Loading...
+        } @else {
+          <i class="bi bi-arrow-down-circle"></i> โหลดโพสต์เพิ่มเติม
+        }
+      </button>
+    </div>
+  }
+
+  <!-- ===== PMDT09A MODAL ===== -->
+  @if (isModalOpen()) {
+    <app-pmdt09a
+      [projectId]="projectId()!"
+      [postToEdit]="postToEdit()"
+      [currentUserAvatar]="getAvatarUrl(currentUserAvatar()!)"
+      [currentUserName]="currentUserName()"
+      (saved)="onPostSaved($event)"
+      (closed)="closeModal()"
+    ></app-pmdt09a>
+  }
+
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts">

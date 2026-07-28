@@ -77,185 +77,118 @@ class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
 </button>
 </div>
 
-<!-- ===== TAB 1: LIST (เหมือนเดิม) ===== -->
+<!-- ===== TAB 1: LIST (ปรับปรุงเป็น 1 คอลัมน์) ===== -->
 @if (rightTab() === 'list') {
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-    <!-- Left: Milestones -->
-    <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
-            <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-flag text-[var(--crm-primary)]"></i>
-                Milestones
-                <span class="text-xs text-[var(--text-muted)] font-normal">({{ p.milestones?.length || 0 }})</span>
-            </h2>
-            <button (click)="openCreateMilestone()"
-            class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
-            <i class="bi bi-plus-lg"></i> เพิ่ม
+<div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
+    <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
+        <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-flag text-[var(--crm-primary)]"></i>
+            Milestones & Work Packages
+            <span class="text-xs text-[var(--text-muted)] font-normal">({{ p.milestones?.length || 0 }} Milestones, {{ getTotalWorkPackages(p) }} Work Packages)</span>
+        </h2>
+        <button (click)="openCreateMilestone()" class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+            <i class="bi bi-plus-lg"></i> เพิ่ม Milestone
         </button>
     </div>
     <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         @for (ms of p.milestones || []; track ms.id) {
-        <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-            <div
-            class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors"
-            (click)="toggleMilestone(ms.id)"
-            >
-            <div class="flex items-center gap-2 min-w-0">
-                <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform"
-                [class.rotate-90]="expandedMilestone() === ms.id"></i>
-                <span class="text-sm font-medium text-[var(--text-active)] truncate">{{ ms.milestoneName }}</span>
-                <span [class]="getStatusClass(ms.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium flex-shrink-0'">
-                    {{ getStatusText(ms.status) }}
-                </span>
+            <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
+                <!-- Milestone header -->
+                <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleMilestone(ms.id)">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedMilestone() === ms.id"></i>
+                        <span class="text-sm font-medium text-[var(--text-active)] truncate">{{ ms.milestoneName }}</span>
+                        <span [class]="getStatusClass(ms.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium flex-shrink-0'">
+                            {{ getStatusText(ms.status) }}
+                        </span>
+                        <span class="text-xs text-[var(--text-muted)]">({{ ms.workPackages?.length || 0 }} WPs)</span>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <span class="text-xs text-[var(--text-muted)]">{{ formatDate(ms.dueDate) }}</span>
+                        <button (click)="editMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button (click)="deleteMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Work packages under milestone -->
+                @if (expandedMilestone() === ms.id) {
+                    <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
+                        @for (wp of ms.workPackages || []; track wp.id) {
+                            <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
+                                <!-- Work Package header -->
+                                <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleWorkPackage(wp.id)">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
+                                        <span class="text-sm font-medium text-[var(--text-active)] truncate">📦 {{ wp.packageName }}</span>
+                                        <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ wp.tasks?.length || 0 }} งาน)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <span class="text-xs text-[var(--text-muted)]">{{ formatDate(wp.startDate) }}</span>
+                                        <button (click)="editWorkPackage(wp, ms.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button (click)="deleteWorkPackage(wp, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Tasks under work package -->
+                                @if (expandedWorkPackage() === wp.id) {
+                                    <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
+                                        @for (task of wp.tasks || []; track task.id) {
+                                            <div class="flex items-center justify-between pl-4 py-1 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <i class="bi bi-circle text-[0.55rem] text-[var(--text-muted)]"></i>
+                                                    <span class="text-sm text-[var(--text)] truncate">{{ task.taskName }}</span>
+                                                    <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ task.assignedTo || '-' }})</span>
+                                                    <span [class]="getStatusClass(task.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.55rem] font-medium flex-shrink-0'">
+                                                        {{ getStatusText(task.status) }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <button (click)="editTask(task, wp.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button (click)="deleteTask(task, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if ((wp.tasks || []).length === 0) {
+                                            <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Task</p>
+                                        }
+                                        <button (click)="openCreateTask(wp.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
+                                            <i class="bi bi-plus-lg"></i> เพิ่ม Task
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        @if ((ms.workPackages || []).length === 0) {
+                            <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Work Package</p>
+                        }
+                        <button (click)="openCreateWorkPackage(ms.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
+                            <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
+                        </button>
+                    </div>
+                }
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-                <span class="text-xs text-[var(--text-muted)]">{{ formatDate(ms.dueDate) }}</span>
-                <button (click)="editMilestone(ms, $event)"
-                class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-                <i class="bi bi-pencil"></i>
-            </button>
-            <button (click)="deleteMilestone(ms, $event)"
-            class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-            <i class="bi bi-trash"></i>
-        </button>
+        }
+        @if ((p.milestones || []).length === 0) {
+            <div class="text-center py-8 text-[var(--text-muted)]">
+                <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+                <p class="text-sm">ยังไม่มี Milestone</p>
+            </div>
+        }
     </div>
 </div>
-<!-- Work packages under milestone -->
-@if (expandedMilestone() === ms.id) {
-<div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
-    @for (wp of ms.workPackages || []; track wp.id) {
-    <div class="flex items-center justify-between pl-4 py-1 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
-        <span class="text-sm text-[var(--text)] flex items-center gap-2">
-            <i class="bi bi-box-seam text-[var(--text-muted)] text-xs"></i>
-            {{ wp.packageName }}
-        </span>
-        <div class="flex items-center gap-1">
-            <span class="text-xs text-[var(--text-muted)]">{{ wp.tasks?.length || 0 }} งาน</span>
-            <button (click)="editWorkPackage(wp, ms.id, $event)"
-            class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-            <i class="bi bi-pencil"></i>
-        </button>
-        <button (click)="deleteWorkPackage(wp, $event)"
-        class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-        <i class="bi bi-trash"></i>
-    </button>
-</div>
-</div>
-}
-@if ((ms.workPackages || []).length === 0) {
-<p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Work Package</p>
-}
-<button (click)="openCreateWorkPackage(ms.id)"
-class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
-<i class="bi bi-plus-lg"></i> เพิ่ม Work Package
-</button>
-</div>
-}
-</div>
-}
-@if ((p.milestones || []).length === 0) {
-<div class="text-center py-8 text-[var(--text-muted)]">
-    <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-    <p class="text-sm">ยังไม่มี Milestone</p>
-</div>
-}
-</div>
-</div>
-
-<!-- Right: Work Packages & Tasks -->
-<div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
-    <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
-        <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-            Work Packages & Tasks
-            <span class="text-xs text-[var(--text-muted)] font-normal">({{ getTotalWorkPackages(p) }})</span>
-        </h2>
-        <button (click)="openCreateWorkPackageForPhase()"
-        class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
-        <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
-    </button>
-</div>
-<div class="flex-1 overflow-y-auto px-3 py-2 space-y-2">
-    @for (ms of p.milestones || []; track ms.id) {
-    @for (wp of ms.workPackages || []; track wp.id) {
-    <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-        <div
-        class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors"
-        (click)="toggleWorkPackage(wp.id)"
-        >
-        <div class="flex items-center gap-2 min-w-0">
-            <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform"
-            [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
-            <span class="text-sm font-medium text-[var(--text-active)] truncate">
-                📦 {{ wp.packageName }}
-            </span>
-            <span class="text-xs text-[var(--text-muted)] flex-shrink-0">
-                ({{ wp.tasks?.length || 0 }} งาน)
-            </span>
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-            <span class="text-xs text-[var(--text-muted)]">
-                {{ formatDate(wp.startDate) }}
-            </span>
-            <button (click)="editWorkPackage(wp, ms.id, $event)"
-            class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-            <i class="bi bi-pencil"></i>
-        </button>
-        <button (click)="deleteWorkPackage(wp, $event)"
-        class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-        <i class="bi bi-trash"></i>
-    </button>
-</div>
-</div>
-<!-- Tasks under work package -->
-@if (expandedWorkPackage() === wp.id) {
-<div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
-    @for (task of wp.tasks || []; track task.id) {
-    <div class="flex items-center justify-between pl-4 py-1 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
-        <div class="flex items-center gap-2 min-w-0">
-            <i class="bi bi-circle text-[0.55rem] text-[var(--text-muted)]"></i>
-            <span class="text-sm text-[var(--text)] truncate">{{ task.taskName }}</span>
-            <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ task.assignedTo || '-' }})</span>
-            <span [class]="getStatusClass(task.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.55rem] font-medium flex-shrink-0'">
-                {{ getStatusText(task.status) }}
-            </span>
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-            <button (click)="editTask(task, wp.id, $event)"
-            class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-            <i class="bi bi-pencil"></i>
-        </button>
-        <button (click)="deleteTask(task, $event)"
-        class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-        <i class="bi bi-trash"></i>
-    </button>
-</div>
-</div>
-}
-@if ((wp.tasks || []).length === 0) {
-<p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Task</p>
-}
-<button (click)="openCreateTask(wp.id)"
-class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
-<i class="bi bi-plus-lg"></i> เพิ่ม Task
-</button>
-</div>
-}
-</div>
-}
-}
-@if (getTotalWorkPackages(p) === 0) {
-<div class="text-center py-8 text-[var(--text-muted)]">
-    <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-    <p class="text-sm">ไม่มี Work Package</p>
-</div>
-}
-</div>
-</div>
-</div>
 }
 
-<!-- ===== TAB 2: CALENDAR (ปรับปรุง) ===== -->
+<!-- ===== TAB 2: CALENDAR (ไม่เปลี่ยนแปลง) ===== -->
 @if (rightTab() === 'calendar') {
 <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
     <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
@@ -279,7 +212,7 @@ class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center 
 </div>
 }
 
-<!-- ===== TAB 3: GANTT (เหมือนเดิม) ===== -->
+<!-- ===== TAB 3: GANTT (ไม่เปลี่ยนแปลง) ===== -->
 @if (rightTab() === 'gantt') {
 <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden p-4">
     <sic-ganttchart
