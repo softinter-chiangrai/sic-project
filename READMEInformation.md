@@ -193,17 +193,13 @@ Renew / Extend MA
 4. Phase & Milestone Management
 5. Requirement Management
 6. Requirement Change Control
-7. usecase management
-7. DFD Designer / Data Flow Management
-8. ER Diagram Designer
-9. Database Script Generator
+7. diagram management / Database Script Generator
 10. Specification Management
 11. Design Review Management
-12. Planning & Manday Management
+12. phase Management
 13. Development Task Tracking
 14. Comment / Discussion Feed
-15. Test Management
-16. Bug / Issue Management
+15. Bug / Issue /Test Management
 17. Delivery Document Management
 18. User Manual Management
 19. Invoice & Payment Management

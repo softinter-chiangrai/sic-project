@@ -1,92 +1,88 @@
 package com.softinter.sicapi.entity.pm;
 
-import com.softinter.sicapi.entity.base.BaseEntity;
+import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "pm_specification")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class PmSpecification extends BaseEntity {
+public class PmSpecification extends BaseBusinessEntity {
 
-    @Column(name = "business_id")
-    private UUID businessId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private PmCustomerProject project;
-
-    @Column(name = "project_id", insertable = false, updatable = false)
-    private UUID projectId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requirement_id")
-    private PmRequirement requirement;
-
-    @Column(name = "spec_code", nullable = false, length = 30)
-    private String specCode;
-
-    @Column(name = "spec_type", nullable = false, length = 50)
-    private String specType;
+    @Column(name = "specification_code", nullable = false, unique = true, length = 50)
+    private String specificationCode;
 
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "related_requirement", columnDefinition = "TEXT")
-    private String relatedRequirement;
-
-    @Column(name = "related_diagram", columnDefinition = "TEXT")
-    private String relatedDiagram;
-
-    @Column(name = "ui_action", columnDefinition = "TEXT")
-    private String uiAction;
-
-    @Column(name = "validation_rule", columnDefinition = "TEXT")
-    private String validationRule;
-
-    @Column(name = "permission", columnDefinition = "TEXT")
-    private String permission;
-
-    @Column(name = "estimated_manday")
-    private Integer estimatedManday;
-
-    @Column(name = "dependency", columnDefinition = "TEXT")
-    private String dependency;
-
-    @Column(name = "status", length = 20)
-    private String status = "Draft";
+    @Column(name = "module", length = 100)
+    private String module;
 
     @Column(name = "version", length = 20)
     private String version = "1.0";
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(name = "status", length = 20)
+    private String status = "Draft";
 
-    public UUID getProjectId() {
-        return projectId;
-    }
+    @Column(name = "priority", length = 20)
+    private String priority = "Medium";
 
-    public void setProjectId(UUID projectId) {
-        this.projectId = projectId;
-    }
+    @Column(name = "owner", length = 100)
+    private String owner;
 
-    public UUID getBusinessId() {
-        return businessId;
-    }
+    @Column(name = "estimated_manday")
+    private Integer estimatedManday;
 
-    public void setBusinessId(UUID businessId) {
-        this.businessId = businessId;
-    }
+    @Column(columnDefinition = "TEXT")
+    private String objective;
 
-    // convenience method to get requirement id
-    public UUID getRequirementId() {
-        return requirement != null ? requirement.getId() : null;
-    }
+    @Column(columnDefinition = "TEXT")
+    private String scope;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String remark;
+
+    @Column(name = "upload_group_id")
+    private UUID uploadGroupId;
+
+    @Column(name = "is_ai_generated")
+    private Boolean isAiGenerated = false;
+
+    @Column(name = "ai_generated_at")
+    private Instant aiGeneratedAt;
+
+    @Column(name = "generated_from_requirement_id")
+    private UUID generatedFromRequirementId;
+
+    @Column(name = "generated_from_diagram_id")
+    private UUID generatedFromDiagramId;
+
+    // ===== Relationships =====
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationScreen> screens = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationField> fields = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationValidation> validations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationBusinessRule> businessRules = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationApi> apis = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PmSpecificationVersion> versions = new ArrayList<>();
 }

@@ -26,4 +26,15 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
 
     @Query("SELECT s FROM PmSpecification s LEFT JOIN FETCH s.project p LEFT JOIN FETCH s.requirement r WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
     Optional<PmSpecification> findByIdWithDetails(@Param("id") UUID id, @Param("businessId") UUID businessId);
+
+     @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false")
+    Page<PmSpecification> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
+
+    @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false AND s.specificationCode = :code")
+    Optional<PmSpecification> findByBusinessIdAndSpecificationCode(@Param("businessId") UUID businessId, @Param("code") String code);
+
+    @Query("SELECT s FROM PmSpecification s WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
+    Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
+
+    boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
 }
