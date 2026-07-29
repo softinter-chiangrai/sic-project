@@ -1,4 +1,3 @@
-// dhtmlx-gantt.component.ts
 import {
   Component,
   ElementRef,
@@ -12,6 +11,7 @@ import {
   PLATFORM_ID,
   EventEmitter,
   Output,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
@@ -61,13 +61,14 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
 
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private cdr = inject(ChangeDetectorRef);
   private isInitialized = false;
   private eventIds: string[] = [];
 
   currentMonth = new Date().toISOString().substring(0, 7); // 'YYYY-MM'
 
   // ──────────────────────────────────────────────────────────────
-  // 1. 生命周期: ngAfterViewInit
+  // 1. Lifecycle: ngAfterViewInit
   // ──────────────────────────────────────────────────────────────
   ngAfterViewInit(): void {
     if (!this.isBrowser) return;
@@ -75,44 +76,42 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     const containerEl = this.container?.nativeElement;
     if (!containerEl) return;
 
-    // หน่วงเวลาเล็กน้อยเพื่อให้ DOM พร้อมและไม่ถูกซ่อน
     setTimeout(() => {
-      // ตรวจสอบว่า container ยังอยู่ใน DOM และมีขนาด visible
-      if (!containerEl.isConnected || containerEl.offsetParent === null) {
-        console.warn('[Gantt] Container not visible, skip init.');
-        return;
-      }
-      this.initializeGantt(containerEl);
+      this.ensureGanttInitialized(containerEl);
     }, 50);
   }
 
+  private ensureGanttInitialized(containerEl: HTMLElement): void {
+    if (!this.isBrowser || !containerEl) return;
+    if (!this.isInitialized) {
+      this.initializeGantt(containerEl);
+    }
+  }
+
   // ──────────────────────────────────────────────────────────────
-  // 2. ตั้งค่า Gantt ครั้งแรก (แยกเป็น method)
+  // 2. Initialize Gantt
   // ──────────────────────────────────────────────────────────────
   private initializeGantt(containerEl: HTMLElement): void {
-    // ถ้าเคย init แล้วให้ทำลายทิ้งก่อน (ป้องกัน state ค้าง)
     if (this.isInitialized) {
-      this.destroyGantt();
+      gantt.clearAll();
+      this.renderData();
+      return;
     }
 
-    // กำหนด config ทั้งหมดใหม่
     this.configureGantt();
 
-    // init
     gantt.init(containerEl);
     this.isInitialized = true;
 
-    // ลงทะเบียน events
     this.registerEvents();
 
-    // ถ้ามีข้อมูลให้แสดง
     if (this.tasks.length > 0) {
       this.renderData();
     }
   }
 
   // ──────────────────────────────────────────────────────────────
-  // 3. รวมการตั้งค่า config, templates, plugins (ปรับขนาดให้เล็กลง)
+  // 3. ตั้งค่า config + templates (✅ ปรับให้ทุกคอลัมน์ปรับขนาดได้)
   // ──────────────────────────────────────────────────────────────
   private configureGantt(): void {
     // ✅ รูปแบบวันที่
@@ -122,23 +121,46 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     // ✅ ตั้งค่า view mode เริ่มต้น
     this.applyViewMode(this.viewMode);
 
-    // ✅ คอลัมน์ (ปรับความกว้างให้เล็กลง)
+    // ✅ ====== เปิดใช้งานการปรับขนาดคอลัมน์ ======
+    gantt.config['grid_resize'] = true;
+
+    // ✅ คอลัมน์ (ทุกคอลัมน์มี resize: true)
     gantt.config['columns'] = [
-      { name: 'text', label: 'Task Name', tree: true, width: 160 },
+      { 
+        name: 'text', 
+        label: 'Task Name', 
+        tree: true, 
+        width: 160,
+        resize: true,        // ✅ ปรับขนาดได้
+      },
       {
         name: 'assignees',
         label: 'Assignee',
         align: 'center',
         width: 100,
+        resize: true,        // ✅ ปรับขนาดได้
         template: (task: any) => task.assignees || task.assignedTo || '-',
       },
-      { name: 'start_date', label: 'Start Date', align: 'center', width: 85 },
-      { name: 'end_date', label: 'End Date', align: 'center', width: 85 },
+      { 
+        name: 'start_date', 
+        label: 'Start Date', 
+        align: 'center', 
+        width: 85,
+        resize: true,        // ✅ ปรับขนาดได้
+      },
+      { 
+        name: 'end_date', 
+        label: 'End Date', 
+        align: 'center', 
+        width: 85,
+        resize: true,        // ✅ ปรับขนาดได้
+      },
       {
         name: 'progress',
         label: 'Progress',
         align: 'center',
         width: 70,
+        resize: true,        // ✅ ปรับขนาดได้
         template: (task: any) => {
           const val = Number(task.progress);
           const pct = isNaN(val) ? 0 : Math.round(val * 100);
@@ -156,7 +178,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     // ✅ ลดความสูงของสเกล
     gantt.config['scale_height'] = 35;
 
-    // ✅ สีตามโครงสร้างและสถานะ (ใช้ CSS Variables)
+    // ✅ สีตามโครงสร้างและสถานะ
     gantt['getTaskColor'] = function (task: any) {
       if (task.color) return task.color;
 
@@ -318,7 +340,12 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   // ──────────────────────────────────────────────────────────────
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.isBrowser) return;
-    if (!this.isInitialized) return; // ยังไม่ init ให้ข้าม
+
+    const containerEl = this.container?.nativeElement;
+    if (!this.isInitialized && containerEl) {
+      this.initializeGantt(containerEl);
+      return;
+    }
 
     if (changes['viewMode']) {
       this.applyViewMode(this.viewMode);
@@ -363,7 +390,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   // ──────────────────────────────────────────────────────────────
   onMonthChange(event: Event): void {
     if (!this.isInitialized || !this.isBrowser) return;
-    const val = (event.target as HTMLInputElement).value; // 'YYYY-MM'
+    const val = (event.target as HTMLInputElement).value;
     if (!val) return;
     this.currentMonth = val;
     const [year, month] = val.split('-').map(Number);
@@ -409,7 +436,6 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       open: true,
     }));
 
-    // ขยายขอบเขตวันที่
     if (data.length > 0) {
       let min = new Date(data[0].start_date);
       let max = new Date(data[0].start_date);
@@ -424,10 +450,15 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       gantt.config.start_date = startDate;
       gantt.config.end_date = endDate;
 
-      // อัปเดตเดือนปัจจุบัน
       const yStr = min.getFullYear();
       const mStr = String(min.getMonth() + 1).padStart(2, '0');
-      this.currentMonth = `${yStr}-${mStr}`;
+      const newMonth = `${yStr}-${mStr}`;
+      if (this.currentMonth !== newMonth) {
+        Promise.resolve().then(() => {
+          this.currentMonth = newMonth;
+          this.cdr.markForCheck();
+        });
+      }
     } else {
       gantt.config.start_date = undefined;
       gantt.config.end_date = undefined;
@@ -438,6 +469,10 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     if (data.length > 0) {
       gantt.showDate(data[0].start_date);
     }
+    setTimeout(() => {
+      gantt.setSizes();
+      gantt.render();
+    }, 50);
   }
 
   refresh(): void {
@@ -451,16 +486,17 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   }
 
   // ──────────────────────────────────────────────────────────────
-  // 10. ทำลาย instance อย่างสมบูรณ์
+  // 10. ทำลาย instance
   // ──────────────────────────────────────────────────────────────
   private destroyGantt(): void {
     if (this.isBrowser && this.isInitialized) {
       this.eventIds.forEach((id) => gantt.detachEvent(id));
       this.eventIds = [];
-      gantt.destructor();
+      try {
+        gantt.clearAll();
+      } catch (e) {}
       this.isInitialized = false;
 
-      // ล้าง container เพื่อป้องกัน残留 DOM
       const containerEl = this.container?.nativeElement;
       if (containerEl) {
         containerEl.innerHTML = '';

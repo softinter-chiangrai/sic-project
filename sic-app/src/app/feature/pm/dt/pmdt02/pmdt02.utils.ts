@@ -52,9 +52,16 @@ export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
       wp.tasks?.forEach((task) => {
         if (task.startDate) {
           const taskProgress = calculateTaskProgress(task);
-          let assigneesText = task.assignedTo || '';
-          if (task.assigneeNames && Object.keys(task.assigneeNames).length > 0) {
-            assigneesText = Object.values(task.assigneeNames).join(', ');
+          let assigneesText = '';
+          if (task.assigneeNames) {
+            if (Array.isArray(task.assigneeNames)) {
+              assigneesText = task.assigneeNames.filter(Boolean).join(', ');
+            } else if (typeof task.assigneeNames === 'object') {
+              assigneesText = Object.values(task.assigneeNames).filter(Boolean).join(', ');
+            }
+          }
+          if (!assigneesText) {
+            assigneesText = task.assignedTo || '-';
           }
           result.push({
             id: task.id,
@@ -64,7 +71,7 @@ export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
             progress: taskProgress,
             parent: `wp-${wp.id}`,
             assignedTo: task.assignedTo || '-',
-            assignees: assigneesText || task.assignedTo || '-',
+            assignees: assigneesText,
             color: task.color || undefined,
           });
         }

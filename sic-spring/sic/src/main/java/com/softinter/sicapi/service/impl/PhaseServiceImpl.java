@@ -1,7 +1,9 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,12 +20,17 @@ import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmMilestone;
 import com.softinter.sicapi.entity.pm.PmPhase;
 import com.softinter.sicapi.entity.pm.PmTask;
+import com.softinter.sicapi.entity.pm.PmTaskAssignee;
 import com.softinter.sicapi.entity.pm.PmWorkPackage;
+import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.repository.pm.PmPhaseRepository;
+import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.PhaseService;
+import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +44,8 @@ public class PhaseServiceImpl implements PhaseService {
     private final PmMilestoneRepository milestoneRepository;
     private final PmTaskRepository taskRepository;
     private final PmCustomerProjectRepository projectRepository;
+    private final PmTaskAssigneeRepository taskAssigneeRepository;
+    private final SuProfileRepository profileRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -221,6 +230,26 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setActualManday(task.getActualManday());
         dto.setStatus(task.getStatus());
         dto.setPriority(task.getPriority());
+
+        List<PmTaskAssignee> assignees = taskAssigneeRepository.findByTaskId(task.getId());
+        if (assignees != null && !assignees.isEmpty()) {
+            List<String> userIds = assignees.stream()
+                    .map(PmTaskAssignee::getUserId)
+                    .collect(Collectors.toList());
+            dto.setAssigneeIds(userIds);
+
+            Map<String, String> names = new HashMap<>();
+            List<SuProfile> profiles = profileRepository.findByUserIdIn(userIds);
+            for (SuProfile profile : profiles) {
+                String fullName = LocalizationHelper.getFullName(profile);
+                names.put(profile.getUserId(), fullName != null ? fullName : profile.getUserId());
+            }
+            for (String userId : userIds) {
+                names.putIfAbsent(userId, userId);
+            }
+            dto.setAssigneeNames(names);
+        }
+
         return dto;
     }
 
