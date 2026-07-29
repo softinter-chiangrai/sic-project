@@ -221,11 +221,15 @@
 
 
 :root {
+  /* ✅ สีหลัก */
   --crm-primary: #29C296;
   --crm-success: #10b981;
   --crm-danger: #ef4444;
   --crm-warning: #f59e0b;
+  --crm-secondary: #3b82f6;    /* ✅ เพิ่ม */
+  --crm-info: #3b82f6;          /* ✅ เพิ่ม */
 
+  /* Light Theme */
   --light-bg: #fafafa;
   --light-sidebar: #ffffff;
   --light-sidebar-hover: #f3f4f6;
@@ -234,15 +238,16 @@
   --light-text-active: #111827;
   --light-border: #d8d8da;
 
-  --dark-bg:#0f172a; ;
-  --dark-sidebar: #111827
+  /* Dark Theme */
+  --dark-bg: #0f172a;
+  --dark-sidebar: #111827;
   --dark-sidebar-hover: #1e293b;
   --dark-text: #e5e7eb;
   --dark-text-muted: #94a3b8;
   --dark-text-active: #f9fafb;
   --dark-border: #1e293b;
 
-  /* active theme default = light */
+  /* ✅ Active Theme (default = light) */
   --bg: var(--light-bg);
   --sidebar: var(--light-sidebar);
   --sidebar-hover: var(--light-sidebar-hover);

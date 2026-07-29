@@ -28,8 +28,7 @@ import { CalendarItem, SicCalendarComponent } from '../../../../core/component/s
     CommonModule,
     RouterModule,
     DhtmlxGanttComponent,
-    SicCalendarComponent,
-    DhtmlxGanttComponent
+    SicCalendarComponent
 ],
   templateUrl: './pmdt02.component.html',
 })
@@ -66,7 +65,7 @@ export class Pmdt02Component implements OnInit {
       end_date: this.formatDateForDhtmlx(p.endDate),
       progress: p.progress / 100,
       open: true,
-      color: p.color || '#4A90D9'
+      color: p.color || undefined
     });
 
     // 2. Milestones
@@ -79,7 +78,7 @@ export class Pmdt02Component implements OnInit {
         end_date: this.formatDateForDhtmlx(ms.dueDate),
         progress: ms.status === 'Done' ? 1 : 0.5,
         parent: `phase-${p.id}`,
-        color: ms.color || '#E67E22'
+        color: ms.color || undefined
       });
 
       // 3. Work Packages
@@ -93,7 +92,7 @@ export class Pmdt02Component implements OnInit {
             end_date: this.formatDateForDhtmlx(wp.endDate),
             progress: this.calculateWpProgress(wp),
             parent: msId,
-            color: wp.color || '#8E44AD'
+            color: wp.color || undefined
           });
         }
 
@@ -108,7 +107,7 @@ export class Pmdt02Component implements OnInit {
               progress: task.status === 'Done' ? 1 :
                        task.status === 'In Progress' ? 0.5 : 0,
               parent: `wp-${wp.id}`,
-              color: task.color || '#2ECC71'
+              color: task.color || undefined
             });
           }
         });

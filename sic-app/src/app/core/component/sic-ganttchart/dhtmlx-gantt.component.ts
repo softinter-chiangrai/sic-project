@@ -1,3 +1,4 @@
+// dhtmlx-gantt.component.ts
 import {
   Component,
   ElementRef,
@@ -15,10 +16,6 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
 
-// ============================================================
-// 1. Public Interface (ใช้กับ @Input / @Output)
-//    ข้อมูลเป็น string format 'DD-MM-YYYY'
-// ============================================================
 export interface DhtmlxGanttTask {
   id: string;
   text: string;
@@ -38,58 +35,11 @@ export interface DhtmlxGanttLink {
   type: string;
 }
 
-// ============================================================
-// 2. Internal Interface (ใช้ภายใน Component เมื่อรับจาก DHTMLX)
-//    DHTMLX ใช้ Date, id/parent เป็น string|number
-// ============================================================
-export interface GanttTaskInternal {
-  id: string | number;
-  text: string;
-  start_date: Date;
-  end_date?: Date;
-  duration?: number;
-  progress: number;
-  parent?: string | number;
-  color?: string;
-  open?: boolean;
-}
-
-// ============================================================
-// 3. Helper Functions
-// ============================================================
-
-/** แปลง Date → string 'DD-MM-YYYY' */
-function formatDate(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-}
-
-/** แปลง string 'DD-MM-YYYY' → Date */
-function parseDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-// ============================================================
-// 4. Component
-// ============================================================
-
 @Component({
   selector: 'app-dhtmlx-gantt',
   standalone: true,
-  template: `<div #ganttContainer class="dhtmlx-gantt-container"></div>`,
-  styles: [`
-    .dhtmlx-gantt-container {
-      width: 100%;
-      height: 500px;
-    }
-    :host {
-      display: block;
-      width: 100%;
-    }
-  `]
+  templateUrl: './dhtmlx-gantt.component.html',
+  styleUrls: ['./dhtmlx-gantt.component.css'],
 })
 export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('ganttContainer', { static: true }) container!: ElementRef;
@@ -139,20 +89,62 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     gantt.config['drag_resize'] = true;
     gantt.config['drag_progress'] = true;
 
-    // ✅ Color
-    gantt['getTaskColor'] = function(task: any, _row: any, _column: any) {
+    // ✅ สีตามโครงสร้างและสถานะ (ใช้ CSS Variables ของธีมหลัก)
+    gantt['getTaskColor'] = function(task: any) {
       if (task.color) return task.color;
+
+      const id = String(task.id || '');
+      const status = task.status || '';
       const progress = task.progress || 0;
-      if (progress === 1) return '#4CAF50';
-      if (progress >= 0.5) return '#FF9800';
-      return '#2196F3';
+
+      // ลำดับชั้น Gantt (Phase > Milestone > Work Package > Task)
+      if (id.startsWith('phase-')) return 'var(--crm-primary)';
+      if (id.startsWith('ms-')) return 'var(--crm-warning)';
+      if (id.startsWith('wp-')) return 'var(--crm-secondary)';
+
+      // สถานะ Task ทั่วไป
+      if (status === 'Done' || progress === 1) return 'var(--crm-success)';
+      if (status === 'Delayed' || status === 'Blocked') return 'var(--crm-danger)';
+      if (status === 'In Progress') return 'var(--crm-primary)';
+      
+      return 'var(--crm-info)';
     };
 
-    // ✅ Tooltip (ใช้ formatDate)
+    // ✅ Tooltip
     gantt.templates['tooltip_text'] = function(start: Date, end: Date, task: any) {
-      const startStr = formatDate(start);
-      const endStr = formatDate(end);
-      return `<b>${task.text}</b><br/>Start: ${startStr}<br/>End: ${endStr}<br/>Progress: ${Math.round(task.progress * 100)}%`;
+  const format = (d: Date) => {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+  return `
+    <div style="font-weight:bold; font-size:14px; color:var(--text-active, #111827);">${task.text}</div>
+    <div style="display:flex; gap:8px; font-size:12px; color:var(--text-muted, #9ca3af); margin-top:4px;">
+      <span>📅 ${format(start)} - ${format(end)}</span>
+      <span>📊 ${Math.round(task.progress * 100)}%</span>
+    </div>
+    ${task.status ? `<div style="font-size:11px; color:var(--crm-primary, #29C296); margin-top:2px;">Status: ${task.status}</div>` : ''}
+  `;
+};
+
+    // ✅ Task Text (แสดง %)
+    gantt.templates['task_text'] = function(_start: Date, _end: Date, task: any) {
+      const pct = Math.round((task.progress || 0) * 100);
+      return `${task.text} (${pct}%)`;
+    };
+
+    // ✅ Progress Text
+    gantt.templates['progress_text'] = function(task: any) {
+      return `<span style="color:white; font-weight:bold; font-size:11px;">${Math.round(task.progress * 100)}%</span>`;
+    };
+
+    // ✅ Grid Row Class
+    gantt.templates['grid_row_class'] = function(_start: Date, _end: Date, task: any) {
+      if (task.progress === 1) return 'gantt-row-done';
+      if (task.status === 'Delayed' || task.status === 'Blocked') return 'gantt-row-delayed';
+      if (task.status === 'In Progress') return 'gantt-row-progress';
+      return '';
     };
 
     // ✅ Plugins
@@ -170,27 +162,26 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     }
   }
 
-  // ============================================================
-  // 5. Event Registration (ใช้ Internal Interface)
-  // ============================================================
-
   private registerEvents(): void {
-    // 5.1 Double-click
-    const evt1 = gantt.attachEvent('onTaskDblClick', (id: string | number) => {
+    const evt1 = gantt.attachEvent('onTaskDblClick', (id) => {
       this.editTask(String(id));
       return true;
     });
     this.eventIds.push(evt1);
 
-    // 5.2 After Update
-    const evt2 = gantt.attachEvent('onAfterTaskUpdate', (id: string | number, task: GanttTaskInternal) => {
+    const evt2 = gantt.attachEvent('onAfterTaskUpdate', (id, task) => {
       const updated: DhtmlxGanttTask = {
         id: String(id),
         text: task.text,
-        start_date: formatDate(task.start_date),
-        end_date: task.end_date ? formatDate(task.end_date) : undefined,
+        // ✅ ตรวจสอบว่า task.start_date เป็น Date หรือไม่
+        start_date: task.start_date instanceof Date 
+          ? this.formatDateToString(task.start_date) 
+          : String(task.start_date),
+        end_date: task.end_date instanceof Date 
+          ? this.formatDateToString(task.end_date) 
+          : task.end_date ? String(task.end_date) : undefined,
         duration: task.duration,
-        progress: task.progress,
+        progress: task.progress ?? 0,
         parent: task.parent ? String(task.parent) : undefined,
         color: task.color,
         open: task.open
@@ -200,22 +191,24 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     });
     this.eventIds.push(evt2);
 
-    // 5.3 After Delete
-    const evt3 = gantt.attachEvent('onAfterTaskDelete', (id: string | number) => {
+    const evt3 = gantt.attachEvent('onAfterTaskDelete', (id) => {
       this.taskDeleted.emit(String(id));
       return true;
     });
     this.eventIds.push(evt3);
 
-    // 5.4 After Add
-    const evt4 = gantt.attachEvent('onAfterTaskAdd', (id: string | number, task: GanttTaskInternal) => {
+    const evt4 = gantt.attachEvent('onAfterTaskAdd', (id, task) => {
       const created: DhtmlxGanttTask = {
         id: String(id),
         text: task.text,
-        start_date: formatDate(task.start_date),
-        end_date: task.end_date ? formatDate(task.end_date) : undefined,
+        start_date: task.start_date instanceof Date 
+          ? this.formatDateToString(task.start_date) 
+          : String(task.start_date),
+        end_date: task.end_date instanceof Date 
+          ? this.formatDateToString(task.end_date) 
+          : task.end_date ? String(task.end_date) : undefined,
         duration: task.duration,
-        progress: task.progress || 0,
+        progress: task.progress ?? 0,
         parent: task.parent ? String(task.parent) : undefined,
         color: task.color,
         open: task.open
@@ -226,9 +219,17 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     this.eventIds.push(evt4);
   }
 
-  // ============================================================
-  // 6. Lifecycle
-  // ============================================================
+  private formatDateToString(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  private parseDate(dateStr: string): Date {
+    const [day, month, year] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.isInitialized || !this.isBrowser) return;
@@ -237,21 +238,16 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     }
   }
 
-  // ============================================================
-  // 7. Render Data (แปลง Input → Internal)
-  // ============================================================
-
   private renderData(): void {
     if (!this.isInitialized || !this.isBrowser) return;
 
-    // แปลง Input tasks (string) → internal (Date)
     const data = this.tasks.map(task => ({
       id: task.id,
       text: task.text,
-      start_date: parseDate(task.start_date),
-      end_date: task.end_date ? parseDate(task.end_date) : undefined,
+      start_date: this.parseDate(task.start_date),
+      end_date: task.end_date ? this.parseDate(task.end_date) : undefined,
       duration: task.duration,
-      progress: task.progress || 0,
+      progress: task.progress ?? 0,
       parent: task.parent || undefined,
       color: task.color || undefined,
       open: true
@@ -263,17 +259,13 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     gantt.parse({ data, links: this.links || [] });
   }
 
-  // ============================================================
-  // 8. Auto Adjust Scale
-  // ============================================================
-
-  private autoAdjustScale(tasks: GanttTaskInternal[]): void {
+  private autoAdjustScale(tasks: any[]): void {
     if (!tasks || tasks.length === 0) return;
 
     let minDate = tasks[0].start_date;
     let maxDate = tasks[0].start_date;
 
-    tasks.forEach(task => {
+    tasks.forEach((task: any) => {
       const start = task.start_date;
       const end = task.end_date || start;
       if (start < minDate) minDate = start;
@@ -305,10 +297,6 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     gantt.render();
   }
 
-  // ============================================================
-  // 9. Public Methods
-  // ============================================================
-
   refresh(): void {
     if (this.isInitialized && this.isBrowser) {
       this.renderData();
@@ -318,10 +306,6 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   editTask(taskId: string): void {
     console.log('[Gantt] Edit task:', taskId);
   }
-
-  // ============================================================
-  // 10. Cleanup
-  // ============================================================
 
   ngOnDestroy(): void {
     if (this.isBrowser && this.isInitialized) {

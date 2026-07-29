@@ -1,0 +1,179 @@
+/* dhtmlx-gantt.component.css */
+
+.dhtmlx-gantt-container {
+  width: 100%;
+  height: 500px;
+}
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* ✅ 1. กำหนด Background ของ Gantt Layout, Grid และ Timeline Background */
+:host ::ng-deep .gantt_container,
+:host ::ng-deep .gantt_data_area,
+:host ::ng-deep .gantt_bars_area,
+:host ::ng-deep .gantt_grid,
+:host ::ng-deep .gantt_grid_data,
+:host ::ng-deep .gantt_task_bg,
+:host ::ng-deep .gantt_layout_cell,
+:host ::ng-deep .gantt_layout_content {
+  background-color: var(--bg) !important;
+}
+
+/* ✅ 2. เส้นแบ่งฝั่ง Grid ซ้าย และ Timeline ขวา (แก้เส้นแนวตั้งตรงกลางแบบครอบคลุมทุกคลาส) */
+:host ::ng-deep .gantt_grid,
+:host ::ng-deep .gantt_layout_cell_border_right,
+:host ::ng-deep .gantt_layout_cell_border_left,
+:host ::ng-deep .gantt_grid_data,
+:host ::ng-deep .gantt_grid_scale {
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+:host ::ng-deep .gantt_cell_tree,
+:host ::ng-deep .gantt_grid_data .gantt_cell:last-child,
+:host ::ng-deep .gantt_grid_head_cell:last-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ✅ 3. เส้น Grid Line แนวนอนและแนวตั้งของ Timeline */
+:host ::ng-deep .gantt_task_cell {
+  background-color: var(--bg) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+:host ::ng-deep .gantt_row,
+:host ::ng-deep .gantt_row_task {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background-color: var(--bg) !important;
+}
+
+/* ✅ 4. Grid Columns / Cells ฝั่งตารางซ้าย & เส้นแบ่งช่อง */
+:host ::ng-deep .gantt_cell {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ✅ 5. Header & Scale (หัวตาราง Gantt + เส้นแบ่งหัวตารางสีขาว) */
+:host ::ng-deep .gantt_grid_scale,
+:host ::ng-deep .gantt_task_scale,
+:host ::ng-deep .gantt_scale_line {
+  background-color: var(--sidebar) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell {
+  background-color: var(--sidebar) !important;
+  color: var(--text-active) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  font-weight: 600 !important;
+}
+
+/* ✅ 6. Grid Row Hover */
+:host ::ng-deep .gantt_row:hover,
+:host ::ng-deep .gantt_row_task:hover,
+:host ::ng-deep .gantt_row.odd:hover,
+:host ::ng-deep .gantt_row_task.odd:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+/* ✅ 7. Row Highlight ตามสถานะ */
+:host ::ng-deep .gantt-row-done td {
+  background-color: color-mix(in srgb, var(--crm-success) 12%, var(--bg)) !important;
+}
+
+:host ::ng-deep .gantt-row-delayed td {
+  background-color: color-mix(in srgb, var(--crm-danger) 12%, var(--bg)) !important;
+}
+
+:host ::ng-deep .gantt-row-progress td {
+  background-color: color-mix(in srgb, var(--crm-primary) 10%, var(--bg)) !important;
+}
+
+/* ✅ 8. Task Bar (แถบงาน Gantt) */
+:host ::ng-deep .gantt_task_line {
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .gantt_task_line:hover {
+  transform: scaleY(1.08) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+  z-index: 10 !important;
+}
+
+:host ::ng-deep .gantt_task_content {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+/* ✅ 9. Progress Bar Inside Task */
+:host ::ng-deep .gantt_task_progress {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+/* ✅ 10. Selected Row */
+:host ::ng-deep .gantt_selected,
+:host ::ng-deep .gantt_selected .gantt_row_task {
+  background-color: color-mix(in srgb, var(--crm-primary) 15%, var(--bg)) !important;
+}
+
+/* ✅ 11. Dependency Links */
+:host ::ng-deep .gantt_task_link .gantt_line_wrapper div {
+  background-color: var(--crm-primary) !important;
+}
+
+:host ::ng-deep .gantt_link_control {
+  stroke: var(--crm-primary) !important;
+}
+
+:host ::ng-deep .gantt_link_arrow {
+  fill: var(--crm-primary) !important;
+}
+
+/* ✅ 12. Tooltip */
+:host ::ng-deep .gantt_tooltip {
+  background-color: var(--sidebar) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+}
+
+/* ✅ 13. Scrollbars */
+:host ::ng-deep .gantt::-webkit-scrollbar,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-track,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-track,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-thumb,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-thumb,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-thumb:hover,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-thumb:hover,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
