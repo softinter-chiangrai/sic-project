@@ -55,22 +55,22 @@
     <!-- ===== TAB SWITCHER ===== -->
     <div class="flex gap-1 border-b border-[var(--border)]">
       <button
-        (click)="rightTab.set('list')"
+        (click)="switchTab('list')"
         class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
         [class]="rightTab() === 'list' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
         <i class="bi bi-list-task mr-1"></i> รายการ
       </button>
       <button
-        (click)="rightTab.set('calendar')"
+        (click)="switchTab('calendar')"
         class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
         [class]="rightTab() === 'calendar' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
         <i class="bi bi-calendar3 mr-1"></i> ปฏิทิน
       </button>
+      <!-- ปุ่มนำทางไป Gantt เต็มจอ -->
       <button
-        (click)="rightTab.set('gantt')"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
-        [class]="rightTab() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
-        <i class="bi bi-bar-chart mr-1"></i> Gantt
+        (click)="goToGanttFullscreen()"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]">
+        <i class="bi bi-bar-chart mr-1"></i> Gantt เต็มจอ
       </button>
     </div>
 
@@ -208,21 +208,7 @@
       </div>
     }
 
-    <!-- ===== TAB 3: GANTT (DHTMLX) ===== -->
-    @if (rightTab() === 'gantt') {
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden p-4">
-        <app-dhtmlx-gantt
-          [tasks]="dhtmlxTasks()"
-          [links]="[]"
-          [projectId]="projectId()"
-          [phaseId]="currentPhaseId()"
-          [isLoading]="isLoading()"
-          (taskUpdated)="onGanttTaskUpdated($event)"
-          (taskDeleted)="onGanttTaskDeleted($event)"
-          (taskCreated)="onGanttTaskCreated($event)">
-        </app-dhtmlx-gantt>
-      </div>
-    }
+    <!-- ===== (ลบส่วน Gantt Tab ออกแล้ว) ===== -->
 
   }
 </div>

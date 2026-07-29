@@ -6,6 +6,7 @@ import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
 import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
+import { Pmdt02GanttComponent } from './dt/pmdt02/pmdt02-gantt.component';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -296,6 +297,10 @@ export const PM_ROUTES: Routes = [
       import('../../core/component/sic-ganttchart/dhtmlx-gantt.component').then((m) => m.DhtmlxGanttComponent),
     canActivate: [customerGuard, projectGuard],
   },
+  {
+  path: 'phase/:id/gantt',
+  loadComponent: () => import('./dt/pmdt02/pmdt02-gantt.component').then(m => m.Pmdt02GanttComponent),
+},
   {
     path: 'gantt/:id/update',
     loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),

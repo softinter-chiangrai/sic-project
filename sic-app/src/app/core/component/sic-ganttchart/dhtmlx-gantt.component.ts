@@ -26,6 +26,8 @@ export interface DhtmlxGanttTask {
   parent?: string;
   color?: string;
   open?: boolean;
+  assignedTo?: string;
+  assignees?: string;
 }
 
 export interface DhtmlxGanttLink {
@@ -34,6 +36,8 @@ export interface DhtmlxGanttLink {
   target: string;
   type: string;
 }
+
+export type GanttViewMode = 'day' | 'week' | 'month';
 
 @Component({
   selector: 'app-dhtmlx-gantt',
@@ -49,6 +53,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   @Input() projectId?: string;
   @Input() phaseId?: string;
   @Input() isLoading = false;
+  @Input() viewMode: GanttViewMode = 'month';
 
   @Output() taskUpdated = new EventEmitter<DhtmlxGanttTask>();
   @Output() taskDeleted = new EventEmitter<string>();
@@ -59,28 +64,87 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   private isInitialized = false;
   private eventIds: string[] = [];
 
+  currentMonth = new Date().toISOString().substring(0, 7); // 'YYYY-MM'
+
+  // ──────────────────────────────────────────────────────────────
+  // 1. 生命周期: ngAfterViewInit
+  // ──────────────────────────────────────────────────────────────
   ngAfterViewInit(): void {
     if (!this.isBrowser) return;
 
-    // ✅ Config
+    const containerEl = this.container?.nativeElement;
+    if (!containerEl) return;
+
+    // หน่วงเวลาเล็กน้อยเพื่อให้ DOM พร้อมและไม่ถูกซ่อน
+    setTimeout(() => {
+      // ตรวจสอบว่า container ยังอยู่ใน DOM และมีขนาด visible
+      if (!containerEl.isConnected || containerEl.offsetParent === null) {
+        console.warn('[Gantt] Container not visible, skip init.');
+        return;
+      }
+      this.initializeGantt(containerEl);
+    }, 50);
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // 2. ตั้งค่า Gantt ครั้งแรก (แยกเป็น method)
+  // ──────────────────────────────────────────────────────────────
+  private initializeGantt(containerEl: HTMLElement): void {
+    // ถ้าเคย init แล้วให้ทำลายทิ้งก่อน (ป้องกัน state ค้าง)
+    if (this.isInitialized) {
+      this.destroyGantt();
+    }
+
+    // กำหนด config ทั้งหมดใหม่
+    this.configureGantt();
+
+    // init
+    gantt.init(containerEl);
+    this.isInitialized = true;
+
+    // ลงทะเบียน events
+    this.registerEvents();
+
+    // ถ้ามีข้อมูลให้แสดง
+    if (this.tasks.length > 0) {
+      this.renderData();
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // 3. รวมการตั้งค่า config, templates, plugins (ปรับขนาดให้เล็กลง)
+  // ──────────────────────────────────────────────────────────────
+  private configureGantt(): void {
+    // ✅ รูปแบบวันที่
     gantt.config['date_format'] = '%d-%m-%Y';
     gantt.config['xml_date'] = '%d-%m-%Y';
-    gantt.config['scale_unit'] = 'week';
-    gantt.config['date_scale'] = '%d %M';
-    gantt.config['subscales'] = [
-      { unit: 'day', step: 1, date: '%D' }
-    ];
+
+    // ✅ ตั้งค่า view mode เริ่มต้น
+    this.applyViewMode(this.viewMode);
+
+    // ✅ คอลัมน์ (ปรับความกว้างให้เล็กลง)
     gantt.config['columns'] = [
-      { name: 'text', label: 'Task Name', tree: true, width: 200 },
-      { name: 'start_date', label: 'Start Date', align: 'center', width: 100 },
-      { name: 'end_date', label: 'End Date', align: 'center', width: 100 },
+      { name: 'text', label: 'Task Name', tree: true, width: 160 },
+      {
+        name: 'assignees',
+        label: 'Assignee',
+        align: 'center',
+        width: 100,
+        template: (task: any) => task.assignees || task.assignedTo || '-',
+      },
+      { name: 'start_date', label: 'Start Date', align: 'center', width: 85 },
+      { name: 'end_date', label: 'End Date', align: 'center', width: 85 },
       {
         name: 'progress',
         label: 'Progress',
         align: 'center',
-        width: 80,
-        template: (task: any) => Math.round(task.progress * 100) + '%'
-      }
+        width: 70,
+        template: (task: any) => {
+          const val = Number(task.progress);
+          const pct = isNaN(val) ? 0 : Math.round(val * 100);
+          return pct + '%';
+        },
+      },
     ];
 
     // ✅ Drag & Drop
@@ -89,58 +153,71 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     gantt.config['drag_resize'] = true;
     gantt.config['drag_progress'] = true;
 
-    // ✅ สีตามโครงสร้างและสถานะ (ใช้ CSS Variables ของธีมหลัก)
-    gantt['getTaskColor'] = function(task: any) {
+    // ✅ ลดความสูงของสเกล
+    gantt.config['scale_height'] = 35;
+
+    // ✅ สีตามโครงสร้างและสถานะ (ใช้ CSS Variables)
+    gantt['getTaskColor'] = function (task: any) {
       if (task.color) return task.color;
 
       const id = String(task.id || '');
       const status = task.status || '';
       const progress = task.progress || 0;
 
-      // ลำดับชั้น Gantt (Phase > Milestone > Work Package > Task)
       if (id.startsWith('phase-')) return 'var(--crm-primary)';
       if (id.startsWith('ms-')) return 'var(--crm-warning)';
       if (id.startsWith('wp-')) return 'var(--crm-secondary)';
 
-      // สถานะ Task ทั่วไป
       if (status === 'Done' || progress === 1) return 'var(--crm-success)';
       if (status === 'Delayed' || status === 'Blocked') return 'var(--crm-danger)';
       if (status === 'In Progress') return 'var(--crm-primary)';
-      
+
       return 'var(--crm-info)';
     };
 
-    // ✅ Tooltip
-    gantt.templates['tooltip_text'] = function(start: Date, end: Date, task: any) {
-  const format = (d: Date) => {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-  return `
-    <div style="font-weight:bold; font-size:14px; color:var(--text-active, #111827);">${task.text}</div>
-    <div style="display:flex; gap:8px; font-size:12px; color:var(--text-muted, #9ca3af); margin-top:4px;">
-      <span>📅 ${format(start)} - ${format(end)}</span>
-      <span>📊 ${Math.round(task.progress * 100)}%</span>
-    </div>
-    ${task.status ? `<div style="font-size:11px; color:var(--crm-primary, #29C296); margin-top:2px;">Status: ${task.status}</div>` : ''}
-  `;
-};
+    // ✅ Tooltip (ปรับขนาดฟอนต์ให้เล็กลง)
+    gantt.templates['tooltip_text'] = function (start: Date, end: Date, task: any) {
+      const format = (d: Date) => {
+        if (!d || isNaN(d.getTime())) return '-';
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+      const val = Number(task.progress);
+      const pct = isNaN(val) ? 0 : Math.round(val * 100);
+      const assigneeText = task.assignees || task.assignedTo || 'Unassigned';
 
-    // ✅ Task Text (แสดง %)
-    gantt.templates['task_text'] = function(_start: Date, _end: Date, task: any) {
-      const pct = Math.round((task.progress || 0) * 100);
-      return `${task.text} (${pct}%)`;
+      return `
+        <div style="font-weight:600; font-size:12px; color:var(--text-active, #111827);">${task.text}</div>
+        <div style="display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--text-muted, #9ca3af); margin-top:3px;">
+          <span>👤 ผู้รับผิดชอบ: ${assigneeText}</span>
+          <span>📅 ${format(start)} - ${format(end)}</span>
+          <span>📊 ความคืบหน้า: ${pct}%</span>
+        </div>
+        ${task.status ? `<div style="font-size:10px; color:var(--crm-primary, #29C296); margin-top:2px;">Status: ${task.status}</div>` : ''}
+      `;
+    };
+
+    // ✅ Task Text (ปรับขนาดฟอนต์ให้เล็กลง)
+    gantt.templates['task_text'] = function (_start: Date, _end: Date, task: any) {
+      const val = Number(task.progress);
+      const pct = isNaN(val) ? 0 : Math.round(val * 100);
+      const assignee = task.assignees || task.assignedTo;
+      const pctText = pct > 0 ? ` (${pct}%)` : '';
+      return assignee ? `${task.text} [${assignee}]${pctText}` : `${task.text}${pctText}`;
     };
 
     // ✅ Progress Text
-    gantt.templates['progress_text'] = function(task: any) {
-      return `<span style="color:white; font-weight:bold; font-size:11px;">${Math.round(task.progress * 100)}%</span>`;
+    gantt.templates['progress_text'] = function (task: any) {
+      const val = Number(task.progress);
+      const pct = isNaN(val) ? 0 : Math.round(val * 100);
+      if (pct <= 0) return '';
+      return `<span style="color:white; font-weight:bold; font-size:10px;">${pct}%</span>`;
     };
 
     // ✅ Grid Row Class
-    gantt.templates['grid_row_class'] = function(_start: Date, _end: Date, task: any) {
+    gantt.templates['grid_row_class'] = function (_start: Date, _end: Date, task: any) {
       if (task.progress === 1) return 'gantt-row-done';
       if (task.status === 'Delayed' || task.status === 'Blocked') return 'gantt-row-delayed';
       if (task.status === 'In Progress') return 'gantt-row-progress';
@@ -150,18 +227,13 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     // ✅ Plugins
     gantt.plugins({
       tooltip: true,
-      marker: true
+      marker: true,
     });
-
-    gantt.init(this.container.nativeElement);
-    this.isInitialized = true;
-    this.registerEvents();
-
-    if (this.tasks.length > 0) {
-      this.renderData();
-    }
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // 4. ลงทะเบียน Events
+  // ──────────────────────────────────────────────────────────────
   private registerEvents(): void {
     const evt1 = gantt.attachEvent('onTaskDblClick', (id) => {
       this.editTask(String(id));
@@ -173,18 +245,21 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       const updated: DhtmlxGanttTask = {
         id: String(id),
         text: task.text,
-        // ✅ ตรวจสอบว่า task.start_date เป็น Date หรือไม่
-        start_date: task.start_date instanceof Date 
-          ? this.formatDateToString(task.start_date) 
-          : String(task.start_date),
-        end_date: task.end_date instanceof Date 
-          ? this.formatDateToString(task.end_date) 
-          : task.end_date ? String(task.end_date) : undefined,
+        start_date:
+          task.start_date instanceof Date
+            ? this.formatDateToString(task.start_date)
+            : String(task.start_date),
+        end_date:
+          task.end_date instanceof Date
+            ? this.formatDateToString(task.end_date)
+            : task.end_date
+            ? String(task.end_date)
+            : undefined,
         duration: task.duration,
         progress: task.progress ?? 0,
         parent: task.parent ? String(task.parent) : undefined,
         color: task.color,
-        open: task.open
+        open: task.open,
       };
       this.taskUpdated.emit(updated);
       return true;
@@ -201,17 +276,21 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       const created: DhtmlxGanttTask = {
         id: String(id),
         text: task.text,
-        start_date: task.start_date instanceof Date 
-          ? this.formatDateToString(task.start_date) 
-          : String(task.start_date),
-        end_date: task.end_date instanceof Date 
-          ? this.formatDateToString(task.end_date) 
-          : task.end_date ? String(task.end_date) : undefined,
+        start_date:
+          task.start_date instanceof Date
+            ? this.formatDateToString(task.start_date)
+            : String(task.start_date),
+        end_date:
+          task.end_date instanceof Date
+            ? this.formatDateToString(task.end_date)
+            : task.end_date
+            ? String(task.end_date)
+            : undefined,
         duration: task.duration,
         progress: task.progress ?? 0,
         parent: task.parent ? String(task.parent) : undefined,
         color: task.color,
-        open: task.open
+        open: task.open,
       };
       this.taskCreated.emit(created);
       return true;
@@ -219,6 +298,9 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     this.eventIds.push(evt4);
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // 5. Utility: วันที่
+  // ──────────────────────────────────────────────────────────────
   private formatDateToString(date: Date): string {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -231,70 +313,131 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     return new Date(year, month - 1, day);
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // 6. เมื่อ Input เปลี่ยน
+  // ──────────────────────────────────────────────────────────────
   ngOnChanges(changes: SimpleChanges): void {
-    if (!this.isInitialized || !this.isBrowser) return;
+    if (!this.isBrowser) return;
+    if (!this.isInitialized) return; // ยังไม่ init ให้ข้าม
+
+    if (changes['viewMode']) {
+      this.applyViewMode(this.viewMode);
+      gantt.render();
+    }
     if (changes['tasks'] || changes['links']) {
       this.renderData();
     }
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // 7. เปลี่ยนมุมมอง
+  // ──────────────────────────────────────────────────────────────
+  applyViewMode(mode: GanttViewMode): void {
+    this.viewMode = mode;
+    if (mode === 'month') {
+      gantt.config['scale_unit'] = 'month';
+      gantt.config['date_scale'] = '%F %Y';
+      gantt.config['subscales'] = [{ unit: 'day', step: 1, date: '%d' }];
+      gantt.config['scale_height'] = 35;
+    } else if (mode === 'week') {
+      gantt.config['scale_unit'] = 'month';
+      gantt.config['date_scale'] = '%F %Y';
+      gantt.config['subscales'] = [{ unit: 'week', step: 1, date: 'สัปดาห์ที่ %W' }];
+      gantt.config['scale_height'] = 35;
+    } else {
+      gantt.config['scale_unit'] = 'day';
+      gantt.config['date_scale'] = '%d %M %Y';
+      gantt.config['subscales'] = [{ unit: 'hour', step: 6, date: '%H:00' }];
+      gantt.config['scale_height'] = 35;
+    }
+  }
+
+  setViewMode(mode: GanttViewMode): void {
+    if (!this.isInitialized || !this.isBrowser) return;
+    this.applyViewMode(mode);
+    gantt.render();
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // 8. Month Picker
+  // ──────────────────────────────────────────────────────────────
+  onMonthChange(event: Event): void {
+    if (!this.isInitialized || !this.isBrowser) return;
+    const val = (event.target as HTMLInputElement).value; // 'YYYY-MM'
+    if (!val) return;
+    this.currentMonth = val;
+    const [year, month] = val.split('-').map(Number);
+    const targetDate = new Date(year, month - 1, 1);
+
+    gantt.config.start_date = new Date(year, month - 1, 1);
+    gantt.config.end_date = new Date(year, month, 0);
+    gantt.render();
+    gantt.showDate(targetDate);
+  }
+
+  shiftDate(amount: number): void {
+    if (!this.isInitialized || !this.isBrowser) return;
+    const [year, month] = this.currentMonth.split('-').map(Number);
+    const d = new Date(year, month - 1 + amount, 1);
+    const yStr = d.getFullYear();
+    const mStr = String(d.getMonth() + 1).padStart(2, '0');
+    this.currentMonth = `${yStr}-${mStr}`;
+
+    gantt.config.start_date = new Date(d.getFullYear(), d.getMonth(), 1);
+    gantt.config.end_date = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    gantt.render();
+    gantt.showDate(d);
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // 9. แสดงข้อมูล
+  // ──────────────────────────────────────────────────────────────
   private renderData(): void {
     if (!this.isInitialized || !this.isBrowser) return;
 
-    const data = this.tasks.map(task => ({
+    const data = this.tasks.map((task) => ({
       id: task.id,
       text: task.text,
       start_date: this.parseDate(task.start_date),
       end_date: task.end_date ? this.parseDate(task.end_date) : undefined,
       duration: task.duration,
-      progress: task.progress ?? 0,
+      progress: isNaN(Number(task.progress)) ? 0 : Number(task.progress),
       parent: task.parent || undefined,
       color: task.color || undefined,
-      open: true
+      assignedTo: task.assignedTo || undefined,
+      assignees: task.assignees || undefined,
+      open: true,
     }));
 
-    this.autoAdjustScale(data);
+    // ขยายขอบเขตวันที่
+    if (data.length > 0) {
+      let min = new Date(data[0].start_date);
+      let max = new Date(data[0].start_date);
+      data.forEach((t) => {
+        if (t.start_date < min) min = new Date(t.start_date);
+        const end = t.end_date || t.start_date;
+        if (end > max) max = new Date(end);
+      });
+
+      const startDate = new Date(min.getFullYear(), min.getMonth() - 1, 1);
+      const endDate = new Date(max.getFullYear(), max.getMonth() + 2, 0);
+      gantt.config.start_date = startDate;
+      gantt.config.end_date = endDate;
+
+      // อัปเดตเดือนปัจจุบัน
+      const yStr = min.getFullYear();
+      const mStr = String(min.getMonth() + 1).padStart(2, '0');
+      this.currentMonth = `${yStr}-${mStr}`;
+    } else {
+      gantt.config.start_date = undefined;
+      gantt.config.end_date = undefined;
+    }
 
     gantt.clearAll();
     gantt.parse({ data, links: this.links || [] });
-  }
-
-  private autoAdjustScale(tasks: any[]): void {
-    if (!tasks || tasks.length === 0) return;
-
-    let minDate = tasks[0].start_date;
-    let maxDate = tasks[0].start_date;
-
-    tasks.forEach((task: any) => {
-      const start = task.start_date;
-      const end = task.end_date || start;
-      if (start < minDate) minDate = start;
-      if (end > maxDate) maxDate = end;
-    });
-
-    const diffDays = (maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
-
-    if (diffDays > 180) {
-      gantt.config['scale_unit'] = 'month';
-      gantt.config['date_scale'] = '%F, %Y';
-      gantt.config['subscales'] = [
-        { unit: 'week', step: 1, date: '%d %M' }
-      ];
-    } else if (diffDays > 60) {
-      gantt.config['scale_unit'] = 'week';
-      gantt.config['date_scale'] = '%d %M';
-      gantt.config['subscales'] = [
-        { unit: 'day', step: 1, date: '%D' }
-      ];
-    } else {
-      gantt.config['scale_unit'] = 'day';
-      gantt.config['date_scale'] = '%D, %d %M';
-      gantt.config['subscales'] = [
-        { unit: 'day', step: 1, date: '%d' }
-      ];
+    if (data.length > 0) {
+      gantt.showDate(data[0].start_date);
     }
-
-    gantt.render();
   }
 
   refresh(): void {
@@ -307,12 +450,25 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     console.log('[Gantt] Edit task:', taskId);
   }
 
-  ngOnDestroy(): void {
+  // ──────────────────────────────────────────────────────────────
+  // 10. ทำลาย instance อย่างสมบูรณ์
+  // ──────────────────────────────────────────────────────────────
+  private destroyGantt(): void {
     if (this.isBrowser && this.isInitialized) {
-      this.eventIds.forEach(id => gantt.detachEvent(id));
+      this.eventIds.forEach((id) => gantt.detachEvent(id));
       this.eventIds = [];
       gantt.destructor();
       this.isInitialized = false;
+
+      // ล้าง container เพื่อป้องกัน残留 DOM
+      const containerEl = this.container?.nativeElement;
+      if (containerEl) {
+        containerEl.innerHTML = '';
+      }
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyGantt();
   }
 }

@@ -36,12 +36,14 @@
   background-color: var(--sidebar) !important;
   color: var(--text-active) !important;
   font-weight: 600 !important;
+  font-size: 11px !important;
 }
 
 :host ::ng-deep .gantt_cell,
 :host ::ng-deep .gantt_task_cell {
   background-color: var(--bg) !important;
   color: var(--text) !important;
+  font-size: 12px !important;
 }
 
 :host ::ng-deep .gantt_row,
@@ -80,7 +82,7 @@
 }
 
 /* ============================================================
-   ✅ คงไว้: Task Bar (แถบงาน) - ไม่มีเส้นขอบ
+   ✅ Task Bar (แถบงาน) - ไม่มีเส้นขอบ
    ============================================================ */
 
 :host ::ng-deep .gantt_task_line {
@@ -98,16 +100,18 @@
 :host ::ng-deep .gantt_task_content {
   color: #ffffff !important;
   font-weight: 500 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 :host ::ng-deep .gantt_task_progress {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-  border-radius: 4px !important;
+  background: var(--crm-success, #10B981) !important;
+  border-radius: 4px 0 0 4px !important;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.9 !important;
 }
 
 /* ============================================================
-   ✅ คงไว้: เส้นเชื่อม Dependency
+   ✅ เส้นเชื่อม Dependency
    ============================================================ */
 
 :host ::ng-deep .gantt_task_link .gantt_line_wrapper div {
@@ -123,7 +127,7 @@
 }
 
 /* ============================================================
-   ✅ คงไว้: Tooltip
+   ✅ Tooltip
    ============================================================ */
 
 :host ::ng-deep .gantt_tooltip {
@@ -132,11 +136,12 @@
   border: 1px solid var(--border) !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
   border-radius: 8px !important;
-  padding: 8px 12px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
 }
 
 /* ============================================================
-   ✅ คงไว้: Scrollbars
+   ✅ Scrollbars
    ============================================================ */
 
 :host ::ng-deep .gantt::-webkit-scrollbar,
@@ -210,4 +215,25 @@
 :host ::ng-deep .gantt_bars_area {
   border-bottom: none !important;
   border-top: none !important;
+}
+
+/* ============================================================
+   🔹 ลดขนาดฟอนต์ใน Grid และ Task ให้เล็กลง
+   ============================================================ */
+:host ::ng-deep .gantt_task_content {
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell {
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_cell,
+:host ::ng-deep .gantt_task_cell {
+  font-size: 12px !important;
+}
+
+:host ::ng-deep .gantt_tooltip {
+  font-size: 12px !important;
 }

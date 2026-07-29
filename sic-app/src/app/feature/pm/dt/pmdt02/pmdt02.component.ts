@@ -15,11 +15,8 @@ import { MilestoneService } from '../../../../core/services/milestone.service';
 import { PhaseService } from '../../../../core/services/phase.service';
 import { TaskService } from '../../../../core/services/task.service';
 import { WorkPackageService } from '../../../../core/services/work-package.service';
-import { DhtmlxGanttComponent, DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
+// ลบ DhtmlxGanttComponent ออกจาก imports และ ViewChild
 import { CalendarItem, SicCalendarComponent } from '../../../../core/component/sic-calendar/sic-calendar.component';
-
-
-
 
 @Component({
   selector: 'app-pmdt02',
@@ -27,9 +24,9 @@ import { CalendarItem, SicCalendarComponent } from '../../../../core/component/s
   imports: [
     CommonModule,
     RouterModule,
-    DhtmlxGanttComponent,
+    // DhtmlxGanttComponent,  // ลบออก
     SicCalendarComponent
-],
+  ],
   templateUrl: './pmdt02.component.html',
 })
 export class Pmdt02Component implements OnInit {
@@ -48,74 +45,13 @@ export class Pmdt02Component implements OnInit {
   currentPhaseId = signal('');
   expandedMilestone = signal<string | null>(null);
   expandedWorkPackage = signal<string | null>(null);
-  rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
+  // ลบ @ViewChild(DhtmlxGanttComponent)
 
-  // ===== DHTMLX GANTT TASKS =====
-  protected dhtmlxTasks = computed<DhtmlxGanttTask[]>(() => {
-    const p = this.phase();
-    if (!p) return [];
+  rightTab = signal<'list' | 'calendar'>('list'); // เปลี่ยน type
 
-    const result: DhtmlxGanttTask[] = [];
-
-    // 1. Phase
-    result.push({
-      id: `phase-${p.id}`,
-      text: `📍 ${p.phaseName}`,
-      start_date: this.formatDateForDhtmlx(p.startDate),
-      end_date: this.formatDateForDhtmlx(p.endDate),
-      progress: p.progress / 100,
-      open: true,
-      color: p.color || undefined
-    });
-
-    // 2. Milestones
-    p.milestones?.forEach((ms) => {
-      const msId = `ms-${ms.id}`;
-      result.push({
-        id: msId,
-        text: `📌 ${ms.milestoneName}`,
-        start_date: this.formatDateForDhtmlx(ms.dueDate),
-        end_date: this.formatDateForDhtmlx(ms.dueDate),
-        progress: ms.status === 'Done' ? 1 : 0.5,
-        parent: `phase-${p.id}`,
-        color: ms.color || undefined
-      });
-
-      // 3. Work Packages
-      ms.workPackages?.forEach((wp) => {
-        const wpId = `wp-${wp.id}`;
-        if (wp.startDate && wp.endDate) {
-          result.push({
-            id: wpId,
-            text: `📦 ${wp.packageName}`,
-            start_date: this.formatDateForDhtmlx(wp.startDate),
-            end_date: this.formatDateForDhtmlx(wp.endDate),
-            progress: this.calculateWpProgress(wp),
-            parent: msId,
-            color: wp.color || undefined
-          });
-        }
-
-        // 4. Tasks
-        wp.tasks?.forEach((task) => {
-          if (task.startDate) {
-            result.push({
-              id: task.id,
-              text: `🔹 ${task.taskName}`,
-              start_date: this.formatDateForDhtmlx(task.startDate),
-              end_date: task.endDate ? this.formatDateForDhtmlx(task.endDate) : this.formatDateForDhtmlx(task.startDate),
-              progress: task.status === 'Done' ? 1 :
-                       task.status === 'In Progress' ? 0.5 : 0,
-              parent: `wp-${wp.id}`,
-              color: task.color || undefined
-            });
-          }
-        });
-      });
-    });
-
-    return result;
-  });
+  switchTab(tab: 'list' | 'calendar'): void {
+    this.rightTab.set(tab);
+  }
 
   // ===== CALENDAR ITEMS =====
   calendarItems = computed<CalendarItem[]>(() => {
@@ -192,22 +128,6 @@ export class Pmdt02Component implements OnInit {
 
     return result;
   });
-
-  // ===== HELPERS =====
-  private formatDateForDhtmlx(dateStr: string | undefined): string {
-    if (!dateStr) return '01-01-2024';
-    const date = new Date(dateStr);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  }
-
-  private calculateWpProgress(wp: any): number {
-    if (!wp.tasks || wp.tasks.length === 0) return 0;
-    const done = wp.tasks.filter((t: any) => t.status === 'Done').length;
-    return done / wp.tasks.length;
-  }
 
   // ===== LIFECYCLE =====
   ngOnInit() {
@@ -455,20 +375,15 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== GANTT EVENTS =====
-  onGanttTaskUpdated(task: DhtmlxGanttTask): void {
-    console.log('[Gantt] Task updated:', task);
-    // TODO: Sync with backend
-  }
-
-  onGanttTaskDeleted(taskId: string): void {
-    console.log('[Gantt] Task deleted:', taskId);
-    // TODO: Delete from backend
-  }
-
-  onGanttTaskCreated(task: DhtmlxGanttTask): void {
-    console.log('[Gantt] Task created:', task);
-    // TODO: Create in backend
+  // ===== NAVIGATION TO FULLSCREEN GANTT =====
+  goToGanttFullscreen() {
+    const phaseId = this.currentPhaseId();
+    const projectId = this.projectId();
+    if (phaseId) {
+      this.router.navigate(['/feature/pm/phase', phaseId, 'gantt'], {
+        queryParams: { projectId }
+      });
+    }
   }
 
   // ===== CALENDAR EVENT =====
