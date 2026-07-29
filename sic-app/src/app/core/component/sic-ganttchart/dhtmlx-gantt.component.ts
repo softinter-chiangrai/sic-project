@@ -12,6 +12,7 @@ import {
   EventEmitter,
   Output,
   ChangeDetectorRef,
+  signal,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
@@ -65,7 +66,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   private isInitialized = false;
   private eventIds: string[] = [];
 
-  currentMonth = new Date().toISOString().substring(0, 7); // 'YYYY-MM'
+  currentMonth = signal<string>(new Date().toISOString().substring(0, 7)); // 'YYYY-MM'
 
   // ──────────────────────────────────────────────────────────────
   // 1. Lifecycle: ngAfterViewInit
@@ -392,7 +393,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     if (!this.isInitialized || !this.isBrowser) return;
     const val = (event.target as HTMLInputElement).value;
     if (!val) return;
-    this.currentMonth = val;
+    this.currentMonth.set(val);
     const [year, month] = val.split('-').map(Number);
     const targetDate = new Date(year, month - 1, 1);
 
@@ -404,11 +405,11 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
 
   shiftDate(amount: number): void {
     if (!this.isInitialized || !this.isBrowser) return;
-    const [year, month] = this.currentMonth.split('-').map(Number);
+    const [year, month] = this.currentMonth().split('-').map(Number);
     const d = new Date(year, month - 1 + amount, 1);
     const yStr = d.getFullYear();
     const mStr = String(d.getMonth() + 1).padStart(2, '0');
-    this.currentMonth = `${yStr}-${mStr}`;
+    this.currentMonth.set(`${yStr}-${mStr}`);
 
     gantt.config.start_date = new Date(d.getFullYear(), d.getMonth(), 1);
     gantt.config.end_date = new Date(d.getFullYear(), d.getMonth() + 1, 0);
@@ -452,16 +453,14 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
 
       const yStr = min.getFullYear();
       const mStr = String(min.getMonth() + 1).padStart(2, '0');
-      const newMonth = `${yStr}-${mStr}`;
-      if (this.currentMonth !== newMonth) {
-        Promise.resolve().then(() => {
-          this.currentMonth = newMonth;
-          this.cdr.markForCheck();
-        });
-      }
+      this.currentMonth.set(`${yStr}-${mStr}`);
     } else {
       gantt.config.start_date = undefined;
       gantt.config.end_date = undefined;
+      const now = new Date();
+      const yStr = now.getFullYear();
+      const mStr = String(now.getMonth() + 1).padStart(2, '0');
+      this.currentMonth.set(`${yStr}-${mStr}`);
     }
 
     gantt.clearAll();
