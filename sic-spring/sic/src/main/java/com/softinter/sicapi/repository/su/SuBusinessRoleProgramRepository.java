@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -18,12 +19,15 @@ public interface SuBusinessRoleProgramRepository extends JpaRepository<SuBusines
 
     List<SuBusinessRoleProgram> findByBusinessRoleIdAndIsDeleteFalse(UUID businessRoleId);
 
-     @Query("SELECT brp FROM SuBusinessRoleProgram brp " +
+    @Query("SELECT brp FROM SuBusinessRoleProgram brp " +
            "JOIN FETCH brp.businessRole " +
            "JOIN FETCH brp.program " +
            "WHERE brp.isDelete = false " +
            "AND (:businessRoleId IS NULL OR brp.businessRole.id = :businessRoleId)")
     List<SuBusinessRoleProgram> findAllWithFetch(@Param("businessRoleId") UUID businessRoleId);
 
-     List<SuBusinessRoleProgram> findByProgramIdAndIsDeleteFalse(UUID programId);
+    List<SuBusinessRoleProgram> findByProgramIdAndIsDeleteFalse(UUID programId);
+
+    // ✅ เพิ่ม method นี้
+    Optional<SuBusinessRoleProgram> findByBusinessRoleIdAndProgramIdAndIsDeleteFalse(UUID businessRoleId, UUID programId);
 }

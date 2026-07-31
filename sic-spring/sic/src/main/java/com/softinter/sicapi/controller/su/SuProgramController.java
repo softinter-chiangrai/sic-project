@@ -1,28 +1,6 @@
-// src/main/java/com/softinter/sicapi/controller/su/SuProgramController.java
-
 package com.softinter.sicapi.controller.su;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.CreateProgramWithPermissionsRequest;
 import com.softinter.sicapi.dto.request.DeleteRequest;
 import com.softinter.sicapi.dto.request.ProgramPageRequest;
@@ -44,7 +22,22 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/su/programs")
 @RequiredArgsConstructor
@@ -57,6 +50,109 @@ public class SuProgramController {
     private final SuBusinessRoleProgramRepository businessRoleProgramRepository;
     private final ProgramAccessService programAccessService;
 
+    // ============================================================
+    // 🔥 METHOD ใหม่: สร้างสิทธิ์เริ่มต้นเป็น None
+    // ============================================================
+    private void createDefaultPermissionsForProgram(SuProgram program) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            log.warn("Cannot create default permissions: no business context");
+            return;
+        }
+
+        // ดึงบทบาททั้งหมดที่ยัง active ใน business นี้
+        List<SuBusinessRole> roles = businessRoleRepository.findByBusinessIdAndIsActiveTrue(businessId);
+        if (roles.isEmpty()) {
+            log.warn("No active roles found for business {}, skipping default permissions", businessId);
+            return;
+        }
+
+        int createdCount = 0;
+        for (SuBusinessRole role : roles) {
+            // ตรวจสอบว่ามี permission สำหรับบทบาท+โปรแกรมนี้อยู่แล้วหรือไม่ (ป้องกันการสร้างซ้ำ)
+            boolean exists = businessRoleProgramRepository
+                    .findByBusinessRoleIdAndProgramIdAndIsDeleteFalse(role.getId(), program.getId())
+                    .isPresent();
+
+            if (exists) {
+                continue; // มีอยู่แล้ว → ข้าม
+            }
+
+            SuBusinessRoleProgram brp = new SuBusinessRoleProgram();
+            brp.setBusinessRole(role);
+            brp.setProgram(program);
+            brp.setIsActive(false);      // ✅ None
+            brp.setAdd(false);
+            brp.setBack(false);
+            brp.setPrint(false);
+            brp.setRemove(false);
+            brp.setSave(false);
+            brp.setSearch(false);
+            businessRoleProgramRepository.save(brp);
+            createdCount++;
+        }
+
+        log.info("✅ Created {} default permissions (None) for program: {}", createdCount, program.getProgramCode());
+    }
+
+    // ============================================================
+    // 🔧 แก้ไขเมธอด save
+    // ============================================================
+    @PostMapping("/save")
+    @Operation(summary = "Save program")
+    @Transactional
+    public ResponseEntity<UUID> save(@Valid @RequestBody SaveProgramRequest request) {
+        SuProgram program;
+        boolean isNew = (request.getId() == null);
+
+        if (isNew) {
+            if (programRepository.existsByProgramCodeAndIsDeleteFalse(request.getProgramCode())) {
+                throw new RuntimeException("Program code already exists: " + request.getProgramCode());
+            }
+            program = new SuProgram();
+        } else {
+            program = programRepository.findById(request.getId())
+                    .orElseThrow(() -> new RuntimeException("Program not found"));
+        }
+
+        // Map ข้อมูล
+        program.setProgramCode(request.getProgramCode());
+        program.setNameEn(request.getProgramNameEn());
+        program.setNameLocal(request.getProgramNameLocal());
+        program.setIcon(request.getProgramIcon());
+        program.setRoutePath(request.getRoutePath());
+        program.setSortOrder(request.getSortOrder());
+        program.setIsActive(request.isActive());
+
+        if (request.getParentProgramId() != null) {
+            SuProgram parent = programRepository.findById(request.getParentProgramId())
+                    .orElseThrow(() -> new RuntimeException("Parent program not found"));
+            program.setParentProgram(parent);
+        } else {
+            program.setParentProgram(null);
+        }
+
+        if (request.getRowVersion() != null) {
+            program.setRowVersion(request.getRowVersion());
+        }
+
+        program = programRepository.save(program);
+
+        // ✅ ถ้าเป็นการสร้างใหม่ → สร้าง default permissions (None) ให้ทุกบทบาท
+        if (isNew) {
+            createDefaultPermissionsForProgram(program);
+        }
+
+        // เคลียร์ Cache สิทธิ์
+        programAccessService.removeAllAccessCache();
+
+        return ResponseEntity.ok(program.getId());
+    }
+
+    // ============================================================
+    // เมธอดอื่นๆ (ไม่ต้องแก้ไข)
+    // ============================================================
+    
     @GetMapping
     @Transactional(readOnly = true)
     @Operation(summary = "Get all programs")
@@ -123,49 +219,11 @@ public class SuProgramController {
         return ResponseEntity.ok(toResponse(program));
     }
 
-    @PostMapping("/save")
-    @Operation(summary = "Save program")
-    @Transactional
-    public ResponseEntity<UUID> save(@Valid @RequestBody SaveProgramRequest request) {
-        SuProgram program;
-        if (request.getId() != null) {
-            program = programRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Program not found"));
-        } else {
-            if (programRepository.existsByProgramCodeAndIsDeleteFalse(request.getProgramCode())) {
-                throw new RuntimeException("Program code already exists: " + request.getProgramCode());
-            }
-            program = new SuProgram();
-        }
-
-        program.setProgramCode(request.getProgramCode());
-        program.setNameEn(request.getProgramNameEn());
-        program.setNameLocal(request.getProgramNameLocal());
-        program.setIcon(request.getProgramIcon());
-        program.setRoutePath(request.getRoutePath());
-        program.setSortOrder(request.getSortOrder());
-        program.setIsActive(request.isActive());
-
-        if (request.getParentProgramId() != null) {
-            SuProgram parent = programRepository.findById(request.getParentProgramId())
-                    .orElseThrow(() -> new RuntimeException("Parent program not found"));
-            program.setParentProgram(parent);
-        } else {
-            program.setParentProgram(null);
-        }
-
-        if (request.getRowVersion() != null) {
-            program.setRowVersion(request.getRowVersion());
-        }
-
-        programRepository.save(program);
-        return ResponseEntity.ok(program.getId());
-    }
-
     @PostMapping("/create-with-permissions")
     @Operation(summary = "Create program with initial permissions")
     @Transactional
     public ResponseEntity<UUID> createWithPermissions(@RequestBody CreateProgramWithPermissionsRequest request) {
+        // ... (โค้ดเดิม ยังไม่ต้องแก้) ...
         if (programRepository.existsByProgramCodeAndIsDeleteFalse(request.getProgramCode())) {
             throw new RuntimeException("Program code already exists: " + request.getProgramCode());
         }
@@ -207,10 +265,12 @@ public class SuProgramController {
 
                 businessRoleProgramRepository.save(brp);
             }
+        } else {
+            // ✅ ถ้าไม่มี RolePermissions ส่งมา → สร้าง None ให้ทุกบทบาท
+            createDefaultPermissionsForProgram(program);
         }
 
         programAccessService.removeAllAccessCache();
-
         return ResponseEntity.ok(program.getId());
     }
 
@@ -240,29 +300,27 @@ public class SuProgramController {
         programRepository.save(program);
 
         programAccessService.removeAllAccessCache();
-
         return ResponseEntity.noContent().build();
     }
 
     private ProgramResponse toResponse(SuProgram program) {
-    ProgramResponse response = new ProgramResponse();
-    response.setId(program.getId());
-    if (program.getParentProgram() != null) {
-        response.setParentProgramId(program.getParentProgram().getId());
-        response.setParentProgramCode(program.getParentProgram().getProgramCode());
+        ProgramResponse response = new ProgramResponse();
+        response.setId(program.getId());
+        if (program.getParentProgram() != null) {
+            response.setParentProgramId(program.getParentProgram().getId());
+            response.setParentProgramCode(program.getParentProgram().getProgramCode());
+        }
+        response.setProgramCode(program.getProgramCode());
+        response.setProgramNameEn(program.getNameEn());
+        response.setProgramNameLocal(program.getNameLocal());
+        response.setProgramName(LocalizationHelper.getProgramName(program));
+        response.setProgramIcon(program.getIcon());
+        response.setRoutePath(program.getRoutePath());
+        response.setSortOrder(program.getSortOrder());
+        response.setActive(Boolean.TRUE.equals(program.getIsActive()));
+        response.setRowVersion(program.getRowVersion());
+        return response;
     }
-    response.setProgramCode(program.getProgramCode());
-    response.setProgramNameEn(program.getNameEn());
-    response.setProgramNameLocal(program.getNameLocal());
-    // ✅ เพิ่ม
-    response.setProgramName(LocalizationHelper.getProgramName(program));
-    response.setProgramIcon(program.getIcon());
-    response.setRoutePath(program.getRoutePath());
-    response.setSortOrder(program.getSortOrder());
-    response.setActive(Boolean.TRUE.equals(program.getIsActive()));
-    response.setRowVersion(program.getRowVersion());
-    return response;
-}
 
     private boolean[] mapLevelToBooleans(String level) {
         switch (level) {

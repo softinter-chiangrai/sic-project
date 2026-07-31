@@ -62,12 +62,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
   },
-  {
-    path: 'burt05/:id/permissions',         
-    loadComponent: () =>
-      import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
-  },
-// sic-app/src/app/feature/bu/bu.routes.ts
 {
   path: 'burt06',
   loadComponent: () => import('./rt/burt06/burt06.component').then((m) => m.Burt06Component),
