@@ -21,12 +21,12 @@ export class Pmrt01AService {
   private baseUrl = environment.apiBaseUrl + '/api/su-customer';
 
   // Combobox endpoints
-  apiGetLovPersonType = environment.apiBaseUrl + '/api/bu/burt01/lov-person-type';
-  apiGetComboboxTitle = environment.apiBaseUrl + '/api/bu/burt01/combobox-title';
-  apiGetComboboxCountry = environment.apiBaseUrl + '/api/bu/burt01/combobox-country';
-  apiGetComboboxProvince = environment.apiBaseUrl + '/api/bu/burt01/combobox-province';
-  apiGetComboboxDistrict = environment.apiBaseUrl + '/api/bu/burt01/combobox-district';
-  apiGetComboboxSubDistrict = environment.apiBaseUrl + '/api/bu/burt01/combobox-sub-district';
+  apiGetLovPersonType = environment.apiBaseUrl + '/api/business/lov-person-type';
+  apiGetComboboxTitle = environment.apiBaseUrl + '/api/business/combobox-title';
+  apiGetComboboxCountry = environment.apiBaseUrl + '/api/business/combobox-country';
+  apiGetComboboxProvince = environment.apiBaseUrl + '/api/business/combobox-province';
+  apiGetComboboxDistrict = environment.apiBaseUrl + '/api/business/combobox-district';
+  apiGetComboboxSubDistrict = environment.apiBaseUrl + '/api/business/combobox-sub-district';
 
   // ===== CRUD =====
 

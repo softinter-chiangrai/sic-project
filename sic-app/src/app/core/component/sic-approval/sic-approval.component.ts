@@ -47,6 +47,12 @@ export class SicApprovalComponent implements OnInit, OnChanges {
     @Input() version?: string;
     @Input() flowId?: string;
     @Input() autoLoad = true;
+    @Input() set initialApproval(data: Approval | null | undefined) {
+        if (data) {
+            this.approval.set(data);
+            this.cdr.markForCheck();
+        }
+    }
 
     @Output() statusChange = new EventEmitter<{ status: string; approval: Approval }>();
     @Output() actionTaken = new EventEmitter<{ action: string; approval: Approval }>();

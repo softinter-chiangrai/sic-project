@@ -74,20 +74,24 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
 
   // ===== Lifecycle =====
   ngOnInit(): void {
+    const id = this.route.snapshot.params['id'];
+    if (id) {
+      this.approvalId.set(id);
+      this.loadApproval(id);
+    }
+
     this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.approvalId.set(id);
-        this.loadApproval(id);
-      } else {
-        this.error.set('ไม่พบรหัสการอนุมัติ');
-        this.navigation.navigate(['/feature/pm/pmdt03']);
+      const paramId = params['id'];
+      if (paramId && paramId !== this.approvalId()) {
+        this.approvalId.set(paramId);
+        this.loadApproval(paramId);
       }
     });
 
     this.route.queryParams.subscribe((params) => {
       if (params['returnUrl']) {
         this.returnUrl.set(params['returnUrl']);
+        this.cdr.markForCheck();
       }
     });
   }

@@ -249,6 +249,17 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
+    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
+        Page<PmApproval> pageResult = approvalRepository.findApprovedHistoryByApprover(userId, pageable);
+        List<ApprovalResponse> data = pageResult.getContent().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return PaginationUtil.of(data, page, size, pageResult.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
@@ -731,6 +742,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setStatusColor(getStatusColor(approval.getStatus()));
         response.setComment(approval.getComment());
         response.setFinalApprover(approval.getFinalApprover());
+        response.setFinalApproverName(getUserName(approval.getFinalApprover()));
         response.setFinalApprovalDate(approval.getFinalApprovalDate());
         response.setFlowCode(approval.getFlow().getFlowCode());
         response.setFlowName(approval.getFlow().getFlowName());

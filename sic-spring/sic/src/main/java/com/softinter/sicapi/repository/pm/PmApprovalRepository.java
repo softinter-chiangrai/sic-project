@@ -49,6 +49,14 @@ public interface PmApprovalRepository extends JpaRepository<PmApproval, UUID>, J
            "ORDER BY a.requestedDate ASC")
     Page<PmApproval> findPendingByApprover(@Param("approverId") String approverId, Pageable pageable);
 
+    @Query("SELECT DISTINCT a FROM PmApproval a " +
+           "JOIN a.stepStatuses ss " +
+           "WHERE ss.approver = :approverId " +
+           "AND ss.status != 'PENDING' " +
+           "AND a.isActive = true " +
+           "ORDER BY a.requestedDate DESC")
+    Page<PmApproval> findApprovedHistoryByApprover(@Param("approverId") String approverId, Pageable pageable);
+
     // ===== Requested By =====
     Page<PmApproval> findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(String requestedBy, Pageable pageable);
 

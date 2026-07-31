@@ -58,7 +58,7 @@ export class Pmdt03Component implements OnInit {
   protected sortBy = signal('requestedDate');
   protected sortDir = signal<'asc' | 'desc'>('desc');
   protected isLoading = signal(false);
-  protected viewMode = signal<'pending' | 'myRequests'>('pending');
+  protected viewMode = signal<'pending' | 'myRequests' | 'approvedHistory'>('pending');
 
   // ===== Data =====
   protected approvals = signal<ApprovalItem[]>([]);
@@ -118,7 +118,7 @@ export class Pmdt03Component implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadApprovals();
+    // handled by effect on initialization
   }
 
   // ===== Load Data =====
@@ -136,10 +136,10 @@ export class Pmdt03Component implements OnInit {
 
     let request$;
     if (this.viewMode() === 'pending') {
-      // ✅ ใช้ getPending(page, size) ตามที่มีใน ApprovalService
       request$ = this.approvalService.getPending(page, size);
+    } else if (this.viewMode() === 'approvedHistory') {
+      request$ = this.approvalService.getApprovedHistory(page, size);
     } else {
-      // ✅ ใช้ getMyRequests(page, size) ตามที่มีใน ApprovalService
       request$ = this.approvalService.getMyRequests(page, size);
     }
 
@@ -161,6 +161,17 @@ export class Pmdt03Component implements OnInit {
 
   // ===== Mapping =====
   private mapApprovalToItem(approval: Approval): ApprovalItem {
+    const approverName =
+      approval.currentStep?.approverName ||
+      approval.finalApproverName ||
+      (approval.steps && approval.steps.length > 0
+        ? approval.steps
+            .filter((s) => s.approverName)
+            .map((s) => s.approverName)
+            .join(', ')
+        : null) ||
+      '-';
+
     return {
       id: approval.id,
       documentType: approval.documentType,
@@ -173,7 +184,7 @@ export class Pmdt03Component implements OnInit {
       dueDate: approval.currentStep?.timeoutDays
         ? new Date(Date.now() + approval.currentStep.timeoutDays * 86400000).toISOString()
         : undefined,
-      approver: approval.currentStep?.approverName || approval.finalApproverName || '-',
+      approver: approverName,
       status: approval.status,
       comment: approval.comment || '',
       attachments: [],

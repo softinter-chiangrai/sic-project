@@ -34,6 +34,13 @@
       <i class="bi bi-clock-history mr-1"></i> รอฉันอนุมัติ
     </button>
     <button
+      (click)="viewMode.set('approvedHistory')"
+      class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+      [class]="viewMode() === 'approvedHistory' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+    >
+      <i class="bi bi-check2-all mr-1"></i> ประวัติการอนุมัติของฉัน
+    </button>
+    <button
       (click)="viewMode.set('myRequests')"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'myRequests' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"

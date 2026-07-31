@@ -127,6 +127,15 @@ public class PmApprovalController {
         return ResponseEntity.ok(approvalService.getPendingApprovals(userId, page, size));
     }
 
+    @GetMapping("/history")
+    @Operation(summary = "Get approval history for current user")
+    public ResponseEntity<PaginationResponse<ApprovalResponse>> getApprovedHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String userId = currentUserService.getUserId();
+        return ResponseEntity.ok(approvalService.getApprovedHistory(userId, page, size));
+    }
+
     @GetMapping("/my-requests")
     @Operation(summary = "Get my approval requests")
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getMyRequests(

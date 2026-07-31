@@ -80,40 +80,6 @@
   @if (!isLoading() && !error() && approval(); as a) {
     <sic-card>
       <div class="space-y-4">
-        <!-- Approval Header -->
-        <div
-          class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--border)]"
-        >
-          <div>
-            <div class="flex items-center gap-3 flex-wrap">
-              <span
-                [class]="
-                  'inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ' +
-                  getStatusClass(a.status)
-                "
-              >
-                <i [class]="getStatusIcon(a.status)"></i>
-                {{ getStatusText(a.status) }}
-              </span>
-              <span class="text-sm text-[var(--text-muted)]">
-                <span class="font-medium">Flow:</span>
-                {{ a.flowName }}
-              </span>
-              <span class="text-sm text-[var(--text-muted)]">
-                <span class="font-medium">โหมด:</span>
-                {{ a.approvalMode }}
-              </span>
-            </div>
-          </div>
-          <div class="text-sm text-[var(--text-muted)] text-right">
-            <div>
-              ขอโดย:
-              <span class="font-medium text-[var(--text-active)]">{{ a.requestedByName }}</span>
-            </div>
-            {{ a.requestedDate | sicDate: null : 'DD/MM/YYYY HH:mm' }}
-          </div>
-        </div>
-
         <!-- Approval Component -->
         <sic-approval
           [documentType]="a.documentType"
@@ -122,6 +88,7 @@
           [documentTitle]="a.documentTitle"
           [version]="a.version"
           [autoLoad]="false"
+          [initialApproval]="a"
           (statusChange)="onStatusChange($event)"
           (actionTaken)="onActionTaken($event)"
         ></sic-approval>

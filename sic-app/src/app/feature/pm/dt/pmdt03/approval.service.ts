@@ -83,6 +83,13 @@ export class ApprovalService {
         return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/pending`, { params });
     }
 
+    getApprovedHistory(page = 0, size = 10): Observable<PaginationResponse<Approval>> {
+        const params = new HttpParams()
+            .set('page', page.toString())
+            .set('size', size.toString());
+        return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/history`, { params });
+    }
+
     getMyRequests(page = 0, size = 10): Observable<PaginationResponse<Approval>> {
         const params = new HttpParams()
             .set('page', page.toString())
