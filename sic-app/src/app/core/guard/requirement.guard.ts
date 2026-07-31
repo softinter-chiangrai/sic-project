@@ -2,37 +2,51 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { DialogService } from '../services/dialog.service';
-import { CustomerStateService } from '../services/customer-state.service'; // ✅ เพิ่ม
+import { CustomerStateService } from '../services/customer-state.service';
 
 export const requirementGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const dialog = inject(DialogService);
-  const customerState = inject(CustomerStateService); // ✅ เพิ่ม
+  const customerState = inject(CustomerStateService);
 
-  // ✅ ตรวจสอบจาก Service หรือ queryParams
-  let requirementId = customerState.getRequirementId(); // ต้องเพิ่ม method ใน Service
+  // 1. พยายามดึงจาก Service ก่อน
+  let requirementId: string | null = customerState.getRequirementId();
+
+  // 2. ถ้าไม่มี ให้ลองอ่านจาก path parameter (กรณี route เช่น requirement/:id)
   if (!requirementId) {
-    requirementId = route.queryParams['requirementId'] || null;
-    if (requirementId) {
-      customerState.setRequirement(
-        requirementId,
-        route.queryParams['requirementTitle'] || ''
-      );
+    const routePath = route.routeConfig?.path || '';
+    if (routePath.startsWith('requirement/:id')) {
+      const idFromParam = route.params['id'];
+      if (idFromParam) {
+        requirementId = idFromParam;
+      }
     }
   }
 
+  // 3. ถ้ายังไม่มี ให้ลองอ่านจาก query parameter
   if (!requirementId) {
-    dialog.warn('กรุณาเลือก Requirement', 'ไม่พบข้อมูล Requirement');
-    const projectId = customerState.getProjectId();
-    const customerId = customerState.getCustomerId();
-    router.navigate(['/feature/pm/pmdt04'], {
-      queryParams: {
-        projectId: projectId || undefined,
-        customerId: customerId || undefined
-      }
-    });
-    return false;
+    const qReqId = route.queryParams['requirementId'];
+    if (qReqId && typeof qReqId === 'string') {
+      requirementId = qReqId;
+    }
   }
 
-  return true;
+  // 4. ถ้ามี requirementId แล้ว → ตั้งค่าใน Service และ return true
+  if (requirementId) {
+    const title = route.queryParams['requirementTitle'] || '';
+    customerState.setRequirement(requirementId, title);
+    return true;
+  }
+
+  // 5. ไม่มี requirementId → แจ้งเตือนและกลับไปหน้ารายการ
+  dialog.warn('กรุณาเลือก Requirement', 'ไม่พบข้อมูล Requirement');
+  const projectId = customerState.getProjectId();
+  const customerId = customerState.getCustomerId();
+  router.navigate(['/feature/pm/pmdt04'], {
+    queryParams: {
+      projectId: projectId || undefined,
+      customerId: customerId || undefined,
+    },
+  });
+  return false;
 };

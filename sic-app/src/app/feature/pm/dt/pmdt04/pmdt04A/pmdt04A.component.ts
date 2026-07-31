@@ -258,9 +258,32 @@ export class Pmdt04AComponent implements OnInit {
       .subscribe({
         next: (res: any) => {
           const id = (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
-          this.form.markAsPristine();
-          this.navigateBackToRequirementList();
+          
+          if (this.selectedFlowId && id) {
+            this.approvalService
+              .submitForApproval({
+                documentType: 'REQUIREMENT',
+                documentId: id,
+                documentCode: data.requirementCode,
+                documentTitle: data.title,
+                flowId: this.selectedFlowId,
+                comment: 'ส่งขออนุมัติ Requirement',
+              })
+              .subscribe({
+                next: () => {
+                  this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อยแล้ว');
+                  this.form.markAsPristine();
+                  this.navigateBackToRequirementList();
+                },
+                error: (err) => {
+                  this.dialog.error('ส่งอนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+                }
+              });
+          } else {
+            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+            this.form.markAsPristine();
+            this.navigateBackToRequirementList();
+          }
         },
         error: (err) => {
           this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

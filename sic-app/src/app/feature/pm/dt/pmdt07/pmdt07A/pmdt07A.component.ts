@@ -33,6 +33,8 @@ interface ChangeRequest {
   description?: string;
   changeReason?: string;
   assigneeId?: string;
+  assigneeName?: string;
+  assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
   status?: string;
   rowVersion?: number;
 }
@@ -99,6 +101,28 @@ export class Pmdt07AComponent implements OnInit {
   });
 
   selectedTargetType = signal('REQUIREMENT');
+  selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
+  selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
+
+  onAssigneeSelected(item: any, combobox: any) {
+    if (item && item.value) {
+      const exists = this.selectedAssignees().some(a => a.userId === item.value);
+      if (!exists) {
+        this.selectedAssignees.update(arr => [...arr, { userId: item.value, userName: item.text }]);
+        this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
+        this.form.get('assigneeId')?.markAsDirty();
+        this.form.get('assigneeId')?.markAsTouched();
+      }
+      combobox.writeValue(null);
+    }
+  }
+
+  removeAssignee(userId: string) {
+    this.selectedAssignees.update(arr => arr.filter(a => a.userId !== userId));
+    this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
+    this.form.get('assigneeId')?.markAsDirty();
+    this.form.get('assigneeId')?.markAsTouched();
+  }
 
   targetDocumentApiUrl = computed(() => {
     const type = this.selectedTargetType();
@@ -171,6 +195,21 @@ export class Pmdt07AComponent implements OnInit {
             this.selectedTargetType.set(data.targetType);
           }
           this.form.patchValue(data);
+          if (data.assignees && data.assignees.length > 0) {
+            this.selectedAssignees.set(
+              data.assignees.map((a) => ({
+                userId: a.userId,
+                userName: a.userName || a.userId,
+              }))
+            );
+            this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
+          } else if (data.assigneeId) {
+            this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
+            this.form.get('assigneeId')?.setValue(data.assigneeId);
+          } else {
+            this.selectedAssignees.set([]);
+            this.form.get('assigneeId')?.setValue(null);
+          }
           if (data.projectId) {
             this.projectId = data.projectId;
           }
@@ -192,12 +231,19 @@ export class Pmdt07AComponent implements OnInit {
     }
 
     this.isSaving = true;
-    const data = this.form.value;
+    const data = { ...this.form.value };
 
     // ตรวจสอบว่ามี projectId หรือไม่ (ถ้าไม่มีให้ใช้จาก query)
     if (!data.projectId && this.projectId) {
       data.projectId = this.projectId;
     }
+
+    // Map assignees array
+    data.assignees = this.selectedAssignees().map(a => ({
+      userId: a.userId,
+      targetType: data.targetType,
+      targetId: data.targetId
+    }));
 
     // กำหนด state
     if (this.isEdit && this.changeRequestId) {
