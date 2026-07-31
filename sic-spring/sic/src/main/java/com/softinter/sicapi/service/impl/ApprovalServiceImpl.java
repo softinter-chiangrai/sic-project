@@ -28,15 +28,17 @@ import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.pm.PmApprovalLog;
 import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
 import com.softinter.sicapi.entity.pm.PmRequirement;
-import com.softinter.sicapi.entity.pm.PmRequirementChangeRequest;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
+
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
@@ -68,7 +70,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ApprovalNotificationService notificationService;
 
     // ✅ Inject repositories สำหรับอัปเดตสถานะเอกสาร
-    private final PmRequirementChangeRequestRepository changeRequestRepository;
+    private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
 
     // ============================================================
@@ -85,8 +87,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         // 2. Check if already has pending approval
         boolean hasPending = approvalRepository.existsByDocumentTypeAndDocumentIdAndStatusAndIsActiveTrue(
-                request.getDocumentType(), request.getDocumentId(), ApprovalStatus.PENDING
-        );
+                request.getDocumentType(), request.getDocumentId(), ApprovalStatus.PENDING);
         if (hasPending) {
             throw new IllegalStateException("This document already has a pending approval.");
         }
@@ -98,7 +99,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                     .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
         } else {
             flow = flowRepository.findByDocumentTypeAndIsActiveTrue(request.getDocumentType())
-                    .orElseThrow(() -> new ResourceNotFoundException("No approval flow defined for " + request.getDocumentType()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No approval flow defined for " + request.getDocumentType()));
         }
 
         // 4. Get steps
@@ -141,7 +143,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                     }
                 }
             } else if (step.getApproverRole() != null && !step.getApproverRole().isBlank()) {
-                List<String> roleUserIds = userBusinessRoleRepository.findUserIdsByBusinessIdAndRoleCode(approval.getBusinessId(), step.getApproverRole());
+                List<String> roleUserIds = userBusinessRoleRepository
+                        .findUserIdsByBusinessIdAndRoleCode(approval.getBusinessId(), step.getApproverRole());
                 if (roleUserIds != null) {
                     targetUserIds.addAll(roleUserIds);
                 }
@@ -227,7 +230,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page, int size) {
+    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page,
+            int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
@@ -262,7 +266,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
-        Page<PmApproval> pageResult = approvalRepository.findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
+        Page<PmApproval> pageResult = approvalRepository
+                .findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -275,8 +280,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         Pageable pageable = PageRequest.of(
                 request.getPageNumber() - 1,
                 request.getPageSize(),
-                Sort.by("createdDate").descending()
-        );
+                Sort.by("createdDate").descending());
 
         Specification<PmApproval> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -298,8 +302,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("documentCode")), keyword),
-                        cb.like(cb.lower(root.get("documentTitle")), keyword)
-                ));
+                        cb.like(cb.lower(root.get("documentTitle")), keyword)));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -310,7 +313,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
 
-        return PaginationUtil.of(data, request.getPageNumber() - 1, request.getPageSize(), pageResult.getTotalElements());
+        return PaginationUtil.of(data, request.getPageNumber() - 1, request.getPageSize(),
+                pageResult.getTotalElements());
     }
 
     // ============================================================
@@ -573,17 +577,19 @@ public class ApprovalServiceImpl implements ApprovalService {
         PmApproval approval = approvalRepository.findById(approvalId)
                 .orElse(null);
 
-        if (approval == null) return false;
-        if (approval.getStatus().isFinal()) return false;
+        if (approval == null)
+            return false;
+        if (approval.getStatus().isFinal())
+            return false;
 
         // Check if user has pending step
         return approval.getStepStatuses().stream()
                 .anyMatch(ss -> ss.getStatus() == ApprovalStatus.PENDING
                         && !ss.getIsCompleted()
                         && userId.equals(ss.getApprover())
-                        && (approval.getFlow().getApprovalMode() != ApprovalMode.CHAIN 
-                            || approval.getCurrentStep() == null 
-                            || ss.getStep().getId().equals(approval.getCurrentStep().getId())));
+                        && (approval.getFlow().getApprovalMode() != ApprovalMode.CHAIN
+                                || approval.getCurrentStep() == null
+                                || ss.getStep().getId().equals(approval.getCurrentStep().getId())));
     }
 
     @Override
@@ -630,15 +636,16 @@ public class ApprovalServiceImpl implements ApprovalService {
     // ============================================================
 
     private String getUserName(String userId) {
-        if (userId == null) return null;
+        if (userId == null)
+            return null;
         return profileRepository.findByUserId(userId)
                 .map(LocalizationHelper::getFullName)
                 .orElse(userId);
     }
 
     private void createLog(PmApproval approval, PmApprovalStepStatus stepStatus, String action,
-                           String actor, String actorName, String comment,
-                           ApprovalStatus oldStatus, ApprovalStatus newStatus) {
+            String actor, String actorName, String comment,
+            ApprovalStatus oldStatus, ApprovalStatus newStatus) {
         PmApprovalLog log = new PmApprovalLog();
         log.setApproval(approval);
         log.setStepStatus(stepStatus);
@@ -664,7 +671,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         try {
             if ("CHANGE_REQUEST".equals(docType)) {
-                PmRequirementChangeRequest changeRequest = changeRequestRepository.findById(docId)
+                PmChangeRequest changeRequest = changeRequestRepository.findById(docId)
                         .orElse(null);
                 if (changeRequest != null) {
                     changeRequest.setStatus(newStatus);
@@ -698,7 +705,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         try {
             if ("CHANGE_REQUEST".equals(docType)) {
-                PmRequirementChangeRequest changeRequest = changeRequestRepository.findById(docId)
+                PmChangeRequest changeRequest = changeRequestRepository.findById(docId)
                         .orElse(null);
                 if (changeRequest != null) {
                     changeRequest.setStatus("In Review");
@@ -819,7 +826,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setStepName(status.getStep().getStepName());
         response.setApproverRole(status.getStep().getApproverRole());
         response.setApproverUserId(status.getStep().getApproverUserId());
-        response.setIsRequired(status.getStep().getIsRequired()); 
+        response.setIsRequired(status.getStep().getIsRequired());
         response.setTimeoutDays(status.getStep().getTimeoutDays());
         response.setStatus(status.getStatus());
         response.setStatusText(getStatusText(status.getStatus()));
@@ -881,30 +888,48 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     private String getStatusText(ApprovalStatus status) {
-        if (status == null) return "-";
+        if (status == null)
+            return "-";
         switch (status) {
-            case PENDING: return "รอดำเนินการ";
-            case PARTIALLY_APPROVED: return "อนุมัติบางส่วน";
-            case APPROVED: return "อนุมัติแล้ว";
-            case REJECTED: return "ปฏิเสธ";
-            case NEED_REVISION: return "ต้องแก้ไข";
-            case CANCELLED: return "ยกเลิก";
-            case EXPIRED: return "หมดอายุ";
-            default: return status.name();
+            case PENDING:
+                return "รอดำเนินการ";
+            case PARTIALLY_APPROVED:
+                return "อนุมัติบางส่วน";
+            case APPROVED:
+                return "อนุมัติแล้ว";
+            case REJECTED:
+                return "ปฏิเสธ";
+            case NEED_REVISION:
+                return "ต้องแก้ไข";
+            case CANCELLED:
+                return "ยกเลิก";
+            case EXPIRED:
+                return "หมดอายุ";
+            default:
+                return status.name();
         }
     }
 
     private String getStatusColor(ApprovalStatus status) {
-        if (status == null) return "bg-gray-100 text-gray-600";
+        if (status == null)
+            return "bg-gray-100 text-gray-600";
         switch (status) {
-            case PENDING: return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-            case PARTIALLY_APPROVED: return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-            case APPROVED: return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
-            case REJECTED: return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-            case NEED_REVISION: return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
-            case CANCELLED: return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
-            case EXPIRED: return "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400";
-            default: return "bg-gray-100 text-gray-600";
+            case PENDING:
+                return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+            case PARTIALLY_APPROVED:
+                return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+            case APPROVED:
+                return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+            case REJECTED:
+                return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+            case NEED_REVISION:
+                return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
+            case CANCELLED:
+                return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+            case EXPIRED:
+                return "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400";
+            default:
+                return "bg-gray-100 text-gray-600";
         }
     }
 }

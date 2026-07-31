@@ -217,3 +217,53 @@ DROP TABLE IF EXISTS pm_specification_requirement;
 
 CREATE INDEX IF NOT EXISTS idx_trace_source_type_id ON pm_trace_link(source_type, source_id);
 CREATE INDEX IF NOT EXISTS idx_trace_target_type_id ON pm_trace_link(target_type, target_id);
+
+DROP TABLE IF EXISTS pm_change_impact_analysis CASCADE;
+DROP TABLE IF EXISTS pm_requirement_change_request CASCADE;
+
+-- 1. สร้างตาราง Change Request
+CREATE TABLE IF NOT EXISTS pm_change_request (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES pm_customer_project(id),
+    target_type VARCHAR(50) NOT NULL,
+    target_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    change_reason VARCHAR(50) NOT NULL,
+    requester_id VARCHAR(100) NOT NULL,
+    assignee_id VARCHAR(100) NOT NULL,
+    target_version VARCHAR(20),
+    status VARCHAR(20) DEFAULT 'DRAFT',
+    created_by VARCHAR(100) DEFAULT 'system',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_by VARCHAR(100) DEFAULT 'system',
+    updated_date TIMESTAMPTZ DEFAULT NOW(),
+    is_delete BOOLEAN DEFAULT FALSE,
+    delete_by VARCHAR(100),
+    delete_date TIMESTAMPTZ
+);
+
+-- 2. สร้างตาราง Edit Session
+CREATE TABLE IF NOT EXISTS pm_edit_session (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    change_request_id UUID NOT NULL REFERENCES pm_change_request(id),
+    target_type VARCHAR(50) NOT NULL,
+    target_id UUID NOT NULL,
+    assignee_id VARCHAR(100) NOT NULL,
+    granted_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by VARCHAR(100) DEFAULT 'system',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_by VARCHAR(100) DEFAULT 'system',
+    updated_date TIMESTAMPTZ DEFAULT NOW(),
+    is_delete BOOLEAN DEFAULT FALSE
+);
+
+-- Indexes
+CREATE INDEX idx_cr_target ON pm_change_request (target_type, target_id);
+CREATE INDEX idx_cr_status ON pm_change_request (status);
+CREATE INDEX idx_session_target ON pm_edit_session (target_type, target_id);
+CREATE INDEX idx_session_active ON pm_edit_session (is_active);
+
+ALTER TABLE pm_edit_session ADD COLUMN edit_type VARCHAR(20) DEFAULT 'CHANGE_REQUEST';

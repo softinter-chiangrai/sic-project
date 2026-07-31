@@ -14,6 +14,7 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmRequirementService;
+import com.softinter.sicapi.service.EditSessionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class PmRequirementServiceImpl implements PmRequirementService {
 
     private final PmRequirementRepository requirementRepository;
+    private final EditSessionService editSessionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,6 +68,14 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         } else if (state == EntityState.MODIFIED) {
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
+
+            // Edit Guard: Check if the document status is NOT Draft, then require assignee rights.
+            if (!"DRAFT".equalsIgnoreCase(requirement.getStatus())) {
+                if (!editSessionService.canEdit("REQUIREMENT", requirement.getId(), userId)) {
+                    throw new IllegalStateException("This document is locked because it is not in Draft. A Change Request is required to edit it.");
+                }
+            }
+
             // check rowVersion
             if (request.getRowVersion() != null && !request.getRowVersion().equals(requirement.getRowVersion())) {
                 throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");

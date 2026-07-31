@@ -8,17 +8,40 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 
+import { ChangeRequestService } from './change-request.service';
+
+interface CrAssignee {
+  id: string;
+  userId: string;
+  userName: string;
+  targetType: string;
+  targetId: string;
+  status: string;
+  completedAt?: string;
+}
+
+interface ChangeImpact {
+  id: string;
+  impactedType: string;
+  impactedId: string;
+  impactedTitle: string;
+  impactLevel: string;
+}
+
 interface ChangeRequest {
   id: string;
-  changeDescription: string;
-  impactSummary: string;
+  title: string;
+  description: string;
+  changeReason: string;
   estimatedManday: number;
   status: string;
-  requirementId: string;
-  requirementCode: string;
+  targetType: string;
+  targetId: string;
   projectId: string;
   projectName?: string;
   createdDate: string;
+  assignees?: CrAssignee[];
+  impacts?: ChangeImpact[];
 }
 
 @Component({
@@ -33,6 +56,7 @@ export class Pmdt07Component implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
+  private crService = inject(ChangeRequestService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
   // ใช้ Math ใน template
@@ -152,6 +176,60 @@ export class Pmdt07Component implements OnInit {
           error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
         });
       }
+    });
+  }
+
+  submitRequest(id: string) {
+    this.crService.submitForApproval(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
+    });
+  }
+
+  approveRequest(id: string) {
+    this.crService.approve(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'อนุมัติ Change Request เรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถอนุมัติได้')
+    });
+  }
+
+  rejectRequest(id: string) {
+    this.dialog.confirm('ปฏิเสธคำขอ', 'คุณต้องการปฏิเสธ Change Request นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.crService.reject(id).subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'ปฏิเสธ Change Request เรียบร้อยแล้ว');
+            this.loadChangeRequests();
+          },
+          error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปฏิเสธได้')
+        });
+      }
+    });
+  }
+
+  implementRequest(id: string) {
+    this.crService.implement(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
+    });
+  }
+
+  completeAssigneeTask(id: string, userId: string, targetId: string) {
+    this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
     });
   }
 

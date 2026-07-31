@@ -19,7 +19,7 @@ public class ChangeImpactAnalysis extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "change_request_id", nullable = false)
-    private PmRequirementChangeRequest changeRequest;
+    private PmChangeRequest changeRequest;
 
     @Column(name = "dfd_impact", columnDefinition = "TEXT")
     private String dfdImpact;

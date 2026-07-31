@@ -68,4 +68,26 @@ export class ChangeRequestService {
   deleteImpactAnalysis(id: string): Observable<void> {
     return this.http.delete<void>(`${this.impactUrl}/${id}`);
   }
+  // ใน change-request.service.ts เพิ่ม
+  createChangeRequest(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}`, data);
+  }
+  submitForApproval(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/submit`, {});
+  }
+  approve(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/approve`, {});
+  }
+  reject(id: string, reason?: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/reject`, { reason });
+  }
+  implement(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/implement`, {});
+  }
+  markAssigneeComplete(id: string, userId: string, targetId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/assignees/complete`, {}, { params: { userId, targetId } });
+  }
+  checkEditLock(targetType: string, targetId: string): Observable<any> {
+    return this.http.get(`${environment.apiBaseUrl}/api/pm/edit-sessions/check`, { params: { targetType, targetId } });
+  }
 }

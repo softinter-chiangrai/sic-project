@@ -3,18 +3,15 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.entity.pm.PmRequirementChangeRequest;
 import com.softinter.sicapi.service.ChangeRequestService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,62 +21,62 @@ public class PmChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
 
-    // ===== LIST (Paging + Filter) =====
+    @PostMapping
+    public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(changeRequestService.createChangeRequest(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ChangeRequestResponse> update(@PathVariable UUID id, @Valid @RequestBody ChangeRequestRequest request) {
+        return ResponseEntity.ok(changeRequestService.updateChangeRequest(id, request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ChangeRequestResponse> get(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.getChangeRequest(id));
+    }
+
     @GetMapping
     public ResponseEntity<PaginationResponse<ChangeRequestResponse>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String targetType,
+            @RequestParam(required = false) UUID targetId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) UUID projectId) {
-
-        Specification<PmRequirementChangeRequest> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.isFalse(root.get("isDelete")));
-
-            if (projectId != null) {
-                predicates.add(cb.equal(root.get("requirement").get("project").get("id"), projectId));
-            }
-            if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("changeDescription")), pattern),
-                        cb.like(cb.lower(root.get("requirement").get("title")), pattern)
-                ));
-            }
-            if (status != null && !status.isBlank() && !"all".equals(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return ResponseEntity.ok(changeRequestService.getChangeRequests(spec, page, size));
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(changeRequestService.listChangeRequests(targetType, targetId, status, pageable));
     }
 
-    // ===== GET BY ID =====
-    @GetMapping("/{id}")
-    public ResponseEntity<ChangeRequestResponse> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(changeRequestService.getChangeRequestById(id));
-    }
-
-    // ===== CREATE =====
-    @PostMapping
-    public ResponseEntity<UUID> create(@Valid @RequestBody ChangeRequestRequest request) {
-        UUID id = changeRequestService.createChangeRequest(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
-    }
-
-    // ===== UPDATE =====
-    @PutMapping("/{id}")
-    public ResponseEntity<UUID> update(@PathVariable UUID id, @Valid @RequestBody ChangeRequestRequest request) {
-        UUID updatedId = changeRequestService.updateChangeRequest(id, request);
-        return ResponseEntity.ok(updatedId);
-    }
-
-    // ===== SOFT DELETE =====
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         changeRequestService.deleteChangeRequest(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<ChangeRequestResponse> submit(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.submitForApproval(id));
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ChangeRequestResponse> approve(@PathVariable UUID id) {
+        // TODO: get current user as approver
+        return ResponseEntity.ok(changeRequestService.approve(id, "system"));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ChangeRequestResponse> reject(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.reject(id, "reason"));
+    }
+
+    @PostMapping("/{id}/implement")
+    public ResponseEntity<ChangeRequestResponse> implement(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.implement(id));
+    }
+
+    @PostMapping("/{id}/assignees/complete")
+    public ResponseEntity<ChangeRequestResponse> completeAssignee(
+            @PathVariable UUID id,
+            @RequestParam String userId,
+            @RequestParam UUID targetId) {
+        return ResponseEntity.ok(changeRequestService.markAssigneeComplete(id, userId, targetId));
     }
 }

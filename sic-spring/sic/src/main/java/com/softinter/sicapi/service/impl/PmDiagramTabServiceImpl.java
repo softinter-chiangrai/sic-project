@@ -20,6 +20,7 @@ import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.service.EditSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmRequirementRepository requirementRepository;
     private final TraceLinkService traceLinkService;
     private final PmTraceLinkRepository traceLinkRepository;   // ✅ เพิ่ม repository
+    private final EditSessionService editSessionService;
 
     // ===== CREATE =====
     @Override
@@ -181,6 +183,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
 
         if (state == EntityState.MODIFIED) {
+            String userId = currentUserService.getUserId();
+            String diagramType = tab.getDiagramType().toUpperCase();
+            if (!editSessionService.canEdit(diagramType, tab.getId(), userId)) {
+                throw new IllegalStateException("This diagram is locked. A Change Request is required to edit it.");
+            }
+
             if (request.getRowVersion() != null && request.getRowVersion() != 0 && !request.getRowVersion().equals(tab.getRowVersion())) {
                 if (request.getGraphData() == null && request.getMermaidScript() == null) {
                     throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");

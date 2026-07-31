@@ -38,6 +38,7 @@ import com.softinter.sicapi.repository.pm.PmSpecificationValidationRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationVersionRepository;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.service.EditSessionService;
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final TraceLinkService traceLinkService;
     private final PmRequirementRepository requirementRepository;
     private final ObjectMapper objectMapper;
+    private final EditSessionService editSessionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -133,6 +135,13 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         } else if (state == EntityState.MODIFIED) {
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+            // Edit Guard: Check if the document status is NOT Draft, then require assignee rights.
+            if (!"DRAFT".equalsIgnoreCase(spec.getStatus())) {
+                if (!editSessionService.canEdit("SPECIFICATION", spec.getId(), userId)) {
+                    throw new IllegalStateException("This document is locked because it is not in Draft. A Change Request is required to edit it.");
+                }
+            }
 
             if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");

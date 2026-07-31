@@ -12,9 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
 import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
 import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
-import com.softinter.sicapi.entity.pm.PmRequirementChangeRequest;
+
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
 import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ImpactAnalysisService;
 import com.softinter.sicapi.service.TraceLinkService;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
     private final ChangeImpactAnalysisRepository repository;
-    private final PmRequirementChangeRequestRepository changeRequestRepository;
+    private final PmChangeRequestRepository changeRequestRepository;
     private final CurrentUserService currentUserService;
     private final TraceLinkService traceLinkService;
 
@@ -43,7 +44,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     @Override
     @Transactional
     public UUID save(SaveImpactAnalysisRequest request) {
-        PmRequirementChangeRequest changeRequest = changeRequestRepository
+        PmChangeRequest changeRequest = changeRequestRepository
                 .findById(request.getChangeRequestId())
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
 
@@ -96,13 +97,15 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
         log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
 
-        PmRequirementChangeRequest changeRequest = changeRequestRepository
+        PmChangeRequest changeRequest = changeRequestRepository
                 .findById(changeRequestId)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
 
-        UUID requirementId = changeRequest.getRequirement().getId();
+        UUID targetId = changeRequest.getTargetId();
+        String targetType = changeRequest.getTargetType();
 
-        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems("REQUIREMENT", requirementId);
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
+                targetId);
 
         Map<String, Set<UUID>> impacted = traceResult.getImpacted();
 

@@ -7,6 +7,7 @@ import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01
 import { requirementGuard } from '../../core/guard/requirement.guard';
 import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
 import { Pmdt02GanttComponent } from './dt/pmdt02/pmdt02-gantt.component';
+import { editGuard } from '../../core/guard/edit.guard';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -169,7 +170,8 @@ export const PM_ROUTES: Routes = [
     path: 'requirement/:id/edit',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
+  data: { targetType: 'REQUIREMENT' } // ✅ เพิ่ม
   },
   {
     path: 'requirement/:id/approval',
