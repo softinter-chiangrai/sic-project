@@ -20,6 +20,10 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
 
     Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
+    List<PmSpecification> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+
+    List<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+
     Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
 
     List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);

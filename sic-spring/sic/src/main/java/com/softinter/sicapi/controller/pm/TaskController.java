@@ -65,4 +65,14 @@ public class TaskController {
         taskService.deleteTask(taskId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/combobox")
+    public ResponseEntity<List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxTasks(@RequestParam UUID projectId) {
+        log.info("Getting tasks combobox for project ID: {}", projectId);
+        List<com.softinter.sicapi.dto.response.TaskResponse> tasks = taskService.getAllTasksByProjectId(projectId);
+        List<com.softinter.sicapi.dto.response.ComboboxResponse> list = tasks.stream()
+                .map(t -> new com.softinter.sicapi.dto.response.ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 }

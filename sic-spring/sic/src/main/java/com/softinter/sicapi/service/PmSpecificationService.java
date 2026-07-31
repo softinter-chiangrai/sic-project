@@ -13,4 +13,5 @@ public interface PmSpecificationService {
     UUID save(PmSpecificationRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
     PmSpecificationResponse getByCode(UUID businessId, String code);
+    java.util.List<com.softinter.sicapi.entity.pm.PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId);
 }

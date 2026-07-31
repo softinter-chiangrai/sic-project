@@ -198,22 +198,22 @@ export const PM_ROUTES: Routes = [
   {
     path: 'pmdt07',
     loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmdt07/new',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmdt07/:id/edit',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'pmdt07/:id/view',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard],
   },
 
  // ===== Specification Management =====

@@ -1,7 +1,6 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -20,17 +19,21 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { BusinessService } from '../../../../../core/services/business.service';
 
 interface ChangeRequest {
   id?: string;
-  requirementId: string;
-  changeDescription: string;
-  impactSummary?: string;
-  estimatedManday?: number;
-  status?: string;
   projectId?: string;
+  targetType: string;
+  targetId: string;
+  title: string;
+  description?: string;
+  changeReason?: string;
+  assigneeId?: string;
+  status?: string;
   rowVersion?: number;
 }
 
@@ -58,8 +61,14 @@ export class Pmdt07AComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
   private approvalService = inject(ApprovalService);
+  private businessService = inject(BusinessService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
+
+  get businessId() {
+    return this.businessService.getCurrentBusinessId();
+  }
 
   // สำหรับใช้ใน template
   environment = environment;
@@ -76,19 +85,33 @@ export class Pmdt07AComponent implements OnInit {
   selectedFlowId: string | null = null;
   isLoadingFlows = false;
 
-  // ฟอร์มหลัก (ไม่มี status)
+  // ฟอร์มหลัก
   form: FormGroup = this.fb.group({
     id: [null],
-    requirementId: [null, Validators.required],
-    changeDescription: [null, Validators.required],
-    impactSummary: [null],
-    estimatedManday: [null, [Validators.min(0)]],
     projectId: [null],
+    targetType: ['REQUIREMENT', Validators.required],
+    targetId: [null, Validators.required],
+    title: [null, Validators.required],
+    description: [null],
+    changeReason: [null],
+    assigneeId: [null, Validators.required],
     rowVersion: [null],
   });
 
-  // Combobox URL
-  requirementApiUrl = environment.apiBaseUrl + '/api/pm/requirement/combobox';
+  selectedTargetType = signal('REQUIREMENT');
+
+  targetDocumentApiUrl = computed(() => {
+    const type = this.selectedTargetType();
+    if (type === 'REQUIREMENT') {
+      return environment.apiBaseUrl + '/api/pm/requirement/combobox';
+    } else if (type === 'SPECIFICATION') {
+      return environment.apiBaseUrl + '/api/pm/specification/combobox';
+    } else if (type === 'TASK') {
+      return environment.apiBaseUrl + '/api/pm/tasks/combobox';
+    }
+    return '';
+  });
+
   documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
 
   ngOnInit() {
@@ -107,6 +130,12 @@ export class Pmdt07AComponent implements OnInit {
         this.projectId = qParams['projectId'];
         this.form.patchValue({ projectId: this.projectId });
       }
+    });
+
+    // Listen to targetType changes
+    this.form.get('targetType')?.valueChanges.subscribe((val) => {
+      this.selectedTargetType.set(val);
+      this.form.get('targetId')?.setValue(null); // reset selected targetId
     });
 
     // ✅ โหลด Approval Flow
@@ -138,6 +167,9 @@ export class Pmdt07AComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (data) => {
+          if (data.targetType) {
+            this.selectedTargetType.set(data.targetType);
+          }
           this.form.patchValue(data);
           if (data.projectId) {
             this.projectId = data.projectId;
@@ -190,7 +222,7 @@ export class Pmdt07AComponent implements OnInit {
               documentType: 'CHANGE_REQUEST',
               documentId: id,
               documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
-              documentTitle: data.changeDescription || 'คำขอเปลี่ยนแปลง Requirement',
+              documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
               flowId: this.selectedFlowId,
               comment: 'ส่งขออนุมัติ Change Request',
             })

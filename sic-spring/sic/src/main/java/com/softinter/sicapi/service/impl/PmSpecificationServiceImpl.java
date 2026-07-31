@@ -516,4 +516,14 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         return response;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId) {
+        if (projectId != null) {
+            return specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        } else {
+            return specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        }
+    }
 }

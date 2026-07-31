@@ -38,6 +38,7 @@ import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 
 import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.entity.pm.PmCrAssignee;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
@@ -46,6 +47,7 @@ import com.softinter.sicapi.service.ApprovalFlowService;
 import com.softinter.sicapi.service.ApprovalNotificationService;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 
@@ -72,6 +74,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     // ✅ Inject repositories สำหรับอัปเดตสถานะเอกสาร
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
+    private final EditSessionService editSessionService;
 
     // ============================================================
     // 1. Submit for Approval (FIXED Optimistic Locking)
@@ -674,11 +677,32 @@ public class ApprovalServiceImpl implements ApprovalService {
                 PmChangeRequest changeRequest = changeRequestRepository.findById(docId)
                         .orElse(null);
                 if (changeRequest != null) {
-                    changeRequest.setStatus(newStatus);
+                    String formattedStatus = newStatus.toUpperCase();
+                    changeRequest.setStatus(formattedStatus);
                     changeRequest.setUpdatedBy(actor);
                     changeRequest.setUpdatedDate(Instant.now());
+                    if ("APPROVED".equals(formattedStatus)) {
+                        changeRequest.setApprovedBy(actor);
+                        changeRequest.setApprovedAt(Instant.now());
+                    }
                     changeRequestRepository.save(changeRequest);
-                    log.info("Updated Change Request {} status to {}", docId, newStatus);
+                    log.info("Updated Change Request {} status to {}", docId, formattedStatus);
+
+                    // ในกรณีอนุมัติ (APPROVED) ให้ทำการสร้าง Edit Session ให้ผู้เกี่ยวข้อง
+                    if ("APPROVED".equals(formattedStatus)) {
+                        // ดึงข้อมูลผู้เกี่ยวข้องจาก pm_cr_assignee ผ่าน repo
+                        // เนื่องจาก ApprovalServiceImpl ไม่มี inject pmCrAssigneeRepository, เราสามารถดึงจาก changeRequest.getAssignees() ได้โดยตรง
+                        if (changeRequest.getAssignees() != null) {
+                            for (PmCrAssignee assignee : changeRequest.getAssignees()) {
+                                editSessionService.createEditSession(
+                                    changeRequest.getId(),
+                                    assignee.getTargetType(),
+                                    assignee.getTargetId(),
+                                    assignee.getUserId()
+                                );
+                            }
+                        }
+                    }
                 }
             } else if ("REQUIREMENT".equals(docType)) {
                 PmRequirement requirement = requirementRepository.findById(docId)
@@ -708,11 +732,11 @@ public class ApprovalServiceImpl implements ApprovalService {
                 PmChangeRequest changeRequest = changeRequestRepository.findById(docId)
                         .orElse(null);
                 if (changeRequest != null) {
-                    changeRequest.setStatus("In Review");
+                    changeRequest.setStatus("SUBMITTED");
                     changeRequest.setUpdatedBy(actor);
                     changeRequest.setUpdatedDate(Instant.now());
                     changeRequestRepository.save(changeRequest);
-                    log.info("Change Request {} status set to In Review on submit", docId);
+                    log.info("Change Request {} status set to SUBMITTED on submit", docId);
                 }
             } else if ("REQUIREMENT".equals(docType)) {
                 PmRequirement requirement = requirementRepository.findById(docId)

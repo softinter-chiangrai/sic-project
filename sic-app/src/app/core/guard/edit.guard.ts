@@ -2,8 +2,9 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { map, catchError, of } from 'rxjs';
-import { DialogService } from '../core/services/dialog.service';
-import { environment } from '../../environments/environment';
+import { DialogService } from '../services/dialog.service';
+import { environment } from '../../../environments/environment';
+
 
 export const editGuard: CanActivateFn = (route, state) => {
   const http = inject(HttpClient);

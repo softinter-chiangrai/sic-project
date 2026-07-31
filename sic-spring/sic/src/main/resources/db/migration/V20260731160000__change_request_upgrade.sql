@@ -40,3 +40,10 @@ CREATE TABLE IF NOT EXISTS pm_change_impact (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cr_impact_request ON pm_change_impact (change_request_id);
+-- เพิ่มคอลัมน์ที่ขาดหาย
+ALTER TABLE pm_change_request ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+ALTER TABLE pm_change_request ADD COLUMN IF NOT EXISTS approved_by VARCHAR(100);
+ALTER TABLE pm_change_request ADD COLUMN IF NOT EXISTS implemented_at TIMESTAMP;
+
+-- ถ้าไม่มีคอลัมน์ assignee_id ให้เพิ่มด้วย
+ALTER TABLE pm_change_request ADD COLUMN IF NOT EXISTS assignee_id VARCHAR(100);

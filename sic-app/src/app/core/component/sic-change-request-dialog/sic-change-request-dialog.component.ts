@@ -19,7 +19,7 @@ import { DialogService } from '../../services/dialog.service';
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4 px-5 py-4">
         <sic-input label="Title" formControlName="title" [required]="true"></sic-input>
-        <sic-input-area label="Description" formControlName="description" rows="3"></sic-input-area>
+        <sic-input-area label="Description" formControlName="description" [rows]="3"></sic-input-area>
         <sic-combobox label="Change Reason" formControlName="changeReason" [apiUrl]="'/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'" valueField="value" textField="text"></sic-combobox>
         <sic-combobox label="Assignee" formControlName="assigneeId" [apiUrl]="'/api/business/combobox-members?businessId=' + businessId" valueField="value" textField="text" [required]="true"></sic-combobox>
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">

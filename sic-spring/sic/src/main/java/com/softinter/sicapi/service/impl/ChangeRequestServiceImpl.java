@@ -40,6 +40,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final CurrentUserService currentUserService;
     private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmChangeImpactRepository pmChangeImpactRepository;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional
@@ -186,10 +187,18 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             throw new IllegalStateException("Only DRAFT Change Request can be submitted.");
         }
 
-        cr.setStatus("SUBMITTED");
-        cr.setUpdatedBy(currentUserService.getUserId());
-        cr.setUpdatedDate(Instant.now());
-        cr = changeRequestRepository.save(cr);
+        // ค้นหาหรือระบุ flow สำหรับอนุมัติ Change Request (สมมติว่าใช้ flow ตัวแรกที่ผูกกับ Change Request หรือกำหนดดีฟอลต์)
+        // เนื่องจาก ApprovalServiceImpl มี helper `updateDocumentStatusOnSubmit` ที่จะคอยอัปเดตเป็น SUBMITTED ให้เมื่อ submit สำเร็จ
+        // เราทำการเรียก submitForApproval ไปที่ ApprovalService
+        com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
+        submitReq.setDocumentType("CHANGE_REQUEST");
+        submitReq.setDocumentId(cr.getId());
+        submitReq.setDocumentCode("CR-" + cr.getId().toString().substring(0, 8).toUpperCase());
+        submitReq.setDocumentTitle(cr.getTitle());
+        submitReq.setComment("ส่งขออนุมัติ Change Request: " + cr.getTitle());
+        
+        approvalService.submitForApproval(submitReq);
+
         return toResponse(cr);
     }
 
@@ -199,10 +208,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         PmChangeRequest cr = changeRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
 
-        if (!"SUBMITTED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only SUBMITTED Change Request can be approved.");
-        }
-
         cr.setStatus("APPROVED");
         cr.setApprovedBy(approvedBy);
         cr.setApprovedAt(Instant.now());
@@ -210,7 +215,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // สร้าง Edit Session และแจ้งเตือนให้ Assignee ทุกคนที่ได้รับเลือก
+        // สร้าง Edit Session ให้ Assignee
         List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
         for (PmCrAssignee assignee : assignees) {
             editSessionService.createEditSession(cr.getId(), assignee.getTargetType(), assignee.getTargetId(), assignee.getUserId());
@@ -224,10 +229,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public ChangeRequestResponse reject(UUID id, String reason) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        if (!"SUBMITTED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only SUBMITTED Change Request can be rejected.");
-        }
 
         cr.setStatus("REJECTED");
         cr.setUpdatedBy(currentUserService.getUserId());

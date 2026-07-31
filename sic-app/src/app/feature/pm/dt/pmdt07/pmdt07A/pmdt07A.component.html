@@ -13,49 +13,75 @@
   <sic-card>
     <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Requirement Combobox -->
-        <div class="md:col-span-2">
+        <!-- Target Type Selection -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
+          <select
+            formControlName="targetType"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
+          >
+            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
+            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
+            <option value="TASK">งาน (Task)</option>
+          </select>
+        </div>
+
+        <!-- Target Document Combobox -->
+        <div>
           <sic-combobox
-            label="Requirement ที่ขอเปลี่ยนแปลง"
-            formControlName="requirementId"
-            [apiUrl]="requirementApiUrl"
+            label="เอกสารที่ขอเปลี่ยนแปลง"
+            formControlName="targetId"
+            [apiUrl]="targetDocumentApiUrl()"
             [params]="{ projectId: projectId }"
-            valueField="id"
-            textField="title"
+            valueField="value"
+            textField="text"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือก Requirement' }"
+            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
           ></sic-combobox>
         </div>
 
-        <!-- Change Description -->
+        <!-- Title -->
+        <div class="md:col-span-2">
+          <sic-input
+            label="หัวข้อคำขอเปลี่ยนแปลง"
+            formControlName="title"
+            [required]="true"
+            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
+          ></sic-input>
+        </div>
+
+        <!-- Description -->
         <div class="md:col-span-2">
           <sic-input-area
-            label="คำอธิบายการเปลี่ยนแปลง"
-            formControlName="changeDescription"
-            [required]="true"
+            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
+            formControlName="description"
             [rows]="3"
             placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
           ></sic-input-area>
         </div>
 
-        <!-- Impact Summary -->
-        <div class="md:col-span-2">
-          <sic-input-area
-            label="สรุปผลกระทบ (โดยสังเขป)"
-            formControlName="impactSummary"
-            [rows]="2"
-            placeholder="สรุปผลกระทบที่คาดว่าจะเกิดขึ้น"
-          ></sic-input-area>
+        <!-- Change Reason -->
+        <div>
+          <sic-combobox
+            label="สาเหตุการเปลี่ยนแปลง"
+            formControlName="changeReason"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
+            valueField="value"
+            textField="text"
+          ></sic-combobox>
         </div>
 
-        <!-- Estimated Manday -->
+        <!-- Assignee -->
         <div>
-          <sic-number
-            label="Manday ที่ประเมิน (เพิ่ม/ลด)"
-            formControlName="estimatedManday"
-            placeholder="0"
-            [decimal]="0"
-          ></sic-number>
+          <sic-combobox
+            label="ผู้รับมอบหมาย"
+            formControlName="assigneeId"
+            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
+            valueField="value"
+            textField="text"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกผู้รับมอบหมาย' }"
+          ></sic-combobox>
         </div>
 
         <!-- Hidden projectId -->

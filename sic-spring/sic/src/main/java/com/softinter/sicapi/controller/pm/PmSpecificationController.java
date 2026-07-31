@@ -124,4 +124,19 @@ public class PmSpecificationController {
         SpecificationDraft draft = generatorService.generateDraft(requirementId, diagramId);
         return ResponseEntity.ok(draft);
     }
+
+    @GetMapping("/combobox")
+    @Operation(summary = "Get specification combobox list")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxSpecifications(
+            @RequestParam(required = false) UUID projectId) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        java.util.List<com.softinter.sicapi.entity.pm.PmSpecification> specs = specificationService.findByBusinessIdAndProjectId(businessId, projectId);
+        java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse> list = specs.stream()
+                .map(s -> new com.softinter.sicapi.dto.response.ComboboxResponse(s.getId().toString(), s.getSpecificationCode() + " - " + s.getTitle()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 }
