@@ -285,6 +285,15 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
       this.opened = false;
       this.loading = false;
       this.activeIndex = -1;
+
+      if (!this.inputText.trim()) {
+        this.selectedItem = null;
+        this.selectedText = '';
+        this.value = null;
+        this.onChange(null);
+        this.selectionChanged.emit(null);
+      }
+
       this.inputText = this.selectedText;
       this.searchTerm = '';
       this.dropdownPanelStyle = {};
@@ -331,6 +340,17 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
 
     this.inputText = term;
     this.searchTerm = term.trim();
+
+    if (!this.searchTerm) {
+      if (this.value !== null || this.selectedItem !== null) {
+        this.selectedItem = null;
+        this.selectedText = '';
+        this.value = null;
+        this.onChange(null);
+        this.selectionChanged.emit(null);
+      }
+    }
+
     this.pageNumber = 1;
     this.options = [];
     this.totalElements = 0;

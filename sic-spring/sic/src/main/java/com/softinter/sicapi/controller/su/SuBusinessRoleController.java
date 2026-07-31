@@ -141,6 +141,12 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
         if (request.getRowVersion() != null) {
             role.setRowVersion(request.getRowVersion());
         }
+        // ตรวจสอบ Role Code ซ้ำเมื่อแก้ไข (ยกเว้นตัวเอง)
+        Optional<SuBusinessRole> existingRoleWithCode = businessRoleRepository
+                .findByBusinessIdAndRoleCodeAndIsDeleteFalse(request.getBusinessId(), request.getRoleCode());
+        if (existingRoleWithCode.isPresent() && !existingRoleWithCode.get().getId().equals(request.getId())) {
+            throw new RuntimeException("Role code '" + request.getRoleCode() + "' already exists in this business.");
+        }
     } else {
         // ===== กรณีเพิ่มใหม่ (ไม่มี id) =====
 

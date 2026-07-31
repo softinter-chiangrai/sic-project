@@ -9,9 +9,9 @@ export class Burt01Service {
 
   private readonly http = inject(HttpClient);
 
-  api = environment.apiBaseUrl + '/api/bu/burt01';
+  api = environment.apiBaseUrl + '/api/business';
 
-  apiGetBusiness = this.api;
+  apiGetBusiness = this.api + '/me';
   apiSaveBusiness = this.api + '/save';
 
   apiGetComboboxTitle = this.api + '/combobox-title';

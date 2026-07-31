@@ -184,10 +184,21 @@ export class Burt03Component implements OnInit {
     parentId: string | null;
     color: string;
   }) {
+    const formattedRoleCode = data.roleCode.trim().toUpperCase();
+
+    // Check duplicate roleCode locally
+    const isDuplicate = this.roles().some(
+      (r) => r.roleCode.toUpperCase() === formattedRoleCode
+    );
+    if (isDuplicate) {
+      this.dialog.error('บันทึกไม่สำเร็จ', 'role_code นี้ถุกใช้เเล้ว');
+      return;
+    }
+
     const role: Role = {
       id: '',
-      roleCode: data.roleCode.toUpperCase(),
-      roleName: data.nameEn, // ✅ เพิ่ม
+      roleCode: formattedRoleCode,
+      roleName: data.nameEn,
       roleNameEn: data.nameEn,
       roleNameLocal: data.nameLocal,
       roleLevel: this.calculateRoleLevel(data.parentId),
@@ -211,9 +222,19 @@ export class Burt03Component implements OnInit {
         error: (err) => {
           console.error('Create role error', err);
           let errorMessage = 'เกิดข้อผิดพลาด';
-          if (err.error?.message) errorMessage = err.error.message;
-          else if (err.message) errorMessage = err.message;
-          this.dialog.error('เพิ่มบทบาทไม่สำเร็จ', errorMessage);
+          const errString = JSON.stringify(err);
+          if (
+            err.error?.message?.includes('already exists') ||
+            err.message?.includes('already exists') ||
+            errString.includes('already exists')
+          ) {
+            errorMessage = 'role_code นี้ถุกใช้เเล้ว';
+          } else if (err.error?.message) {
+            errorMessage = err.error.message;
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+          this.dialog.error('บันทึกไม่สำเร็จ', errorMessage);
           this.loadRoles();
         },
       });
@@ -280,10 +301,21 @@ export class Burt03Component implements OnInit {
           nameLocal: string;
           color: string;
         }) => {
+          const formattedRoleCode = payload.roleCode.trim().toUpperCase();
+
+          // Check duplicate roleCode locally
+          const isDuplicate = this.roles().some(
+            (r) => r.roleCode.toUpperCase() === formattedRoleCode && r.id !== role.id
+          );
+          if (isDuplicate) {
+            this.dialog.error('บันทึกไม่สำเร็จ', 'role_code นี้ถุกใช้เเล้ว');
+            return;
+          }
+
           const updatedRole: Role = {
             ...role,
-            roleCode: payload.roleCode.toUpperCase(),
-            roleName: payload.nameEn, // ✅ เพิ่ม
+            roleCode: formattedRoleCode,
+            roleName: payload.nameEn,
             roleNameEn: payload.nameEn,
             roleNameLocal: payload.nameLocal,
             color: payload.color,
@@ -302,9 +334,19 @@ export class Burt03Component implements OnInit {
               error: (err) => {
                 console.error('Update role error', err);
                 let errorMessage = 'เกิดข้อผิดพลาด';
-                if (err.error?.message) errorMessage = err.error.message;
-                else if (err.message) errorMessage = err.message;
-                this.dialog.error('แก้ไขไม่สำเร็จ', errorMessage);
+                const errString = JSON.stringify(err);
+                if (
+                  err.error?.message?.includes('already exists') ||
+                  err.message?.includes('already exists') ||
+                  errString.includes('already exists')
+                ) {
+                  errorMessage = 'role_code นี้ถุกใช้เเล้ว';
+                } else if (err.error?.message) {
+                  errorMessage = err.error.message;
+                } else if (err.message) {
+                  errorMessage = err.message;
+                }
+                this.dialog.error('บันทึกไม่สำเร็จ', errorMessage);
                 this.loadRoles();
               },
             });

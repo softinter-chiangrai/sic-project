@@ -55,6 +55,14 @@ public class PmSpecification extends BaseBusinessEntity {
     @Column(name = "upload_group_id")
     private UUID uploadGroupId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private PmCustomerProject project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requirement_id")
+    private PmRequirement requirement;
+
     @Column(name = "is_ai_generated")
     private Boolean isAiGenerated = false;
 

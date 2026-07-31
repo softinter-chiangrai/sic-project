@@ -23,6 +23,9 @@ public class SuBusinessInvite extends BaseEntity {
     @Column(name = "invite_type", nullable = false, length = 50)
     private String inviteType;
 
+    @Column(name = "business_id", nullable = false)
+    private UUID businessId;
+
     @Column(name = "invite_email", length = 320)
     private String inviteEmail;
 
@@ -35,11 +38,9 @@ public class SuBusinessInvite extends BaseEntity {
     @Column(name = "expire_at")
     private Instant expireAt;
 
-    // ✅ เพิ่ม field นี้ (มีในฐานข้อมูลแล้ว)
     @Column(name = "max_uses")
     private Integer maxUses;
 
-    // ✅ เพิ่ม field นี้ (มีในฐานข้อมูลแล้ว)
     @Column(name = "use_count")
     private Integer useCount = 0;
 }

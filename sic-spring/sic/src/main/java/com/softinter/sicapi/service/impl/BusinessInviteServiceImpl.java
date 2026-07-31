@@ -44,7 +44,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
     private final SuBusinessRepository businessRepository;
     private final CurrentUserService currentUserService;
-    private final MailService mailService;  // ✅ inject MailService
+    private final MailService mailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,6 +87,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         // สร้าง Invite
         SuBusinessInvite invite = new SuBusinessInvite();
         invite.setSuBusinessRole(role);
+        invite.setBusinessId(role.getBusinessId()); // ✅ แก้ไข: ตั้งค่า business_id เพื่อป้องกัน NOT NULL constraint
         invite.setInviteType(request.getInviteType());
         invite.setInviteEmail(request.getInviteEmail());
         invite.setInviteToken(token);
@@ -137,12 +138,10 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     @Override
     public List<ComboboxResponse> getComboboxRoles() {
         UUID businessId = BusinessContextHolder.getBusinessId();
-        // ✅ ไม่ต้องมี boolean useEnglish แล้ว
 
         return businessRoleRepository.findByBusinessIdAndIsActiveTrue(businessId)
                 .stream()
                 .map(role -> {
-                    // ✅ ใช้ LocalizationHelper
                     String roleName = LocalizationHelper.getRoleName(role);
                     return new ComboboxResponse(role.getId().toString(), roleName);
                 })
@@ -150,96 +149,108 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     }
 
     @Override
-    @Transactional
-    public JoinBusinessResponse joinBusiness(String token) {
-        String userId = currentUserService.getUserId();
-        String userEmail = currentUserService.getEmail();
+@Transactional
+public JoinBusinessResponse joinBusiness(String token) {
+    String userId = currentUserService.getUserId();
+    if (userId == null || userId.isBlank()) {
+        throw new IllegalArgumentException("Invalid user.");
+    }
 
-        // 1. ค้นหา Invite
-        SuBusinessInvite invite = businessInviteRepository.findByInviteTokenAndIsDeleteFalse(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invite not found or has been revoked."));
+    // 1. ค้นหา Invite
+    SuBusinessInvite invite = businessInviteRepository.findByInviteTokenAndIsDeleteFalse(token)
+            .orElseThrow(() -> new IllegalArgumentException("Invite not found or has been revoked."));
 
-        // 2. ตรวจสอบวันหมดอายุ
-        if (invite.getExpireAt() != null && invite.getExpireAt().isBefore(Instant.now())) {
-            throw new IllegalStateException("This invite has expired.");
+    // 2. ตรวจสอบวันหมดอายุ
+    if (invite.getExpireAt() != null && invite.getExpireAt().isBefore(Instant.now())) {
+        throw new IllegalStateException("This invite has expired.");
+    }
+
+    SuBusinessRole role = invite.getSuBusinessRole();
+    UUID businessId = role.getBusinessId();
+
+    // 3. ตรวจสอบสถานะ invite (ไม่ตรวจสอบ email)
+    if ("email".equalsIgnoreCase(invite.getInviteType())) {
+        if (Boolean.TRUE.equals(invite.getIsActivated())) {
+            throw new IllegalStateException("This email invite has already been used.");
         }
+    }
 
-        SuBusinessRole role = invite.getSuBusinessRole();
-        UUID businessId = role.getBusinessId();
-
-        // 3. ตรวจสอบ Email (เฉพาะ type email)
-        if ("email".equalsIgnoreCase(invite.getInviteType())) {
-            if (invite.getInviteEmail() == null || !invite.getInviteEmail().equalsIgnoreCase(userEmail)) {
-                throw new IllegalArgumentException("This invite is not intended for you.");
-            }
-            if (Boolean.TRUE.equals(invite.getIsActivated())) {
-                throw new IllegalStateException("This email invite has already been used.");
-            }
+    if ("token".equalsIgnoreCase(invite.getInviteType())) {
+        if (invite.getMaxUses() != null && invite.getUseCount() >= invite.getMaxUses()) {
+            throw new IllegalStateException("This invite has reached its usage limit.");
         }
+    }
 
-        // 4. ตรวจสอบ maxUses (เฉพาะ type token)
-        if ("token".equalsIgnoreCase(invite.getInviteType())) {
-            if (invite.getMaxUses() != null && invite.getUseCount() >= invite.getMaxUses()) {
-                throw new IllegalStateException("This invite has reached its usage limit.");
-            }
-        }
+    // ✅ 4. ตรวจสอบว่าผู้ใช้เป็นสมาชิกอยู่แล้วหรือไม่
+    SuUserBusiness existingUserBusiness = userBusinessRepository
+            .findByUserIdAndBusinessId(userId, businessId)
+            .orElse(null);
 
-        // 5. เพิ่มหรือเปิดใช้งาน UserBusiness
-        SuUserBusiness userBusiness = userBusinessRepository.findByUserIdAndBusinessId(userId, businessId)
-                .orElse(null);
-
-        if (userBusiness == null) {
-            boolean isFirstBusiness = userBusinessRepository.countByUserId(userId) == 0;
-            userBusiness = new SuUserBusiness();
-            userBusiness.setUserId(userId);
-            userBusiness.setBusinessId(businessId);
-            userBusiness.setIsDefault(isFirstBusiness);
-            userBusiness.setIsActive(true);
-            userBusiness.setCreatedBy(userId);
-            userBusiness.setCreatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        } else {
-            userBusiness.setIsActive(true);
-            userBusiness.setUpdatedBy(userId);
-            userBusiness.setUpdatedDate(Instant.now());
-            userBusiness = userBusinessRepository.save(userBusiness);
-        }
-
-        // 6. กำหนด Role (ถ้ายังไม่มี)
-        UUID userBusinessId = userBusiness.getId();
-        boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
-                userBusinessId, role.getId());
-        if (!hasRole) {
-            SuUserBusinessRole userRole = new SuUserBusinessRole();
-            userRole.setUserBusiness(userBusiness);
-            userRole.setBusinessRole(role);
-            userRole.setIsPrimary(true);
-            userRole.setIsActive(true);
-            userRole.setCreatedBy(userId);
-            userRole.setCreatedDate(Instant.now());
-            userBusinessRoleRepository.save(userRole);
-        }
-
-        // 7. อัปเดต Invite
-        if ("email".equalsIgnoreCase(invite.getInviteType())) {
-            invite.setIsActivated(true);
-        }
-        invite.setUseCount(invite.getUseCount() + 1);
-        invite.setUpdatedBy(userId);
-        invite.setUpdatedDate(Instant.now());
-        businessInviteRepository.save(invite);
-
-        // 8. ดึงชื่อธุรกิจเพื่อตอบกลับ
+    if (existingUserBusiness != null && Boolean.TRUE.equals(existingUserBusiness.getIsActive())) {
+        // 📌 ผู้ใช้เป็นสมาชิกอยู่แล้ว → ไม่เพิ่ม useCount, ส่งข้อความแจ้งเตือน
         String businessName = businessRepository.findById(businessId)
                 .map(SuBusiness::getBusinessCode)
                 .orElse("Unknown Business");
 
-        return JoinBusinessResponse.builder()
-                .businessId(businessId)
-                .businessName(businessName)
-                .message("Joined business successfully.")
-                .build();
+        throw new IllegalStateException("You are already a member of this business: " + businessName);
     }
+
+    // 5. ถ้าไม่ใช่สมาชิก หรือเป็น inactive ให้ดำเนินการต่อ
+    SuUserBusiness userBusiness = existingUserBusiness;
+
+    if (userBusiness == null) {
+        boolean isFirstBusiness = userBusinessRepository.countByUserId(userId) == 0;
+        userBusiness = new SuUserBusiness();
+        userBusiness.setUserId(userId);
+        userBusiness.setBusinessId(businessId);
+        userBusiness.setIsDefault(isFirstBusiness);
+        userBusiness.setIsActive(true);
+        userBusiness.setCreatedBy(userId);
+        userBusiness.setCreatedDate(Instant.now());
+        userBusiness = userBusinessRepository.save(userBusiness);
+    } else {
+        // กรณีมีอยู่แต่ inactive → เปิดใช้งานใหม่ (reactivate)
+        userBusiness.setIsActive(true);
+        userBusiness.setUpdatedBy(userId);
+        userBusiness.setUpdatedDate(Instant.now());
+        userBusiness = userBusinessRepository.save(userBusiness);
+    }
+
+    // 6. กำหนด Role (ถ้ายังไม่มี)
+    UUID userBusinessId = userBusiness.getId();
+    boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
+            userBusinessId, role.getId());
+    if (!hasRole) {
+        SuUserBusinessRole userRole = new SuUserBusinessRole();
+        userRole.setUserBusiness(userBusiness);
+        userRole.setBusinessRole(role);
+        userRole.setIsPrimary(true);
+        userRole.setIsActive(true);
+        userRole.setCreatedBy(userId);
+        userRole.setCreatedDate(Instant.now());
+        userBusinessRoleRepository.save(userRole);
+    }
+
+    // 7. ✅ อัปเดต Invite (เฉพาะเมื่อมีการเข้าร่วมจริง ๆ)
+    if ("email".equalsIgnoreCase(invite.getInviteType())) {
+        invite.setIsActivated(true);
+    }
+    invite.setUseCount(invite.getUseCount() + 1);
+    invite.setUpdatedBy(userId);
+    invite.setUpdatedDate(Instant.now());
+    businessInviteRepository.save(invite);
+
+    // 8. ดึงชื่อธุรกิจ
+    String businessName = businessRepository.findById(businessId)
+            .map(SuBusiness::getBusinessCode)
+            .orElse("Unknown Business");
+
+    return JoinBusinessResponse.builder()
+            .businessId(businessId)
+            .businessName(businessName)
+            .message("Joined business successfully.")
+            .build();
+}
 
     // ===== Helper =====
 

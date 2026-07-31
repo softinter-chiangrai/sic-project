@@ -89,4 +89,18 @@ public class BusinessController {
         String lang = LanguageUtils.getLanguage();
         return ResponseEntity.ok(comboboxService.getPersonTypeLov(lang));
     }
+
+    @GetMapping("/me")
+@Operation(summary = "Get full business info of current active business")
+public ResponseEntity<BusinessResponse> getMyBusinessFull() {
+    UUID activeId = businessAccessService.getBusinessId();
+    if (activeId == null) {
+        return ResponseEntity.notFound().build();
+    }
+    BusinessResponse fullInfo = businessAccessService.getBusinessInfo(activeId);
+    if (fullInfo == null) {
+        return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(fullInfo);
+}
 }
