@@ -1,3 +1,6 @@
+// ============================================================
+// 9. ApprovalFlowServiceImpl.java (แก้ไข updateFlow)
+// ============================================================
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
@@ -12,14 +15,18 @@ import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
 import com.softinter.sicapi.dto.request.SaveApprovalFlowStepRequest;
 import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
 import com.softinter.sicapi.dto.response.ApprovalFlowStepResponse;
+import com.softinter.sicapi.dto.response.CancelApprovalResponse;
 import com.softinter.sicapi.entity.enums.ApprovalMode;
+import com.softinter.sicapi.entity.enums.ApprovalStatus;
 import com.softinter.sicapi.entity.enums.DocumentType;
 import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
+import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +37,8 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
 
     private final PmApprovalFlowRepository flowRepository;
     private final PmApprovalFlowStepRepository stepRepository;
+    private final PmApprovalRepository approvalRepository;
+    private final ApprovalService approvalService;
     private final CurrentUserService currentUserService;
 
     @Override
@@ -73,103 +82,134 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                 .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found: " + flowCode));
         return toResponse(flow);
     }
+
     @Override
-@Transactional
-public ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request) {
-    // ตรวจสอบรหัสซ้ำ
-    if (flowRepository.findByFlowCode(request.getFlowCode()).isPresent()) {
-        throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
-    }
-
-    PmApprovalFlow flow = new PmApprovalFlow();
-    flow.setBusinessId(currentUserService.getBusinessId());
-    flow.setFlowCode(request.getFlowCode());
-    flow.setFlowName(request.getFlowName());
-    flow.setDocumentType(request.getDocumentType());
-    flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
-    flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-    flow.setDescription(request.getDescription());
-    flow.setCreatedBy(currentUserService.getUserId());
-
-    flow = flowRepository.save(flow);
-
-    // สร้าง Steps
-    if (request.getSteps() != null) {
-        for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
-            PmApprovalFlowStep step = new PmApprovalFlowStep();
-            step.setFlow(flow);
-            step.setStepOrder(stepReq.getStepOrder());
-            step.setStepName(stepReq.getStepName());
-            step.setApproverRole(stepReq.getApproverRole());
-            step.setApproverUserId(stepReq.getApproverUserId());
-            step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
-            step.setTimeoutDays(stepReq.getTimeoutDays());
-            step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
-            step.setConditionExpression(stepReq.getConditionExpression());
-            step.setCreatedBy(currentUserService.getUserId());
-            stepRepository.save(step);
+    @Transactional
+    public ApprovalFlowResponse createFlow(SaveApprovalFlowRequest request) {
+        if (flowRepository.findByFlowCode(request.getFlowCode()).isPresent()) {
+            throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
         }
-    }
 
-    return toResponse(flow);
-}
+        PmApprovalFlow flow = new PmApprovalFlow();
+        flow.setBusinessId(currentUserService.getBusinessId());
+        flow.setFlowCode(request.getFlowCode());
+        flow.setFlowName(request.getFlowName());
+        flow.setDocumentType(request.getDocumentType());
+        flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
+        flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        flow.setDescription(request.getDescription());
+        flow.setCreatedBy(currentUserService.getUserId());
 
-@Override
-@Transactional
-public ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request) {
-    PmApprovalFlow flow = flowRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+        flow = flowRepository.save(flow);
 
-    // ตรวจสอบรหัสซ้ำ (ยกเว้นตัวเอง)
-    flowRepository.findByFlowCode(request.getFlowCode())
-            .ifPresent(existing -> {
-                if (!existing.getId().equals(id)) {
-                    throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
-                }
-            });
-
-    flow.setFlowCode(request.getFlowCode());
-    flow.setFlowName(request.getFlowName());
-    flow.setDocumentType(request.getDocumentType());
-    flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
-    flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-    flow.setDescription(request.getDescription());
-    flow.setUpdatedBy(currentUserService.getUserId());
-
-    // จัดการ Steps: ลบเก่าแล้วสร้างใหม่ (ง่ายสุด)
-    stepRepository.deleteByFlowId(id);
-
-    if (request.getSteps() != null) {
-        for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
-            PmApprovalFlowStep step = new PmApprovalFlowStep();
-            step.setFlow(flow);
-            step.setStepOrder(stepReq.getStepOrder());
-            step.setStepName(stepReq.getStepName());
-            step.setApproverRole(stepReq.getApproverRole());
-            step.setApproverUserId(stepReq.getApproverUserId());
-            step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
-            step.setTimeoutDays(stepReq.getTimeoutDays());
-            step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
-            step.setConditionExpression(stepReq.getConditionExpression());
-            step.setCreatedBy(currentUserService.getUserId());
-            stepRepository.save(step);
+        if (request.getSteps() != null) {
+            for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
+                PmApprovalFlowStep step = new PmApprovalFlowStep();
+                step.setFlow(flow);
+                step.setStepOrder(stepReq.getStepOrder());
+                step.setStepName(stepReq.getStepName());
+                step.setApproverRole(stepReq.getApproverRole());
+                step.setApproverUserId(stepReq.getApproverUserId());
+                step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
+                step.setTimeoutDays(stepReq.getTimeoutDays());
+                step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
+                step.setConditionExpression(stepReq.getConditionExpression());
+                step.setCreatedBy(currentUserService.getUserId());
+                stepRepository.save(step);
+            }
         }
+
+        return toResponse(flow);
     }
 
-    return toResponse(flow);
-}
+    @Override
+    @Transactional
+    public ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request) {
+        PmApprovalFlow flow = flowRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
 
-@Override
-@Transactional
-public void deleteFlow(UUID id) {
-    PmApprovalFlow flow = flowRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
-    flow.setIsDelete(true);
-    flow.setIsActive(false);
-    flow.setDeleteBy(currentUserService.getUserId());
-    flow.setDeleteDate(Instant.now());
-    flowRepository.save(flow);
-}
+        flowRepository.findByFlowCode(request.getFlowCode())
+                .ifPresent(existing -> {
+                    if (!existing.getId().equals(id)) {
+                        throw new IllegalArgumentException("Flow code already exists: " + request.getFlowCode());
+                    }
+                });
+
+        boolean hasActiveApproval = approvalRepository.existsByFlowIdAndStatusIn(
+                flow.getId(),
+                List.of(ApprovalStatus.PENDING, ApprovalStatus.PARTIALLY_APPROVED, ApprovalStatus.NEED_REVISION));
+
+        if (hasActiveApproval) {
+            CancelApprovalResponse cancelResponse = approvalService.cancelByFlow(
+                    flow.getId(),
+                    "Flow was modified, all pending approvals have been cancelled.");
+
+            if (cancelResponse.getCancelledCount() > 0) {
+                throw new IllegalStateException(
+                        "Flow has " + cancelResponse.getCancelledCount() +
+                                " active approval(s) that have been cancelled. Please ask users to resubmit.");
+            }
+        }
+
+        flow.setFlowCode(request.getFlowCode());
+        flow.setFlowName(request.getFlowName());
+        flow.setDocumentType(request.getDocumentType());
+        flow.setApprovalMode(request.getApprovalMode() != null ? request.getApprovalMode() : ApprovalMode.CHAIN);
+        flow.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        flow.setDescription(request.getDescription());
+        flow.setUpdatedBy(currentUserService.getUserId());
+
+        stepRepository.deleteByFlowId(id);
+
+        if (request.getSteps() != null) {
+            for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
+                PmApprovalFlowStep step = new PmApprovalFlowStep();
+                step.setFlow(flow);
+                step.setStepOrder(stepReq.getStepOrder());
+                step.setStepName(stepReq.getStepName());
+                step.setApproverRole(stepReq.getApproverRole());
+                step.setApproverUserId(stepReq.getApproverUserId());
+                step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
+                step.setTimeoutDays(stepReq.getTimeoutDays());
+                step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
+                step.setConditionExpression(stepReq.getConditionExpression());
+                step.setCreatedBy(currentUserService.getUserId());
+                stepRepository.save(step);
+            }
+        }
+
+        flow = flowRepository.save(flow);
+        return toResponse(flow);
+    }
+
+    @Override
+    @Transactional
+    public void deleteFlow(UUID id) {
+        PmApprovalFlow flow = flowRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+
+        boolean hasActiveApproval = approvalRepository.existsByFlowIdAndStatusIn(
+                flow.getId(),
+                List.of(ApprovalStatus.PENDING, ApprovalStatus.PARTIALLY_APPROVED, ApprovalStatus.NEED_REVISION));
+
+        if (hasActiveApproval) {
+            CancelApprovalResponse cancelResponse = approvalService.cancelByFlow(
+                    flow.getId(),
+                    "Flow was deleted, all pending approvals have been cancelled.");
+
+            if (cancelResponse.getCancelledCount() > 0) {
+                throw new IllegalStateException(
+                        "Flow has " + cancelResponse.getCancelledCount() +
+                                " active approval(s) that have been cancelled. Please ask users to resubmit.");
+            }
+        }
+
+        flow.setIsDelete(true);
+        flow.setIsActive(false);
+        flow.setDeleteBy(currentUserService.getUserId());
+        flow.setDeleteDate(Instant.now());
+        flowRepository.save(flow);
+    }
 
     private ApprovalFlowResponse toResponse(PmApprovalFlow flow) {
         ApprovalFlowResponse response = new ApprovalFlowResponse();
@@ -182,7 +222,6 @@ public void deleteFlow(UUID id) {
         response.setDescription(flow.getDescription());
         response.setActive(flow.getIsActive());
 
-        // Document type display
         try {
             DocumentType docType = DocumentType.valueOf(flow.getDocumentType());
             response.setDocumentTypeDisplay(docType.getDisplayName());
@@ -190,7 +229,6 @@ public void deleteFlow(UUID id) {
             response.setDocumentTypeDisplay(flow.getDocumentType());
         }
 
-        // Steps
         List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdOrderByStepOrderAsc(flow.getId());
         response.setSteps(steps.stream()
                 .map(this::toStepResponse)

@@ -1,3 +1,6 @@
+// ============================================================
+// 8. PmApprovalController.java (เพิ่ม endpoint)
+// ============================================================
 package com.softinter.sicapi.controller.pm;
 
 import java.util.List;
@@ -16,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.softinter.sicapi.dto.request.ApprovalActionRequest;
 import com.softinter.sicapi.dto.request.ApprovalSearchRequest;
 import com.softinter.sicapi.dto.request.ApprovalSubmitRequest;
+import com.softinter.sicapi.dto.request.CancelApprovalRequest;
 import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
 import com.softinter.sicapi.dto.response.ApprovalResponse;
 import com.softinter.sicapi.dto.response.ApprovalSummaryResponse;
+import com.softinter.sicapi.dto.response.CancelApprovalResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.service.ApprovalFlowService;
 import com.softinter.sicapi.service.ApprovalService;
@@ -41,9 +46,6 @@ public class PmApprovalController {
     private final ApprovalFlowService flowService;
     private final CurrentUserService currentUserService;
 
-    // ============================================================
-    // 1. Submit
-    // ============================================================
     @PostMapping("/submit")
     @Operation(summary = "Submit document for approval")
     public ResponseEntity<ApprovalResponse> submit(@Valid @RequestBody ApprovalSubmitRequest request) {
@@ -51,9 +53,6 @@ public class PmApprovalController {
                 .body(approvalService.submitForApproval(request));
     }
 
-    // ============================================================
-    // 2. Actions
-    // ============================================================
     @PostMapping("/{id}/approve")
     @Operation(summary = "Approve document")
     public ResponseEntity<ApprovalResponse> approve(
@@ -99,9 +98,15 @@ public class PmApprovalController {
         return ResponseEntity.ok(approvalService.delegate(id, request.getDelegateToUserId(), request.getComment()));
     }
 
-    // ============================================================
-    // 3. Query
-    // ============================================================
+    @PostMapping("/cancel-by-flow/{flowId}")
+    @Operation(summary = "Cancel all active approvals by flow ID")
+    public ResponseEntity<CancelApprovalResponse> cancelByFlow(
+            @PathVariable UUID flowId,
+            @RequestBody(required = false) CancelApprovalRequest request) {
+        String reason = request != null ? request.getReason() : null;
+        return ResponseEntity.ok(approvalService.cancelByFlow(flowId, reason));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get approval by ID")
     public ResponseEntity<ApprovalResponse> getApproval(@PathVariable UUID id) {
@@ -169,7 +174,6 @@ public class PmApprovalController {
     public ResponseEntity<ApprovalResponse> getDocumentStatus(
             @RequestParam String documentType,
             @RequestParam UUID documentId) {
-        // Get the latest approval for this document
         PaginationResponse<ApprovalResponse> result = approvalService.getApprovalsByDocument(documentType, documentId, 0, 1);
         if (result.getData().isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -177,9 +181,6 @@ public class PmApprovalController {
         return ResponseEntity.ok(result.getData().get(0));
     }
 
-    // ============================================================
-    // 4. Flows
-    // ============================================================
     @GetMapping("/flows")
     @Operation(summary = "Get all approval flows")
     public ResponseEntity<List<ApprovalFlowResponse>> getAllFlows() {
