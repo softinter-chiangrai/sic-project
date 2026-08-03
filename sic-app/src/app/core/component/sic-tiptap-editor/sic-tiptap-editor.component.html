@@ -1,0 +1,18 @@
+<div
+  class="sic-tiptap-editor"
+  [class.disabled]="disabled()"
+  [style.min-height]="minHeight()"
+  [style.max-height]="maxHeight()"
+>
+  <angular-tiptap-editor
+    [config]="editorConfig()"
+    [content]="content()"
+    [editable]="!disabled()"
+    (contentChange)="onContentChange($event)"
+  ></angular-tiptap-editor>
+
+  <!-- Validation Error (แสดงเมื่อมี error) -->
+  @if (showError() && errorMessage()) {
+    <div class="sic-tiptap-error">{{ errorMessage() }}</div>
+  }
+</div>

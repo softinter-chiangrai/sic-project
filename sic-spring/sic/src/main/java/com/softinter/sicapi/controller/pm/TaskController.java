@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.TaskRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.TaskResponse;
 import com.softinter.sicapi.service.TaskService;
 
@@ -67,11 +69,11 @@ public class TaskController {
     }
 
     @GetMapping("/combobox")
-    public ResponseEntity<List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxTasks(@RequestParam UUID projectId) {
+    public ResponseEntity<List<ComboboxResponse>> getComboboxTasks(@RequestParam UUID projectId) {
         log.info("Getting tasks combobox for project ID: {}", projectId);
-        List<com.softinter.sicapi.dto.response.TaskResponse> tasks = taskService.getAllTasksByProjectId(projectId);
-        List<com.softinter.sicapi.dto.response.ComboboxResponse> list = tasks.stream()
-                .map(t -> new com.softinter.sicapi.dto.response.ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
+        List<TaskResponse> tasks = taskService.getAllTasksByProjectId(projectId);
+        List<ComboboxResponse> list = tasks.stream()
+                .map(t -> new ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
                 .collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(list);
     }

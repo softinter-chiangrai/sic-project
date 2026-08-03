@@ -160,19 +160,24 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
-  {
-    path: 'requirement/new',
-    loadComponent: () =>
-      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
-  },
-  {
-    path: 'requirement/:id/edit',
-    loadComponent: () =>
-      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
-  data: { targetType: 'REQUIREMENT' } // ✅ เพิ่ม
-  },
+  // ✅ สร้าง Requirement ใหม่ (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
+{
+  path: 'requirement/new',
+  loadComponent: () =>
+    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+  canActivate: [customerGuard, projectGuard, requirementGuard],
+  canDeactivate: [CanDeactivateGuard],
+},
+
+// ✅ แก้ไข Requirement (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
+{
+  path: 'requirement/:id/edit',
+  loadComponent: () =>
+    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+  canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
+  data: { targetType: 'REQUIREMENT' },
+  canDeactivate: [CanDeactivateGuard],
+},
   {
     path: 'requirement/:id/approval',
     loadComponent: () =>

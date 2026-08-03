@@ -47,6 +47,11 @@
     <artifactId>jasperreports</artifactId>
     <version>6.21.0</version>
     </dependency>
+    <dependency>
+    <groupId>com.lowagie</groupId>
+    <artifactId>itext</artifactId>
+    <version>2.1.7</version>
+</dependency>
 
 <!-- ถ้าต้องการส่งออกเป็น Excel (.xlsx) -->
     <dependency>

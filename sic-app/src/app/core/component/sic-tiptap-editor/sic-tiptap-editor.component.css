@@ -1,0 +1,29 @@
+.sic-tiptap-editor {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.sic-tiptap-editor:focus-within {
+  border-color: var(--crm-primary);
+  box-shadow: 0 0 0 3px rgba(var(--crm-primary-rgb), 0.15);
+}
+
+.sic-tiptap-editor.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ปรับให้ min-height / max-height ใช้กับ editor */
+.sic-tiptap-editor .angular-tiptap-editor {
+  min-height: inherit;
+  max-height: inherit;
+}
+
+.sic-tiptap-error {
+  padding: 0.5rem 0.75rem;
+  color: var(--crm-danger);
+  font-size: 0.8rem;
+}
