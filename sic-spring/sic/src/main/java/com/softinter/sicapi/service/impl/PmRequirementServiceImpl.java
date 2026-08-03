@@ -2,6 +2,8 @@ package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +17,10 @@ import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.service.EditSessionService;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +30,8 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
     private final PmRequirementRepository requirementRepository;
     private final EditSessionService editSessionService;
+    private final SuUploadRepository uploadRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,6 +63,9 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         PmRequirement requirement;
         EntityState state = EntityState.values()[request.getState()];
 
+        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
+        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
+
         if (state == EntityState.ADDED) {
             requirement = new PmRequirement();
             requirement.setBusinessId(businessId);
@@ -64,6 +75,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
             mapRequestToEntity(request, requirement);
+            requirement.setUploadGroupId(finalUploadGroupId);
             requirement = requirementRepository.save(requirement);
         } else if (state == EntityState.MODIFIED) {
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
@@ -83,6 +95,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setUpdatedBy(userId);
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
+            requirement.setUploadGroupId(finalUploadGroupId);
             requirement = requirementRepository.save(requirement);
         } else if (state == EntityState.DELETED) {
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
@@ -96,6 +109,12 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         } else {
             throw new IllegalArgumentException("Invalid state: " + state);
         }
+
+        // Sync Uploads
+        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+        }
+
         return requirement.getId();
     }
 
@@ -150,6 +169,69 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         response.setCreatedDate(entity.getCreatedDate());
         response.setUpdatedDate(entity.getUpdatedDate());
         response.setRowVersion(entity.getRowVersion());
+
+        UUID uploadGroupId = entity.getUploadGroupId();
+        response.setUploadGroupId(uploadGroupId);
+
+        List<StorageUploadReference> uploadData = new ArrayList<>();
+        if (uploadGroupId != null) {
+            List<SuUpload> uploads = uploadRepository
+                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+
+            for (SuUpload upload : uploads) {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(uploadGroupId);
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+
+                // TODO: ทำให้ baseUrl configurable
+                String baseUrl = "http://localhost:5265";
+                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+
+                ref.setState(EntityState.DETACHED.getEntityStateCode());
+                ref.setIsActive(upload.getIsActive());
+                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+
+                uploadData.add(ref);
+            }
+        }
+        response.setUploadGroupData(uploadData);
+
         return response;
+    }
+
+    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
+        if (existingGroupId != null) {
+            return existingGroupId;
+        }
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        for (StorageUploadReference ref : references) {
+            if (ref.getUploadGroupId() != null) {
+                return ref.getUploadGroupId();
+            }
+            if (ref.getId() != null) {
+                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
+                if (upload != null && upload.getUploadGroupId() != null) {
+                    return upload.getUploadGroupId();
+                }
+            }
+        }
+        return null;
+    }
+
+    private String mapVisibilityToString(com.softinter.sicapi.entity.enums.FileVisibility visibility) {
+        if (visibility == null) return "Public";
+        switch (visibility) {
+            case UPLOADER_ONLY: return "UploaderOnly";
+            case BUSINESS_ONLY: return "BusinessOnly";
+            case ANYONE_WITH_LINK: return "AnyoneWithLink";
+            case PUBLIC: return "Public";
+            default: return "Public";
+        }
     }
 }

@@ -25,4 +25,6 @@ public class PmRequirementResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
+    private UUID uploadGroupId;
+    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
 }

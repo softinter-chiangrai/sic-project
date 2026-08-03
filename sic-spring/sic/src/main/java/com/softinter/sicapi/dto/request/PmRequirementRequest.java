@@ -22,4 +22,6 @@ public class PmRequirementRequest {
     private Boolean isActive;
     private Integer state;
     private Integer rowVersion;
+    private UUID uploadGroupId;
+    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
 }

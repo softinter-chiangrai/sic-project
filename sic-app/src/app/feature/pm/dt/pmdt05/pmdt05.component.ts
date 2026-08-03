@@ -20,6 +20,9 @@ import {
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of, Subscription, interval, takeWhile } from 'rxjs';
 import { delay, finalize, tap } from 'rxjs/operators';
+import { environment } from '../../../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 // Components
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
@@ -32,6 +35,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 // ✅ เปลี่ยนเป็น sic-tiptap-editor
 import { SicTiptapEditorComponent } from '../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 
 // Services
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
@@ -40,6 +44,7 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
 import { RequirementExportService } from './requirement-export.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 // Preview Component
 import { SicRequirementPreviewComponent } from './pmdt05-preview/pmdt05-preview.component';
@@ -67,81 +72,37 @@ export interface RequirementModel {
   rowVersion?: number;
   createdAt?: string;
   updatedAt?: string;
+  uploadGroupId?: string;
+  uploadGroupData?: any[];
 }
 
-// ===== Service (Mock) =====
+// ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt05Service {
-  private mockRequirements: RequirementModel[] = [
-    {
-      id: '1',
-      requirementCode: 'REQ-001',
-      title: 'ระบบ Login',
-      description: '<p>ผู้ใช้สามารถเข้าสู่ระบบด้วย Username และ Password</p>',
-      requirementType: 'Functional Requirement',
-      source: 'ลูกค้า',
-      priority: 'Must',
-      businessValue: 'สูง',
-      acceptanceCriteria: '<p>ผู้ใช้กรอก Username/Password ถูกต้องแล้วเข้าสู่ระบบได้</p>',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      createdBy: 'สมหญิง รักเรียน',
-      baConfirmStatus: 'Confirmed',
-      customerConfirmStatus: 'Confirmed',
-      version: 'v1.0',
-      status: 'Approved',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  private http = inject(HttpClient);
 
-  apiGetComboboxProject = '/api/pm/requirement/combobox-project';
-  apiGetLovRequirementType = '/api/pm/requirement/lov-type';
-  apiGetLovPriority = '/api/pm/requirement/lov-priority';
-  apiGetLovStatus = '/api/pm/requirement/lov-status';
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
+  apiGetLovRequirementType = `${environment.apiBaseUrl}/api/pm/requirement/lov-type`;
+  apiGetLovPriority = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
+  apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
+  apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
 
-  save(req: RequirementModel): Observable<string> {
+  save(req: RequirementModel): Observable<any> {
     console.log('📝 Saving requirement:', req);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
+    const data = { ...req };
+    delete data.projectName;
+    return this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, data);
   }
 
   getRequirement(id: string): Observable<RequirementModel> {
-    const found = this.mockRequirements.find((r) => r.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const emptyReq: RequirementModel = {
-      id: '',
-      requirementCode: '',
-      title: '',
-      description: '',
-      requirementType: '',
-      source: '',
-      priority: 'Must',
-      businessValue: '',
-      acceptanceCriteria: '',
-      projectId: '',
-      projectName: '',
-      createdBy: '',
-      baConfirmStatus: 'Pending',
-      customerConfirmStatus: 'Pending',
-      version: 'v1.0',
-      status: 'Draft',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    return of(emptyReq).pipe(delay(300));
+    return this.http.get<RequirementModel>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`);
   }
 
-  autoSave(req: RequirementModel): Observable<string> {
+  autoSave(req: RequirementModel): Observable<any> {
     console.log('💾 Auto-saving requirement:', req);
-    return of('Auto-save success').pipe(delay(200));
+    const data = { ...req };
+    delete data.projectName;
+    return this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, data);
   }
 }
 
@@ -161,7 +122,8 @@ export class Pmdt05Service {
     SicRequirementPreviewComponent,
     SicCardComponent,
     SicCheckboxComponent,
-    SicTiptapEditorComponent,      // ✅ ใช้ตัวใหม่
+    SicTiptapEditorComponent,      
+    SicUploadComponent,
     SicDatePipe,
   ],
   templateUrl: './pmdt05.component.html',
@@ -267,6 +229,9 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
   private readonly exportService = inject(RequirementExportService);
   private readonly navigation = inject(NavigationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly customerState = inject(CustomerStateService);
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
 
   // ===== Form =====
   form!: FormGroup;
@@ -312,12 +277,33 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
         this.reqId = id;
         this.loadRequirement(id);
       } else {
-        // New requirement - set default project from query params
+        // New requirement - set default project from query params or customer state
         this.route.queryParams.subscribe((qParams) => {
-          if (qParams['projectId']) {
-            this.form.patchValue({ projectId: qParams['projectId'] });
+          const pId = qParams['projectId'] || this.customerState.getProjectId();
+          console.log('🔍 [ngOnInit] pId found:', pId, 'Type:', typeof pId);
+          console.log('🔍 [ngOnInit] customerState projectId:', this.customerState.getProjectId(), 'Type:', typeof this.customerState.getProjectId());
+          console.log('🔍 [ngOnInit] customerState projectName:', this.customerState.getProjectName());
+          
+          if (pId) {
+            this.form.patchValue({ projectId: pId });
+            const pName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(pId)) 
+              ? this.customerState.getProjectName() 
+              : null;
+            if (pName) {
+              console.log('🔍 [ngOnInit] Matching project name found in state:', pName);
+              this.form.patchValue({ projectName: pName });
+            } else {
+              console.log('🔍 [ngOnInit] No matching project name in state, fetching from API...');
+              this.fetchProjectName(pId);
+            }
           }
         });
+
+        // Set default createdBy for new requirement
+        const userName = this.getUserNameFromToken();
+        if (userName) {
+          this.form.patchValue({ createdBy: userName });
+        }
       }
     });
 
@@ -359,6 +345,8 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
       isActive: [true],
       state: [null],
       rowVersion: [null],
+      uploadGroupId: [null],
+      uploadGroupData: [[]],
     });
   }
 
@@ -370,6 +358,27 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
         this.form.patchValue(data);
         this.isLoading = false;
         this.form.markAsPristine();
+
+        // If loaded data doesn't have projectName but has projectId, try to fetch it
+        if (!data.projectName && data.projectId) {
+          const cachedName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(data.projectId)) 
+            ? this.customerState.getProjectName() 
+            : null;
+          if (cachedName) {
+            this.form.patchValue({ projectName: cachedName });
+          } else {
+            this.fetchProjectName(data.projectId);
+          }
+        }
+
+        // If loaded data doesn't have createdBy, set it from token
+        if (!data.createdBy) {
+          const userName = this.getUserNameFromToken();
+          if (userName) {
+            this.form.patchValue({ createdBy: userName });
+          }
+        }
+
         console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
       },
       error: (error) => {
@@ -379,6 +388,39 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
         this.navigation.navigate(['/feature/pm/requirement']);
       },
     });
+  }
+
+  private fetchProjectName(projectId: string): void {
+    console.log('🔍 [fetchProjectName] Fetching projects list from:', this.service.apiGetComboboxProject);
+    this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
+      next: (res) => {
+        console.log('🔍 [fetchProjectName] API Response:', res);
+        const list = Array.isArray(res) ? res : (res.data || []);
+        const project = list.find((p: any) => String(p.value || p.id || '') === String(projectId));
+        if (project) {
+          const name = project.projectName || project.name || project.text || project.projectNameTh || project.projectNameEn;
+          console.log('🔍 [fetchProjectName] Matched project:', project, 'Resolved Name:', name);
+          if (name) {
+            this.form.patchValue({ projectName: name });
+            this.cdr.markForCheck();
+          }
+        } else {
+          console.warn('🔍 [fetchProjectName] No project matched ID:', projectId, 'in list:', list);
+        }
+      },
+      error: (err) => console.warn('❌ [fetchProjectName] Could not fetch project name:', err),
+    });
+  }
+
+  private getUserNameFromToken(): string | null {
+    const token = this.auth.getAccessToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.name || payload.preferred_username || payload.displayName || payload.sub || null;
+    } catch {
+      return null;
+    }
   }
 
   loadFlows() {
@@ -426,8 +468,19 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
     this.lastAutoSaveTime = new Date();
 
     this.service.autoSave(data).subscribe({
-      next: () => {
+      next: (response: any) => {
         this.isAutoSaving = false;
+
+        // If it was a new document, the backend returned a new UUID. We must update the form ID.
+        if (!data.id && response) {
+          const savedId = typeof response === 'string' ? response : response.id || response.data?.id;
+          if (savedId) {
+            this.form.patchValue({ id: savedId });
+            this.reqId = savedId;
+            this.isEdit = true;
+          }
+        }
+
         this.form.markAsPristine({ onlySelf: true });
         this.cdr.markForCheck();
       },
@@ -636,6 +689,11 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
       return;
     }
 
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
+      return;
+    }
+
     this.isSaving = true;
     const data = this.form.value as RequirementModel;
 
@@ -646,18 +704,47 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
     }
 
     this.service.save(data).subscribe({
-      next: (response) => {
-        this.isSaving = false;
+      next: (response: any) => {
         this.form.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย').then(() => {
-          // If it's a new requirement, update the ID
-          if (!this.isEdit) {
-            // In real implementation, response would contain the ID
-            this.reqId = 'new-id';
-            this.isEdit = true;
+        
+        // Resolve the saved requirement ID
+        let savedId = data.id || this.reqId;
+        if (!this.isEdit) {
+          if (response && typeof response === 'object' && response.id) {
+            savedId = response.id;
+          } else if (response && typeof response === 'string' && response !== 'บันทึกสำเร็จ') {
+            savedId = response;
+          } else {
+            savedId = '1';
           }
-          this.navigateBack(data.projectId);
-        });
+          this.reqId = savedId;
+          this.isEdit = true;
+          this.form.patchValue({ id: savedId });
+        }
+
+        // Submit for approval automatically
+        this.approvalService
+          .submitForApproval({
+            documentType: 'REQUIREMENT',
+            documentId: savedId!,
+            documentCode: data.requirementCode,
+            documentTitle: data.title,
+            version: data.version,
+            flowId: this.selectedFlowId!,
+            comment: 'ส่งขออนุมัติ Requirement อัตโนมัติขณะบันทึก',
+          })
+          .subscribe({
+            next: () => {
+              this.isSaving = false;
+              this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว').then(() => {
+                this.navigateBack(data.projectId);
+              });
+            },
+            error: (err) => {
+              this.isSaving = false;
+              this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+            },
+          });
       },
       error: (error) => {
         this.isSaving = false;

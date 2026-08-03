@@ -130,7 +130,7 @@ public class PmRequirementController {
     @GetMapping("/lov-type")
     @Operation(summary = "Get requirement type LOV")
     public ResponseEntity<List<ComboboxResponse>> getLovType() {
-        return getParameterLov("PM", "REQ_TYPE");
+        return getParameterLov("PM", "REQUIREMENT_TYPE");
     }
 
     @GetMapping("/lov-priority")

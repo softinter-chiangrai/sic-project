@@ -97,7 +97,7 @@
               ></sic-input>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <sic-combobox
                 label="ประเภท Requirement"
                 formControlName="requirementType"
@@ -105,37 +105,16 @@
                 [required]="true"
               ></sic-combobox>
               <sic-combobox
-                label="โครงการ"
-                formControlName="projectId"
-                [apiUrl]="service.apiGetComboboxProject"
-                [required]="true"
-              ></sic-combobox>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <sic-combobox
                 label="ลำดับความสำคัญ"
                 formControlName="priority"
                 [apiUrl]="service.apiGetLovPriority"
                 [required]="true"
               ></sic-combobox>
-              <label class="flex flex-col">
-                <span class="text-sm font-medium text-[var(--text-active)] mb-1">แหล่งที่มา</span>
-                <select
-                  formControlName="source"
-                  class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 transition-all"
-                >
-                  <option value="">-- เลือก --</option>
-                  @for (src of sourceOptions; track src) {
-                    <option [value]="src">{{ src }}</option>
-                  }
-                </select>
-              </label>
-              <sic-input
-                label="คุณค่าทางธุรกิจ"
-                formControlName="businessValue"
-                placeholder="สูง / ปานกลาง / ต่ำ"
-              ></sic-input>
+              <sic-combobox
+                label="สถานะ"
+                formControlName="status"
+                [apiUrl]="service.apiGetLovStatus"
+              ></sic-combobox>
             </div>
 
             <!-- Description (ใช้ sic-tiptap-editor) -->
@@ -156,41 +135,17 @@
               }
             </div>
 
-            <!-- Acceptance Criteria (ใช้ sic-tiptap-editor) -->
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-medium text-[var(--text-active)]">เงื่อนไขการยอมรับ</span>
-                <span class="text-xs text-[var(--text-muted)]">(ไม่บังคับ)</span>
-              </div>
-              <sic-tiptap-editor
-                formControlName="acceptanceCriteria"
-                placeholderInput="ระบุเงื่อนไขที่ต้องผ่านเพื่อให้ Requirement นี้สำเร็จ..."
-                minHeightInput="100px"
-              ></sic-tiptap-editor>
-            </div>
-
-            <!-- Created By -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <sic-input
-                label="ผู้สร้าง"
-                formControlName="createdBy"
-                placeholder="สมหญิง รักเรียน"
-              ></sic-input>
-              <div>
-                <label class="block text-sm font-medium text-[var(--text-active)] mb-1">เวอร์ชัน</label>
-                <input
-                  type="text"
-                  formControlName="version"
-                  class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 transition-all"
-                  [disabled]="true" 
-                  [readonly]="true" 
-                />
-              </div>
-              <sic-combobox
-                label="สถานะ"
-                formControlName="status"
-                [apiUrl]="service.apiGetLovStatus"
-              ></sic-combobox>
+            <!-- เอกสารแนบ -->
+            <div class="space-y-1">
+              <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+              <sic-upload
+                formControlName="uploadGroupData"
+                [uploadGroupId]="form.get('uploadGroupId')?.value"
+                [multiple]="true"
+                category="all"
+                [visibility]="1"
+                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Requirement"
+              ></sic-upload>
             </div>
 
             <!-- Active -->
@@ -211,31 +166,17 @@
                 <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
                 การอนุมัติ
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 gap-4">
                 <sic-combobox
                   label="กระบวนการอนุมัติ"
-                  [apiUrl]="'/api/pm/approvals/flows/document-type/REQUIREMENT'"
+                  [apiUrl]="service.apiGetApprovals"
                   valueField="id"
                   textField="flowName"
                   placeholder="เลือกกระบวนการอนุมัติ"
                   [clearable]="true"
                   (selectionChanged)="selectedFlowId = $event?.id"
                 ></sic-combobox>
-                <div class="flex items-end">
-                  <sic-button
-                    variant="primary"
-                    [fullWidth]="true"
-                    [disabled]="!selectedFlowId || !form.get('id')?.value"
-                    (click)="submitForApproval()"
-                  >
-                    <i class="bi bi-send"></i>
-                    ส่งขออนุมัติ
-                  </sic-button>
-                </div>
               </div>
-              @if (!form.get('id')?.value) {
-                <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ</p>
-              }
             </div>
 
             <!-- Action Buttons -->
@@ -253,7 +194,7 @@
                 [fullWidth]="true"
                 type="submit"
                 variant="primary"
-                [disabled]="isSaving || form.invalid"
+                [disabled]="isSaving || form.invalid || !selectedFlowId"
               >
                 @if (isSaving) {
                   <i class="bi bi-arrow-repeat animate-spin"></i>

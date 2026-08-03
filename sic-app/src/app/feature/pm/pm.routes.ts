@@ -165,7 +165,7 @@ export const PM_ROUTES: Routes = [
   path: 'requirement/new',
   loadComponent: () =>
     import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard],
+  canActivate: [customerGuard, projectGuard],
   canDeactivate: [CanDeactivateGuard],
 },
 

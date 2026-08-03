@@ -52,4 +52,7 @@ public class PmRequirement extends BaseBusinessEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "upload_group_id")
+    private UUID uploadGroupId;
 }

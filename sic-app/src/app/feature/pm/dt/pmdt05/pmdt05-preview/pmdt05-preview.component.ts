@@ -52,14 +52,6 @@ export interface RequirementPreviewData {
               <span class="info-value">{{ data.requirementType || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">แหล่งที่มา</span>
-              <span class="info-value">{{ data.source || '-' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">คุณค่าทางธุรกิจ</span>
-              <span class="info-value">{{ data.businessValue || '-' }}</span>
-            </div>
-            <div class="info-item">
               <span class="info-label">ลำดับความสำคัญ</span>
               <span class="info-value" [class]="'priority--' + data.priority.toLowerCase()">
                 {{ getPriorityLabel(data.priority) }}
