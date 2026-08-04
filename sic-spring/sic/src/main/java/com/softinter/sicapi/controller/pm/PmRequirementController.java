@@ -91,14 +91,14 @@ public class PmRequirementController {
 
     @PostMapping("/save")
     @Operation(summary = "Save requirement (create or update)")
-    public ResponseEntity<UUID> save(@RequestBody PmRequirementRequest request) {
+    public ResponseEntity<PmRequirementResponse> save(@RequestBody PmRequirementRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
         String userId = currentUserService.getUserId();
-        UUID id = requirementService.save(request, businessId, userId);
-        return ResponseEntity.ok(id);
+        PmRequirementResponse response = requirementService.save(request, businessId, userId);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")

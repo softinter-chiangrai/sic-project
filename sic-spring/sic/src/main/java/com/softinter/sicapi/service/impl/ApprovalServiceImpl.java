@@ -68,7 +68,6 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
     private final SuProfileRepository profileRepository;
     private final CurrentUserService currentUserService;
-    private final ApprovalFlowService flowService;
     private final ApprovalNotificationService notificationService;
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;

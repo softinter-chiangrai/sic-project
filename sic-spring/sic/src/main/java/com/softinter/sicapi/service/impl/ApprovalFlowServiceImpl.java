@@ -1,15 +1,6 @@
-// ============================================================
-// 9. ApprovalFlowServiceImpl.java (แก้ไข updateFlow)
-// ============================================================
+// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ApprovalFlowServiceImpl.java
+
 package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
 import com.softinter.sicapi.dto.request.SaveApprovalFlowStepRequest;
@@ -30,6 +21,13 @@ import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -128,6 +126,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
         PmApprovalFlow flow = flowRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
 
+        // ตรวจสอบ Flow Code ซ้ำ
         flowRepository.findByFlowCode(request.getFlowCode())
                 .ifPresent(existing -> {
                     if (!existing.getId().equals(id)) {
@@ -135,6 +134,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                     }
                 });
 
+        // ตรวจสอบและยกเลิก Approval ที่ยังค้างอยู่
         boolean hasActiveApproval = approvalRepository.existsByFlowIdAndStatusIn(
                 flow.getId(),
                 List.of(ApprovalStatus.PENDING, ApprovalStatus.PARTIALLY_APPROVED, ApprovalStatus.NEED_REVISION));
@@ -144,13 +144,14 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                     flow.getId(),
                     "Flow was modified, all pending approvals have been cancelled.");
 
+            // (Optional) Log จำนวนที่ถูกยกเลิก
             if (cancelResponse.getCancelledCount() > 0) {
-                throw new IllegalStateException(
-                        "Flow has " + cancelResponse.getCancelledCount() +
-                                " active approval(s) that have been cancelled. Please ask users to resubmit.");
+                // ปล่อยให้ผ่านไปได้ (ไม่ต้อง throw)
+                // ถ้าต้องการให้แจ้งเตือน前端 แต่ไม่ Block การ update
             }
         }
 
+        // อัปเดตข้อมูล Flow
         flow.setFlowCode(request.getFlowCode());
         flow.setFlowName(request.getFlowName());
         flow.setDocumentType(request.getDocumentType());
@@ -159,8 +160,17 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
         flow.setDescription(request.getDescription());
         flow.setUpdatedBy(currentUserService.getUserId());
 
-        stepRepository.deleteByFlowId(id);
+        // ===== 🔥 เปลี่ยนจาก Hard Delete เป็น Soft Delete =====
+        // ลบขั้นตอนเดิมแบบ Soft Delete (เพื่อรักษาข้อมูลประวัติ)
+        List<PmApprovalFlowStep> existingSteps = stepRepository.findByFlowIdAndIsDeleteFalseOrderByStepOrderAsc(flow.getId());
+        for (PmApprovalFlowStep step : existingSteps) {
+            step.setIsDelete(true);
+            step.setDeleteBy(currentUserService.getUserId());
+            step.setDeleteDate(Instant.now());
+            stepRepository.save(step);
+        }
 
+        // สร้างขั้นตอนใหม่ตาม request
         if (request.getSteps() != null) {
             for (SaveApprovalFlowStepRequest stepReq : request.getSteps()) {
                 PmApprovalFlowStep step = new PmApprovalFlowStep();
@@ -197,20 +207,27 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                     flow.getId(),
                     "Flow was deleted, all pending approvals have been cancelled.");
 
-            if (cancelResponse.getCancelledCount() > 0) {
-                throw new IllegalStateException(
-                        "Flow has " + cancelResponse.getCancelledCount() +
-                                " active approval(s) that have been cancelled. Please ask users to resubmit.");
-            }
+            // ปล่อยผ่าน
         }
 
+        // Soft delete Flow
         flow.setIsDelete(true);
         flow.setIsActive(false);
         flow.setDeleteBy(currentUserService.getUserId());
         flow.setDeleteDate(Instant.now());
         flowRepository.save(flow);
+
+        // Soft delete Steps ที่ยัง active อยู่ด้วย (ป้องกันการค้าง)
+        List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdAndIsDeleteFalseOrderByStepOrderAsc(flow.getId());
+        for (PmApprovalFlowStep step : steps) {
+            step.setIsDelete(true);
+            step.setDeleteBy(currentUserService.getUserId());
+            step.setDeleteDate(Instant.now());
+            stepRepository.save(step);
+        }
     }
 
+    // ===== Mapper methods =====
     private ApprovalFlowResponse toResponse(PmApprovalFlow flow) {
         ApprovalFlowResponse response = new ApprovalFlowResponse();
         response.setId(flow.getId());
@@ -229,7 +246,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
             response.setDocumentTypeDisplay(flow.getDocumentType());
         }
 
-        List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdOrderByStepOrderAsc(flow.getId());
+        List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdAndIsDeleteFalseOrderByStepOrderAsc(flow.getId());
         response.setSteps(steps.stream()
                 .map(this::toStepResponse)
                 .collect(Collectors.toList()));

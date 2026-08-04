@@ -59,7 +59,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
     @Override
     @Transactional
-    public UUID save(PmRequirementRequest request, UUID businessId, String userId) {
+    public PmRequirementResponse save(PmRequirementRequest request, UUID businessId, String userId) {
         PmRequirement requirement;
         EntityState state = EntityState.values()[request.getState()];
 
@@ -105,7 +105,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setDeleteBy(userId);
             requirement.setDeleteDate(Instant.now());
             requirementRepository.save(requirement);
-            return requirement.getId();
+            return toResponse(requirement);
         } else {
             throw new IllegalArgumentException("Invalid state: " + state);
         }
@@ -115,7 +115,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
         }
 
-        return requirement.getId();
+        return toResponse(requirement);
     }
 
     @Override

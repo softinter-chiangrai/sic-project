@@ -10,6 +10,6 @@ import java.util.UUID;
 public interface PmRequirementService {
     Page<PmRequirementResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable);
     PmRequirementResponse findById(UUID id, UUID businessId);
-    UUID save(PmRequirementRequest request, UUID businessId, String userId);
+    PmRequirementResponse save(PmRequirementRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
 }

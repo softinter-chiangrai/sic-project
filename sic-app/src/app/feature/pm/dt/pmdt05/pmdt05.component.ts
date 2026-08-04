@@ -471,11 +471,11 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
       next: (response: any) => {
         this.isAutoSaving = false;
 
-        // If it was a new document, the backend returned a new UUID. We must update the form ID.
-        if (!data.id && response) {
-          const savedId = typeof response === 'string' ? response : response.id || response.data?.id;
+        // Patch the entire returned response to update uploadGroupId and other fields
+        if (response) {
+          this.form.patchValue(response);
+          const savedId = response.id;
           if (savedId) {
-            this.form.patchValue({ id: savedId });
             this.reqId = savedId;
             this.isEdit = true;
           }
@@ -707,19 +707,13 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
       next: (response: any) => {
         this.form.markAsPristine();
         
-        // Resolve the saved requirement ID
+        // Resolve the saved requirement ID and patch the entire response (including uploadGroupId)
         let savedId = data.id || this.reqId;
-        if (!this.isEdit) {
-          if (response && typeof response === 'object' && response.id) {
-            savedId = response.id;
-          } else if (response && typeof response === 'string' && response !== 'บันทึกสำเร็จ') {
-            savedId = response;
-          } else {
-            savedId = '1';
-          }
+        if (response && response.id) {
+          savedId = response.id;
+          this.form.patchValue(response);
           this.reqId = savedId;
           this.isEdit = true;
-          this.form.patchValue({ id: savedId });
         }
 
         // Submit for approval automatically
