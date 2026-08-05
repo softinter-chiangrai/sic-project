@@ -162,8 +162,10 @@ export class Pmdt07Component implements OnInit {
   }
 
   goToImpact(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'impact']);
-  }
+  this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
+    queryParams: { showImpact: true } // optional
+  });
+}
 
   deleteChangeRequest(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {

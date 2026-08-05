@@ -30,3 +30,7 @@ WHERE LOWER(requirement_type) = 'data';
 UPDATE pm_requirement 
 SET requirement_type = 'UI' 
 WHERE LOWER(requirement_type) = 'ui';
+
+
+ALTER TABLE pm_change_impact ADD COLUMN delete_by VARCHAR(100);
+ALTER TABLE pm_change_impact ADD COLUMN delete_date TIMESTAMP;

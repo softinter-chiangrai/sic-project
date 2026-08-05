@@ -70,6 +70,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setRequesterId(currentUserService.getUserId());
         cr.setStatus("DRAFT");
         cr.setTargetVersion(request.getTargetVersion());
+        cr.setAssigneeId(request.getAssigneeId());
         cr.setCreatedBy(currentUserService.getUserId());
         cr.setCreatedDate(Instant.now());
 
@@ -105,6 +106,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
         cr.setTargetVersion(request.getTargetVersion());
+        cr.setAssigneeId(request.getAssigneeId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());
 

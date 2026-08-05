@@ -801,27 +801,39 @@ CREATE TABLE IF NOT EXISTS pm_requirement_change_request (
 );
 
 -- 34. pm_change_impact_analysis
+-- สร้างตาราง Impact Analysis
 CREATE TABLE IF NOT EXISTS pm_change_impact_analysis (
-    id UUID PRIMARY KEY,
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMPTZ NOT NULL,
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMPTZ NOT NULL,
-    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMPTZ,
-    business_id UUID,
-    change_request_id UUID NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    change_request_id UUID NOT NULL REFERENCES pm_change_request(id),
     dfd_impact TEXT,
     er_impact TEXT,
     ui_impact TEXT,
     api_impact TEXT,
     test_impact TEXT,
-    manday_impact INTEGER,
-    timeline_impact INTEGER,
+    manday_impact INT,
+    timeline_impact INT,
     cost_impact TEXT,
-    CONSTRAINT fk_impact_change FOREIGN KEY (change_request_id) REFERENCES pm_requirement_change_request(id)
+    impacted_requirement_ids UUID[],
+    impacted_spec_ids UUID[],
+    impacted_task_ids UUID[],
+    impacted_test_case_ids UUID[],
+    impacted_bug_ids UUID[],
+    impacted_table_names TEXT[],
+    analysis_status VARCHAR(20) DEFAULT 'MANUAL',
+    analyzed_at TIMESTAMP,
+    analyzed_by VARCHAR(100),
+    created_by VARCHAR(100),
+    created_date TIMESTAMP DEFAULT NOW(),
+    updated_by VARCHAR(100),
+    updated_date TIMESTAMP,
+    delete_by VARCHAR(100),
+    delete_date TIMESTAMP,
+    is_delete BOOLEAN DEFAULT FALSE,
 );
+
+-- สร้าง Index
+CREATE INDEX idx_change_impact_analysis_cr ON pm_change_impact_analysis(change_request_id);
+CREATE INDEX idx_change_impact_analysis_status ON pm_change_impact_analysis(analysis_status);
 
 -- ============================================================
 -- ส่วนที่ 5: Specification และ Use Case (ตารางที่ 43-44) [ข้าม DFD/ER เดิม]
