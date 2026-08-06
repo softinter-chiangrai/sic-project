@@ -123,6 +123,6 @@ export const routes: Routes = [
   },
   {
     path: 'tutorial',
-    loadComponent: () => import('./tutorial/tutorial.component').then((m) => m.TutorialComponent),
-  },
+    loadComponent: () => import('sic-ng').then(m => m.TutorialPageComponent) 
+  }
 ];
