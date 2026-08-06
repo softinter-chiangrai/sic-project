@@ -58,22 +58,8 @@ export const routes: Routes = [
         loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
       },
       {
-        path: 'db',
-        loadChildren: () => import('./feature/db/db.routes').then((m) => m.routes),
-      },
-      {
         path: 'su',
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes)
-      },
-      {
-        path: 'do',
-        loadChildren: () => import('./feature/do/do.routes').then((m) => m.routes)
-      },
-      {
-        path: 'mp',
-        loadChildren: () => import('./feature/mp/mp.routes').then((m) => m.routes)
-      }
-        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes),
+        loadChildren: () => import('./feature/bu/bu.routes').then((m) => m.routes), // Using bu routes – adjust if needed
       },
       {
         path: 'pm',

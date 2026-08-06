@@ -76,16 +76,18 @@ export class AuthService {
     if (!this.isBrowser) return false;
     const claims = this.getIdentityClaims();
     if (!claims) return false;
-    
+
     // Check keycloak realm roles
     const roles = claims.realm_access?.roles || [];
     const isKeycloakAdmin = roles.includes('ADMIN') || roles.includes('admin');
-    
+
     // Fallback/direct check for admin email
     const isEmailAdmin = claims.email === 'supachaiinchaitap@gmail.com';
-    
+
     return isKeycloakAdmin || isEmailAdmin;
-  // ✅ เพิ่ม method นี้
+  } // ✅ <-- This closing brace was missing
+
+  // ✅ Added method correctly (outside isAdmin)
   getUserId(): string | null {
     if (!this.isBrowser) return null;
     const token = this.getAccessToken();
@@ -111,7 +113,7 @@ export class AuthService {
 
   logout(): void {
     if (!this.isBrowser) return;
-    
+
     // Prevent Keycloak "Missing id_token_hint" error by performing a local logout
     // if the user doesn't actually have an active ID token to send to the server.
     if (!this.oauth.getIdToken()) {
@@ -119,7 +121,7 @@ export class AuthService {
       window.location.href = '/';
       return;
     }
-    
+
     this.oauth.logOut();
   }
 
