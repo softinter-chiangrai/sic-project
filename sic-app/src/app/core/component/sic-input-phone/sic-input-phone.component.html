@@ -1,40 +1,50 @@
-<label class="sic-field">
+<label class="sic-input-phone-wrapper" [class.sic-input-phone--disabled]="disabled">
   @if (label) {
-    <span class="sic-field__label">
+    <span class="sic-input-phone__label">
       {{ label }}
       @if (isRequired) {
-        <span class="sic-field__required">*</span>
+        <span class="sic-input-phone__required">*</span>
       }
     </span>
   }
 
-  <span class="sic-input-phone__wrap" [class.sic-input-phone__wrap--invalid]="showError">
-    <select
-      class="sic-input-phone__dial"
-      [disabled]="disabled"
-      [value]="dialCode"
-      (change)="handleDialCodeChange($event)"
-    >
-      @for (country of countries; track country.code) {
-        <option [value]="country.dialCode">{{ country.label }}</option>
-      }
-    </select>
+  <div class="sic-input-phone" [class.sic-input-phone--invalid]="showError">
     <input
-      class="sic-input-phone__field"
-      type="tel"
-      [name]="name"
-      [placeholder]="placeholder"
-      [readOnly]="readonly"
+      class="sic-input-phone__left"
+      [class.sic-input-phone__field--invalid]="showError"
+      type="text"
+      [value]="left"
+      [placeholder]="placeholderLeft"
       [disabled]="disabled"
-      [value]="value"
-      (input)="handleInput($event)"
-      (blur)="handleBlur()"
-    />
-  </span>
+      [required]="isRequired"
+      inputmode="text"
+      pattern="\+?[0-9]{0,3}"
+      autocomplete="off"
+      maxlength="3"
+      (input)="onLeftInput($event)"
+      (keypress)="onLeftKeyPress($event)"
+      (blur)="onBlur()" />
+
+    <span class="sic-input-phone__dash">-</span>
+
+    <input
+      class="sic-input-phone__right"
+      [class.sic-input-phone__field--invalid]="showError"
+      type="text"
+      [value]="right"
+      [placeholder]="placeholderRight"
+      [disabled]="disabled"
+      [required]="isRequired"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      autocomplete="off"
+      (input)="onRightInput($event)"
+      (blur)="onBlur()" />
+  </div>
 
   @if (showError && errorMessage) {
-    <span class="sic-field__error">{{ errorMessage }}</span>
+    <span class="sic-input-phone__error">{{ errorMessage }}</span>
   } @else if (hint) {
-    <span class="sic-field__hint">{{ hint }}</span>
+    <span class="sic-input-phone__hint">{{ hint }}</span>
   }
 </label>

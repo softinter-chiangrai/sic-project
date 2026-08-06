@@ -52,8 +52,9 @@
       @if (showNavigation) {
         <div class="sic-stepper__panel-actions">
           <div class="sic-stepper__panel-actions-start">
+            <!-- ✅ แก้ไข: ใช้ property binding -->
             <sic-button
-              variant="secondary"
+              [variant]="'secondary'"
               [disabled]="!canGoPrevious()"
               (click)="previous()">
               <i class="bi bi-arrow-left"></i>
@@ -64,13 +65,14 @@
           <div class="sic-stepper__panel-actions-end">
             @if (showSkip && canSkip()) {
               <sic-button
-                variant="ghost"
+                [variant]="'ghost'"
                 (click)="skip()">
                 <span>{{ skipText }}</span>
                 <i class="bi bi-skip-forward"></i>
               </sic-button>
             }
 
+            <!-- ✅ แก้ไข: ใช้ property binding -->
             <sic-button
               [variant]="isLastStep() ? 'success' : 'primary'"
               (click)="next()">

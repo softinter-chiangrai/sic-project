@@ -27,7 +27,7 @@ import { SicInputComponent } from '../sic-input/sic-input.component';
 import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
 
 type NodeEditPayload = {
-  roleCode: string; // ✅ เพิ่มบรรทัดนี้
+  roleCode: string;
   nameEn: string;
   nameLocal: string;
   color: string;
@@ -83,10 +83,9 @@ type NodeEditPayload = {
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()"
-          >Save</sic-button
-        >
+        <!-- ✅ แก้ไข: ใช้ property binding -->
+        <sic-button [variant]="'secondary'" size="sm" (click)="cancel()">Cancel</sic-button>
+        <sic-button [variant]="'primary'" size="sm" [disabled]="!canSave" (click)="save()">Save</sic-button>
       </div>
     </div>
   `,
@@ -119,17 +118,13 @@ export class SicOrganizationalChartEditDialog implements OnInit {
   }
 
   save(): void {
-    if (!this.canSave) {
-      return;
-    }
-
+    if (!this.canSave) return;
     this.onSave({
       roleCode: this.roleCode.trim().toUpperCase(),
       nameEn: this.nameEn.trim(),
       nameLocal: this.nameLocal.trim(),
       color: this.color.trim(),
     });
-
     this.dialogService.close(true);
   }
 
@@ -143,7 +138,7 @@ export class SicOrganizationalChartEditDialog implements OnInit {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-organizational-chart.component.html',
-  styleUrl: './sic-organizational-chart.component.css',
+  styleUrls: ['./sic-organizational-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges, OnDestroy {
@@ -152,6 +147,7 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
   @Output() nodeRemoved = new EventEmitter<{ parentId: string; nodeId: string }>();
   @Output() nodeUpdated = new EventEmitter<{ nodeId: string; node: SicOrganizationalChartNode }>();
   @Output() dataChanged = new EventEmitter<SicOrganizationalChartNode>();
+  @Output() nodeClick = new EventEmitter<SicOrganizationalChartNode>();
 
   private resizeObserver?: ResizeObserver;
   private hasCenteredInitialScroll = false;
@@ -168,32 +164,28 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
     @Inject(PLATFORM_ID) platformId: object,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    // ✅ ตั้งค่าภาษาเริ่มต้นให้ถูกต้องตั้งแต่เริ่ม
     this.currentLanguage = this.resolveLanguage(
       this.translate.currentLang || this.translate.getDefaultLang() || 'en',
     );
   }
 
   ngAfterViewInit(): void {
-    // ✅ อัปเดตภาษาซ้ำเพื่อความปลอดภัย (เผื่อมีการเปลี่ยนแปลงระหว่าง constructor กับ afterViewInit)
     const newLang = this.resolveLanguage(
       this.translate.currentLang || this.translate.getDefaultLang() || 'en',
     );
     if (this.currentLanguage !== newLang) {
       this.currentLanguage = newLang;
-      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดตทันที
+      this.cdr.detectChanges();
     }
 
     this.languageChangeSubscription = this.translate.onLangChange.subscribe(({ lang }) => {
       this.ngZone.run(() => {
         this.currentLanguage = this.resolveLanguage(lang);
-        this.cdr.detectChanges(); // ✅ มีอยู่แล้ว แต่ยืนยันว่าทำงาน
+        this.cdr.detectChanges();
       });
     });
 
-    if (!this.isBrowser) {
-      return;
-    }
+    if (!this.isBrowser) return;
 
     this.scheduleConnectorLayout(true);
 
@@ -201,16 +193,12 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
       this.resizeObserver = new ResizeObserver(() => {
         this.scheduleConnectorLayout();
       });
-
       this.resizeObserver.observe(this.hostElementRef.nativeElement);
     });
   }
 
   ngOnChanges(_changes: SimpleChanges): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
+    if (!this.isBrowser) return;
     this.scheduleConnectorLayout();
   }
 
@@ -221,12 +209,9 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
 
   resolveNodeLabel(node: SicOrganizationalChartNode): string {
     if (this.currentLanguage === 'th') {
-      const localLabel = node.nameLocal?.trim();
-      return localLabel || node.nameEn || '';
+      return node.nameLocal?.trim() || node.nameEn || '';
     }
-
-    const englishLabel = node.nameEn?.trim();
-    return englishLabel || node.nameLocal || '';
+    return node.nameEn?.trim() || node.nameLocal || '';
   }
 
   addChild(parentNode: SicOrganizationalChartNode): void {
@@ -290,11 +275,12 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
     this.scheduleConnectorLayout();
   }
 
-  private scheduleConnectorLayout(centerScroll = false): void {
-    if (!this.isBrowser) {
-      return;
-    }
+  onNodeClick(node: SicOrganizationalChartNode): void {
+    this.nodeClick.emit(node);
+  }
 
+  private scheduleConnectorLayout(centerScroll = false): void {
+    if (!this.isBrowser) return;
     this.ngZone.runOutsideAngular(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -310,10 +296,7 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
 
   private centerHorizontalScroll(): void {
     const host = this.hostElementRef.nativeElement;
-    if (host.scrollWidth <= host.clientWidth) {
-      return;
-    }
-
+    if (host.scrollWidth <= host.clientWidth) return;
     host.scrollLeft = (host.scrollWidth - host.clientWidth) / 2;
   }
 
@@ -327,9 +310,7 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
       const horizontalConnector = childrenContainer.querySelector<HTMLElement>(
         ':scope > .sic-organizational-chart__connector-horizontal',
       );
-      if (!horizontalConnector) {
-        return;
-      }
+      if (!horizontalConnector) return;
 
       const childNodes = childrenContainer.querySelectorAll<HTMLElement>(
         ':scope > .sic-organizational-chart__child-wrapper > .sic-organizational-chart__child-content > .sic-organizational-chart__node-container > .sic-organizational-chart__node-shell > .sic-organizational-chart__node',
@@ -373,11 +354,4 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
   }
 
   trackById = (_index: number, node: SicOrganizationalChartNode): string => node.id;
-
-  @Output() nodeClick = new EventEmitter<SicOrganizationalChartNode>();
-
-  // ✅ เพิ่ม method
-  onNodeClick(node: SicOrganizationalChartNode): void {
-    this.nodeClick.emit(node);
-  }
 }

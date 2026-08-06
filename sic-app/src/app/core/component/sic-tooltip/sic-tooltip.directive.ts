@@ -1,7 +1,7 @@
 import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { Directive, ElementRef, HostListener, Input, OnDestroy, inject } from '@angular/core';
-import { SicTooltipComponent } from './sic-tooltip.component';
+import { SictoolTipComponent } from './sic-tooltip.component';
 
 export type SicTooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -37,7 +37,7 @@ export class SicTooltipDirective implements OnDestroy {
       .withPositions([POSITIONS[this.sicTooltipPlacement], ...Object.values(POSITIONS)]);
 
     this.overlayRef = this.overlay.create({ positionStrategy, panelClass: 'sic-tooltip__panel' });
-    const portal = new ComponentPortal(SicTooltipComponent);
+    const portal = new ComponentPortal(SictoolTipComponent);
     const ref = this.overlayRef.attach(portal);
     ref.instance.text = this.text;
   }

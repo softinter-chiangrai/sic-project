@@ -15,6 +15,16 @@ export class SicValidator {
 
     return control.invalid && (control.touched || control.dirty || touched);
   }
+  
+   isRequired(control: AbstractControl | null): boolean {
+    if (!control) return false;
+    // Check if the validator returns a 'required' error
+    const validator = control.validator;
+    if (!validator) return false;
+    const testControl = { value: null } as any;
+    const errors = validator(testControl);
+    return !!errors?.['required'];
+  }
 
   /**
    * Resolve and return the appropriate error message

@@ -1,7 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input, forwardRef } from '@angular/core';
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SicFormControlBase } from '../../base/sic-form-control.base';
+import {
+  Component,
+  HostBinding,
+  Input,
+  OnInit,
+  forwardRef,
+  Injector,
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  NgControl,
+} from '@angular/forms';
+import { SicValidator } from '../../validator/sic.validator';
 
 @Component({
   selector: 'sic-checkbox',
@@ -17,25 +28,94 @@ import { SicFormControlBase } from '../../base/sic-form-control.base';
     },
   ],
 })
-export class SicCheckboxComponent extends SicFormControlBase<unknown> {
-  @Input() checkedValue: unknown = true;
-  @Input() uncheckedValue: unknown = false;
+export class SicCheckboxComponent implements ControlValueAccessor, OnInit {
+  @Input() label?: string;
+  @Input() disabled = false;
+  @Input() readonly = false;
+  @Input() checkedValue: any = true;
+  @Input() uncheckedValue: any = false;
+  @Input() hint?: string;
+  @Input() errorMessages: Record<string, string> = {};
 
   @HostBinding('class.sic-checkbox-host') readonly hostClass = true;
 
-  override value: unknown = false;
-
   get checked(): boolean {
-    return this.value === this.checkedValue;
+    return this.value == this.checkedValue;
+  }
+
+  touched = false;
+  value: any = null;
+
+  private onChange: (value: any) => void = () => {};
+  private onTouched: () => void = () => {};
+  private ngControl: NgControl | null = null;
+
+  constructor(
+    private readonly injector: Injector,
+    private readonly validator: SicValidator,
+  ) {}
+
+  ngOnInit(): void {
+    this.ngControl = this.injector.get(NgControl, null);
+
+    if (this.ngControl) {
+      this.ngControl.valueAccessor = this;
+    }
+  }
+
+  get control() {
+    return this.validator.getControl(this.ngControl);
+  }
+
+  get showError(): boolean {
+    return this.validator.shouldShowError(this.control, this.touched);
+  }
+
+  get errorMessage(): string | null {
+    return this.validator.getErrorMessage(this.control, this.errorMessages);
+  }
+
+  get isRequired(): boolean {
+    if (!this.control?.validator) {
+      return false;
+    }
+    // Check if the validator returns a 'required' error by testing with null value
+    const testControl = { value: null } as any;
+    const errorMap = this.control.validator(testControl);
+    return !!errorMap?.['required'];
+  }
+
+  writeValue(value: any): void {
+    this.value = value;
+  }
+
+  registerOnChange(fn: (value: any) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
   }
 
   onCheckboxChange(): void {
-    if (this.disabled || this.readonly) {
-      return;
-    }
-
-    this.value = this.checked ? this.uncheckedValue : this.checkedValue;
+    const newChecked = !this.checked;
+    this.value = newChecked ? this.checkedValue : this.uncheckedValue;
     this.onChange(this.value);
     this.markTouched();
+  }
+
+  onBlur(): void {
+    this.markTouched();
+  }
+
+  private markTouched(): void {
+    if (!this.touched) {
+      this.touched = true;
+      this.onTouched();
+    }
   }
 }
