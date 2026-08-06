@@ -17,7 +17,7 @@ export class SicButtonComponent {
     | 'outline' = 'primary';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
-  @Input() disabled = false;
+  @Input() disabled : any = false;
   @Input() fullWidth = false;
   @Input() iconOnly = false;
 

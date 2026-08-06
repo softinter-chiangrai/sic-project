@@ -4,7 +4,6 @@ import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { provideEnvironmentNgxMask } from 'ngx-mask';
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { AuthService } from './core/auth/auth.service';
 import { LanguageService } from './core/services/language.service';
@@ -25,7 +24,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideRouter(routes),
-    provideClientHydration(),
     provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
     provideEnvironmentNgxMask(),
     provideSicNumberConfig({ decimal: 2 }),

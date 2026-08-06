@@ -1,0 +1,268 @@
+<sic-container>
+  <div class="space-y-4 bg-[var(--bg)] text-[var(--text)]">
+    <sic-card>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <button
+            type="button"
+            class="mb-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-active)]"
+            (click)="back()">
+            <i class="bi bi-arrow-left"></i>
+            Back
+          </button>
+
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--crm-primary)] text-white">
+              <i class="bi bi-receipt-cutoff text-lg"></i>
+            </div>
+
+            <div>
+              <h1 class="m-0 text-xl font-semibold text-[var(--text-active)]">
+                {{ isCreateMode() ? 'Create' : 'Edit' }} {{ title() }}
+              </h1>
+
+              <p class="mt-1 text-sm text-[var(--text-muted)]">
+                บันทึก Header และ Detail พร้อมกัน
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <sic-button
+            variant="outline"
+            [disabled]="saving() || deleting()"
+            (click)="back()">
+            Cancel
+          </sic-button>
+
+          <sic-button
+            variant="primary"
+            [disabled]="saving() || deleting()"
+            (click)="save()">
+            <i class="bi bi-save mr-1"></i>
+            {{ saving() ? 'Saving...' : 'Save' }}
+          </sic-button>
+
+          <sic-button
+            *ngIf="!isCreateMode()"
+            variant="danger"
+            [disabled]="saving() || deleting()"
+            (click)="delete()">
+            <i class="bi bi-trash mr-1"></i>
+            {{ deleting() ? 'Deleting...' : 'Delete' }}
+          </sic-button>
+        </div>
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="errorMessage()"
+      class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+      {{ errorMessage() }}
+    </div>
+
+    <div
+      *ngIf="successMessage()"
+      class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
+      {{ successMessage() }}
+    </div>
+
+    <sic-card *ngIf="loading()">
+      <div class="flex items-center justify-center gap-3 py-8 text-sm text-[var(--text-muted)]">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--crm-primary)]"></span>
+        กำลังโหลดข้อมูล...
+      </div>
+    </sic-card>
+
+    <sic-card *ngIf="!loading()">
+      <div card-header>
+        <h2 class="m-0 text-base font-semibold text-[var(--text-active)]">
+          Header
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ng-container *ngFor="let field of headerFields(); trackBy: trackByField">
+          <sic-input
+            *ngIf="isAuto(field)"
+            [label]="getLabel(field)"
+            [readonly]="true"
+            [hint]="'AUTO: ' + (field.format || '')"
+            placeholder="ระบบจะสร้างให้อัตโนมัติ"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-input>
+
+          <sic-combobox
+            *ngIf="isReference(field)"
+            [label]="getLabel(field)"
+            [apiUrl]="getReferenceApiUrl(field)"
+            [paging]="true"
+            [pageSize]="20"
+            [valueField]="'id'"
+            [textField]="'label'"
+            [clearable]="!isRequired(field)"
+            placeholder="เลือกข้อมูล"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-combobox>
+
+          <sic-datepicker
+            *ngIf="isDate(field)"
+            [label]="getLabel(field)"
+            [clearable]="!isRequired(field)"
+            placeholder="เลือกวันที่"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-datepicker>
+
+          <sic-number
+            *ngIf="isNumber(field)"
+            [label]="getLabel(field)"
+            [decimal]="isInteger(field) ? 0 : 2"
+            placeholder="0.00"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-number>
+
+          <sic-checkbox
+            *ngIf="isBoolean(field)"
+            [label]="getLabel(field)"
+            [checkedValue]="true"
+            [uncheckedValue]="false"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-checkbox>
+
+          <sic-input
+            *ngIf="isText(field)"
+            [label]="getLabel(field)"
+            placeholder="กรอกข้อมูล"
+            [ngModel]="getHeaderValue(field)"
+            (ngModelChange)="setHeaderValue(field, $event)">
+          </sic-input>
+        </ng-container>
+      </div>
+    </sic-card>
+
+    <sic-card *ngIf="!loading()">
+      <div card-header>
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="m-0 text-base font-semibold text-[var(--text-active)]">
+              Detail
+            </h2>
+
+            <p class="mt-1 text-sm text-[var(--text-muted)]">
+              รายการสินค้า / บริการ
+            </p>
+          </div>
+
+          <sic-button variant="primary" (click)="addDetailRow()">
+            <i class="bi bi-plus-lg mr-1"></i>
+            Add Detail
+          </sic-button>
+        </div>
+      </div>
+
+      <div class="overflow-auto">
+        <table class="min-w-full divide-y divide-[var(--border)] text-sm">
+          <thead class="bg-[var(--sidebar-hover)]">
+            <tr>
+              <th class="w-12 px-4 py-3 text-left text-[var(--text-muted)]">
+                #
+              </th>
+
+              <th
+                *ngFor="let field of detailFields(); trackBy: trackByField"
+                class="min-w-48 whitespace-nowrap px-4 py-3 text-left text-[var(--text-muted)]">
+                {{ getLabel(field) }}
+              </th>
+
+              <th class="w-24 px-4 py-3 text-right text-[var(--text-muted)]">
+                Action
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-[var(--border)]">
+            <tr
+              *ngFor="let row of visibleDetailRows(); let i = index; trackBy: trackByDetailRow"
+              class="align-top">
+              <td class="px-4 py-3 text-[var(--text-muted)]">
+                {{ i + 1 }}
+              </td>
+
+              <td
+                *ngFor="let field of detailFields(); trackBy: trackByField"
+                class="px-4 py-3">
+                <sic-combobox
+                  *ngIf="isReference(field)"
+                  [apiUrl]="getReferenceApiUrl(field)"
+                  [paging]="true"
+                  [pageSize]="20"
+                  [valueField]="'id'"
+                  [textField]="'label'"
+                  [clearable]="!isRequired(field)"
+                  placeholder="เลือกข้อมูล"
+                  [ngModel]="getDetailValue(row, field)"
+                  (ngModelChange)="setDetailValue(row, field, $event)">
+                </sic-combobox>
+
+                <sic-datepicker
+                  *ngIf="isDate(field)"
+                  [clearable]="!isRequired(field)"
+                  placeholder="เลือกวันที่"
+                  [ngModel]="getDetailValue(row, field)"
+                  (ngModelChange)="setDetailValue(row, field, $event)">
+                </sic-datepicker>
+
+                <sic-number
+                  *ngIf="isNumber(field)"
+                  [decimal]="isInteger(field) ? 0 : 2"
+                  placeholder="0.00"
+                  [ngModel]="getDetailValue(row, field)"
+                  (ngModelChange)="setDetailValue(row, field, $event); calculateDetailRow(row)">
+                </sic-number>
+
+                <sic-checkbox
+                  *ngIf="isBoolean(field)"
+                  [checkedValue]="true"
+                  [uncheckedValue]="false"
+                  [ngModel]="getDetailValue(row, field)"
+                  (ngModelChange)="setDetailValue(row, field, $event)">
+                </sic-checkbox>
+
+                <sic-input
+                  *ngIf="isText(field) || isAuto(field)"
+                  placeholder="กรอกข้อมูล"
+                  [readonly]="isAuto(field)"
+                  [ngModel]="getDetailValue(row, field)"
+                  (ngModelChange)="setDetailValue(row, field, $event)">
+                </sic-input>
+              </td>
+
+              <td class="px-4 py-3 text-right">
+                <sic-button
+                  variant="danger"
+                  size="sm"
+                  (click)="removeDetailRow(row)">
+                  Delete
+                </sic-button>
+              </td>
+            </tr>
+
+            <tr *ngIf="visibleDetailRows().length === 0">
+              <td
+                class="px-4 py-10 text-center text-[var(--text-muted)]"
+                [attr.colspan]="detailFields().length + 2">
+                ยังไม่มีรายการสินค้า
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </sic-card>
+  </div>
+</sic-container>

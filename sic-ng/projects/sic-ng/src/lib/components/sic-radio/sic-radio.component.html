@@ -1,0 +1,14 @@
+<label class="sic-radio" [class.sic-radio--disabled]="disabled">
+  <input
+    type="radio"
+    class="sic-radio__input"
+    [name]="name"
+    [checked]="checked"
+    [disabled]="disabled"
+    (change)="onRadioChange()"
+  />
+  <span class="sic-radio__dot" [class.sic-radio__dot--invalid]="showError"></span>
+  @if (label) {
+    <span class="sic-radio__label">{{ label }}</span>
+  }
+</label>

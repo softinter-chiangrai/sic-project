@@ -1,0 +1,220 @@
+<sic-container>
+  <div class="space-y-4 bg-[var(--bg)] text-[var(--text)]">
+    <sic-card>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <button
+            type="button"
+            class="mb-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-active)]"
+            (click)="back()">
+            <i class="bi bi-arrow-left"></i>
+            Back to Marketplace
+          </button>
+
+          <div class="flex items-center gap-3">
+            <div class="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--crm-primary)] text-white">
+              <i class="bi bi-box-seam text-lg"></i>
+            </div>
+
+            <div>
+              <h1 class="m-0 text-xl font-semibold text-[var(--text-active)]">
+                {{ detail()?.appName || 'Marketplace Detail' }}
+              </h1>
+
+              <p class="mt-1 font-mono text-xs text-[var(--text-muted)]">
+                {{ detail()?.appCode || '-' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span
+              class="rounded-full px-3 py-1 font-medium"
+              [class.bg-emerald-500/10]="detail()?.installed"
+              [class.text-emerald-500]="detail()?.installed"
+              [class.bg-[var(--sidebar-hover)]]="!detail()?.installed"
+              [class.text-[var(--text-muted)]]="!detail()?.installed">
+              {{ detail()?.installed ? 'Installed' : 'Not installed' }}
+            </span>
+
+            <span class="rounded-full border border-[var(--border)] bg-[var(--sidebar-hover)] px-3 py-1 text-[var(--text)]">
+              {{ detail()?.installStatus || '-' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <sic-button
+            variant="outline"
+            [disabled]="loading() || actionLoading()"
+            (click)="loadDetail()">
+            <i class="bi bi-arrow-clockwise mr-1"></i>
+            Reload
+          </sic-button>
+
+          <sic-button
+            variant="primary"
+            [disabled]="loading() || actionLoading() || detail()?.installed"
+            (click)="install()">
+            <i class="bi bi-download mr-1"></i>
+            {{ actionLoading() && action() === 'INSTALL' ? 'Installing...' : 'Install' }}
+          </sic-button>
+
+          <sic-button
+            variant="danger"
+            [disabled]="loading() || actionLoading() || !detail()?.installed"
+            (click)="uninstall()">
+            <i class="bi bi-trash mr-1"></i>
+            {{ actionLoading() && action() === 'UNINSTALL' ? 'Uninstalling...' : 'Uninstall' }}
+          </sic-button>
+        </div>
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="errorMessage()"
+      class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+      {{ errorMessage() }}
+    </div>
+
+    <div
+      *ngIf="successMessage()"
+      class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
+      {{ successMessage() }}
+    </div>
+
+    <sic-card *ngIf="loading()">
+      <div class="flex items-center justify-center gap-3 py-8 text-sm text-[var(--text-muted)]">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--crm-primary)]"></span>
+        กำลังโหลดรายละเอียด...
+      </div>
+    </sic-card>
+
+    <ng-container *ngIf="!loading() && detail()">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <sic-card>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-[var(--text-muted)]">Entities</div>
+              <div class="mt-1 text-3xl font-semibold text-[var(--text-active)]">
+                {{ detail()?.entities?.length || 0 }}
+              </div>
+            </div>
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-500/10 text-blue-500">
+              <i class="bi bi-diagram-3 text-xl"></i>
+            </div>
+          </div>
+        </sic-card>
+
+        <sic-card>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-[var(--text-muted)]">Programs</div>
+              <div class="mt-1 text-3xl font-semibold text-[var(--text-active)]">
+                {{ detail()?.programs?.length || 0 }}
+              </div>
+            </div>
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-purple-500/10 text-purple-500">
+              <i class="bi bi-window-sidebar text-xl"></i>
+            </div>
+          </div>
+        </sic-card>
+
+        <sic-card>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-[var(--text-muted)]">Generated Tables</div>
+              <div class="mt-1 text-3xl font-semibold text-[var(--text-active)]">
+                {{ detail()?.tables?.length || 0 }}
+              </div>
+            </div>
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+              <i class="bi bi-table text-xl"></i>
+            </div>
+          </div>
+        </sic-card>
+      </div>
+
+      <sic-card>
+        <div card-header>
+          <div>
+            <h2 class="m-0 text-base font-semibold text-[var(--text-active)]">
+              Programs
+            </h2>
+            <p class="mt-1 text-sm text-[var(--text-muted)]">
+              กดเปิดโปรแกรมเพื่อไปหน้า dynamic master data
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <button
+            type="button"
+            *ngFor="let program of detail()?.programs; trackBy: trackByProgram"
+            class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-4 text-left transition hover:bg-[var(--sidebar-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!detail()?.installed"
+            (click)="openProgram(program)">
+            <div class="flex items-center gap-3">
+              <div class="grid h-10 w-10 place-items-center rounded-xl bg-[var(--sidebar-hover)] text-[var(--text-active)]">
+                <i [class]="program.icon"></i>
+              </div>
+
+              <div class="min-w-0">
+                <div class="truncate font-semibold text-[var(--text-active)]">
+                  {{ program.nameLocal || program.nameEn }}
+                </div>
+                <div class="mt-1 font-mono text-xs text-[var(--text-muted)]">
+                  {{ program.programCode }}
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 text-xs text-[var(--text-muted)]">
+              Entity: {{ program.entityName }}
+            </div>
+          </button>
+        </div>
+      </sic-card>
+
+      <sic-card>
+        <div card-header>
+          <h2 class="m-0 text-base font-semibold text-[var(--text-active)]">
+            Generated Tables
+          </h2>
+        </div>
+
+        <div class="overflow-auto rounded-xl border border-[var(--border)]">
+          <table class="min-w-full divide-y divide-[var(--border)] text-sm">
+            <thead class="bg-[var(--sidebar-hover)]">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-[var(--text-muted)]">Entity</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--text-muted)]">Table Name</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--text-muted)]">Status</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[var(--border)] bg-[var(--sidebar)]">
+              <tr *ngFor="let table of detail()?.tables; trackBy: trackByTable">
+                <td class="px-4 py-3 text-[var(--text-active)]">
+                  {{ table.entityName }}
+                </td>
+                <td class="px-4 py-3 font-mono text-xs text-[var(--text-muted)]">
+                  {{ table.tableName }}
+                </td>
+                <td class="px-4 py-3 text-[var(--text)]">
+                  {{ table.status }}
+                </td>
+              </tr>
+
+              <tr *ngIf="(detail()?.tables?.length || 0) === 0">
+                <td colspan="3" class="px-4 py-8 text-center text-[var(--text-muted)]">
+                  ยังไม่มี generated table
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </sic-card>
+    </ng-container>
+  </div>
+</sic-container>

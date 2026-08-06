@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--sic-color-surface) 25%,
+    color-mix(in srgb, var(--sic-color-surface) 60%, var(--sic-color-border)) 37%,
+    var(--sic-color-surface) 63%
+  );
+  background-size: 400% 100%;
+  animation: sic-skeleton-shimmer 1.4s ease infinite;
+}
+
+:host(.sic-skeleton--text) {
+  border-radius: var(--sic-radius-sm);
+}
+
+:host(.sic-skeleton--rect) {
+  border-radius: var(--sic-radius-md);
+}
+
+:host(.sic-skeleton--circle) {
+  border-radius: var(--sic-radius-full);
+}
+
+@keyframes sic-skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}

@@ -1,0 +1,17 @@
+/**
+ * sic-ng design tokens — dark theme overrides.
+ * Applied when ThemeService toggles the `dark` class on <html>.
+ */
+:root.dark {
+  color-scheme: dark;
+
+  --sic-color-bg: #101215;
+  --sic-color-surface: #17191d;
+  --sic-color-border: #2a2d33;
+  --sic-color-text: #f2f3f5;
+  --sic-color-text-muted: #9aa0ab;
+  --sic-color-text-active: #ffffff;
+
+  --sic-shadow-sm: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
+  --sic-shadow-md: 0 8px 24px color-mix(in srgb, #000 45%, transparent);
+}

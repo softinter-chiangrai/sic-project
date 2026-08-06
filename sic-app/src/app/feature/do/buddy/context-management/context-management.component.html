@@ -1,0 +1,121 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h2>Context & Settings Management</h2>
+    <p class="subtitle">Customize system prompts and configure external AI models</p>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <span>Saving or loading settings...</span>
+  </div>
+
+  <div class="alert success" *ngIf="successMessage">
+    <span>{{ successMessage }}</span>
+    <button class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+
+  <div class="alert error" *ngIf="error">
+    <span>{{ error }}</span>
+    <button class="close-btn" (click)="error = ''">&times;</button>
+  </div>
+
+  <div class="settings-grid" *ngIf="!isLoading">
+    <!-- User Settings Panel -->
+    <div class="settings-card user-settings">
+      <div class="card-header">
+        <span class="icon">👤</span>
+        <h3>Personal AI Config</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="systemPrompt">Personal System Prompt</label>
+          <p class="field-desc">Instruct Buddy on how to behave, respond, or adopt a specific persona just for you.</p>
+          <textarea 
+            id="systemPrompt" 
+            [(ngModel)]="systemPrompt" 
+            placeholder="e.g. Respond in a friendly, conversational tone with bullet points..." 
+            rows="4">
+          </textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-group checkbox-group">
+          <input 
+            type="checkbox" 
+            id="useCloudModel" 
+            [(ngModel)]="useCloudModel" />
+          <label for="useCloudModel">
+            <strong>Use Cloud AI Model</strong>
+            <p class="field-desc">Enable this to use OpenAI/Cloud endpoints instead of the local server.</p>
+          </label>
+        </div>
+
+        <div class="cloud-config-fields" [class.disabled]="!useCloudModel">
+          <div class="form-group">
+            <label for="cloudApiKey">Cloud API Key</label>
+            <input 
+              type="password" 
+              id="cloudApiKey" 
+              [(ngModel)]="cloudApiKey" 
+              [disabled]="!useCloudModel"
+              placeholder="sk-..." />
+          </div>
+
+          <div class="form-group">
+            <label for="cloudBaseUrl">Cloud Base URL</label>
+            <input 
+              type="text" 
+              id="cloudBaseUrl" 
+              [(ngModel)]="cloudBaseUrl" 
+              [disabled]="!useCloudModel"
+              placeholder="e.g. https://api.openai.com/v1" />
+          </div>
+
+          <div class="form-group">
+            <label for="cloudModelName">Cloud Model Name</label>
+            <input 
+              type="text" 
+              id="cloudModelName" 
+              [(ngModel)]="cloudModelName" 
+              [disabled]="!useCloudModel"
+              placeholder="e.g. gpt-4o" />
+          </div>
+        </div>
+
+        <button class="save-btn" (click)="onSaveUserSettings()">Save Personal Config</button>
+      </div>
+    </div>
+
+    <!-- Admin Settings Panel -->
+    <div class="settings-card admin-settings" *ngIf="isAdmin">
+      <div class="card-header admin">
+        <span class="icon">🛡️</span>
+        <h3>Global Admin Controls</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="globalSystemPrompt">Global System Prompt</label>
+          <p class="field-desc">Foundation system rules applied to ALL users on this server. Perfect for setting default guardrails.</p>
+          <textarea 
+            id="globalSystemPrompt" 
+            [(ngModel)]="globalSystemPrompt" 
+            placeholder="e.g. Keep answers concise, and base them strictly on the document context." 
+            rows="5">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="vllmDeploymentMode">vLLM Inference Deployment Mode</label>
+          <p class="field-desc">Swap between the internal vLLM container or an external API gateway container.</p>
+          <select id="vllmDeploymentMode" [(ngModel)]="vllmDeploymentMode" class="form-control">
+            <option value="Internal">Internal (Local devcontainer)</option>
+            <option value="External Container">External Container (vllm-server endpoint)</option>
+          </select>
+        </div>
+
+        <button class="save-btn admin-btn" (click)="onSaveAdminSettings()">Save Global Config</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+<label class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">{{ label }}</span>
+  }
+
+  <span class="sic-colorpicker__wrap" [class.sic-control-field--invalid]="showError">
+    <input
+      type="color"
+      class="sic-colorpicker__swatch"
+      [disabled]="disabled"
+      [value]="value"
+      (input)="handleColorInput($event)"
+      (blur)="handleBlur()"
+    />
+    @if (allowText) {
+      <input
+        type="text"
+        class="sic-colorpicker__hex"
+        [disabled]="disabled"
+        [readOnly]="readonly"
+        [value]="value"
+        (input)="handleTextInput($event)"
+        (blur)="handleBlur()"
+      />
+    }
+  </span>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</label>

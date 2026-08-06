@@ -38,8 +38,8 @@ export class SicSidebarService {
   }
 
   readonly DEFAULT_FLAGS: MenuActionFlags = {
-    isBack: false, isSearch: false, isAdd: false,
-    isSave: false, isRemove: false, isPrint: false,
+    RoleBack: false, RoleSearch: false, RoleAdd: false,
+    RoleSave: false, RoleDelete: false, RolePrint: false,
   };
 
   /**
@@ -51,12 +51,12 @@ export class SicSidebarService {
     for (const item of items) {
       if (item.path === path) {
         return {
-          isBack: item.isBack,
-          isSearch: item.isSearch,
-          isAdd: item.isAdd,
-          isSave: item.isSave,
-          isRemove: item.isRemove,
-          isPrint: item.isPrint,
+          RoleBack: item.RoleBack,
+          RoleSearch: item.RoleSearch,
+          RoleAdd: item.RoleAdd,
+          RoleSave: item.RoleSave,
+          RoleDelete: item.RoleDelete,
+          RolePrint: item.RolePrint,
         };
       }
       if (item.children?.length) {

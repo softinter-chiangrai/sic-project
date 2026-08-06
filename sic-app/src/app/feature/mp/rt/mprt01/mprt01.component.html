@@ -1,0 +1,146 @@
+<sic-container>
+  <div class="space-y-4 bg-[var(--bg)] text-[var(--text)]">
+    <sic-card>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--crm-primary)] text-white">
+              <i class="bi bi-boxes text-lg"></i>
+            </div>
+
+            <div>
+              <h1 class="m-0 text-xl font-semibold text-[var(--text-active)]">
+                Marketplace Management
+              </h1>
+              <p class="mt-1 text-sm text-[var(--text-muted)]">
+                ค้นหา เพิ่ม แก้ไข และ Import Marketplace
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-[var(--border)] bg-[var(--sidebar-hover)] px-3 py-1">
+              ทั้งหมด {{ items().length }} รายการ
+            </span>
+
+            <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-500">
+              Install รวม {{ totalInstallCount() }} ครั้ง
+            </span>
+          </div>
+        </div>
+
+        <div class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+          <div class="w-full sm:w-80">
+            <sic-input
+              label="ค้นหา"
+              placeholder="ค้นหา app code หรือ app name..."
+              type="search"
+              [(ngModel)]="keyword"
+              (keyup.enter)="search()">
+            </sic-input>
+          </div>
+
+          <div class="flex gap-2 sm:items-end">
+            <sic-button variant="primary" [disabled]="loading()" (click)="search()">
+              <i class="bi bi-search mr-1"></i>
+              Search
+            </sic-button>
+
+            <sic-button variant="outline" [disabled]="loading()" (click)="clearSearch()">
+              Clear
+            </sic-button>
+
+            <sic-button variant="primary" (click)="add()">
+              <i class="bi bi-plus-lg mr-1"></i>
+              Add
+            </sic-button>
+          </div>
+        </div>
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="errorMessage()"
+      class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+      {{ errorMessage() }}
+    </div>
+
+    <sic-card *ngIf="loading()">
+      <div class="flex items-center justify-center gap-3 py-8 text-sm text-[var(--text-muted)]">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--crm-primary)]"></span>
+        กำลังโหลดข้อมูล...
+      </div>
+    </sic-card>
+
+    <sic-card *ngIf="!loading() && items().length === 0">
+      <div class="py-10 text-center text-sm text-[var(--text-muted)]">
+        ไม่พบ Marketplace
+      </div>
+    </sic-card>
+
+    <div
+      *ngIf="!loading() && items().length > 0"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <button
+        type="button"
+        *ngFor="let item of items(); trackBy: trackById"
+        class="group rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--sidebar-hover)] hover:shadow-md"
+        (click)="openDetail(item)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="truncate text-base font-semibold text-[var(--text-active)]">
+              {{ item.appName }}
+            </div>
+
+            <div class="mt-1 font-mono text-xs text-[var(--text-muted)]">
+              {{ item.appCode }}
+            </div>
+          </div>
+
+          <span
+            class="shrink-0 rounded-full px-3 py-1 text-xs font-medium"
+            [class.bg-emerald-500/10]="item.installCount > 0"
+            [class.text-emerald-500]="item.installCount > 0"
+            [class.bg-[var(--sidebar-hover)]]="item.installCount === 0"
+            [class.text-[var(--text-muted)]]="item.installCount === 0">
+            Install {{ item.installCount }}
+          </span>
+        </div>
+
+        <div class="mt-5 grid grid-cols-3 gap-3">
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3">
+            <div class="text-xs text-[var(--text-muted)]">Entities</div>
+            <div class="mt-1 text-xl font-semibold text-[var(--text-active)]">
+              {{ item.entityCount }}
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3">
+            <div class="text-xs text-[var(--text-muted)]">Programs</div>
+            <div class="mt-1 text-xl font-semibold text-[var(--text-active)]">
+              {{ item.programCount }}
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)] p-3">
+            <div class="text-xs text-[var(--text-muted)]">Can Delete</div>
+            <div class="mt-1 text-sm font-semibold" [class.text-emerald-500]="item.canDelete" [class.text-red-500]="!item.canDelete">
+              {{ item.canDelete ? 'Yes' : 'No' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-xs">
+          <span class="text-[var(--text-muted)]">
+            {{ item.updatedDate | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+
+          <span class="font-medium text-[var(--text)] group-hover:text-[var(--text-active)]">
+            Detail
+            <i class="bi bi-arrow-right ml-1"></i>
+          </span>
+        </div>
+      </button>
+    </div>
+  </div>
+</sic-container>

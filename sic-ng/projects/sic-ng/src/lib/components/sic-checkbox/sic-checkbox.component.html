@@ -1,0 +1,24 @@
+<label class="sic-checkbox" [class.sic-checkbox--disabled]="disabled">
+  <input
+    type="checkbox"
+    class="sic-checkbox__input"
+    [checked]="checked"
+    [disabled]="disabled"
+    (change)="onCheckboxChange()"
+  />
+  <span class="sic-checkbox__box" [class.sic-checkbox__box--invalid]="showError"></span>
+  @if (label) {
+    <span class="sic-checkbox__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-field__required">*</span>
+      }
+    </span>
+  }
+</label>
+
+@if (showError && errorMessage) {
+  <span class="sic-field__error">{{ errorMessage }}</span>
+} @else if (hint) {
+  <span class="sic-field__hint">{{ hint }}</span>
+}

@@ -1,0 +1,40 @@
+<label class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">
+      {{ label }}
+      @if (isRequired) {
+        <span class="sic-field__required">*</span>
+      }
+    </span>
+  }
+
+  <span class="sic-input-phone__wrap" [class.sic-input-phone__wrap--invalid]="showError">
+    <select
+      class="sic-input-phone__dial"
+      [disabled]="disabled"
+      [value]="dialCode"
+      (change)="handleDialCodeChange($event)"
+    >
+      @for (country of countries; track country.code) {
+        <option [value]="country.dialCode">{{ country.label }}</option>
+      }
+    </select>
+    <input
+      class="sic-input-phone__field"
+      type="tel"
+      [name]="name"
+      [placeholder]="placeholder"
+      [readOnly]="readonly"
+      [disabled]="disabled"
+      [value]="value"
+      (input)="handleInput($event)"
+      (blur)="handleBlur()"
+    />
+  </span>
+
+  @if (showError && errorMessage) {
+    <span class="sic-field__error">{{ errorMessage }}</span>
+  } @else if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</label>

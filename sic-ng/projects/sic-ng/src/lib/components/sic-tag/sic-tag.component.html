@@ -1,0 +1,4 @@
+<span class="sic-tag__label"><ng-content></ng-content></span>
+@if (closable) {
+  <button type="button" class="sic-tag__close" (click)="closed.emit()" aria-label="Remove tag">✕</button>
+}

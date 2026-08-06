@@ -1,0 +1,43 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-input-area__field {
+  width: 100%;
+  padding: var(--sic-space-3);
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-md);
+  background: var(--sic-color-bg);
+  color: var(--sic-color-text-active);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-md);
+  resize: vertical;
+  transition: border-color var(--sic-transition-fast), box-shadow var(--sic-transition-fast);
+}
+
+:host(.sic-size-sm) .sic-input-area__field {
+  font-size: var(--sic-font-size-sm);
+}
+
+:host(.sic-size-lg) .sic-input-area__field {
+  font-size: var(--sic-font-size-lg);
+}
+
+.sic-input-area__field:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--sic-color-primary) 45%, var(--sic-color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sic-color-primary) 14%, transparent);
+}
+
+.sic-input-area__field:disabled {
+  cursor: not-allowed;
+  background: var(--sic-color-surface);
+  color: var(--sic-color-text-muted);
+}
+
+.sic-input-area__field--invalid {
+  border-color: color-mix(in srgb, var(--sic-color-danger) 46%, var(--sic-color-border));
+}

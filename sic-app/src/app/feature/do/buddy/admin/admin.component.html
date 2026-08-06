@@ -1,0 +1,151 @@
+<div class="admin-container">
+
+  <!-- Access Denied -->
+  <div *ngIf="!isAdmin" class="access-denied">
+    <div class="denied-icon">🔒</div>
+    <h2>Admin Access Required</h2>
+    <p>You do not have permission to view this page.</p>
+  </div>
+
+  <!-- Admin Panel -->
+  <ng-container *ngIf="isAdmin">
+
+    <!-- Header -->
+    <div class="admin-header">
+      <h1 class="admin-title">⚙️ Engine Control Panel</h1>
+      <p class="admin-subtitle">Manage the vLLM inference engine and models</p>
+    </div>
+
+    <!-- Feedback Banner -->
+    <div *ngIf="actionMessage" class="banner banner-success">
+      ✅ {{ actionMessage }}
+    </div>
+    <div *ngIf="actionError" class="banner banner-error">
+      ❌ {{ actionError }}
+    </div>
+
+    <!-- Status Card -->
+    <div class="card status-card">
+      <div class="card-label">Engine Status</div>
+      <div class="status-row">
+        <span
+          class="status-dot"
+          [class.dot-online]="status?.running"
+          [class.dot-offline]="!status?.running">
+        </span>
+        <span class="status-message">{{ status?.message || 'Checking...' }}</span>
+        <span *ngIf="status?.mode" class="status-badge">{{ status!.mode }}</span>
+      </div>
+      <div *ngIf="status?.active_model" class="active-model">
+        Running: <strong>{{ status!.active_model }}</strong>
+      </div>
+    </div>
+
+    <div class="panels">
+
+      <!-- Left: Engine Control -->
+      <div class="panel">
+        <div class="panel-title">🚀 Start Engine</div>
+
+        <label class="field-label">Model</label>
+        <select class="field-select" [(ngModel)]="selectedModel">
+          <option *ngFor="let m of models" [value]="m">{{ m }}</option>
+        </select>
+
+        <label class="field-label" style="margin-top:12px">Device</label>
+        <div class="device-toggle">
+          <button
+            class="toggle-btn"
+            [class.active]="selectedDevice === 'gpu'"
+            (click)="selectedDevice = 'gpu'">GPU</button>
+          <button
+            class="toggle-btn"
+            [class.active]="selectedDevice === 'cpu'"
+            (click)="selectedDevice = 'cpu'">CPU</button>
+        </div>
+
+        <div class="engine-actions">
+          <button
+            class="btn btn-start"
+            (click)="onStart()"
+            [disabled]="isActioning || !selectedModel">
+            <span *ngIf="!isActioning">▶ Start</span>
+            <span *ngIf="isActioning">Loading...</span>
+          </button>
+          <button
+            class="btn btn-stop"
+            (click)="onStop()"
+            [disabled]="isActioning || !status?.running">
+            ■ Stop
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Download Model -->
+        <div class="panel-title">📥 Download Model</div>
+        <label class="field-label">HuggingFace Repo ID</label>
+        <input
+          class="field-input"
+          type="text"
+          [(ngModel)]="downloadRepoId"
+          placeholder="e.g. Qwen/Qwen2.5-3B-Instruct-AWQ"
+        />
+        <button
+          class="btn btn-download"
+          (click)="onDownload()"
+          [disabled]="!downloadRepoId.trim() || isDownloading"
+          style="margin-top: 10px; width: 100%;">
+          <span *ngIf="!isDownloading">⬇ Download</span>
+          <span *ngIf="isDownloading">Downloading...</span>
+        </button>
+      </div>
+
+      <!-- Right: Model Library -->
+      <div class="panel">
+        <div class="panel-title">📦 Model Library</div>
+        <div *ngIf="models.length === 0" class="empty-state">No models found on disk.</div>
+        <div class="model-list">
+          <div *ngFor="let m of models" class="model-item">
+            <div class="model-name">{{ m }}</div>
+            <div class="model-item-actions">
+              <button
+                class="btn-icon btn-load"
+                title="Load this model"
+                (click)="selectedModel = m">
+                ▶
+              </button>
+              <button
+                class="btn-icon btn-del"
+                title="Delete from disk"
+                [disabled]="status?.active_model === m"
+                (click)="onDeleteModel(m)">
+                🗑
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Section -->
+    <div class="card logs-card">
+      <div class="logs-header">
+        <div class="panel-title" style="margin-bottom:0">📋 Logs</div>
+        <div class="log-tabs">
+          <button
+            class="log-tab"
+            [class.active]="activeLogTab === 'engine'"
+            (click)="switchLogTab('engine')">Engine Logs</button>
+          <button
+            class="log-tab"
+            [class.active]="activeLogTab === 'download'"
+            (click)="switchLogTab('download')">Download Logs</button>
+        </div>
+      </div>
+      <pre class="log-output">{{ activeLogTab === 'engine' ? vllmLogs : downloadLogs || 'No logs yet.' }}</pre>
+    </div>
+
+  </ng-container>
+</div>

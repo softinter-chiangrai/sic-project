@@ -1,0 +1,76 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-upload__dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  border: 1.5px dashed var(--sic-color-border);
+  border-radius: var(--sic-radius-lg);
+  background: var(--sic-color-surface);
+  cursor: pointer;
+  transition: border-color var(--sic-transition-fast), background var(--sic-transition-fast);
+}
+
+.sic-upload__dropzone--over {
+  border-color: var(--sic-color-primary);
+  background: color-mix(in srgb, var(--sic-color-primary) 8%, var(--sic-color-surface));
+}
+
+.sic-upload__dropzone--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sic-upload__input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sic-upload__hint-text {
+  color: var(--sic-color-text-muted);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-sm);
+  text-align: center;
+  padding: var(--sic-space-3);
+}
+
+.sic-upload__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sic-space-1);
+}
+
+.sic-upload__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sic-space-2) var(--sic-space-3);
+  border: 1px solid var(--sic-color-border);
+  border-radius: var(--sic-radius-sm);
+  font-size: var(--sic-font-size-sm);
+}
+
+.sic-upload__item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sic-upload__item-remove {
+  border: none;
+  background: transparent;
+  color: var(--sic-color-text-muted);
+  cursor: pointer;
+}

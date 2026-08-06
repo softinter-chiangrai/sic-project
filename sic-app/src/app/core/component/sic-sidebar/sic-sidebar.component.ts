@@ -65,18 +65,18 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private clockTimer?: ReturnType<typeof setInterval>;
   private routerSubscription?: Subscription;
 
-  isBack: boolean = false;
-  isSearch: boolean = false;
-  isAdd: boolean = false;
-  isSave: boolean = false;
-  isPrint: boolean = false;
+  RoleBack:boolean = false;
+  RoleSearch:boolean = false; 
+  RoleAdd:boolean = false;
+  RoleSave:boolean = false;
+  RolePrint:boolean = false;
 
   /** Raw menu items from API — kept so we can look up flags on route change */
   private rawMenuItems: MenuItemModel[] = [];
 
   readonly isMobileSidebarOpen = signal(false);
   readonly expandedMenus = signal<string[]>(
-    JSON.parse(localStorage.getItem('expandedMenus') || '[]'),
+    typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('expandedMenus') || '[]') : []
   );
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
@@ -96,7 +96,58 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     path: 'dashboard',
   };
 
-  readonly mainMenu = signal<SidebarItem[]>([this.DASHBOARD_ITEM]);
+  private getBuddyItem(): SidebarItem {
+    const children: SidebarItem[] = [
+      {
+        code: 'buddy-chat',
+        label: 'Chat',
+        icon: 'bi-chat-dots',
+        path: 'do/buddy/chat',
+      },
+      {
+        code: 'buddy-documents',
+        label: 'Documents',
+        icon: 'bi-file-earmark-text',
+        path: 'do/buddy/documents',
+      },
+      {
+        code: 'buddy-categories',
+        label: 'Categories',
+        icon: 'bi-tag',
+        path: 'do/buddy/categories',
+      },
+      {
+        code: 'buddy-tags',
+        label: 'Tags',
+        icon: 'bi-bookmark',
+        path: 'do/buddy/tags',
+      },
+      {
+        code: 'buddy-context-management',
+        label: 'Settings',
+        icon: 'bi-gear',
+        path: 'do/buddy/context-management',
+      },
+    ];
+
+    if (this.authService.isAdmin()) {
+      children.push({
+        code: 'buddy-admin',
+        label: 'Admin',
+        icon: 'bi-shield-lock',
+        path: 'do/buddy/admin',
+      });
+    }
+
+    return {
+      code: 'buddy',
+      label: 'Buddy',
+      icon: 'bi-robot',
+      children: children,
+    };
+  }
+
+  readonly mainMenu = signal<SidebarItem[]>([]);
 
   profile: ProfileInfoModel = {} as ProfileInfoModel;
   business: BusinessInfoModel = {} as BusinessInfoModel;
@@ -111,7 +162,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
   constructor() {
     effect(() => {
-      localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('expandedMenus', JSON.stringify(this.expandedMenus()));
+      }
     });
   }
 
@@ -119,6 +172,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) return;
 
     this.currentUrl.set(this.router.url);
+    this.mainMenu.set([this.DASHBOARD_ITEM, this.getBuddyItem()]);
     this.loadInfomations();
 
     this.routerSubscription = this.router.events
@@ -149,6 +203,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.service.getBusiness().subscribe((business) => (this.business = business));
 
     this.service.getMenu().subscribe((menu) => {
+      this.mainMenu.set([this.DASHBOARD_ITEM, this.getBuddyItem(), ...menu.map((item) => this.mapMenuItem(item))]);
       this.rawMenuItems = menu;
       this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
       this.autoExpand();
@@ -176,11 +231,11 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       : null;
 
     const f = flags ?? this.service.DEFAULT_FLAGS;
-    this.isBack = f.isBack;
-    this.isSearch = f.isSearch;
-    this.isAdd = f.isAdd;
-    this.isSave = f.isSave;
-    this.isPrint = f.isPrint;
+    this.RoleBack   = f.RoleBack;
+    this.RoleSearch = f.RoleSearch;
+    this.RoleAdd    = f.RoleAdd;
+    this.RoleSave   = f.RoleSave;
+    this.RolePrint  = f.RolePrint;
   }
 
   // ────────────────────────────────────────────────────────────────

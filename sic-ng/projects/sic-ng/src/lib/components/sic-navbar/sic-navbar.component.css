@@ -1,0 +1,36 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: var(--sic-space-4);
+  min-height: 3.6rem;
+  padding: 0 var(--sic-space-4);
+  background: var(--sic-color-bg);
+  border-bottom: 1px solid var(--sic-color-border);
+  font-family: var(--sic-font-sans);
+}
+
+:host(.sic-navbar--sticky) {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.sic-navbar__brand {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--sic-color-text-active);
+}
+
+.sic-navbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--sic-space-3);
+  flex: 1;
+}
+
+.sic-navbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sic-space-3);
+}

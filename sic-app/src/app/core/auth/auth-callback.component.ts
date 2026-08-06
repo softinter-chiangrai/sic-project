@@ -29,6 +29,7 @@ export class AuthCallbackComponent implements OnInit {
   private async handleLogin(): Promise<void> {
     const ok = await this.auth.handleCallback();
     if (!ok) {
+      console.error('[DEBUG] handleCallback failed! User might have received an error from Keycloak.');
       await this.router.navigateByUrl('/');
       return;
     }

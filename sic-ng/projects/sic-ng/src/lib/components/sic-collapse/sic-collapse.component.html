@@ -1,0 +1,10 @@
+<button type="button" class="sic-collapse__trigger" (click)="toggle()">
+  <span>{{ label }}</span>
+  <span class="sic-collapse__caret" [class.sic-collapse__caret--open]="expanded">▾</span>
+</button>
+
+@if (expanded) {
+  <div class="sic-collapse__body">
+    <ng-content></ng-content>
+  </div>
+}

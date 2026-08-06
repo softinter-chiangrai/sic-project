@@ -1,7 +1,7 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslationObject } from '@ngx-translate/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export const APP_TRANSLATE_MODULE_CODE = new InjectionToken<string>(
@@ -64,6 +64,11 @@ export class AppTranslateLoader implements TranslateLoader {
   ): Observable<TranslationObject> {
     return this.http.get<TranslationObject>(
       `${this.apiBaseUrl}/api/i18n/${encodeURIComponent(moduleCode)}/${encodeURIComponent(programCode)}/${encodeURIComponent(languageCode)}`
+    ).pipe(
+      catchError(() => {
+        // Prevent SSR process from crashing if the backend is down
+        return of({});
+      })
     );
   }
 

@@ -10,7 +10,7 @@ export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly document = inject(DOCUMENT);
 
-  readonly mode = signal<ThemeMode>('system');
+  readonly mode = signal<ThemeMode>('light');
   readonly isDark = signal(false);
 
   private mediaQuery?: MediaQueryList;
@@ -21,7 +21,7 @@ export class ThemeService {
       return;
     }
 
-    const saved = (localStorage.getItem('theme') as ThemeMode | null) ?? 'system';
+    const saved = (localStorage.getItem('theme') as ThemeMode | null) ?? 'light';
     this.mode.set(saved);
     this.applyTheme(saved);
     this.bindSystemThemeListener();

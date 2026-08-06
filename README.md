@@ -168,6 +168,8 @@ public partial class SicDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(SicDbContext).Assembly);
         
         // Configure modules
         ConfigureDbModule(modelBuilder);
