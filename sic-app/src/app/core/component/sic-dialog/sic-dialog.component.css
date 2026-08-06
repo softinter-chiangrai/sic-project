@@ -1,0 +1,59 @@
+.sic-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #000 45%, transparent);
+  font-family: var(--sic-font-sans);
+}
+
+.sic-dialog__panel {
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: var(--sic-radius-lg);
+  background: var(--sic-color-bg);
+  box-shadow: var(--sic-shadow-md);
+}
+
+.sic-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sic-space-4);
+  border-bottom: 1px solid var(--sic-color-border);
+}
+
+.sic-dialog__title {
+  margin: 0;
+  color: var(--sic-color-text-active);
+  font-size: var(--sic-font-size-lg);
+  font-weight: 700;
+}
+
+.sic-dialog__close {
+  border: none;
+  background: transparent;
+  color: var(--sic-color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.sic-dialog__body {
+  padding: var(--sic-space-4);
+  color: var(--sic-color-text);
+}
+
+.sic-dialog__footer:empty {
+  display: none;
+}
+
+.sic-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sic-space-2);
+  padding: var(--sic-space-4);
+  border-top: 1px solid var(--sic-color-border);
+}

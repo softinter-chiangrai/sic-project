@@ -1,0 +1,5 @@
+@if (src && !errored) {
+  <img class="sic-avatar__img" [src]="src" [alt]="name" (error)="handleError()" />
+} @else {
+  <span class="sic-avatar__initials">{{ initials }}</span>
+}

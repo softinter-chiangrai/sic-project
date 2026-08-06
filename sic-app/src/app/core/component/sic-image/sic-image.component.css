@@ -1,0 +1,16 @@
+:host {
+  display: inline-block;
+  line-height: 0;
+}
+
+.sic-image__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  background: var(--sic-color-surface);
+}
+
+.sic-image__img--sm { border-radius: var(--sic-radius-sm); }
+.sic-image__img--md { border-radius: var(--sic-radius-md); }
+.sic-image__img--lg { border-radius: var(--sic-radius-lg); }
+.sic-image__img--full { border-radius: var(--sic-radius-full); }

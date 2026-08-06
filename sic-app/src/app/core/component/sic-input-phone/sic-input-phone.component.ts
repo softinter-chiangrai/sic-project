@@ -1,7 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Injector, Input, forwardRef } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
-import { SicValidator } from '../../validator/sic.validator';
+import { Component, HostBinding, Input, forwardRef } from '@angular/core';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { SicFormControlBase } from '../../base/sic-form-control.base';
+
+export interface SicPhoneCountry {
+  code: string;
+  dialCode: string;
+  label: string;
+}
+
+export const SIC_DEFAULT_PHONE_COUNTRIES: SicPhoneCountry[] = [
+  { code: 'TH', dialCode: '+66', label: 'TH +66' },
+  { code: 'US', dialCode: '+1', label: 'US +1' },
+  { code: 'GB', dialCode: '+44', label: 'GB +44' },
+  { code: 'SG', dialCode: '+65', label: 'SG +65' },
+];
 
 @Component({
   selector: 'sic-input-phone',
@@ -17,128 +30,35 @@ import { SicValidator } from '../../validator/sic.validator';
     },
   ],
 })
-export class SicInputPhoneComponent implements ControlValueAccessor {
-  @Input() label = '';
-  @Input() hint?: string;
-  @Input() error = '';
-  @Input() errorMessages: Record<string, string> = {};
-  @Input() placeholderLeft = '+00';
-  @Input() placeholderRight = '0000000000';
+export class SicInputPhoneComponent extends SicFormControlBase<string> {
+  @Input() name?: string;
+  @Input() placeholder = '';
+  @Input() countries: SicPhoneCountry[] = SIC_DEFAULT_PHONE_COUNTRIES;
 
   @HostBinding('class.sic-input-phone-host') readonly hostClass = true;
 
-  left = '';
-  right = '';
-  disabled = false;
-  touched = false;
+  override value = '';
+  dialCode = this.countries[0]?.dialCode ?? '';
 
-  private onChange: (value: string) => void = () => {};
-  private onTouched: () => void = () => {};
-  private ngControl: NgControl | null = null;
-
-  constructor(
-    private readonly injector: Injector,
-    private readonly validator: SicValidator,
-  ) {}
-
-  ngOnInit(): void {
-    this.ngControl = this.injector.get(NgControl, null);
-
-    if (this.ngControl) {
-      this.ngControl.valueAccessor = this;
-    }
+  override writeValue(value: string | null | undefined): void {
+    this.value = value ?? '';
   }
 
-  get control() {
-    return this.validator.getControl(this.ngControl);
+  handleDialCodeChange(event: Event): void {
+    this.dialCode = (event.target as HTMLSelectElement).value;
+    this.emit();
   }
 
-  get showError(): boolean {
-    return this.validator.shouldShowError(this.control, this.touched);
+  handleInput(event: Event): void {
+    this.value = (event.target as HTMLInputElement).value;
+    this.emit();
   }
 
-  get errorMessage(): string | null {
-    if (this.error) {
-      return this.error;
-    }
-
-    return this.validator.getErrorMessage(this.control, this.errorMessages);
+  handleBlur(): void {
+    this.markTouched();
   }
 
-  get isRequired(): boolean {
-    if (!this.control?.validator) {
-      return false;
-    }
-    // Check if the validator returns a 'required' error by testing with null value
-    const testControl = { value: null } as any;
-    const errorMap = this.control.validator(testControl);
-    return !!errorMap?.['required'];
-  }
-
-  writeValue(value: string | null): void {
-    if (!value) {
-      this.left = '';
-      this.right = '';
-      return;
-    }
-
-    const [left, right] = value.split('-');
-    this.left = left || '';
-    this.right = right || '';
-  }
-
-  registerOnChange(fn: (value: string) => void): void {
-    this.onChange = fn;
-  }
-
-  registerOnTouched(fn: () => void): void {
-    this.onTouched = fn;
-  }
-
-  setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
-  }
-
-  onLeftKeyPress(event: KeyboardEvent): void {
-    const char = event.key;
-
-    if (char === '+' && (this.left.length > 0 || this.left.includes('+'))) {
-      event.preventDefault();
-      return;
-    }
-
-    if (!/\d/.test(char) && char !== '+') {
-      event.preventDefault();
-    }
-  }
-
-  onLeftInput(event: Event): void {
-    let input = (event.target as HTMLInputElement).value;
-
-    input = input.replaceAll(/[^\d+]/g, '');
-    if (input.startsWith('+')) {
-      input = '+' + input.slice(1).replaceAll(/[^\d]/g, '');
-    } else {
-      input = input.replaceAll(/[^\d]/g, '');
-    }
-
-    this.left = input.slice(0, 3);
-    this.emitValue();
-  }
-
-  onRightInput(event: Event): void {
-    const input = (event.target as HTMLInputElement).value.replaceAll(/\D/g, '');
-    this.right = input;
-    this.emitValue();
-  }
-
-  onBlur(): void {
-    this.touched = true;
-    this.onTouched();
-  }
-
-  private emitValue(): void {
-    const value = this.left && this.right ? `${this.left}-${this.right}` : '';
-    this.onChange(value);
+  private emit(): void {
+    this.onChange(`${this.dialCode} ${this.value}`.trim());
   }
 }

@@ -1,0 +1,19 @@
+:host {
+  width: 100%;
+}
+
+:host(.sic-grid--responsive) {
+  grid-template-columns: repeat(var(--sic-grid-cols-sm), minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  :host(.sic-grid--responsive) {
+    grid-template-columns: repeat(var(--sic-grid-cols-md), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  :host(.sic-grid--responsive) {
+    grid-template-columns: repeat(var(--sic-grid-cols-lg), minmax(0, 1fr));
+  }
+}

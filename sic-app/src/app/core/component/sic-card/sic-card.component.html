@@ -1,14 +1,14 @@
-<div [class]="cardClass" [ngStyle]="cardStyle">
-  <div class="sic-card__header" *ngIf="headerTpl">
-    <ng-container *ngTemplateOutlet="headerTpl"></ng-container>
-  </div>
-  <div class="sic-card__body">
-    <ng-content></ng-content>
-  </div>
-  <div class="sic-card__footer" *ngIf="footerTpl">
-    <ng-container *ngTemplateOutlet="footerTpl"></ng-container>
-  </div>
+<div class="sic-card__header">
+  @if (title) {
+    <h3 class="sic-card__title">{{ title }}</h3>
+  }
+  <ng-content select="[sicCardHeader]"></ng-content>
 </div>
 
-<ng-template #headerTpl><ng-content select="[card-header]"></ng-content></ng-template>
-<ng-template #footerTpl><ng-content select="[card-footer]"></ng-content></ng-template>
+<div class="sic-card__content">
+  <ng-content></ng-content>
+</div>
+
+<div class="sic-card__footer">
+  <ng-content select="[sicCardFooter]"></ng-content>
+</div>

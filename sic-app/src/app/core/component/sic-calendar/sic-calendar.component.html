@@ -1,151 +1,26 @@
-<div class="sic-calendar" [attr.data-disabled]="disabled ? 'true' : null">
-  @if (label) {
-    <span class="sic-calendar__label">
-      {{ label }}
-    </span>
+<div class="sic-calendar__header">
+  <button type="button" (click)="prevMonth()" aria-label="Previous month">‹</button>
+  <span class="sic-calendar__title">{{ monthLabel }}</span>
+  <button type="button" (click)="nextMonth()" aria-label="Next month">›</button>
+</div>
+
+<div class="sic-calendar__weekdays">
+  @for (day of orderedWeekdayLabels; track day) {
+    <span>{{ day }}</span>
   }
+</div>
 
-  <div class="sic-calendar__control">
-    <div class="sic-calendar__surface">
-      <!-- Toolbar -->
-      <div class="sic-calendar__toolbar">
-        <div class="sic-calendar__toolbar-left-slot">
-          <ng-content select="[sicCalendarToolbarLeft]"></ng-content>
-        </div>
-
-        <div class="sic-calendar__toolbar-start">
-          <button type="button" class="sic-calendar__today-button" [disabled]="disabled" (click)="goToToday()">
-            Today
-          </button>
-
-          <div class="sic-calendar__nav-group">
-            <button
-              type="button"
-              class="sic-calendar__nav-button"
-              [disabled]="disabled"
-              (click)="previousMonth()">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-
-            <button
-              type="button"
-              class="sic-calendar__month-year-button"
-              [disabled]="disabled"
-              (click)="toggleYearView()">
-              <span>{{ getMonthYearLabel() }}</span>
-              <i class="bi bi-chevron-down"></i>
-            </button>
-
-            <button
-              type="button"
-              class="sic-calendar__nav-button"
-              [disabled]="disabled"
-              (click)="nextMonth()">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Year/Month Picker (unchanged) -->
-      @if (yearViewOpen || monthViewOpen) {
-        <button
-          type="button"
-          class="sic-calendar__picker-backdrop"
-          tabindex="-1"
-          aria-hidden="true"
-          (click)="closePickerOverlay()">
-        </button>
-
-        <div class="sic-calendar__picker-modal">
-          @if (yearViewOpen) {
-            <div class="sic-calendar__picker-panel">
-              <div class="sic-calendar__picker-panel-header">
-                <span>{{ getYearRangeLabel() }}</span>
-              </div>
-
-              <div class="sic-calendar__picker-grid sic-calendar__picker-grid--years">
-                @for (year of years; track year) {
-                  <button
-                    type="button"
-                    class="sic-calendar__picker-cell"
-                    [attr.data-selected]="currentViewDate.year() === year ? 'true' : null"
-                    (click)="selectYear(year)">
-                    {{ getDisplayYear(year) }}
-                  </button>
-                }
-              </div>
-            </div>
-          }
-
-          @if (monthViewOpen) {
-            <div class="sic-calendar__picker-panel">
-              <div class="sic-calendar__picker-panel-header">
-                <span>{{ currentYearLabel }}</span>
-              </div>
-
-              <div class="sic-calendar__picker-grid sic-calendar__picker-grid--months">
-                @for (month of monthNames; track $index) {
-                  <button
-                    type="button"
-                    class="sic-calendar__picker-cell"
-                    [attr.data-selected]="currentViewDate.month() === $index ? 'true' : null"
-                    (click)="selectMonth($index)">
-                    {{ month }}
-                  </button>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Weekdays -->
-      <div class="sic-calendar__weekdays sic-calendar__weekdays--header">
-        @for (day of weekDays; track $index) {
-          <div class="sic-calendar__weekday">
-            {{ isWideScreen ? weekDaysFull[$index] : day }}
-          </div>
-        }
-      </div>
-
-      <!-- Days Grid -->
-      <div class="sic-calendar__days sic-calendar__days--month">
-        @for (date of calendarDays; track trackByDate($index, date)) {
-          <button
-            type="button"
-            class="sic-calendar__day"
-            [attr.data-other-month]="!isCurrentMonth(date) ? 'true' : null"
-            [attr.data-today]="isToday(date) ? 'true' : null"
-            [attr.data-selected]="isSelected(date) ? 'true' : null"
-            [attr.data-has-tasks]="hasTasks(date) ? 'true' : null"
-            [disabled]="disabled || isDateDisabled(date)"
-            (click)="selectDate(date)">
-            <div class="sic-calendar__day-head">
-              <span class="sic-calendar__day-number">{{ date.date() }}</span>
-              @if (getOverflowItemCount(date) > 0) {
-                <span class="sic-calendar__day-more">+{{ getOverflowItemCount(date) }} more</span>
-              }
-            </div>
-
-            <div class="sic-calendar__day-events">
-              @for (item of getVisibleItemsForDate(date); track trackByItem($index, item)) {
-                <span
-                  class="sic-calendar__event-pill"
-                  [style.--task-color]="item.color || '#4ECDC4'"
-                  [attr.data-completed]="item.completed ? 'true' : null"
-                  (click)="onItemClick(item, $event)">
-                  {{ item.title }}
-                </span>
-              }
-            </div>
-          </button>
-        }
-      </div>
-    </div>
-  </div>
-
-  @if (hint) {
-    <span class="sic-calendar__hint">{{ hint }}</span>
+<div class="sic-calendar__grid">
+  @for (cell of cells; track cell.date.getTime()) {
+    <button
+      type="button"
+      class="sic-calendar__cell"
+      [class.sic-calendar__cell--muted]="!cell.inMonth"
+      [class.sic-calendar__cell--today]="cell.isToday"
+      [class.sic-calendar__cell--selected]="isSelected(cell)"
+      (click)="selectDate(cell)"
+    >
+      {{ cell.date.getDate() }}
+    </button>
   }
 </div>

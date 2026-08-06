@@ -1,0 +1,16 @@
+<label class="sic-switch" [class.sic-switch--disabled]="disabled">
+  <input
+    type="checkbox"
+    class="sic-switch__input"
+    role="switch"
+    [checked]="checked"
+    [disabled]="disabled"
+    (change)="onToggle()"
+  />
+  <span class="sic-switch__track">
+    <span class="sic-switch__thumb"></span>
+  </span>
+  @if (label) {
+    <span class="sic-switch__label">{{ label }}</span>
+  }
+</label>

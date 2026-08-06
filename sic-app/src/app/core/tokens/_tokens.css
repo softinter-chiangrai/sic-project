@@ -1,0 +1,45 @@
+/**
+ * sic-ng design tokens — light theme (default).
+ * Component styles must only read --sic-* custom properties, never hardcode values.
+ */
+:root {
+  color-scheme: light;
+
+  --sic-color-bg: #ffffff;
+  --sic-color-surface: #f7f8fa;
+  --sic-color-border: #e2e5ea;
+  --sic-color-text: #16181d;
+  --sic-color-text-muted: #6b7280;
+  --sic-color-text-active: #0b0c0e;
+
+  --sic-color-primary: #2563eb;
+  --sic-color-primary-contrast: #ffffff;
+  --sic-color-success: #16a34a;
+  --sic-color-danger: #dc2626;
+  --sic-color-warning: #d97706;
+
+  --sic-radius-sm: 0.5rem;
+  --sic-radius-md: 0.85rem;
+  --sic-radius-lg: 1.25rem;
+  --sic-radius-full: 999px;
+
+  --sic-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sic-font-size-sm: 0.85rem;
+  --sic-font-size-md: 0.95rem;
+  --sic-font-size-lg: 1.05rem;
+
+  --sic-space-1: 0.25rem;
+  --sic-space-2: 0.5rem;
+  --sic-space-3: 0.75rem;
+  --sic-space-4: 1rem;
+
+  --sic-control-height-sm: 2.2rem;
+  --sic-control-height-md: 2.9rem;
+  --sic-control-height-lg: 3.4rem;
+
+  --sic-shadow-sm: 0 1px 2px color-mix(in srgb, #000 8%, transparent);
+  --sic-shadow-md: 0 8px 24px color-mix(in srgb, #000 12%, transparent);
+
+  --sic-transition-fast: 0.15s ease;
+  --sic-transition-base: 0.2s ease;
+}

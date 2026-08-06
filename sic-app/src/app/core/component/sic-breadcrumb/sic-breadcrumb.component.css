@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-sm);
+}
+
+.sic-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sic-space-2);
+}
+
+.sic-breadcrumb__link {
+  color: var(--sic-color-primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sic-breadcrumb__link:hover {
+  text-decoration: underline;
+}
+
+.sic-breadcrumb__current {
+  color: var(--sic-color-text-muted);
+}
+
+.sic-breadcrumb__separator {
+  color: var(--sic-color-text-muted);
+}

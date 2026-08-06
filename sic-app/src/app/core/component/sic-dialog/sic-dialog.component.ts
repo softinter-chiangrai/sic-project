@@ -1,63 +1,42 @@
-import { NgComponentOutlet } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { DialogService } from '../../services/dialog.service';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, HostBinding, HostListener, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'sic-dialog',
-  imports: [NgComponentOutlet, SicButtonComponent],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './sic-dialog.component.html',
+  styleUrl: './sic-dialog.component.css',
 })
 export class SicDialogComponent {
-  readonly dialogService = inject(DialogService);
-  readonly state = this.dialogService.state;
+  @Input() open = false;
+  @Input() title?: string;
+  @Input() disableClose = false;
+  @Input() width = '32rem';
 
-  readonly iconClass = computed(() => {
-    switch (this.state()?.type) {
-      case 'success':
-        return 'bi bi-check-circle-fill';
-      case 'warn':
-        return 'bi bi-exclamation-triangle-fill';
-      case 'confirm':
-        return 'bi bi-patch-question-fill';
-      case 'error':
-        return 'bi bi-x-octagon-fill';
-      default:
-        return 'bi bi-info-circle-fill';
+  @Output() openChange = new EventEmitter<boolean>();
+  @Output() closed = new EventEmitter<void>();
+
+  @HostBinding('class.sic-dialog-host') readonly hostClass = true;
+
+  close(): void {
+    if (this.disableClose) {
+      return;
     }
-  });
 
-  readonly iconContainerClass = computed(() => {
-    switch (this.state()?.type) {
-      case 'success':
-        return 'bg-[color-mix(in_srgb,var(--crm-success)_14%,var(--bg))] text-[var(--crm-success)]';
-      case 'warn':
-        return 'bg-[color-mix(in_srgb,var(--crm-warning)_16%,var(--bg))] text-[var(--crm-warning)]';
-      case 'confirm':
-        return 'bg-[color-mix(in_srgb,var(--crm-primary)_14%,var(--bg))] text-[var(--crm-primary)]';
-      case 'error':
-        return 'bg-[color-mix(in_srgb,var(--crm-danger)_14%,var(--bg))] text-[var(--crm-danger)]';
-      default:
-        return 'bg-[color-mix(in_srgb,var(--crm-success)_14%,var(--bg))] text-[var(--crm-success)]';
+    this.open = false;
+    this.openChange.emit(false);
+    this.closed.emit();
+  }
+
+  handleBackdropClick(): void {
+    this.close();
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscape(): void {
+    if (this.open) {
+      this.close();
     }
-  });
-
-  readonly confirmButtonVariant = computed(() => {
-    switch (this.state()?.type) {
-      case 'success':
-        return 'success' as const;
-      case 'warn':
-        return 'outline' as const;
-      case 'confirm':
-        return 'primary' as const;
-      case 'error':
-        return 'danger' as const;
-      default:
-        return 'success' as const;
-    }
-  });
-
-  close(result = false): void {
-    this.dialogService.close(result);
   }
 }

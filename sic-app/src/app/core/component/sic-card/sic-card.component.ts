@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, HostBinding } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 
 @Component({
   selector: 'sic-card',
@@ -9,23 +9,15 @@ import { Component, Input, HostBinding } from '@angular/core';
   styleUrl: './sic-card.component.css',
 })
 export class SicCardComponent {
-  @Input() padding: string = '1.5rem';
-  @Input() shadow: boolean = true;
-  @Input() rounded: boolean = true;
+  @Input() title?: string;
+  @Input() bordered = true;
+  @Input() elevated = false;
 
   @HostBinding('class.sic-card-host') readonly hostClass = true;
-
-  get cardClass(): string {
-    return [
-      'sic-card',
-      this.shadow ? 'sic-card--shadow' : '',
-      this.rounded ? 'sic-card--rounded' : '',
-    ].filter(Boolean).join(' ');
+  @HostBinding('class.sic-card--bordered') get isBordered() {
+    return this.bordered;
   }
-
-  get cardStyle(): Record<string, string> {
-    return {
-      padding: this.padding,
-    };
+  @HostBinding('class.sic-card--elevated') get isElevated() {
+    return this.elevated;
   }
 }

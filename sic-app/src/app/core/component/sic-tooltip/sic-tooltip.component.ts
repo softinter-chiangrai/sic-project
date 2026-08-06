@@ -1,20 +1,13 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-
-type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
 @Component({
   selector: 'sic-tooltip',
-  templateUrl: './sic-tooltip.component.html',
+  standalone: true,
+  imports: [CommonModule],
+  template: `<div class="sic-tooltip__bubble">{{ text }}</div>`,
   styleUrl: './sic-tooltip.component.css',
-  host: {
-    class: 'fixed block pointer-events-none z-[9999]'
-  }
 })
-export class SictoolTipComponent {
+export class SicTooltipComponent {
   @Input() text = '';
-  @Input() position: TooltipPosition = 'bottom';
-
-  get positionClass(): string {
-    return 'animate-fade-in';
-  }
 }

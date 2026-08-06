@@ -1,0 +1,25 @@
+@import '../../tokens/_field.css';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sic-range__wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sic-space-3);
+}
+
+.sic-range__input {
+  flex: 1;
+  accent-color: var(--sic-color-primary);
+}
+
+.sic-range__value {
+  min-width: 3rem;
+  text-align: right;
+  color: var(--sic-color-text-muted);
+  font-family: var(--sic-font-sans);
+  font-size: var(--sic-font-size-sm);
+}

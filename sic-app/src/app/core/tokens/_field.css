@@ -1,0 +1,40 @@
+/**
+ * Shared field chrome (label / hint / error) for form control components.
+ * Import with: @import '../../tokens/_field.css';
+ */
+.sic-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sic-space-2);
+  width: 100%;
+  font-family: var(--sic-font-sans);
+}
+
+.sic-field__label {
+  color: var(--sic-color-text-active);
+  font-size: var(--sic-font-size-sm);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sic-field__required {
+  color: var(--sic-color-danger);
+  margin-inline-start: 0.15rem;
+}
+
+.sic-field__hint {
+  color: var(--sic-color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.sic-field__error {
+  color: var(--sic-color-danger);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+:host(.sic-disabled) .sic-field__label {
+  color: var(--sic-color-text-muted);
+}

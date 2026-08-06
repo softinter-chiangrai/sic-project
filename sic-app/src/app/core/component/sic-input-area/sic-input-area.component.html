@@ -1,9 +1,9 @@
-<label class="sic-input-area" [class.sic-input-area--invalid]="showError" [class.sic-input-area--disabled]="disabled">
+<label class="sic-field">
   @if (label) {
-    <span class="sic-input-area__label">
+    <span class="sic-field__label">
       {{ label }}
       @if (isRequired) {
-        <span class="sic-input-area__required">*</span>
+        <span class="sic-field__required">*</span>
       }
     </span>
   }
@@ -11,20 +11,20 @@
   <textarea
     class="sic-input-area__field"
     [class.sic-input-area__field--invalid]="showError"
-    [value]="value"
+    [name]="name"
     [placeholder]="placeholder"
-    [readOnly]="readonly"
-    [required]="isRequired"
-    [disabled]="disabled"
     [rows]="rows"
-    [attr.minlength]="minLength"
-    [attr.maxlength]="maxLength"
+    [attr.maxlength]="maxlength ?? null"
+    [readOnly]="readonly"
+    [disabled]="disabled"
+    [value]="value"
     (input)="handleInput($event)"
-    (blur)="handleBlur()"></textarea>
+    (blur)="handleBlur()"
+  ></textarea>
 
   @if (showError && errorMessage) {
-    <span class="sic-input-area__error">{{ errorMessage }}</span>
+    <span class="sic-field__error">{{ errorMessage }}</span>
   } @else if (hint) {
-    <span class="sic-input-area__hint">{{ hint }}</span>
+    <span class="sic-field__hint">{{ hint }}</span>
   }
 </label>

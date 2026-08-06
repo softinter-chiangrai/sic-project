@@ -1,0 +1,33 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--sic-radius-full);
+  background: var(--sic-color-primary);
+  overflow: hidden;
+  font-family: var(--sic-font-sans);
+}
+
+:host(.sic-size-sm) {
+  width: 2rem;
+  height: 2rem;
+}
+
+:host(.sic-size-lg) {
+  width: 3.4rem;
+  height: 3.4rem;
+}
+
+.sic-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sic-avatar__initials {
+  color: var(--sic-color-primary-contrast);
+  font-weight: 700;
+  font-size: 0.9rem;
+}

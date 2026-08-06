@@ -1,0 +1,7 @@
+<div class="sic-progress-bar__track">
+  <div
+    class="sic-progress-bar__fill sic-progress-bar__fill--{{ color }}"
+    [class.sic-progress-bar__fill--indeterminate]="indeterminate"
+    [style.width.%]="indeterminate ? 40 : clampedValue"
+  ></div>
+</div>

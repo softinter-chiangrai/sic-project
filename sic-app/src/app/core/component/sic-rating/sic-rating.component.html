@@ -1,0 +1,19 @@
+<div class="sic-field">
+  @if (label) {
+    <span class="sic-field__label">{{ label }}</span>
+  }
+
+  <div class="sic-rating" (mouseleave)="setHover(null)">
+    @for (star of stars; track star) {
+      <span
+        class="sic-rating__star sic-rating__star--{{ displayValue(star) }}"
+        (click)="setValue(star, $event)"
+        (mousemove)="setHover(star)"
+      >★</span>
+    }
+  </div>
+
+  @if (hint) {
+    <span class="sic-field__hint">{{ hint }}</span>
+  }
+</div>
