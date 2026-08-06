@@ -1,7 +1,7 @@
 // src/app/feature/bu/rt/burt04/burt04A/burt04A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -24,6 +24,7 @@ import { ComboboxRole, burt04Service } from '../burt04.service';
     SicInputComponent,
     SicComboboxComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04A.component.html',
 })
 export class Burt04AComponent implements OnInit, CanComponentDeactivate {

@@ -20,6 +20,7 @@ import {
   TemplateRef,
   ViewChild,
   inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { AsyncValidatorFn, FormControl, FormsModule, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { firstValueFrom, Subscription } from 'rxjs';
@@ -183,6 +184,7 @@ export class SicGridPanelTemplate {
   ],
   providers: [DatePipe],
   templateUrl: './sic-gridpanel.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-gridpanel.component.css',
 })
 export class SicGridPanelComponent implements OnChanges, AfterContentInit, AfterViewInit, OnDestroy {

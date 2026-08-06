@@ -1,7 +1,7 @@
 // src/app/feature/bu/rt/burt04/burt04.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
@@ -19,6 +19,7 @@ interface MemberWithUI extends TeamMember {
   selector: 'app-burt04',
   standalone: true,
   imports: [CommonModule, RouterModule, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })
 export class Burt04AComponent implements OnInit {

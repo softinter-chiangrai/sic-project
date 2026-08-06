@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -39,6 +39,7 @@ interface Requirement {
   selector: 'app-pmdt04',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
 export class Pmdt04Component implements OnInit {

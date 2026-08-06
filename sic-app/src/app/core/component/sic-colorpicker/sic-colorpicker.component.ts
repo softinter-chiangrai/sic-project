@@ -12,6 +12,7 @@ import {
   OnInit,
   ViewChild,
   forwardRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -30,6 +31,7 @@ import { SicValidator } from '../../validator/sic.validator';
   host: {
     ngSkipHydration: 'true',
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

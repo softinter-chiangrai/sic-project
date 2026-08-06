@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, HostBinding } from '@angular/core';
+import { Component, Input, HostBinding, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-card',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-card.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-card.component.css',
 })
 export class SicCardComponent {

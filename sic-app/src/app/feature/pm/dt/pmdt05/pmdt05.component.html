@@ -140,7 +140,7 @@
               <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
               <sic-upload
                 formControlName="uploadGroupData"
-                [uploadGroupId]="form.get('uploadGroupId')?.value"
+                [uploadGroupId]="$safeNavigationMigration(form.get('uploadGroupId')?.value)"
                 [multiple]="true"
                 category="all"
                 [visibility]="1"

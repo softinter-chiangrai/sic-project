@@ -8,6 +8,7 @@ import {
   OnInit,
   PLATFORM_ID,
   signal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
@@ -48,6 +49,7 @@ interface BreadcrumbItem {
   ],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     ngSkipHydration: 'true',
   },

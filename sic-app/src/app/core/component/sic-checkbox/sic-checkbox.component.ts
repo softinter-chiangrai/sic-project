@@ -6,6 +6,7 @@ import {
   OnInit,
   forwardRef,
   Injector,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -20,6 +21,7 @@ import { SicValidator } from '../../validator/sic.validator';
   imports: [CommonModule],
   templateUrl: './sic-checkbox.component.html',
   styleUrl: './sic-checkbox.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

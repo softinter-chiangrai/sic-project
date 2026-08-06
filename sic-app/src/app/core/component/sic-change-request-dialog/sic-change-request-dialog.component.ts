@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SicInputComponent } from '../sic-input/sic-input.component';
@@ -11,6 +11,7 @@ import { DialogService } from '../../services/dialog.service';
   selector: 'sic-change-request-dialog',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, SicInputComponent, SicInputAreaComponent, SicButtonComponent, SicComboboxComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-[min(92vw,32rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4" style="border-color: var(--border);">

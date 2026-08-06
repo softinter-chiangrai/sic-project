@@ -90,7 +90,7 @@
           label="Requirement ที่เกี่ยวข้อง"
           formControlName="requirementIds"
           [apiUrl]="service.apiGetComboboxRequirement"
-          [params]="{ projectId: form.get('projectId')?.value }"
+          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           multiple="true"
         ></sic-combobox>
         <p class="text-xs text-[var(--text-muted)] mt-1">เลือก Requirement ที่เกี่ยวข้อง (กด Ctrl เพื่อเลือกหลายรายการ)</p>

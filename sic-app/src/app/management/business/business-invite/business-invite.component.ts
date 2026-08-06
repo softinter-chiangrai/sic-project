@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,6 +28,7 @@ import { SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate } from 
     SicGridPanelTemplate,
   ],
   templateUrl: './business-invite.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './business-invite.component.css',
 })
 export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {

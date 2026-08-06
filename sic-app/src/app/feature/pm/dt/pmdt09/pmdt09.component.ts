@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -39,6 +39,7 @@ interface AttachmentFile {
     SicInputUploadComponent,
   ],
   templateUrl: './pmdt09.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt09.component.css'],
 })
 export class Pmdt09Component implements OnInit {

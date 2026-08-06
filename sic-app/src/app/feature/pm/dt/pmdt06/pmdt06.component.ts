@@ -10,6 +10,7 @@ import {
   OnDestroy,
   signal,
   ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,6 +29,7 @@ import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog
   standalone: true,
   imports: [CommonModule, FormsModule, pmdt06AComponent],
   templateUrl: './pmdt06.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt06.component.css'],
 })
 export class Pmdt06Component implements AfterViewInit, OnDestroy {

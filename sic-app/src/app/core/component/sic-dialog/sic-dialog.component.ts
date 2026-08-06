@@ -1,11 +1,12 @@
 import { NgComponentOutlet } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { SicButtonComponent } from '../sic-button/sic-button.component';
 import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'sic-dialog',
   imports: [NgComponentOutlet, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './sic-dialog.component.html',
 })
 export class SicDialogComponent {

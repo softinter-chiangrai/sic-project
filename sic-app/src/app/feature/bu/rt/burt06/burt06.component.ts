@@ -1,6 +1,6 @@
 // sic-app/src/app/feature/bu/rt/burt06/burt06.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -13,6 +13,7 @@ import { ApprovalFlow, Burt06Service } from './burt06.service';
   standalone: true,
   imports: [CommonModule, RouterModule, SicButtonComponent],
   templateUrl: './burt06.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',
 })
 export class Burt06Component implements OnInit {

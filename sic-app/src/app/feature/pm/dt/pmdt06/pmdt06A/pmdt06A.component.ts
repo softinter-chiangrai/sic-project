@@ -10,6 +10,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
@@ -24,6 +25,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
   standalone: true,
   imports: [CommonModule, FormsModule, MarkdownModule],
   templateUrl: './pmdt06A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt06A.component.css'],
 })
 export class pmdt06AComponent implements AfterViewInit, OnDestroy {

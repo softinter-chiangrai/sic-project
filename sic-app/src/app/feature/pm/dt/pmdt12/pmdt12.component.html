@@ -63,7 +63,7 @@
           label="Specification ที่เกี่ยวข้อง"
           formControlName="relatedSpec"
           [apiUrl]="service.apiGetComboboxSpec"
-          [params]="{ projectId: form.get('projectId')?.value }"
+          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           [required]="true"
         ></sic-combobox>
         @if (form.get('relatedSpec')?.touched && form.get('relatedSpec')?.invalid) {
@@ -178,7 +178,7 @@
           label="Dependency (งานที่ต้องรอ)"
           formControlName="dependency"
           [apiUrl]="service.apiGetComboboxTask"
-          [params]="{ projectId: form.get('projectId')?.value }"
+          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
         ></sic-combobox>
         <p class="text-xs text-[var(--text-muted)] mt-1">เลือกงานที่ต้องทำก่อน</p>
       </div>

@@ -17,6 +17,7 @@ import {
   TemplateRef,
   ViewChild,
   forwardRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
@@ -56,6 +57,7 @@ export class SicComboboxOptionTemplate {
   host: {
     ngSkipHydration: 'true',
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

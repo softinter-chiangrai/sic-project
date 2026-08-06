@@ -1,7 +1,7 @@
 // src/app/feature/bu/rt/burt05/burt05.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { burt05Service, Program } from './burt05.service';
@@ -37,6 +37,7 @@ function getProgramName(program: Program | TreeNode): string {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './burt05.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt05.component.css',
 })
 export class Burt05Component implements OnInit {

@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-button',
   standalone: true,
   imports: [],
   templateUrl: './sic-button.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-button.component.css',
 })
 export class SicButtonComponent {

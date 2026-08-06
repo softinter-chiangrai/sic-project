@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 
 export interface SicBreadcrumbItem {
   label: string;
@@ -11,6 +11,7 @@ export interface SicBreadcrumbItem {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-breadcrumb.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-breadcrumb.component.css',
 })
 export class SicBreadcrumbComponent {

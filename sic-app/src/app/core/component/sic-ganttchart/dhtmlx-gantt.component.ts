@@ -13,6 +13,7 @@ import {
   Output,
   ChangeDetectorRef,
   signal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
@@ -44,6 +45,7 @@ export type GanttViewMode = 'day' | 'week' | 'month';
   selector: 'app-dhtmlx-gantt',
   standalone: true,
   templateUrl: './dhtmlx-gantt.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dhtmlx-gantt.component.css'],
 })
 export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy {

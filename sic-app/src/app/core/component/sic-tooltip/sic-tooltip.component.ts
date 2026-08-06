@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -6,6 +6,7 @@ type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
   selector: 'sic-tooltip',
   templateUrl: './sic-tooltip.component.html',
   styleUrl: './sic-tooltip.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     class: 'fixed block pointer-events-none z-[9999]'
   }

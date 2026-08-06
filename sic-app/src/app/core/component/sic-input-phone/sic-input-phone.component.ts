@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Injector, Input, forwardRef } from '@angular/core';
+import { Component, HostBinding, Injector, Input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
 import { SicValidator } from '../../validator/sic.validator';
 
@@ -9,6 +9,7 @@ import { SicValidator } from '../../validator/sic.validator';
   imports: [CommonModule],
   templateUrl: './sic-input-phone.component.html',
   styleUrl: './sic-input-phone.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

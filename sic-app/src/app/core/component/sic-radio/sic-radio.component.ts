@@ -12,6 +12,7 @@ import {
   inject,
   Injector,
   SimpleChanges,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -48,6 +49,7 @@ function nextSicRadioGroupName(): string {
   imports: [CommonModule],
   templateUrl: './sic-radio.component.html',
   styleUrl: './sic-radio.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

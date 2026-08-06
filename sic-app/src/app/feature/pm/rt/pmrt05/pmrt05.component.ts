@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -55,6 +55,7 @@ interface RelatedItem {
   standalone: true,
   imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
   templateUrl: './pmrt05.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmrt05.component.css'],
 })
 export class Pmrt05Component implements OnInit {

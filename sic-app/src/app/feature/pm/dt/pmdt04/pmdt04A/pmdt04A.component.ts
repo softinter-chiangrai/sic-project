@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -51,6 +51,7 @@ interface Requirement {
     SicInputAreaComponent,
     SicNumberComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04A.component.html',
 })
 export class Pmdt04AComponent implements OnInit {

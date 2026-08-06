@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
@@ -25,6 +25,7 @@ import { BusinessService } from '../../../../../core/services/business.service';
     SicComboboxComponent,
     RouterModule,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt01A.component.html',
 })
 export class Pmdt01AComponent implements OnInit {

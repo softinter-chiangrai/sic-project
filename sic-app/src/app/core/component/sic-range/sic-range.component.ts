@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input, forwardRef } from '@angular/core';
+import { Component, HostBinding, Input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SicFormControlBase } from '../../base/sic-form-control.base';
 
@@ -11,6 +11,7 @@ export type SicRangeValue = number | [number, number];
   imports: [CommonModule],
   templateUrl: './sic-range.component.html',
   styleUrl: './sic-range.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

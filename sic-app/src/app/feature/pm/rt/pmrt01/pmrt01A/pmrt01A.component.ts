@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -38,6 +38,7 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
     SicInputAreaComponent,
     SicInputPhoneComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt01A.component.html',
 })
 export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {

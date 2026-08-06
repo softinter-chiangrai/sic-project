@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-badge',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-badge.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-badge.component.css',
 })
 export class SicBadgeComponent {

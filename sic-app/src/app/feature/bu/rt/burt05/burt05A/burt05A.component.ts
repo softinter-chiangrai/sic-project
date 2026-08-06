@@ -1,7 +1,7 @@
 // src/app/feature/bu/rt/burt05/burt05A/burt05A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -13,6 +13,7 @@ import { burt05Service, Program } from '../burt05.service';
   selector: 'app-burt05A',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt05A.component.html',
 })
 export class Burt05AComponent implements OnInit {

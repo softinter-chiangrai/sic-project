@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SicSidebarComponent } from '../core/component/sic-sidebar/sic-sidebar.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,6 +24,7 @@ type TaskPersistMeta = {
   imports: [RouterOutlet, SicSidebarComponent,ReactiveFormsModule, CommonModule, SicHeadchatComponent],
   templateUrl: './feature.component.html',
   styleUrl: './feature.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     AppTranslateLoader,
     { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'FEATURE' },

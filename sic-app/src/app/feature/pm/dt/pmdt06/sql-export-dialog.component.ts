@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
@@ -17,6 +17,7 @@ interface DiagramPage {
   selector: 'app-sql-export-dialog',
   standalone: true,
   imports: [CommonModule, FormsModule, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
       class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"

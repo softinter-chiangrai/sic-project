@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -22,6 +22,7 @@ import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base
   selector: 'app-burt01',
   imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent],
   templateUrl: './burt01.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt01.component.css',
 })
 export class Burt01Component extends BaseActionComponent implements OnInit, ISidebarAction {

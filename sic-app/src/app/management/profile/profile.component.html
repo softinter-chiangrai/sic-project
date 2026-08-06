@@ -123,7 +123,7 @@
             label="จังหวัด"
             formControlName="provinceId"
             [apiUrl]="service.apiGetComboboxProvince"
-            [params]="{ countryId: data1.formGroup.get('countryId')?.value }"
+            [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }"
             (selectionChanged)="onProvinceChange($event)"
           >
           </sic-combobox>
@@ -135,7 +135,7 @@
             label="อำเภอ"
             formControlName="districtId"
             [apiUrl]="service.apiGetComboboxDistrict"
-            [params]="{ provinceId: data1.formGroup.get('provinceId')?.value }"
+            [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }"
             (selectionChanged)="onDistrictChange($event)"
           >
           </sic-combobox>
@@ -147,7 +147,7 @@
             label="ตำบล"
             formControlName="subDistrictId"
             [apiUrl]="service.apiGetComboboxSubDistrict"
-            [params]="{ districtId: data1.formGroup.get('districtId')?.value }"
+            [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }"
             (selectionChanged)="onSubDistrictChange($event)"
           >
           </sic-combobox>

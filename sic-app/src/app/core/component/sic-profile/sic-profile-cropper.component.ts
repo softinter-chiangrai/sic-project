@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogService } from '../../services/dialog.service';
 
@@ -6,6 +6,7 @@ import { DialogService } from '../../services/dialog.service';
   selector: 'sic-profile-cropper',
   imports: [CommonModule],
   templateUrl: './sic-profile-cropper.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-profile-cropper.component.css',
 })
 export class SicProfileCropperComponent implements AfterViewInit {

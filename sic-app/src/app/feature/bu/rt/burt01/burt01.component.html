@@ -25,7 +25,7 @@
     </div>
     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
       <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle"
-        [params]="{ personType: data.formGroup.get('personType')?.value }">
+        [params]="{ personType: $safeNavigationMigration(data.formGroup.get('personType')?.value) }">
       </sic-combobox>
     </div>
     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
@@ -68,18 +68,18 @@
     @if(data.formGroup.get('supportLocalAddress')?.value) {
     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
       <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince"
-        [params]="{ countryId: data.formGroup.get('countryId')?.value }" (selectionChanged)="onProvinceChange($event)">
+        [params]="{ countryId: $safeNavigationMigration(data.formGroup.get('countryId')?.value) }" (selectionChanged)="onProvinceChange($event)">
       </sic-combobox>
     </div>
     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
       <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict"
-        [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
+        [params]="{ provinceId: $safeNavigationMigration(data.formGroup.get('provinceId')?.value) }"
         (selectionChanged)="onDistrictChange($event)">
       </sic-combobox>
     </div>
     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
       <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict"
-        [params]="{ districtId: data.formGroup.get('districtId')?.value }"
+        [params]="{ districtId: $safeNavigationMigration(data.formGroup.get('districtId')?.value) }"
         (selectionChanged)="onSubDistrictChange($event)">
       </sic-combobox>
     </div>

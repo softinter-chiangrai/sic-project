@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, NgZone, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, NgZone, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -28,6 +28,7 @@ import { ContractModel, Pmrt04AService } from '../pmrt04A/pmrt04A.component';
     SicDatepickerComponent,
     SicInputAreaComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt04B.component.html',
 })
 export class pmrt04BComponent implements OnInit, CanComponentDeactivate {

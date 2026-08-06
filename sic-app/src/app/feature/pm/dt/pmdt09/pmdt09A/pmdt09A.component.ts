@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.ts
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Post } from '../discussion.model';
@@ -24,6 +24,7 @@ import { SicInputUploadComponent } from '../../../../../core/component/sic-input
     SicInputUploadComponent,
   ],
   templateUrl: './pmdt09A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './pmdt09A.component.css',
 })
 export class Pmdt09AComponent implements OnInit {

@@ -37,7 +37,7 @@
           label="รหัสเอกสาร"
           formControlName="documentCode"
           [apiUrl]="service.apiGetComboboxDocument"
-          [params]="{ type: form.get('documentType')?.value }"
+          [params]="{ type: $safeNavigationMigration(form.get('documentType')?.value) }"
           [required]="true"
         ></sic-combobox>
         @if (form.get('documentCode')?.touched && form.get('documentCode')?.invalid) {

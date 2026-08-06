@@ -11,6 +11,7 @@ import {
   OnDestroy,
   ViewChild,
   forwardRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -33,6 +34,7 @@ import type { Subscription } from 'rxjs';
   host: {
     ngSkipHydration: 'true',
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

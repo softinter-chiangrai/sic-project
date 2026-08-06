@@ -1,6 +1,6 @@
 // business-join.component.ts
 
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,6 +22,7 @@ import { ToForm } from '../../../core/types/form.type';
     SicButtonComponent,
   ],
   templateUrl: './business-join.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './business-join.component.css',
 })
 export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-collapse',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-collapse.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-collapse.component.css',
 })
 export class SicCollapseComponent {

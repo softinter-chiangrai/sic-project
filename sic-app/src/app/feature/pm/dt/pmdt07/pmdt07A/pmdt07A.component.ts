@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormGroup,
@@ -56,6 +56,7 @@ interface ChangeRequest {
         SicNumberComponent,
         SicCardComponent,
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt07A.component.html',
 })
 export class Pmdt07AComponent implements OnInit {

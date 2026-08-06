@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt06/new-diagram-dialog.component.ts
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
@@ -17,6 +17,7 @@ export interface DiagramEditData {
   selector: 'app-new-diagram-dialog',
   standalone: true,
   imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4" style="border-color: var(--border);">

@@ -1,7 +1,7 @@
 // src/app/feature/bu/rt/burt03/burt03.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -18,6 +18,7 @@ import { burt03Service, type Role } from './burt03.service';
   standalone: true,
   imports: [CommonModule, RouterModule, SicOrganizationalChartComponent],
   templateUrl: './burt03.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt03.component.css',
 })
 export class Burt03Component implements OnInit {

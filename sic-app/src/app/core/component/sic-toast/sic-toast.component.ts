@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input, inject } from '@angular/core';
+import { Component, HostBinding, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { SicToastPosition, SicToastService } from './sic-toast.service';
 
 @Component({
@@ -7,6 +7,7 @@ import { SicToastPosition, SicToastService } from './sic-toast.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-toast.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-toast.component.css',
 })
 export class SicToastComponent {

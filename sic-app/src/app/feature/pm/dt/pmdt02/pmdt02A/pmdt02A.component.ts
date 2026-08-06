@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
@@ -21,6 +21,7 @@ import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/mo
     SicTimepickerComponent,
     SicColorpickerComponent,   // ✅ import
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02A.component.html',
 })
 export class Pmdt02AComponent implements OnInit {

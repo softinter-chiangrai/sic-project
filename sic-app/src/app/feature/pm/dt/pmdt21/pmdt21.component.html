@@ -72,7 +72,7 @@
           label="โครงการ"
           formControlName="projectId"
           [apiUrl]="service.apiGetComboboxProject"
-          [params]="{ customerId: form.get('customerId')?.value }"
+          [params]="{ customerId: $safeNavigationMigration(form.get('customerId')?.value) }"
           [required]="true"
         ></sic-combobox>
         @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
@@ -88,7 +88,7 @@
           label="สัญญา MA"
           formControlName="contractId"
           [apiUrl]="service.apiGetComboboxContract"
-          [params]="{ projectId: form.get('projectId')?.value }"
+          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           [required]="true"
         ></sic-combobox>
         @if (form.get('contractId')?.touched && form.get('contractId')?.invalid) {

@@ -86,7 +86,7 @@
           label="Specification ที่เกี่ยวข้อง"
           formControlName="relatedSpec"
           [apiUrl]="service.apiGetComboboxSpec"
-          [params]="{ projectId: form.get('projectId')?.value }"
+          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
         ></sic-combobox>
         <p class="text-xs text-[var(--text-muted)] mt-1">เลือก Specification ที่เกี่ยวข้องกับคู่มือนี้</p>
       </div>

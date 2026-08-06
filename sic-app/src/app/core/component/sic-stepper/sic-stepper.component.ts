@@ -8,6 +8,7 @@ import {
   Output,
   QueryList,
   TemplateRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { SicButtonComponent } from '../sic-button/sic-button.component';
@@ -33,6 +34,7 @@ export class SicStepTemplate {
   standalone: true,
   imports: [NgTemplateOutlet, SicButtonComponent],
   templateUrl: './sic-stepper.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-stepper.component.css',
 })
 export class SicStepperComponent implements AfterContentInit {

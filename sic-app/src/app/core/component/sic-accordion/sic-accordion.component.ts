@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterContentInit, Component, ContentChildren, HostBinding, Input, QueryList } from '@angular/core';
+import { AfterContentInit, Component, ContentChildren, HostBinding, Input, QueryList, ChangeDetectionStrategy } from '@angular/core';
 import { SicCollapseComponent } from '../sic-collapse/sic-collapse.component';
 
 /**
@@ -11,6 +11,7 @@ import { SicCollapseComponent } from '../sic-collapse/sic-collapse.component';
   standalone: true,
   imports: [CommonModule],
   template: `<ng-content select="sic-collapse"></ng-content>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-accordion.component.css',
 })
 export class SicAccordionComponent implements AfterContentInit {

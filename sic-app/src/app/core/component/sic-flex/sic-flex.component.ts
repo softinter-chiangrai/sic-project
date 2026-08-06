@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-flex',
   standalone: true,
   imports: [CommonModule],
   template: `<ng-content></ng-content>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-flex.component.css',
 })
 export class SicFlexComponent {

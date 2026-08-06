@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SicContainerComponent } from "../core/component/sic-container/sic-container.component";
 import { ThemeService } from '../core/services/theme.service';
@@ -11,6 +11,7 @@ import { AuthService } from '../core/auth/auth.service';
   selector: 'app-management',
   imports: [RouterOutlet, TranslateModule, SicContainerComponent],
   templateUrl: './management.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './management.component.css',
 })
 export class Management {

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-avatar',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-avatar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-avatar.component.css',
 })
 export class SicAvatarComponent {

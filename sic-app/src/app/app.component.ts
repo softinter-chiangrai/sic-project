@@ -1,5 +1,5 @@
 // src/app/app.component.ts
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
 import { LanguageService } from './core/services/language.service';
@@ -13,6 +13,7 @@ import { SicNumberConfigService } from './core/component/sic-number/sic-number.c
 ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [],
 })
 export class AppComponent {

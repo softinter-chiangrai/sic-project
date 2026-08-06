@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 
 export interface SicTab {
   id: string;
@@ -12,6 +12,7 @@ export interface SicTab {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-tabs.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-tabs.component.css',
 })
 export class SicTabsComponent {

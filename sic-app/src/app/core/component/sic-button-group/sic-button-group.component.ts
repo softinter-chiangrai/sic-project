@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-button-group',
   standalone: true,
   imports: [CommonModule],
   template: `<ng-content select="sic-button"></ng-content>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-button-group.component.css',
 })
 export class SicButtonGroupComponent {

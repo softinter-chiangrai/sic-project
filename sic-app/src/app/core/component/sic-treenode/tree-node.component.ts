@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/burt05/tree-node.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, ChangeDetectionStrategy } from '@angular/core';
 
 export interface TreeNode {
   id: string;
@@ -21,6 +21,7 @@ export interface TreeNode {
   selector: 'app-tree-node',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
       <td class="px-4 py-3">

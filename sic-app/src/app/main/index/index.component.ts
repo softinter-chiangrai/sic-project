@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, signal } from '@angular/core';
+import { Component, inject, PLATFORM_ID, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
 import { AppLanguage, LanguageService } from '../../core/services/language.service';
@@ -12,6 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
   imports: [RouterOutlet, TooltipDirective, SicButtonComponent,TranslateModule],
   templateUrl: './index.component.html',
   styleUrl: './index.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [],
 })
 export class Index {

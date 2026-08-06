@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, Injectable, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -112,6 +112,7 @@ export class Pmrt04AService {
     SicDatepickerComponent, // ✅ เพิ่มตรงนี้
   ],
   templateUrl: './pmrt04A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [],
 })
 export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {

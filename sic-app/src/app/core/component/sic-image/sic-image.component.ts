@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-image',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-image.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-image.component.css',
 })
 export class SicImageComponent {

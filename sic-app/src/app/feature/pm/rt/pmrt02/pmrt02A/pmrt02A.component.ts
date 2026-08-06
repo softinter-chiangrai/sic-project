@@ -1,6 +1,6 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -53,6 +53,7 @@ export interface ProjectModel {
     SicNumberComponent,
   ],
   templateUrl: './pmrt02A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [],
 })
 export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {

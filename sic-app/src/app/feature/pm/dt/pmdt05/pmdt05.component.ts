@@ -9,6 +9,7 @@ import {
   OnDestroy,
   signal,
   ChangeDetectorRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   FormBuilder,
@@ -127,6 +128,7 @@ export class Pmdt05Service {
     SicDatePipe,
   ],
   templateUrl: './pmdt05.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .pmdt05-layout {

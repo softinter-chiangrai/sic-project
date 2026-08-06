@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '../../auth/auth.service';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
 import { AppLanguage, LanguageService } from '../../services/language.service';
@@ -35,6 +35,7 @@ type SidebarItem = {
   imports: [TooltipDirective, TranslateModule, RouterLink],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     ngSkipHydration: 'true',
   },

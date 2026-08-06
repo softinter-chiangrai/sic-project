@@ -104,8 +104,8 @@
           formControlName="reviewableId"
           [apiUrl]="service.apiGetComboboxReviewable"
           [params]="{
-            projectId: form.get('projectId')?.value,
-            type: form.get('reviewableType')?.value,
+            projectId: $safeNavigationMigration(form.get('projectId')?.value),
+            type: $safeNavigationMigration(form.get('reviewableType')?.value),
           }"
           [required]="true"
         ></sic-combobox>

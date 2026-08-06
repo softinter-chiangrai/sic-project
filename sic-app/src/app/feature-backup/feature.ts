@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SicSidebarComponent } from '../core/component/sic-sidebar/sic-sidebar.component';
 import { SicStepperComponent, SicStepTemplate } from '../core/component/sic-stepper/sic-stepper.component';
@@ -39,6 +39,7 @@ type TaskPersistMeta = {
     SicColorpickerComponent, SicCheckboxComponent, SicInputAreaComponent, SicRadioComponent, SicButtonComponent, SicGridPanelComponent, SicGridPanelTemplate, SicUploadComponent, SicOrganizationalChartComponent, CommonModule, SicTaskComponent, SicHeadchatComponent],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     AppTranslateLoader,
     { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'FEATURE' },

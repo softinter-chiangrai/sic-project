@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, signal } from '@angular/core';
+import { Component, inject, Injectable, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -141,6 +141,7 @@ export class Pmdt14Service {
     SicInputAreaComponent,
   ],
   templateUrl: './pmdt14.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [],
 })
 export class Pmdt14Component implements OnInit, CanComponentDeactivate {

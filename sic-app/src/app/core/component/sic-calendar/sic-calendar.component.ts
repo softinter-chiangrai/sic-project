@@ -12,6 +12,7 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Dayjs } from 'dayjs';
@@ -62,6 +63,7 @@ type TaskDraftPayload = {
   selector: 'sic-calendar-task-dialog',
   standalone: true,
   imports: [CommonModule, FormsModule, SicInputComponent, SicInputAreaComponent, SicColorpickerComponent, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
       class="w-[min(92vw,30rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"
@@ -141,6 +143,7 @@ class SicCalendarTaskDialog implements OnInit {
   imports: [CommonModule],
   templateUrl: './sic-calendar.component.html',
   styleUrl: './sic-calendar.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { ngSkipHydration: 'true' },
 })
 export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {

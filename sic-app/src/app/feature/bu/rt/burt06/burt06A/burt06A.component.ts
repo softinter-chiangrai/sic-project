@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -49,6 +49,7 @@ interface UserOption {
   ],
   templateUrl: './burt06A.component.html',
   styleUrl: './burt06A.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   animations: [listAnimation],
 })
 export class Burt06AComponent implements OnInit, CanComponentDeactivate {

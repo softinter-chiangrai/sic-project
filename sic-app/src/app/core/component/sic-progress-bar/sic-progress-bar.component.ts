@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-progress-bar',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-progress-bar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-progress-bar.component.css',
 })
 export class SicProgressBarComponent {

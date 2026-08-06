@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import dayjs from '../../../../core/dayjs';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -27,6 +27,7 @@ import { CalendarItem, SicCalendarComponent } from '../../../../core/component/s
     // DhtmlxGanttComponent,  // ลบออก
     SicCalendarComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',
 })
 export class Pmdt02Component implements OnInit {

@@ -185,7 +185,7 @@
                     valueField="roleCode"
                     textField="roleName"
                     placeholder="เลือกบทบาท..."
-                    (selectionChanged)="loadUsersForStep(i, $event?.roleCode)"
+                    (selectionChanged)="loadUsersForStep(i, $safeNavigationMigration($event?.roleCode))"
                     [errorMessages]="{ required: 'กรุณาเลือกบทบาท' }"
                   ></sic-combobox>
                 </div>
@@ -234,7 +234,7 @@
                         ไม่พบผู้ใช้งานใน Role นี้ หรือยังไม่ได้โหลด
                         <button type="button"
                           class="ml-2 text-[var(--crm-primary)] underline text-xs"
-                          (click)="loadUsersForStep(i, step.get('approverRole')?.value)">
+                          (click)="loadUsersForStep(i, $safeNavigationMigration(step.get('approverRole')?.value))">
                           โหลดใหม่
                         </button>
                       </p>

@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 
@@ -11,6 +11,7 @@ import { PhaseService } from '../../../../core/services/phase.service';
   selector: 'app-pmdt01',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {

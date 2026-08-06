@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-navbar',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-navbar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-navbar.component.css',
 })
 export class SicNavbarComponent {

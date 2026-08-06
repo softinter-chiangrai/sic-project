@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt08A/pmdt08A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -45,6 +45,7 @@ import { Pmdt08Service } from '../pmdt08.service';
         SicApprovalComponent,
     ],
     templateUrl: './pmdt08A.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styles: [`
         .spec-tabs {
             display: flex;

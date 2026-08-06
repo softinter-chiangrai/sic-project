@@ -43,6 +43,7 @@ type NodeEditPayload = {
     SicInputComponent,
     SicColorpickerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
       class="w-[min(92vw,28rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl"

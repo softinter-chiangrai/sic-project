@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostBinding, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostBinding, Input, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-video-player',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sic-video-player.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-video-player.component.css',
 })
 export class SicVideoPlayerComponent {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input, forwardRef } from '@angular/core';
+import { Component, HostBinding, Input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SicFormControlBase } from '../../base/sic-form-control.base';
 
@@ -9,6 +9,7 @@ import { SicFormControlBase } from '../../base/sic-form-control.base';
   imports: [CommonModule],
   templateUrl: './sic-input-number.component.html',
   styleUrl: './sic-input-number.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

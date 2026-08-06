@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
@@ -26,6 +26,7 @@ import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.
     SicTimepickerComponent,
     SicColorpickerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02C.component.html',
 })
 export class Pmdt02CComponent implements OnInit {

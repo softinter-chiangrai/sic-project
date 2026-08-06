@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'sic-skeleton',
   standalone: true,
   imports: [CommonModule],
   template: ``,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-skeleton.component.css',
 })
 export class SicSkeletonComponent {

@@ -10,6 +10,7 @@ import {
   signal,
   computed,
   effect,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -25,6 +26,7 @@ import {
   imports: [CommonModule, AngularTiptapEditorComponent],
   templateUrl: './sic-tiptap-editor.component.html',
   styleUrls: ['./sic-tiptap-editor.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

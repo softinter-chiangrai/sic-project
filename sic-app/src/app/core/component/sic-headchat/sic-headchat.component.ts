@@ -10,6 +10,7 @@ import {
   computed,
   inject,
   signal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -55,6 +56,7 @@ interface OpenGroupChat {
   standalone: true,
   imports: [CommonModule, FormsModule, SicStreamDirective],
   templateUrl: './sic-headchat.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-headchat.component.css',
 })
 export class SicHeadchatComponent implements OnInit, OnDestroy {

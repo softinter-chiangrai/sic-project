@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 @Component({
   standalone: true,
   selector: 'app-auth-callback',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div style="padding:16px;font-family:system-ui">
       <p>Signing you in...</p>

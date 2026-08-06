@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../core/services/theme.service';
 
@@ -29,6 +29,7 @@ interface NavItem {
   selector: 'app-tutorial',
   imports: [CommonModule],
   templateUrl: './tutorial.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './tutorial.component.css',
 })
 export class TutorialComponent {

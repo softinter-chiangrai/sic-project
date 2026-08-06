@@ -15,6 +15,7 @@ import {
   ViewChild,
   forwardRef,
   inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
@@ -57,6 +58,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
   host: {
     ngSkipHydration: 'true',
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

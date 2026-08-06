@@ -1,10 +1,11 @@
 // base-action.component.ts
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SicSidebarService } from '../sic-sidebar.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: '' // คลาสแม่ที่เป็นโครงสร้างสถาปัตยกรรม ไม่ต้องมีหน้า HTML
 })
 export abstract class BaseActionComponent implements  OnDestroy {

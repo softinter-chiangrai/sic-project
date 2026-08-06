@@ -78,7 +78,7 @@
             label="Test Case ที่เกี่ยวข้อง"
             formControlName="relatedTestCase"
             [apiUrl]="service.apiGetComboboxTestCase"
-            [params]="{ projectId: form.get('projectId')?.value }"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           ></sic-combobox>
         </div>
         <div class="flex-1">
@@ -86,7 +86,7 @@
             label="Task ที่เกี่ยวข้อง"
             formControlName="relatedTask"
             [apiUrl]="service.apiGetComboboxTask"
-            [params]="{ projectId: form.get('projectId')?.value }"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           ></sic-combobox>
         </div>
         <div class="flex-1">
@@ -94,7 +94,7 @@
             label="Spec ที่เกี่ยวข้อง"
             formControlName="relatedSpec"
             [apiUrl]="service.apiGetComboboxSpec"
-            [params]="{ projectId: form.get('projectId')?.value }"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
           ></sic-combobox>
         </div>
       </div>

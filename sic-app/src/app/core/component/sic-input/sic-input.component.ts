@@ -5,6 +5,7 @@ import {
   Injector,
   Input,
   forwardRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -20,6 +21,7 @@ import { SicValidator } from '../../validator/sic.validator';
   imports: [CommonModule, NgxMaskDirective],
   templateUrl: './sic-input.component.html',
   styleUrl: './sic-input.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

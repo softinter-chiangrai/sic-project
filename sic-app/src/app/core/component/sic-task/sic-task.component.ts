@@ -13,6 +13,7 @@ import {
   Output,
   PLATFORM_ID,
   SimpleChanges,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
@@ -44,6 +45,7 @@ type SicTaskState = 'active' | 'new' | 'updated' | 'deleted';
   standalone: true,
   imports: [CommonModule, SicCalendarComponent],
   templateUrl: './sic-task.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-task.component.css',
 })
 export class SicTaskComponent implements OnChanges, AfterViewInit {
