@@ -1,0 +1,300 @@
+:host {
+  --sic-organizational-node-size: 100px;
+  --sic-organizational-line-size: 2px;
+  --sic-organizational-line-overlap: 2px;
+  --sic-organizational-branch-drop: 46px;
+  --sic-organizational-button-offset: 32px;
+  --sic-organizational-remove-button-offset: 28px;
+  --sic-organizational-button-bg: #f1f3f5;
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+  background: transparent;
+  min-height: 100%;
+}
+
+.sic-organizational-chart {
+  width: max-content;
+  min-width: 100%;
+  margin-inline: auto;
+}
+
+.sic-organizational-chart__tree {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 100%;
+  padding: 1rem;
+}
+
+.sic-organizational-chart__node-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 1rem 0;
+}
+
+.sic-organizational-chart__node-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sic-organizational-chart__node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  border: 3px solid var(--node-color, #FF6B6B);
+  border-radius: 50%;
+  width: var(--sic-organizational-node-size);
+  height: var(--sic-organizational-node-size);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sic-organizational-chart__node:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.sic-organizational-chart__node:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--node-color, #FF6B6B) 70%, white);
+  outline-offset: 2px;
+}
+
+.sic-organizational-chart__node--readonly {
+  cursor: default;
+}
+
+.sic-organizational-chart__node--readonly:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sic-organizational-chart__node-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--node-color, #FF6B6B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sic-organizational-chart__node-avatar--placeholder {
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sic-organizational-chart__avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sic-organizational-chart__node-badge {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--node-color, #FF6B6B);
+  background: transparent;
+  padding: 0 0.5rem;
+  border-radius: 0;
+  text-transform: uppercase;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  text-shadow: none;
+}
+
+.sic-organizational-chart__node-controls {
+  position: absolute;
+  bottom: calc(-1 * var(--sic-organizational-button-offset));
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+}
+
+.sic-organizational-chart__node-shell:hover .sic-organizational-chart__node-controls {
+  opacity: 1;
+}
+
+.sic-organizational-chart__btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.sic-organizational-chart__btn i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 1px;
+  border-radius: 999px;
+  background: var(--sic-organizational-button-bg);
+  border: 1px solid #d0d7de;
+}
+
+.sic-organizational-chart__btn--add {
+  color: #27ae60;
+}
+
+.sic-organizational-chart__btn--add:hover {
+  color: #229954;
+  transform: scale(1.15);
+}
+
+.sic-organizational-chart__btn--remove {
+  color: #e74c3c;
+  position: absolute;
+  top: calc(-1 * var(--sic-organizational-remove-button-offset));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  font-size: 1rem;
+  opacity: 0;
+  z-index: 3;
+  transition: all 0.2s ease;
+}
+
+.sic-organizational-chart__child-wrapper:hover .sic-organizational-chart__btn--remove {
+  opacity: 1;
+}
+
+.sic-organizational-chart__btn--remove:hover {
+  color: #c0392b;
+  transform: translateX(-50%) scale(1.2);
+}
+
+.sic-organizational-chart__connector-vertical {
+  width: var(--sic-organizational-line-size);
+  height: 28px;
+  background: #bdc3c7;
+  margin: 0;
+}
+
+.sic-organizational-chart__children {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem;
+  margin-top: calc(-1 * var(--sic-organizational-line-overlap));
+  padding-top: var(--sic-organizational-branch-drop);
+}
+
+.sic-organizational-chart__connector-horizontal {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: var(--sic-organizational-line-size);
+  background: #bdc3c7;
+  transform: translateX(-50%);
+}
+
+.sic-organizational-chart__children:has(.sic-organizational-chart__child-wrapper) .sic-organizational-chart__connector-horizontal {
+  width: calc(100% - var(--sic-organizational-node-size) + var(--sic-organizational-line-size));
+  left: calc((var(--sic-organizational-node-size) / 2) - (var(--sic-organizational-line-size) / 2));
+  transform: none;
+}
+
+.sic-organizational-chart__child-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 1 auto;
+}
+
+.sic-organizational-chart__child-wrapper--first::before,
+.sic-organizational-chart__child-wrapper--last::before {
+  content: '';
+}
+
+.sic-organizational-chart__connector-branch {
+  position: absolute;
+  top: calc(-1 * (var(--sic-organizational-branch-drop) + var(--sic-organizational-line-overlap)));
+  left: 50%;
+  width: var(--sic-organizational-line-size);
+  height: calc(var(--sic-organizational-branch-drop) + (2 * var(--sic-organizational-line-overlap)));
+  background: #bdc3c7;
+  transform: translateX(-50%);
+}
+
+.sic-organizational-chart__child-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.sic-organizational-chart__child-content > .sic-organizational-chart__node-container {
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  :host {
+    --sic-organizational-node-size: 85px;
+  }
+
+  .sic-organizational-chart__node-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sic-organizational-chart__node-badge {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    --sic-organizational-node-size: 70px;
+    padding: 1rem 0.5rem;
+  }
+
+  .sic-organizational-chart__node-avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .sic-organizational-chart__node-badge {
+    font-size: 0.68rem;
+  }
+
+  .sic-organizational-chart__btn {
+    width: 20px;
+    height: 20px;
+    font-size: 1rem;
+  }
+}

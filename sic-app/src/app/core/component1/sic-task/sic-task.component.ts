@@ -17,7 +17,7 @@ import {
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
-import { SicCalendarComponent, SicCalendarTask, SicCalendarViewRange } from '../sic-calendar/sic-calendar.component';
+import { SicCalendarComponent, SicCalendarTask, SicCalendarViewRange } from '../../component/sic-calendar/sic-calendar.component';
 import { environment } from '../../../../environments/environment';
 
 export type SicTaskPersistState = 4 | 3 | 2;

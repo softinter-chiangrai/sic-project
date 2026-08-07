@@ -24,6 +24,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
+    provideAngularQuery(new QueryClient()),
     provideRouter(routes),
     provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
     provideEnvironmentNgxMask(),

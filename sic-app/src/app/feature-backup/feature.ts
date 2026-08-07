@@ -19,7 +19,7 @@ import { SicUploadComponent } from '../core/component/sic-upload/sic-upload.comp
 import { SicOrganizationalChartComponent } from '../core/component/sic-organizational-chart/sic-organizational-chart.component';
 import { CommonModule } from '@angular/common';
 import type { SicCalendarTask } from '../core/component/sic-calendar/sic-calendar.component';
-import { SicTaskConfig, SicTaskPersistState, SicTaskComponent } from '../core/component/sic-task/sic-task.component';
+import { SicTaskConfig, SicTaskPersistState, SicTaskComponent } from '../core/component1/sic-task/sic-task.component';
 import { SicOrganizationalChartNode } from '../core/component/sic-organizational-chart/sic-organizational-chart.model';
 import { SicHeadchatComponent } from "../core/component/sic-headchat/sic-headchat.component";
 import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoader } from '../core/services/app-translate-loader.service';

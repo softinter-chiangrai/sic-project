@@ -1,0 +1,302 @@
+/* dhtmlx-gantt.component.css */
+
+.dhtmlx-gantt-container {
+  width: 100%;
+  height: 500px;
+}
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* ============================================================
+   🔹 พื้นหลัง (Background) - ใช้ Theme Variables ทั้งหมด
+   ============================================================ */
+
+:host ::ng-deep .gantt_container,
+:host ::ng-deep .gantt_data_area,
+:host ::ng-deep .gantt_bars_area,
+:host ::ng-deep .gantt_grid,
+:host ::ng-deep .gantt_grid_data,
+:host ::ng-deep .gantt_task_bg,
+:host ::ng-deep .gantt_layout_cell,
+:host ::ng-deep .gantt_layout_content {
+  background-color: var(--bg) !important;
+}
+
+:host ::ng-deep .gantt_grid_scale,
+:host ::ng-deep .gantt_task_scale,
+:host ::ng-deep .gantt_scale_line {
+  background-color: var(--sidebar) !important;
+}
+
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell {
+  background-color: var(--sidebar) !important;
+  color: var(--text-active) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_cell,
+:host ::ng-deep .gantt_task_cell {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+}
+
+:host ::ng-deep .gantt_row,
+:host ::ng-deep .gantt_row_task,
+:host ::ng-deep .gantt_task_row {
+  background-color: var(--bg) !important;
+}
+
+/* ============================================================
+   🔸 Hover & Selection (ไม่มีเส้นขอบ)
+   ============================================================ */
+
+:host ::ng-deep .gantt_row:hover,
+:host ::ng-deep .gantt_row_task:hover,
+:host ::ng-deep .gantt_row.odd:hover,
+:host ::ng-deep .gantt_row_task.odd:hover,
+:host ::ng-deep .gantt_task_row:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+:host ::ng-deep .gantt_selected,
+:host ::ng-deep .gantt_selected .gantt_row_task {
+  background-color: color-mix(in srgb, var(--crm-primary) 15%, var(--bg)) !important;
+}
+
+:host ::ng-deep .gantt-row-done td {
+  background-color: color-mix(in srgb, var(--crm-success) 12%, var(--bg)) !important;
+}
+
+:host ::ng-deep .gantt-row-delayed td {
+  background-color: color-mix(in srgb, var(--crm-danger) 12%, var(--bg)) !important;
+}
+
+:host ::ng-deep .gantt-row-progress td {
+  background-color: color-mix(in srgb, var(--crm-primary) 10%, var(--bg)) !important;
+}
+
+/* ============================================================
+   ✅ Task Bar (แถบงาน) - ไม่มีเส้นขอบ
+   ============================================================ */
+
+:host ::ng-deep .gantt_task_line {
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .gantt_task_line:hover {
+  transform: scaleY(1.08) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+  z-index: 10 !important;
+}
+
+:host ::ng-deep .gantt_task_content {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_task_progress {
+  background: var(--crm-success, #10B981) !important;
+  border-radius: 4px 0 0 4px !important;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.9 !important;
+}
+
+/* ============================================================
+   ✅ เส้นเชื่อม Dependency
+   ============================================================ */
+
+:host ::ng-deep .gantt_task_link .gantt_line_wrapper div {
+  background-color: var(--crm-primary) !important;
+}
+
+:host ::ng-deep .gantt_link_control {
+  stroke: var(--crm-primary) !important;
+}
+
+:host ::ng-deep .gantt_link_arrow {
+  fill: var(--crm-primary) !important;
+}
+
+/* ============================================================
+   ✅ Tooltip
+   ============================================================ */
+
+:host ::ng-deep .gantt_tooltip {
+  background-color: var(--sidebar) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+/* ============================================================
+   ✅ Scrollbars
+   ============================================================ */
+
+:host ::ng-deep .gantt::-webkit-scrollbar,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-track,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-track,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-thumb,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-thumb,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+:host ::ng-deep .gantt::-webkit-scrollbar-thumb:hover,
+:host ::ng-deep .gantt_hor_scroll::-webkit-scrollbar-thumb:hover,
+:host ::ng-deep .gantt_ver_scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================================
+   ❌ ลบเส้นขอบทั้งหมดของตาราง (รวมเส้นแนวนอน Task)
+   ============================================================ */
+
+:host ::ng-deep .gantt_grid,
+:host ::ng-deep .gantt_grid_data,
+:host ::ng-deep .gantt_grid_scale,
+:host ::ng-deep .gantt_layout_cell_border_right,
+:host ::ng-deep .gantt_layout_cell_border_left,
+:host ::ng-deep .gantt_cell,
+:host ::ng-deep .gantt_task_cell,
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell,
+:host ::ng-deep .gantt_cell_tree,
+:host ::ng-deep .gantt_row,
+:host ::ng-deep .gantt_row_task,
+:host ::ng-deep .gantt_task_row,
+:host ::ng-deep .gantt_table,
+:host ::ng-deep .gantt_grid_table,
+:host ::ng-deep .gantt_task_table,
+:host ::ng-deep .gantt_task_bg,
+:host ::ng-deep .gantt_bars_area,
+:host ::ng-deep .gantt_data_area,
+:host ::ng-deep .gantt_container,
+:host ::ng-deep .gantt_layout_cell,
+:host ::ng-deep .gantt_layout_content,
+:host ::ng-deep .gantt_scale_line,
+:host ::ng-deep .gantt_task_scale {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  outline: none !important;
+  border-collapse: collapse !important;
+}
+
+/* ✅ บังคับให้ทุกเซลล์ใน Task area ไม่มีเส้นขอบ */
+:host ::ng-deep .gantt_task_cell,
+:host ::ng-deep .gantt_row_task,
+:host ::ng-deep .gantt_task_row,
+:host ::ng-deep .gantt_task_bg,
+:host ::ng-deep .gantt_bars_area {
+  border-bottom: none !important;
+  border-top: none !important;
+}
+
+/* ============================================================
+   ❌ ลบเส้นขาวแนวตั้งทั้งหมด (รวม Pseudo-elements & Resize Handle)
+   ============================================================ */
+
+/* ลบเส้นขอบแนวตั้งและแนวนอนทุกเซลล์และ header */
+:host ::ng-deep .gantt_task_cell,
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell,
+:host ::ng-deep .gantt_cell,
+:host ::ng-deep .gantt_row,
+:host ::ng-deep .gantt_row_task,
+:host ::ng-deep .gantt_grid_data .gantt_cell,
+:host ::ng-deep .gantt_task_row .gantt_task_cell,
+:host ::ng-deep .gantt_grid_scale .gantt_grid_head_cell,
+:host ::ng-deep .gantt_tree_content {
+  border: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ซ่อน Pseudo-elements (::after, ::before) ที่สร้างเส้นตั้งใน dhtmlx */
+:host ::ng-deep .gantt_grid_head_cell::after,
+:host ::ng-deep .gantt_grid_head_cell::before,
+:host ::ng-deep .gantt_scale_cell::after,
+:host ::ng-deep .gantt_scale_cell::before,
+:host ::ng-deep .gantt_cell::after,
+:host ::ng-deep .gantt_cell::before,
+:host ::ng-deep .gantt_row::after,
+:host ::ng-deep .gantt_row::before,
+:host ::ng-deep .gantt_grid_head_cell .gantt_tree_content::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  background: transparent !important;
+  width: 0 !important;
+}
+
+/* ทำให้ Resize Handle / Column Resizer ล่องหน (ไม่มีเส้นขาว) แต่ยังลากปรับขนาด column ได้ */
+:host ::ng-deep .gantt_grid_resize,
+:host ::ng-deep .gantt_grid_resize_handle,
+:host ::ng-deep .gantt_grid_resize_marker,
+:host ::ng-deep .gantt_grid_resize_indicator,
+:host ::ng-deep .gantt_resize,
+:host ::ng-deep .gantt_grid_column_resize_wrap {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  opacity: 0 !important;
+}
+
+/* ส่วนของ Splitter ระหว่าง Grid กับ Chart ให้โปร่งใส ไม่เป็นเส้นขาว */
+:host ::ng-deep .gantt_layout_resizer,
+:host ::ng-deep .gantt_layout_resizer_v,
+:host ::ng-deep .gantt_layout_resizer_h {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ============================================================
+   🔹 ลดขนาดฟอนต์ใน Grid และ Task ให้เล็กลง
+   ============================================================ */
+:host ::ng-deep .gantt_task_content {
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_grid_head_cell,
+:host ::ng-deep .gantt_scale_cell {
+  font-size: 11px !important;
+}
+
+:host ::ng-deep .gantt_cell,
+:host ::ng-deep .gantt_task_cell {
+  font-size: 12px !important;
+}
+
+:host ::ng-deep .gantt_tooltip {
+  font-size: 12px !important;
+}

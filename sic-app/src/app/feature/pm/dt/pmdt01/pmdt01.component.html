@@ -1,39 +1,40 @@
 <!-- src/app/feature/pm/dt/pmdt01/pmdt01.component.html -->
-<div class="space-y-5 p-4">
-
-  <!-- Header -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
+<div class="p-4">
+  <sic-flex direction="row" justify="between" align="center" class="mb-4">
     <div>
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-layers text-[var(--crm-primary)]"></i>
         Phases & Milestones
       </h1>
-      <p class="text-sm text-[var(--text-muted)]">จัดการระยะและเหตุการณ์สำคัญของโครงการ</p>
+      <sic-text color="muted">จัดการระยะและเหตุการณ์สำคัญของโครงการ</sic-text>
     </div>
-    <button
-      (click)="openCreatePhase()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่ม Phase
-    </button>
-  </div>
+    <sic-button color="primary" (click)="openCreatePhase()">
+      <i class="bi bi-plus-lg"></i> เพิ่ม Phase
+    </sic-button>
+  </sic-flex>
 
-  <!-- Loading -->
-  @if (isLoading()) {
+  <!-- ✅ ใช้ phasesQuery.isPending() และ phasesQuery.error() โดยตรง -->
+  @if (phasesQuery.isPending()) {
     <div class="flex justify-center py-12">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <sic-spinner size="lg" />
     </div>
   }
 
-  <!-- ===== LIST VIEW ===== -->
-  @if (!isLoading()) {
-    @if (phases().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (phase of phases(); track phase.id) {
-          <div
+  @if (phasesQuery.error()) {
+    <div class="p-4 bg-red-50 text-red-700 rounded-lg">
+      {{ phasesQuery.error()?.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล' }}
+    </div>
+  }
+
+  @if (!phasesQuery.isPending() && !phasesQuery.error()) {
+    @if (phasesQuery.data() && phasesQuery.data()!.length > 0) {
+      <sic-grid [cols]="3" gap="1rem" [colsBreakpoints]="{ sm: 1, md: 2, lg: 3 }">
+        @for (phase of phasesQuery.data()!; track phase.id) {
+          <sic-card
+            [bordered]="true"
+            [elevated]="true"
             (click)="goToDetail(phase.id)"
-            class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm hover:shadow-md hover:border-[var(--crm-primary)]/30 cursor-pointer transition-all"
+            class="cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div class="flex justify-between items-start">
               <h3 class="font-semibold text-[var(--text-active)] text-lg">{{ phase.phaseName }}</h3>
@@ -41,7 +42,9 @@
                 {{ getStatusText(phase.status) }}
               </span>
             </div>
-            <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{{ phase.description || 'ไม่มีคำอธิบาย' }}</p>
+            <sic-text color="muted" size="sm" class="mt-1 line-clamp-2">
+              {{ phase.description || 'ไม่มีคำอธิบาย' }}
+            </sic-text>
             <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-3">
               <span><i class="bi bi-calendar3"></i> {{ formatDate(phase.startDate) }} - {{ formatDate(phase.endDate) }}</span>
               <span><i class="bi bi-person"></i> {{ phase.owner || '-' }}</span>
@@ -49,38 +52,35 @@
             <div class="mt-3 flex items-center gap-4 text-sm">
               <span class="flex items-center gap-1">
                 <i class="bi bi-flag text-[var(--crm-primary)]"></i>
-                {{ phase.milestoneCount }} Milestones
+                {{ phase.milestoneCount || 0 }} Milestones
               </span>
               <span class="flex items-center gap-1">
                 <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-                {{ phase.taskCompletedCount }}/{{ phase.taskCount }} Tasks
+                {{ phase.taskCompletedCount || 0 }}/{{ phase.taskCount || 0 }} Tasks
               </span>
             </div>
             <div class="mt-3 w-full bg-[var(--bg)] rounded-full h-2 overflow-hidden">
-              <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="phase.progress"></div>
+              <div
+                class="h-full bg-[var(--crm-primary)] rounded-full transition-all"
+                [style.width.%]="phase.progress || 0"
+              ></div>
             </div>
             <div class="flex justify-between text-xs text-[var(--text-muted)] mt-1">
               <span>ความคืบหน้า</span>
-              <span>{{ phase.progress }}%</span>
+              <span>{{ phase.progress || 0 }}%</span>
             </div>
 
-            <div class="flex justify-end gap-2 mt-3 border-t border-[var(--border)] pt-3">
-              <button
-                (click)="editPhase(phase, $event)"
-                class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
-              >
+            <sic-flex sicCardFooter direction="row" justify="end" gap="0.5rem">
+              <sic-button variant="ghost" size="sm" (click)="editPhase(phase, $event)">
                 <i class="bi bi-pencil"></i> แก้ไข
-              </button>
-              <button
-                (click)="deletePhase(phase, $event)"
-                class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
-              >
+              </sic-button>
+              <sic-button variant="ghost" color="danger" size="sm" (click)="deletePhase(phase, $event)">
                 <i class="bi bi-trash"></i> ลบ
-              </button>
-            </div>
-          </div>
+              </sic-button>
+            </sic-flex>
+          </sic-card>
         }
-      </div>
+      </sic-grid>
     } @else {
       <div class="text-center py-12 text-[var(--text-muted)]">
         <i class="bi bi-inbox text-5xl block mb-3 opacity-30"></i>
@@ -89,5 +89,4 @@
       </div>
     }
   }
-
 </div>
