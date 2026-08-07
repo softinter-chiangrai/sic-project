@@ -11,6 +11,8 @@ sic-storage/
 Migrations/
 resources/
 drawio-dev/
+component/
+
 
 # โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
 **/.angular/
