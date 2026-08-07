@@ -1,9 +1,7 @@
-// src/app/feature/pm/rt/pmrt01A/pmrt01A.service.ts
-
+// src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 import { CustomerModel } from './pmrt01A.model';
 import { environment } from '../../../../../../environments/environment';
 
@@ -20,7 +18,7 @@ export class Pmrt01AService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiBaseUrl + '/api/su-customer';
 
-  // Combobox endpoints
+  // Combobox endpoints (คงเดิม)
   apiGetLovPersonType = environment.apiBaseUrl + '/api/business/lov-person-type';
   apiGetComboboxTitle = environment.apiBaseUrl + '/api/business/combobox-title';
   apiGetComboboxCountry = environment.apiBaseUrl + '/api/business/combobox-country';
@@ -34,13 +32,17 @@ export class Pmrt01AService {
     businessId: string,
     page: number,
     size: number,
-    keyword?: string
+    keyword?: string,
+    sortBy?: string,
+    sortDir?: 'asc' | 'desc'
   ): Observable<PageResponse<CustomerModel>> {
     let params = new HttpParams()
       .set('businessId', businessId)
       .set('page', page.toString())
       .set('size', size.toString());
     if (keyword) params = params.set('keyword', keyword);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    if (sortDir) params = params.set('sortDir', sortDir);
     return this.http.get<PageResponse<CustomerModel>>(this.baseUrl, { params });
   }
 
