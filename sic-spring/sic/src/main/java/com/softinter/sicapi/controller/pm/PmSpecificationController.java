@@ -3,9 +3,9 @@ package com.softinter.sicapi.controller.pm;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,10 +34,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/pm/specification")
+@RequestMapping("/api/pm/specifications")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "Specification", description = "Specification Management API (PMDT08)")
+@Tag(name = "Specification", description = "จัดการข้อมูลข้อกำหนด (Specification)")
 public class PmSpecificationController {
 
     private final PmSpecificationService specificationService;
@@ -49,23 +49,19 @@ public class PmSpecificationController {
     public ResponseEntity<PaginationResponse<PmSpecificationResponse>> getSpecifications(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdDate") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
         Page<PmSpecificationResponse> pageResult = specificationService.findAll(businessId, keyword, status, pageable);
 
         return ResponseEntity.ok(PaginationUtil.of(
                 pageResult.getContent(),
-                page,
-                size,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
                 pageResult.getTotalElements()
         ));
     }

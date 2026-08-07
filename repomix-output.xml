@@ -7449,593 +7449,6 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
 };
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
-<!-- src/app/feature/pm/rt/pmrt01/pmrt01.component.html -->
-
-<div class="space-y-5 p-0.5">
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
-        รายการลูกค้า
-      </h1>
-      <span
-        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
-      >
-        {{ totalItems() }} รายการ
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
-    </button>
-  </div>
-
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <i
-        class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
-      ></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร หรือรหัส..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
-    </div>
-
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="custom-select px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">🌐 ทั้งหมด</option>
-      <option value="active">✅ ใช้งาน</option>
-      <option value="inactive">⛔ ไม่ใช้งาน</option>
-    </select>
-  </div>
-
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div
-      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
-    >
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th
-              (click)="onSortChange('customerCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              รหัส
-              @if (sortBy() === 'customerCode') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('companyNameEn')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[220px]"
-            >
-              ชื่อบริษัท
-              @if (sortBy() === 'companyNameEn') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('email')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[200px]"
-            >
-              อีเมล
-              @if (sortBy() === 'email') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]"
-            >
-              เบอร์โทร
-            </th>
-            <th
-              (click)="onSortChange('isActive')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px]"
-            >
-              สถานะ
-              @if (sortBy() === 'isActive') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
-            >
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (customer of paginatedCustomers(); track customer.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <!-- รหัส -->
-              <td class="px-4 py-3">
-                <span
-                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
-                >
-                  {{ customer.customerCode }}
-                </span>
-              </td>
-
-              <!-- ชื่อบริษัท -->
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  @if (customer.uploadGroupData && customer.uploadGroupData.length > 0) {
-                    <img
-                      [src]="getImageUrl(customer)"
-                      alt="{{ customer.companyNameEn }}"
-                      class="w-9 h-9 rounded-full object-cover border border-[var(--border)] flex-shrink-0"
-                      (error)="onImageError($event)"
-                    />
-                  } @else {
-                    <div
-                      class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase"
-                    >
-                      {{ getInitials(customer.companyNameEn) }}
-                    </div>
-                  }
-                  <div class="min-w-0">
-                    <div class="font-medium text-[var(--text-active)] truncate">
-                      {{ customer.companyNameEn }}
-                    </div>
-                    @if (customer.companyNameLocal) {
-                      <div class="text-xs text-[var(--text-muted)] truncate">
-                        {{ customer.companyNameLocal }}
-                      </div>
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <!-- อีเมล -->
-              <td class="px-4 py-3">
-                <a
-                  [href]="'mailto:' + customer.email"
-                  class="text-[var(--crm-primary)] hover:underline transition-colors"
-                >
-                  {{ customer.email }}
-                </a>
-              </td>
-
-              <!-- เบอร์โทร -->
-              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
-                {{ customer.phoneNumber || '-' }}
-              </td>
-
-              <!-- สถานะ -->
-              <td class="px-4 py-3">
-                <span
-                  [class]="
-                    getStatusClass(customer.isActive) +
-                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                  "
-                >
-                  {{ getStatusText(customer.isActive) }}
-                </span>
-              </td>
-
-              <!-- จัดการ -->
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1">
-                  <button
-                    (click)="goToProjects(customer)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="ดูโครงการทั้งหมดของลูกค้ารายนี้"
-                  >
-                    <i class="bi bi-briefcase"></i>
-                  </button>
-                  <button
-                    (click)="goToEdit(customer.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button
-                    (click)="toggleActive(customer)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-                    [class.text-emerald-500]="customer.isActive"
-                    [class.text-gray-400]="!customer.isActive"
-                    [class.hover:bg-emerald-50]="customer.isActive"
-                    [class.hover:bg-gray-100]="!customer.isActive"
-                    [class.dark:hover:bg-emerald-500/10]="customer.isActive"
-                    [class.dark:hover:bg-gray-700]="!customer.isActive"
-                    [title]="customer.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
-                  >
-                    <i
-                      class="bi"
-                      [class.bi-check-circle-fill]="customer.isActive"
-                      [class.bi-x-circle]="!customer.isActive"
-                    ></i>
-                  </button>
-                  <button
-                    (click)="deleteCustomer(customer.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลลูกค้า</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มลูกค้าใหม่</p>
-                  <button
-                    [routerLink]="['/feature/pm/pmrt01/new']"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- PAGINATION -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{
-          (currentPage() - 1) * pageSize() + 1
-        }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{
-          Math.min(currentPage() * pageSize(), totalItems())
-        }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
-      </div>
-
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="
-              page === currentPage()
-                ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-                : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
-            "
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
-// src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
-
-import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-
-import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
-import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
-
-@Component({
-  selector: 'app-pmrt01',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './pmrt01.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class Pmrt01Component implements OnInit {
-  private router = inject(Router);
-  private service = inject(Pmrt01AService);
-  private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
-  private navigation = inject(NavigationService);
-
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('customerCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
-  protected customers = signal<CustomerModel[]>([]);
-  protected totalItems = signal(0);
-  protected businessId = '';
-
-  // ===== Computed =====
-  protected filteredCustomers = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    let result = this.customers();
-    if (term) {
-      result = result.filter(
-        (c) =>
-          c.customerCode?.toLowerCase().includes(term) ||
-          c.companyNameEn?.toLowerCase().includes(term) ||
-          c.companyNameLocal?.toLowerCase().includes(term) ||
-          c.email?.toLowerCase().includes(term) ||
-          c.contactPerson?.toLowerCase().includes(term),
-      );
-    }
-    if (status === 'active') result = result.filter((c) => c.isActive);
-    else if (status === 'inactive') result = result.filter((c) => !c.isActive);
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof CustomerModel] ?? '';
-      const bVal = b[sortField as keyof CustomerModel] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return result;
-  });
-
-  protected paginatedCustomers = computed(() => {
-    const all = this.filteredCustomers();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
-
-  ngOnInit() {
-    this.businessId = localStorage.getItem('businessId') || '';
-    if (this.businessId) {
-      this.loadCustomers();
-    }
-  }
-
-  loadCustomers() {
-    this.isLoading.set(true);
-    const page = this.currentPage() - 1;
-    this.service
-      .getCustomers(this.businessId, page, this.pageSize(), this.searchTerm() || undefined)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (pageData) => {
-          this.customers.set(pageData.content);
-          this.totalItems.set(pageData.totalElements);
-        },
-        error: (err) => {
-          console.error('Load customers error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
-        },
-      });
-  }
-
-  // ===== Event Handlers =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadCustomers(); // โหลดข้อมูลใหม่
-  }
-
-  goToAdd() {
-     this.navigation.navigate(['/feature/pm/pmrt01/new']);
-  }
-
-  goToEdit(id: string | undefined) {
-    if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']); 
-  }
-
-  toggleActive(customer: CustomerModel) {
-    if (!customer.id) return;
-    const updated = { ...customer, isActive: !customer.isActive };
-    this.service.updateCustomer(customer.id, updated).subscribe({
-      next: () => {
-        this.loadCustomers();
-        this.dialog.success(
-          'อัปเดตสถานะสำเร็จ',
-          `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
-        );
-      },
-      error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
-      },
-    });
-  }
-
-  deleteCustomer(id: string | undefined) {
-    if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
-      return;
-    }
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
-      if (confirmed) {
-        this.service.deleteCustomer(id).subscribe({
-          next: () => {
-            this.loadCustomers();
-            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
-          },
-          error: (err) => {
-            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
-          },
-        });
-      }
-    });
-  }
-
-  // ===== Utility Methods =====
-  getStatusClass(isActive: boolean | undefined): string {
-    return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
-  }
-
-  getStatusText(isActive: boolean | undefined): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-
-  getInitials(companyName: string | undefined): string {
-    if (!companyName) return '?';
-    return companyName.charAt(0).toUpperCase();
-  }
-
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-
-  onImageError(event: Event) {
-    const img = event.target as HTMLImageElement;
-    img.style.display = 'none';
-  }
-  getImageUrl(customer: CustomerModel): string {
-    if (!customer.uploadGroupId) {
-      return '';
-    }
-    return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
-  }
-  goToProjects(customer: CustomerModel) {
-  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-  this.navigation.navigate(['/feature/pm/pmrt02'], {
-    queryParams: { customerId: customer.id }
-  });
-}
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.service.ts">
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -46449,82 +45862,387 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.service.ts">
-// src/app/feature/pm/rt/pmrt01A/pmrt01A.service.ts
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.html">
+<!-- src/app/feature/pm/rt/pmrt01/pmrt01.component.html -->
+<sic-flex direction="column" gap="1rem">
+  <!-- HEADER -->
+  <sic-flex direction="row" justify="between" align="center">
+    <div>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
+        รายการลูกค้า
+      </h1>
+      <sic-text color="muted" size="sm">จัดการข้อมูลลูกค้าทั้งหมด</sic-text>
+    </div>
+    <sic-button color="primary" (click)="goToAdd()">
+      <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
+    </sic-button>
+  </sic-flex>
 
-import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+  <!-- FILTER BAR -->
+  <sic-flex direction="row" gap="0.75rem" wrap="wrap">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร หรือรหัส..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
 
-import { CustomerModel } from './pmrt01A.model';
-import { environment } from '../../../../../../environments/environment';
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">🌐 ทั้งหมด</option>
+      <option value="active">✅ ใช้งาน</option>
+      <option value="inactive">⛔ ไม่ใช้งาน</option>
+    </select>
+  </sic-flex>
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+  <!-- GRID -->
+  <sic-card [bordered]="true" [elevated]="true">
+    <sic-gridpanel
+      #customerGrid
+      [config]="gridConfig"
+      (loadData)="handleGridLoad($event)"
+      (rowAction)="handleGridRowAction($event)"
+    >
+      <!-- Custom column: companyNameEn -->
+      <ng-template sicGridPanelTemplate="companyNameEn" section="cell" let-row>
+        <div class="flex items-center gap-3">
+          <sic-avatar
+            [name]="row.companyNameEn"
+            [src]="getImageUrl(row)"
+            size="sm"
+          ></sic-avatar>
+          <div class="min-w-0">
+            <div class="font-medium text-[var(--text-active)] truncate">
+              {{ row.companyNameEn }}
+            </div>
+            @if (row.companyNameLocal) {
+              <div class="text-xs text-[var(--text-muted)] truncate">
+                {{ row.companyNameLocal }}
+              </div>
+            }
+          </div>
+        </div>
+      </ng-template>
 
-@Injectable({ providedIn: 'root' })
-export class Pmrt01AService {
-  private http = inject(HttpClient);
-  private baseUrl = environment.apiBaseUrl + '/api/su-customer';
+      <!-- Custom column: isActive -->
+      <ng-template sicGridPanelTemplate="isActive" section="cell" let-row>
+        <span
+          class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+          [class.bg-emerald-100]="row.isActive"
+          [class.text-emerald-700]="row.isActive"
+          [class.bg-gray-100]="!row.isActive"
+          [class.text-gray-500]="!row.isActive"
+        >
+          {{ row.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+        </span>
+      </ng-template>
 
-  // Combobox endpoints
-  apiGetLovPersonType = environment.apiBaseUrl + '/api/business/lov-person-type';
-  apiGetComboboxTitle = environment.apiBaseUrl + '/api/business/combobox-title';
-  apiGetComboboxCountry = environment.apiBaseUrl + '/api/business/combobox-country';
-  apiGetComboboxProvince = environment.apiBaseUrl + '/api/business/combobox-province';
-  apiGetComboboxDistrict = environment.apiBaseUrl + '/api/business/combobox-district';
-  apiGetComboboxSubDistrict = environment.apiBaseUrl + '/api/business/combobox-sub-district';
+      <!-- Custom column: actions -->
+      <ng-template sicGridPanelTemplate="actions" section="cell" let-row>
+        <div class="flex items-center justify-center gap-1">
+          <sic-button
+            variant="ghost"
+            size="sm"
+            color="primary"
+            (click)="handleGridRowAction({ action: 'projects', row: row })"
+            title="ดูโครงการทั้งหมด"
+          >
+            <i class="bi bi-briefcase"></i>
+          </sic-button>
+          <sic-button
+            variant="ghost"
+            size="sm"
+            color="warning"
+            (click)="handleGridRowAction({ action: 'edit', row: row })"
+            title="แก้ไข"
+          >
+            <i class="bi bi-pencil"></i>
+          </sic-button>
+          <sic-button
+            variant="ghost"
+            size="sm"
+            [color]="row.isActive ? 'success' : 'primary'"
+            (click)="handleGridRowAction({ action: 'toggleActive', row: row })"
+            [title]="row.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
+          >
+            <i class="bi" [class.bi-check-circle-fill]="row.isActive" [class.bi-x-circle]="!row.isActive"></i>
+          </sic-button>
+          <sic-button
+            variant="ghost"
+            size="sm"
+            color="danger"
+            (click)="handleGridRowAction({ action: 'delete', row: row })"
+            title="ลบ"
+          >
+            <i class="bi bi-trash"></i>
+          </sic-button>
+        </div>
+      </ng-template>
+    </sic-gridpanel>
+  </sic-card>
+</sic-flex>
+</file>
 
-  // ===== CRUD =====
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01.component.ts">
+// src/app/feature/pm/rt/pmrt01/pmrt01.component.ts
+import { Component, inject, ViewChild, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import {
+  SicButtonComponent,
+  SicCardComponent,
+  SicFlexComponent,
+  SicGridPanelComponent,
+  SicGridPanelConfig,
+  SicGridLoadRequest,
+  SicGridRowData,
+  SicGridPanelTemplate,
+  SicAvatarComponent,
+  SicTextComponent,
+} from 'sic-ng';
+import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
+import { CustomerModel } from './pmrt01A/pmrt01A.model';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { environment } from '../../../../../environments/environment';
 
-  getCustomers(
-    businessId: string,
-    page: number,
-    size: number,
-    keyword?: string
-  ): Observable<PageResponse<CustomerModel>> {
-    let params = new HttpParams()
-      .set('businessId', businessId)
-      .set('page', page.toString())
-      .set('size', size.toString());
-    if (keyword) params = params.set('keyword', keyword);
-    return this.http.get<PageResponse<CustomerModel>>(this.baseUrl, { params });
+@Component({
+  selector: 'app-pmrt01',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    SicButtonComponent,
+    SicCardComponent,
+    SicFlexComponent,
+    SicGridPanelComponent,
+    SicGridPanelTemplate,
+    SicAvatarComponent,
+    SicTextComponent,
+  ],
+  templateUrl: './pmrt01.component.html',
+  styleUrls: ['./pmrt01.component.css'],
+})
+export class Pmrt01Component {
+  private service = inject(Pmrt01AService);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
+
+  @ViewChild('customerGrid') customerGrid!: SicGridPanelComponent;
+
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  businessId = localStorage.getItem('businessId') || '';
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    defaultSortField: 'customerCode',
+    pageSize: 10,
+    pageSizeOptions: [5, 10, 20, 50],
+    column: [
+      {
+        label: 'รหัส',
+        name: 'customerCode',
+        type: 'text',
+        sortable: true,
+        width: 120,
+      },
+      {
+        label: 'ชื่อบริษัท',
+        name: 'companyNameEn',
+        type: 'custom',
+        sortable: true,
+        minWidth: 220,
+      },
+      {
+        label: 'อีเมล',
+        name: 'email',
+        type: 'text',
+        sortable: true,
+        width: 200,
+      },
+      {
+        label: 'เบอร์โทร',
+        name: 'phoneNumber',
+        type: 'text',
+        sortable: true,
+        width: 140,
+      },
+      {
+        label: 'สถานะ',
+        name: 'isActive',
+        type: 'custom',
+        sortable: true,
+        width: 100,
+        align: 'center',
+      },
+      {
+        label: '',
+        name: 'actions',
+        type: 'custom',
+        width: 200,
+        align: 'center',
+      },
+    ],
+    toolbar: {
+      add: false,
+      save: false,
+      delete: false,
+      review: false,
+    },
+    selectable: false,
+  };
+
+  handleGridLoad(request: SicGridLoadRequest): void {
+    if (!this.businessId) {
+      this.customerGrid.setRows([], { totalElements: 0 }, request.requestId);
+      return;
+    }
+
+    // 🔥 ใช้ field ที่ถูกต้องตาม sic-ng
+    const page = request.pageNumber ?? 0;
+    const size = request.pageSize ?? 10;
+    const sortBy = request.sortField ?? 'customerCode';        // ✅ sortField
+    const sortDir = request.sortDescending ? 'desc' : 'asc';  
+    const keyword = this.searchTerm() || undefined;
+
+    this.service
+      .getCustomers(this.businessId, page, size, keyword, sortBy, sortDir)
+      .subscribe({
+        next: (pageData) => {
+          this.customerGrid.setRows(
+            pageData.content as any,
+            {
+              totalElements: pageData.totalElements,
+              totalPages: pageData.totalPages,
+              pageNumber: pageData.number,   
+              pageSize: pageData.size,     
+            },
+            request.requestId
+          );
+        },
+        error: (err) => {
+          console.error('Load customers error', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
+          this.customerGrid.setLoadError('เกิดข้อผิดพลาดในการโหลดข้อมูล', request.requestId);
+        },
+      });
   }
 
-  getCustomer(id: string): Observable<CustomerModel> {
-    return this.http.get<CustomerModel>(`${this.baseUrl}/${id}`);
+  handleGridRowAction(event: { action: string; row?: SicGridRowData | null }): void {
+    const row = event.row as unknown as CustomerModel;
+    if (!row) return;
+
+    if (event.action === 'edit') {
+      this.goToEdit(row.id);
+    } else if (event.action === 'delete') {
+      this.deleteCustomer(row.id);
+    } else if (event.action === 'projects') {
+      this.goToProjects(row);
+    } else if (event.action === 'toggleActive') {
+      this.toggleActive(row);
+    }
   }
 
-  createCustomer(businessId: string, data: CustomerModel): Observable<CustomerModel> {
-    const params = new HttpParams().set('businessId', businessId);
-    return this.http.post<CustomerModel>(this.baseUrl, data, { params });
+  // ===== Actions =====
+  goToAdd(): void {
+    this.navigation.navigate(['/feature/pm/pmrt01/new']);
   }
 
-  updateCustomer(id: string, data: CustomerModel): Observable<CustomerModel> {
-    return this.http.put<CustomerModel>(`${this.baseUrl}/${id}`, data);
+  goToEdit(id: string | undefined): void {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']);
   }
 
-  deleteCustomer(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  goToProjects(customer: CustomerModel): void {
+    this.customerState.setCustomer(customer.id!, customer.companyNameEn);
+    this.navigation.navigate(['/feature/pm/pmrt02'], {
+      queryParams: { customerId: customer.id },
+    });
   }
 
-  getActiveCustomers(businessId: string): Observable<CustomerModel[]> {
-    const params = new HttpParams().set('businessId', businessId);
-    return this.http.get<CustomerModel[]>(`${this.baseUrl}/active`, { params });
+  toggleActive(customer: CustomerModel): void {
+    if (!customer.id) return;
+    const updated = { ...customer, isActive: !customer.isActive };
+    this.service.updateCustomer(customer.id, updated).subscribe({
+      next: () => {
+        this.dialog.success('อัปเดตสถานะสำเร็จ', `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`);
+        this.customerGrid.reload();
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
+      },
+    });
   }
 
-  searchCustomers(businessId: string, keyword: string, page: number, size: number) {
-    const params = new HttpParams()
-      .set('businessId', businessId)
-      .set('keyword', keyword)
-      .set('page', page.toString())
-      .set('size', size.toString());
-    return this.http.get<PageResponse<CustomerModel>>(`${this.baseUrl}/search`, { params });
+  deleteCustomer(id: string | undefined): void {
+    if (!id) {
+      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
+      return;
+    }
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        this.service.deleteCustomer(id).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
+            this.customerGrid.reload();
+          },
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
+          },
+        });
+      }
+    });
+  }
+
+  // ===== Search / Filter =====
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.customerGrid.reload();
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.customerGrid.reload();
+  }
+
+  onFilterChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.customerGrid.reload();
+  }
+
+  // ===== Utility =====
+  getImageUrl(customer: CustomerModel): string {
+    if (!customer.uploadGroupId) return '';
+    return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
   }
 }
 </file>
@@ -57290,6 +57008,88 @@ export class DiscussionService {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.service.ts">
+// src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { CustomerModel } from './pmrt01A.model';
+import { environment } from '../../../../../../environments/environment';
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class Pmrt01AService {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl + '/api/su-customer';
+
+  // Combobox endpoints (คงเดิม)
+  apiGetLovPersonType = environment.apiBaseUrl + '/api/business/lov-person-type';
+  apiGetComboboxTitle = environment.apiBaseUrl + '/api/business/combobox-title';
+  apiGetComboboxCountry = environment.apiBaseUrl + '/api/business/combobox-country';
+  apiGetComboboxProvince = environment.apiBaseUrl + '/api/business/combobox-province';
+  apiGetComboboxDistrict = environment.apiBaseUrl + '/api/business/combobox-district';
+  apiGetComboboxSubDistrict = environment.apiBaseUrl + '/api/business/combobox-sub-district';
+
+  // ===== CRUD =====
+
+  getCustomers(
+    businessId: string,
+    page: number,
+    size: number,
+    keyword?: string,
+    sortBy?: string,
+    sortDir?: 'asc' | 'desc'
+  ): Observable<PageResponse<CustomerModel>> {
+    let params = new HttpParams()
+      .set('businessId', businessId)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (keyword) params = params.set('keyword', keyword);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    if (sortDir) params = params.set('sortDir', sortDir);
+    return this.http.get<PageResponse<CustomerModel>>(this.baseUrl, { params });
+  }
+
+  getCustomer(id: string): Observable<CustomerModel> {
+    return this.http.get<CustomerModel>(`${this.baseUrl}/${id}`);
+  }
+
+  createCustomer(businessId: string, data: CustomerModel): Observable<CustomerModel> {
+    const params = new HttpParams().set('businessId', businessId);
+    return this.http.post<CustomerModel>(this.baseUrl, data, { params });
+  }
+
+  updateCustomer(id: string, data: CustomerModel): Observable<CustomerModel> {
+    return this.http.put<CustomerModel>(`${this.baseUrl}/${id}`, data);
+  }
+
+  deleteCustomer(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  getActiveCustomers(businessId: string): Observable<CustomerModel[]> {
+    const params = new HttpParams().set('businessId', businessId);
+    return this.http.get<CustomerModel[]>(`${this.baseUrl}/active`, { params });
+  }
+
+  searchCustomers(businessId: string, keyword: string, page: number, size: number) {
+    const params = new HttpParams()
+      .set('businessId', businessId)
+      .set('keyword', keyword)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<PageResponse<CustomerModel>>(`${this.baseUrl}/search`, { params });
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/feature.component.ts">
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -61466,6 +61266,290 @@ export class Pmdt01Component implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts">
+// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import type { ApprovalStatus } from '../pmdt03/approval.model';
+import { ApprovalService } from '../pmdt03/approval.service';
+
+interface Requirement {
+  id: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  requirementType: string;
+  source: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName?: string;
+  createdBy: string;
+  baConfirmStatus: string;
+  customerConfirmStatus: string;
+  version: string;
+  status: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  rowVersion?: number;
+  approvalStatus?: ApprovalStatus | null;
+}
+
+@Component({
+  selector: 'app-pmdt04',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt04.component.html',
+})
+export class Pmdt04Component implements OnInit {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
+  private navigation = inject(NavigationService);
+  public customerState = inject(CustomerStateService); // ✅ เปลี่ยนเป็น public
+
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('requirementCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+  protected requirements = signal<Requirement[]>([]);
+  protected totalItems = signal(0);
+
+  // ===== Computed =====
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  protected Math = Math;
+
+  ngOnInit() {
+    this.loadRequirements();
+  }
+
+  // ===== Load Data =====
+  loadRequirements() {
+    const projectId = this.customerState.getProjectId();
+    if (!projectId) {
+      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+      return;
+    }
+
+    this.isLoading.set(true);
+    const params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString())
+      .set('keyword', this.searchTerm() || '')
+      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
+      .set('sortBy', this.sortBy())
+      .set('sortDir', this.sortDir())
+      .set('projectId', projectId);
+
+    this.http
+      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          const data = res.data || [];
+          this.requirements.set(data);
+          this.totalItems.set(res.totalElements || 0);
+          this.loadApprovalStatuses(data);
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
+          this.requirements.set([]);
+          this.totalItems.set(0);
+        },
+      });
+  }
+
+  loadApprovalStatuses(requirements: Requirement[]) {
+    requirements.forEach((req) => {
+      this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
+        next: (approval) => {
+          this.requirements.update((list) =>
+            list.map((item) =>
+              item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
+            ),
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
+        },
+      });
+    });
+  }
+
+  // ===== Event Handlers =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+    this.loadRequirements();
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadRequirements();
+  }
+
+  // ===== Navigation =====
+  goToAdd() {
+    this.navigation.navigate(['/feature/pm/requirement/new']);
+  }
+
+  goToEdit(id: string) {
+    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+  }
+
+  goToView(id: string) {
+    const projectId = this.customerState.getProjectId();
+    const requirement = this.requirements().find(r => r.id === id);
+    this.navigation.navigate(['/feature/pm/pmrt05'], {
+      queryParams: {
+        requirementId: id,
+        projectId: projectId,
+        requirementTitle: requirement?.title || ''
+      }
+    });
+  }
+
+  deleteRequirement(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
+            this.loadRequirements();
+          },
+          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
+        });
+      }
+    });
+  }
+
+  // ===== Utility =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || map['Draft'];
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      Approved: 'อนุมัติแล้ว',
+      Changed: 'เปลี่ยนแปลง',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return map[priority] || map["Won't"];
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05-preview/pmdt05-preview.component.ts">
 import { Component, inject, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -65447,6 +65531,7 @@ public/images/
 *.json
 *.gitattributes
 *.css
+*.mjs
 
 # ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
 **/Migrations/
@@ -66707,290 +66792,6 @@ export class Pmdt02Component implements OnInit {
 
     </div>
   </form>
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts">
-// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import type { ApprovalStatus } from '../pmdt03/approval.model';
-import { ApprovalService } from '../pmdt03/approval.service';
-
-interface Requirement {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  requirementType: string;
-  source: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  rowVersion?: number;
-  approvalStatus?: ApprovalStatus | null;
-}
-
-@Component({
-  selector: 'app-pmdt04',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt04.component.html',
-})
-export class Pmdt04Component implements OnInit {
-  private http = inject(HttpClient);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private approvalService = inject(ApprovalService);
-  private navigation = inject(NavigationService);
-  public customerState = inject(CustomerStateService); // ✅ เปลี่ยนเป็น public
-
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('requirementCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
-  protected requirements = signal<Requirement[]>([]);
-  protected totalItems = signal(0);
-
-  // ===== Computed =====
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
-
-  ngOnInit() {
-    this.loadRequirements();
-  }
-
-  // ===== Load Data =====
-  loadRequirements() {
-    const projectId = this.customerState.getProjectId();
-    if (!projectId) {
-      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
-      this.navigation.navigate(['/feature/pm/pmrt02']);
-      return;
-    }
-
-    this.isLoading.set(true);
-    const params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString())
-      .set('keyword', this.searchTerm() || '')
-      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
-      .set('sortBy', this.sortBy())
-      .set('sortDir', this.sortDir())
-      .set('projectId', projectId);
-
-    this.http
-      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (res) => {
-          const data = res.data || [];
-          this.requirements.set(data);
-          this.totalItems.set(res.totalElements || 0);
-          this.loadApprovalStatuses(data);
-        },
-        error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
-          this.requirements.set([]);
-          this.totalItems.set(0);
-        },
-      });
-  }
-
-  loadApprovalStatuses(requirements: Requirement[]) {
-    requirements.forEach((req) => {
-      this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
-        next: (approval) => {
-          this.requirements.update((list) =>
-            list.map((item) =>
-              item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
-            ),
-          );
-        },
-        error: () => {
-          // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
-        },
-      });
-    });
-  }
-
-  // ===== Event Handlers =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadRequirements();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadRequirements();
-  }
-
-  // ===== Navigation =====
-  goToAdd() {
-    this.navigation.navigate(['/feature/pm/requirement/new']);
-  }
-
-  goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
-  }
-
-  goToView(id: string) {
-    const projectId = this.customerState.getProjectId();
-    const requirement = this.requirements().find(r => r.id === id);
-    this.navigation.navigate(['/feature/pm/pmrt05'], {
-      queryParams: {
-        requirementId: id,
-        projectId: projectId,
-        requirementTitle: requirement?.title || ''
-      }
-    });
-  }
-
-  deleteRequirement(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
-      if (ok) {
-        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
-          next: () => {
-            this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
-            this.loadRequirements();
-          },
-          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
-        });
-      }
-    });
-  }
-
-  // ===== Utility =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Draft'];
-  }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  getPriorityClass(priority: string): string {
-    const map: Record<string, string> = {
-      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return map[priority] || map["Won't"];
-  }
-
-  getApprovalStatusClass(status?: string): string {
-    const map: Record<string, string> = {
-      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
-  }
-
-  getApprovalStatusText(status?: string): string {
-    const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
-    };
-    return status ? map[status] || '-' : '-';
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
 }
 </file>
 
@@ -71512,6 +71313,318 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts">
+// src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { BusinessService } from '../../../../../core/services/business.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { Pmrt02Service } from '../../../rt/pmrt02/pmrt02.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { ApprovalService } from '../../pmdt03/approval.service';
+
+interface Requirement {
+  id?: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName?: string;
+  createdBy: string;
+  baConfirmStatus: string;
+  customerConfirmStatus: string;
+  version: string;
+  status?: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}
+
+@Component({
+  selector: 'app-pmdt04a',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicComboboxComponent,
+    SicInputComponent,
+    SicInputAreaComponent,
+    SicNumberComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt04A.component.html',
+})
+export class Pmdt04AComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
+  private businessService = inject(BusinessService);
+  private projectService = inject(Pmrt02Service);
+  private cdr = inject(ChangeDetectorRef);
+  apiBaseUrl = environment.apiBaseUrl;
+
+  form!: FormGroup;
+  isEdit = false;
+  reqId: string | null = null;
+  isLoading = false;
+  isSaving = false;
+  projectId: string | null = null;
+  projectName = '';
+
+  // Approval
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
+
+  // Combobox URLs
+  priorityApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
+  businessValueApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-business-value`;
+  documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
+
+  // User combobox
+  userApiUrl = '';
+  businessId: string | null = null;
+
+  readonly ENTITY_STATE = SicEntityState;
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadFlows();
+
+    // Load business id for user combobox
+    this.businessId = this.businessService.getCurrentBusinessId();
+    if (this.businessId) {
+      this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${this.businessId}`;
+    } else {
+      const stored = localStorage.getItem('businessId');
+      if (stored) {
+        this.businessId = stored;
+        this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${stored}`;
+      }
+    }
+
+    // รับ projectId จาก queryParams (กรณีสร้างใหม่)
+    this.route.queryParams.subscribe((params) => {
+      const projectId = params['projectId'];
+      if (projectId) {
+        this.projectId = projectId;
+        this.loadProjectName(projectId);
+        this.form.patchValue({ projectId });
+      }
+    });
+
+    // รับ id สำหรับแก้ไข
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.reqId = id;
+        this.loadRequirement(id);
+      }
+    });
+  }
+
+  initForm() {
+    this.form = this.fb.group({
+      id: [null],
+      requirementCode: [null, [Validators.required, Validators.maxLength(30)]],
+      title: [null, [Validators.required, Validators.maxLength(255)]],
+      description: [null, [Validators.required, Validators.maxLength(2000)]],
+      priority: ['Must', [Validators.required]],
+      businessValue: [null],
+      acceptanceCriteria: [null],
+      projectId: [null, [Validators.required]],
+      projectName: [{ value: null, disabled: true }],
+      createdBy: [null],
+      baConfirmStatus: ['Pending'],
+      customerConfirmStatus: ['Pending'],
+      version: [{ value: 'v1.0', disabled: true }],
+      // ✅ ไม่มี status แล้ว
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
+      approvalFlowId: [null],
+    });
+  }
+
+  loadProjectName(projectId: string) {
+    this.projectService.getProject(projectId).subscribe({
+      next: (project) => {
+        this.projectName = project.projectName;
+        this.form.patchValue({ projectName: this.projectName });
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.dialog.warn('ไม่พบโครงการ', 'ไม่สามารถโหลดชื่อโครงการได้');
+      },
+    });
+  }
+
+  loadRequirement(id: string) {
+    this.isLoading = true;
+    this.http
+      .get<Requirement>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          this.form.patchValue(data);
+          this.projectId = data.projectId;
+          if (data.projectId) {
+            this.loadProjectName(data.projectId);
+          }
+          if (data.projectName) {
+            this.projectName = data.projectName;
+            this.form.patchValue({ projectName: data.projectName });
+          }
+
+          if (!data.version) {
+            this.form.patchValue({ version: 'v1.0' });
+          }
+
+          this.loadApprovalFlowForRequirement(id);
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
+          this.router.navigate(['/feature/pm/requirement']);
+        },
+      });
+  }
+
+  loadApprovalFlowForRequirement(requirementId: string) {
+    this.approvalService.getDocumentStatus('REQUIREMENT', requirementId).subscribe({
+      next: (approval) => {
+        let flowId: string | null = null;
+        if (approval && (approval as any).flowId) {
+          flowId = (approval as any).flowId;
+        } else if (approval && (approval as any).flow?.id) {
+          flowId = (approval as any).flow.id;
+        }
+        if (flowId) {
+          this.selectedFlowId = flowId;
+          this.form.patchValue({ approvalFlowId: flowId });
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // ไม่มี approval หรือ error – ไม่ต้องทำอะไร
+      }
+    });
+  }
+
+  loadFlows() {
+    this.isLoadingFlows = true;
+    this.approvalService
+      .getFlowsByDocumentType('REQUIREMENT')
+      .pipe(finalize(() => (this.isLoadingFlows = false)))
+      .subscribe({
+        next: (flows) => {
+          this.flows = flows;
+          if (flows.length === 1) {
+            this.selectedFlowId = flows[0].id;
+            this.form.patchValue({ approvalFlowId: flows[0].id });
+          }
+        },
+        error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
+      });
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      return;
+    }
+
+    this.isSaving = true;
+    const data = this.form.value;
+
+    if (this.isEdit) {
+      data.state = this.ENTITY_STATE.Modified;
+    } else {
+      data.state = this.ENTITY_STATE.Added;
+      data.rowVersion = 0;
+    }
+
+    delete data.projectName;
+
+    const url = `${environment.apiBaseUrl}/api/pm/requirement/save`;
+
+    this.http
+      .post(url, data)
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: (res: any) => {
+          const id = (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
+          
+          if (this.selectedFlowId && id) {
+            this.approvalService
+              .submitForApproval({
+                documentType: 'REQUIREMENT',
+                documentId: id,
+                documentCode: data.requirementCode,
+                documentTitle: data.title,
+                flowId: this.selectedFlowId,
+                comment: 'ส่งขออนุมัติ Requirement',
+              })
+              .subscribe({
+                next: () => {
+                  this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อยแล้ว');
+                  this.form.markAsPristine();
+                  this.navigateBackToRequirementList();
+                },
+                error: (err) => {
+                  this.dialog.error('ส่งอนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+                }
+              });
+          } else {
+            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+            this.form.markAsPristine();
+            this.navigateBackToRequirementList();
+          }
+        },
+        error: (err) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  private navigateBackToRequirementList() {
+    const projectId = this.projectId;
+    if (projectId) {
+      this.router.navigate(['/feature/pm/requirement'], {
+        queryParams: { projectId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/requirement']);
+    }
+  }
+
+  onBack() {
+    this.navigateBackToRequirementList();
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts">
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
@@ -72998,318 +73111,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             return specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
         }
     }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts">
-// src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
-import { SicEntityState } from '../../../../../core/model/sic-entity-state';
-import { BusinessService } from '../../../../../core/services/business.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { Pmrt02Service } from '../../../rt/pmrt02/pmrt02.service';
-import type { ApprovalFlow } from '../../pmdt03/approval.model';
-import { ApprovalService } from '../../pmdt03/approval.service';
-
-interface Requirement {
-  id?: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status?: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
-
-@Component({
-  selector: 'app-pmdt04a',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicNumberComponent,
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt04A.component.html',
-})
-export class Pmdt04AComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private approvalService = inject(ApprovalService);
-  private businessService = inject(BusinessService);
-  private projectService = inject(Pmrt02Service);
-  private cdr = inject(ChangeDetectorRef);
-  apiBaseUrl = environment.apiBaseUrl;
-
-  form!: FormGroup;
-  isEdit = false;
-  reqId: string | null = null;
-  isLoading = false;
-  isSaving = false;
-  projectId: string | null = null;
-  projectName = '';
-
-  // Approval
-  flows: ApprovalFlow[] = [];
-  selectedFlowId: string | null = null;
-  isLoadingFlows = false;
-
-  // Combobox URLs
-  priorityApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
-  businessValueApiUrl = `${environment.apiBaseUrl}/api/pm/requirement/lov-business-value`;
-  documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
-
-  // User combobox
-  userApiUrl = '';
-  businessId: string | null = null;
-
-  readonly ENTITY_STATE = SicEntityState;
-
-  ngOnInit(): void {
-    this.initForm();
-    this.loadFlows();
-
-    // Load business id for user combobox
-    this.businessId = this.businessService.getCurrentBusinessId();
-    if (this.businessId) {
-      this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${this.businessId}`;
-    } else {
-      const stored = localStorage.getItem('businessId');
-      if (stored) {
-        this.businessId = stored;
-        this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${stored}`;
-      }
-    }
-
-    // รับ projectId จาก queryParams (กรณีสร้างใหม่)
-    this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'];
-      if (projectId) {
-        this.projectId = projectId;
-        this.loadProjectName(projectId);
-        this.form.patchValue({ projectId });
-      }
-    });
-
-    // รับ id สำหรับแก้ไข
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.reqId = id;
-        this.loadRequirement(id);
-      }
-    });
-  }
-
-  initForm() {
-    this.form = this.fb.group({
-      id: [null],
-      requirementCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required, Validators.maxLength(2000)]],
-      priority: ['Must', [Validators.required]],
-      businessValue: [null],
-      acceptanceCriteria: [null],
-      projectId: [null, [Validators.required]],
-      projectName: [{ value: null, disabled: true }],
-      createdBy: [null],
-      baConfirmStatus: ['Pending'],
-      customerConfirmStatus: ['Pending'],
-      version: [{ value: 'v1.0', disabled: true }],
-      // ✅ ไม่มี status แล้ว
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-      approvalFlowId: [null],
-    });
-  }
-
-  loadProjectName(projectId: string) {
-    this.projectService.getProject(projectId).subscribe({
-      next: (project) => {
-        this.projectName = project.projectName;
-        this.form.patchValue({ projectName: this.projectName });
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.dialog.warn('ไม่พบโครงการ', 'ไม่สามารถโหลดชื่อโครงการได้');
-      },
-    });
-  }
-
-  loadRequirement(id: string) {
-    this.isLoading = true;
-    this.http
-      .get<Requirement>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
-      .pipe(finalize(() => (this.isLoading = false)))
-      .subscribe({
-        next: (data) => {
-          this.form.patchValue(data);
-          this.projectId = data.projectId;
-          if (data.projectId) {
-            this.loadProjectName(data.projectId);
-          }
-          if (data.projectName) {
-            this.projectName = data.projectName;
-            this.form.patchValue({ projectName: data.projectName });
-          }
-
-          if (!data.version) {
-            this.form.patchValue({ version: 'v1.0' });
-          }
-
-          this.loadApprovalFlowForRequirement(id);
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
-          this.router.navigate(['/feature/pm/requirement']);
-        },
-      });
-  }
-
-  loadApprovalFlowForRequirement(requirementId: string) {
-    this.approvalService.getDocumentStatus('REQUIREMENT', requirementId).subscribe({
-      next: (approval) => {
-        let flowId: string | null = null;
-        if (approval && (approval as any).flowId) {
-          flowId = (approval as any).flowId;
-        } else if (approval && (approval as any).flow?.id) {
-          flowId = (approval as any).flow.id;
-        }
-        if (flowId) {
-          this.selectedFlowId = flowId;
-          this.form.patchValue({ approvalFlowId: flowId });
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        // ไม่มี approval หรือ error – ไม่ต้องทำอะไร
-      }
-    });
-  }
-
-  loadFlows() {
-    this.isLoadingFlows = true;
-    this.approvalService
-      .getFlowsByDocumentType('REQUIREMENT')
-      .pipe(finalize(() => (this.isLoadingFlows = false)))
-      .subscribe({
-        next: (flows) => {
-          this.flows = flows;
-          if (flows.length === 1) {
-            this.selectedFlowId = flows[0].id;
-            this.form.patchValue({ approvalFlowId: flows[0].id });
-          }
-        },
-        error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
-      });
-  }
-
-  submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
-    }
-
-    this.isSaving = true;
-    const data = this.form.value;
-
-    if (this.isEdit) {
-      data.state = this.ENTITY_STATE.Modified;
-    } else {
-      data.state = this.ENTITY_STATE.Added;
-      data.rowVersion = 0;
-    }
-
-    delete data.projectName;
-
-    const url = `${environment.apiBaseUrl}/api/pm/requirement/save`;
-
-    this.http
-      .post(url, data)
-      .pipe(finalize(() => (this.isSaving = false)))
-      .subscribe({
-        next: (res: any) => {
-          const id = (typeof res === 'string' ? res : res?.id || res?.data?.id) || data.id || this.reqId;
-          
-          if (this.selectedFlowId && id) {
-            this.approvalService
-              .submitForApproval({
-                documentType: 'REQUIREMENT',
-                documentId: id,
-                documentCode: data.requirementCode,
-                documentTitle: data.title,
-                flowId: this.selectedFlowId,
-                comment: 'ส่งขออนุมัติ Requirement',
-              })
-              .subscribe({
-                next: () => {
-                  this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อยแล้ว');
-                  this.form.markAsPristine();
-                  this.navigateBackToRequirementList();
-                },
-                error: (err) => {
-                  this.dialog.error('ส่งอนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
-                }
-              });
-          } else {
-            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
-            this.form.markAsPristine();
-            this.navigateBackToRequirementList();
-          }
-        },
-        error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  private navigateBackToRequirementList() {
-    const projectId = this.projectId;
-    if (projectId) {
-      this.router.navigate(['/feature/pm/requirement'], {
-        queryParams: { projectId },
-      });
-    } else {
-      this.router.navigate(['/feature/pm/requirement']);
-    }
-  }
-
-  onBack() {
-    this.navigateBackToRequirementList();
-  }
 }
 </file>
 

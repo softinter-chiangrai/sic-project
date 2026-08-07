@@ -13,19 +13,21 @@ import com.softinter.sicapi.entity.enums.ApprovalStatus;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
+
 public interface ApprovalService {
 
     ApprovalResponse submitForApproval(ApprovalSubmitRequest request);
 
     ApprovalResponse getApproval(UUID id);
 
-    PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page, int size);
+    PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, Pageable pageable);
 
-    PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, int page, int size);
+    PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, Pageable pageable);
 
-    PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, int page, int size);
+    PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, Pageable pageable);
 
-    PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size);
+    PaginationResponse<ApprovalResponse> getMyRequests(String userId, Pageable pageable);
 
     PaginationResponse<ApprovalResponse> searchApprovals(ApprovalSearchRequest request);
 

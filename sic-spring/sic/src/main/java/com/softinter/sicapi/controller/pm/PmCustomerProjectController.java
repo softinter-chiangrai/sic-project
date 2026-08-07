@@ -13,9 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/pm/customer-projects")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "PmCustomerProject", description = "API สำหรับจัดการโครงการของลูกค้า")
+@Tag(name = "Customer Project", description = "จัดการข้อมูลโครงการของลูกค้า")
 public class PmCustomerProjectController {
 
     private final PmCustomerProjectService projectService;
@@ -36,13 +36,9 @@ public class PmCustomerProjectController {
     public ResponseEntity<PaginationResponse<PmCustomerProjectResponse>> getProjects(
             @RequestParam UUID customerId,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.ASC) Pageable pageable) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Pageable pageable = buildPageable(page, size, sortBy, sortDir);
 
         Page<PmCustomerProjectResponse> pageResult;
         if (keyword != null && !keyword.isBlank()) {
@@ -51,7 +47,7 @@ public class PmCustomerProjectController {
             pageResult = projectService.findByCustomerId(customerId, businessId, pageable);
         }
 
-        return ResponseEntity.ok(PaginationUtil.of(pageResult.getContent(), page - 1, size, pageResult.getTotalElements()));
+        return ResponseEntity.ok(PaginationUtil.of(pageResult.getContent(), pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements()));
     }
 
     @GetMapping("/{id}")
@@ -85,14 +81,5 @@ public class PmCustomerProjectController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         projectService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Pageable buildPageable(int page, int size, String sortBy, String sortDir) {
-        if (sortBy == null || sortBy.isBlank()) {
-            sortBy = "createdDate";
-        }
-        Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("desc"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-        return PageRequest.of(page - 1, size, Sort.by(direction, sortBy));
     }
 }

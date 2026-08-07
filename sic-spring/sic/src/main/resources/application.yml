@@ -54,6 +54,11 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true   
+
 app:
   keycloak:
     realm: sic-project
@@ -86,7 +91,7 @@ logging:
     console: "%msg%n"
   level:
     root: INFO
-    com.softinter.sicapi:  DEBUG 
+    com.softinter.sicapi: DEBUG
     org.springframework.mail: DEBUG
     com.softinter.sicapi.service.impl: ERROR
     org.springframework.security: WARN

@@ -13,8 +13,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/pm/contracts")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "PmCustomerContract", description = "API สำหรับสัญญาลูกค้า")
+@Tag(name = "Customer Contract", description = "จัดการข้อมูลสัญญาของลูกค้า")
 public class PmCustomerContractController {
 
     private final PmCustomerContractService contractService;
@@ -38,13 +39,9 @@ public class PmCustomerContractController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String contractType,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "contractNo") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
+            @PageableDefault(size = 10, sort = "contractNo", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         UUID businessId = businessAccessService.getBusinessId();
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
         return ResponseEntity.ok(
                 contractService.getContracts(businessId, keyword, status, contractType, pageable)
         );

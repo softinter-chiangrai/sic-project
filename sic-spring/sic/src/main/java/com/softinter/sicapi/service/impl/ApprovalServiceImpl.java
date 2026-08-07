@@ -206,48 +206,43 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, int page,
-            int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return PaginationUtil.of(data, page, size, pageResult.getTotalElements());
+        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").ascending());
+    public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return PaginationUtil.of(data, page, size, pageResult.getTotalElements());
+        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
+    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository.findApprovedHistoryByApprover(userId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return PaginationUtil.of(data, page, size, pageResult.getTotalElements());
+        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getMyRequests(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("requestedDate").descending());
+    public PaginationResponse<ApprovalResponse> getMyRequests(String userId, Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository
                 .findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return PaginationUtil.of(data, page, size, pageResult.getTotalElements());
+        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
     }
 
     @Override

@@ -5,9 +5,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,22 +58,18 @@ public class PmRequirementController {
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) UUID projectId,   
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size,
-        @RequestParam(defaultValue = "requirementCode") String sortBy,
-        @RequestParam(defaultValue = "asc") String sortDir) {
+        @PageableDefault(size = 10, sort = "requirementCode", direction = Sort.Direction.ASC) Pageable pageable) {
 
-    UUID businessId = BusinessContextHolder.getBusinessId();
-    if (businessId == null) {
-        return ResponseEntity.badRequest().build();
-    }
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-    Page<PmRequirementResponse> pageResult = requirementService.findAll(businessId, projectId, keyword, status, pageable);
+        Page<PmRequirementResponse> pageResult = requirementService.findAll(businessId, projectId, keyword, status, pageable);
         PaginationResponse<PmRequirementResponse> response = PaginationUtil.of(
                 pageResult.getContent(),
-                pageResult.getNumber(),
-                pageResult.getSize(),
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
                 pageResult.getTotalElements()
         );
         return ResponseEntity.ok(response);

@@ -6,6 +6,9 @@ package com.softinter.sicapi.controller.pm;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -118,36 +121,32 @@ public class PmApprovalController {
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getByDocument(
             @RequestParam String documentType,
             @RequestParam UUID documentId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(approvalService.getApprovalsByDocument(documentType, documentId, page, size));
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(approvalService.getApprovalsByDocument(documentType, documentId, pageable));
     }
 
     @GetMapping("/pending")
     @Operation(summary = "Get pending approvals for current user")
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getPending(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.ASC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getPendingApprovals(userId, page, size));
+        return ResponseEntity.ok(approvalService.getPendingApprovals(userId, pageable));
     }
 
     @GetMapping("/history")
     @Operation(summary = "Get approval history for current user")
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getApprovedHistory(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.DESC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getApprovedHistory(userId, page, size));
+        return ResponseEntity.ok(approvalService.getApprovedHistory(userId, pageable));
     }
 
     @GetMapping("/my-requests")
     @Operation(summary = "Get my approval requests")
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getMyRequests(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.DESC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getMyRequests(userId, page, size));
+        return ResponseEntity.ok(approvalService.getMyRequests(userId, pageable));
     }
 
     @GetMapping("/search")
