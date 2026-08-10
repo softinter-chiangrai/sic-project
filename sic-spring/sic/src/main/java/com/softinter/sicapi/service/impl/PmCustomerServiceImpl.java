@@ -103,8 +103,8 @@ public class PmCustomerServiceImpl implements PmCustomerService {
      @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerResponse> findAllByBusiness(UUID businessId, Pageable pageable) {
-        // ✅ ใช้เมธอดที่มี JOIN FETCH
-        return PmCustomerRepository.findByBusinessIdAndIsActiveTrueWithFetch(businessId, pageable)
+        // ✅ ใช้เมธอดที่โหลดลูกค้าทั้งหมด (ทั้ง active และ inactive)
+        return PmCustomerRepository.findByBusinessIdWithFetch(businessId, pageable)
                 .map(this::toResponse);
     }
 

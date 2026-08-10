@@ -21,6 +21,7 @@ import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
 import { SicCardComponent } from '../sic-card/sic-card.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import {
   BusinessInfoModel,
   MenuItemModel,
@@ -28,13 +29,6 @@ import {
   SidebarItem,
 } from './sic-sidebar.model';
 import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
-
-interface BreadcrumbItem {
-  label: string;
-  url: string | null;
-  icon?: string;
-  isCurrent?: boolean;
-}
 
 @Component({
   selector: 'sic-sidebar',
@@ -61,6 +55,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly languageService = inject(LanguageService);
   private readonly dialog = inject(DialogService);
   private readonly service = inject(SicSidebarService);
+  private readonly breadcrumbService = inject(BreadcrumbService);
   public readonly router = inject(Router);
 
   private readonly ngZone = inject(NgZone);
@@ -83,9 +78,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
   readonly datetime = signal('--/--/---- --:--:--');
-  readonly breadcrumbs = signal<BreadcrumbItem[]>([
-    { label: 'Home', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
-  ]);
+  readonly breadcrumbs = this.breadcrumbService.breadcrumbs;
 
   // signal เก็บ URL ปัจจุบัน — อัปเดตทุกครั้งที่ route เปลี่ยน
   // template อ่าน signal นี้โดยตรง → Angular re-render อัตโนมัติ
@@ -228,32 +221,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   }
 
   private updateBreadcrumbs(): void {
-    const home: BreadcrumbItem = {
-      label: 'Home',
-      url: '/feature/dashboard',
-      icon: 'bi-house-door',
-    };
-    const activeTrail = this.findActiveTrail(this.mainMenu(), this.currentUrl()) ?? [];
-    const trailWithoutDashboard = activeTrail.filter(
-      (item) => item.code !== this.DASHBOARD_ITEM.code,
-    );
-    const breadcrumbItems: BreadcrumbItem[] = [home];
-
-    for (const item of trailWithoutDashboard) {
-      breadcrumbItems.push({
-        label: item.label,
-        url: item.children?.length ? null : this.getItemLink(item.path),
-        icon: item.icon,
-      });
-    }
-
-    this.breadcrumbs.set(
-      breadcrumbItems.map((item, index) => ({
-        ...item,
-        isCurrent: index === breadcrumbItems.length - 1,
-        url: index === breadcrumbItems.length - 1 ? null : item.url,
-      })),
-    );
+    this.breadcrumbService.setMenuItems(this.mainMenu());
   }
 
   private findActiveTrail(

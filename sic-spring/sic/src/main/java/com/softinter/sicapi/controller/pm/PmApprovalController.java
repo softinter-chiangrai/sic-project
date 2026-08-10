@@ -6,6 +6,7 @@ package com.softinter.sicapi.controller.pm;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -173,7 +174,9 @@ public class PmApprovalController {
     public ResponseEntity<ApprovalResponse> getDocumentStatus(
             @RequestParam String documentType,
             @RequestParam UUID documentId) {
-        PaginationResponse<ApprovalResponse> result = approvalService.getApprovalsByDocument(documentType, documentId, 0, 1);
+        PaginationResponse<ApprovalResponse> result = approvalService.getApprovalsByDocument(
+            documentType, documentId, PageRequest.of(0, 1)
+        );
         if (result.getData().isEmpty()) {
             return ResponseEntity.notFound().build();
         }

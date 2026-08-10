@@ -244,7 +244,7 @@
 
           @if (crumb.url && !crumb.isCurrent) {
           <a [routerLink]="crumb.url"
-            class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)]"
+            class="inline-flex items-center gap-2 rounded-md px-1 py-0.5 no-underline transition-colors hover:text-[var(--crm-primary)] cursor-pointer"
             [class.text-[var(--crm-primary)]]="$index === 0" [class.text-[var(--text-muted)]]="$index !== 0">
             @if (crumb.icon) {
             <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>

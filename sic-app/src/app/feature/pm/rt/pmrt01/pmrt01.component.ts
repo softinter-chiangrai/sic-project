@@ -67,6 +67,7 @@ export class Pmrt01Component {
         label: 'ชื่อบริษัท',
         name: 'companyNameEn',
         type: 'custom',
+        customTemplate: 'companyNameEn',
         sortable: true,
         minWidth: 220,
       },
@@ -88,6 +89,7 @@ export class Pmrt01Component {
         label: 'สถานะ',
         name: 'isActive',
         type: 'custom',
+        customTemplate: 'isActive',
         sortable: true,
         width: 100,
         align: 'center',
@@ -96,6 +98,7 @@ export class Pmrt01Component {
         label: '',
         name: 'actions',
         type: 'custom',
+        customTemplate: 'actions',
         width: 200,
         align: 'center',
       },
@@ -126,10 +129,18 @@ export class Pmrt01Component {
       .getCustomers(this.businessId, page, size, keyword, sortBy, sortDir)
       .subscribe({
         next: (pageData) => {
+          let content = pageData.content || [];
+          const statusFilter = this.filterStatus();
+          if (statusFilter === 'active') {
+            content = content.filter((item) => item.isActive);
+          } else if (statusFilter === 'inactive') {
+            content = content.filter((item) => !item.isActive);
+          }
+
           this.customerGrid.setRows(
-            pageData.content as any,
+            content as any,
             {
-              totalElements: pageData.totalElements,
+              totalElements: statusFilter === 'all' ? pageData.totalElements : content.length,
               totalPages: pageData.totalPages,
               pageNumber: pageData.number,   
               pageSize: pageData.size,     

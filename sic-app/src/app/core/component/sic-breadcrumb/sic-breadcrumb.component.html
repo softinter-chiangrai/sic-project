@@ -1,8 +1,12 @@
 <nav class="sic-breadcrumb" aria-label="Breadcrumb">
-  @for (item of items; track item.label; let last = $last) {
+  @for (item of displayItems; track item.label + $index; let last = $last) {
     <span class="sic-breadcrumb__item">
-      @if (item.link && !last) {
-        <a class="sic-breadcrumb__link" (click)="itemClick.emit(item)">{{ item.label }}</a>
+      @if ((item.link || item.url) && !last) {
+        @if (item.url) {
+          <a class="sic-breadcrumb__link" [routerLink]="item.url" (click)="itemClick.emit(item)">{{ item.label }}</a>
+        } @else {
+          <a class="sic-breadcrumb__link" (click)="itemClick.emit(item)">{{ item.label }}</a>
+        }
       } @else {
         <span class="sic-breadcrumb__current">{{ item.label }}</span>
       }
