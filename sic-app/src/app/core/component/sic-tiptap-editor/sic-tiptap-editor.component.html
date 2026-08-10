@@ -1,18 +1,56 @@
-<div
-  class="sic-tiptap-editor"
-  [class.disabled]="disabled()"
-  [style.min-height]="minHeight()"
-  [style.max-height]="maxHeight()"
->
-  <angular-tiptap-editor
-    [config]="editorConfig()"
-    [content]="content()"
-    [editable]="!disabled()"
-    (contentChange)="onContentChange($event)"
-  ></angular-tiptap-editor>
+<!-- src/app/core/component/sic-tiptap-editor/sic-tiptap-editor.component.html -->
 
-  <!-- Validation Error (แสดงเมื่อมี error) -->
-  @if (showError() && errorMessage()) {
-    <div class="sic-tiptap-error">{{ errorMessage() }}</div>
-  }
-</div>
+<!-- ====== Editor หลัก (แสดงเมื่อไม่ใช่ fullscreen) ====== -->
+@if (!fullscreen) {
+  <div
+    class="sic-tiptap-editor"
+    [class.disabled]="disabled()"
+    [style.min-height]="minHeight()"
+    [style.max-height]="maxHeight()"
+    (click)="openFullscreen()"
+  >
+    <angular-tiptap-editor
+      [config]="editorConfig()"
+      [content]="content()"
+      [editable]="!disabled()"
+      (contentChange)="onContentChange($event)"
+    ></angular-tiptap-editor>
+
+    <!-- แสดง error ถ้ามี -->
+    @if (showError()) {
+      <div class="sic-tiptap-error">{{ errorMessages() | json }}</div>
+      <!-- หรือจะแสดงเฉพาะ error message แรกก็ได้ เช่น -->
+      <!-- <div class="sic-tiptap-error">{{ errorMessages() | keyvalue | first | value }}</div> -->
+    }
+
+    <!-- ปุ่มขยายเพื่อเปิด fullscreen (ทางเลือก) -->
+    <button class="sic-tiptap-expand-btn" (click)="openFullscreen(); $event.stopPropagation()" title="ขยายเต็มจอ">
+      <i class="bi bi-arrows-fullscreen"></i>
+    </button>
+  </div>
+}
+
+<!-- ====== Full‑screen overlay ====== -->
+@if (fullscreen) {
+  <div class="fullscreen-overlay" (click)="closeFullscreen()">
+    <div class="fullscreen-container" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="fullscreen-header">
+        <span class="fullscreen-title">✏️ แก้ไขข้อความ</span>
+        <button class="fullscreen-close-btn" (click)="closeFullscreen()">
+          <i class="bi bi-x-lg"></i> ปิด
+        </button>
+      </div>
+
+      <!-- Editor -->
+      <div class="fullscreen-editor-wrapper">
+        <angular-tiptap-editor
+          [config]="editorConfig()"
+          [content]="content()"
+          [editable]="!disabled()"
+          (contentChange)="onContentChange($event)"
+        ></angular-tiptap-editor>
+      </div>
+    </div>
+  </div>
+}

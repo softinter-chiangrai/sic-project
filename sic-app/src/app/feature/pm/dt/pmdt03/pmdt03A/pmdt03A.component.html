@@ -78,7 +78,6 @@
 
   <!-- ===== APPROVAL DETAIL ===== -->
   @if (!isLoading() && !error() && approval(); as a) {
-    <sic-card>
       <div class="space-y-4">
         <!-- Approval Component -->
         <sic-approval
@@ -93,6 +92,5 @@
           (actionTaken)="onActionTaken($event)"
         ></sic-approval>
       </div>
-    </sic-card>
   }
 </div>

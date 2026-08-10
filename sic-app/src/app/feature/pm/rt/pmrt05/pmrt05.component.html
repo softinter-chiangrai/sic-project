@@ -60,7 +60,6 @@
 
   <!-- ===== REQUIREMENT DETAIL ===== -->
   @if (!isLoading() && requirement(); as req) {
-    <sic-card>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คำอธิบาย</p>
@@ -75,7 +74,6 @@
           <p class="text-sm text-[var(--text)] mt-1">{{ req.acceptanceCriteria || '-' }}</p>
         </div>
       </div>
-    </sic-card>
   }
 
   <!-- ===== QUICK ACTIONS ===== -->

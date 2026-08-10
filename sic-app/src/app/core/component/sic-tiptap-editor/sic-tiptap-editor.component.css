@@ -1,14 +1,19 @@
+/* src/app/core/component/sic-tiptap-editor/sic-tiptap-editor.component.css */
+
+/* ====== Editor หลัก ====== */
 .sic-tiptap-editor {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   overflow: hidden;
   background: var(--bg);
   transition: border-color 0.2s;
+  cursor: text;
 }
 
 .sic-tiptap-editor:focus-within {
   border-color: var(--crm-primary);
-  box-shadow: 0 0 0 3px rgba(var(--crm-primary-rgb), 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--crm-primary-rgb, 26, 115, 232), 0.15);
 }
 
 .sic-tiptap-editor.disabled {
@@ -16,14 +21,171 @@
   pointer-events: none;
 }
 
-/* ปรับให้ min-height / max-height ใช้กับ editor */
 .sic-tiptap-editor .angular-tiptap-editor {
   min-height: inherit;
   max-height: inherit;
 }
 
+/* ====== ปุ่มขยายเต็มจอ ====== */
+.sic-tiptap-expand-btn {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.6;
+  z-index: 5;
+}
+
+.sic-tiptap-expand-btn:hover {
+  opacity: 1;
+  background: var(--crm-primary);
+  color: white;
+  border-color: var(--crm-primary);
+}
+
+/* ====== Error ====== */
 .sic-tiptap-error {
   padding: 0.5rem 0.75rem;
   color: var(--crm-danger);
   font-size: 0.8rem;
+}
+
+/* ====== Full‑screen overlay ====== */
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease;
+}
+
+.fullscreen-container {
+  width: 95vw;
+  max-width: 1400px;
+  height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar);
+  flex-shrink: 0;
+}
+
+.fullscreen-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-active);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fullscreen-close-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fullscreen-close-btn:hover {
+  background: var(--crm-danger);
+  border-color: var(--crm-danger);
+  color: white;
+}
+
+.fullscreen-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 1rem;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* Force angular-tiptap-editor component host to fill 100% height */
+.fullscreen-editor-wrapper angular-tiptap-editor,
+.fullscreen-editor-wrapper .angular-tiptap-editor {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+/* Internal tiptap containers */
+.fullscreen-editor-wrapper ::ng-deep angular-tiptap-editor > div,
+.fullscreen-editor-wrapper ::ng-deep .angular-tiptap-editor > div,
+.fullscreen-editor-wrapper ::ng-deep .ate-editor-container,
+.fullscreen-editor-wrapper ::ng-deep .ate-wrapper,
+.fullscreen-editor-wrapper ::ng-deep .ate-content-wrapper,
+.fullscreen-editor-wrapper ::ng-deep .ate-editor {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* Scrollable editable text area filling 100% remaining vertical space */
+.fullscreen-editor-wrapper ::ng-deep .ProseMirror,
+.fullscreen-editor-wrapper ::ng-deep div[contenteditable="true"] {
+  flex: 1 !important;
+  min-height: 100% !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  padding: 1rem 1.25rem !important;
+  box-sizing: border-box !important;
+}
+
+/* ====== Animation ====== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

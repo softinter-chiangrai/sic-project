@@ -1,8 +1,6 @@
 <!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
 <div class="space-y-5 p-0.5">
-  <!-- Card หลัก -->
-  <sic-card>
-    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Target Type Selection -->
         <div>
@@ -276,5 +274,4 @@
         <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
       </div>
     </form>
-  </sic-card>
 </div>

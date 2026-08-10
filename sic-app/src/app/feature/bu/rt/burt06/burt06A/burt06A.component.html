@@ -27,8 +27,7 @@
 
   <!-- Form -->
   @if (!isLoading) {
-    <sic-card>
-      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
         <!-- === Basic Info === -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-input
@@ -288,6 +287,5 @@
           </sic-button>
         </div>
       </form>
-    </sic-card>
   }
 </div>
