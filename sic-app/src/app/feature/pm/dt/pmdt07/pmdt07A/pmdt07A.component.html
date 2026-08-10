@@ -1,14 +1,5 @@
 <!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
 <div class="space-y-5 p-0.5">
-  <!-- Breadcrumb -->
-  <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-    <a [routerLink]="['/feature/pm/pmdt07']" class="hover:text-[var(--crm-primary)]"
-      >Change Request</a
-    >
-    <span>/</span>
-    <span class="text-[var(--text-active)] font-medium">{{ isEdit ? 'แก้ไข' : 'สร้างใหม่' }}</span>
-  </div>
-
   <!-- Card หลัก -->
   <sic-card>
     <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">

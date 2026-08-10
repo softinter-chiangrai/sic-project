@@ -1,16 +1,3 @@
-<!-- src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.html -->
-<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1 flex-wrap">
-  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
-  <span>/</span>
-  <a [routerLink]="['/feature/pm/phase', phaseId]" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phase</a>
-  <span>/</span>
-  @if (isEdit) {
-    <span>Edit Work Package</span>
-  } @else {
-    <span>New Work Package</span>
-  }
-</div>
-
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
     {{ isEdit ? 'แก้ไข Work Package' : 'สร้าง Work Package ใหม่' }}

@@ -1,18 +1,13 @@
 <!-- src/app/feature/pm/dt/pmdt02/pmdt02.component.html -->
 <div class="space-y-5 p-4">
 
-  <!-- ===== BACK & BREADCRUMB ===== -->
+  <!-- ===== BACK BUTTON ===== -->
   <div class="flex items-center gap-3 flex-wrap">
     <button (click)="goBack()"
-      class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all">
+      class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+      title="ย้อนกลับ">
       <i class="bi bi-arrow-left text-xl"></i>
     </button>
-    <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-      <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId() }"
-        class="hover:text-[var(--crm-primary)]">Phases</a>
-      <span>/</span>
-      <span class="text-[var(--text-active)] font-medium">{{ phase()?.phaseName || 'Phase' }}</span>
-    </div>
   </div>
 
   <!-- ===== PHASE HEADER ===== -->

@@ -1,19 +1,10 @@
 <!-- src/app/feature/bu/rt/burt06/burt06A/burt06A.component.html -->
 
 <div class="space-y-5 p-0.5">
-  <!-- Breadcrumb + Header -->
+  <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
-      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-        <a [routerLink]="['/feature/bu/burt06']" class="hover:text-[var(--crm-primary)]"
-          >Approval Flow</a
-        >
-        <span>/</span>
-        <span class="text-[var(--text-active)] font-medium">{{
-          isEdit ? 'แก้ไข' : 'สร้างใหม่'
-        }}</span>
-      </div>
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] mt-1">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)]">
         {{ isEdit ? 'แก้ไข Approval Flow' : 'สร้าง Approval Flow ใหม่' }}
       </h1>
     </div>

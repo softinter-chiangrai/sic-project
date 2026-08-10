@@ -1,16 +1,4 @@
 <!-- src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.html -->
-
-<!-- Breadcrumbs -->
-<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1">
-  <a [routerLink]="['/feature/pm/pmdt01']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
-  <span>/</span>
-  @if (phaseData.value.id) {
-    <span>Edit Phase</span>
-  } @else {
-    <span>New Phase</span>
-  }
-</div>
-
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
     {{ phaseData.value.id ? 'แก้ไข Phase' : 'สร้าง Phase ใหม่' }}
