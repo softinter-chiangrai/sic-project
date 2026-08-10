@@ -11,12 +11,22 @@ import type {
   TaskResponse,
   WorkPackageResponse,
 } from '../../../../core/model/phase.model';
-import { MilestoneService } from '../../../../core/services/milestone.service';
-import { PhaseService } from '../../../../core/services/phase.service';
-import { TaskService } from '../../../../core/services/task.service';
-import { WorkPackageService } from '../../../../core/services/work-package.service';
-// ลบ DhtmlxGanttComponent ออกจาก imports และ ViewChild
-import { CalendarItem, SicCalendarComponent } from '../../../../core/component/sic-calendar/sic-calendar.component';
+import { MilestoneService } from './milestone.service';
+import { PhaseService } from './phase.service';
+import { TaskService } from './task.service';
+import { WorkPackageService } from './work-package.service';
+import 'dayjs/locale/th';
+import {
+  SicCalendarComponent,
+  SicCalendarEvent,
+  SicCalendarHoliday,
+  SicCalendarTimelineComponent,
+  SicCalendarTimelineRow,
+  SicCalendarTimelineViewMode,
+  SicCalendarEra,
+  SicCalendarView,
+} from 'sic-ng';
+import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from './pmdt02.utils';
 
 @Component({
   selector: 'app-pmdt02',
@@ -24,8 +34,8 @@ import { CalendarItem, SicCalendarComponent } from '../../../../core/component/s
   imports: [
     CommonModule,
     RouterModule,
-    // DhtmlxGanttComponent,  // ลบออก
-    SicCalendarComponent
+    SicCalendarComponent,
+    SicCalendarTimelineComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',
@@ -46,88 +56,45 @@ export class Pmdt02Component implements OnInit {
   currentPhaseId = signal('');
   expandedMilestone = signal<string | null>(null);
   expandedWorkPackage = signal<string | null>(null);
-  // ลบ @ViewChild(DhtmlxGanttComponent)
 
-  rightTab = signal<'list' | 'calendar'>('list'); // เปลี่ยน type
+  rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
+  calendarEra = signal<SicCalendarEra>('BE');
+  calendarView = signal<SicCalendarView>('grid');
+  timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
 
-  switchTab(tab: 'list' | 'calendar'): void {
+  switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
     this.rightTab.set(tab);
   }
 
-  // ===== CALENDAR ITEMS =====
-  calendarItems = computed<CalendarItem[]>(() => {
+  // ===== CALENDAR & TIMELINE DATA =====
+  calendarTasks = computed<SicCalendarEvent[]>(() => {
     const p = this.phase();
     if (!p) return [];
-    const result: CalendarItem[] = [];
+    return buildCalendarEvents(p);
+  });
 
-    // Phase
-    if (p.startDate && p.endDate) {
-      const start = dayjs.utc(p.startDate);
-      const end = dayjs.utc(p.endDate);
-      const days = end.diff(start, 'day') + 1;
-      for (let i = 0; i < days; i++) {
-        const date = start.add(i, 'day');
-        result.push({
-          id: p.id,
-          type: 'phase',
-          title: p.phaseName,
-          color: p.color || '#4A90D9',
-          date: date.toISOString(),
-          completed: false,
-        });
-      }
-    }
+  calendarHolidays = computed<SicCalendarHoliday[]>(() => {
+    const p = this.phase();
+    if (!p) return [];
+    return buildCalendarHolidays(p);
+  });
 
-    // Milestones
-    p.milestones?.forEach((ms) => {
-      if (ms.dueDate) {
-        result.push({
-          id: ms.id,
-          type: 'milestone',
-          title: ms.milestoneName,
-          color: ms.color || '#E67E22',
-          date: dayjs.utc(ms.dueDate).toISOString(),
-          completed: false,
-        });
-      }
+  timelineItems = computed<SicCalendarTimelineRow[]>(() => {
+    const p = this.phase();
+    if (!p) return [];
+    return buildTimelineItems(p);
+  });
 
-      // WorkPackages
-      ms.workPackages?.forEach((wp) => {
-        if (wp.startDate && wp.endDate) {
-          const start = dayjs.utc(wp.startDate);
-          const end = dayjs.utc(wp.endDate);
-          const days = end.diff(start, 'day') + 1;
-          for (let i = 0; i < days; i++) {
-            const date = start.add(i, 'day');
-            result.push({
-              id: wp.id,
-              type: 'workpackage',
-              title: wp.packageName,
-              color: wp.color || '#8E44AD',
-              date: date.toISOString(),
-              completed: false,
-            });
-          }
-        }
+  timelineStartDate = computed(() => {
+    const p = this.phase();
+    if (p?.startDate) return p.startDate.split('T')[0];
+    return dayjs().format('YYYY-MM-DD');
+  });
 
-        // Tasks
-        wp.tasks?.forEach((task) => {
-          if (task.startDate) {
-            result.push({
-              id: task.id,
-              type: 'task',
-              title: task.taskName,
-              color: task.color || '#2ECC71',
-              date: dayjs.utc(task.startDate).toISOString(),
-              completed: task.status === 'Done',
-              extra: { workPackageId: wp.id },
-            });
-          }
-        });
-      });
-    });
-
-    return result;
+  timelineEndDate = computed(() => {
+    const p = this.phase();
+    if (p?.endDate) return p.endDate.split('T')[0];
+    return dayjs().add(30, 'day').format('YYYY-MM-DD');
   });
 
   // ===== LIFECYCLE =====
@@ -387,34 +354,71 @@ export class Pmdt02Component implements OnInit {
     }
   }
 
-  // ===== CALENDAR EVENT =====
-  onCalendarItemClick(item: CalendarItem): void {
+  // ===== CALENDAR & TIMELINE EVENT HANDLERS =====
+  handleCalendarEventClick(event: SicCalendarEvent): void {
+    const extra = (event as any).extra;
+    if (!extra) return;
+
     const projectId = this.projectId();
     const phaseId = this.currentPhaseId();
 
-    switch (item.type) {
+    switch (extra.type) {
       case 'phase':
-        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
+        this.router.navigate(['/feature/pm/phase', extra.id, 'edit'], {
           queryParams: { projectId },
         });
         break;
       case 'milestone':
-        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
+        this.router.navigate(['/feature/pm/milestone', extra.id, 'edit'], {
           queryParams: { projectId, phaseId },
         });
         break;
       case 'workpackage':
-        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
+        this.router.navigate(['/feature/pm/work-package', extra.id, 'edit'], {
           queryParams: { projectId, phaseId },
         });
         break;
       case 'task':
-        const wpId = item.extra?.['workPackageId'] || '';
-        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
-          queryParams: { projectId, phaseId, workPackageId: wpId },
+        this.router.navigate(['/feature/pm/task', extra.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: extra.workPackageId || '' },
         });
         break;
-      default:
+    }
+  }
+
+  onTimelineRowClick(row: SicCalendarTimelineRow): void {
+    this.navigateFromTimelineData(row.data);
+  }
+
+  onTimelinePhaseClick(event: { row: SicCalendarTimelineRow; phase: any }): void {
+    this.navigateFromTimelineData(event.row.data);
+  }
+
+  private navigateFromTimelineData(data: any): void {
+    if (!data) return;
+    const projectId = this.projectId();
+    const phaseId = this.currentPhaseId();
+
+    switch (data.type) {
+      case 'phase':
+        this.router.navigate(['/feature/pm/phase', data.id, 'edit'], {
+          queryParams: { projectId },
+        });
+        break;
+      case 'milestone':
+        this.router.navigate(['/feature/pm/milestone', data.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'workpackage':
+        this.router.navigate(['/feature/pm/work-package', data.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'task':
+        this.router.navigate(['/feature/pm/task', data.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: data.workPackageId || '' },
+        });
         break;
     }
   }

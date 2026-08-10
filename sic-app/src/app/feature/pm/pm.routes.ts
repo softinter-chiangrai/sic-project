@@ -1,4 +1,5 @@
 // src/app/feature/pm/pm.routes.ts
+
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
@@ -6,7 +7,6 @@ import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
 import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
-import { Pmdt02GanttComponent } from './dt/pmdt02/pmdt02-gantt.component';
 import { editGuard } from '../../core/guard/edit.guard';
 
 export const PM_ROUTES: Routes = [
@@ -160,43 +160,40 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
-  // ✅ สร้าง Requirement ใหม่ (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
-{
-  path: 'requirement/new',
-  loadComponent: () =>
-    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-  canActivate: [customerGuard, projectGuard],
-  canDeactivate: [CanDeactivateGuard],
-},
-
-// ✅ แก้ไข Requirement (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
-{
-  path: 'requirement/:id/edit',
-  loadComponent: () =>
-    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
-  data: { targetType: 'REQUIREMENT' },
-  canDeactivate: [CanDeactivateGuard],
-},
+  {
+    path: 'requirement/new',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'requirement/:id/edit',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
+    data: { targetType: 'REQUIREMENT' },
+    canDeactivate: [CanDeactivateGuard],
+  },
   {
     path: 'requirement/:id/approval',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Requirement Dashboard (pmrt05) =====
   {
     path: 'pmrt05',
     loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ มีอยู่แล้ว
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Diagram =====
   {
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Change Request =====
@@ -221,31 +218,32 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
- // ===== Specification Management =====
-{
-  path: 'pmdt08',
-  loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'pmdt08A/new',
-  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-  resolve: { form: pmdt08CreateResolver },
-  canDeactivate: [CanDeactivateGuard],
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'pmdt08A/:id/edit',
-  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-  resolve: { form: pmdt08EditResolver },
-  canDeactivate: [CanDeactivateGuard],
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'discussion',
-  loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
-  canActivate: [customerGuard, projectGuard],
-},
+  // ===== Specification Management =====
+  {
+    path: 'pmdt08',
+    loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08A/new',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08CreateResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08A/:id/edit',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08EditResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'discussion',
+    loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+
   // ===== Design Review =====
   {
     path: 'design-review',
@@ -255,12 +253,12 @@ export const PM_ROUTES: Routes = [
   {
     path: 'design-review/new',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {
     path: 'design-review/:id/edit',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Task (เดิม) =====
@@ -298,21 +296,23 @@ export const PM_ROUTES: Routes = [
   },
 
   // ===== Gantt =====
-  {
-    path: 'gantt',
-    loadComponent: () =>
-      import('../../core/component/sic-ganttchart/dhtmlx-gantt.component').then((m) => m.DhtmlxGanttComponent),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-  path: 'phase/:id/gantt',
-  loadComponent: () => import('./dt/pmdt02/pmdt02-gantt.component').then(m => m.Pmdt02GanttComponent),
+{
+  path: 'gantt',
+  loadComponent: () =>
+    import('../../core/component/sic-gantt/sic-gantt.component').then((m) => m.SicGanttComponent),
+  canActivate: [customerGuard, projectGuard],
 },
-  {
-    path: 'gantt/:id/update',
-    loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
-    canActivate: [customerGuard, projectGuard],
-  },
+{
+  path: 'phase/:id/gantt',
+  loadComponent: () =>
+    import('../../core/component/sic-gantt/sic-gantt.component').then((m) => m.SicGanttComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'gantt/:id/update',
+  loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
+  canActivate: [customerGuard, projectGuard],
+},
 
   // ===== Test Case =====
   {

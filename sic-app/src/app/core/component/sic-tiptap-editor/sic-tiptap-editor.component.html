@@ -24,7 +24,7 @@
     }
 
     <!-- ปุ่มขยายเพื่อเปิด fullscreen (ทางเลือก) -->
-    <button class="sic-tiptap-expand-btn" (click)="openFullscreen(); $event.stopPropagation()" title="ขยายเต็มจอ">
+    <button type="button" class="sic-tiptap-expand-btn" (click)="openFullscreen($event)" title="ขยายเต็มจอ">
       <i class="bi bi-arrows-fullscreen"></i>
     </button>
   </div>
@@ -32,12 +32,12 @@
 
 <!-- ====== Full‑screen overlay ====== -->
 @if (fullscreen) {
-  <div class="fullscreen-overlay" (click)="closeFullscreen()">
+  <div class="fullscreen-overlay" (click)="closeFullscreen($event)">
     <div class="fullscreen-container" (click)="$event.stopPropagation()">
       <!-- Header -->
       <div class="fullscreen-header">
         <span class="fullscreen-title">✏️ แก้ไขข้อความ</span>
-        <button class="fullscreen-close-btn" (click)="closeFullscreen()">
+        <button type="button" class="fullscreen-close-btn" (click)="closeFullscreen($event)">
           <i class="bi bi-x-lg"></i> ปิด
         </button>
       </div>

@@ -2,8 +2,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { WorkPackageResponse, WorkPackageRequest } from '../model/phase.model';
+import { environment } from '../../../../../environments/environment';
+import type { WorkPackageResponse, WorkPackageRequest } from '../../../../core/model/phase.model';
 
 @Injectable({
   providedIn: 'root',

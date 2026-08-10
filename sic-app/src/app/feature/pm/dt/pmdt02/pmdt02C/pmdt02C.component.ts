@@ -9,7 +9,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { TaskService } from '../../../../../core/services/task.service';
+import { TaskService } from '../task.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';

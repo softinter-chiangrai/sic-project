@@ -7,7 +7,7 @@ import { SicDatepickerComponent } from '../../../../../core/component/sic-datepi
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { MilestoneService } from '../../../../../core/services/milestone.service';
+import { MilestoneService } from '../milestone.service';
 import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
 
 @Component({

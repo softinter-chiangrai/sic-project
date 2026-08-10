@@ -61,11 +61,11 @@
         [class]="rightTab() === 'calendar' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
         <i class="bi bi-calendar3 mr-1"></i> ปฏิทิน
       </button>
-      <!-- ปุ่มนำทางไป Gantt เต็มจอ -->
       <button
-        (click)="goToGanttFullscreen()"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]">
-        <i class="bi bi-bar-chart mr-1"></i> Gantt
+        (click)="switchTab('gantt')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi bi-bar-chart mr-1"></i> Gantt Chart
       </button>
     </div>
 
@@ -188,22 +188,54 @@
             <i class="bi bi-calendar3 text-[var(--crm-primary)]"></i>
             ปฏิทินงาน
           </h2>
-          <span class="text-xs text-[var(--text-muted)]">คลิกรายการเพื่อแก้ไข</span>
+          <span class="text-xs text-[var(--text-muted)]">คลิกรายการเพื่อไปแก้ไข</span>
         </div>
         <div class="p-4">
           <sic-calendar
-            [items]="calendarItems()"
-            [mode]="'view'"
-            [disabled]="false"
-            [label]="'ปฏิทิน Phase'"
-            [hint]="'คลิกรายการเพื่อไปแก้ไข'"
-            (itemClick)="onCalendarItemClick($event)">
+            [tasks]="calendarTasks()"
+            [holidays]="calendarHolidays()"
+            [weekStartsOn]="1"
+            locale="th"
+            [(era)]="calendarEra"
+            [(view)]="calendarView"
+            (eventClick)="handleCalendarEventClick($event)">
           </sic-calendar>
         </div>
       </div>
     }
 
-    <!-- ===== (ลบส่วน Gantt Tab ออกแล้ว) ===== -->
+    <!-- ===== TAB 3: GANTT CHART (TIMELINE) ===== -->
+    @if (rightTab() === 'gantt') {
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
+          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-bar-chart text-[var(--crm-primary)]"></i>
+            Gantt Chart
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-[var(--text-muted)]">คลิกแถว/เฟสเพื่อไปแก้ไข</span>
+            <button
+              (click)="goToGanttFullscreen()"
+              class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+              <i class="bi bi-arrows-fullscreen"></i> เต็มจอ
+            </button>
+          </div>
+        </div>
+        <div class="p-4">
+          <sic-calendar-timeline
+            [items]="timelineItems()"
+            [startDate]="timelineStartDate()"
+            [endDate]="timelineEndDate()"
+            [(viewMode)]="timelineViewMode"
+            locale="th"
+            era="BE"
+            maxHeight="500px"
+            (rowClick)="onTimelineRowClick($event)"
+            (phaseClick)="onTimelinePhaseClick($event)">
+          </sic-calendar-timeline>
+        </div>
+      </div>
+    }
 
   }
 </div>

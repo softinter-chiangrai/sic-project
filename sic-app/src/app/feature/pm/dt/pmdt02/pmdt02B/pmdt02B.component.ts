@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { WorkPackageService } from '../../../../../core/services/work-package.service';
+import { WorkPackageService } from '../work-package.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
 

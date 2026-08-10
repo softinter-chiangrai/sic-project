@@ -3,8 +3,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { TaskRequest, TaskResponse } from '../model/phase.model';
+import { environment } from '../../../../../environments/environment';
+import type { TaskRequest, TaskResponse } from '../../../../core/model/phase.model';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {

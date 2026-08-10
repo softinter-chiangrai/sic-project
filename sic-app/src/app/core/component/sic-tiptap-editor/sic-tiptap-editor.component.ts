@@ -105,16 +105,22 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   }
 
   // เปิด Fullscreen (เรียกจาก template)
-  openFullscreen(): void {
+  openFullscreen(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     this.fullscreen = true;
   }
 
   // ปิด Fullscreen (เรียกจาก template)
-  closeFullscreen(): void {
+  closeFullscreen(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     this.fullscreen = false;
     this.fullscreenClosed.emit();
-    // เมื่อปิด ให้ mark touched เพื่อแสดง error ถ้ามี
-    this.onTouched();
   }
 
   // === ControlValueAccessor Implementation ===
