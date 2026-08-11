@@ -7,8 +7,10 @@ import { SicDatepickerComponent } from '../../../../../core/component/sic-datepi
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { MilestoneService } from '../milestone.service';
-import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
+import { Pmdt02AService } from './pmdt02A.service';
+import { Pmdt02AForm } from './pmdt02A.form';
+import { MilestoneModel, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 @Component({
   selector: 'app-pmdt02A',
@@ -26,7 +28,7 @@ import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/mo
 })
 export class Pmdt02AComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private milestoneService = inject(MilestoneService);
+  private milestoneService = inject(Pmdt02AService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -37,14 +39,11 @@ export class Pmdt02AComponent implements OnInit {
   isEdit = false;
   data: MilestoneResponse | null = null;
 
-  // ✅ เพิ่ม color ในฟอร์ม
-  form = this.fb.group({
-    milestoneName: ['', Validators.required],
-    description: [''],
-    dueDate: ['', Validators.required],
-    dueTime: ['', Validators.required],
-    color: [''], // ✅ เพิ่ม
-  });
+  formData: SicFromData<MilestoneModel> = new SicFromData<MilestoneModel>(Pmdt02AForm.createForm(this.fb));
+
+  get form() {
+    return this.formData.formGroup;
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {

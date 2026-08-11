@@ -1,14 +1,13 @@
-// src/app/core/services/work-package.service.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type { WorkPackageResponse, WorkPackageRequest } from '../../../../core/model/phase.model';
-
+import { environment } from '../../../../../../environments/environment';
+import type { WorkPackageResponse, WorkPackageRequest } from './pmdt02B.model';
 @Injectable({
   providedIn: 'root',
 })
-export class WorkPackageService {
+export class Pmdt02BService {
   private http = inject(HttpClient);
   private apiBaseUrl = environment.apiBaseUrl;
 
@@ -28,7 +27,6 @@ export class WorkPackageService {
     return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`);
   }
 
-  // ✅ 新增: โหลด Work Packages ตาม Milestone ID
   getWorkPackagesByMilestoneId(milestoneId: string): Observable<WorkPackageResponse[]> {
     return this.http.get<WorkPackageResponse[]>(
       `${this.apiBaseUrl}/api/pm/work-packages/milestone/${milestoneId}`

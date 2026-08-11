@@ -1,16 +1,13 @@
-// src/app/feature/pm/services/task.service.ts
-
+// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.service.ts
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type { TaskRequest, TaskResponse } from '../../../../core/model/phase.model';
-
+import { environment } from '../../../../../../environments/environment';
+import type { TaskRequest, TaskResponse } from './pmdt02C.model';
 @Injectable({ providedIn: 'root' })
-export class TaskService {
+export class Pmdt02CService {
+  private http = inject(HttpClient);
   private baseUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
-
-  constructor(private http: HttpClient) {}
 
   getTasksByWorkPackageId(wpId: string): Observable<TaskResponse[]> {
     return this.http.get<TaskResponse[]>(`${this.baseUrl}/work-package/${wpId}`);

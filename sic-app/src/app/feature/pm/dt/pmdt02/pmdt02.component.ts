@@ -5,16 +5,14 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import dayjs from '../../../../core/dayjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-import type {
-  MilestoneResponse,
-  PhaseResponse,
-  TaskResponse,
-  WorkPackageResponse,
-} from '../../../../core/model/phase.model';
-import { MilestoneService } from './milestone.service';
-import { PhaseService } from './phase.service';
-import { TaskService } from './task.service';
-import { WorkPackageService } from './work-package.service';
+import type { PhaseResponse, CalendarItemDetail } from './pmdt02.model';
+import type { MilestoneResponse } from './pmdt02A/pmdt02A.model';
+import type { WorkPackageResponse } from './pmdt02B/pmdt02B.model';
+import type { TaskResponse } from './pmdt02C/pmdt02C.model';
+import { Pmdt02AService } from './pmdt02A/pmdt02A.service';
+import { Pmdt02Service } from './pmdt02.service';
+import { Pmdt02CService } from './pmdt02C/pmdt02C.service';
+import { Pmdt02BService } from './pmdt02B/pmdt02B.service';
 import 'dayjs/locale/th';
 import {
   SicAvatarComponent,
@@ -32,17 +30,7 @@ import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from '
 
 import { FormsModule } from '@angular/forms';
 
-export interface CalendarItemDetail {
-  id: string;
-  type: 'phase' | 'milestone' | 'workpackage' | 'task' | 'holiday' | 'event';
-  title: string;
-  subtitle?: string;
-  description?: string;
-  color: string;
-  icon: string;
-  isCustom?: boolean;
-  rawObject?: any;
-}
+export type { CalendarItemDetail };
 
 @Component({
   selector: 'app-pmdt02',
@@ -68,10 +56,10 @@ export interface CalendarItemDetail {
 export class Pmdt02Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private phaseService = inject(PhaseService);
-  private milestoneService = inject(MilestoneService);
-  private wpService = inject(WorkPackageService);
-  private taskService = inject(TaskService);
+  private phaseService = inject(Pmdt02Service);
+  private milestoneService = inject(Pmdt02AService);
+  private wpService = inject(Pmdt02BService);
+  private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
 
   // ===== SIGNALS =====

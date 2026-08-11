@@ -1,14 +1,13 @@
-// src/app/core/services/phase.service.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import type { PhaseRequest, PhaseResponse } from '../../../../core/model/phase.model';
-
+import type { PhaseRequest, PhaseResponse } from './pmdt02.model';
 @Injectable({
   providedIn: 'root',
 })
-export class PhaseService {
+export class Pmdt02Service {
   private http = inject(HttpClient);
   private apiBaseUrl = environment.apiBaseUrl;
 

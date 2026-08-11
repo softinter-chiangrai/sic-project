@@ -9,10 +9,12 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { TaskService } from '../task.service';
+import { Pmdt02CService } from './pmdt02C.service';
+import { Pmdt02CForm } from './pmdt02C.form';
+import { TaskModel, TaskRequest, TaskResponse } from './pmdt02C.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
-import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
 
 @Component({
   selector: 'app-pmdt02C',
@@ -31,7 +33,7 @@ import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.
 })
 export class Pmdt02CComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private taskService = inject(TaskService);
+  private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -50,20 +52,11 @@ export class Pmdt02CComponent implements OnInit {
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
   assigneeNames: Record<string, string> = {};
 
-  form = this.fb.group({
-    taskCode: ['', Validators.required],
-    taskName: ['', Validators.required],
-    description: [''],
-    assignedTo: [''], // คนหลัก (optional)
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
-    priority: ['Medium'],
-    color: [''],
-    assigneeIds: [[]], // ✅ array ของ userId
-  });
+  formData: SicFromData<TaskModel> = new SicFromData<TaskModel>(Pmdt02CForm.createForm(this.fb));
+
+  get form() {
+    return this.formData.formGroup;
+  }
 
   get assigneeIds(): FormControl {
     return this.form.get('assigneeIds') as FormControl;

@@ -1,14 +1,14 @@
-// src/app/core/services/milestone.service.ts
+// src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type { MilestoneRequest, MilestoneResponse } from '../../../../core/model/phase.model';
+import { environment } from '../../../../../../environments/environment';
+import type { MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MilestoneService {
+export class Pmdt02AService {
   private http = inject(HttpClient);
   private apiBaseUrl = environment.apiBaseUrl;
 

@@ -8,6 +8,23 @@ import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01
 import { requirementGuard } from '../../core/guard/requirement.guard';
 import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
 import { editGuard } from '../../core/guard/edit.guard';
+import { pmdt02Resolver } from './dt/pmdt02/pmdt02.resolver';
+import { pmdt02AResolver } from './dt/pmdt02/pmdt02A/pmdt02A.resolver';
+import { pmdt02BResolver } from './dt/pmdt02/pmdt02B/pmdt02B.resolver';
+import { pmdt02CResolver } from './dt/pmdt02/pmdt02C/pmdt02C.resolver';
+import { pmdt01ACreateResolver, pmdt01AEditResolver } from './dt/pmdt01/pmdt01A/pmdt01A.resolver';
+import { pmdt03Resolver } from './dt/pmdt03/pmdt03.resolver';
+import { pmdt03AResolver } from './dt/pmdt03/pmdt03A/pmdt03A.resolver';
+import { pmdt04Resolver } from './dt/pmdt04/pmdt04.resolver';
+import { pmdt04AResolver } from './dt/pmdt04/pmdt04A/pmdt04A.resolver';
+import { pmdt05Resolver } from './dt/pmdt05/pmdt05.resolver';
+import { pmdt06Resolver } from './dt/pmdt06/pmdt06.resolver';
+import { pmdt06AResolver } from './dt/pmdt06/pmdt06A/pmdt06A.resolver';
+import { pmdt07Resolver } from './dt/pmdt07/pmdt07.resolver';
+import { pmdt07AResolver } from './dt/pmdt07/pmdt07A/pmdt07A.resolver';
+import { pmdt08AResolver } from './dt/pmdt08/pmdt08A/pmdt08A.resolver';
+import { pmdt09Resolver } from './dt/pmdt09/pmdt09.resolver';
+import { pmdt09AResolver } from './dt/pmdt09/pmdt09A/pmdt09A.resolver';
 
 export const PM_ROUTES: Routes = [
   // ===== Customer =====
@@ -97,6 +114,8 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt01ACreateResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   // ---- Phase Form (Edit) ----
   {
@@ -104,12 +123,15 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt01/pmdt01A/pmdt01A.component').then((m) => m.Pmdt01AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt01AEditResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   // ---- Phase Detail ----
   {
     path: 'phase/:id',
     loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt02Resolver },
   },
 
   // ---- Milestone Form ----
@@ -124,6 +146,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt02/pmdt02A/pmdt02A.component').then((m) => m.Pmdt02AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt02AResolver },
   },
 
   // ---- WorkPackage Form ----
@@ -138,6 +161,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt02/pmdt02B/pmdt02B.component').then((m) => m.Pmdt02BComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt02BResolver },
   },
 
   // ---- Task Form ----
@@ -152,6 +176,21 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt02/pmdt02C/pmdt02C.component').then((m) => m.Pmdt02CComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt02CResolver },
+  },
+
+  // ===== Approval =====
+  {
+    path: 'pmdt03',
+    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt03Resolver },
+  },
+  {
+    path: 'pmdt03/:id',
+    loadComponent: () => import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt03AResolver },
   },
 
   // ===== Requirement =====
@@ -159,12 +198,14 @@ export const PM_ROUTES: Routes = [
     path: 'requirement',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt04Resolver },
   },
   {
     path: 'requirement/new',
     loadComponent: () =>
       import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt05Resolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
@@ -173,6 +214,7 @@ export const PM_ROUTES: Routes = [
       import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
     canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
     data: { targetType: 'REQUIREMENT' },
+    resolve: { form: pmdt05Resolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
@@ -180,6 +222,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { form: pmdt04AResolver },
   },
 
   // ===== Requirement Dashboard (pmrt05) =====
@@ -194,6 +237,7 @@ export const PM_ROUTES: Routes = [
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
     canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { form: pmdt06Resolver },
   },
 
   // ===== Change Request =====
@@ -201,21 +245,25 @@ export const PM_ROUTES: Routes = [
     path: 'pmdt07',
     loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt07Resolver },
   },
   {
     path: 'pmdt07/new',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt07AResolver },
   },
   {
     path: 'pmdt07/:id/edit',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt07AResolver },
   },
   {
     path: 'pmdt07/:id/view',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt07AResolver },
   },
 
   // ===== Specification Management =====
@@ -227,14 +275,14 @@ export const PM_ROUTES: Routes = [
   {
     path: 'pmdt08A/new',
     loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08CreateResolver },
+    resolve: { form: pmdt08AResolver },
     canDeactivate: [CanDeactivateGuard],
     canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {
     path: 'pmdt08A/:id/edit',
     loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08EditResolver },
+    resolve: { form: pmdt08AResolver },
     canDeactivate: [CanDeactivateGuard],
     canActivate: [customerGuard, projectGuard, requirementGuard],
   },
@@ -242,6 +290,7 @@ export const PM_ROUTES: Routes = [
     path: 'discussion',
     loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt09Resolver },
   },
 
   // ===== Design Review =====

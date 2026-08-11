@@ -13,23 +13,22 @@
     </sic-button>
   </sic-flex>
 
-  <!-- ✅ ใช้ phasesQuery.isPending() และ phasesQuery.error() โดยตรง -->
-  @if (phasesQuery.isPending()) {
+  @if (isLoading()) {
     <div class="flex justify-center py-12">
       <sic-spinner size="lg" />
     </div>
   }
 
-  @if (phasesQuery.error()) {
+  @if (error()) {
     <div class="p-4 bg-red-50 text-red-700 rounded-lg">
-      {{ phasesQuery.error()?.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล' }}
+      {{ error() }}
     </div>
   }
 
-  @if (!phasesQuery.isPending() && !phasesQuery.error()) {
-    @if (phasesQuery.data() && phasesQuery.data()!.length > 0) {
+  @if (!isLoading() && !error()) {
+    @if (phases() && phases().length > 0) {
       <sic-grid [cols]="3" gap="1rem" [colsBreakpoints]="{ sm: 1, md: 2, lg: 3 }">
-        @for (phase of phasesQuery.data()!; track phase.id) {
+        @for (phase of phases(); track phase.id) {
           <sic-card
             [bordered]="true"
             [elevated]="true"

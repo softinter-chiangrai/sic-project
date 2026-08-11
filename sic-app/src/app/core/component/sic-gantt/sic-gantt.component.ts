@@ -9,10 +9,10 @@ import { NavigationService } from '../../services/navigation.service';
 import { CustomerStateService } from '../../services/customer-state.service';
 import { Pmrt02Service } from '../../../feature/pm/rt/pmrt02/pmrt02.service';
 import { buildTimelineItems } from '../../../feature/pm/dt/pmdt02/pmdt02.utils';
-import { MilestoneService } from '../../../feature/pm/dt/pmdt02/milestone.service';
-import { WorkPackageService } from '../../../feature/pm/dt/pmdt02/work-package.service';
-import { TaskService } from '../../../feature/pm/dt/pmdt02/task.service';
-import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
+import { Pmdt02AService } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.service';
+import { Pmdt02BService } from '../../../feature/pm/dt/pmdt02/pmdt02B/pmdt02B.service';
+import { Pmdt02CService } from '../../../feature/pm/dt/pmdt02/pmdt02C/pmdt02C.service';
+import { Pmdt02Service } from '../../../feature/pm/dt/pmdt02/pmdt02.service';
 
 @Component({
   selector: 'app-sic-gantt',
@@ -111,10 +111,10 @@ export class SicGanttComponent implements OnInit {
   private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
   private projectService = inject(Pmrt02Service);
-  private phaseService = inject(PhaseService);
-  private milestoneService = inject(MilestoneService);
-  private wpService = inject(WorkPackageService);
-  private taskService = inject(TaskService);
+  private phaseService = inject(Pmdt02Service);
+  private milestoneService = inject(Pmdt02AService);
+  private wpService = inject(Pmdt02BService);
+  private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
 
   isLoading = signal(false);

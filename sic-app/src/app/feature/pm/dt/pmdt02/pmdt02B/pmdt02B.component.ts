@@ -6,9 +6,11 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { WorkPackageService } from '../work-package.service';
+import { Pmdt02BService } from './pmdt02B.service';
+import { Pmdt02BForm } from './pmdt02B.form';
+import { WorkPackageModel, WorkPackageRequest, WorkPackageResponse } from './pmdt02B.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
 
 @Component({
   selector: 'app-pmdt02B',
@@ -26,7 +28,7 @@ import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../cor
 })
 export class Pmdt02BComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private wpService = inject(WorkPackageService);
+  private wpService = inject(Pmdt02BService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -38,16 +40,11 @@ export class Pmdt02BComponent implements OnInit {
   isEdit = false;
   data: WorkPackageResponse | null = null;
 
-  // ✅ เพิ่ม color ในฟอร์ม
-  form = this.fb.group({
-    packageName: ['', Validators.required],
-    description: [''],
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    color: [''], // ✅ เพิ่ม
-  });
+  formData: SicFromData<WorkPackageModel> = new SicFromData<WorkPackageModel>(Pmdt02BForm.createForm(this.fb));
+
+  get form() {
+    return this.formData.formGroup;
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {

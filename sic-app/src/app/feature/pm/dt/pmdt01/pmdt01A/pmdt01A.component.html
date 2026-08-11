@@ -77,8 +77,8 @@
         <sic-button
           type="submit"
           color="primary"
-          [disabled]="phaseData.invalid || saveMutation.isPending()"
-          [loading]="saveMutation.isPending()"
+          [disabled]="phaseData.invalid || isSaving()"
+          [loading]="isSaving()"
         >
           {{ phaseData.value.id ? 'บันทึก' : 'สร้าง' }}
         </sic-button>

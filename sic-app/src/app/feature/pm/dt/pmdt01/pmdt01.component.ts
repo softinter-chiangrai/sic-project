@@ -2,8 +2,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { injectQuery, injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 import {
   SicButtonComponent,
   SicCardComponent,
@@ -15,7 +13,6 @@ import {
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmdt01Service } from './pmdt01.service';
 import { PhaseModel } from './pmdt01.model';
-import { pmdt01QueryKeys } from './pmdt01.query';
 
 @Component({
   selector: 'app-pmdt01',
@@ -38,34 +35,37 @@ export class Pmdt01Component implements OnInit {
   private router = inject(Router);
   private service = inject(Pmdt01Service);
   private dialog = inject(DialogService);
-  private queryClient = inject(QueryClient);
 
   projectId = signal<string>('');
-
-  // ใช้ query โดยตรง ไม่ต้องสร้างตัวแปร isLoading/error แยก
-  phasesQuery = injectQuery(() => ({
-    queryKey: pmdt01QueryKeys.list(this.projectId()),
-    queryFn: () => lastValueFrom(this.service.getPhases(this.projectId())),
-    enabled: !!this.projectId(),
-  }));
-
-  private deleteMutation = injectMutation(() => ({
-    mutationFn: (id: string) => lastValueFrom(this.service.deletePhase(id)),
-    onSuccess: () => {
-      this.dialog.success('ลบ Phase สำเร็จ', '');
-      this.queryClient.invalidateQueries({ queryKey: pmdt01QueryKeys.list(this.projectId()) });
-    },
-    onError: (err: any) => this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาด'),
-  }));
+  phases = signal<PhaseModel[]>([]);
+  isLoading = signal<boolean>(false);
+  error = signal<string | null>(null);
 
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       const pid = params['projectId'];
       if (pid) {
         this.projectId.set(pid);
+        this.loadPhases(pid);
       } else {
         this.router.navigate(['/feature/pm/pmrt02']);
       }
+    });
+  }
+
+  loadPhases(projectId: string) {
+    if (!projectId) return;
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.service.getPhases(projectId).subscribe({
+      next: (data) => {
+        this.phases.set(data || []);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -94,7 +94,13 @@ export class Pmdt01Component implements OnInit {
       .confirm('ยืนยันการลบ', `คุณต้องการลบ Phase "${phase.phaseName}" ใช่หรือไม่?`)
       .then((confirmed) => {
         if (confirmed) {
-          this.deleteMutation.mutate(phase.id);
+          this.service.deletePhase(phase.id).subscribe({
+            next: () => {
+              this.dialog.success('ลบ Phase สำเร็จ', '');
+              this.loadPhases(this.projectId());
+            },
+            error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาด'),
+          });
         }
       });
   }

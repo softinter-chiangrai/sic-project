@@ -1,11 +1,9 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts
 
-import type {
-  PhaseResponse,
-  MilestoneResponse,
-  WorkPackageResponse,
-  TaskResponse,
-} from '../../../../core/model/phase.model';
+import type { PhaseResponse } from './pmdt02.model';
+import type { MilestoneResponse } from './pmdt02A/pmdt02A.model';
+import type { WorkPackageResponse } from './pmdt02B/pmdt02B.model';
+import type { TaskResponse } from './pmdt02C/pmdt02C.model';
 import type { DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
 import type { SicCalendarTimelineRow, SicCalendarEvent, SicCalendarHoliday } from 'sic-ng';
 import dayjs from '../../../../core/dayjs';
