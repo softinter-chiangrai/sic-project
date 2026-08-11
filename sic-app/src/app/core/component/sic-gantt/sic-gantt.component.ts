@@ -1,9 +1,9 @@
 // src/app/core/component/sic-gantt/sic-gantt.component.ts
 
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SicCalendarTimelineComponent, SicCalendarTimelineRow } from 'sic-ng';
+import { SicAvatarComponent, SicCalendarTimelineComponent, SicCalendarTimelineRow } from 'sic-ng';
 import { DialogService } from '../../services/dialog.service';
 import { NavigationService } from '../../services/navigation.service';
 import { CustomerStateService } from '../../services/customer-state.service';
@@ -14,7 +14,7 @@ import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
 @Component({
   selector: 'app-sic-gantt',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicCalendarTimelineComponent],
+  imports: [CommonModule, RouterModule, SicAvatarComponent, SicCalendarTimelineComponent],
   template: `
     <div class="p-4 h-screen flex flex-col bg-[var(--bg)]">
       <div class="flex items-center gap-3 mb-4 flex-shrink-0">
@@ -48,8 +48,51 @@ import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
             locale="th"
             era="BE"
             (rowClick)="onRowClick($event)"
-            (phaseClick)="onPhaseClick($event)"
-          />
+            (phaseClick)="onPhaseClick($event)">
+            <ng-template #labelTemplate let-row>
+              <div
+                class="flex items-center gap-1.5 w-full py-1 pr-2 select-none"
+                [style.padding-left.px]="((row.data?.level || 0) * 16) + 4">
+                @if (row.data?.hasChildren) {
+                  <button
+                    type="button"
+                    (click)="toggleTimelineRow(row.id, $event)"
+                    class="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all flex-shrink-0 shadow-sm"
+                    title="คลิกเพื่อพับ/ขยาย">
+                    <i
+                      class="bi bi-chevron-right text-[0.7rem] font-bold transition-transform duration-200"
+                      [class.rotate-90]="isTimelineRowExpanded(row.id)"></i>
+                  </button>
+                } @else {
+                  <span class="w-5 flex-shrink-0"></span>
+                }
+                <span class="text-sm flex-shrink-0">{{ row.data?.icon || '📌' }}</span>
+                <span class="text-xs font-medium text-[var(--text-active)] truncate flex-1" [title]="row.data?.title || row.label">
+                  {{ row.data?.title || row.label }}
+                </span>
+              </div>
+            </ng-template>
+            <ng-template #phaseTemplate let-phase let-row="row">
+              <div
+                class="h-full rounded-md flex items-center justify-between px-2.5 text-white text-xs font-medium shadow-sm transition-all overflow-hidden"
+                [style.background-color]="phase.color || '#3b82f6'"
+                [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
+                <span class="truncate mr-1.5">{{ phase.label || row.label }}</span>
+                @if (row.data?.assignees && row.data?.assignees.length > 0) {
+                  <div class="flex items-center -space-x-1 flex-shrink-0">
+                    @for (person of row.data?.assignees.slice(0, 2); track person) {
+                      <sic-avatar
+                        [name]="person"
+                        [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
+                        size="sm"
+                        class="ring-1 ring-white/30 rounded-full">
+                      </sic-avatar>
+                    }
+                  </div>
+                }
+              </div>
+            </ng-template>
+          </sic-calendar-timeline>
         </div>
       }
     </div>
@@ -73,10 +116,59 @@ export class SicGanttComponent implements OnInit {
   phaseId = signal<string | null>(null);
   pageTitle = signal('Loading...');
   phaseName = signal<string | null>(null);
-  timelineItems = signal<SicCalendarTimelineRow[]>([]);
+  allTimelineItems = signal<SicCalendarTimelineRow[]>([]);
+  expandedTimelineRowIds = signal<Set<string>>(new Set());
   startDate = signal('');
   endDate = signal('');
   viewMode = signal<'day' | 'week' | 'month'>('week');
+
+  toggleTimelineRow(rowId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    const current = new Set(this.expandedTimelineRowIds());
+    if (current.has(rowId)) {
+      current.delete(rowId);
+    } else {
+      current.add(rowId);
+    }
+    this.expandedTimelineRowIds.set(current);
+  }
+
+  isTimelineRowExpanded(rowId: string): boolean {
+    return this.expandedTimelineRowIds().has(rowId);
+  }
+
+  timelineItems = computed<SicCalendarTimelineRow[]>(() => {
+    const all = this.allTimelineItems();
+    if (all.length === 0) return [];
+
+    const expanded = this.expandedTimelineRowIds();
+    if (expanded.size === 0 && all.length > 0) {
+      const initialSet = new Set<string>();
+      all.forEach((item) => {
+        const data = item.data as any;
+        if (data?.hasChildren) {
+          initialSet.add(String(item.id));
+        }
+      });
+      setTimeout(() => this.expandedTimelineRowIds.set(initialSet));
+    }
+
+    return all.filter((item) => {
+      const data = item.data as any;
+      if (!data || data.level === 0) return true;
+
+      let currentParentId = data.parentId;
+      while (currentParentId) {
+        if (!expanded.has(currentParentId)) {
+          return false;
+        }
+        const parentRow = all.find((r) => String(r.id) === currentParentId);
+        const parentData = parentRow?.data as any;
+        currentParentId = parentData?.parentId;
+      }
+      return true;
+    });
+  });
 
   ngOnInit() {
     // ตรวจสอบว่าเป็น route แบบ phase/:id/gantt หรือ gantt (มี projectId ใน query)
@@ -110,7 +202,7 @@ export class SicGanttComponent implements OnInit {
         this.startDate.set(phase.startDate);
         this.endDate.set(phase.endDate);
         const items = buildTimelineItems(phase);
-        this.timelineItems.set(items);
+        this.allTimelineItems.set(items);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -136,7 +228,7 @@ export class SicGanttComponent implements OnInit {
               const items = buildTimelineItems(phase);
               allItems.push(...items);
             });
-            this.timelineItems.set(allItems);
+            this.allTimelineItems.set(allItems);
             this.isLoading.set(false);
           },
           error: (err) => {
@@ -156,7 +248,11 @@ export class SicGanttComponent implements OnInit {
   onRowClick(row: SicCalendarTimelineRow) {
     const data = row.data as any;
     if (!data) return;
-    this.navigateToEntity(data.type, data.id, data.phaseId, data.milestoneId, data.workPackageId);
+    if (data.hasChildren) {
+      this.toggleTimelineRow(String(row.id));
+    } else {
+      this.navigateToEntity(data.type, data.id, data.phaseId, data.milestoneId, data.workPackageId);
+    }
   }
 
   onPhaseClick(event: { row: SicCalendarTimelineRow; phase: any }) {

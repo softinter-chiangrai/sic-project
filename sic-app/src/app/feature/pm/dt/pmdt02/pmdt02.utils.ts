@@ -108,29 +108,60 @@ export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
 }
 
 // ===== ฟังก์ชันใหม่สำหรับ SicCalendarTimeline =====
-export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow[] {
-  const rows: SicCalendarTimelineRow[] = [];
+export interface TimelineRowData {
+  type: 'phase' | 'milestone' | 'workpackage' | 'task';
+  id: string;
+  phaseId?: string;
+  milestoneId?: string;
+  workPackageId?: string;
+  title: string;
+  level: number; // 0 = phase, 1 = milestone, 2 = workpackage, 3 = task
+  parentId?: string;
+  icon: string;
+  hasChildren: boolean;
+  color: string;
+  assignedTo?: string;
+  assignees?: string[];
+}
+
+export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow<TimelineRowData>[] {
+  const rows: SicCalendarTimelineRow<TimelineRowData>[] = [];
+  const phaseRowId = `phase-${phase.id}`;
 
   // 1. Phase row
+  const phaseAssignee = phase.owner || undefined;
   rows.push({
-    id: `phase-${phase.id}`,
-    label: `📌 ${phase.phaseName}`,
+    id: phaseRowId,
+    label: phase.phaseName,
     progress: phase.progress, // Phase มี progress โดยตรง
+    avatarUrl: phaseAssignee,
     phases: [{
       id: phase.id,
       label: phase.phaseName,
       start: phase.startDate,
       end: phase.endDate,
-      color: phase.color || '#4A90D9'
+      color: phase.color || '#4A90D9',
+      avatarUrl: phaseAssignee
     }],
-    data: { type: 'phase', id: phase.id }
+    data: {
+      type: 'phase',
+      id: phase.id,
+      title: phase.phaseName,
+      level: 0,
+      icon: '🚩',
+      hasChildren: (phase.milestones?.length || 0) > 0,
+      color: phase.color || '#4A90D9',
+      assignedTo: phase.owner
+    }
   });
 
   // 2. Milestones, Work Packages, Tasks
   phase.milestones?.forEach((ms) => {
+    const msRowId = `ms-${ms.id}`;
+    const hasWp = (ms.workPackages?.length || 0) > 0;
     rows.push({
-      id: `ms-${ms.id}`,
-      label: `  📍 ${ms.milestoneName}`,
+      id: msRowId,
+      label: ms.milestoneName,
       progress: ms.status === 'Done' ? 100 : 0,
       phases: [{
         id: ms.id,
@@ -139,14 +170,26 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
         end: ms.dueDate,
         color: ms.color || '#E67E22'
       }],
-      data: { type: 'milestone', id: ms.id, phaseId: phase.id }
+      data: {
+        type: 'milestone',
+        id: ms.id,
+        phaseId: phase.id,
+        title: ms.milestoneName,
+        level: 1,
+        parentId: phaseRowId,
+        icon: '📌',
+        hasChildren: hasWp,
+        color: ms.color || '#E67E22'
+      }
     });
 
     ms.workPackages?.forEach((wp) => {
+      const wpRowId = `wp-${wp.id}`;
       const wpProgress = calculateWpProgress(wp) * 100; // แปลงเป็นเปอร์เซ็นต์
+      const hasTasks = (wp.tasks?.length || 0) > 0;
       rows.push({
-        id: `wp-${wp.id}`,
-        label: `    📦 ${wp.packageName}`,
+        id: wpRowId,
+        label: wp.packageName,
         progress: wpProgress,
         phases: [{
           id: wp.id,
@@ -155,24 +198,68 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
           end: wp.endDate,
           color: wp.color || '#8E44AD'
         }],
-        data: { type: 'workpackage', id: wp.id, milestoneId: ms.id, phaseId: phase.id }
+        data: {
+          type: 'workpackage',
+          id: wp.id,
+          milestoneId: ms.id,
+          phaseId: phase.id,
+          title: wp.packageName,
+          level: 2,
+          parentId: msRowId,
+          icon: '📦',
+          hasChildren: hasTasks,
+          color: wp.color || '#8E44AD'
+        }
       });
 
       wp.tasks?.forEach((task) => {
         const taskProgress = calculateTaskProgress(task) * 100; // แปลงเป็นเปอร์เซ็นต์
+        const visuals = getTaskVisuals(task);
+
+        // Collect assignees list
+        const assigneesList: string[] = [];
+        if (task.assigneeNames) {
+          if (Array.isArray(task.assigneeNames)) {
+            assigneesList.push(...task.assigneeNames.filter(Boolean));
+          } else if (typeof task.assigneeNames === 'object') {
+            assigneesList.push(...Object.values(task.assigneeNames).filter(Boolean));
+          }
+        }
+        if (assigneesList.length === 0 && task.assignedTo) {
+          assigneesList.push(task.assignedTo);
+        }
+
+        const firstAssignee = assigneesList.length > 0 ? assigneesList[0] : undefined;
+
         rows.push({
           id: task.id,
-          label: `      🔹 ${task.taskName}`,
+          label: task.taskName,
           progress: taskProgress,
+          avatarUrl: firstAssignee,
           phases: [{
             id: task.id,
             label: task.taskName,
             start: task.startDate,
             end: task.endDate || task.startDate,
-            color: task.color || '#2ECC71'
+            color: task.color || visuals.color,
+            avatarUrl: firstAssignee
           }],
-          data: { type: 'task', id: task.id, workPackageId: wp.id, milestoneId: ms.id, phaseId: phase.id }
-        });
+          data: {
+            type: 'task',
+            id: task.id,
+            workPackageId: wp.id,
+            milestoneId: ms.id,
+            phaseId: phase.id,
+            title: task.taskName,
+            level: 3,
+            parentId: wpRowId,
+            icon: visuals.icon,
+            hasChildren: false,
+            color: task.color || visuals.color,
+            assignedTo: task.assignedTo,
+            assignees: assigneesList
+          }
+        } as any);
       });
     });
   });

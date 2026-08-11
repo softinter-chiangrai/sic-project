@@ -339,6 +339,49 @@
             maxHeight="500px"
             (rowClick)="onTimelineRowClick($event)"
             (phaseClick)="onTimelinePhaseClick($event)">
+            <ng-template #labelTemplate let-row>
+              <div
+                class="flex items-center gap-1.5 w-full py-1 pr-2 select-none"
+                [style.padding-left.px]="((row.data?.level || 0) * 16) + 4">
+                @if (row.data?.hasChildren) {
+                  <button
+                    type="button"
+                    (click)="toggleTimelineRow(row.id, $event)"
+                    class="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all flex-shrink-0 shadow-sm"
+                    title="คลิกเพื่อพับ/ขยาย">
+                    <i
+                      class="bi bi-chevron-right text-[0.7rem] font-bold transition-transform duration-200"
+                      [class.rotate-90]="isTimelineRowExpanded(row.id)"></i>
+                  </button>
+                } @else {
+                  <span class="w-5 flex-shrink-0"></span>
+                }
+                <span class="text-sm flex-shrink-0">{{ row.data?.icon || '📌' }}</span>
+                <span class="text-xs font-medium text-[var(--text-active)] truncate flex-1" [title]="row.data?.title || row.label">
+                  {{ row.data?.title || row.label }}
+                </span>
+              </div>
+            </ng-template>
+            <ng-template #phaseTemplate let-phase let-row="row">
+              <div
+                class="h-full rounded-md flex items-center justify-between px-2.5 text-white text-xs font-medium shadow-sm transition-all overflow-hidden"
+                [style.background-color]="phase.color || '#3b82f6'"
+                [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
+                <span class="truncate mr-1.5">{{ phase.label || row.label }}</span>
+                @if (row.data?.assignees && row.data?.assignees.length > 0) {
+                  <div class="flex items-center -space-x-1 flex-shrink-0">
+                    @for (person of row.data?.assignees.slice(0, 2); track person) {
+                      <sic-avatar
+                        [name]="person"
+                        [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
+                        size="sm"
+                        class="ring-1 ring-white/30 rounded-full">
+                      </sic-avatar>
+                    }
+                  </div>
+                }
+              </div>
+            </ng-template>
           </sic-calendar-timeline>
         </div>
       </div>

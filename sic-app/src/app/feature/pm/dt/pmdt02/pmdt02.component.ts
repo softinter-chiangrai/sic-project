@@ -17,6 +17,7 @@ import { TaskService } from './task.service';
 import { WorkPackageService } from './work-package.service';
 import 'dayjs/locale/th';
 import {
+  SicAvatarComponent,
   SicCalendarComponent,
   SicCalendarEvent,
   SicCalendarHoliday,
@@ -50,6 +51,7 @@ export interface CalendarItemDetail {
     CommonModule,
     FormsModule,
     RouterModule,
+    SicAvatarComponent,
     SicCalendarComponent,
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
@@ -235,11 +237,95 @@ export class Pmdt02Component implements OnInit {
     return items;
   });
 
-  timelineItems = computed<SicCalendarTimelineRow[]>(() => {
+  // ===== TIMELINE COLLAPSIBLE STATE =====
+  expandedTimelineRowIds = signal<Set<string>>(new Set());
+
+  toggleTimelineRow(rowId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    const current = new Set(this.expandedTimelineRowIds());
+    if (current.has(rowId)) {
+      current.delete(rowId);
+    } else {
+      current.add(rowId);
+    }
+    this.expandedTimelineRowIds.set(current);
+  }
+
+  isTimelineRowExpanded(rowId: string): boolean {
+    return this.expandedTimelineRowIds().has(rowId);
+  }
+
+  allTimelineItems = computed(() => {
     const p = this.phase();
     if (!p) return [];
     return buildTimelineItems(p);
   });
+
+  timelineItems = computed<SicCalendarTimelineRow[]>(() => {
+    const all = this.allTimelineItems();
+    if (all.length === 0) return [];
+
+    const expanded = this.expandedTimelineRowIds();
+    // Initialize expanded set if empty on first load (default Phase and Milestones expanded)
+    if (expanded.size === 0 && all.length > 0) {
+      const initialSet = new Set<string>();
+      all.forEach((item) => {
+        const data = item.data as any;
+        if (data?.hasChildren) {
+          initialSet.add(String(item.id));
+        }
+      });
+      // Update asynchronously or on demand
+      setTimeout(() => this.expandedTimelineRowIds.set(initialSet));
+    }
+
+    return all.filter((item) => {
+      const data = item.data as any;
+      if (!data || data.level === 0) return true; // Top level phase is always visible
+
+      // Check if all parent ancestors are expanded
+      let currentParentId = data.parentId;
+      while (currentParentId) {
+        if (!expanded.has(currentParentId)) {
+          return false;
+        }
+        const parentRow = all.find((r) => String(r.id) === currentParentId);
+        const parentData = parentRow?.data as any;
+        currentParentId = parentData?.parentId;
+      }
+      return true;
+    });
+  });
+
+  onTimelineRowClick(row: SicCalendarTimelineRow): void {
+    const data = row.data as any;
+    if (!data) return;
+    if (data.hasChildren) {
+      this.toggleTimelineRow(String(row.id));
+    } else {
+      this.onSelectItem({
+        id: data.id,
+        type: data.type,
+        title: data.title,
+        color: data.color,
+        icon: data.icon,
+        rawObject: data,
+      });
+    }
+  }
+
+  onTimelinePhaseClick(event: { row: SicCalendarTimelineRow; phase: any }): void {
+    const data = event.row.data as any;
+    if (!data) return;
+    this.onSelectItem({
+      id: data.id,
+      type: data.type,
+      title: data.title,
+      color: data.color,
+      icon: data.icon,
+      rawObject: data,
+    });
+  }
 
   timelineStartDate = computed(() => {
     const p = this.phase();
@@ -318,6 +404,10 @@ export class Pmdt02Component implements OnInit {
             if (target) {
               target.workPackages = workPackages;
               this.phase.set({ ...current });
+              // Automatically load tasks for each workpackage so Gantt chart has full tree
+              workPackages.forEach((wp) => {
+                this.loadTasksForWorkPackage(wp.id);
+              });
             }
           }
         },
@@ -798,14 +888,6 @@ export class Pmdt02Component implements OnInit {
       default:
         return { icon: '📝', color: '#8b5cf6' };
     }
-  }
-
-  onTimelineRowClick(row: SicCalendarTimelineRow): void {
-    this.navigateFromTimelineData(row.data);
-  }
-
-  onTimelinePhaseClick(event: { row: SicCalendarTimelineRow; phase: any }): void {
-    this.navigateFromTimelineData(event.row.data);
   }
 
   private navigateFromTimelineData(data: any): void {
