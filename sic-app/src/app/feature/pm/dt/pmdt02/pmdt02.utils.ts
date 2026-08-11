@@ -317,21 +317,8 @@ export function buildCalendarEvents(phase: PhaseResponse): SicCalendarEvent[] {
   return events;
 }
 
-// ===== ฟังก์ชันสร้าง Holidays/Milestones Badges สำหรับ SicCalendar =====
+// ===== ฟังก์ชันสร้าง Holidays สำหรับ SicCalendar =====
 export function buildCalendarHolidays(phase: PhaseResponse): SicCalendarHoliday[] {
-  const holidays: SicCalendarHoliday[] = [];
-  phase.milestones?.forEach((ms) => {
-    if (ms.dueDate) {
-      const cleanDate = ms.dueDate.split('T')[0];
-      holidays.push({
-        id: `ms-holiday-${ms.id}`,
-        date: cleanDate,
-        title: `Milestone: ${ms.milestoneName}`,
-        source: 'office',
-        color: ms.color || '#eab308',
-        icon: '📌',
-      });
-    }
-  });
-  return holidays;
+  // ไม่แปลง Milestone เป็นวันหยุดออฟฟิศ เพื่อไม่ให้เกิดข้อมูลซ้ำซ้อนหรือขึ้นเป็นวันหยุดออฟฟิศ
+  return [];
 }

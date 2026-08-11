@@ -82,12 +82,8 @@ sic-app/
           customer-state.service.ts
           dialog.service.ts
           language.service.ts
-          milestone.service.ts
           navigation.service.ts
-          phase.service.ts
-          task.service.ts
           theme.service.ts
-          work-package.service.ts
         theme/
           provide-sic-theme.ts
           theme.config.ts
@@ -172,10 +168,13 @@ sic-app/
               pmdt02C/
                 pmdt02C.component.html
                 pmdt02C.component.ts
+              milestone.service.ts
+              phase.service.ts
               pmdt02.component.html
               pmdt02.component.ts
-              pmdt02-gantt.component.ts
               pmdt02.utils.ts
+              task.service.ts
+              work-package.service.ts
             pmdt03/
               pmdt03A/
                 pmdt03A.component.html
@@ -2245,43 +2244,6 @@ export class LanguageService {
 }
 </file>
 
-<file path="sic-app/src/app/core/services/milestone.service.ts">
-// src/app/core/services/milestone.service.ts
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { MilestoneRequest, MilestoneResponse } from '../model/phase.model';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MilestoneService {
-  private http = inject(HttpClient);
-  private apiBaseUrl = environment.apiBaseUrl;
-
-  getMilestonesByPhaseId(phaseId: string): Observable<MilestoneResponse[]> {
-    return this.http.get<MilestoneResponse[]>(`${this.apiBaseUrl}/api/pm/milestones/phase/${phaseId}`);
-  }
-
-  getMilestoneById(id: string): Observable<MilestoneResponse> {
-    return this.http.get<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones/${id}`);
-  }
-
-  createMilestone(data: MilestoneRequest): Observable<MilestoneResponse> {
-    return this.http.post<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones`, data);
-  }
-
-  updateMilestone(id: string, data: MilestoneRequest): Observable<MilestoneResponse> {
-    return this.http.put<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones/${id}`, data);
-  }
-
-  deleteMilestone(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/milestones/${id}`);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/core/services/navigation.service.ts">
 // navigation.service.ts
 import { Injectable } from '@angular/core';
@@ -2312,120 +2274,6 @@ export class NavigationService {
 
   navigateWithoutContext(commands: any[], extras?: NavigationExtras): Promise<boolean> {
     return this.router.navigate(commands, extras);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/core/services/phase.service.ts">
-// src/app/core/services/phase.service.ts
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { PhaseRequest, PhaseResponse } from '../model/phase.model';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class PhaseService {
-  private http = inject(HttpClient);
-  private apiBaseUrl = environment.apiBaseUrl;
-
-  getPhases(projectId: string): Observable<PhaseResponse[]> {
-    return this.http.get<PhaseResponse[]>(`${this.apiBaseUrl}/api/pm/projects/${projectId}/phases`);
-  }
-
-  getPhaseById(phaseId: string): Observable<PhaseResponse> {
-    return this.http.get<PhaseResponse>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`);
-  }
-
-  createPhase(projectId: string, data: PhaseRequest): Observable<PhaseResponse> {
-    return this.http.post<PhaseResponse>(`${this.apiBaseUrl}/api/pm/projects/${projectId}/phases`, data);
-  }
-
-  updatePhase(phaseId: string, data: PhaseRequest): Observable<PhaseResponse> {
-    return this.http.put<PhaseResponse>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`, data);
-  }
-
-  deletePhase(phaseId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/core/services/task.service.ts">
-// src/app/feature/pm/services/task.service.ts
-
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { TaskRequest, TaskResponse } from '../model/phase.model';
-
-@Injectable({ providedIn: 'root' })
-export class TaskService {
-  private baseUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
-
-  constructor(private http: HttpClient) {}
-
-  getTasksByWorkPackageId(wpId: string): Observable<TaskResponse[]> {
-    return this.http.get<TaskResponse[]>(`${this.baseUrl}/work-package/${wpId}`);
-  }
-
-  getTaskById(id: string): Observable<TaskResponse> {
-    return this.http.get<TaskResponse>(`${this.baseUrl}/${id}`);
-  }
-
-  createTask(data: TaskRequest): Observable<TaskResponse> {
-    return this.http.post<TaskResponse>(this.baseUrl, data);
-  }
-
-  updateTask(taskId: string, data: TaskRequest): Observable<TaskResponse> {
-    return this.http.put<TaskResponse>(`${this.baseUrl}/${taskId}`, data);
-  }
-
-  deleteTask(taskId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${taskId}`);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/core/services/work-package.service.ts">
-// src/app/core/services/work-package.service.ts
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { WorkPackageResponse, WorkPackageRequest } from '../model/phase.model';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class WorkPackageService {
-  private http = inject(HttpClient);
-  private apiBaseUrl = environment.apiBaseUrl;
-
-  getWorkPackageById(id: string): Observable<WorkPackageResponse> {
-    return this.http.get<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`);
-  }
-
-  createWorkPackage(data: WorkPackageRequest): Observable<WorkPackageResponse> {
-    return this.http.post<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages`, data);
-  }
-
-  updateWorkPackage(id: string, data: WorkPackageRequest): Observable<WorkPackageResponse> {
-    return this.http.put<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`, data);
-  }
-
-  deleteWorkPackage(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`);
-  }
-
-  // ✅ 新增: โหลด Work Packages ตาม Milestone ID
-  getWorkPackagesByMilestoneId(milestoneId: string): Observable<WorkPackageResponse[]> {
-    return this.http.get<WorkPackageResponse[]>(
-      `${this.apiBaseUrl}/api/pm/work-packages/milestone/${milestoneId}`
-    );
   }
 }
 </file>
@@ -22264,138 +22112,6 @@ export class Pmdt01Service {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { MilestoneService } from '../../../../../core/services/milestone.service';
-import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
-
-@Component({
-  selector: 'app-pmdt02A',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicDatepickerComponent,
-    SicTimepickerComponent,
-    SicColorpickerComponent,   // ✅ import
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt02A.component.html',
-})
-export class Pmdt02AComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private milestoneService = inject(MilestoneService);
-  private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-
-  phaseId = '';
-  projectId = '';
-  milestoneId: string | null = null;
-  isEdit = false;
-  data: MilestoneResponse | null = null;
-
-  // ✅ เพิ่ม color ในฟอร์ม
-  form = this.fb.group({
-    milestoneName: ['', Validators.required],
-    description: [''],
-    dueDate: ['', Validators.required],
-    dueTime: ['', Validators.required],
-    color: [''], // ✅ เพิ่ม
-  });
-
-  ngOnInit() {
-    this.route.paramMap.subscribe((params) => {
-      this.milestoneId = params.get('id');
-      this.isEdit = !!this.milestoneId;
-    });
-
-    this.route.queryParams.subscribe((qParams) => {
-      this.phaseId = qParams['phaseId'] || '';
-      this.projectId = qParams['projectId'] || '';
-      if (this.isEdit && this.milestoneId) {
-        this.loadMilestone(this.milestoneId);
-      }
-    });
-  }
-
-  loadMilestone(id: string) {
-    this.milestoneService.getMilestoneById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
-    });
-  }
-
-  patchForm(data: MilestoneResponse) {
-    const dueDate = data.dueDate ? data.dueDate.split('T')[0] : '';
-    const dueTime = data.dueDate ? data.dueDate.split('T')[1]?.substring(0, 5) : '';
-    this.form.patchValue({
-      milestoneName: data.milestoneName,
-      description: data.description,
-      dueDate: dueDate,
-      dueTime: dueTime,
-      color: data.color || '', // ✅ patch ค่าสี
-    });
-  }
-
-  private buildISOString(date: any, time: string): string {
-    if (!date) return '';
-    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
-    if (!dateStr) return '';
-    const timeStr = time || '00:00';
-    return `${dateStr}T${timeStr}:00Z`;
-  }
-
-  onSubmit() {
-    if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const raw = this.form.value;
-    const data: MilestoneRequest = {
-      phaseId: this.phaseId,
-      milestoneName: raw.milestoneName!,
-      description: raw.description || undefined,
-      dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
-      color: raw.color || undefined, // ✅ ส่งค่าสี
-    };
-
-    const request = this.isEdit && this.milestoneId
-      ? this.milestoneService.updateMilestone(this.milestoneId, data)
-      : this.milestoneService.createMilestone(data);
-
-    request.subscribe({
-      next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Milestone เรียบร้อย' : 'สร้าง Milestone เรียบร้อย');
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
-      },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
-    });
-  }
-
-  cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.html">
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
@@ -22478,147 +22194,6 @@ export class Pmdt02AComponent implements OnInit {
 
   </form>
 </div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.ts
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { WorkPackageService } from '../../../../../core/services/work-package.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
-
-@Component({
-  selector: 'app-pmdt02B',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicDatepickerComponent,
-    SicTimepickerComponent,
-    SicColorpickerComponent,   // ✅ import
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt02B.component.html',
-})
-export class Pmdt02BComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private wpService = inject(WorkPackageService);
-  private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-
-  milestoneId = '';
-  projectId = '';
-  phaseId = '';
-  wpId: string | null = null;
-  isEdit = false;
-  data: WorkPackageResponse | null = null;
-
-  // ✅ เพิ่ม color ในฟอร์ม
-  form = this.fb.group({
-    packageName: ['', Validators.required],
-    description: [''],
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    color: [''], // ✅ เพิ่ม
-  });
-
-  ngOnInit() {
-    this.route.paramMap.subscribe((params) => {
-      this.wpId = params.get('id');
-      this.isEdit = !!this.wpId;
-    });
-
-    this.route.queryParams.subscribe((qParams) => {
-      this.milestoneId = qParams['milestoneId'] || '';
-      this.projectId = qParams['projectId'] || '';
-      this.phaseId = qParams['phaseId'] || '';
-      if (this.isEdit && this.wpId) {
-        this.loadWorkPackage(this.wpId);
-      }
-    });
-  }
-
-  loadWorkPackage(id: string) {
-    this.wpService.getWorkPackageById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
-    });
-  }
-
-  patchForm(data: WorkPackageResponse) {
-    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
-    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
-    this.form.patchValue({
-      packageName: data.packageName,
-      description: data.description,
-      startDate: startDate,
-      startTime: startTime,
-      endDate: endDate,
-      endTime: endTime,
-      color: data.color || '', // ✅ patch ค่าสี
-    });
-  }
-
-  private buildISOString(date: any, time: string): string {
-    if (!date) return '';
-    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
-    if (!dateStr) return '';
-    const timeStr = time || '00:00';
-    return `${dateStr}T${timeStr}:00Z`;
-  }
-
-  onSubmit() {
-    if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const raw = this.form.value;
-    const data: WorkPackageRequest = {
-      milestoneId: this.milestoneId,
-      packageName: raw.packageName!,
-      description: raw.description || undefined,
-      startDate: this.buildISOString(raw.startDate, raw.startTime!),
-      endDate: this.buildISOString(raw.endDate, raw.endTime!),
-      color: raw.color || undefined, // ✅ ส่งค่าสี
-    };
-
-    const request = this.isEdit && this.wpId
-      ? this.wpService.updateWorkPackage(this.wpId, data)
-      : this.wpService.createWorkPackage(data);
-
-    request.subscribe({
-      next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Work Package เรียบร้อย' : 'สร้าง Work Package เรียบร้อย');
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
-      },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
-    });
-  }
-
-  cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
-  }
-}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html">
@@ -22767,213 +22342,153 @@ export class Pmdt02BComponent implements OnInit {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/milestone.service.ts">
+// src/app/core/services/milestone.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type { MilestoneRequest, MilestoneResponse } from '../../../../core/model/phase.model';
 
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { environment } from '../../../../../../environments/environment';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
-import { TaskService } from '../../../../../core/services/task.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { BusinessService } from '../../../../../core/services/business.service';
-import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
-
-@Component({
-  selector: 'app-pmdt02C',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicComboboxComponent,
-    SicDatepickerComponent,
-    SicTimepickerComponent,
-    SicColorpickerComponent,
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt02C.component.html',
+@Injectable({
+  providedIn: 'root',
 })
-export class Pmdt02CComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private taskService = inject(TaskService);
-  private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private businessService = inject(BusinessService);
+export class MilestoneService {
+  private http = inject(HttpClient);
+  private apiBaseUrl = environment.apiBaseUrl;
 
-  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
-
-  workPackageId = '';
-  projectId = '';
-  phaseId = '';
-  taskId: string | null = null;
-  isEdit = false;
-  data: TaskResponse | null = null;
-  assignedToApiUrl = '';
-
-  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
-  assigneeNames: Record<string, string> = {};
-
-  form = this.fb.group({
-    taskCode: ['', Validators.required],
-    taskName: ['', Validators.required],
-    description: [''],
-    assignedTo: [''], // คนหลัก (optional)
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
-    priority: ['Medium'],
-    color: [''],
-    assigneeIds: [[]], // ✅ array ของ userId
-  });
-
-  get assigneeIds(): FormControl {
-    return this.form.get('assigneeIds') as FormControl;
+  getMilestonesByPhaseId(phaseId: string): Observable<MilestoneResponse[]> {
+    return this.http.get<MilestoneResponse[]>(`${this.apiBaseUrl}/api/pm/milestones/phase/${phaseId}`);
   }
 
-  ngOnInit() {
-    const businessId = this.businessService.getCurrentBusinessId();
-    if (businessId) {
-      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
-    }
-
-    this.route.paramMap.subscribe((params) => {
-      this.taskId = params.get('id');
-      this.isEdit = !!this.taskId;
-    });
-
-    this.route.queryParams.subscribe((qParams) => {
-      this.workPackageId = qParams['workPackageId'] || '';
-      this.projectId = qParams['projectId'] || '';
-      this.phaseId = qParams['phaseId'] || '';
-      if (this.isEdit && this.taskId) {
-        this.loadTask(this.taskId);
-      }
-    });
+  getMilestoneById(id: string): Observable<MilestoneResponse> {
+    return this.http.get<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones/${id}`);
   }
 
-  loadTask(id: string) {
-    this.taskService.getTaskById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
-    });
+  createMilestone(data: MilestoneRequest): Observable<MilestoneResponse> {
+    return this.http.post<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones`, data);
   }
 
-  patchForm(data: TaskResponse) {
-    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
-    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
-
-    this.form.patchValue({
-      taskCode: data.taskCode,
-      taskName: data.taskName,
-      description: data.description,
-      assignedTo: data.assignedTo,
-      startDate: startDate,
-      startTime: startTime,
-      endDate: endDate,
-      endTime: endTime,
-      estimateManday: data.estimateManday ?? null,
-      priority: data.priority,
-      color: data.color || '',
-    });
-
-    // ✅ โหลด assigneeIds และ assigneeNames
-    if (data.assigneeIds) {
-      this.assigneeIds.setValue(data.assigneeIds);
-    }
-    if (data.assigneeNames) {
-      this.assigneeNames = data.assigneeNames;
-    }
+  updateMilestone(id: string, data: MilestoneRequest): Observable<MilestoneResponse> {
+    return this.http.put<MilestoneResponse>(`${this.apiBaseUrl}/api/pm/milestones/${id}`, data);
   }
 
-  // ✅ เมื่อเลือกจาก combobox
-  onAssigneeSelect(item: any) {
-    if (!item) return;
-    const userId = item.value;
-    const current = this.assigneeIds.value || [];
-    if (current.includes(userId)) {
-      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
-      this.assigneeCombobox.clearSelection();
-      return;
-    }
-    this.assigneeNames[userId] = item.text;
-    this.assigneeIds.setValue([...current, userId]);
-    this.assigneeCombobox.clearSelection();
+  deleteMilestone(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/milestones/${id}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/phase.service.ts">
+// src/app/core/services/phase.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type { PhaseRequest, PhaseResponse } from '../../../../core/model/phase.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PhaseService {
+  private http = inject(HttpClient);
+  private apiBaseUrl = environment.apiBaseUrl;
+
+  getPhases(projectId: string): Observable<PhaseResponse[]> {
+    return this.http.get<PhaseResponse[]>(`${this.apiBaseUrl}/api/pm/projects/${projectId}/phases`);
   }
 
-  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
-  removeAssignee(userId: string) {
-    const current = this.assigneeIds.value || [];
-    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
-    delete this.assigneeNames[userId];
+  getPhaseById(phaseId: string): Observable<PhaseResponse> {
+    return this.http.get<PhaseResponse>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`);
   }
 
-  // ✅ ดูชื่อจาก userId
-  getAssigneeName(userId: string): string {
-    return this.assigneeNames[userId] || userId;
+  createPhase(projectId: string, data: PhaseRequest): Observable<PhaseResponse> {
+    return this.http.post<PhaseResponse>(`${this.apiBaseUrl}/api/pm/projects/${projectId}/phases`, data);
   }
 
-  private buildISOString(date: any, time: string): string {
-    if (!date) return '';
-    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
-    if (!dateStr) return '';
-    const timeStr = time || '00:00';
-    return `${dateStr}T${timeStr}:00Z`;
+  updatePhase(phaseId: string, data: PhaseRequest): Observable<PhaseResponse> {
+    return this.http.put<PhaseResponse>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`, data);
   }
 
-  onSubmit() {
-    if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
+  deletePhase(phaseId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`);
+  }
+}
+</file>
 
-    const raw = this.form.value;
-    const data: TaskRequest = {
-      workPackageId: this.workPackageId,
-      taskCode: raw.taskCode!,
-      taskName: raw.taskName!,
-      description: raw.description || undefined,
-      assignedTo: raw.assignedTo || undefined,
-      startDate: this.buildISOString(raw.startDate, raw.startTime!),
-      endDate: this.buildISOString(raw.endDate, raw.endTime!),
-      estimateManday: raw.estimateManday!,
-      priority: raw.priority || 'Medium',
-      color: raw.color || undefined,
-      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
-    };
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/task.service.ts">
+// src/app/feature/pm/services/task.service.ts
 
-    const request = this.isEdit && this.taskId
-      ? this.taskService.updateTask(this.taskId, data)
-      : this.taskService.createTask(data);
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type { TaskRequest, TaskResponse } from '../../../../core/model/phase.model';
 
-    request.subscribe({
-      next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
-      },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
-    });
+@Injectable({ providedIn: 'root' })
+export class TaskService {
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
+
+  constructor(private http: HttpClient) {}
+
+  getTasksByWorkPackageId(wpId: string): Observable<TaskResponse[]> {
+    return this.http.get<TaskResponse[]>(`${this.baseUrl}/work-package/${wpId}`);
   }
 
-  cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
+  getTaskById(id: string): Observable<TaskResponse> {
+    return this.http.get<TaskResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  createTask(data: TaskRequest): Observable<TaskResponse> {
+    return this.http.post<TaskResponse>(this.baseUrl, data);
+  }
+
+  updateTask(taskId: string, data: TaskRequest): Observable<TaskResponse> {
+    return this.http.put<TaskResponse>(`${this.baseUrl}/${taskId}`, data);
+  }
+
+  deleteTask(taskId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${taskId}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/work-package.service.ts">
+// src/app/core/services/work-package.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type { WorkPackageResponse, WorkPackageRequest } from '../../../../core/model/phase.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class WorkPackageService {
+  private http = inject(HttpClient);
+  private apiBaseUrl = environment.apiBaseUrl;
+
+  getWorkPackageById(id: string): Observable<WorkPackageResponse> {
+    return this.http.get<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`);
+  }
+
+  createWorkPackage(data: WorkPackageRequest): Observable<WorkPackageResponse> {
+    return this.http.post<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages`, data);
+  }
+
+  updateWorkPackage(id: string, data: WorkPackageRequest): Observable<WorkPackageResponse> {
+    return this.http.put<WorkPackageResponse>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`, data);
+  }
+
+  deleteWorkPackage(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/work-packages/${id}`);
+  }
+
+  // ✅ 新增: โหลด Work Packages ตาม Milestone ID
+  getWorkPackagesByMilestoneId(milestoneId: string): Observable<WorkPackageResponse[]> {
+    return this.http.get<WorkPackageResponse[]>(
+      `${this.apiBaseUrl}/api/pm/work-packages/milestone/${milestoneId}`
+    );
   }
 }
 </file>
@@ -34027,253 +33542,515 @@ export class Burt03Component implements OnInit {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02-gantt.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02-gantt.component.ts
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts
 import { CommonModule } from '@angular/common';
-import { DhtmlxGanttComponent, DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
-import { PhaseService } from '../../../../core/services/phase.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { buildGanttTasks } from './pmdt02.utils';
-import type { PhaseResponse } from '../../../../core/model/phase.model';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { MilestoneService } from '../milestone.service';
+import type { MilestoneRequest, MilestoneResponse } from '../../../../../core/model/phase.model';
 
 @Component({
-  selector: 'app-pmdt02-gantt',
+  selector: 'app-pmdt02A',
   standalone: true,
-  imports: [CommonModule, RouterModule, DhtmlxGanttComponent],
-  template: `
-    <div class="p-4 h-screen flex flex-col bg-[var(--bg)]">
-      <!-- Header with back button -->
-      <div class="flex items-center gap-3 mb-4 flex-shrink-0">
-        <button (click)="goBack()"
-          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all">
-          <i class="bi bi-arrow-left text-xl"></i>
-        </button>
-        <h1 class="text-xl font-bold text-[var(--text-active)]">
-          Gantt Chart: {{ phase()?.phaseName || 'Loading...' }}
-        </h1>
-        <span class="text-sm text-[var(--text-muted)] ml-auto">Project: {{ projectId() }}</span>
-      </div>
-
-      <!-- Gantt container (full remaining height) -->
-      <div class="flex-1 min-h-0 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 overflow-hidden">
-        @if (isLoading()) {
-          <div class="flex justify-center items-center h-full">
-            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-          </div>
-        } @else {
-          <app-dhtmlx-gantt
-            [tasks]="ganttTasks()"
-            [links]="[]"
-            [projectId]="projectId()"
-            [phaseId]="phaseId()"
-            [isLoading]="false"
-            (taskUpdated)="onTaskUpdated($event)"
-            (taskDeleted)="onTaskDeleted($event)"
-            (taskCreated)="onTaskCreated($event)">
-          </app-dhtmlx-gantt>
-        }
-      </div>
-    </div>
-  `,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,   // ✅ import
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [`
-    :host {
-      display: block;
-      height: 100vh;
-    }
-  `]
+  templateUrl: './pmdt02A.component.html',
 })
-export class Pmdt02GanttComponent implements OnInit {
+export class Pmdt02AComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private milestoneService = inject(MilestoneService);
+  private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private phaseService = inject(PhaseService);
-  private dialog = inject(DialogService);
 
-  phaseId = signal('');
-  projectId = signal('');
-  phase = signal<PhaseResponse | null>(null);
-  isLoading = signal(true);
-  ganttTasks = signal<DhtmlxGanttTask[]>([]);
+  phaseId = '';
+  projectId = '';
+  milestoneId: string | null = null;
+  isEdit = false;
+  data: MilestoneResponse | null = null;
+
+  // ✅ เพิ่ม color ในฟอร์ม
+  form = this.fb.group({
+    milestoneName: ['', Validators.required],
+    description: [''],
+    dueDate: ['', Validators.required],
+    dueTime: ['', Validators.required],
+    color: [''], // ✅ เพิ่ม
+  });
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.phaseId.set(id);
-        this.loadPhase(id);
-      } else {
-        this.goBack();
-      }
+    this.route.paramMap.subscribe((params) => {
+      this.milestoneId = params.get('id');
+      this.isEdit = !!this.milestoneId;
     });
 
-    this.route.queryParams.subscribe(qParams => {
-      const pid = qParams['projectId'];
-      if (pid) this.projectId.set(pid);
+    this.route.queryParams.subscribe((qParams) => {
+      this.phaseId = qParams['phaseId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      const dateParam = qParams['dueDate'] || qParams['date'];
+      if (!this.isEdit && dateParam) {
+        const cleanDate = dateParam.split('T')[0];
+        this.form.patchValue({
+          dueDate: cleanDate,
+          dueTime: '17:00',
+        });
+      }
+      if (this.isEdit && this.milestoneId) {
+        this.loadMilestone(this.milestoneId);
+      }
     });
   }
 
-  loadPhase(id: string) {
-    this.isLoading.set(true);
-    this.phaseService.getPhaseById(id).subscribe({
+  loadMilestone(id: string) {
+    this.milestoneService.getMilestoneById(id).subscribe({
       next: (data) => {
-        this.phase.set(data);
-        // แปลงข้อมูลเป็น Gantt Tasks โดยใช้ Utility
-        const tasks = buildGanttTasks(data);
-        this.ganttTasks.set(tasks);
-        this.isLoading.set(false);
+        this.data = data;
+        this.patchForm(data);
       },
-      error: (err) => {
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message);
-        this.isLoading.set(false);
-        this.goBack();
-      }
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
   }
 
-  // ----- Event handlers (อาจจะเพิ่ม logic เชื่อม backend ภายหลัง) -----
-  onTaskUpdated(task: DhtmlxGanttTask) {
-    console.log('[Gantt] Updated:', task);
-    // TODO: sync with backend
+  patchForm(data: MilestoneResponse) {
+    const dueDate = data.dueDate ? data.dueDate.split('T')[0] : '';
+    const dueTime = data.dueDate ? data.dueDate.split('T')[1]?.substring(0, 5) : '';
+    this.form.patchValue({
+      milestoneName: data.milestoneName,
+      description: data.description,
+      dueDate: dueDate,
+      dueTime: dueTime,
+      color: data.color || '', // ✅ patch ค่าสี
+    });
   }
 
-  onTaskDeleted(taskId: string) {
-    console.log('[Gantt] Deleted:', taskId);
-    // TODO: delete from backend
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
   }
 
-  onTaskCreated(task: DhtmlxGanttTask) {
-    console.log('[Gantt] Created:', task);
-    // TODO: create in backend
-  }
-
-  goBack() {
-    const phaseId = this.phaseId();
-    const projectId = this.projectId();
-    if (phaseId) {
-      this.router.navigate(['/feature/pm/phase', phaseId], { queryParams: { projectId } });
-    } else {
-      this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId } });
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
     }
+
+    const raw = this.form.value;
+    const data: MilestoneRequest = {
+      phaseId: this.phaseId,
+      milestoneName: raw.milestoneName!,
+      description: raw.description || undefined,
+      dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
+      color: raw.color || undefined, // ✅ ส่งค่าสี
+    };
+
+    const request = this.isEdit && this.milestoneId
+      ? this.milestoneService.updateMilestone(this.milestoneId, data)
+      : this.milestoneService.createMilestone(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Milestone เรียบร้อย' : 'สร้าง Milestone เรียบร้อย');
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
+      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+    });
+  }
+
+  cancel() {
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
   }
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts
-import type { PhaseResponse } from '../../../../core/model/phase.model';
-import type { DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.component.ts
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { WorkPackageService } from '../work-package.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import type { WorkPackageRequest, WorkPackageResponse } from '../../../../../core/model/phase.model';
 
-export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
-  const result: DhtmlxGanttTask[] = [];
+@Component({
+  selector: 'app-pmdt02B',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,   // ✅ import
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt02B.component.html',
+})
+export class Pmdt02BComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private wpService = inject(WorkPackageService);
+  private dialog = inject(DialogService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  // 1. Phase
-  const phaseProgress = isNaN(phase.progress) ? 0 : phase.progress / 100;
-  result.push({
-    id: `phase-${phase.id}`,
-    text: `📍 ${phase.phaseName}`,
-    start_date: formatDateForDhtmlx(phase.startDate),
-    end_date: formatDateForDhtmlx(phase.endDate),
-    progress: phaseProgress,
-    assignedTo: phase.owner || '-',
-    assignees: phase.owner || '-',
-    open: true,
-    color: phase.color || undefined,
+  milestoneId = '';
+  projectId = '';
+  phaseId = '';
+  wpId: string | null = null;
+  isEdit = false;
+  data: WorkPackageResponse | null = null;
+
+  // ✅ เพิ่ม color ในฟอร์ม
+  form = this.fb.group({
+    packageName: ['', Validators.required],
+    description: [''],
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    color: [''], // ✅ เพิ่ม
   });
 
-  // 2. Milestones
-  phase.milestones?.forEach((ms) => {
-    const msId = `ms-${ms.id}`;
-    result.push({
-      id: msId,
-      text: `📌 ${ms.milestoneName}`,
-      start_date: formatDateForDhtmlx(ms.dueDate),
-      end_date: formatDateForDhtmlx(ms.dueDate),
-      progress: ms.status === 'Done' ? 1 : 0.5,
-      parent: `phase-${phase.id}`,
-      color: ms.color || undefined,
+  ngOnInit() {
+    this.route.paramMap.subscribe((params) => {
+      this.wpId = params.get('id');
+      this.isEdit = !!this.wpId;
     });
 
-    // 3. Work Packages
-    ms.workPackages?.forEach((wp) => {
-      const wpId = `wp-${wp.id}`;
-      if (wp.startDate && wp.endDate) {
-        const wpProgress = calculateWpProgress(wp);
-        result.push({
-          id: wpId,
-          text: `📦 ${wp.packageName}`,
-          start_date: formatDateForDhtmlx(wp.startDate),
-          end_date: formatDateForDhtmlx(wp.endDate),
-          progress: isNaN(wpProgress) ? 0 : wpProgress,
-          parent: msId,
-          color: wp.color || undefined,
+    this.route.queryParams.subscribe((qParams) => {
+      this.milestoneId = qParams['milestoneId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      const dateParam = qParams['startDate'] || qParams['date'];
+      if (!this.isEdit && dateParam) {
+        const cleanDate = dateParam.split('T')[0];
+        this.form.patchValue({
+          startDate: cleanDate,
+          startTime: '09:00',
+          endDate: cleanDate,
+          endTime: '18:00',
         });
       }
-
-      // 4. Tasks
-      wp.tasks?.forEach((task) => {
-        if (task.startDate) {
-          const taskProgress = calculateTaskProgress(task);
-          let assigneesText = '';
-          if (task.assigneeNames) {
-            if (Array.isArray(task.assigneeNames)) {
-              assigneesText = task.assigneeNames.filter(Boolean).join(', ');
-            } else if (typeof task.assigneeNames === 'object') {
-              assigneesText = Object.values(task.assigneeNames).filter(Boolean).join(', ');
-            }
-          }
-          if (!assigneesText) {
-            assigneesText = task.assignedTo || '-';
-          }
-          result.push({
-            id: task.id,
-            text: `🔹 ${task.taskName}`,
-            start_date: formatDateForDhtmlx(task.startDate),
-            end_date: task.endDate ? formatDateForDhtmlx(task.endDate) : formatDateForDhtmlx(task.startDate),
-            progress: taskProgress,
-            parent: `wp-${wp.id}`,
-            assignedTo: task.assignedTo || '-',
-            assignees: assigneesText,
-            color: task.color || undefined,
-          });
-        }
-      });
+      if (this.isEdit && this.wpId) {
+        this.loadWorkPackage(this.wpId);
+      }
     });
+  }
+
+  loadWorkPackage(id: string) {
+    this.wpService.getWorkPackageById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: WorkPackageResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    this.form.patchValue({
+      packageName: data.packageName,
+      description: data.description,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      color: data.color || '', // ✅ patch ค่าสี
+    });
+  }
+
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    const raw = this.form.value;
+    const data: WorkPackageRequest = {
+      milestoneId: this.milestoneId,
+      packageName: raw.packageName!,
+      description: raw.description || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      color: raw.color || undefined, // ✅ ส่งค่าสี
+    };
+
+    const request = this.isEdit && this.wpId
+      ? this.wpService.updateWorkPackage(this.wpId, data)
+      : this.wpService.createWorkPackage(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Work Package เรียบร้อย' : 'สร้าง Work Package เรียบร้อย');
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
+      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+    });
+  }
+
+  cancel() {
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../../environments/environment';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { TaskService } from '../task.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
+import type { TaskRequest, TaskResponse } from '../../../../../core/model/phase.model';
+
+@Component({
+  selector: 'app-pmdt02C',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicComboboxComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt02C.component.html',
+})
+export class Pmdt02CComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private dialog = inject(DialogService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private businessService = inject(BusinessService);
+
+  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
+
+  workPackageId = '';
+  projectId = '';
+  phaseId = '';
+  taskId: string | null = null;
+  isEdit = false;
+  data: TaskResponse | null = null;
+  assignedToApiUrl = '';
+
+  // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
+  assigneeNames: Record<string, string> = {};
+
+  form = this.fb.group({
+    taskCode: ['', Validators.required],
+    taskName: ['', Validators.required],
+    description: [''],
+    assignedTo: [''], // คนหลัก (optional)
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    estimateManday: [null as number | null, [Validators.required, Validators.min(1)]],
+    priority: ['Medium'],
+    color: [''],
+    assigneeIds: [[]], // ✅ array ของ userId
   });
 
-  return result;
-}
-
-// ----- Helper functions (copy/paste จาก pmdt02.component.ts) -----
-function formatDateForDhtmlx(dateStr: string | undefined): string {
-  if (!dateStr) return '01-01-2024';
-  const date = new Date(dateStr);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-}
-
-function calculateTaskProgress(task: any): number {
-  if (task.progress !== undefined && task.progress !== null && !isNaN(Number(task.progress))) {
-    const p = Number(task.progress);
-    return p > 1 ? p / 100 : p;
+  get assigneeIds(): FormControl {
+    return this.form.get('assigneeIds') as FormControl;
   }
-  if (task.percent !== undefined && task.percent !== null && !isNaN(Number(task.percent))) {
-    const p = Number(task.percent);
-    return p > 1 ? p / 100 : p;
-  }
-  const status = task.status || '';
-  if (status === 'Done') return 1;
-  if (status === 'In Progress' || status === 'Waiting Review' || status === 'Waiting Fix') return 0.5;
-  return 0;
-}
 
-function calculateWpProgress(wp: any): number {
-  if (!wp.tasks || wp.tasks.length === 0) return 0;
-  const totalProgress = wp.tasks.reduce((sum: number, t: any) => sum + calculateTaskProgress(t), 0);
-  return totalProgress / wp.tasks.length;
+  ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.assignedToApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
+    }
+
+    this.route.paramMap.subscribe((params) => {
+      this.taskId = params.get('id');
+      this.isEdit = !!this.taskId;
+    });
+
+    this.route.queryParams.subscribe((qParams) => {
+      this.workPackageId = qParams['workPackageId'] || '';
+      this.projectId = qParams['projectId'] || '';
+      this.phaseId = qParams['phaseId'] || '';
+      const dateParam = qParams['startDate'] || qParams['date'];
+      if (!this.isEdit && dateParam) {
+        const cleanDate = dateParam.split('T')[0];
+        this.form.patchValue({
+          startDate: cleanDate,
+          startTime: '09:00',
+          endDate: cleanDate,
+          endTime: '18:00',
+        });
+      }
+      if (this.isEdit && this.taskId) {
+        this.loadTask(this.taskId);
+      }
+    });
+  }
+
+  loadTask(id: string) {
+    this.taskService.getTaskById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: TaskResponse) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
+    this.form.patchValue({
+      taskCode: data.taskCode,
+      taskName: data.taskName,
+      description: data.description,
+      assignedTo: data.assignedTo,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      estimateManday: data.estimateManday ?? null,
+      priority: data.priority,
+      color: data.color || '',
+    });
+
+    // ✅ โหลด assigneeIds และ assigneeNames
+    if (data.assigneeIds) {
+      this.assigneeIds.setValue(data.assigneeIds);
+    }
+    if (data.assigneeNames) {
+      this.assigneeNames = data.assigneeNames;
+    }
+  }
+
+  // ✅ เมื่อเลือกจาก combobox
+  onAssigneeSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const current = this.assigneeIds.value || [];
+    if (current.includes(userId)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      this.assigneeCombobox.clearSelection();
+      return;
+    }
+    this.assigneeNames[userId] = item.text;
+    this.assigneeIds.setValue([...current, userId]);
+    this.assigneeCombobox.clearSelection();
+  }
+
+  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
+  removeAssignee(userId: string) {
+    const current = this.assigneeIds.value || [];
+    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
+    delete this.assigneeNames[userId];
+  }
+
+  // ✅ ดูชื่อจาก userId
+  getAssigneeName(userId: string): string {
+    return this.assigneeNames[userId] || userId;
+  }
+
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    const raw = this.form.value;
+    const data: TaskRequest = {
+      workPackageId: this.workPackageId,
+      taskCode: raw.taskCode!,
+      taskName: raw.taskName!,
+      description: raw.description || undefined,
+      assignedTo: raw.assignedTo || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      estimateManday: raw.estimateManday!,
+      priority: raw.priority || 'Medium',
+      color: raw.color || undefined,
+      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
+    };
+
+    const request = this.isEdit && this.taskId
+      ? this.taskService.updateTask(this.taskId, data)
+      : this.taskService.createTask(data);
+
+    request.subscribe({
+      next: (res) => {
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
+        this.router.navigate(['/feature/pm/phase', this.phaseId], {
+          queryParams: { projectId: this.projectId },
+        });
+      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+    });
+  }
+
+  cancel() {
+    this.router.navigate(['/feature/pm/phase', this.phaseId], {
+      queryParams: { projectId: this.projectId },
+    });
+  }
 }
 </file>
 
@@ -36963,6 +36740,346 @@ export class Pmdt01Component implements OnInit {
       return dateStr;
     }
   }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts
+
+import type {
+  PhaseResponse,
+  MilestoneResponse,
+  WorkPackageResponse,
+  TaskResponse,
+} from '../../../../core/model/phase.model';
+import type { DhtmlxGanttTask } from '../../../../core/component/sic-ganttchart/dhtmlx-gantt.component';
+import type { SicCalendarTimelineRow, SicCalendarEvent, SicCalendarHoliday } from 'sic-ng';
+import dayjs from '../../../../core/dayjs';
+
+// ===== Helper: คำนวณ progress ของ Task จาก status (ไม่มี progress หรือ percent) =====
+function calculateTaskProgress(task: TaskResponse): number {
+  // ใช้ status เท่านั้น เพราะ TaskResponse ไม่มี progress หรือ percent
+  const status = task.status || '';
+  if (status === 'Done' || status === 'Closed') return 1;
+  if (status === 'In Progress' || status === 'Waiting Review' || status === 'Waiting Fix' || status === 'Review') return 0.5;
+  return 0;
+}
+
+// ===== Helper: คำนวณ progress ของ Work Package จาก Tasks ข้างใน =====
+function calculateWpProgress(wp: WorkPackageResponse): number {
+  if (!wp.tasks || wp.tasks.length === 0) return 0;
+  const total = wp.tasks.reduce((sum, t) => sum + calculateTaskProgress(t), 0);
+  return total / wp.tasks.length; // ค่า 0-1
+}
+
+// ===== ฟังก์ชันเก่า (ยังคงไว้เผื่อใช้ที่อื่น) =====
+export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
+  const result: DhtmlxGanttTask[] = [];
+
+  // Phase
+  const phaseProgress = isNaN(phase.progress) ? 0 : phase.progress / 100;
+  result.push({
+    id: `phase-${phase.id}`,
+    text: `📍 ${phase.phaseName}`,
+    start_date: formatDateForDhtmlx(phase.startDate),
+    end_date: formatDateForDhtmlx(phase.endDate),
+    progress: phaseProgress,
+    assignedTo: phase.owner || '-',
+    assignees: phase.owner || '-',
+    open: true,
+    color: phase.color || undefined,
+  });
+
+  // Milestones
+  phase.milestones?.forEach((ms) => {
+    const msId = `ms-${ms.id}`;
+    result.push({
+      id: msId,
+      text: `📌 ${ms.milestoneName}`,
+      start_date: formatDateForDhtmlx(ms.dueDate),
+      end_date: formatDateForDhtmlx(ms.dueDate),
+      progress: ms.status === 'Done' ? 1 : 0.5,
+      parent: `phase-${phase.id}`,
+      color: ms.color || undefined,
+    });
+
+    // Work Packages
+    ms.workPackages?.forEach((wp) => {
+      const wpId = `wp-${wp.id}`;
+      if (wp.startDate && wp.endDate) {
+        const wpProgress = calculateWpProgress(wp);
+        result.push({
+          id: wpId,
+          text: `📦 ${wp.packageName}`,
+          start_date: formatDateForDhtmlx(wp.startDate),
+          end_date: formatDateForDhtmlx(wp.endDate),
+          progress: isNaN(wpProgress) ? 0 : wpProgress,
+          parent: msId,
+          color: wp.color || undefined,
+        });
+      }
+
+      // Tasks
+      wp.tasks?.forEach((task) => {
+        if (task.startDate) {
+          const taskProgress = calculateTaskProgress(task);
+          let assigneesText = '';
+          if (task.assigneeNames) {
+            if (Array.isArray(task.assigneeNames)) {
+              assigneesText = task.assigneeNames.filter(Boolean).join(', ');
+            } else if (typeof task.assigneeNames === 'object') {
+              assigneesText = Object.values(task.assigneeNames).filter(Boolean).join(', ');
+            }
+          }
+          if (!assigneesText) {
+            assigneesText = task.assignedTo || '-';
+          }
+          result.push({
+            id: task.id,
+            text: `🔹 ${task.taskName}`,
+            start_date: formatDateForDhtmlx(task.startDate),
+            end_date: task.endDate ? formatDateForDhtmlx(task.endDate) : formatDateForDhtmlx(task.startDate),
+            progress: taskProgress,
+            parent: `wp-${wp.id}`,
+            assignedTo: task.assignedTo || '-',
+            assignees: assigneesText,
+            color: task.color || undefined,
+          });
+        }
+      });
+    });
+  });
+
+  return result;
+}
+
+// ===== ฟังก์ชันใหม่สำหรับ SicCalendarTimeline =====
+export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow[] {
+  const rows: SicCalendarTimelineRow[] = [];
+
+  // 1. Phase row
+  rows.push({
+    id: `phase-${phase.id}`,
+    label: `📌 ${phase.phaseName}`,
+    progress: phase.progress, // Phase มี progress โดยตรง
+    phases: [{
+      id: phase.id,
+      label: phase.phaseName,
+      start: phase.startDate,
+      end: phase.endDate,
+      color: phase.color || '#4A90D9'
+    }],
+    data: { type: 'phase', id: phase.id }
+  });
+
+  // 2. Milestones, Work Packages, Tasks
+  phase.milestones?.forEach((ms) => {
+    rows.push({
+      id: `ms-${ms.id}`,
+      label: `  📍 ${ms.milestoneName}`,
+      progress: ms.status === 'Done' ? 100 : 0,
+      phases: [{
+        id: ms.id,
+        label: ms.milestoneName,
+        start: ms.dueDate,
+        end: ms.dueDate,
+        color: ms.color || '#E67E22'
+      }],
+      data: { type: 'milestone', id: ms.id, phaseId: phase.id }
+    });
+
+    ms.workPackages?.forEach((wp) => {
+      const wpProgress = calculateWpProgress(wp) * 100; // แปลงเป็นเปอร์เซ็นต์
+      rows.push({
+        id: `wp-${wp.id}`,
+        label: `    📦 ${wp.packageName}`,
+        progress: wpProgress,
+        phases: [{
+          id: wp.id,
+          label: wp.packageName,
+          start: wp.startDate,
+          end: wp.endDate,
+          color: wp.color || '#8E44AD'
+        }],
+        data: { type: 'workpackage', id: wp.id, milestoneId: ms.id, phaseId: phase.id }
+      });
+
+      wp.tasks?.forEach((task) => {
+        const taskProgress = calculateTaskProgress(task) * 100; // แปลงเป็นเปอร์เซ็นต์
+        rows.push({
+          id: task.id,
+          label: `      🔹 ${task.taskName}`,
+          progress: taskProgress,
+          phases: [{
+            id: task.id,
+            label: task.taskName,
+            start: task.startDate,
+            end: task.endDate || task.startDate,
+            color: task.color || '#2ECC71'
+          }],
+          data: { type: 'task', id: task.id, workPackageId: wp.id, milestoneId: ms.id, phaseId: phase.id }
+        });
+      });
+    });
+  });
+
+  return rows;
+}
+
+// ===== Helper functions =====
+function formatDateForDhtmlx(dateStr: string | undefined): string {
+  if (!dateStr) return '01-01-2024';
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+// ===== Helper: ดึง Icon & Color ประจำ Task ตาม Status =====
+function getTaskVisuals(task: TaskResponse): { icon: string; color: string } {
+  if (task.color) {
+    return { icon: '🔹', color: task.color };
+  }
+  switch (task.status) {
+    case 'Done':
+    case 'Closed':
+      return { icon: '✅', color: '#22c55e' };
+    case 'In Progress':
+      return { icon: '👥', color: '#3b82f6' };
+    case 'Waiting Review':
+      return { icon: '🔍', color: '#06b6d4' };
+    case 'Waiting Fix':
+      return { icon: '🛠️', color: '#f59e0b' };
+    case 'Blocked':
+      return { icon: '⛔', color: '#ef4444' };
+    default:
+      return { icon: '📝', color: '#8b5cf6' };
+  }
+}
+
+// ===== ฟังก์ชันสร้าง Events สำหรับ SicCalendar =====
+export function buildCalendarEvents(phase: PhaseResponse): SicCalendarEvent[] {
+  const events: SicCalendarEvent[] = [];
+
+  // Helper เพื่อเพิ่ม Event ทุกๆ วันในช่วง startDate ถึง endDate
+  const addMultiDayEvent = (
+    baseId: string,
+    startDateStr: string,
+    endDateStr: string | undefined,
+    title: string,
+    color: string,
+    icon: string,
+    description: string,
+    extra: any
+  ) => {
+    if (!startDateStr) return;
+    const cleanStart = startDateStr.split('T')[0];
+    const cleanEnd = endDateStr ? endDateStr.split('T')[0] : cleanStart;
+    const start = dayjs.utc(cleanStart);
+    const end = dayjs.utc(cleanEnd);
+    const days = Math.max(1, end.diff(start, 'day') + 1);
+
+    for (let i = 0; i < days; i++) {
+      const currentDate = start.add(i, 'day').format('YYYY-MM-DD');
+      events.push({
+        id: `${baseId}-${i}`,
+        date: currentDate,
+        title,
+        color,
+        icon,
+        description,
+        extra,
+      } as SicCalendarEvent & { extra?: any });
+    }
+  };
+
+  // 1. Phase
+  if (phase.startDate) {
+    addMultiDayEvent(
+      `phase-${phase.id}`,
+      phase.startDate,
+      phase.endDate,
+      phase.phaseName,
+      phase.color || '#3b82f6',
+      '🚩',
+      phase.description || `Phase: ${phase.phaseName}`,
+      { type: 'phase', id: phase.id }
+    );
+  }
+
+  // 2. Milestones, Work Packages, Tasks
+  phase.milestones?.forEach((ms) => {
+    if (ms.dueDate) {
+      addMultiDayEvent(
+        `ms-${ms.id}`,
+        ms.dueDate,
+        ms.dueDate,
+        ms.milestoneName,
+        ms.color || '#eab308',
+        '📌',
+        ms.description || `Milestone: ${ms.milestoneName}`,
+        { type: 'milestone', id: ms.id, phaseId: phase.id }
+      );
+    }
+
+    ms.workPackages?.forEach((wp) => {
+      if (wp.startDate) {
+        addMultiDayEvent(
+          `wp-${wp.id}`,
+          wp.startDate,
+          wp.endDate,
+          wp.packageName,
+          wp.color || '#a855f7',
+          '📦',
+          wp.description || `Work Package: ${wp.packageName}`,
+          { type: 'workpackage', id: wp.id, milestoneId: ms.id, phaseId: phase.id }
+        );
+      }
+
+      wp.tasks?.forEach((task) => {
+        if (task.startDate) {
+          const visuals = getTaskVisuals(task);
+          const descParts: string[] = [];
+          if (task.assignedTo) descParts.push(`ผู้รับผิดชอบ: ${task.assignedTo}`);
+          if (task.status) descParts.push(`สถานะ: ${task.status}`);
+          if (task.description) descParts.push(task.description);
+
+          addMultiDayEvent(
+            `task-${task.id}`,
+            task.startDate,
+            task.endDate || task.startDate,
+            task.taskName,
+            visuals.color,
+            visuals.icon,
+            descParts.join(' | ') || `Task: ${task.taskName}`,
+            { type: 'task', id: task.id, workPackageId: wp.id, milestoneId: ms.id, phaseId: phase.id }
+          );
+        }
+      });
+    });
+  });
+
+  return events;
+}
+
+// ===== ฟังก์ชันสร้าง Holidays/Milestones Badges สำหรับ SicCalendar =====
+export function buildCalendarHolidays(phase: PhaseResponse): SicCalendarHoliday[] {
+  const holidays: SicCalendarHoliday[] = [];
+  phase.milestones?.forEach((ms) => {
+    if (ms.dueDate) {
+      const cleanDate = ms.dueDate.split('T')[0];
+      holidays.push({
+        id: `ms-holiday-${ms.id}`,
+        date: cleanDate,
+        title: `Milestone: ${ms.milestoneName}`,
+        source: 'office',
+        color: ms.color || '#eab308',
+        icon: '📌',
+      });
+    }
+  });
+  return holidays;
 }
 </file>
 
@@ -40030,480 +40147,6 @@ export class Feature {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts">
-// src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import dayjs from '../../../../core/dayjs';
-import { DialogService } from '../../../../core/services/dialog.service';
-
-import type {
-  MilestoneResponse,
-  PhaseResponse,
-  TaskResponse,
-  WorkPackageResponse,
-} from '../../../../core/model/phase.model';
-import { MilestoneService } from '../../../../core/services/milestone.service';
-import { PhaseService } from '../../../../core/services/phase.service';
-import { TaskService } from '../../../../core/services/task.service';
-import { WorkPackageService } from '../../../../core/services/work-package.service';
-// ลบ DhtmlxGanttComponent ออกจาก imports และ ViewChild
-import { CalendarItem, SicCalendarComponent } from '../../../../core/component/sic-calendar/sic-calendar.component';
-
-@Component({
-  selector: 'app-pmdt02',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    // DhtmlxGanttComponent,  // ลบออก
-    SicCalendarComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt02.component.html',
-})
-export class Pmdt02Component implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private phaseService = inject(PhaseService);
-  private milestoneService = inject(MilestoneService);
-  private wpService = inject(WorkPackageService);
-  private taskService = inject(TaskService);
-  private dialog = inject(DialogService);
-
-  // ===== SIGNALS =====
-  phase = signal<PhaseResponse | null>(null);
-  isLoading = signal(false);
-  projectId = signal('');
-  currentPhaseId = signal('');
-  expandedMilestone = signal<string | null>(null);
-  expandedWorkPackage = signal<string | null>(null);
-  // ลบ @ViewChild(DhtmlxGanttComponent)
-
-  rightTab = signal<'list' | 'calendar'>('list'); // เปลี่ยน type
-
-  switchTab(tab: 'list' | 'calendar'): void {
-    this.rightTab.set(tab);
-  }
-
-  // ===== CALENDAR ITEMS =====
-  calendarItems = computed<CalendarItem[]>(() => {
-    const p = this.phase();
-    if (!p) return [];
-    const result: CalendarItem[] = [];
-
-    // Phase
-    if (p.startDate && p.endDate) {
-      const start = dayjs.utc(p.startDate);
-      const end = dayjs.utc(p.endDate);
-      const days = end.diff(start, 'day') + 1;
-      for (let i = 0; i < days; i++) {
-        const date = start.add(i, 'day');
-        result.push({
-          id: p.id,
-          type: 'phase',
-          title: p.phaseName,
-          color: p.color || '#4A90D9',
-          date: date.toISOString(),
-          completed: false,
-        });
-      }
-    }
-
-    // Milestones
-    p.milestones?.forEach((ms) => {
-      if (ms.dueDate) {
-        result.push({
-          id: ms.id,
-          type: 'milestone',
-          title: ms.milestoneName,
-          color: ms.color || '#E67E22',
-          date: dayjs.utc(ms.dueDate).toISOString(),
-          completed: false,
-        });
-      }
-
-      // WorkPackages
-      ms.workPackages?.forEach((wp) => {
-        if (wp.startDate && wp.endDate) {
-          const start = dayjs.utc(wp.startDate);
-          const end = dayjs.utc(wp.endDate);
-          const days = end.diff(start, 'day') + 1;
-          for (let i = 0; i < days; i++) {
-            const date = start.add(i, 'day');
-            result.push({
-              id: wp.id,
-              type: 'workpackage',
-              title: wp.packageName,
-              color: wp.color || '#8E44AD',
-              date: date.toISOString(),
-              completed: false,
-            });
-          }
-        }
-
-        // Tasks
-        wp.tasks?.forEach((task) => {
-          if (task.startDate) {
-            result.push({
-              id: task.id,
-              type: 'task',
-              title: task.taskName,
-              color: task.color || '#2ECC71',
-              date: dayjs.utc(task.startDate).toISOString(),
-              completed: task.status === 'Done',
-              extra: { workPackageId: wp.id },
-            });
-          }
-        });
-      });
-    });
-
-    return result;
-  });
-
-  // ===== LIFECYCLE =====
-  ngOnInit() {
-    this.route.paramMap.subscribe((params) => {
-      const phaseId = params.get('id');
-      this.route.queryParams.subscribe((qParams) => {
-        const pid = qParams['projectId'];
-        if (phaseId && pid) {
-          this.currentPhaseId.set(phaseId);
-          this.projectId.set(pid);
-          this.loadPhaseDetail(phaseId);
-        } else {
-          this.router.navigate(['/feature/pm/pmdt01'], {
-            queryParams: { projectId: this.projectId() },
-          });
-        }
-      });
-    });
-  }
-
-  loadPhaseDetail(phaseId: string) {
-    this.isLoading.set(true);
-    this.phaseService.getPhaseById(phaseId).subscribe({
-      next: (data) => {
-        this.phase.set(data);
-        this.loadMilestones(phaseId);
-      },
-      error: (err) => {
-        console.error(err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
-        this.router.navigate(['/feature/pm/pmdt01'], {
-          queryParams: { projectId: this.projectId() },
-        });
-      },
-      complete: () => this.isLoading.set(false),
-    });
-  }
-
-  loadMilestones(phaseId: string) {
-    this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
-      next: (milestones) => {
-        const current = this.phase();
-        if (current) {
-          this.phase.set({
-            ...current,
-            milestones: milestones,
-          });
-          this.loadWorkPackagesForMilestones(milestones);
-        }
-      },
-      error: (err) => console.error(err),
-    });
-  }
-
-  private loadWorkPackagesForMilestones(milestones: MilestoneResponse[]) {
-    if (!milestones || milestones.length === 0) return;
-    milestones.forEach((ms) => {
-      this.wpService.getWorkPackagesByMilestoneId(ms.id).subscribe({
-        next: (workPackages) => {
-          const current = this.phase();
-          if (current?.milestones) {
-            const target = current.milestones.find((m) => m.id === ms.id);
-            if (target) {
-              target.workPackages = workPackages;
-              this.phase.set({ ...current });
-            }
-          }
-        },
-        error: (err) => console.error(`Failed to load WPs for milestone ${ms.id}`, err),
-      });
-    });
-  }
-
-  private loadTasksForWorkPackage(wpId: string) {
-    const current = this.phase();
-    if (!current) return;
-    let targetWp: WorkPackageResponse | null = null;
-    for (const ms of current.milestones || []) {
-      const found = ms.workPackages?.find((w) => w.id === wpId);
-      if (found) {
-        targetWp = found;
-        break;
-      }
-    }
-    if (!targetWp) return;
-    if (!targetWp.tasks || targetWp.tasks.length === 0) {
-      this.taskService.getTasksByWorkPackageId(wpId).subscribe({
-        next: (tasks) => {
-          targetWp!.tasks = tasks;
-          this.phase.set({ ...current });
-        },
-        error: (err) => console.error(`Failed to load tasks for WP ${wpId}`, err),
-      });
-    }
-  }
-
-  // ===== TOGGLE =====
-  toggleMilestone(msId: string) {
-    this.expandedMilestone.set(this.expandedMilestone() === msId ? null : msId);
-  }
-
-  toggleWorkPackage(wpId: string) {
-    if (this.expandedWorkPackage() !== wpId) {
-      this.loadTasksForWorkPackage(wpId);
-    }
-    this.expandedWorkPackage.set(this.expandedWorkPackage() === wpId ? null : wpId);
-  }
-
-  getTotalWorkPackages(phase: PhaseResponse): number {
-    let count = 0;
-    phase.milestones?.forEach((ms) => {
-      count += ms.workPackages?.length || 0;
-    });
-    return count;
-  }
-
-  // ===== CRUD =====
-  openCreateMilestone() {
-    const phaseId = this.currentPhaseId();
-    if (!phaseId) return;
-    this.router.navigate(['/feature/pm/milestone/new'], {
-      queryParams: { phaseId, projectId: this.projectId() },
-    });
-  }
-
-  editMilestone(ms: MilestoneResponse, event: Event) {
-    event.stopPropagation();
-    this.router.navigate(['/feature/pm/milestone', ms.id, 'edit'], {
-      queryParams: { projectId: this.projectId() },
-    });
-  }
-
-  deleteMilestone(ms: MilestoneResponse, event: Event) {
-    event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Milestone "${ms.milestoneName}"?`).then((confirmed) => {
-      if (confirmed) {
-        this.milestoneService.deleteMilestone(ms.id).subscribe({
-          next: () => {
-            const current = this.phase();
-            if (current?.milestones) {
-              current.milestones = current.milestones.filter((m) => m.id !== ms.id);
-              this.phase.set({ ...current });
-            }
-          },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
-        });
-      }
-    });
-  }
-
-  openCreateWorkPackage(milestoneId: string) {
-    this.router.navigate(['/feature/pm/work-package/new'], {
-      queryParams: {
-        milestoneId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  openCreateWorkPackageForPhase() {
-    const p = this.phase();
-    if (!p || !p.milestones || p.milestones.length === 0) {
-      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
-      return;
-    }
-    this.openCreateWorkPackage(p.milestones[0].id);
-  }
-
-  editWorkPackage(wp: WorkPackageResponse, milestoneId: string, event: Event) {
-    event.stopPropagation();
-    this.router.navigate(['/feature/pm/work-package', wp.id, 'edit'], {
-      queryParams: {
-        milestoneId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  deleteWorkPackage(wp: WorkPackageResponse, event: Event) {
-    event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Work Package "${wp.packageName}"?`).then((confirmed) => {
-      if (confirmed) {
-        this.wpService.deleteWorkPackage(wp.id).subscribe({
-          next: () => {
-            const current = this.phase();
-            if (current?.milestones) {
-              current.milestones = current.milestones.map((m) => ({
-                ...m,
-                workPackages: m.workPackages?.filter((w) => w.id !== wp.id) || [],
-              }));
-              this.phase.set({ ...current });
-            }
-          },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
-        });
-      }
-    });
-  }
-
-  openCreateTask(workPackageId: string) {
-    this.router.navigate(['/feature/pm/task/new'], {
-      queryParams: {
-        workPackageId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  editTask(task: TaskResponse, workPackageId: string, event: Event) {
-    event.stopPropagation();
-    this.router.navigate(['/feature/pm/task', task.id, 'edit'], {
-      queryParams: {
-        workPackageId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  deleteTask(task: TaskResponse, event: Event) {
-    event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Task "${task.taskName}"?`).then((confirmed) => {
-      if (confirmed) {
-        this.taskService.deleteTask(task.id).subscribe({
-          next: () => {
-            const current = this.phase();
-            if (current?.milestones) {
-              current.milestones = current.milestones.map((m) => ({
-                ...m,
-                workPackages:
-                  m.workPackages?.map((wp) => ({
-                    ...wp,
-                    tasks: wp.tasks?.filter((t) => t.id !== task.id) || [],
-                  })) || [],
-              }));
-              this.phase.set({ ...current });
-            }
-          },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
-        });
-      }
-    });
-  }
-
-  // ===== NAVIGATION TO FULLSCREEN GANTT =====
-  goToGanttFullscreen() {
-    const phaseId = this.currentPhaseId();
-    const projectId = this.projectId();
-    if (phaseId) {
-      this.router.navigate(['/feature/pm/phase', phaseId, 'gantt'], {
-        queryParams: { projectId }
-      });
-    }
-  }
-
-  // ===== CALENDAR EVENT =====
-  onCalendarItemClick(item: CalendarItem): void {
-    const projectId = this.projectId();
-    const phaseId = this.currentPhaseId();
-
-    switch (item.type) {
-      case 'phase':
-        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
-          queryParams: { projectId },
-        });
-        break;
-      case 'milestone':
-        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
-          queryParams: { projectId, phaseId },
-        });
-        break;
-      case 'workpackage':
-        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
-          queryParams: { projectId, phaseId },
-        });
-        break;
-      case 'task':
-        const wpId = item.extra?.['workPackageId'] || '';
-        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
-          queryParams: { projectId, phaseId, workPackageId: wpId },
-        });
-        break;
-      default:
-        break;
-    }
-  }
-
-  // ===== NAVIGATION =====
-  goBack() {
-    this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId() } });
-  }
-
-  // ===== UTILITIES =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600',
-      'In Progress': 'bg-blue-100 text-blue-700',
-      Done: 'bg-emerald-100 text-emerald-700',
-      Delayed: 'bg-red-100 text-red-700',
-      Todo: 'bg-gray-100 text-gray-600',
-      'Waiting Review': 'bg-purple-100 text-purple-700',
-      'Waiting Fix': 'bg-orange-100 text-orange-700',
-      Blocked: 'bg-rose-100 text-rose-700',
-      Cancelled: 'bg-gray-300 text-gray-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
-  }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'ยังไม่เริ่ม',
-      'In Progress': 'กำลังดำเนินการ',
-      Done: 'เสร็จสิ้น',
-      Delayed: 'ล่าช้า',
-      Todo: 'รอเริ่ม',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html">
 <!-- src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html -->
 
@@ -41888,7 +41531,6 @@ export const appConfig: ApplicationConfig = {
         useExisting: AppTranslateLoader
       }
     }),
-    // ✅ วางไว้ตรงนี้ (หรือจะแทรกตรงไหนก็ได้ใน array)
     provideSicTheme({ mode: 'system' }),
     provideSicConfig({
       decimals: 2,
@@ -41957,216 +41599,888 @@ export const appConfig: ApplicationConfig = {
 };
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.html">
-<!-- src/app/feature/pm/dt/pmdt02/pmdt02.component.html -->
-<div class="space-y-5 p-4">
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.ts">
+// src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
+import { CommonModule } from '@angular/common';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import dayjs from '../../../../core/dayjs';
+import { DialogService } from '../../../../core/services/dialog.service';
 
-  <!-- ===== BACK BUTTON ===== -->
-  <div class="flex items-center gap-3 flex-wrap">
-    <button (click)="goBack()"
-      class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-      title="ย้อนกลับ">
-      <i class="bi bi-arrow-left text-xl"></i>
-    </button>
-  </div>
+import type {
+  MilestoneResponse,
+  PhaseResponse,
+  TaskResponse,
+  WorkPackageResponse,
+} from '../../../../core/model/phase.model';
+import { MilestoneService } from './milestone.service';
+import { PhaseService } from './phase.service';
+import { TaskService } from './task.service';
+import { WorkPackageService } from './work-package.service';
+import 'dayjs/locale/th';
+import {
+  SicCalendarComponent,
+  SicCalendarEvent,
+  SicCalendarHoliday,
+  SicCalendarTimelineComponent,
+  SicCalendarTimelineRow,
+  SicCalendarTimelineViewMode,
+  SicCalendarEra,
+  SicCalendarView,
+} from 'sic-ng';
+import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from './pmdt02.utils';
 
-  <!-- ===== PHASE HEADER ===== -->
-  @if (phase(); as p) {
-    <div class="flex flex-wrap items-center justify-between gap-4 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5">
-      <div>
-        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-3">
-          {{ p.phaseName }}
-          <span [class]="getStatusClass(p.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium'">
-            {{ getStatusText(p.status) }}
-          </span>
-        </h1>
-        <p class="text-sm text-[var(--text-muted)] mt-1">{{ p.description || 'ไม่มีคำอธิบาย' }}</p>
-        <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-2">
-          <span><i class="bi bi-calendar3"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</span>
-          <span><i class="bi bi-person"></i> {{ p.owner || '-' }}</span>
-        </div>
-      </div>
-      <div class="flex flex-col items-end gap-2">
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-medium text-[var(--text-active)]">{{ p.progress }}%</span>
-          <span class="text-xs text-[var(--text-muted)]">{{ p.taskCompletedCount }}/{{ p.taskCount }} Tasks</span>
-        </div>
-        <div class="w-48 h-2 bg-[var(--bg)] rounded-full overflow-hidden">
-          <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="p.progress"></div>
-        </div>
-      </div>
-    </div>
+import { FormsModule } from '@angular/forms';
+
+export interface CalendarItemDetail {
+  id: string;
+  type: 'phase' | 'milestone' | 'workpackage' | 'task' | 'holiday' | 'event';
+  title: string;
+  subtitle?: string;
+  description?: string;
+  color: string;
+  icon: string;
+  isCustom?: boolean;
+  rawObject?: any;
+}
+
+@Component({
+  selector: 'app-pmdt02',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    SicCalendarComponent,
+    SicCalendarTimelineComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt02.component.html',
+})
+export class Pmdt02Component implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private phaseService = inject(PhaseService);
+  private milestoneService = inject(MilestoneService);
+  private wpService = inject(WorkPackageService);
+  private taskService = inject(TaskService);
+  private dialog = inject(DialogService);
+
+  // ===== SIGNALS =====
+  phase = signal<PhaseResponse | null>(null);
+  isLoading = signal(false);
+  projectId = signal('');
+  currentPhaseId = signal('');
+  expandedMilestone = signal<string | null>(null);
+  expandedWorkPackage = signal<string | null>(null);
+
+  rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
+  calendarEra = signal<SicCalendarEra>('BE');
+  calendarView = signal<SicCalendarView>('grid');
+  timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
+
+  // ===== CUSTOM CALENDAR SIGNALS & SIDEBAR =====
+  customHolidays = signal<SicCalendarHoliday[]>([]);
+  customEvents = signal<SicCalendarEvent[]>([]);
+  selectedCalendarDate = signal<string>(dayjs().format('YYYY-MM-DD'));
+  isSidebarOpen = signal<boolean>(false);
+
+  showCustomItemModal = signal<boolean>(false);
+  customItemForm = {
+    id: '',
+    date: dayjs().format('YYYY-MM-DD'),
+    title: '',
+    description: '',
+    icon: '📌',
+    color: '#8b5cf6',
+  };
+
+  switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
+    this.rightTab.set(tab);
   }
 
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-12">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    </div>
+  // ===== HELPER: convert string | Date to YYYY-MM-DD =====
+  private toDateString(value: string | Date | undefined | null): string {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      const parts = value.split('T');
+      if (parts.length > 0) return parts[0];
+      return value;
+    }
+    if (value instanceof Date) {
+      return dayjs(value).format('YYYY-MM-DD');
+    }
+    return '';
   }
 
-  @if (!isLoading() && phase(); as p) {
+  // ===== CALENDAR & TIMELINE DATA =====
+  calendarTasks = computed<SicCalendarEvent[]>(() => {
+    const p = this.phase();
+    const events = p ? buildCalendarEvents(p) : [];
+    return [...events, ...this.customEvents()];
+  });
 
-    <!-- ===== TAB SWITCHER ===== -->
-    <div class="flex gap-1 border-b border-[var(--border)]">
-      <button
-        (click)="switchTab('list')"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
-        [class]="rightTab() === 'list' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
-        <i class="bi bi-list-task mr-1"></i> รายการ
-      </button>
-      <button
-        (click)="switchTab('calendar')"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
-        [class]="rightTab() === 'calendar' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
-        <i class="bi bi-calendar3 mr-1"></i> ปฏิทิน
-      </button>
-      <!-- ปุ่มนำทางไป Gantt เต็มจอ -->
-      <button
-        (click)="goToGanttFullscreen()"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]">
-        <i class="bi bi-bar-chart mr-1"></i> Gantt
-      </button>
-    </div>
+  calendarHolidays = computed<SicCalendarHoliday[]>(() => {
+    const p = this.phase();
+    const phaseHolidays = p ? buildCalendarHolidays(p) : [];
+    return [...phaseHolidays, ...this.customHolidays()];
+  });
 
-    <!-- ===== TAB 1: LIST ===== -->
-    @if (rightTab() === 'list') {
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
-          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-flag text-[var(--crm-primary)]"></i>
-            Milestones & Work Packages
-            <span class="text-xs text-[var(--text-muted)] font-normal">({{ p.milestones?.length || 0 }} Milestones, {{ getTotalWorkPackages(p) }} Work Packages)</span>
-          </h2>
-          <button (click)="openCreateMilestone()" class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
-            <i class="bi bi-plus-lg"></i> เพิ่ม Milestone
-          </button>
-        </div>
-        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-          @for (ms of p.milestones || []; track ms.id) {
-            <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-              <!-- Milestone header -->
-              <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleMilestone(ms.id)">
-                <div class="flex items-center gap-2 min-w-0">
-                  <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedMilestone() === ms.id"></i>
-                  <span class="text-sm font-medium text-[var(--text-active)] truncate">{{ ms.milestoneName }}</span>
-                  <span [class]="getStatusClass(ms.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium flex-shrink-0'">
-                    {{ getStatusText(ms.status) }}
-                  </span>
-                  <span class="text-xs text-[var(--text-muted)]">({{ ms.workPackages?.length || 0 }} WPs)</span>
-                </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                  <span class="text-xs text-[var(--text-muted)]">{{ formatDate(ms.dueDate) }}</span>
-                  <button (click)="editMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button (click)="deleteMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- Work packages under milestone -->
-              @if (expandedMilestone() === ms.id) {
-                <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
-                  @for (wp of ms.workPackages || []; track wp.id) {
-                    <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
-                      <!-- Work Package header -->
-                      <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleWorkPackage(wp.id)">
-                        <div class="flex items-center gap-2 min-w-0">
-                          <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
-                          <span class="text-sm font-medium text-[var(--text-active)] truncate">📦 {{ wp.packageName }}</span>
-                          <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ wp.tasks?.length || 0 }} งาน)</span>
-                        </div>
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                          <span class="text-xs text-[var(--text-muted)]">{{ formatDate(wp.startDate) }}</span>
-                          <button (click)="editWorkPackage(wp, ms.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button (click)="deleteWorkPackage(wp, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <!-- Tasks under work package -->
-                      @if (expandedWorkPackage() === wp.id) {
-                        <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
-                          @for (task of wp.tasks || []; track task.id) {
-                            <div class="flex items-center justify-between pl-4 py-1 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
-                              <div class="flex items-center gap-2 min-w-0">
-                                <i class="bi bi-circle text-[0.55rem] text-[var(--text-muted)]"></i>
-                                <span class="text-sm text-[var(--text)] truncate">{{ task.taskName }}</span>
-                                <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ task.assignedTo || '-' }})</span>
-                                <span [class]="getStatusClass(task.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.55rem] font-medium flex-shrink-0'">
-                                  {{ getStatusText(task.status) }}
-                                </span>
-                              </div>
-                              <div class="flex items-center gap-1 flex-shrink-0">
-                                <button (click)="editTask(task, wp.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
-                                  <i class="bi bi-pencil"></i>
-                                </button>
-                                <button (click)="deleteTask(task, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
-                                  <i class="bi bi-trash"></i>
-                                </button>
-                              </div>
-                            </div>
-                          }
-                          @if ((wp.tasks || []).length === 0) {
-                            <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Task</p>
-                          }
-                          <button (click)="openCreateTask(wp.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
-                            <i class="bi bi-plus-lg"></i> เพิ่ม Task
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  }
-                  @if ((ms.workPackages || []).length === 0) {
-                    <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Work Package</p>
-                  }
-                  <button (click)="openCreateWorkPackage(ms.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
-                    <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
-                  </button>
-                </div>
+  selectedDateItems = computed<CalendarItemDetail[]>(() => {
+    const selDate = this.selectedCalendarDate();
+    if (!selDate) return [];
+
+    const items: CalendarItemDetail[] = [];
+    const p = this.phase();
+
+    if (p) {
+      // 1. Phase
+      if (p.startDate) {
+        const start = this.toDateString(p.startDate);
+        const end = this.toDateString(p.endDate) || start;
+        if (selDate >= start && selDate <= end) {
+          items.push({
+            id: p.id,
+            type: 'phase',
+            title: `Phase: ${p.phaseName}`,
+            subtitle: p.description || 'Phase หลัก',
+            description: `ระยะเวลา: ${this.formatDate(p.startDate)} - ${this.formatDate(p.endDate)}`,
+            color: p.color || '#3b82f6',
+            icon: '🚩',
+            rawObject: p,
+          });
+        }
+      }
+
+      // 2. Milestones
+      p.milestones?.forEach((ms) => {
+        const due = this.toDateString(ms.dueDate);
+        if (due && due === selDate) {
+          items.push({
+            id: ms.id,
+            type: 'milestone',
+            title: `Milestone: ${ms.milestoneName}`,
+            subtitle: ms.description || 'วันกำหนด Milestone',
+            color: ms.color || '#eab308',
+            icon: '📌',
+            rawObject: ms,
+          });
+        }
+
+        // 3. Work Packages
+        ms.workPackages?.forEach((wp) => {
+          if (wp.startDate) {
+            const start = this.toDateString(wp.startDate);
+            const end = this.toDateString(wp.endDate) || start;
+            if (selDate >= start && selDate <= end) {
+              items.push({
+                id: wp.id,
+                type: 'workpackage',
+                title: `Work Package: ${wp.packageName}`,
+                subtitle: wp.description || `Milestone: ${ms.milestoneName}`,
+                color: wp.color || '#a855f7',
+                icon: '📦',
+                rawObject: { ...wp, milestoneId: ms.id },
+              });
+            }
+
+            // 4. Tasks
+            wp.tasks?.forEach((task) => {
+              if (task.startDate) {
+                const tStart = this.toDateString(task.startDate);
+                const tEnd = this.toDateString(task.endDate) || tStart;
+                if (selDate >= tStart && selDate <= tEnd) {
+                  const visuals = this.getTaskVisuals(task);
+                  items.push({
+                    id: task.id,
+                    type: 'task',
+                    title: `Task: ${task.taskName}`,
+                    subtitle: `ผู้รับผิดชอบ: ${task.assignedTo || '-'} | สถานะ: ${this.getStatusText(task.status)}`,
+                    description: task.description,
+                    color: task.color || visuals.color,
+                    icon: visuals.icon,
+                    rawObject: { ...task, workPackageId: wp.id, milestoneId: ms.id },
+                  });
+                }
               }
-            </div>
+            });
           }
-          @if ((p.milestones || []).length === 0) {
-            <div class="text-center py-8 text-[var(--text-muted)]">
-              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">ยังไม่มี Milestone</p>
-            </div>
-          }
-        </div>
-      </div>
+        });
+      });
     }
 
-    <!-- ===== TAB 2: CALENDAR ===== -->
-    @if (rightTab() === 'calendar') {
-      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
-          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-calendar3 text-[var(--crm-primary)]"></i>
-            ปฏิทินงาน
-          </h2>
-          <span class="text-xs text-[var(--text-muted)]">คลิกรายการเพื่อแก้ไข</span>
-        </div>
-        <div class="p-4">
-          <sic-calendar
-            [items]="calendarItems()"
-            [mode]="'view'"
-            [disabled]="false"
-            [label]="'ปฏิทิน Phase'"
-            [hint]="'คลิกรายการเพื่อไปแก้ไข'"
-            (itemClick)="onCalendarItemClick($event)">
-          </sic-calendar>
-        </div>
-      </div>
-    }
+    // 5. Custom Items
+    const rawCustom = this.getRawCustomItems();
+    rawCustom.forEach((cItem) => {
+      if (cItem.date === selDate) {
+        items.push({
+          id: cItem.id,
+          type: 'holiday',
+          title: cItem.title,
+          subtitle: cItem.description || 'วันหยุด / Event ที่เพิ่มเอง',
+          color: cItem.color || '#8b5cf6',
+          icon: cItem.icon || '📌',
+          isCustom: true,
+          rawObject: cItem,
+        });
+      }
+    });
 
-    <!-- ===== (ลบส่วน Gantt Tab ออกแล้ว) ===== -->
+    return items;
+  });
 
+  timelineItems = computed<SicCalendarTimelineRow[]>(() => {
+    const p = this.phase();
+    if (!p) return [];
+    return buildTimelineItems(p);
+  });
+
+  timelineStartDate = computed(() => {
+    const p = this.phase();
+    if (p?.startDate) return this.toDateString(p.startDate);
+    return dayjs().format('YYYY-MM-DD');
+  });
+
+  timelineEndDate = computed(() => {
+    const p = this.phase();
+    if (p?.endDate) return this.toDateString(p.endDate);
+    return dayjs().add(30, 'day').format('YYYY-MM-DD');
+  });
+
+  // ===== LIFECYCLE =====
+  ngOnInit() {
+    this.route.paramMap.subscribe((params) => {
+      const phaseId = params.get('id');
+      this.route.queryParams.subscribe((qParams) => {
+        const pid = qParams['projectId'];
+        if (phaseId && pid) {
+          this.currentPhaseId.set(phaseId);
+          this.projectId.set(pid);
+          this.loadPhaseDetail(phaseId);
+        } else {
+          this.router.navigate(['/feature/pm/pmdt01'], {
+            queryParams: { projectId: this.projectId() },
+          });
+        }
+      });
+    });
   }
-</div>
+
+  loadPhaseDetail(phaseId: string) {
+    this.isLoading.set(true);
+    this.phaseService.getPhaseById(phaseId).subscribe({
+      next: (data) => {
+        this.phase.set(data);
+        this.loadCustomItems();
+        this.loadMilestones(phaseId);
+      },
+      error: (err) => {
+        console.error(err);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
+        this.router.navigate(['/feature/pm/pmdt01'], {
+          queryParams: { projectId: this.projectId() },
+        });
+      },
+      complete: () => this.isLoading.set(false),
+    });
+  }
+
+  loadMilestones(phaseId: string) {
+    this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
+      next: (milestones) => {
+        const current = this.phase();
+        if (current) {
+          this.phase.set({
+            ...current,
+            milestones: milestones,
+          });
+          this.loadWorkPackagesForMilestones(milestones);
+        }
+      },
+      error: (err) => console.error(err),
+    });
+  }
+
+  private loadWorkPackagesForMilestones(milestones: MilestoneResponse[]) {
+    if (!milestones || milestones.length === 0) return;
+    milestones.forEach((ms) => {
+      this.wpService.getWorkPackagesByMilestoneId(ms.id).subscribe({
+        next: (workPackages) => {
+          const current = this.phase();
+          if (current?.milestones) {
+            const target = current.milestones.find((m) => m.id === ms.id);
+            if (target) {
+              target.workPackages = workPackages;
+              this.phase.set({ ...current });
+            }
+          }
+        },
+        error: (err) => console.error(`Failed to load WPs for milestone ${ms.id}`, err),
+      });
+    });
+  }
+
+  private loadTasksForWorkPackage(wpId: string) {
+    const current = this.phase();
+    if (!current) return;
+    let targetWp: WorkPackageResponse | null = null;
+    for (const ms of current.milestones || []) {
+      const found = ms.workPackages?.find((w) => w.id === wpId);
+      if (found) {
+        targetWp = found;
+        break;
+      }
+    }
+    if (!targetWp) return;
+    if (!targetWp.tasks || targetWp.tasks.length === 0) {
+      this.taskService.getTasksByWorkPackageId(wpId).subscribe({
+        next: (tasks) => {
+          targetWp!.tasks = tasks;
+          this.phase.set({ ...current });
+        },
+        error: (err) => console.error(`Failed to load tasks for WP ${wpId}`, err),
+      });
+    }
+  }
+
+  // ===== TOGGLE =====
+  toggleMilestone(msId: string) {
+    this.expandedMilestone.set(this.expandedMilestone() === msId ? null : msId);
+  }
+
+  toggleWorkPackage(wpId: string) {
+    if (this.expandedWorkPackage() !== wpId) {
+      this.loadTasksForWorkPackage(wpId);
+    }
+    this.expandedWorkPackage.set(this.expandedWorkPackage() === wpId ? null : wpId);
+  }
+
+  getTotalWorkPackages(phase: PhaseResponse): number {
+    let count = 0;
+    phase.milestones?.forEach((ms) => {
+      count += ms.workPackages?.length || 0;
+    });
+    return count;
+  }
+
+  // ===== CRUD =====
+  openCreateMilestone() {
+    const phaseId = this.currentPhaseId();
+    if (!phaseId) return;
+    this.router.navigate(['/feature/pm/milestone/new'], {
+      queryParams: { phaseId, projectId: this.projectId() },
+    });
+  }
+
+  editMilestone(ms: MilestoneResponse, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/feature/pm/milestone', ms.id, 'edit'], {
+      queryParams: { projectId: this.projectId() },
+    });
+  }
+
+  deleteMilestone(ms: MilestoneResponse, event: Event) {
+    event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', `ลบ Milestone "${ms.milestoneName}"?`).then((confirmed) => {
+      if (confirmed) {
+        this.milestoneService.deleteMilestone(ms.id).subscribe({
+          next: () => {
+            const current = this.phase();
+            if (current?.milestones) {
+              current.milestones = current.milestones.filter((m) => m.id !== ms.id);
+              this.phase.set({ ...current });
+            }
+          },
+          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+        });
+      }
+    });
+  }
+
+  openCreateWorkPackage(milestoneId: string) {
+    this.router.navigate(['/feature/pm/work-package/new'], {
+      queryParams: {
+        milestoneId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  openCreateWorkPackageForPhase() {
+    const p = this.phase();
+    if (!p || !p.milestones || p.milestones.length === 0) {
+      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
+      return;
+    }
+    this.openCreateWorkPackage(p.milestones[0].id);
+  }
+
+  editWorkPackage(wp: WorkPackageResponse, milestoneId: string, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/feature/pm/work-package', wp.id, 'edit'], {
+      queryParams: {
+        milestoneId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  deleteWorkPackage(wp: WorkPackageResponse, event: Event) {
+    event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', `ลบ Work Package "${wp.packageName}"?`).then((confirmed) => {
+      if (confirmed) {
+        this.wpService.deleteWorkPackage(wp.id).subscribe({
+          next: () => {
+            const current = this.phase();
+            if (current?.milestones) {
+              current.milestones = current.milestones.map((m) => ({
+                ...m,
+                workPackages: m.workPackages?.filter((w) => w.id !== wp.id) || [],
+              }));
+              this.phase.set({ ...current });
+            }
+          },
+          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+        });
+      }
+    });
+  }
+
+  openCreateTask(workPackageId: string) {
+    this.router.navigate(['/feature/pm/task/new'], {
+      queryParams: {
+        workPackageId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  editTask(task: TaskResponse, workPackageId: string, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/feature/pm/task', task.id, 'edit'], {
+      queryParams: {
+        workPackageId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  deleteTask(task: TaskResponse, event: Event) {
+    event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', `ลบ Task "${task.taskName}"?`).then((confirmed) => {
+      if (confirmed) {
+        this.taskService.deleteTask(task.id).subscribe({
+          next: () => {
+            const current = this.phase();
+            if (current?.milestones) {
+              current.milestones = current.milestones.map((m) => ({
+                ...m,
+                workPackages:
+                  m.workPackages?.map((wp) => ({
+                    ...wp,
+                    tasks: wp.tasks?.filter((t) => t.id !== task.id) || [],
+                  })) || [],
+              }));
+              this.phase.set({ ...current });
+            }
+          },
+          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+        });
+      }
+    });
+  }
+
+  // ===== NAVIGATION TO FULLSCREEN GANTT =====
+  goToGanttFullscreen() {
+    const phaseId = this.currentPhaseId();
+    const projectId = this.projectId();
+    if (phaseId) {
+      this.router.navigate(['/feature/pm/phase', phaseId, 'gantt'], {
+        queryParams: { projectId }
+      });
+    }
+  }
+
+  // ===== CUSTOM CALENDAR STORAGE & LOGIC =====
+  private getStorageKey(): string {
+    return `sic_custom_calendar_items_${this.currentPhaseId()}`;
+  }
+
+  loadCustomItems(): void {
+    const key = this.getStorageKey();
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const hList: SicCalendarHoliday[] = [];
+          const eList: SicCalendarEvent[] = [];
+          parsed.forEach((item: any) => {
+            hList.push({
+              id: item.id,
+              date: item.date,
+              title: item.title,
+              source: 'office',
+              color: item.color || '#8b5cf6',
+              icon: item.icon || '📌',
+            });
+            eList.push({
+              id: item.id,
+              date: item.date,
+              title: item.title,
+              color: item.color || '#8b5cf6',
+              icon: item.icon || '📌',
+              description: item.description || '',
+              extra: { type: 'holiday', id: item.id, isCustom: true, raw: item },
+            } as any);
+          });
+          this.customHolidays.set(hList);
+          this.customEvents.set(eList);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load custom calendar items', e);
+    }
+  }
+
+  saveCustomItems(items: any[]): void {
+    const key = this.getStorageKey();
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify(items));
+      this.loadCustomItems();
+    } catch (e) {
+      console.error('Failed to save custom calendar items', e);
+    }
+  }
+
+  private getRawCustomItems(): any[] {
+    const key = this.getStorageKey();
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // ===== CALENDAR & TIMELINE EVENT HANDLERS =====
+  onDateClick(event: any): void {
+    let dateStr = '';
+    if (event && event.date) {
+      if (typeof event.date.format === 'function') {
+        dateStr = event.date.format('YYYY-MM-DD');
+      } else if (event.date instanceof Date) {
+        dateStr = dayjs(event.date).format('YYYY-MM-DD');
+      } else if (typeof event.date === 'string') {
+        dateStr = event.date.split('T')[0];
+      }
+    } else if (event instanceof Date) {
+      dateStr = dayjs(event).format('YYYY-MM-DD');
+    } else if (typeof event === 'string') {
+      dateStr = event.split('T')[0];
+    }
+
+    if (dateStr) {
+      this.selectedCalendarDate.set(dateStr);
+      this.isSidebarOpen.set(true);
+    }
+  }
+
+  handleCalendarEventClick(event: SicCalendarEvent): void {
+    if (event && event.date) {
+      const dateStr = this.toDateString(event.date);
+      if (dateStr) {
+        this.selectedCalendarDate.set(dateStr);
+        this.isSidebarOpen.set(true);
+      }
+    }
+  }
+
+  handleCalendarHolidayClick(holiday: SicCalendarHoliday): void {
+    if (holiday && holiday.date) {
+      const dateStr = this.toDateString(holiday.date);
+      if (dateStr) {
+        this.selectedCalendarDate.set(dateStr);
+        this.isSidebarOpen.set(true);
+      }
+    }
+  }
+
+  closeDateSidebar(): void {
+    this.isSidebarOpen.set(false);
+  }
+
+  onSelectItem(item: CalendarItemDetail): void {
+    const projectId = this.projectId();
+    const phaseId = this.currentPhaseId();
+
+    switch (item.type) {
+      case 'phase':
+        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
+          queryParams: { projectId },
+        });
+        break;
+      case 'milestone':
+        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'workpackage':
+        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'task':
+        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: item.rawObject?.workPackageId || '' },
+        });
+        break;
+      case 'holiday':
+      case 'event':
+        if (item.isCustom && item.rawObject) {
+          this.customItemForm = {
+            id: item.rawObject.id || '',
+            date: item.rawObject.date || this.selectedCalendarDate(),
+            title: item.rawObject.title || '',
+            description: item.rawObject.description || '',
+            icon: item.rawObject.icon || '📌',
+            color: item.rawObject.color || '#8b5cf6',
+          };
+          this.showCustomItemModal.set(true);
+        }
+        break;
+    }
+  }
+
+  openAddCustomItemModal(dateStr?: string | null): void {
+    const targetDate = dateStr || this.selectedCalendarDate() || dayjs().format('YYYY-MM-DD');
+    this.customItemForm = {
+      id: '',
+      date: targetDate,
+      title: '',
+      description: '',
+      icon: '📌',
+      color: '#8b5cf6',
+    };
+    this.showCustomItemModal.set(true);
+  }
+
+  closeCustomItemModal(): void {
+    this.showCustomItemModal.set(false);
+  }
+
+  saveCustomItem(): void {
+    if (!this.customItemForm.title.trim()) return;
+    const currentItems = this.getRawCustomItems();
+    if (this.customItemForm.id) {
+      const updated = currentItems.map((item) =>
+        item.id === this.customItemForm.id ? { ...this.customItemForm } : item
+      );
+      this.saveCustomItems(updated);
+    } else {
+      const newItem = {
+        ...this.customItemForm,
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      };
+      this.saveCustomItems([...currentItems, newItem]);
+    }
+    this.selectedCalendarDate.set(this.customItemForm.date);
+    this.isSidebarOpen.set(true);
+    this.closeCustomItemModal();
+  }
+
+  deleteCustomItem(itemId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบข้อมูลนี้หรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        const currentItems = this.getRawCustomItems();
+        const updated = currentItems.filter((i) => i.id !== itemId);
+        this.saveCustomItems(updated);
+      }
+    });
+  }
+
+  openCreateMilestoneForDate(dateStr?: string | null): void {
+    const phaseId = this.currentPhaseId();
+    if (!phaseId) return;
+    this.router.navigate(['/feature/pm/milestone/new'], {
+      queryParams: {
+        phaseId,
+        projectId: this.projectId(),
+        dueDate: dateStr || undefined,
+      },
+    });
+  }
+
+  openCreateWorkPackageForDate(dateStr?: string | null): void {
+    const p = this.phase();
+    if (!p || !p.milestones || p.milestones.length === 0) {
+      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
+      return;
+    }
+    this.router.navigate(['/feature/pm/work-package/new'], {
+      queryParams: {
+        milestoneId: p.milestones[0].id,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+        startDate: dateStr || undefined,
+      },
+    });
+  }
+
+  openCreateTaskForDate(dateStr?: string | null): void {
+    const p = this.phase();
+    if (!p || !p.milestones) return;
+    let wpId = '';
+    for (const ms of p.milestones) {
+      if (ms.workPackages && ms.workPackages.length > 0) {
+        wpId = ms.workPackages[0].id;
+        break;
+      }
+    }
+    if (!wpId) {
+      this.dialog.error('ไม่มี Work Package', 'กรุณาสร้าง Work Package ก่อน');
+      return;
+    }
+    this.router.navigate(['/feature/pm/task/new'], {
+      queryParams: {
+        workPackageId: wpId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+        startDate: dateStr || undefined,
+      },
+    });
+  }
+
+  formatSelectedDateLabel(dateStr: string | null): string {
+    if (!dateStr) return '';
+    const d = dayjs(dateStr);
+    if (!d.isValid()) return dateStr;
+    const monthNamesTh = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const day = d.date();
+    const month = monthNamesTh[d.month()];
+    const yearBE = d.year() + 543;
+    return `${day} ${month} ${yearBE}`;
+  }
+
+  private getTaskVisuals(task: TaskResponse): { icon: string; color: string } {
+    if (task.color) {
+      return { icon: '🔹', color: task.color };
+    }
+    switch (task.status) {
+      case 'Done':
+      case 'Closed':
+        return { icon: '✅', color: '#22c55e' };
+      case 'In Progress':
+        return { icon: '👥', color: '#3b82f6' };
+      case 'Waiting Review':
+        return { icon: '🔍', color: '#06b6d4' };
+      case 'Waiting Fix':
+        return { icon: '🛠️', color: '#f59e0b' };
+      case 'Blocked':
+        return { icon: '⛔', color: '#ef4444' };
+      default:
+        return { icon: '📝', color: '#8b5cf6' };
+    }
+  }
+
+  onTimelineRowClick(row: SicCalendarTimelineRow): void {
+    this.navigateFromTimelineData(row.data);
+  }
+
+  onTimelinePhaseClick(event: { row: SicCalendarTimelineRow; phase: any }): void {
+    this.navigateFromTimelineData(event.row.data);
+  }
+
+  private navigateFromTimelineData(data: any): void {
+    if (!data) return;
+    const projectId = this.projectId();
+    const phaseId = this.currentPhaseId();
+
+    switch (data.type) {
+      case 'phase':
+        this.router.navigate(['/feature/pm/phase', data.id, 'edit'], {
+          queryParams: { projectId },
+        });
+        break;
+      case 'milestone':
+        this.router.navigate(['/feature/pm/milestone', data.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'workpackage':
+        this.router.navigate(['/feature/pm/work-package', data.id, 'edit'], {
+          queryParams: { projectId, phaseId },
+        });
+        break;
+      case 'task':
+        this.router.navigate(['/feature/pm/task', data.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: data.workPackageId || '' },
+        });
+        break;
+    }
+  }
+
+  // ===== NAVIGATION =====
+  goBack() {
+    this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId() } });
+  }
+
+  // ===== UTILITIES =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'bg-gray-100 text-gray-600',
+      'In Progress': 'bg-blue-100 text-blue-700',
+      Done: 'bg-emerald-100 text-emerald-700',
+      Delayed: 'bg-red-100 text-red-700',
+      Todo: 'bg-gray-100 text-gray-600',
+      'Waiting Review': 'bg-purple-100 text-purple-700',
+      'Waiting Fix': 'bg-orange-100 text-orange-700',
+      Blocked: 'bg-rose-100 text-rose-700',
+      Cancelled: 'bg-gray-300 text-gray-700',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      'Not Started': 'ยังไม่เริ่ม',
+      'In Progress': 'กำลังดำเนินการ',
+      Done: 'เสร็จสิ้น',
+      Delayed: 'ล่าช้า',
+      Todo: 'รอเริ่ม',
+      'Waiting Review': 'รอ Review',
+      'Waiting Fix': 'รอแก้ไข',
+      Blocked: 'ติดปัญหา',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.ts">
@@ -44662,6 +44976,456 @@ public/images/
 **/node_modules/
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.component.html">
+<!-- src/app/feature/pm/dt/pmdt02/pmdt02.component.html -->
+<div class="space-y-5 p-4">
+
+  <!-- ===== BACK BUTTON ===== -->
+  <div class="flex items-center gap-3 flex-wrap">
+    <button (click)="goBack()"
+      class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+      title="ย้อนกลับ">
+      <i class="bi bi-arrow-left text-xl"></i>
+    </button>
+  </div>
+
+  <!-- ===== PHASE HEADER ===== -->
+  @if (phase(); as p) {
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5">
+      <div>
+        <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-3">
+          {{ p.phaseName }}
+          <span [class]="getStatusClass(p.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ getStatusText(p.status) }}
+          </span>
+        </h1>
+        <p class="text-sm text-[var(--text-muted)] mt-1">{{ p.description || 'ไม่มีคำอธิบาย' }}</p>
+        <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-2">
+          <span><i class="bi bi-calendar3"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</span>
+          <span><i class="bi bi-person"></i> {{ p.owner || '-' }}</span>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-[var(--text-active)]">{{ p.progress }}%</span>
+          <span class="text-xs text-[var(--text-muted)]">{{ p.taskCompletedCount }}/{{ p.taskCount }} Tasks</span>
+        </div>
+        <div class="w-48 h-2 bg-[var(--bg)] rounded-full overflow-hidden">
+          <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="p.progress"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-12">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (!isLoading() && phase(); as p) {
+
+    <!-- ===== TAB SWITCHER ===== -->
+    <div class="flex gap-1 border-b border-[var(--border)]">
+      <button
+        (click)="switchTab('list')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'list' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi bi-list-task mr-1"></i> รายการ
+      </button>
+      <button
+        (click)="switchTab('calendar')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'calendar' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi bi-calendar3 mr-1"></i> ปฏิทิน
+      </button>
+      <button
+        (click)="switchTab('gantt')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi bi-bar-chart mr-1"></i> Gantt Chart
+      </button>
+    </div>
+
+    <!-- ===== TAB 1: LIST ===== -->
+    @if (rightTab() === 'list') {
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col max-h-[600px]">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-shrink-0">
+          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-flag text-[var(--crm-primary)]"></i>
+            Milestones & Work Packages
+            <span class="text-xs text-[var(--text-muted)] font-normal">({{ p.milestones?.length || 0 }} Milestones, {{ getTotalWorkPackages(p) }} Work Packages)</span>
+          </h2>
+          <button (click)="openCreateMilestone()" class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+            <i class="bi bi-plus-lg"></i> เพิ่ม Milestone
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+          @for (ms of p.milestones || []; track ms.id) {
+            <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
+              <!-- Milestone header -->
+              <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleMilestone(ms.id)">
+                <div class="flex items-center gap-2 min-w-0">
+                  <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedMilestone() === ms.id"></i>
+                  <span class="text-sm font-medium text-[var(--text-active)] truncate">{{ ms.milestoneName }}</span>
+                  <span [class]="getStatusClass(ms.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium flex-shrink-0'">
+                    {{ getStatusText(ms.status) }}
+                  </span>
+                  <span class="text-xs text-[var(--text-muted)]">({{ ms.workPackages?.length || 0 }} WPs)</span>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <span class="text-xs text-[var(--text-muted)]">{{ formatDate(ms.dueDate) }}</span>
+                  <button (click)="editMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button (click)="deleteMilestone(ms, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <!-- Work packages under milestone -->
+              @if (expandedMilestone() === ms.id) {
+                <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
+                  @for (wp of ms.workPackages || []; track wp.id) {
+                    <div class="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden">
+                      <!-- Work Package header -->
+                      <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[var(--sidebar-hover)] transition-colors" (click)="toggleWorkPackage(wp.id)">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform" [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
+                          <span class="text-sm font-medium text-[var(--text-active)] truncate">📦 {{ wp.packageName }}</span>
+                          <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ wp.tasks?.length || 0 }} งาน)</span>
+                        </div>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                          <span class="text-xs text-[var(--text-muted)]">{{ formatDate(wp.startDate) }}</span>
+                          <button (click)="editWorkPackage(wp, ms.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button (click)="deleteWorkPackage(wp, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <!-- Tasks under work package -->
+                      @if (expandedWorkPackage() === wp.id) {
+                        <div class="border-t border-[var(--border)] px-3 py-2 space-y-1 bg-[var(--bg)]/30">
+                          @for (task of wp.tasks || []; track task.id) {
+                            <div class="flex items-center justify-between pl-4 py-1 rounded hover:bg-[var(--sidebar-hover)] transition-colors">
+                              <div class="flex items-center gap-2 min-w-0">
+                                <i class="bi bi-circle text-[0.55rem] text-[var(--text-muted)]"></i>
+                                <span class="text-sm text-[var(--text)] truncate">{{ task.taskName }}</span>
+                                <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ task.assignedTo || '-' }})</span>
+                                <span [class]="getStatusClass(task.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.55rem] font-medium flex-shrink-0'">
+                                  {{ getStatusText(task.status) }}
+                                </span>
+                              </div>
+                              <div class="flex items-center gap-1 flex-shrink-0">
+                                <button (click)="editTask(task, wp.id, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] p-1 rounded">
+                                  <i class="bi bi-pencil"></i>
+                                </button>
+                                <button (click)="deleteTask(task, $event)" class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] p-1 rounded">
+                                  <i class="bi bi-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          }
+                          @if ((wp.tasks || []).length === 0) {
+                            <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Task</p>
+                          }
+                          <button (click)="openCreateTask(wp.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
+                            <i class="bi bi-plus-lg"></i> เพิ่ม Task
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if ((ms.workPackages || []).length === 0) {
+                    <p class="text-xs text-[var(--text-muted)] pl-4 py-1">ไม่มี Work Package</p>
+                  }
+                  <button (click)="openCreateWorkPackage(ms.id)" class="mt-1 text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 pl-4">
+                    <i class="bi bi-plus-lg"></i> เพิ่ม Work Package
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          @if ((p.milestones || []).length === 0) {
+            <div class="text-center py-8 text-[var(--text-muted)]">
+              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+              <p class="text-sm">ยังไม่มี Milestone</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ===== TAB 2: CALENDAR ===== -->
+    @if (rightTab() === 'calendar') {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Main Calendar Area -->
+        <div [class]="isSidebarOpen() ? 'lg:col-span-2' : 'lg:col-span-3'" class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden transition-all duration-300">
+          <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex-wrap gap-2">
+            <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-calendar3 text-[var(--crm-primary)]"></i>
+              ปฏิทินงาน
+            </h2>
+            <div class="flex items-center gap-2">
+              <button
+                (click)="openAddCustomItemModal()"
+                class="px-3 py-1.5 bg-[var(--crm-primary)] text-white text-xs rounded-lg font-medium hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm">
+                <i class="bi bi-plus-circle"></i> เพิ่มวันหยุด / ข้อความ
+              </button>
+            </div>
+          </div>
+          <div class="p-4">
+            <sic-calendar
+              [tasks]="calendarTasks()"
+              [holidays]="calendarHolidays()"
+              [weekStartsOn]="1"
+              locale="th"
+              [(era)]="calendarEra"
+              [(view)]="calendarView"
+              (dateClick)="onDateClick($event)"
+              (eventClick)="handleCalendarEventClick($event)"
+              (holidayClick)="handleCalendarHolidayClick($event)">
+            </sic-calendar>
+          </div>
+        </div>
+
+        <!-- Right Side Panel (Drawer) matching user's screenshot -->
+        @if (isSidebarOpen()) {
+          <div class="lg:col-span-1 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col h-full min-h-[500px] shadow-xl">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg)]/40">
+              <h3 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-calendar-date text-[var(--crm-primary)]"></i>
+                {{ formatSelectedDateLabel(selectedCalendarDate()) }}
+              </h3>
+              <button
+                (click)="closeDateSidebar()"
+                class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--bg)] transition-colors">
+                <i class="bi bi-x-lg text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Sidebar Quick Actions Bar -->
+            <div class="p-3 border-b border-[var(--border)] bg-[var(--bg)]/20 flex flex-wrap gap-2">
+              <button
+                (click)="openAddCustomItemModal(selectedCalendarDate())"
+                class="flex-1 px-2.5 py-1.5 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1">
+                <i class="bi bi-plus-lg"></i> เพิ่มวันหยุด/Event
+              </button>
+              <button
+                (click)="openCreateMilestoneForDate(selectedCalendarDate())"
+                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
+                <i class="bi bi-flag"></i> Milestone
+              </button>
+              <button
+                (click)="openCreateWorkPackageForDate(selectedCalendarDate())"
+                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
+                <i class="bi bi-box-seam"></i> WP
+              </button>
+              <button
+                (click)="openCreateTaskForDate(selectedCalendarDate())"
+                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
+                <i class="bi bi-check2-square"></i> Task
+              </button>
+            </div>
+
+            <!-- Sidebar Items List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+              @for (item of selectedDateItems(); track item.id) {
+                <div
+                  (click)="onSelectItem(item)"
+                  class="group relative flex items-start gap-3.5 p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)]/60 hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/50 transition-all cursor-pointer shadow-sm">
+                  <!-- Icon Badge -->
+                  <div
+                    class="w-10 h-10 rounded-full flex items-center justify-center text-white text-base shadow-sm flex-shrink-0"
+                    [style.background]="item.color">
+                    {{ item.icon }}
+                  </div>
+
+                  <!-- Content -->
+                  <div class="flex-1 min-w-0 pr-6">
+                    <h4 class="text-sm font-semibold text-[var(--text-active)] truncate group-hover:text-[var(--crm-primary)] transition-colors">
+                      {{ item.title }}
+                    </h4>
+                    @if (item.subtitle) {
+                      <p class="text-xs text-[var(--text-muted)] mt-1 truncate">
+                        {{ item.subtitle }}
+                      </p>
+                    }
+                    @if (item.description && item.description !== item.subtitle) {
+                      <p class="text-[0.7rem] text-[var(--text-muted)] opacity-80 line-clamp-2 mt-0.5">
+                        {{ item.description }}
+                      </p>
+                    }
+                  </div>
+
+                  <!-- Action icons -->
+                  <div class="absolute right-3 top-3.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    @if (item.isCustom) {
+                      <button
+                        (click)="deleteCustomItem(item.id, $event)"
+                        class="p-1 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded transition-colors"
+                        title="ลบ">
+                        <i class="bi bi-trash text-xs"></i>
+                      </button>
+                    }
+                    <i class="bi bi-chevron-right text-xs text-[var(--text-muted)]"></i>
+                  </div>
+                </div>
+              }
+
+              @if (selectedDateItems().length === 0) {
+                <div class="text-center py-12 text-[var(--text-muted)]">
+                  <i class="bi bi-calendar-event text-4xl block mb-2 opacity-30"></i>
+                  <p class="text-sm font-medium">ไม่มีข้อมูลในวันนี้</p>
+                  <p class="text-xs mt-1">คลิกปุ่มด้านบนเพื่อเพิ่มวันหยุด Event หรือ Milestone</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ===== TAB 3: GANTT CHART (TIMELINE) ===== -->
+    @if (rightTab() === 'gantt') {
+      <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]/50">
+          <h2 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-bar-chart text-[var(--crm-primary)]"></i>
+            Gantt Chart
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-[var(--text-muted)]">คลิกแถว/เฟสเพื่อไปแก้ไข</span>
+            <button
+              (click)="goToGanttFullscreen()"
+              class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+              <i class="bi bi-arrows-fullscreen"></i> เต็มจอ
+            </button>
+          </div>
+        </div>
+        <div class="p-4">
+          <sic-calendar-timeline
+            [items]="timelineItems()"
+            [startDate]="timelineStartDate()"
+            [endDate]="timelineEndDate()"
+            [(viewMode)]="timelineViewMode"
+            locale="th"
+            era="BE"
+            maxHeight="500px"
+            (rowClick)="onTimelineRowClick($event)"
+            (phaseClick)="onTimelinePhaseClick($event)">
+          </sic-calendar-timeline>
+        </div>
+      </div>
+    }
+
+    <!-- ===== CUSTOM ITEM / HOLIDAY MODAL ===== -->
+    @if (showCustomItemModal()) {
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg)]/50">
+            <h3 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-plus-circle text-[var(--crm-primary)]"></i>
+              {{ customItemForm.id ? 'แก้ไขวันหยุด / Event' : 'เพิ่มวันหยุด / ข้อความ / Icon' }}
+            </h3>
+            <button (click)="closeCustomItemModal()" class="text-[var(--text-muted)] hover:text-[var(--text-active)]">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">วันที่</label>
+              <input
+                type="date"
+                [(ngModel)]="customItemForm.date"
+                class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">ชื่อ / ข้อความ *</label>
+              <input
+                type="text"
+                [(ngModel)]="customItemForm.title"
+                placeholder="เช่น ทำหน้า login, วันหยุดออฟฟิศ"
+                class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">รายละเอียดเพิ่มเติม</label>
+              <textarea
+                [(ngModel)]="customItemForm.description"
+                rows="2"
+                placeholder="เช่น รายละเอียดกิจกรรม..."
+                class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]"></textarea>
+            </div>
+
+            <!-- Icon Selector -->
+            <div>
+              <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">เลือก Icon</label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                @for (iconOpt of ['📌', '🚩', '📦', '🔹', '🎉', '🏖️', '🎂', '⚡', '📝', '🌟']; track iconOpt) {
+                  <button
+                    type="button"
+                    (click)="customItemForm.icon = iconOpt"
+                    [class]="customItemForm.icon === iconOpt ? 'border-[var(--crm-primary)] bg-[var(--crm-primary)]/20 scale-110' : 'border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)]'"
+                    class="w-9 h-9 rounded-lg border flex items-center justify-center text-lg transition-all">
+                    {{ iconOpt }}
+                  </button>
+                }
+              </div>
+              <input
+                type="text"
+                [(ngModel)]="customItemForm.icon"
+                placeholder="หรือพิมพ์ Emoji / Icon ที่ต้องการ"
+                class="w-full px-3 py-1.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]" />
+            </div>
+
+            <!-- Color Selector -->
+            <div>
+              <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">เลือกสี</label>
+              <div class="flex items-center gap-2">
+                @for (colorOpt of ['#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1']; track colorOpt) {
+                  <button
+                    type="button"
+                    (click)="customItemForm.color = colorOpt"
+                    [style.background]="colorOpt"
+                    [class.ring-2]="customItemForm.color === colorOpt"
+                    class="w-7 h-7 rounded-full transition-all ring-offset-2 ring-[var(--crm-primary)]"></button>
+                }
+                <input
+                  type="color"
+                  [(ngModel)]="customItemForm.color"
+                  class="w-8 h-8 rounded border border-[var(--border)] bg-transparent cursor-pointer ml-2" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--border)] bg-[var(--bg)]/50">
+            <button
+              (click)="closeCustomItemModal()"
+              class="px-4 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors">
+              ยกเลิก
+            </button>
+            <button
+              (click)="saveCustomItem()"
+              [disabled]="!customItemForm.title.trim()"
+              class="px-4 py-2 text-xs font-medium bg-[var(--crm-primary)] text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50">
+              บันทึก
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+  }
+</div>
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
 // src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
 import { CommonModule } from '@angular/common';
@@ -46782,6 +47546,7 @@ export class Pmdt09Component implements OnInit {
 
 <file path="sic-app/src/app/feature/pm/pm.routes.ts">
 // src/app/feature/pm/pm.routes.ts
+
 import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
@@ -46789,7 +47554,6 @@ import { projectGuard } from '../../core/guard/project.guard';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
 import { pmdt08CreateResolver, pmdt08EditResolver } from './dt/pmdt08/pmdt08.resolver';
-import { Pmdt02GanttComponent } from './dt/pmdt02/pmdt02-gantt.component';
 import { editGuard } from '../../core/guard/edit.guard';
 
 export const PM_ROUTES: Routes = [
@@ -46943,43 +47707,40 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
     canActivate: [customerGuard, projectGuard],
   },
-  // ✅ สร้าง Requirement ใหม่ (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
-{
-  path: 'requirement/new',
-  loadComponent: () =>
-    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-  canActivate: [customerGuard, projectGuard],
-  canDeactivate: [CanDeactivateGuard],
-},
-
-// ✅ แก้ไข Requirement (ใช้ Pmdt05Component ที่มีอยู่แล้ว)
-{
-  path: 'requirement/:id/edit',
-  loadComponent: () =>
-    import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
-  data: { targetType: 'REQUIREMENT' },
-  canDeactivate: [CanDeactivateGuard],
-},
+  {
+    path: 'requirement/new',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'requirement/:id/edit',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
+    data: { targetType: 'REQUIREMENT' },
+    canDeactivate: [CanDeactivateGuard],
+  },
   {
     path: 'requirement/:id/approval',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Requirement Dashboard (pmrt05) =====
   {
     path: 'pmrt05',
     loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ มีอยู่แล้ว
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Diagram =====
   {
     path: 'diagram',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Change Request =====
@@ -47004,31 +47765,32 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
   },
 
- // ===== Specification Management =====
-{
-  path: 'pmdt08',
-  loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'pmdt08A/new',
-  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-  resolve: { form: pmdt08CreateResolver },
-  canDeactivate: [CanDeactivateGuard],
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'pmdt08A/:id/edit',
-  loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-  resolve: { form: pmdt08EditResolver },
-  canDeactivate: [CanDeactivateGuard],
-  canActivate: [customerGuard, projectGuard, requirementGuard],
-},
-{
-  path: 'discussion',
-  loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
-  canActivate: [customerGuard, projectGuard],
-},
+  // ===== Specification Management =====
+  {
+    path: 'pmdt08',
+    loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08A/new',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08CreateResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08A/:id/edit',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08EditResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'discussion',
+    loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+
   // ===== Design Review =====
   {
     path: 'design-review',
@@ -47038,12 +47800,12 @@ export const PM_ROUTES: Routes = [
   {
     path: 'design-review/new',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {
     path: 'design-review/:id/edit',
     loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard], // ✅ เพิ่ม
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
   // ===== Task (เดิม) =====
@@ -47081,21 +47843,23 @@ export const PM_ROUTES: Routes = [
   },
 
   // ===== Gantt =====
-  {
-    path: 'gantt',
-    loadComponent: () =>
-      import('../../core/component/sic-ganttchart/dhtmlx-gantt.component').then((m) => m.DhtmlxGanttComponent),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-  path: 'phase/:id/gantt',
-  loadComponent: () => import('./dt/pmdt02/pmdt02-gantt.component').then(m => m.Pmdt02GanttComponent),
+{
+  path: 'gantt',
+  loadComponent: () =>
+    import('../../core/component/sic-gantt/sic-gantt.component').then((m) => m.SicGanttComponent),
+  canActivate: [customerGuard, projectGuard],
 },
-  {
-    path: 'gantt/:id/update',
-    loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
-    canActivate: [customerGuard, projectGuard],
-  },
+{
+  path: 'phase/:id/gantt',
+  loadComponent: () =>
+    import('../../core/component/sic-gantt/sic-gantt.component').then((m) => m.SicGanttComponent),
+  canActivate: [customerGuard, projectGuard],
+},
+{
+  path: 'gantt/:id/update',
+  loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
+  canActivate: [customerGuard, projectGuard],
+},
 
   // ===== Test Case =====
   {

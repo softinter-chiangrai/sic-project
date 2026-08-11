@@ -84,6 +84,16 @@ export class Pmdt02CComponent implements OnInit {
       this.workPackageId = qParams['workPackageId'] || '';
       this.projectId = qParams['projectId'] || '';
       this.phaseId = qParams['phaseId'] || '';
+      const dateParam = qParams['startDate'] || qParams['date'];
+      if (!this.isEdit && dateParam) {
+        const cleanDate = dateParam.split('T')[0];
+        this.form.patchValue({
+          startDate: cleanDate,
+          startTime: '09:00',
+          endDate: cleanDate,
+          endTime: '18:00',
+        });
+      }
       if (this.isEdit && this.taskId) {
         this.loadTask(this.taskId);
       }

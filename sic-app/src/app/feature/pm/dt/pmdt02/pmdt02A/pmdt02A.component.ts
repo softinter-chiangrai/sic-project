@@ -55,6 +55,14 @@ export class Pmdt02AComponent implements OnInit {
     this.route.queryParams.subscribe((qParams) => {
       this.phaseId = qParams['phaseId'] || '';
       this.projectId = qParams['projectId'] || '';
+      const dateParam = qParams['dueDate'] || qParams['date'];
+      if (!this.isEdit && dateParam) {
+        const cleanDate = dateParam.split('T')[0];
+        this.form.patchValue({
+          dueDate: cleanDate,
+          dueTime: '17:00',
+        });
+      }
       if (this.isEdit && this.milestoneId) {
         this.loadMilestone(this.milestoneId);
       }

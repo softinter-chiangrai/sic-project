@@ -47,7 +47,6 @@ export const appConfig: ApplicationConfig = {
         useExisting: AppTranslateLoader
       }
     }),
-    // ✅ วางไว้ตรงนี้ (หรือจะแทรกตรงไหนก็ได้ใน array)
     provideSicTheme({ mode: 'system' }),
     provideSicConfig({
       decimals: 2,

@@ -25,20 +25,43 @@ import {
   SicCalendarTimelineViewMode,
   SicCalendarEra,
   SicCalendarView,
+  SicDatepickerComponent,
 } from 'sic-ng';
 import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from './pmdt02.utils';
+
+import { FormsModule } from '@angular/forms';
+
+export interface CalendarItemDetail {
+  id: string;
+  type: 'phase' | 'milestone' | 'workpackage' | 'task' | 'holiday' | 'event';
+  title: string;
+  subtitle?: string;
+  description?: string;
+  color: string;
+  icon: string;
+  isCustom?: boolean;
+  rawObject?: any;
+}
 
 @Component({
   selector: 'app-pmdt02',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     SicCalendarComponent,
     SicCalendarTimelineComponent,
+    SicDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',
+  styles: [`
+    ::ng-deep .sic-calendar__sidebar,
+    ::ng-deep .sic-calendar__sidebar-backdrop {
+      display: none !important;
+    }
+  `],
 })
 export class Pmdt02Component implements OnInit {
   private route = inject(ActivatedRoute);
@@ -62,21 +85,154 @@ export class Pmdt02Component implements OnInit {
   calendarView = signal<SicCalendarView>('grid');
   timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
 
+  // ===== CUSTOM CALENDAR SIGNALS & SIDEBAR =====
+  customHolidays = signal<SicCalendarHoliday[]>([]);
+  customEvents = signal<SicCalendarEvent[]>([]);
+  selectedCalendarDate = signal<string>(dayjs().format('YYYY-MM-DD'));
+  isSidebarOpen = signal<boolean>(false);
+
+  showCustomItemModal = signal<boolean>(false);
+  customItemForm = {
+    id: '',
+    date: dayjs().format('YYYY-MM-DD'),
+    title: '',
+    description: '',
+    icon: '📌',
+    color: '#8b5cf6',
+  };
+
   switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
     this.rightTab.set(tab);
+  }
+
+  // ===== HELPER: convert string | Date to YYYY-MM-DD =====
+  private toDateString(value: string | Date | undefined | null): string {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      const parts = value.split('T');
+      if (parts.length > 0) return parts[0];
+      return value;
+    }
+    if (value instanceof Date) {
+      return dayjs(value).format('YYYY-MM-DD');
+    }
+    return '';
   }
 
   // ===== CALENDAR & TIMELINE DATA =====
   calendarTasks = computed<SicCalendarEvent[]>(() => {
     const p = this.phase();
-    if (!p) return [];
-    return buildCalendarEvents(p);
+    const events = p ? buildCalendarEvents(p) : [];
+    return [...events, ...this.customEvents()];
   });
 
   calendarHolidays = computed<SicCalendarHoliday[]>(() => {
     const p = this.phase();
-    if (!p) return [];
-    return buildCalendarHolidays(p);
+    const phaseHolidays = p ? buildCalendarHolidays(p) : [];
+    return [...phaseHolidays, ...this.customHolidays()];
+  });
+
+  selectedDateItems = computed<CalendarItemDetail[]>(() => {
+    const selDate = this.selectedCalendarDate();
+    if (!selDate) return [];
+
+    const items: CalendarItemDetail[] = [];
+    const p = this.phase();
+
+    if (p) {
+      // 1. Phase
+      if (p.startDate) {
+        const start = this.toDateString(p.startDate);
+        const end = this.toDateString(p.endDate) || start;
+        if (selDate >= start && selDate <= end) {
+          items.push({
+            id: p.id,
+            type: 'phase',
+            title: `Phase: ${p.phaseName}`,
+            subtitle: p.description || 'Phase หลัก',
+            description: `ระยะเวลา: ${this.formatDate(p.startDate)} - ${this.formatDate(p.endDate)}`,
+            color: p.color || '#3b82f6',
+            icon: '🚩',
+            rawObject: p,
+          });
+        }
+      }
+
+      // 2. Milestones
+      p.milestones?.forEach((ms) => {
+        const due = this.toDateString(ms.dueDate);
+        if (due && due === selDate) {
+          items.push({
+            id: ms.id,
+            type: 'milestone',
+            title: `Milestone: ${ms.milestoneName}`,
+            subtitle: ms.description || 'วันกำหนด Milestone',
+            color: ms.color || '#eab308',
+            icon: '📌',
+            rawObject: ms,
+          });
+        }
+
+        // 3. Work Packages
+        ms.workPackages?.forEach((wp) => {
+          if (wp.startDate) {
+            const start = this.toDateString(wp.startDate);
+            const end = this.toDateString(wp.endDate) || start;
+            if (selDate >= start && selDate <= end) {
+              items.push({
+                id: wp.id,
+                type: 'workpackage',
+                title: `Work Package: ${wp.packageName}`,
+                subtitle: wp.description || `Milestone: ${ms.milestoneName}`,
+                color: wp.color || '#a855f7',
+                icon: '📦',
+                rawObject: { ...wp, milestoneId: ms.id },
+              });
+            }
+
+            // 4. Tasks
+            wp.tasks?.forEach((task) => {
+              if (task.startDate) {
+                const tStart = this.toDateString(task.startDate);
+                const tEnd = this.toDateString(task.endDate) || tStart;
+                if (selDate >= tStart && selDate <= tEnd) {
+                  const visuals = this.getTaskVisuals(task);
+                  items.push({
+                    id: task.id,
+                    type: 'task',
+                    title: `Task: ${task.taskName}`,
+                    subtitle: `ผู้รับผิดชอบ: ${task.assignedTo || '-'} | สถานะ: ${this.getStatusText(task.status)}`,
+                    description: task.description,
+                    color: task.color || visuals.color,
+                    icon: visuals.icon,
+                    rawObject: { ...task, workPackageId: wp.id, milestoneId: ms.id },
+                  });
+                }
+              }
+            });
+          }
+        });
+      });
+    }
+
+    // 5. Custom Items
+    const rawCustom = this.getRawCustomItems();
+    rawCustom.forEach((cItem) => {
+      if (cItem.date === selDate) {
+        items.push({
+          id: cItem.id,
+          type: 'holiday',
+          title: cItem.title,
+          subtitle: cItem.description || 'วันหยุด / Event ที่เพิ่มเอง',
+          color: cItem.color || '#8b5cf6',
+          icon: cItem.icon || '📌',
+          isCustom: true,
+          rawObject: cItem,
+        });
+      }
+    });
+
+    return items;
   });
 
   timelineItems = computed<SicCalendarTimelineRow[]>(() => {
@@ -87,13 +243,13 @@ export class Pmdt02Component implements OnInit {
 
   timelineStartDate = computed(() => {
     const p = this.phase();
-    if (p?.startDate) return p.startDate.split('T')[0];
+    if (p?.startDate) return this.toDateString(p.startDate);
     return dayjs().format('YYYY-MM-DD');
   });
 
   timelineEndDate = computed(() => {
     const p = this.phase();
-    if (p?.endDate) return p.endDate.split('T')[0];
+    if (p?.endDate) return this.toDateString(p.endDate);
     return dayjs().add(30, 'day').format('YYYY-MM-DD');
   });
 
@@ -121,6 +277,7 @@ export class Pmdt02Component implements OnInit {
     this.phaseService.getPhaseById(phaseId).subscribe({
       next: (data) => {
         this.phase.set(data);
+        this.loadCustomItems();
         this.loadMilestones(phaseId);
       },
       error: (err) => {
@@ -354,35 +511,292 @@ export class Pmdt02Component implements OnInit {
     }
   }
 
-  // ===== CALENDAR & TIMELINE EVENT HANDLERS =====
-  handleCalendarEventClick(event: SicCalendarEvent): void {
-    const extra = (event as any).extra;
-    if (!extra) return;
+  // ===== CUSTOM CALENDAR STORAGE & LOGIC =====
+  private getStorageKey(): string {
+    return `sic_custom_calendar_items_${this.currentPhaseId()}`;
+  }
 
+  loadCustomItems(): void {
+    const key = this.getStorageKey();
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const hList: SicCalendarHoliday[] = [];
+          const eList: SicCalendarEvent[] = [];
+          parsed.forEach((item: any) => {
+            hList.push({
+              id: item.id,
+              date: item.date,
+              title: item.title,
+              source: 'office',
+              color: item.color || '#8b5cf6',
+              icon: item.icon || '📌',
+            });
+            eList.push({
+              id: item.id,
+              date: item.date,
+              title: item.title,
+              color: item.color || '#8b5cf6',
+              icon: item.icon || '📌',
+              description: item.description || '',
+              extra: { type: 'holiday', id: item.id, isCustom: true, raw: item },
+            } as any);
+          });
+          this.customHolidays.set(hList);
+          this.customEvents.set(eList);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load custom calendar items', e);
+    }
+  }
+
+  saveCustomItems(items: any[]): void {
+    const key = this.getStorageKey();
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify(items));
+      this.loadCustomItems();
+    } catch (e) {
+      console.error('Failed to save custom calendar items', e);
+    }
+  }
+
+  private getRawCustomItems(): any[] {
+    const key = this.getStorageKey();
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // ===== CALENDAR & TIMELINE EVENT HANDLERS =====
+  onDateClick(event: any): void {
+    let dateStr = '';
+    if (event && event.date) {
+      if (typeof event.date.format === 'function') {
+        dateStr = event.date.format('YYYY-MM-DD');
+      } else if (event.date instanceof Date) {
+        dateStr = dayjs(event.date).format('YYYY-MM-DD');
+      } else if (typeof event.date === 'string') {
+        dateStr = event.date.split('T')[0];
+      }
+    } else if (event instanceof Date) {
+      dateStr = dayjs(event).format('YYYY-MM-DD');
+    } else if (typeof event === 'string') {
+      dateStr = event.split('T')[0];
+    }
+
+    if (dateStr) {
+      this.selectedCalendarDate.set(dateStr);
+      this.isSidebarOpen.set(true);
+    }
+  }
+
+  handleCalendarEventClick(event: SicCalendarEvent): void {
+    if (event && event.date) {
+      const dateStr = this.toDateString(event.date);
+      if (dateStr) {
+        this.selectedCalendarDate.set(dateStr);
+        this.isSidebarOpen.set(true);
+      }
+    }
+  }
+
+  handleCalendarHolidayClick(holiday: SicCalendarHoliday): void {
+    if (holiday && holiday.date) {
+      const dateStr = this.toDateString(holiday.date);
+      if (dateStr) {
+        this.selectedCalendarDate.set(dateStr);
+        this.isSidebarOpen.set(true);
+      }
+    }
+  }
+
+  closeDateSidebar(): void {
+    this.isSidebarOpen.set(false);
+  }
+
+  onSelectItem(item: CalendarItemDetail): void {
     const projectId = this.projectId();
     const phaseId = this.currentPhaseId();
 
-    switch (extra.type) {
+    switch (item.type) {
       case 'phase':
-        this.router.navigate(['/feature/pm/phase', extra.id, 'edit'], {
+        this.router.navigate(['/feature/pm/phase', item.id, 'edit'], {
           queryParams: { projectId },
         });
         break;
       case 'milestone':
-        this.router.navigate(['/feature/pm/milestone', extra.id, 'edit'], {
+        this.router.navigate(['/feature/pm/milestone', item.id, 'edit'], {
           queryParams: { projectId, phaseId },
         });
         break;
       case 'workpackage':
-        this.router.navigate(['/feature/pm/work-package', extra.id, 'edit'], {
+        this.router.navigate(['/feature/pm/work-package', item.id, 'edit'], {
           queryParams: { projectId, phaseId },
         });
         break;
       case 'task':
-        this.router.navigate(['/feature/pm/task', extra.id, 'edit'], {
-          queryParams: { projectId, phaseId, workPackageId: extra.workPackageId || '' },
+        this.router.navigate(['/feature/pm/task', item.id, 'edit'], {
+          queryParams: { projectId, phaseId, workPackageId: item.rawObject?.workPackageId || '' },
         });
         break;
+      case 'holiday':
+      case 'event':
+        if (item.isCustom && item.rawObject) {
+          this.customItemForm = {
+            id: item.rawObject.id || '',
+            date: item.rawObject.date || this.selectedCalendarDate(),
+            title: item.rawObject.title || '',
+            description: item.rawObject.description || '',
+            icon: item.rawObject.icon || '📌',
+            color: item.rawObject.color || '#8b5cf6',
+          };
+          this.showCustomItemModal.set(true);
+        }
+        break;
+    }
+  }
+
+  openAddCustomItemModal(dateStr?: string | null): void {
+    const targetDate = dateStr || this.selectedCalendarDate() || dayjs().format('YYYY-MM-DD');
+    this.customItemForm = {
+      id: '',
+      date: targetDate,
+      title: '',
+      description: '',
+      icon: '📌',
+      color: '#8b5cf6',
+    };
+    this.showCustomItemModal.set(true);
+  }
+
+  closeCustomItemModal(): void {
+    this.showCustomItemModal.set(false);
+  }
+
+  saveCustomItem(): void {
+    if (!this.customItemForm.title.trim()) return;
+    const currentItems = this.getRawCustomItems();
+    if (this.customItemForm.id) {
+      const updated = currentItems.map((item) =>
+        item.id === this.customItemForm.id ? { ...this.customItemForm } : item
+      );
+      this.saveCustomItems(updated);
+    } else {
+      const newItem = {
+        ...this.customItemForm,
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      };
+      this.saveCustomItems([...currentItems, newItem]);
+    }
+    this.selectedCalendarDate.set(this.customItemForm.date);
+    this.isSidebarOpen.set(true);
+    this.closeCustomItemModal();
+  }
+
+  deleteCustomItem(itemId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบข้อมูลนี้หรือไม่?').then((confirmed) => {
+      if (confirmed) {
+        const currentItems = this.getRawCustomItems();
+        const updated = currentItems.filter((i) => i.id !== itemId);
+        this.saveCustomItems(updated);
+      }
+    });
+  }
+
+  openCreateMilestoneForDate(dateStr?: string | null): void {
+    const phaseId = this.currentPhaseId();
+    if (!phaseId) return;
+    this.router.navigate(['/feature/pm/milestone/new'], {
+      queryParams: {
+        phaseId,
+        projectId: this.projectId(),
+        dueDate: dateStr || undefined,
+      },
+    });
+  }
+
+  openCreateWorkPackageForDate(dateStr?: string | null): void {
+    const p = this.phase();
+    if (!p || !p.milestones || p.milestones.length === 0) {
+      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
+      return;
+    }
+    this.router.navigate(['/feature/pm/work-package/new'], {
+      queryParams: {
+        milestoneId: p.milestones[0].id,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+        startDate: dateStr || undefined,
+      },
+    });
+  }
+
+  openCreateTaskForDate(dateStr?: string | null): void {
+    const p = this.phase();
+    if (!p || !p.milestones) return;
+    let wpId = '';
+    for (const ms of p.milestones) {
+      if (ms.workPackages && ms.workPackages.length > 0) {
+        wpId = ms.workPackages[0].id;
+        break;
+      }
+    }
+    if (!wpId) {
+      this.dialog.error('ไม่มี Work Package', 'กรุณาสร้าง Work Package ก่อน');
+      return;
+    }
+    this.router.navigate(['/feature/pm/task/new'], {
+      queryParams: {
+        workPackageId: wpId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+        startDate: dateStr || undefined,
+      },
+    });
+  }
+
+  formatSelectedDateLabel(dateStr: string | null): string {
+    if (!dateStr) return '';
+    const d = dayjs(dateStr);
+    if (!d.isValid()) return dateStr;
+    const monthNamesTh = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const day = d.date();
+    const month = monthNamesTh[d.month()];
+    const yearBE = d.year() + 543;
+    return `${day} ${month} ${yearBE}`;
+  }
+
+  private getTaskVisuals(task: TaskResponse): { icon: string; color: string } {
+    if (task.color) {
+      return { icon: '🔹', color: task.color };
+    }
+    switch (task.status) {
+      case 'Done':
+      case 'Closed':
+        return { icon: '✅', color: '#22c55e' };
+      case 'In Progress':
+        return { icon: '👥', color: '#3b82f6' };
+      case 'Waiting Review':
+        return { icon: '🔍', color: '#06b6d4' };
+      case 'Waiting Fix':
+        return { icon: '🛠️', color: '#f59e0b' };
+      case 'Blocked':
+        return { icon: '⛔', color: '#ef4444' };
+      default:
+        return { icon: '📝', color: '#8b5cf6' };
     }
   }
 
