@@ -209,7 +209,7 @@ export class SicGanttComponent implements OnInit {
         this.endDate.set(phase.endDate);
 
         // Fetch full milestone/workpackage/task hierarchy for full-screen view
-        this.milestoneService?.getMilestonesByPhaseId(phaseId).subscribe({
+        this.milestoneService.getMilestonesByPhaseId(phaseId).subscribe({
           next: (milestones) => {
             phase.milestones = milestones;
             if (!milestones || milestones.length === 0) {
@@ -218,22 +218,35 @@ export class SicGanttComponent implements OnInit {
               return;
             }
             let loadedWps = 0;
+            let totalWps = 0;
+
+            // Count total work packages
             milestones.forEach((ms) => {
-              this.wpService?.getWorkPackagesByMilestoneId(ms.id).subscribe({
+              this.wpService.getWorkPackagesByMilestoneId(ms.id).subscribe({
                 next: (wps) => {
                   ms.workPackages = wps;
                   loadedWps++;
+
                   if (wps && wps.length > 0) {
+                    totalWps += wps.length;
+                    let loadedTasks = 0;
                     wps.forEach((wp) => {
-                      this.taskService?.getTasksByWorkPackageId(wp.id).subscribe({
+                      this.taskService.getTasksByWorkPackageId(wp.id).subscribe({
                         next: (tasks) => {
                           wp.tasks = tasks;
+                          loadedTasks++;
+                          this.allTimelineItems.set(buildTimelineItems(phase));
+                        },
+                        error: () => {
+                          loadedTasks++;
                           this.allTimelineItems.set(buildTimelineItems(phase));
                         }
                       });
                     });
+                  } else {
+                    this.allTimelineItems.set(buildTimelineItems(phase));
                   }
-                  this.allTimelineItems.set(buildTimelineItems(phase));
+
                   if (loadedWps === milestones.length) {
                     this.isLoading.set(false);
                   }
@@ -276,15 +289,15 @@ export class SicGanttComponent implements OnInit {
             }
             let loadedPhases = 0;
             phases.forEach((phase) => {
-              this.milestoneService?.getMilestonesByPhaseId(phase.id).subscribe({
+              this.milestoneService.getMilestonesByPhaseId(phase.id).subscribe({
                 next: (milestones) => {
                   phase.milestones = milestones;
                   milestones.forEach((ms) => {
-                    this.wpService?.getWorkPackagesByMilestoneId(ms.id).subscribe({
+                    this.wpService.getWorkPackagesByMilestoneId(ms.id).subscribe({
                       next: (wps) => {
                         ms.workPackages = wps;
                         wps.forEach((wp) => {
-                          this.taskService?.getTasksByWorkPackageId(wp.id).subscribe({
+                          this.taskService.getTasksByWorkPackageId(wp.id).subscribe({
                             next: (tasks) => {
                               wp.tasks = tasks;
                               this.rebuildAllProjectTimeline(phases);
