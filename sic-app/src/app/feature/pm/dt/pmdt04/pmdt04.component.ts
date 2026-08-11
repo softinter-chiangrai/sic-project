@@ -11,29 +11,8 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 import type { ApprovalStatus } from '../pmdt03/approval.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 
-interface Requirement {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  requirementType: string;
-  source: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  rowVersion?: number;
-  approvalStatus?: ApprovalStatus | null;
-}
+import { RequirementItem } from './pmdt04.model';
+
 
 @Component({
   selector: 'app-pmdt04',
@@ -58,7 +37,8 @@ export class Pmdt04Component implements OnInit {
   protected sortBy = signal('requirementCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected requirements = signal<Requirement[]>([]);
+  protected requirements = signal<RequirementItem[]>([]);
+
   protected totalItems = signal(0);
 
   // ===== Computed =====
@@ -121,7 +101,8 @@ export class Pmdt04Component implements OnInit {
       });
   }
 
-  loadApprovalStatuses(requirements: Requirement[]) {
+  loadApprovalStatuses(requirements: RequirementItem[]) {
+
     requirements.forEach((req) => {
       this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
         next: (approval) => {

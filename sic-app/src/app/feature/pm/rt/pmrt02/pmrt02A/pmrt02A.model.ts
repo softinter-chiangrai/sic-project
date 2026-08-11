@@ -15,3 +15,24 @@ export interface Pmrt02AModel extends SicBaseStateModel {
 export interface Pmrt02APageData {
   projectData: SicFromData<Pmrt02AModel>;
 }
+
+export interface ProjectModel {
+  id?: string;
+  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customerName?: string;
+  contractId?: string;
+  contractNo?: string;
+  startDate: string;
+  plannedEndDate: string;
+  actualEndDate?: string;
+  budgetManday: number;
+  usedManday: number;
+  status: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  description?: string;
+  isActive: boolean;
+  createdAt?: string;
+  rowVersion?: number;
+}

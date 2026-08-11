@@ -10,39 +10,8 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { ChangeRequestService } from './change-request.service';
 
-interface CrAssignee {
-  id: string;
-  userId: string;
-  userName: string;
-  targetType: string;
-  targetId: string;
-  status: string;
-  completedAt?: string;
-}
+import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
 
-interface ChangeImpact {
-  id: string;
-  impactedType: string;
-  impactedId: string;
-  impactedTitle: string;
-  impactLevel: string;
-}
-
-interface ChangeRequest {
-  id: string;
-  title: string;
-  description: string;
-  changeReason: string;
-  estimatedManday: number;
-  status: string;
-  targetType: string;
-  targetId: string;
-  projectId: string;
-  projectName?: string;
-  createdDate: string;
-  assignees?: CrAssignee[];
-  impacts?: ChangeImpact[];
-}
 
 @Component({
   selector: 'app-pmdt07',
@@ -65,7 +34,8 @@ export class Pmdt07Component implements OnInit {
 
   // State
   isLoading = signal(false);
-  changeRequests = signal<ChangeRequest[]>([]);
+  changeRequests = signal<ChangeRequestItem[]>([]);
+
   totalItems = signal(0);
   currentPage = signal(1);
   pageSize = signal(10);

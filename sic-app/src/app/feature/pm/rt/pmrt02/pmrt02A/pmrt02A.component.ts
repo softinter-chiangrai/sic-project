@@ -16,27 +16,8 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 
-// ===== Interface =====
-export interface ProjectModel {
-  id?: string;
-  projectCode: string;
-  projectName: string;
-  customerId: string;
-  customerName?: string;
-  contractId?: string;
-  contractNo?: string;
-  startDate: string;
-  plannedEndDate: string;
-  actualEndDate?: string;
-  budgetManday: number;
-  usedManday: number;
-  status: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  description?: string;
-  isActive: boolean;
-  createdAt?: string;
-  rowVersion?: number;
-}
+import { ProjectModel } from './pmrt02A.model';
+
 
 @Component({
   selector: 'app-pmrt02a',

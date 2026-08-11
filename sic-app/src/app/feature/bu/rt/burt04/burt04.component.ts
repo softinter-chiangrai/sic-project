@@ -6,14 +6,9 @@ import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { burt04Service, type TeamMember } from './burt04.service';
+import { burt04Service } from './burt04.service';
+import { MemberWithUI, TeamMember } from './burt04.model';
 
-interface MemberWithUI extends TeamMember {
-  userName: string;
-  userEmail: string;
-  roleNames: string[];
-  isDefault: boolean;
-}
 
 @Component({
   selector: 'app-burt04',

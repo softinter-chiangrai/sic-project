@@ -15,3 +15,71 @@ export interface Pmdt09Model extends SicBaseStateModel {
 export interface Pmdt09PageData {
   discussionData: SicFromData<Pmdt09Model>;
 }
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+export interface Post {
+  id: string;
+  subject: string;
+  content: string;
+  createdBy: string;
+  createdByName: string;
+  createdDate: string;
+  attachmentGroupId?: string;
+  pinned: boolean;
+  replyCount: number;
+  userAvatarUrl?: string;
+  replies?: Reply[];
+  isEditing?: boolean;
+}
+
+export interface Reply {
+  id: string;
+  content: string;
+  createdBy: string;
+  createdByName: string;
+  createdDate: string;
+  attachmentGroupId?: string;
+  userAvatarUrl?: string;
+  replyToUser?: string;
+  isEditing?: boolean;
+}
+
+export interface CreatePostRequest {
+  targetId: string;
+  subject: string;
+  content: string;
+  attachmentGroupId?: string;
+  pinned?: boolean;
+}
+
+export interface CreateReplyRequest {
+  postId: string;
+  content: string;
+  attachmentGroupId?: string;
+}
+
+export interface UpdateCommentRequest {
+  content: string;
+}
+
+export interface AttachmentFile {
+  id: string;
+  fileName: string;
+  accessUrl: string;
+  fileSize: number;
+  contentType: string;
+}

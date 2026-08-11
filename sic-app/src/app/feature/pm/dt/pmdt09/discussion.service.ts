@@ -4,20 +4,8 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CreatePostRequest, CreateReplyRequest, Post, Reply, UpdateCommentRequest } from './discussion.model';
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+import { PageResponse, ApiResponse } from './pmdt09.model';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  timestamp: string;
-}
 
 @Injectable({ providedIn: 'root' })
 export class DiscussionService {

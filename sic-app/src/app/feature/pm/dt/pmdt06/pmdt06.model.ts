@@ -14,3 +14,9 @@ export interface Pmdt06Model extends SicBaseStateModel {
 export interface Pmdt06PageData {
   diagramData: SicFromData<Pmdt06Model>;
 }
+
+export interface DiagramPage {
+  id: string;
+  name: string;
+  xml: string;
+}

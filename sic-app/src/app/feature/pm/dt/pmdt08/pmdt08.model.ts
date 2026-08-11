@@ -95,3 +95,8 @@ export interface Api {
 export interface Pmdt08FormData {
     specification: SicFromData<PmSpecificationModel>;
 }
+
+export interface ComboboxItem {
+    value: string;
+    text: string;
+}

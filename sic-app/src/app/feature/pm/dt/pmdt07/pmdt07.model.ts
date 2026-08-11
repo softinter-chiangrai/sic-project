@@ -17,3 +17,37 @@ export interface Pmdt07Model extends SicBaseStateModel {
 export interface Pmdt07PageData {
   changeRequestData: SicFromData<Pmdt07Model>;
 }
+
+export interface CrAssignee {
+  id: string;
+  userId: string;
+  userName: string;
+  targetType: string;
+  targetId: string;
+  status: string;
+  completedAt?: string;
+}
+
+export interface ChangeImpact {
+  id: string;
+  impactedType: string;
+  impactedId: string;
+  impactedTitle: string;
+  impactLevel: string;
+}
+
+export interface ChangeRequestItem {
+  id: string;
+  title: string;
+  description: string;
+  changeReason: string;
+  estimatedManday: number;
+  status: string;
+  targetType: string;
+  targetId: string;
+  projectId: string;
+  projectName?: string;
+  createdDate: string;
+  assignees?: CrAssignee[];
+  impacts?: ChangeImpact[];
+}

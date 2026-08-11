@@ -7,11 +7,8 @@ import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-interface DiagramPage {
-  id: string;
-  name: string;
-  xml: string;
-}
+import { DiagramPage } from './pmdt06.model';
+
 
 @Component({
   selector: 'app-sql-export-dialog',

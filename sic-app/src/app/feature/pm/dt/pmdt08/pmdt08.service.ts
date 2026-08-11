@@ -5,12 +5,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { PmSpecificationModel } from './pmdt08.model';
+import { PmSpecificationModel, ComboboxItem } from './pmdt08.model';
 
-export interface ComboboxItem {
-    value: string;
-    text: string;
-}
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt08Service {

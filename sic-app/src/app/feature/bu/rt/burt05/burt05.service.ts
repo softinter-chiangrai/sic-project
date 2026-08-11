@@ -5,38 +5,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
-
-export interface Program {
-  id?: string;
-  parentProgramId?: string | null;
-  parentProgramCode?: string;
-  programCode: string;
-  programName: string; // ✅ ฟิลด์ที่แปลแล้ว
-  programNameEn: string;
-  programNameLocal: string;
-  programIcon?: string;
-  routePath?: string;
-  sortOrder?: number;
-  isActive: boolean;
-  rowVersion?: number;
-}
-
-export interface RolePermission {
-  roleId: string;
-  level: string;
-}
-
-export interface CreateProgramWithPermissionsRequest {
-  parentProgramId?: string | null;
-  programCode: string;
-  programNameEn: string;
-  programNameLocal: string;
-  programIcon?: string;
-  routePath?: string;
-  sortOrder?: number;
-  isActive: boolean;
-  rolePermissions: RolePermission[];
-}
+import { Program, RolePermission, CreateProgramWithPermissionsRequest } from './burt05.model';
 
 @Injectable({ providedIn: 'root' })
 export class burt05Service {

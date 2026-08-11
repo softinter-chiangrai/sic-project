@@ -18,25 +18,8 @@ import { Pmrt02Service } from '../../../rt/pmrt02/pmrt02.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { ApprovalService } from '../../pmdt03/approval.service';
 
-interface Requirement {
-  id?: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status?: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
+import { Requirement } from './pmdt04A.model';
+
 
 @Component({
   selector: 'app-pmdt04a',

@@ -27,3 +27,17 @@ export interface Pmdt03Model extends SicBaseStateModel {
 export interface Pmdt03PageData {
   approvalData: SicFromData<Pmdt03Model>;
 }
+
+export interface ApprovalItem {
+  id: string;
+  documentType: string;
+  documentCode: string;
+  title: string;
+  projectId: string;
+  projectName: string;
+  requester: string;
+  requestedDate: string;
+  dueDate?: string;
+  approver: string;
+  status: string;
+}

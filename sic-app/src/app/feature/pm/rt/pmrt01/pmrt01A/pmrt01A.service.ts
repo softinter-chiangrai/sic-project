@@ -2,16 +2,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CustomerModel } from './pmrt01A.model';
+import { CustomerModel, PageResponse } from './pmrt01A.model';
 import { environment } from '../../../../../../environments/environment';
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt01AService {

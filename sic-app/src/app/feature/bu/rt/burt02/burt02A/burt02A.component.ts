@@ -111,23 +111,8 @@ export function mapLevelToBooleans(level: string): {
   }
 }
 
-// ============================================================
-// 3. Models
-// ============================================================
-interface ModulePermission {
-  moduleId: string;
-  moduleCode: string;
-  moduleName: string;
-  level: string;
-  id?: string | null;
-}
+import { ModulePermission, RolePermissionData } from './burt02A.model';
 
-interface RolePermissionData {
-  roleId: string;
-  roleCode: string;
-  roleName: string;
-  modules: ModulePermission[];
-}
 
 // ============================================================
 // 4. Service

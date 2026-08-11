@@ -13,42 +13,8 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 
-interface TraceLink {
-  id: string;
-  sourceType: string;
-  sourceId: string;
-  targetType: string;
-  targetId: string;
-  relationshipType: string;
-}
+import { RequirementDetail, TraceLink, RelatedItem, Pmrt05PageData } from './pmrt05.model';
 
-interface RequirementDetail {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  status: string;
-  version: string;
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-}
-
-interface RelatedItem {
-  id: string;
-  name: string;
-  code?: string;
-  type: string;
-  link: string;
-  color?: string;
-}
 
 @Component({
   selector: 'app-pmrt05',
@@ -91,20 +57,32 @@ export class Pmrt05Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      const reqId = params['requirementId'];
-      const projId = params['projectId'];
-      if (!reqId || !projId) {
-        this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
-        this.navigation.navigate(['/feature/pm/pmrt02']);
-        return;
+    const pageData: Pmrt05PageData = this.route.snapshot.data['pageData'];
+    if (pageData && pageData.requirementDetail) {
+      this.requirement.set(pageData.requirementDetail);
+      this.projectId.set(pageData.requirementDetail.projectId);
+      this.requirementId.set(pageData.requirementDetail.id);
+      if (pageData.traceLinks) {
+        this.traceLinks.set(pageData.traceLinks);
+        this.groupLinks(pageData.traceLinks);
       }
-      this.requirementId.set(reqId);
-      this.projectId.set(projId);
-      this.loadRequirement(reqId);
-      this.loadTraceLinks(reqId);
-    });
+    } else {
+      this.route.queryParams.subscribe((params) => {
+        const reqId = params['requirementId'];
+        const projId = params['projectId'];
+        if (!reqId || !projId) {
+          this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
+          this.navigation.navigate(['/feature/pm/pmrt02']);
+          return;
+        }
+        this.requirementId.set(reqId);
+        this.projectId.set(projId);
+        this.loadRequirement(reqId);
+        this.loadTraceLinks(reqId);
+      });
+    }
   }
+
 
   // ===== Load Data =====
   loadRequirement(id: string) {

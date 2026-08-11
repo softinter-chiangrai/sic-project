@@ -15,3 +15,18 @@ export interface Burt02AModel extends SicBaseStateModel {
 export interface Burt02APageData {
   customerData: SicFromData<Burt02AModel>;
 }
+
+export interface ModulePermission {
+  moduleId: string;
+  moduleCode: string;
+  moduleName: string;
+  level: string;
+  id?: string | null;
+}
+
+export interface RolePermissionData {
+  roleId: string;
+  roleCode: string;
+  roleName: string;
+  modules: ModulePermission[];
+}

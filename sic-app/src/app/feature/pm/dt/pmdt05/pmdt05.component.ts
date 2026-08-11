@@ -50,32 +50,8 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 // Preview Component
 import { SicRequirementPreviewComponent } from './pmdt05-preview/pmdt05-preview.component';
 
-// ===== Model =====
-export interface RequirementModel {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  requirementType: string;
-  source: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  uploadGroupId?: string;
-  uploadGroupData?: any[];
-}
+import { RequirementModel } from './pmdt05.model';
+
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })

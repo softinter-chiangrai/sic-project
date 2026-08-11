@@ -14,3 +14,41 @@ export interface Burt04Model extends SicBaseStateModel {
 export interface Burt04PageData {
   teamData: SicFromData<Burt04Model>;
 }
+
+export interface TeamMember {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  roleIds?: string[];
+  roleNames?: string[];
+  isActive: boolean;
+  isDefault: boolean;
+  createdDate: string;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ComboboxRole {
+  value: string;
+  text: string;
+}
+
+export interface MemberWithUI extends TeamMember {
+  userName: string;
+  userEmail: string;
+  roleNames: string[];
+  isDefault: boolean;
+}

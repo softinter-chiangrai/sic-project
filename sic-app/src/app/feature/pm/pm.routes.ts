@@ -32,6 +32,8 @@ import { pmrt03Resolver } from './rt/pmrt03/pmrt03.resolver';
 import { pmrt04Resolver } from './rt/pmrt04/pmrt04.resolver';
 import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
+import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
+
 
 export const PM_ROUTES: Routes = [
   {
@@ -256,7 +258,9 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt05',
     loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
     canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { pageData: pmrt05Resolver },
   },
+
 
   // ===== Diagram =====
   {

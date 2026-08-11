@@ -17,3 +17,18 @@ export interface Pmdt07AModel extends SicBaseStateModel {
 export interface Pmdt07APageData {
   changeRequestData: SicFromData<Pmdt07AModel>;
 }
+
+export interface ChangeRequestFormModel {
+  id?: string;
+  projectId?: string;
+  targetType: string;
+  targetId: string;
+  title: string;
+  description?: string;
+  changeReason?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
+  status?: string;
+  rowVersion?: number;
+}

@@ -16,15 +16,7 @@ import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
-
-interface AttachmentFile {
-  id: string;
-  fileName: string;
-  accessUrl: string;
-  fileSize: number;
-  contentType: string;
-  uploadGroupId: string;
-}
+import { AttachmentFile } from './pmdt09.model';
 
 @Component({
   selector: 'app-pmdt09',

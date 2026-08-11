@@ -17,3 +17,23 @@ export interface Pmdt04AModel extends SicBaseStateModel {
 export interface Pmdt04APageData {
   requirementData: SicFromData<Pmdt04AModel>;
 }
+
+export interface Requirement {
+  id?: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName?: string;
+  createdBy: string;
+  baConfirmStatus: string;
+  customerConfirmStatus: string;
+  version: string;
+  status?: string;
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}

@@ -5,36 +5,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
-export interface TeamMember {
-  id: string;
-  userId: string;
-  userName?: string;
-  userEmail?: string;
-  roleIds?: string[]; // ✅ เปลี่ยนเป็น array ของ roleId
-  roleNames?: string[]; // ✅ เปลี่ยนเป็น array ของชื่อบทบาท
-  isActive: boolean;
-  isDefault: boolean;
-  createdDate: string;
-}
+import { TeamMember, Page, User, ComboboxRole } from './burt04.model';
 
-export interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export interface ComboboxRole {
-  value: string; // roleId
-  text: string; // roleNameLocal
-}
 
 @Injectable({
   providedIn: 'root',

@@ -14,3 +14,27 @@ export interface Burt06Model extends SicBaseStateModel {
 export interface Burt06PageData {
   memberData: SicFromData<Burt06Model>;
 }
+
+export interface ApprovalFlowStep {
+  id?: string;
+  stepOrder: number;
+  stepName: string;
+  approverRole?: string;
+  approverUserId?: string;
+  isRequired: boolean;
+  timeoutDays?: number;
+  canSkip: boolean;
+  rowVersion?: number;
+}
+
+export interface ApprovalFlow {
+  id?: string;
+  flowCode: string;
+  flowName: string;
+  documentType: string;
+  approvalMode: string;
+  description?: string;
+  active: boolean;
+  steps: ApprovalFlowStep[];
+  rowVersion?: number;
+}

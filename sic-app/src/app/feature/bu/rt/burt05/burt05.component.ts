@@ -4,22 +4,9 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { burt05Service, Program } from './burt05.service';
+import { Program, TreeNode } from './burt05.model';
+import { burt05Service } from './burt05.service';
 
-/** โครงสร้าง TreeNode (เหมือนเดิม) */
-interface TreeNode {
-  id: string;
-  code: string;
-  name: string;
-  nameLocal: string;
-  icon: string;
-  routePath: string;
-  sortOrder: number;
-  isActive: boolean;
-  children: TreeNode[];
-  parentProgramId?: string | null;
-  level: number; // level ใช้ใน FlatNode
-}
 
 /** FlatNode = TreeNode ที่เพิ่ม level เพื่อจัด indent */
 type FlatNode = TreeNode & { level: number };

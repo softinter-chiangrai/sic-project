@@ -16,24 +16,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from './approval.service';
 import type { Approval } from './approval.model';
-
-// ===== Interface สำหรับแสดงในตาราง (map จาก Approval) =====
-interface ApprovalItem {
-  id: string;
-  documentType: string;
-  documentCode: string;
-  title: string;
-  projectId: string;
-  projectName: string;
-  requester: string;
-  requestedDate: string;
-  dueDate?: string;
-  approver: string;
-  status: string;
-  comment?: string;
-  attachments?: string[];
-  isActive: boolean;
-}
+import { ApprovalItem } from './pmdt03.model';
 
 @Component({
   selector: 'app-pmdt03',

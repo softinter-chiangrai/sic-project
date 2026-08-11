@@ -15,3 +15,48 @@ export interface Burt05Model extends SicBaseStateModel {
 export interface Burt05PageData {
   projectData: SicFromData<Burt05Model>;
 }
+
+export interface Program {
+  id?: string;
+  parentProgramId?: string | null;
+  parentProgramCode?: string;
+  programCode: string;
+  programName: string;
+  programNameEn: string;
+  programNameLocal: string;
+  programIcon?: string;
+  routePath?: string;
+  sortOrder?: number;
+  isActive: boolean;
+  rowVersion?: number;
+}
+
+export interface RolePermission {
+  roleId: string;
+  level: string;
+}
+
+export interface CreateProgramWithPermissionsRequest {
+  parentProgramId?: string | null;
+  programCode: string;
+  programNameEn: string;
+  programNameLocal: string;
+  programIcon?: string;
+  routePath?: string;
+  sortOrder?: number;
+  permissions: RolePermission[];
+}
+
+export interface TreeNode {
+  id: string;
+  code: string;
+  name: string;
+  nameLocal: string;
+  icon: string;
+  routePath: string;
+  sortOrder: number;
+  isActive: boolean;
+  children: TreeNode[];
+  parentProgramId?: string | null;
+  level: number;
+}

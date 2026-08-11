@@ -5,26 +5,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
-export interface Role {
-  id: string;
-  roleCode: string;
-  roleName: string; // ✅ เพิ่ม – ฟิลด์ที่แปลแล้วจาก Backend
-  roleNameEn: string;
-  roleNameLocal: string;
-  roleLevel: string;
-  sortOrder: number;
-  isActive: boolean;
-  businessId: string;
-  parentRoleId?: string;
-  rowVersion?: number;
-  isDelete?: boolean;
-  color?: string; // ✅ เพิ่ม – สีของบทบาท
-}
+import { Role, ComboboxItem } from './burt03.model';
 
-export interface ComboboxItem {
-  value: string;
-  text: string;
-}
 
 @Injectable({ providedIn: 'root' })
 export class burt03Service {

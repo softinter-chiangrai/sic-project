@@ -15,24 +15,7 @@ import { finalize } from 'rxjs';
 import { burt03Service } from '../burt03/burt03.service';
 import { burt04Service } from '../burt04/burt04.service';
 import { burt02AService } from './burt02A/burt02A.component';
-
-// ===== Interfaces =====
-export interface ProgramPermissionSummary {
-  moduleId: string;
-  moduleCode: string;
-  moduleName: string;
-  level: string;
-  isActive: boolean;
-}
-
-export interface RolePermissionSummary {
-  roleId: string;
-  roleCode: string;
-  roleName: string;
-  userCount: number;
-  isActive: boolean;
-  permissions: ProgramPermissionSummary[];
-}
+import { RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
 
 @Component({
   selector: 'app-burt02',

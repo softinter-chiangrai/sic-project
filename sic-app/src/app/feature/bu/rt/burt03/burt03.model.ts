@@ -13,3 +13,24 @@ export interface Burt03Model extends SicBaseStateModel {
 export interface Burt03PageData {
   roleData: SicFromData<Burt03Model>;
 }
+
+export interface Role {
+  id: string;
+  roleCode: string;
+  roleName: string;
+  roleNameEn: string;
+  roleNameLocal: string;
+  roleLevel: string;
+  sortOrder: number;
+  isActive: boolean;
+  businessId: string;
+  parentRoleId?: string;
+  rowVersion?: number;
+  isDelete?: boolean;
+  color?: string;
+}
+
+export interface ComboboxItem {
+  value: string;
+  text: string;
+}

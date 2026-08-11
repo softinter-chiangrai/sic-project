@@ -26,20 +26,8 @@ import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
 
-interface ChangeRequest {
-    id?: string;
-    projectId?: string;
-    targetType: string;
-    targetId: string;
-    title: string;
-    description?: string;
-    changeReason?: string;
-    assigneeId?: string;
-    assigneeName?: string;
-    assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
-    status?: string;
-    rowVersion?: number;
-}
+import { ChangeRequestFormModel } from './pmdt07A.model';
+
 
 @Component({
     selector: 'app-pmdt07a',
@@ -196,7 +184,8 @@ export class Pmdt07AComponent implements OnInit {
     loadChangeRequest(id: string) {
         this.isLoading = true;
         this.http
-            .get<ChangeRequest>(`${this.baseUrl}/${id}`)
+            .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
+
             .pipe(finalize(() => (this.isLoading = false)))
             .subscribe({
                 next: (data) => {
