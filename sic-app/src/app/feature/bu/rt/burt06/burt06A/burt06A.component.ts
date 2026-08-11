@@ -26,12 +26,8 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt06.service';
-import { listAnimation } from '../list.animations';
+import { UserOption } from './burt06A.model';
 
-interface UserOption {
-  value: string;
-  text: string;
-}
 
 @Component({
   selector: 'app-burt06a',
@@ -50,7 +46,6 @@ interface UserOption {
   templateUrl: './burt06A.component.html',
   styleUrl: './burt06A.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  animations: [listAnimation],
 })
 export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
@@ -100,8 +95,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         .filter(({ stepGroup }) => {
           const approverRole = stepGroup.get('approverRole')?.value;
           const selectedUserIds = (stepGroup.get('selectedUserIds')?.value as string[]) || [];
-          // ❌ เก่า: !approverRole && selectedUserIds.length === 0
-          // ✅ ใหม่: ต้องมีทั้งบทบาท AND ต้องมีผู้ใช้
           return !approverRole || selectedUserIds.length === 0;
         });
 

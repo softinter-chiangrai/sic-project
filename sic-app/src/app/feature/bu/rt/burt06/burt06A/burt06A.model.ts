@@ -15,3 +15,8 @@ export interface Burt06AModel extends SicBaseStateModel {
 export interface Burt06APageData {
   flowData: SicFromData<Burt06AModel>;
 }
+
+export interface UserOption {
+  value: string;
+  text: string;
+}
