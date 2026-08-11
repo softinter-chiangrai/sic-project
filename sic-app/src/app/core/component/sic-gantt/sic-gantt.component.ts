@@ -9,6 +9,9 @@ import { NavigationService } from '../../services/navigation.service';
 import { CustomerStateService } from '../../services/customer-state.service';
 import { Pmrt02Service } from '../../../feature/pm/rt/pmrt02/pmrt02.service';
 import { buildTimelineItems } from '../../../feature/pm/dt/pmdt02/pmdt02.utils';
+import { MilestoneService } from '../../../feature/pm/dt/pmdt02/milestone.service';
+import { WorkPackageService } from '../../../feature/pm/dt/pmdt02/work-package.service';
+import { TaskService } from '../../../feature/pm/dt/pmdt02/task.service';
 import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
 
 @Component({
@@ -74,10 +77,10 @@ import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
             </ng-template>
             <ng-template #phaseTemplate let-phase let-row="row">
               <div
-                class="h-full rounded-md flex items-center justify-between px-2.5 text-white text-xs font-medium shadow-sm transition-all overflow-hidden"
-                [style.background-color]="phase.color || '#3b82f6'"
+                class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
+                [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
                 [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
-                <span class="truncate mr-1.5">{{ phase.label || row.label }}</span>
+                <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
                 @if (row.data?.assignees && row.data?.assignees.length > 0) {
                   <div class="flex items-center -space-x-1 flex-shrink-0">
                     @for (person of row.data?.assignees.slice(0, 2); track person) {
@@ -85,7 +88,7 @@ import { PhaseService } from '../../../feature/pm/dt/pmdt02/phase.service';
                         [name]="person"
                         [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
                         size="sm"
-                        class="ring-1 ring-white/30 rounded-full">
+                        class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
                       </sic-avatar>
                     }
                   </div>
@@ -109,6 +112,9 @@ export class SicGanttComponent implements OnInit {
   private customerState = inject(CustomerStateService);
   private projectService = inject(Pmrt02Service);
   private phaseService = inject(PhaseService);
+  private milestoneService = inject(MilestoneService);
+  private wpService = inject(WorkPackageService);
+  private taskService = inject(TaskService);
   private dialog = inject(DialogService);
 
   isLoading = signal(false);
@@ -201,9 +207,49 @@ export class SicGanttComponent implements OnInit {
         this.pageTitle.set(phase.phaseName);
         this.startDate.set(phase.startDate);
         this.endDate.set(phase.endDate);
-        const items = buildTimelineItems(phase);
-        this.allTimelineItems.set(items);
-        this.isLoading.set(false);
+
+        // Fetch full milestone/workpackage/task hierarchy for full-screen view
+        this.milestoneService?.getMilestonesByPhaseId(phaseId).subscribe({
+          next: (milestones) => {
+            phase.milestones = milestones;
+            if (!milestones || milestones.length === 0) {
+              this.allTimelineItems.set(buildTimelineItems(phase));
+              this.isLoading.set(false);
+              return;
+            }
+            let loadedWps = 0;
+            milestones.forEach((ms) => {
+              this.wpService?.getWorkPackagesByMilestoneId(ms.id).subscribe({
+                next: (wps) => {
+                  ms.workPackages = wps;
+                  loadedWps++;
+                  if (wps && wps.length > 0) {
+                    wps.forEach((wp) => {
+                      this.taskService?.getTasksByWorkPackageId(wp.id).subscribe({
+                        next: (tasks) => {
+                          wp.tasks = tasks;
+                          this.allTimelineItems.set(buildTimelineItems(phase));
+                        }
+                      });
+                    });
+                  }
+                  this.allTimelineItems.set(buildTimelineItems(phase));
+                  if (loadedWps === milestones.length) {
+                    this.isLoading.set(false);
+                  }
+                },
+                error: () => {
+                  loadedWps++;
+                  if (loadedWps === milestones.length) this.isLoading.set(false);
+                }
+              });
+            });
+          },
+          error: () => {
+            this.allTimelineItems.set(buildTimelineItems(phase));
+            this.isLoading.set(false);
+          }
+        });
       },
       error: (err) => {
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message);
@@ -223,13 +269,42 @@ export class SicGanttComponent implements OnInit {
 
         this.phaseService.getPhases(pid).subscribe({
           next: (phases) => {
-            const allItems: SicCalendarTimelineRow[] = [];
+            if (!phases || phases.length === 0) {
+              this.allTimelineItems.set([]);
+              this.isLoading.set(false);
+              return;
+            }
+            let loadedPhases = 0;
             phases.forEach((phase) => {
-              const items = buildTimelineItems(phase);
-              allItems.push(...items);
+              this.milestoneService?.getMilestonesByPhaseId(phase.id).subscribe({
+                next: (milestones) => {
+                  phase.milestones = milestones;
+                  milestones.forEach((ms) => {
+                    this.wpService?.getWorkPackagesByMilestoneId(ms.id).subscribe({
+                      next: (wps) => {
+                        ms.workPackages = wps;
+                        wps.forEach((wp) => {
+                          this.taskService?.getTasksByWorkPackageId(wp.id).subscribe({
+                            next: (tasks) => {
+                              wp.tasks = tasks;
+                              this.rebuildAllProjectTimeline(phases);
+                            }
+                          });
+                        });
+                        this.rebuildAllProjectTimeline(phases);
+                      }
+                    });
+                  });
+                  loadedPhases++;
+                  this.rebuildAllProjectTimeline(phases);
+                  if (loadedPhases === phases.length) this.isLoading.set(false);
+                },
+                error: () => {
+                  loadedPhases++;
+                  if (loadedPhases === phases.length) this.isLoading.set(false);
+                }
+              });
             });
-            this.allTimelineItems.set(allItems);
-            this.isLoading.set(false);
           },
           error: (err) => {
             this.dialog.error('โหลด Phase ไม่สำเร็จ', err.message);
@@ -243,6 +318,15 @@ export class SicGanttComponent implements OnInit {
         this.navigation.navigate(['/feature/pm/pmrt02']);
       }
     });
+  }
+
+  private rebuildAllProjectTimeline(phases: any[]) {
+    const allItems: SicCalendarTimelineRow[] = [];
+    phases.forEach((phase) => {
+      const items = buildTimelineItems(phase);
+      allItems.push(...items);
+    });
+    this.allTimelineItems.set(allItems);
   }
 
   onRowClick(row: SicCalendarTimelineRow) {

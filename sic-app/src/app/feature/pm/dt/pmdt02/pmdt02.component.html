@@ -364,10 +364,10 @@
             </ng-template>
             <ng-template #phaseTemplate let-phase let-row="row">
               <div
-                class="h-full rounded-md flex items-center justify-between px-2.5 text-white text-xs font-medium shadow-sm transition-all overflow-hidden"
-                [style.background-color]="phase.color || '#3b82f6'"
+                class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
+                [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
                 [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
-                <span class="truncate mr-1.5">{{ phase.label || row.label }}</span>
+                <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
                 @if (row.data?.assignees && row.data?.assignees.length > 0) {
                   <div class="flex items-center -space-x-1 flex-shrink-0">
                     @for (person of row.data?.assignees.slice(0, 2); track person) {
@@ -375,7 +375,7 @@
                         [name]="person"
                         [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
                         size="sm"
-                        class="ring-1 ring-white/30 rounded-full">
+                        class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
                       </sic-avatar>
                     }
                   </div>
