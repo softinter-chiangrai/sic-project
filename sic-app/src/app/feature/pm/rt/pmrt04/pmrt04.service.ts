@@ -3,11 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-
-export interface ComboboxItem {
-  value: string;
-  text: string;
-}
+import { ComboboxItem, Pmrt04Model } from './pmrt04.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt04Service {
@@ -16,6 +12,10 @@ export class Pmrt04Service {
 
   private getBusinessId(): string {
     return localStorage.getItem('businessId') || '';
+  }
+
+  getContract(id: string): Observable<Pmrt04Model> {
+    return this.http.get<Pmrt04Model>(`${this.baseUrl}/${id}`);
   }
 
   /** ดึงสัญญาสำหรับ combobox โดยสามารถกรองตาม customerId */

@@ -47,7 +47,7 @@ export const appConfig: ApplicationConfig = {
         useExisting: AppTranslateLoader
       }
     }),
-    provideSicTheme({ mode: 'system' }),
+    provideSicTheme({ mode: 'system', theme: 'forest' }),
     provideSicConfig({
       decimals: 2,
       dateFormat: 'dd/MM/yyyy',

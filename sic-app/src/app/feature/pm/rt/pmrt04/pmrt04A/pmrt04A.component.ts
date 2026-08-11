@@ -18,84 +18,9 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
-
-// ===== Model =====
-// src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
-
-export interface ContractModel {
-  id?: string;
-  contractNo: string;
-  contractType: string;
-  customerId?: string;
-  projectId: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  contractValue: number;
-  paymentTerms: string;
-  scopeSummary: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
-  renewalStatus: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-  // ✅ เพิ่มตรงนี้
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-}
-
-// ===== Form =====
-class Pmrt04AForm {
-  static createForm(fb: FormBuilder) {
-    return fb.group({
-      id: [null],
-      contractNo: [null, [Validators.required, Validators.maxLength(50)]],
-      contractType: [null, [Validators.required, Validators.maxLength(50)]],
-      projectId: [null, [Validators.required]], // ✅ เพิ่ม projectId
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      contractValue: [null, [Validators.required, Validators.min(0)]],
-      paymentTerms: [null, [Validators.maxLength(500)]],
-      scopeSummary: [null, [Validators.maxLength(1000)]],
-      signStatus: ['Draft', [Validators.required]],
-      renewalStatus: ['ยังไม่ต่อ'],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmrt04AService {
-  private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
-
-  constructor(private http: HttpClient) {}
-
-  save(contract: ContractModel): Observable<string> {
-    return this.http.post<string>(`${this.apiUrl}/save`, contract);
-  }
-
-  getContract(id: string): Observable<ContractModel> {
-    return this.http.get<ContractModel>(`${this.apiUrl}/${id}`);
-  }
-
-  getLovContractType(): string {
-    return `${this.apiUrl}/lov-contract-type`;
-  }
-
-  getLovSignStatus(): string {
-    return `${this.apiUrl}/lov-sign-status`;
-  }
-
-  // ✅ Combobox Project (กรองตาม customerId)
-  getComboboxProject(customerId: string | null): string {
-    if (!customerId) {
-      return `${this.apiUrl}/combobox-project`;
-    }
-    return `${this.apiUrl}/combobox-project?customerId=${customerId}`;
-  }
-}
+import { ContractModel } from './pmrt04A.model';
+import { Pmrt04AService } from './pmrt04A.service';
+import { Pmrt04AForm } from './pmrt04A.form';
 
 // ===== Component =====
 @Component({

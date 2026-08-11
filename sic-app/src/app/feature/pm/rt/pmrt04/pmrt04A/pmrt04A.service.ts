@@ -1,17 +1,15 @@
-// ✅ แก้ไข: เปลี่ยน import ให้ถูกต้อง
-import { HttpClient } from '@angular/common/http';   // ✅ ใช้จาก Angular ไม่ใช่ SignalR
-import { Observable } from 'rxjs';                    // ✅ ใช้ import ปกติ (ไม่ใช่ type)
-
-import { Injectable } from '@angular/core';
+// src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.service.ts
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ContractModel, Pmrt04AModel } from './pmrt04A.model';
 import { environment } from '../../../../../../environments/environment';
-import { ContractModel } from './pmrt04A.model';
-
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt04AService {
+  private http = inject(HttpClient);
   private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
-
-  constructor(private http: HttpClient) {}
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/contract-installments`;
 
   save(contract: ContractModel): Observable<string> {
     return this.http.post<string>(`${this.apiUrl}/save`, contract);
@@ -29,11 +27,22 @@ export class Pmrt04AService {
     return `${this.apiUrl}/lov-sign-status`;
   }
 
-  // ✅ Combobox Project (กรองตาม customerId)
   getComboboxProject(customerId: string | null): string {
     if (!customerId) {
       return `${this.apiUrl}/combobox-project`;
     }
     return `${this.apiUrl}/combobox-project?customerId=${customerId}`;
+  }
+
+  getInstallmentById(id: string): Observable<Pmrt04AModel> {
+    return this.http.get<Pmrt04AModel>(`${this.baseUrl}/${id}`);
+  }
+
+  createInstallment(data: Partial<Pmrt04AModel>): Observable<Pmrt04AModel> {
+    return this.http.post<Pmrt04AModel>(this.baseUrl, data);
+  }
+
+  updateInstallment(id: string, data: Partial<Pmrt04AModel>): Observable<Pmrt04AModel> {
+    return this.http.put<Pmrt04AModel>(`${this.baseUrl}/${id}`, data);
   }
 }

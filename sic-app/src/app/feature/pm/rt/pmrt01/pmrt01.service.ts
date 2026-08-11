@@ -1,49 +1,8 @@
+// src/app/feature/pm/rt/pmrt01/pmrt01.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-
-export interface pmrt01 {
-  id: string;
-  code: string;
-  firstNameEn: string;
-  lastNameEn: string;
-  firstNameLocal?: string;
-  lastNameLocal?: string;
-  email: string;
-  phoneNumber?: string;
-  isActive: boolean;
-  taxId?: string;
-  addressEn?: string;
-  addressLocal?: string;
-  countryId?: string;
-  provinceId?: string;
-  districtId?: string;
-  subDistrictId?: string;
-  zipCode?: string;
-  uploadGroupId?: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  size: number;
-  totalPages: number;
-}
-
-export interface pmrt01FilterParams {
-  keyword?: string;
-  status?: 'all' | 'active' | 'inactive';
-  page?: number;
-  size?: number;
-  sortBy?: string;
-  sortDir?: 'asc' | 'desc';
-  projectId?: string;
-}
+import { Pmrt01Model, pmrt01, PaginatedResponse, pmrt01FilterParams } from './pmrt01.model';
 
 @Injectable({
   providedIn: 'root',
@@ -69,6 +28,10 @@ export class Pmrt01Service {
 
   getpmrt01ById(id: string): Observable<pmrt01> {
     return this.http.get<pmrt01>(`${this.baseUrl}/${id}`);
+  }
+
+  getCustomer(id: string): Observable<Pmrt01Model> {
+    return this.http.get<Pmrt01Model>(`${this.baseUrl}/${id}`);
   }
 
   createpmrt01(data: Partial<pmrt01>): Observable<pmrt01> {

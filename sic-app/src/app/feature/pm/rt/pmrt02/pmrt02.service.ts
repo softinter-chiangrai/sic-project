@@ -3,41 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-
-export interface PmCustomerProject {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  contractId?: string;
-  contractNo?: string;
-  projectManager: string;
-  ba: string;
-  sa: string;
-  startDate: string;
-  plannedEndDate: string;
-  actualEndDate?: string;
-  budgetManday: number;
-  usedManday: number;
-  status: string;
-  priority: string;
-  description?: string;
-  isActive: boolean;
-  rowVersion?: number;
-  createdDate?: string;
-  updatedDate?: string;
-}
-
-export interface PageResponse<T> {
-  data: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    totalElements: number;
-    totalPages: number;
-  };
-}
+import { PageResponse, PmCustomerProject } from './pmrt02.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02Service {

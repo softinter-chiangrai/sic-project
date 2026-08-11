@@ -10,60 +10,7 @@ import { delay, finalize } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-
-// ===== Interfaces =====
-export interface ProjectDashboard {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  contractId: string;
-  contractNo: string;
-  projectManager: string;
-  ba: string;
-  sa: string;
-  startDate: string;
-  plannedEndDate: string;
-  actualEndDate?: string;
-  budgetManday: number;
-  usedManday: number;
-  status: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  description?: string;
-  isActive: boolean;
-  rowVersion?: number;
-
-  // Summary stats
-  phaseCount: number;
-  taskCount: number;
-  taskCompletedCount: number;
-  requirementCount: number;
-  bugCount: number;
-  bugOpenCount: number;
-
-  // Recent items (for quick view)
-  recentPhases: RecentPhase[];
-  recentTasks: RecentTask[];
-}
-
-export interface RecentPhase {
-  id: string;
-  phaseCode: string;
-  phaseName: string;
-  status: string;
-  progress: number;
-  endDate: string;
-}
-
-export interface RecentTask {
-  id: string;
-  taskCode: string;
-  taskName: string;
-  assignedTo: string;
-  status: string;
-  priority: string;
-}
+import { ProjectDashboard, RecentPhase, RecentTask } from './pmrt03.model';
 
 @Component({
   selector: 'app-pmrt03',

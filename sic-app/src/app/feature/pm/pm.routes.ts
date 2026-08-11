@@ -25,12 +25,24 @@ import { pmdt07AResolver } from './dt/pmdt07/pmdt07A/pmdt07A.resolver';
 import { pmdt08AResolver } from './dt/pmdt08/pmdt08A/pmdt08A.resolver';
 import { pmdt09Resolver } from './dt/pmdt09/pmdt09.resolver';
 import { pmdt09AResolver } from './dt/pmdt09/pmdt09A/pmdt09A.resolver';
+import { pmrt01Resolver } from './rt/pmrt01/pmrt01.resolver';
+import { pmrt02Resolver } from './rt/pmrt02/pmrt02.resolver';
+import { pmrt02AResolver } from './rt/pmrt02/pmrt02A/pmrt02A.resolver';
+import { pmrt03Resolver } from './rt/pmrt03/pmrt03.resolver';
+import { pmrt04Resolver } from './rt/pmrt04/pmrt04.resolver';
+import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
+import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
 
 export const PM_ROUTES: Routes = [
+  {
+  path: '',
+  loadComponent: () => import('./rt/pmrt03/pmrt03.component').then(m => m.Pmrt03Component)
+  },
   // ===== Customer =====
   {
     path: 'pmrt01',
     loadComponent: () => import('./rt/pmrt01/pmrt01.component').then((m) => m.Pmrt01Component),
+    resolve: { form: pmrt01Resolver },
   },
   {
     path: 'pmrt01/new',
@@ -52,18 +64,21 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
     canActivate: [customerGuard],
+    resolve: { form: pmrt02Resolver },
   },
   {
     path: 'pmrt02/new',
     loadComponent: () =>
       import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
+    resolve: { form: pmrt02AResolver },
   },
   {
     path: 'pmrt02/:id/edit',
     loadComponent: () =>
       import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
+    resolve: { form: pmrt02AResolver },
   },
 
   // ===== Project Dashboard =====
@@ -71,6 +86,7 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt03',
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt03Resolver },
   },
 
   // ===== Contract =====
@@ -78,23 +94,33 @@ export const PM_ROUTES: Routes = [
     path: 'pmrt04',
     loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt04Resolver },
   },
   {
     path: 'pmrt04/new',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt04AResolver },
   },
   {
     path: 'pmrt04/:id/edit',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt04AResolver },
   },
   {
     path: 'pmrt04/renew/:id',
     loadComponent: () =>
-      import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.pmrt04BComponent),
+      import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.Pmrt04BComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt04BResolver },
+  },
+  {
+    path: 'pmrt04/renew/:id',
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.Pmrt04BComponent),
     canActivate: [customerGuard, projectGuard],
   },
 

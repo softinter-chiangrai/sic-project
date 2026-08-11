@@ -17,35 +17,7 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
-
-// ===== Interfaces =====
-export interface Contract {
-  id: string;
-  contractNo: string;
-  contractType: string;
-  customerId: string;
-  customerName: string;
-  projectId: string;
-  projectName: string;
-  startDate: string;
-  endDate: string;
-  contractValue: number;
-  paymentTerms: string;
-  scopeSummary: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
-  renewalStatus: string;
-  isActive: boolean;
-  createdAt: string;
-  rowVersion?: number;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+import { Contract, PageResponse } from './pmrt04.model';
 
 @Component({
   selector: 'app-pmrt04',

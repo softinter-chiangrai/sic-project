@@ -14,6 +14,10 @@ export class Pmrt02AService {
     return this.http.get<ProjectModel>(`${this.baseUrl}/${id}`);
   }
 
+  getProject(id: string): Observable<ProjectModel> {
+    return this.getById(id);
+  }
+
   create(project: ProjectModel): Observable<any> {
     return this.http.post(this.baseUrl, project);
   }

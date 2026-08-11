@@ -13,7 +13,8 @@ import { finalize } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-import { PmCustomerProject, Pmrt02Service } from './pmrt02.service';
+import { Pmrt02Service } from './pmrt02.service';
+import { PmCustomerProject } from './pmrt02.model';
 
 @Component({
   selector: 'app-pmrt02',

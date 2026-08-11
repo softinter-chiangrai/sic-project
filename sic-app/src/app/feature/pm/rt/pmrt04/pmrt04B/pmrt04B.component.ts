@@ -13,8 +13,9 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { ContractModel } from '../pmrt04A/pmrt04A.model';
+import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
 
-import { ContractModel, Pmrt04AService } from '../pmrt04A/pmrt04A.component';
 
 @Component({
   selector: 'app-pmrt04-renew',
@@ -31,7 +32,7 @@ import { ContractModel, Pmrt04AService } from '../pmrt04A/pmrt04A.component';
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt04B.component.html',
 })
-export class pmrt04BComponent implements OnInit, CanComponentDeactivate {
+export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private service = inject(Pmrt04AService);
