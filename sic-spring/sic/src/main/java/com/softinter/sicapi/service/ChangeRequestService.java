@@ -11,7 +11,7 @@ public interface ChangeRequestService {
     ChangeRequestResponse createChangeRequest(ChangeRequestRequest request);
     ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request);
     ChangeRequestResponse getChangeRequest(UUID id);
-    PaginationResponse<ChangeRequestResponse> listChangeRequests(String targetType, UUID targetId, String status, Pageable pageable);
+    PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, Pageable pageable);
     void deleteChangeRequest(UUID id);
     ChangeRequestResponse submitForApproval(UUID id);
     ChangeRequestResponse approve(UUID id, String approvedBy);

@@ -38,11 +38,12 @@ public class PmChangeRequestController {
 
     @GetMapping
     public ResponseEntity<PaginationResponse<ChangeRequestResponse>> list(
+            @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String targetType,
             @RequestParam(required = false) UUID targetId,
             @RequestParam(required = false) String status,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(changeRequestService.listChangeRequests(targetType, targetId, status, pageable));
+        return ResponseEntity.ok(changeRequestService.listChangeRequests(projectId, targetType, targetId, status, pageable));
     }
 
     @DeleteMapping("/{id}")

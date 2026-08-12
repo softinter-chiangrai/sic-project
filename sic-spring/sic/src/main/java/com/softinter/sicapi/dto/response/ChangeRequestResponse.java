@@ -10,6 +10,7 @@ import java.util.UUID;
 public class ChangeRequestResponse {
     private UUID id;
     private UUID projectId;
+    private String projectName;
     private String targetType;
     private UUID targetId;
     private String title;

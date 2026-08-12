@@ -68,6 +68,7 @@ export class Pmdt07AComponent implements OnInit {
     readonly Math = Math;
 
     isEdit = false;
+    isView = false;
     changeRequestId: string | null = null;
     isLoading = false;
     isSaving = false;
@@ -137,13 +138,18 @@ export class Pmdt07AComponent implements OnInit {
     });
 
     ngOnInit() {
+        const currentUrl = this.router.url;
+        if (currentUrl.endsWith('/view') || currentUrl.includes('/view?')) {
+            this.isView = true;
+        }
+
         this.route.params.subscribe((params) => {
             const id = params['id'];
             if (id) {
-                this.isEdit = true;
+                this.isEdit = !this.isView;
                 this.changeRequestId = id;
                 this.loadChangeRequest(id);
-                // โหลด Impact Analysis เฉพาะตอนแก้ไข
+                // โหลด Impact Analysis เฉพาะตอนแก้ไข/ดูรายละเอียด
                 this.loadImpactAnalysis(id);
             }
         });
@@ -210,6 +216,9 @@ export class Pmdt07AComponent implements OnInit {
                     }
                     if (data.projectId) {
                         this.projectId = data.projectId;
+                    }
+                    if (this.isView) {
+                        this.form.disable();
                     }
                     this.isLoading = false;
                 },

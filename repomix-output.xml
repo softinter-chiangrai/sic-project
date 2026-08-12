@@ -37407,47 +37407,6 @@ export class Pmdt07AService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/change-request.model.ts">
-// src/app/feature/pm/dt/pmdt07/models/change-request.model.ts
-export interface ChangeRequest {
-  id?: string;
-  requirementId: string;
-  requirementCode?: string;
-  requirementTitle?: string;
-  changeDescription: string;
-  impactSummary?: string;
-  estimatedManday?: number;
-  status: string; // Draft, Submitted, Approved, Rejected
-  isActive?: boolean;
-  rowVersion?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ImpactAnalysis {
-  id?: string;
-  changeRequestId: string;
-  dfdImpact?: string;
-  erImpact?: string;
-  uiImpact?: string;
-  apiImpact?: string;
-  testImpact?: string;
-  mandayImpact?: number;
-  timelineImpact?: number;
-  costImpact?: string;
-  impactedRequirementIds?: string[];
-  impactedSpecIds?: string[];
-  impactedTaskIds?: string[];
-  impactedTestCaseIds?: string[];
-  impactedBugIds?: string[];
-  impactedDiagramIds?: string[];
-  impactedTableNames?: string[];
-  analysisStatus?: 'AUTO' | 'MANUAL';
-  analyzedAt?: string;
-  analyzedBy?: string;
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.form.ts">
 // src/app/feature/pm/dt/pmdt07/pmdt07.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -48840,41 +48799,6 @@ public class RequirementExportRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveImpactAnalysisRequest.java">
-// src/main/java/com/softinter/sicapi/dto/request/SaveImpactAnalysisRequest.java
-package com.softinter.sicapi.dto.request;
-
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
-import java.util.UUID;
-
-@Data
-public class SaveImpactAnalysisRequest {
-
-    @NotNull(message = "Change Request ID is required")
-    private UUID changeRequestId;
-
-    private String dfdImpact;
-    private String erImpact;
-    private String uiImpact;
-    private String apiImpact;
-    private String testImpact;
-    private Integer mandayImpact;
-    private Integer timelineImpact;
-    private String costImpact;
-
-    // สำหรับบันทึกผล Auto-Detect (ส่งจาก Frontend หรือ Service)
-    private UUID[] impactedRequirementIds;
-    private UUID[] impactedSpecIds;
-    private UUID[] impactedTaskIds;
-    private UUID[] impactedTestCaseIds;
-    private UUID[] impactedBugIds;
-    private UUID[] impactedDiagramIds;
-    private String[] impactedTableNames;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/TaskRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -49036,43 +48960,6 @@ import lombok.Data;
 @Data
 public class GenerateSqlResponse {
     private String sql;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java">
-// src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Data
-public class ImpactAnalysisResponse {
-    private UUID id;
-    private UUID changeRequestId;
-
-    private String dfdImpact;
-    private String erImpact;
-    private String uiImpact;
-    private String apiImpact;
-    private String testImpact;
-    private Integer mandayImpact;
-    private Integer timelineImpact;
-    private String costImpact;
-
-    private UUID[] impactedRequirementIds;
-    private UUID[] impactedSpecIds;
-    private UUID[] impactedTaskIds;
-    private UUID[] impactedTestCaseIds;
-    private UUID[] impactedBugIds;
-    private UUID[] impactedDiagramIds;
-    private String[] impactedTableNames;
-
-    private String analysisStatus; // AUTO / MANUAL
-    private Instant analyzedAt;
-    private String analyzedBy;
 }
 </file>
 
@@ -55925,6 +55812,47 @@ export interface ChangeRequestFormModel {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/change-request.model.ts">
+// src/app/feature/pm/dt/pmdt07/models/change-request.model.ts
+export interface ChangeRequest {
+  id?: string;
+  requirementId: string;
+  requirementCode?: string;
+  requirementTitle?: string;
+  changeDescription: string;
+  impactSummary?: string;
+  estimatedManday?: number;
+  status: string; // Draft, Submitted, Approved, Rejected
+  isActive?: boolean;
+  rowVersion?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ImpactAnalysis {
+  id?: string;
+  changeRequestId: string;
+  dfdImpact?: string;
+  erImpact?: string;
+  uiImpact?: string;
+  apiImpact?: string;
+  testImpact?: string;
+  mandayImpact?: number;
+  timelineImpact?: number;
+  costImpact?: string;
+  impactedRequirementIds?: string[];
+  impactedSpecIds?: string[];
+  impactedTaskIds?: string[];
+  impactedTestCaseIds?: string[];
+  impactedBugIds?: string[];
+  impactedDiagramIds?: string[];
+  impactedTableNames?: string[];
+  analysisStatus?: 'AUTO' | 'MANUAL';
+  analyzedAt?: string;
+  analyzedBy?: string;
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/change-request.service.ts">
 // src/app/core/services/change-request.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -56018,59 +55946,6 @@ export class ChangeRequestService {
   checkEditLock(targetType: string, targetId: string): Observable<any> {
     return this.http.get(`${environment.apiBaseUrl}/api/pm/edit-sessions/check`, { params: { targetType, targetId } });
   }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts">
-// src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-
-export interface ImpactAnalysis {
-    id?: string;
-    changeRequestId: string;
-    dfdImpact?: string;
-    erImpact?: string;
-    uiImpact?: string;
-    apiImpact?: string;
-    testImpact?: string;
-    mandayImpact?: number;
-    timelineImpact?: number;
-    costImpact?: string;
-    impactedRequirementIds?: string[];
-    impactedSpecIds?: string[];
-    impactedTaskIds?: string[];
-    impactedTestCaseIds?: string[];
-    impactedBugIds?: string[];
-    impactedDiagramIds?: string[];
-    impactedTableNames?: string[];
-    analysisStatus?: 'AUTO' | 'MANUAL';
-    analyzedAt?: string;
-    analyzedBy?: string;
-}
-
-@Injectable({ providedIn: 'root' })
-export class ImpactAnalysisService {
-    private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/impact-analysis';
-
-    getByChangeRequest(changeRequestId: string): Observable<ImpactAnalysis> {
-        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
-    }
-
-    autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {
-        return this.http.post<ImpactAnalysis>(`${this.baseUrl}/auto-detect-trace/${changeRequestId}`, {});
-    }
-
-    save(data: ImpactAnalysis): Observable<string> {
-        return this.http.post<string>(`${this.baseUrl}/save`, data);
-    }
-
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
-    }
 }
 </file>
 
@@ -59323,6 +59198,41 @@ public class PmDiagramTabRequest {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/SaveImpactAnalysisRequest.java">
+// src/main/java/com/softinter/sicapi/dto/request/SaveImpactAnalysisRequest.java
+package com.softinter.sicapi.dto.request;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class SaveImpactAnalysisRequest {
+
+    @NotNull(message = "Change Request ID is required")
+    private UUID changeRequestId;
+
+    private String dfdImpact;
+    private String erImpact;
+    private String uiImpact;
+    private String apiImpact;
+    private String testImpact;
+    private Integer mandayImpact;
+    private Integer timelineImpact;
+    private String costImpact;
+
+    // สำหรับบันทึกผล Auto-Detect (ส่งจาก Frontend หรือ Service)
+    private UUID[] impactedRequirementIds;
+    private UUID[] impactedSpecIds;
+    private UUID[] impactedTaskIds;
+    private UUID[] impactedTestCaseIds;
+    private UUID[] impactedBugIds;
+    private UUID[] impactedDiagramIds;
+    private String[] impactedTableNames;
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChangeRequestResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -59353,6 +59263,35 @@ public class ChangeRequestResponse {
     private Instant createdDate;
     private List<CrAssigneeResponse> assignees;
     private List<ChangeImpactResponse> impacts;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+import java.time.Instant;
+import java.util.UUID;
+
+@Data
+public class ImpactAnalysisResponse {
+    private UUID id;
+    private UUID changeRequestId;
+
+    // 6 ฟิลด์ที่ใช้จริงตามที่คุณบอก
+    private UUID[] impactedRequirementIds;
+    private UUID[] impactedSpecIds;
+    private UUID[] impactedDiagramIds;
+    private UUID[] impactedTaskIds;
+    private UUID[] impactedTestCaseIds;
+    private UUID[] impactedBugIds;
+
+    // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
+    private Integer mandayImpact;
+    private Integer timelineImpact;
+    private String analysisStatus;
+    private Instant analyzedAt;
+    private String analyzedBy;
 }
 </file>
 
@@ -59398,94 +59337,6 @@ public class ReplyResponse {
     private Instant createdDate;
     private UUID attachmentGroupId;
     private String userAvatarUrl;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/ChangeImpactAnalysis.java">
-// src/main/java/com/softinter/sicapi/entity/pm/ChangeImpactAnalysis.java
-package com.softinter.sicapi.entity.pm;
-
-import com.softinter.sicapi.entity.base.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "pm_change_impact_analysis")
-public class ChangeImpactAnalysis extends BaseEntity {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "change_request_id", nullable = false)
-    private PmChangeRequest changeRequest;
-
-    @Column(name = "dfd_impact", columnDefinition = "TEXT")
-    private String dfdImpact;
-
-    @Column(name = "er_impact", columnDefinition = "TEXT")
-    private String erImpact;
-
-    @Column(name = "ui_impact", columnDefinition = "TEXT")
-    private String uiImpact;
-
-    @Column(name = "api_impact", columnDefinition = "TEXT")
-    private String apiImpact;
-
-    @Column(name = "test_impact", columnDefinition = "TEXT")
-    private String testImpact;
-
-    @Column(name = "manday_impact")
-    private Integer mandayImpact;
-
-    @Column(name = "timeline_impact")
-    private Integer timelineImpact;
-
-    @Column(name = "cost_impact", columnDefinition = "TEXT")
-    private String costImpact;
-
-    // ---- Array fields สำหรับ Auto-Detect 100% ----
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_requirement_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedRequirementIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_spec_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedSpecIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_task_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedTaskIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_test_case_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedTestCaseIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_bug_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedBugIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_diagram_ids", columnDefinition = "UUID[]")
-    private UUID[] impactedDiagramIds;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "impacted_table_names", columnDefinition = "TEXT[]")
-    private String[] impactedTableNames;
-
-    @Column(name = "analysis_status", length = 20)
-    private String analysisStatus = "MANUAL";
-
-    @Column(name = "analyzed_at")
-    private Instant analyzedAt;
-
-    @Column(name = "analyzed_by", length = 100)
-    private String analyzedBy;
 }
 </file>
 
@@ -61967,6 +61818,59 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
   'Use Case':
     'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
 };
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts">
+// src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+
+export interface ImpactAnalysis {
+    id?: string;
+    changeRequestId: string;
+    dfdImpact?: string;
+    erImpact?: string;
+    uiImpact?: string;
+    apiImpact?: string;
+    testImpact?: string;
+    mandayImpact?: number;
+    timelineImpact?: number;
+    costImpact?: string;
+    impactedRequirementIds?: string[];
+    impactedSpecIds?: string[];
+    impactedTaskIds?: string[];
+    impactedTestCaseIds?: string[];
+    impactedBugIds?: string[];
+    impactedDiagramIds?: string[];
+    impactedTableNames?: string[];
+    analysisStatus?: 'AUTO' | 'MANUAL';
+    analyzedAt?: string;
+    analyzedBy?: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ImpactAnalysisService {
+    private http = inject(HttpClient);
+    private baseUrl = environment.apiBaseUrl + '/api/pm/impact-analysis';
+
+    getByChangeRequest(changeRequestId: string): Observable<ImpactAnalysis> {
+        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
+    }
+
+    autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {
+        return this.http.post<ImpactAnalysis>(`${this.baseUrl}/auto-detect-trace/${changeRequestId}`, {});
+    }
+
+    save(data: ImpactAnalysis): Observable<string> {
+        return this.http.post<string>(`${this.baseUrl}/save`, data);
+    }
+
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html">
@@ -64558,65 +64462,91 @@ public class PmSpecificationResponse {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java">
-// src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
-package com.softinter.sicapi.repository.pm;
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/ChangeImpactAnalysis.java">
+// src/main/java/com/softinter/sicapi/entity/pm/ChangeImpactAnalysis.java
+package com.softinter.sicapi.entity.pm;
 
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import com.softinter.sicapi.entity.base.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
-@Repository
-public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> {
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = "pm_change_impact_analysis")
+public class ChangeImpactAnalysis extends BaseEntity {
 
-    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
-    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.isDelete = false")
-    List<PmTraceLink> findBySourceTypeAndSourceId(@Param("sourceType") String sourceType, @Param("sourceId") UUID sourceId);
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "change_request_id", nullable = false)
+    private PmChangeRequest changeRequest;
 
-    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
-    @Query("SELECT t FROM PmTraceLink t WHERE t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
-    List<PmTraceLink> findByTargetTypeAndTargetId(@Param("targetType") String targetType, @Param("targetId") UUID targetId);
+    @Column(name = "dfd_impact", columnDefinition = "TEXT")
+    private String dfdImpact;
 
-    // ✅ แก้ไข: ปรับเป็น Bidirectional Trace Traversal (รองรับทั้งกรณี source/target สลับทิศทาง)
-    @Query(value = """
-        WITH RECURSIVE trace AS (
-            SELECT source_type, source_id, target_type, target_id, relationship_type
-            FROM pm_trace_link
-            WHERE is_delete = false AND (
-                (source_type = :sourceType AND source_id = :sourceId)
-                OR (target_type = :sourceType AND target_id = :sourceId)
-            )
-            UNION
-            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type
-            FROM pm_trace_link l
-            INNER JOIN trace t ON (
-                (t.target_type = l.source_type AND t.target_id = l.source_id)
-                OR (t.source_type = l.target_type AND t.source_id = l.target_id)
-                OR (t.target_type = l.target_type AND t.target_id = l.target_id)
-                OR (t.source_type = l.source_type AND t.source_id = l.source_id)
-            )
-            WHERE l.is_delete = false
-        )
-        SELECT DISTINCT source_type, source_id, target_type, target_id, relationship_type FROM trace
-        """, nativeQuery = true)
-    List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
-                                 @Param("sourceId") UUID sourceId);
+    @Column(name = "er_impact", columnDefinition = "TEXT")
+    private String erImpact;
 
-    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
-    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
-    List<PmTraceLink> findExistingLink(@Param("sourceType") String sourceType,
-                                       @Param("sourceId") UUID sourceId,
-                                       @Param("targetType") String targetType,
-                                       @Param("targetId") UUID targetId);
+    @Column(name = "ui_impact", columnDefinition = "TEXT")
+    private String uiImpact;
 
-    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
-    @Query("SELECT t FROM PmTraceLink t WHERE t.projectId = :projectId AND t.isDelete = false")
-    List<PmTraceLink> findAllByProjectId(@Param("projectId") UUID projectId);
+    @Column(name = "api_impact", columnDefinition = "TEXT")
+    private String apiImpact;
+
+    @Column(name = "test_impact", columnDefinition = "TEXT")
+    private String testImpact;
+
+    @Column(name = "manday_impact")
+    private Integer mandayImpact;
+
+    @Column(name = "timeline_impact")
+    private Integer timelineImpact;
+
+    @Column(name = "cost_impact", columnDefinition = "TEXT")
+    private String costImpact;
+
+    // ---- Array fields สำหรับ Auto-Detect 100% ----
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_requirement_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedRequirementIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_spec_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedSpecIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_task_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedTaskIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_test_case_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedTestCaseIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_bug_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedBugIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_diagram_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedDiagramIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_table_names", columnDefinition = "TEXT[]")
+    private String[] impactedTableNames;
+
+    @Column(name = "analysis_status", length = 20)
+    private String analysisStatus = "MANUAL";
+
+    @Column(name = "analyzed_at")
+    private Instant analyzedAt;
+
+    @Column(name = "analyzed_by", length = 100)
+    private String analyzedBy;
 }
 </file>
 
@@ -64953,189 +64883,6 @@ public class DiscussionServiceImpl implements DiscussionService {
         return profileRepository.findByUserId(userId)
                 .map(p -> p.getUploadGroupId() != null ? "/api/storage/avatar/" + p.getUploadGroupId() : null)
                 .orElse(null);
-    }
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java">
-// src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.entity.enums.TraceRelationship;
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
-import java.util.*;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class TraceLinkServiceImpl implements TraceLinkService {
-
-    private final PmTraceLinkRepository traceLinkRepository;
-
-    @Override
-    @Transactional
-    public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
-            String targetType, UUID targetId, TraceRelationship relationshipType) {
-        // ✅ ตรวจสอบว่ามี link ที่ active อยู่แล้วหรือไม่ (isDelete = false)
-        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
-        if (!existing.isEmpty()) {
-            log.debug("Active link already exists: {} -> {}", sourceId, targetId);
-            return existing.get(0);
-        }
-
-        // ✅ ตรวจสอบว่ามี link ที่ถูกลบ (isDelete = true) และต้องการกู้คืนหรือไม่
-        // (ถ้าต้องการกู้คืน ให้ set isDelete = false แทนการสร้างใหม่)
-        // แต่ถ้าไม่ต้องการกู้คืน ก็สร้างใหม่ตามปกติ
-
-        PmTraceLink link = new PmTraceLink();
-        link.setProjectId(projectId);
-        link.setSourceType(sourceType);
-        link.setSourceId(sourceId);
-        link.setTargetType(targetType);
-        link.setTargetId(targetId);
-        link.setRelationshipType(relationshipType);
-        return traceLinkRepository.save(link);
-    }
-
-    @Override
-    @Transactional
-    public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
-        // ✅ ใช้เมธอดที่กรอง isDelete = false
-        List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
-        for (PmTraceLink link : links) {
-            link.setIsDelete(true);
-            traceLinkRepository.save(link);
-        }
-        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType,
-                targetId);
-    }
-
-    @Override
-    @Transactional
-    public void deleteLink(UUID linkId) {
-        PmTraceLink link = traceLinkRepository.findById(linkId)
-                .orElseThrow(() -> new RuntimeException("Trace link not found: " + linkId));
-        link.setIsDelete(true);
-        traceLinkRepository.save(link);
-    }
-
-    @Override
-    public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
-        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
-    }
-
-    @Override
-    public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
-        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
-    }
-
-    @Override
-    public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
-        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
-        List<PmTraceLink> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            PmTraceLink link = new PmTraceLink();
-            link.setSourceType((String) row[0]);
-            link.setSourceId((UUID) row[1]);
-            link.setTargetType((String) row[2]);
-            link.setTargetId((UUID) row[3]);
-            link.setRelationshipType(TraceRelationship.valueOf((String) row[4]));
-            result.add(link);
-        }
-        return result;
-    }
-
-    @Override
-    public ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId) {
-        List<PmTraceLink> trace = getFullTrace(sourceType, sourceId);
-        Map<String, Set<UUID>> impactedMap = new HashMap<>();
-
-        for (PmTraceLink link : trace) {
-            if (link.getSourceId() != null && !link.getSourceId().equals(sourceId)) {
-                impactedMap.computeIfAbsent(link.getSourceType(), k -> new HashSet<>())
-                        .add(link.getSourceId());
-            }
-            if (link.getTargetId() != null && !link.getTargetId().equals(sourceId)) {
-                impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
-                        .add(link.getTargetId());
-            }
-        }
-
-        ImpactTraceResult result = new ImpactTraceResult();
-        result.setSourceType(sourceType);
-        result.setSourceId(sourceId);
-        result.setImpacted(impactedMap);
-        return result;
-    }
-
-    @Override
-    @Transactional
-    public void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent) {
-        if (xmlContent == null || xmlContent.trim().isEmpty()) {
-            log.debug("No XML content to parse for diagram: {}", diagramTabId);
-            return;
-        }
-
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xmlContent)));
-
-            NodeList cells = doc.getElementsByTagName("mxCell");
-            Map<String, String> entityNames = new HashMap<>();
-
-            for (int i = 0; i < cells.getLength(); i++) {
-                Element cell = (Element) cells.item(i);
-                String vertex = cell.getAttribute("vertex");
-                String value = cell.getAttribute("value");
-
-                if ("1".equals(vertex) && value != null && !value.trim().isEmpty()) {
-                    String[] lines = value.trim().split("\n");
-                    String entityName = lines[0].trim();
-                    if (!entityName.isEmpty()) {
-                        entityNames.put(cell.getAttribute("id"), entityName);
-                    }
-                }
-            }
-
-            for (String entityId : entityNames.keySet()) {
-                String entityName = entityNames.get(entityId);
-                String targetType = "ENTITY";
-                String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
-                UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
-
-                TraceRelationship relType = "DFD".equalsIgnoreCase(diagramType)
-                        ? TraceRelationship.DESIGNED_BY
-                        : TraceRelationship.IMPLEMENTED_BY;
-
-                this.createLink(
-                        projectId,
-                        diagramType.toUpperCase(), diagramTabId,
-                        targetType, targetUuid,
-                        relType);
-            }
-
-            log.info("Created {} trace links from diagram {} (type: {})",
-                    entityNames.size(), diagramTabId, diagramType);
-
-        } catch (Exception e) {
-            log.error("Failed to parse XML for trace links: {}", diagramTabId, e);
-        }
     }
 }
 </file>
@@ -66879,6 +66626,87 @@ export class SicRequirementPreviewComponent implements OnChanges {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
+
+<div class="h-full flex flex-col bg-[var(--bg)]">
+  <div
+    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
+  >
+    <h3 class="text-sm font-medium">AI Assistant</h3>
+    <button
+      (click)="clearChat()"
+      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
+    >
+      Clear
+    </button>
+  </div>
+  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
+    @for (message of messages(); track message.id) {
+      <div class="flex" [class.justify-end]="message.role === 'user'">
+        <div
+          class="max-w-[80%] px-4 py-2 rounded-xl relative"
+          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
+          [class.text-white]="message.role === 'user'"
+          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
+        >
+          <div
+            [class.text-sm]="message.role === 'user'"
+            [class.prose]="message.role === 'assistant'"
+          >
+            <markdown
+              [data]="message.content"
+              [class.text-white]="message.role === 'user'"
+            ></markdown>
+          </div>
+          <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
+            <span>{{ message.createdAt | date: 'shortTime' }}</span>
+            <!-- ✅ ปุ่ม Copy Mermaid ที่เปลี่ยนข้อความตามสถานะ -->
+            @if (message.role === 'assistant' && getMermaidCode(message.content)) {
+              @if (copiedStatus()[message.id]) {
+                <span class="text-green-500 text-xs font-medium">Copied!</span>
+              } @else {
+                <button
+                  (click)="copyMermaidCode(message.content, message.id)"
+                  class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
+                  title="คัดลอก Mermaid Code"
+                >
+                  <i class="bi bi-clipboard"></i> Copy Mermaid
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+    @if (isLoading()) {
+      <div class="flex justify-start">
+        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
+          <span class="animate-pulse">AI is thinking...</span>
+        </div>
+      </div>
+    }
+  </div>
+  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
+    <div class="flex gap-2">
+      <input
+        [(ngModel)]="userInput"
+        (keydown.enter)="sendMessage()"
+        placeholder="Ask AI to create or modify diagrams..."
+        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      />
+      <button
+        (click)="sendMessage()"
+        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
+        [disabled]="isLoading() || !userInput.trim()"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.html">
 <!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
 <div class="space-y-5 p-0.5">
@@ -68415,199 +68243,65 @@ public class PmSpecificationController {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
-package com.softinter.sicapi.service.impl;
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java">
+// src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
+package com.softinter.sicapi.repository.pm;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+@Repository
+public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> {
 
-import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
-import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
-import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.isDelete = false")
+    List<PmTraceLink> findBySourceTypeAndSourceId(@Param("sourceType") String sourceType, @Param("sourceId") UUID sourceId);
 
-import com.softinter.sicapi.entity.pm.PmChangeRequest;
-import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
-import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.ImpactAnalysisService;
-import com.softinter.sicapi.service.TraceLinkService;
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
+    List<PmTraceLink> findByTargetTypeAndTargetId(@Param("targetType") String targetType, @Param("targetId") UUID targetId);
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+    // ✅ แก้ไข: ปรับเป็น Bidirectional Trace Traversal (รองรับทั้งกรณี source/target สลับทิศทาง)
+    @Query(value = """
+        WITH RECURSIVE trace AS (
+            SELECT source_type, source_id, target_type, target_id, relationship_type
+            FROM pm_trace_link
+            WHERE is_delete = false AND (
+                (source_type = :sourceType AND source_id = :sourceId)
+                OR (target_type = :sourceType AND target_id = :sourceId)
+            )
+            UNION
+            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type
+            FROM pm_trace_link l
+            INNER JOIN trace t ON (
+                (t.target_type = l.source_type AND t.target_id = l.source_id)
+                OR (t.source_type = l.target_type AND t.source_id = l.target_id)
+                OR (t.target_type = l.target_type AND t.target_id = l.target_id)
+                OR (t.source_type = l.source_type AND t.source_id = l.source_id)
+            )
+            WHERE l.is_delete = false
+        )
+        SELECT DISTINCT source_type, source_id, target_type, target_id, relationship_type FROM trace
+        """, nativeQuery = true)
+    List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
+                                 @Param("sourceId") UUID sourceId);
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
+    List<PmTraceLink> findExistingLink(@Param("sourceType") String sourceType,
+                                       @Param("sourceId") UUID sourceId,
+                                       @Param("targetType") String targetType,
+                                       @Param("targetId") UUID targetId);
 
-    private final ChangeImpactAnalysisRepository repository;
-    private final PmChangeRequestRepository changeRequestRepository;
-    private final CurrentUserService currentUserService;
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
-        return repository.findByChangeRequestId(changeRequestId)
-                .map(this::toResponse)
-                .orElse(null);
-    }
-
-    @Override
-    @Transactional
-    public UUID save(SaveImpactAnalysisRequest request) {
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(request.getChangeRequestId())
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(request.getChangeRequestId())
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setDfdImpact(request.getDfdImpact());
-        analysis.setErImpact(request.getErImpact());
-        analysis.setUiImpact(request.getUiImpact());
-        analysis.setApiImpact(request.getApiImpact());
-        analysis.setTestImpact(request.getTestImpact());
-        analysis.setMandayImpact(request.getMandayImpact());
-        analysis.setTimelineImpact(request.getTimelineImpact());
-        analysis.setCostImpact(request.getCostImpact());
-
-        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
-        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
-        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
-        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
-        analysis.setImpactedBugIds(request.getImpactedBugIds());
-        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
-        analysis.setImpactedTableNames(request.getImpactedTableNames());
-
-        if (analysis.getAnalysisStatus() == null) {
-            analysis.setAnalysisStatus("MANUAL");
-        }
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
-        return saved.getId();
-    }
-
-    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
-        try {
-            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
-            return autoDetectUsingTrace(changeRequestId);
-        } catch (Exception e) {
-            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
-            return null;
-        }
-    }
-
-    @Override
-    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
-        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
-
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        UUID targetId = changeRequest.getTargetId();
-        String targetType = changeRequest.getTargetType();
-
-        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
-                targetId);
-
-        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
-
-        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
-        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
-        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
-        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
-        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
-
-        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
-        Set<UUID> diagramSet = new java.util.HashSet<>();
-        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
-        for (String dType : diagramTypes) {
-            if (impacted.containsKey(dType)) {
-                diagramSet.addAll(impacted.get(dType));
-            }
-        }
-        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(changeRequestId)
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setImpactedRequirementIds(reqIds);
-        analysis.setImpactedSpecIds(specIds);
-        analysis.setImpactedTaskIds(taskIds);
-        analysis.setImpactedTestCaseIds(testCaseIds);
-        analysis.setImpactedBugIds(bugIds);
-        analysis.setImpactedDiagramIds(diagramIds);
-        analysis.setImpactedTableNames(new String[0]);
-
-        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
-        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
-            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
-            analysis.setMandayImpact(calculatedManday);
-        }
-        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
-            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
-            analysis.setTimelineImpact(calculatedDays);
-        }
-
-        analysis.setAnalysisStatus("AUTO");
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        repository.deleteById(id);
-        log.info("Impact Analysis deleted: {}", id);
-    }
-
-    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
-        ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
-        dto.setId(entity.getId());
-        dto.setChangeRequestId(entity.getChangeRequest().getId());
-        dto.setDfdImpact(entity.getDfdImpact());
-        dto.setErImpact(entity.getErImpact());
-        dto.setUiImpact(entity.getUiImpact());
-        dto.setApiImpact(entity.getApiImpact());
-        dto.setTestImpact(entity.getTestImpact());
-        dto.setMandayImpact(entity.getMandayImpact());
-        dto.setTimelineImpact(entity.getTimelineImpact());
-        dto.setCostImpact(entity.getCostImpact());
-        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
-        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
-        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
-        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
-        dto.setImpactedBugIds(entity.getImpactedBugIds());
-        dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
-        dto.setImpactedTableNames(entity.getImpactedTableNames());
-        dto.setAnalysisStatus(entity.getAnalysisStatus());
-        dto.setAnalyzedAt(entity.getAnalyzedAt());
-        dto.setAnalyzedBy(entity.getAnalyzedBy());
-        return dto;
-    }
+    // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
+    @Query("SELECT t FROM PmTraceLink t WHERE t.projectId = :projectId AND t.isDelete = false")
+    List<PmTraceLink> findAllByProjectId(@Param("projectId") UUID projectId);
 }
 </file>
 
@@ -68906,6 +68600,189 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             case ANYONE_WITH_LINK: return "AnyoneWithLink";
             case PUBLIC: return "Public";
             default: return "Public";
+        }
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java">
+// src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.TraceLinkService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringReader;
+import java.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TraceLinkServiceImpl implements TraceLinkService {
+
+    private final PmTraceLinkRepository traceLinkRepository;
+
+    @Override
+    @Transactional
+    public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
+            String targetType, UUID targetId, TraceRelationship relationshipType) {
+        // ✅ ตรวจสอบว่ามี link ที่ active อยู่แล้วหรือไม่ (isDelete = false)
+        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        if (!existing.isEmpty()) {
+            log.debug("Active link already exists: {} -> {}", sourceId, targetId);
+            return existing.get(0);
+        }
+
+        // ✅ ตรวจสอบว่ามี link ที่ถูกลบ (isDelete = true) และต้องการกู้คืนหรือไม่
+        // (ถ้าต้องการกู้คืน ให้ set isDelete = false แทนการสร้างใหม่)
+        // แต่ถ้าไม่ต้องการกู้คืน ก็สร้างใหม่ตามปกติ
+
+        PmTraceLink link = new PmTraceLink();
+        link.setProjectId(projectId);
+        link.setSourceType(sourceType);
+        link.setSourceId(sourceId);
+        link.setTargetType(targetType);
+        link.setTargetId(targetId);
+        link.setRelationshipType(relationshipType);
+        return traceLinkRepository.save(link);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false
+        List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        for (PmTraceLink link : links) {
+            link.setIsDelete(true);
+            traceLinkRepository.save(link);
+        }
+        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType,
+                targetId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLink(UUID linkId) {
+        PmTraceLink link = traceLinkRepository.findById(linkId)
+                .orElseThrow(() -> new RuntimeException("Trace link not found: " + linkId));
+        link.setIsDelete(true);
+        traceLinkRepository.save(link);
+    }
+
+    @Override
+    public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
+        return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
+    }
+
+    @Override
+    public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
+        return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
+    }
+
+    @Override
+    public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
+        // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
+        List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
+        List<PmTraceLink> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            PmTraceLink link = new PmTraceLink();
+            link.setSourceType((String) row[0]);
+            link.setSourceId((UUID) row[1]);
+            link.setTargetType((String) row[2]);
+            link.setTargetId((UUID) row[3]);
+            link.setRelationshipType(TraceRelationship.valueOf((String) row[4]));
+            result.add(link);
+        }
+        return result;
+    }
+
+    @Override
+    public ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId) {
+        List<PmTraceLink> trace = getFullTrace(sourceType, sourceId);
+        Map<String, Set<UUID>> impactedMap = new HashMap<>();
+
+        for (PmTraceLink link : trace) {
+            if (link.getSourceId() != null && !link.getSourceId().equals(sourceId)) {
+                impactedMap.computeIfAbsent(link.getSourceType(), k -> new HashSet<>())
+                        .add(link.getSourceId());
+            }
+            if (link.getTargetId() != null && !link.getTargetId().equals(sourceId)) {
+                impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
+                        .add(link.getTargetId());
+            }
+        }
+
+        ImpactTraceResult result = new ImpactTraceResult();
+        result.setSourceType(sourceType);
+        result.setSourceId(sourceId);
+        result.setImpacted(impactedMap);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public void createLinksFromDiagramXml(UUID projectId, UUID diagramTabId, String diagramType, String xmlContent) {
+        if (xmlContent == null || xmlContent.trim().isEmpty()) {
+            log.debug("No XML content to parse for diagram: {}", diagramTabId);
+            return;
+        }
+
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xmlContent)));
+
+            NodeList cells = doc.getElementsByTagName("mxCell");
+            Map<String, String> entityNames = new HashMap<>();
+
+            for (int i = 0; i < cells.getLength(); i++) {
+                Element cell = (Element) cells.item(i);
+                String vertex = cell.getAttribute("vertex");
+                String value = cell.getAttribute("value");
+
+                if ("1".equals(vertex) && value != null && !value.trim().isEmpty()) {
+                    String[] lines = value.trim().split("\n");
+                    String entityName = lines[0].trim();
+                    if (!entityName.isEmpty()) {
+                        entityNames.put(cell.getAttribute("id"), entityName);
+                    }
+                }
+            }
+
+            for (String entityId : entityNames.keySet()) {
+                String entityName = entityNames.get(entityId);
+                String targetType = "ENTITY";
+                String targetId = "entity_" + entityName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+                UUID targetUuid = UUID.nameUUIDFromBytes(targetId.getBytes());
+
+                TraceRelationship relType = "DFD".equalsIgnoreCase(diagramType)
+                        ? TraceRelationship.DESIGNED_BY
+                        : TraceRelationship.IMPLEMENTED_BY;
+
+                this.createLink(
+                        projectId,
+                        diagramType.toUpperCase(), diagramTabId,
+                        targetType, targetUuid,
+                        relType);
+            }
+
+            log.info("Created {} trace links from diagram {} (type: {})",
+                    entityNames.size(), diagramTabId, diagramType);
+
+        } catch (Exception e) {
+            log.error("Failed to parse XML for trace links: {}", diagramTabId, e);
         }
     }
 }
@@ -69727,87 +69604,6 @@ export class Pmdt01Component implements OnInit {
     }
   }
 }
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
-<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
-
-<div class="h-full flex flex-col bg-[var(--bg)]">
-  <div
-    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
-  >
-    <h3 class="text-sm font-medium">AI Assistant</h3>
-    <button
-      (click)="clearChat()"
-      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
-    >
-      Clear
-    </button>
-  </div>
-  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
-    @for (message of messages(); track message.id) {
-      <div class="flex" [class.justify-end]="message.role === 'user'">
-        <div
-          class="max-w-[80%] px-4 py-2 rounded-xl relative"
-          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
-          [class.text-white]="message.role === 'user'"
-          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
-        >
-          <div
-            [class.text-sm]="message.role === 'user'"
-            [class.prose]="message.role === 'assistant'"
-          >
-            <markdown
-              [data]="message.content"
-              [class.text-white]="message.role === 'user'"
-            ></markdown>
-          </div>
-          <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
-            <span>{{ message.createdAt | date: 'shortTime' }}</span>
-            <!-- ✅ ปุ่ม Copy Mermaid ที่เปลี่ยนข้อความตามสถานะ -->
-            @if (message.role === 'assistant' && getMermaidCode(message.content)) {
-              @if (copiedStatus()[message.id]) {
-                <span class="text-green-500 text-xs font-medium">Copied!</span>
-              } @else {
-                <button
-                  (click)="copyMermaidCode(message.content, message.id)"
-                  class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
-                  title="คัดลอก Mermaid Code"
-                >
-                  <i class="bi bi-clipboard"></i> Copy Mermaid
-                </button>
-              }
-            }
-          </div>
-        </div>
-      </div>
-    }
-    @if (isLoading()) {
-      <div class="flex justify-start">
-        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
-          <span class="animate-pulse">AI is thinking...</span>
-        </div>
-      </div>
-    }
-  </div>
-  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
-    <div class="flex gap-2">
-      <input
-        [(ngModel)]="userInput"
-        (keydown.enter)="sendMessage()"
-        placeholder="Ask AI to create or modify diagrams..."
-        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
-      />
-      <button
-        (click)="sendMessage()"
-        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
-        [disabled]="isLoading() || !userInput.trim()"
-      >
-        Send
-      </button>
-    </div>
-  </div>
-</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
@@ -70885,6 +70681,199 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
     Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
     boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
+import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
+import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
+
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
+import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.ImpactAnalysisService;
+import com.softinter.sicapi.service.TraceLinkService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
+
+    private final ChangeImpactAnalysisRepository repository;
+    private final PmChangeRequestRepository changeRequestRepository;
+    private final CurrentUserService currentUserService;
+    private final TraceLinkService traceLinkService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
+        return repository.findByChangeRequestId(changeRequestId)
+                .map(this::toResponse)
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public UUID save(SaveImpactAnalysisRequest request) {
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(request.getChangeRequestId())
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(request.getChangeRequestId())
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setDfdImpact(request.getDfdImpact());
+        analysis.setErImpact(request.getErImpact());
+        analysis.setUiImpact(request.getUiImpact());
+        analysis.setApiImpact(request.getApiImpact());
+        analysis.setTestImpact(request.getTestImpact());
+        analysis.setMandayImpact(request.getMandayImpact());
+        analysis.setTimelineImpact(request.getTimelineImpact());
+        analysis.setCostImpact(request.getCostImpact());
+
+        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
+        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
+        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
+        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
+        analysis.setImpactedBugIds(request.getImpactedBugIds());
+        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
+        analysis.setImpactedTableNames(request.getImpactedTableNames());
+
+        if (analysis.getAnalysisStatus() == null) {
+            analysis.setAnalysisStatus("MANUAL");
+        }
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
+        return saved.getId();
+    }
+
+    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
+        try {
+            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
+            return autoDetectUsingTrace(changeRequestId);
+        } catch (Exception e) {
+            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
+            return null;
+        }
+    }
+
+    @Override
+    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
+        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
+
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        UUID targetId = changeRequest.getTargetId();
+        String targetType = changeRequest.getTargetType();
+
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
+                targetId);
+
+        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
+
+        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
+        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
+        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
+        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
+        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
+
+        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
+        Set<UUID> diagramSet = new java.util.HashSet<>();
+        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
+        for (String dType : diagramTypes) {
+            if (impacted.containsKey(dType)) {
+                diagramSet.addAll(impacted.get(dType));
+            }
+        }
+        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(changeRequestId)
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setImpactedRequirementIds(reqIds);
+        analysis.setImpactedSpecIds(specIds);
+        analysis.setImpactedTaskIds(taskIds);
+        analysis.setImpactedTestCaseIds(testCaseIds);
+        analysis.setImpactedBugIds(bugIds);
+        analysis.setImpactedDiagramIds(diagramIds);
+        analysis.setImpactedTableNames(new String[0]);
+
+        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
+        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
+            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+            analysis.setMandayImpact(calculatedManday);
+        }
+        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
+            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
+            analysis.setTimelineImpact(calculatedDays);
+        }
+
+        analysis.setAnalysisStatus("AUTO");
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id) {
+        repository.deleteById(id);
+        log.info("Impact Analysis deleted: {}", id);
+    }
+
+    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
+    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
+    
+    dto.setId(entity.getId());
+    dto.setChangeRequestId(entity.getChangeRequest().getId());
+    
+    dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
+    dto.setImpactedSpecIds(entity.getImpactedSpecIds());
+    dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
+    dto.setImpactedTaskIds(entity.getImpactedTaskIds());
+    dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
+    dto.setImpactedBugIds(entity.getImpactedBugIds());
+    
+    dto.setMandayImpact(entity.getMandayImpact());
+    dto.setTimelineImpact(entity.getTimelineImpact());
+    dto.setAnalysisStatus(entity.getAnalysisStatus());
+    dto.setAnalyzedAt(entity.getAnalyzedAt());
+    dto.setAnalyzedBy(entity.getAnalyzedBy());
+    
+    return dto;
+}
 }
 </file>
 
@@ -75632,295 +75621,6 @@ export class Pmdt02Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html">
-<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
-<div class="space-y-5 p-0.5">
-  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Target Type Selection -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
-          <select
-            formControlName="targetType"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
-          >
-            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
-            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
-            <option value="TASK">งาน (Task)</option>
-          </select>
-        </div>
-
-        <!-- Target Document Combobox -->
-        <div>
-          <sic-combobox
-            label="เอกสารที่ขอเปลี่ยนแปลง"
-            formControlName="targetId"
-            [apiUrl]="targetDocumentApiUrl()"
-            [params]="{ projectId: projectId }"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
-          ></sic-combobox>
-        </div>
-
-        <!-- Title -->
-        <div class="md:col-span-2">
-          <sic-input
-            label="หัวข้อคำขอเปลี่ยนแปลง"
-            formControlName="title"
-            [required]="true"
-            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
-          ></sic-input>
-        </div>
-
-        <!-- Description -->
-        <div class="md:col-span-2">
-          <sic-input-area
-            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
-            formControlName="description"
-            [rows]="3"
-            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
-          ></sic-input-area>
-        </div>
-
-        <!-- Change Reason -->
-        <div>
-          <sic-combobox
-            label="สาเหตุการเปลี่ยนแปลง"
-            formControlName="changeReason"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
-            valueField="value"
-            textField="text"
-          ></sic-combobox>
-        </div>
-
-        <!-- Assignee -->
-        <div>
-          <sic-combobox
-            #assigneeCombobox
-            label="ผู้รับมอบหมาย"
-            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
-            valueField="value"
-            textField="text"
-            [excludeValues]="selectedAssigneeIds()"
-            (selectionChanged)="onAssigneeSelected($event, assigneeCombobox)"
-          ></sic-combobox>
-
-          <!-- List of selected assignees -->
-          <div class="flex flex-wrap gap-2 mt-2">
-            @for (assignee of selectedAssignees(); track assignee.userId) {
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 font-medium">
-                {{ assignee.userName }}
-                <button type="button" class="hover:text-red-500 focus:outline-none flex items-center" (click)="removeAssignee(assignee.userId)">
-                  <i class="bi bi-x text-base font-bold leading-none"></i>
-                </button>
-              </span>
-            }
-          </div>
-
-          <input type="hidden" formControlName="assigneeId" />
-          @if (form.get('assigneeId')?.touched && form.get('assigneeId')?.errors?.['required']) {
-            <p class="text-red-500 text-xs mt-1">กรุณาเลือกผู้รับมอบหมาย</p>
-          }
-        </div>
-
-        <!-- Hidden projectId -->
-        <input type="hidden" formControlName="projectId" />
-      </div>
-
-      <!-- Approval Flow Selection -->
-      <div class="border-t border-[var(--border)] pt-4 mt-2">
-        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            label="เลือกกระบวนการอนุมัติ"
-            [apiUrl]="documenttypeapiUrl"
-            valueField="id"
-            textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
-            [clearable]="true"
-            (selectionChanged)="selectedFlowId = $event?.id"
-          ></sic-combobox>
-        </div>
-
-        @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
-          </p>
-        }
-      </div>
-
-      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit) {
-        <div class="border-t border-[var(--border)] pt-4 mt-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              ผลกระทบที่คาดการณ์ (Impact Analysis)
-              @if (isLoadingImpact()) {
-                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
-                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
-                </span>
-              }
-            </h4>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                [disabled]="isLoadingImpact()"
-                class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-              >
-                <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                วิเคราะห์ใหม่
-              </button>
-            </div>
-          </div>
-
-          @if (showImpactSection() && impactData(); as impact) {
-            <div class="mt-3 space-y-3">
-              <!-- สรุปผลกระทบ -->
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedRequirementIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedSpecIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-amber-500">
-                    {{ impact.impactedDiagramIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTaskIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Task</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTestCaseIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedBugIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
-                </div>
-              </div>
-
-              <!-- รายละเอียดเพิ่มเติม -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
-                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
-                    {{ getImpactStatusText(impact.analysisStatus) }}
-                  </span>
-                  @if (impact.analyzedAt) {
-                    <span class="text-[var(--text-muted)] ml-2 text-xs">
-                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
-                    </span>
-                  }
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
-                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
-                  @if (impact.timelineImpact) {
-                    <span class="text-[var(--text-muted)] ml-4">
-                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
-                    </span>
-                  }
-                </div>
-                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
-                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
-                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
-                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
-                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
-                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
-                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
-                    </div>
-                  </div>
-                }
-              </div>
-
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
-                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">เอกสารและ Diagram ที่ได้รับผลกระทบ (ID):</p>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    @for (id of impact.impactedRequirementIds; track id) {
-                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedSpecIds; track id) {
-                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedDiagramIds; track id) {
-                      <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedTaskIds; track id) {
-                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedTestCaseIds; track id) {
-                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedBugIds; track id) {
-                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else if (!isLoadingImpact()) {
-            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
-              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
-              >
-                คลิกเพื่อวิเคราะห์อัตโนมัติ
-              </button>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Actions -->
-      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-        <sic-button type="submit" variant="primary" [disabled]="isSaving">
-          @if (isSaving) {
-            <i class="bi bi-arrow-repeat animate-spin me-1"></i>
-          }
-          {{
-            isSaving
-              ? 'กำลังบันทึก...'
-              : selectedFlowId
-                ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                : (isEdit ? 'บันทึก' : 'สร้าง')
-          }}
-        </sic-button>
-        <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
-      </div>
-    </form>
-</div>
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts">
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
@@ -78426,6 +78126,501 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 </div>
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
+import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  inject,
+  signal,
+  viewChild,
+  ChangeDetectionStrategy
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MarkdownModule } from 'ngx-markdown';
+import { Subject, takeUntil } from 'rxjs';
+import type { ChatMessage } from '../diagram.model';
+import { DiagramService, PmChatResponse } from '../diagram.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
+
+@Component({
+  selector: 'app-pmdt06A',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MarkdownModule],
+  templateUrl: './pmdt06A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./pmdt06A.component.css'],
+})
+export class pmdt06AComponent implements AfterViewInit, OnDestroy {
+  private _diagramId: string | null = null;
+  @Input()
+  set diagramId(value: string | null) {
+    if (value && value !== this._diagramId) {
+      this._diagramId = value;
+      this.loadChatHistory(value);
+    } else if (!value) {
+      this._diagramId = null;
+      this.messages.set([]);
+    }
+  }
+  get diagramId(): string | null {
+    return this._diagramId;
+  }
+
+  private diagramService = inject(DiagramService);
+  private dialogService = inject(DialogService);
+  private destroy$ = new Subject<void>();
+
+  messages = signal<ChatMessage[]>([]);
+  userInput = '';
+  isLoading = signal(false);
+  // ✅ เพิ่ม signal เก็บสถานะการคัดลอกของแต่ละข้อความ (key = message.id)
+  copiedStatus = signal<Record<string, boolean>>({});
+
+  chatContainer = viewChild<ElementRef>('chatContainer');
+
+  ngAfterViewInit() {
+    // Nothing extra needed
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadChatHistory(diagramId: string) {
+    if (!diagramId) return;
+    this.diagramService
+      .getChatHistory(diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (history) => {
+          this.messages.set(history);
+          this.scrollToBottom();
+        },
+        error: () => {
+          console.warn('Failed to load chat history for diagram:', diagramId);
+          this.messages.set([]);
+        },
+      });
+  }
+
+  sendMessage() {
+    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      diagramId: this.diagramId,
+      userId: 'current-user',
+      role: 'user',
+      content: this.userInput.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    this.messages.update((m) => [...m, userMessage]);
+    const input = this.userInput.trim();
+    this.userInput = '';
+    this.isLoading.set(true);
+    this.scrollToBottom();
+
+    this.diagramService
+      .sendChatMessage(this.diagramId, input)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PmChatResponse) => {
+          const assistantMsg: ChatMessage = {
+            id: response.id || crypto.randomUUID(),
+            diagramId: response.diagramId || this.diagramId!,
+            userId: response.createdBy || 'system',
+            role: response.role || 'assistant',
+            content: response.content,
+            contextData: response.contextData,
+            createdAt: response.createdDate || new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, assistantMsg]);
+          this.isLoading.set(false);
+          this.scrollToBottom();
+          // No automatic import anymore
+        },
+        error: (err) => {
+          console.error('Chat error:', err);
+          this.isLoading.set(false);
+          const errorMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            diagramId: this.diagramId!,
+            userId: 'system',
+            role: 'assistant',
+            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
+            createdAt: new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, errorMsg]);
+          this.scrollToBottom();
+        },
+      });
+  }
+
+  // ฟังก์ชันดึง Mermaid code จากข้อความ
+  getMermaidCode(content: string): string | null {
+    const match = content.match(/```mermaid\s*([\s\S]*?)```/);
+    return match ? match[1].trim() : null;
+  }
+
+  // ✅ ฟังก์ชันคัดลอก Mermaid code (รับ messageId ด้วย)
+  copyMermaidCode(content: string, messageId: string): void {
+    const code = this.getMermaidCode(content);
+    if (!code) return;
+
+    // ฟังก์ชันที่เรียกเมื่อคัดลอกสำเร็จ
+    const markAsCopied = () => {
+      this.copiedStatus.update((status) => ({ ...status, [messageId]: true }));
+      // เปลี่ยนกลับเป็น false หลังจาก 2 วินาที
+      setTimeout(() => {
+        this.copiedStatus.update((status) => ({ ...status, [messageId]: false }));
+      }, 2000);
+    };
+
+    // ใช้ Clipboard API ถ้ารองรับ
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(code)
+        .then(() => markAsCopied())
+        .catch(() => this.fallbackCopy(code, markAsCopied));
+    } else {
+      // fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
+      this.fallbackCopy(code, markAsCopied);
+    }
+  }
+
+  // ✅ fallback copy (รับ callback เมื่อสำเร็จ)
+  private fallbackCopy(text: string, onSuccess?: () => void): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      if (onSuccess) onSuccess();
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+    textarea.remove();
+  }
+
+  clearChat() {
+    if (!this.diagramId) return;
+    this.diagramService
+      .clearChatHistory(this.diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.messages.set([]);
+      });
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      const container = this.chatContainer()?.nativeElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 50);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html">
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
+<div class="space-y-5 p-0.5">
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Target Type Selection -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
+          <select
+            formControlName="targetType"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
+          >
+            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
+            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
+            <option value="TASK">งาน (Task)</option>
+          </select>
+        </div>
+
+        <!-- Target Document Combobox -->
+        <div>
+          <sic-combobox
+            label="เอกสารที่ขอเปลี่ยนแปลง"
+            formControlName="targetId"
+            [apiUrl]="targetDocumentApiUrl()"
+            [params]="{ projectId: projectId }"
+            valueField="value"
+            textField="text"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
+          ></sic-combobox>
+        </div>
+
+        <!-- Title -->
+        <div class="md:col-span-2">
+          <sic-input
+            label="หัวข้อคำขอเปลี่ยนแปลง"
+            formControlName="title"
+            [required]="true"
+            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
+          ></sic-input>
+        </div>
+
+        <!-- Description -->
+        <div class="md:col-span-2">
+          <sic-input-area
+            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
+            formControlName="description"
+            [rows]="3"
+            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
+          ></sic-input-area>
+        </div>
+
+        <!-- Change Reason -->
+        <div>
+          <sic-combobox
+            label="สาเหตุการเปลี่ยนแปลง"
+            formControlName="changeReason"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
+            valueField="value"
+            textField="text"
+          ></sic-combobox>
+        </div>
+
+        <!-- Assignee -->
+        <div>
+          <sic-combobox
+            #assigneeCombobox
+            label="ผู้รับมอบหมาย"
+            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
+            valueField="value"
+            textField="text"
+            [excludeValues]="selectedAssigneeIds()"
+            (selectionChanged)="onAssigneeSelected($event, assigneeCombobox)"
+          ></sic-combobox>
+
+          <!-- List of selected assignees -->
+          <div class="flex flex-wrap gap-2 mt-2">
+            @for (assignee of selectedAssignees(); track assignee.userId) {
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 font-medium">
+                {{ assignee.userName }}
+                <button type="button" class="hover:text-red-500 focus:outline-none flex items-center" (click)="removeAssignee(assignee.userId)">
+                  <i class="bi bi-x text-base font-bold leading-none"></i>
+                </button>
+              </span>
+            }
+          </div>
+
+          <input type="hidden" formControlName="assigneeId" />
+          @if (form.get('assigneeId')?.touched && form.get('assigneeId')?.errors?.['required']) {
+            <p class="text-red-500 text-xs mt-1">กรุณาเลือกผู้รับมอบหมาย</p>
+          }
+        </div>
+
+        <!-- Hidden projectId -->
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <!-- Approval Flow Selection -->
+      <div class="border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          กระบวนการอนุมัติ
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="เลือกกระบวนการอนุมัติ"
+            [apiUrl]="documenttypeapiUrl"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId = $event?.id"
+          ></sic-combobox>
+        </div>
+
+        @if (!selectedFlowId && flows.length > 0) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
+          </p>
+        }
+      </div>
+
+      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
+      @if (isEdit) {
+        <div class="border-t border-[var(--border)] pt-4 mt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+              ผลกระทบที่คาดการณ์ (Impact Analysis)
+              @if (isLoadingImpact()) {
+                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
+                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
+                </span>
+              }
+            </h4>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                (click)="refreshImpact()"
+                [disabled]="isLoadingImpact()"
+                class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+              >
+                <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                วิเคราะห์ใหม่
+              </button>
+            </div>
+          </div>
+
+          @if (showImpactSection() && impactData(); as impact) {
+            <div class="mt-3 space-y-3">
+              <!-- สรุปผลกระทบ -->
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedRequirementIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedSpecIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-amber-500">
+                    {{ impact.impactedDiagramIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTaskIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Task</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTestCaseIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedBugIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
+                </div>
+              </div>
+
+              <!-- รายละเอียดเพิ่มเติม -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
+                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
+                    {{ getImpactStatusText(impact.analysisStatus) }}
+                  </span>
+                  @if (impact.analyzedAt) {
+                    <span class="text-[var(--text-muted)] ml-2 text-xs">
+                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                  }
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
+                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
+                  @if (impact.timelineImpact) {
+                    <span class="text-[var(--text-muted)] ml-4">
+                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
+                    </span>
+                  }
+                </div>
+                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
+                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
+                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
+                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
+                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
+                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
+                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
+                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
+                  <p class="font-medium text-[var(--text-active)]">เอกสารและ Diagram ที่ได้รับผลกระทบ (ID):</p>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    @for (id of impact.impactedRequirementIds; track id) {
+                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedSpecIds; track id) {
+                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedDiagramIds; track id) {
+                      <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedTaskIds; track id) {
+                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedTestCaseIds; track id) {
+                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedBugIds; track id) {
+                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (!isLoadingImpact()) {
+            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
+              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
+              <button
+                type="button"
+                (click)="refreshImpact()"
+                class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+              >
+                คลิกเพื่อวิเคราะห์อัตโนมัติ
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+        <sic-button type="submit" variant="primary" [disabled]="isSaving">
+          @if (isSaving) {
+            <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+          }
+          {{
+            isSaving
+              ? 'กำลังบันทึก...'
+              : selectedFlowId
+                ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                : (isEdit ? 'บันทึก' : 'สร้าง')
+          }}
+        </sic-button>
+        <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+      </div>
+    </form>
+</div>
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -78932,212 +79127,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         dto.setCreatedDate(version.getCreatedDate());
         return dto;
     }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
-// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
-
-import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  Input,
-  OnDestroy,
-  inject,
-  signal,
-  viewChild,
-  ChangeDetectionStrategy
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MarkdownModule } from 'ngx-markdown';
-import { Subject, takeUntil } from 'rxjs';
-import type { ChatMessage } from '../diagram.model';
-import { DiagramService, PmChatResponse } from '../diagram.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-
-
-@Component({
-  selector: 'app-pmdt06A',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownModule],
-  templateUrl: './pmdt06A.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./pmdt06A.component.css'],
-})
-export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  private _diagramId: string | null = null;
-  @Input()
-  set diagramId(value: string | null) {
-    if (value && value !== this._diagramId) {
-      this._diagramId = value;
-      this.loadChatHistory(value);
-    } else if (!value) {
-      this._diagramId = null;
-      this.messages.set([]);
-    }
-  }
-  get diagramId(): string | null {
-    return this._diagramId;
-  }
-
-  private diagramService = inject(DiagramService);
-  private dialogService = inject(DialogService);
-  private destroy$ = new Subject<void>();
-
-  messages = signal<ChatMessage[]>([]);
-  userInput = '';
-  isLoading = signal(false);
-  // ✅ เพิ่ม signal เก็บสถานะการคัดลอกของแต่ละข้อความ (key = message.id)
-  copiedStatus = signal<Record<string, boolean>>({});
-
-  chatContainer = viewChild<ElementRef>('chatContainer');
-
-  ngAfterViewInit() {
-    // Nothing extra needed
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  loadChatHistory(diagramId: string) {
-    if (!diagramId) return;
-    this.diagramService
-      .getChatHistory(diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (history) => {
-          this.messages.set(history);
-          this.scrollToBottom();
-        },
-        error: () => {
-          console.warn('Failed to load chat history for diagram:', diagramId);
-          this.messages.set([]);
-        },
-      });
-  }
-
-  sendMessage() {
-    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
-
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      diagramId: this.diagramId,
-      userId: 'current-user',
-      role: 'user',
-      content: this.userInput.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    this.messages.update((m) => [...m, userMessage]);
-    const input = this.userInput.trim();
-    this.userInput = '';
-    this.isLoading.set(true);
-    this.scrollToBottom();
-
-    this.diagramService
-      .sendChatMessage(this.diagramId, input)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: PmChatResponse) => {
-          const assistantMsg: ChatMessage = {
-            id: response.id || crypto.randomUUID(),
-            diagramId: response.diagramId || this.diagramId!,
-            userId: response.createdBy || 'system',
-            role: response.role || 'assistant',
-            content: response.content,
-            contextData: response.contextData,
-            createdAt: response.createdDate || new Date().toISOString(),
-          };
-          this.messages.update((m) => [...m, assistantMsg]);
-          this.isLoading.set(false);
-          this.scrollToBottom();
-          // No automatic import anymore
-        },
-        error: (err) => {
-          console.error('Chat error:', err);
-          this.isLoading.set(false);
-          const errorMsg: ChatMessage = {
-            id: crypto.randomUUID(),
-            diagramId: this.diagramId!,
-            userId: 'system',
-            role: 'assistant',
-            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
-            createdAt: new Date().toISOString(),
-          };
-          this.messages.update((m) => [...m, errorMsg]);
-          this.scrollToBottom();
-        },
-      });
-  }
-
-  // ฟังก์ชันดึง Mermaid code จากข้อความ
-  getMermaidCode(content: string): string | null {
-    const match = content.match(/```mermaid\s*([\s\S]*?)```/);
-    return match ? match[1].trim() : null;
-  }
-
-  // ✅ ฟังก์ชันคัดลอก Mermaid code (รับ messageId ด้วย)
-  copyMermaidCode(content: string, messageId: string): void {
-    const code = this.getMermaidCode(content);
-    if (!code) return;
-
-    // ฟังก์ชันที่เรียกเมื่อคัดลอกสำเร็จ
-    const markAsCopied = () => {
-      this.copiedStatus.update((status) => ({ ...status, [messageId]: true }));
-      // เปลี่ยนกลับเป็น false หลังจาก 2 วินาที
-      setTimeout(() => {
-        this.copiedStatus.update((status) => ({ ...status, [messageId]: false }));
-      }, 2000);
-    };
-
-    // ใช้ Clipboard API ถ้ารองรับ
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(code)
-        .then(() => markAsCopied())
-        .catch(() => this.fallbackCopy(code, markAsCopied));
-    } else {
-      // fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
-      this.fallbackCopy(code, markAsCopied);
-    }
-  }
-
-  // ✅ fallback copy (รับ callback เมื่อสำเร็จ)
-  private fallbackCopy(text: string, onSuccess?: () => void): void {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      if (onSuccess) onSuccess();
-    } catch (e) {
-      console.warn('Copy failed', e);
-    }
-    textarea.remove();
-  }
-
-  clearChat() {
-    if (!this.diagramId) return;
-    this.diagramService
-      .clearChatHistory(this.diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.messages.set([]);
-      });
-  }
-
-  private scrollToBottom() {
-    setTimeout(() => {
-      const container = this.chatContainer()?.nativeElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }, 50);
-  }
 }
 </file>
 

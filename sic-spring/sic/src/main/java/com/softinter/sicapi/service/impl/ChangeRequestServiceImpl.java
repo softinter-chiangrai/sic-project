@@ -40,6 +40,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final CurrentUserService currentUserService;
     private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmChangeImpactRepository pmChangeImpactRepository;
+    private final PmCustomerProjectRepository projectRepository;
     private final ApprovalService approvalService;
 
     @Override
@@ -143,11 +144,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ChangeRequestResponse> listChangeRequests(String targetType, UUID targetId, String status, Pageable pageable) {
+    public PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, Pageable pageable) {
         Specification<PmChangeRequest> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.isFalse(root.get("isDelete")));
 
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
             if (targetType != null) {
                 predicates.add(cb.equal(root.get("targetType"), targetType));
             }
@@ -358,6 +362,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         ChangeRequestResponse response = new ChangeRequestResponse();
         response.setId(cr.getId());
         response.setProjectId(cr.getProjectId());
+        if (cr.getProjectId() != null) {
+            projectRepository.findById(cr.getProjectId())
+                    .ifPresent(p -> response.setProjectName(p.getProjectName()));
+        }
         response.setTargetType(cr.getTargetType());
         response.setTargetId(cr.getTargetId());
         response.setTitle(cr.getTitle());

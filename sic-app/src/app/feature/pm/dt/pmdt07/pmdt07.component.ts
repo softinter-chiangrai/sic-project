@@ -131,6 +131,10 @@ export class Pmdt07Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
   }
 
+  goToView(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'view']);
+  }
+
   goToImpact(id: string) {
     this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
       queryParams: { showImpact: true } // optional

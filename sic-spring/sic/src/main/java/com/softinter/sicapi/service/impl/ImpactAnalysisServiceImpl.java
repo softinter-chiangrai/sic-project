@@ -20,6 +20,8 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ImpactAnalysisService;
 import com.softinter.sicapi.service.TraceLinkService;
 
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
     private final ChangeImpactAnalysisRepository repository;
     private final PmChangeRequestRepository changeRequestRepository;
+    private final PmDiagramTabRepository diagramTabRepository;
     private final CurrentUserService currentUserService;
     private final TraceLinkService traceLinkService;
 
@@ -172,12 +175,29 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     dto.setId(entity.getId());
     dto.setChangeRequestId(entity.getChangeRequest().getId());
     
-    dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
-    dto.setImpactedSpecIds(entity.getImpactedSpecIds());
-    dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
-    dto.setImpactedTaskIds(entity.getImpactedTaskIds());
-    dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
-    dto.setImpactedBugIds(entity.getImpactedBugIds());
+        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
+        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
+        dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
+
+        if (entity.getImpactedDiagramIds() != null && entity.getImpactedDiagramIds().length > 0) {
+            java.util.List<ImpactAnalysisResponse.DiagramItem> diagramItems = new java.util.ArrayList<>();
+            for (UUID diagramId : entity.getImpactedDiagramIds()) {
+                ImpactAnalysisResponse.DiagramItem item = new ImpactAnalysisResponse.DiagramItem();
+                item.setId(diagramId);
+                diagramTabRepository.findById(diagramId).ifPresentOrElse(d -> {
+                    item.setName(d.getName());
+                    item.setDiagramType(d.getDiagramType());
+                }, () -> {
+                    item.setName("Diagram " + diagramId.toString().substring(0, 8));
+                });
+                diagramItems.add(item);
+            }
+            dto.setImpactedDiagrams(diagramItems);
+        }
+
+        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
+        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
+        dto.setImpactedBugIds(entity.getImpactedBugIds());
     
     dto.setMandayImpact(entity.getMandayImpact());
     dto.setTimelineImpact(entity.getTimelineImpact());

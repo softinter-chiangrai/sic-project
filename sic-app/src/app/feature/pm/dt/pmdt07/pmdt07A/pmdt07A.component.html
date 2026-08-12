@@ -121,7 +121,7 @@
       </div>
 
       <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit) {
+      @if (isEdit || isView) {
         <div class="border-t border-[var(--border)] pt-4 mt-2">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
@@ -133,17 +133,19 @@
                 </span>
               }
             </h4>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                [disabled]="isLoadingImpact()"
-                class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-              >
-                <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                วิเคราะห์ใหม่
-              </button>
-            </div>
+            @if (!isView) {
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  [disabled]="isLoadingImpact()"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+                >
+                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                  วิเคราะห์ใหม่
+                </button>
+              </div>
+            }
           </div>
 
           @if (showImpactSection() && impactData(); as impact) {
@@ -234,8 +236,14 @@
                     @for (id of impact.impactedSpecIds; track id) {
                       <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
                     }
-                    @for (id of impact.impactedDiagramIds; track id) {
-                      <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
+                      @for (diag of impact.impactedDiagrams; track diag.id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedDiagramIds; track id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                      }
                     }
                     @for (id of impact.impactedTaskIds; track id) {
                       <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
@@ -254,13 +262,15 @@
             <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
               <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
               <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
-              >
-                คลิกเพื่อวิเคราะห์อัตโนมัติ
-              </button>
+              @if (!isView) {
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                >
+                  คลิกเพื่อวิเคราะห์อัตโนมัติ
+                </button>
+              }
             </div>
           }
         </div>
@@ -268,19 +278,23 @@
 
       <!-- Actions -->
       <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-        <sic-button type="submit" variant="primary" [disabled]="isSaving">
-          @if (isSaving) {
-            <i class="bi bi-arrow-repeat animate-spin me-1"></i>
-          }
-          {{
-            isSaving
-              ? 'กำลังบันทึก...'
-              : selectedFlowId
-                ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                : (isEdit ? 'บันทึก' : 'สร้าง')
-          }}
-        </sic-button>
-        <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        @if (isView) {
+          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
+        } @else {
+          <sic-button type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+            }
+            {{
+              isSaving
+                ? 'กำลังบันทึก...'
+                : selectedFlowId
+                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                  : (isEdit ? 'บันทึก' : 'สร้าง')
+            }}
+          </sic-button>
+          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        }
       </div>
     </form>
 </div>

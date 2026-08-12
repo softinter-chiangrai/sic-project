@@ -13,6 +13,7 @@ public class ImpactAnalysisResponse {
     private UUID[] impactedRequirementIds;
     private UUID[] impactedSpecIds;
     private UUID[] impactedDiagramIds;
+    private java.util.List<DiagramItem> impactedDiagrams;
     private UUID[] impactedTaskIds;
     private UUID[] impactedTestCaseIds;
     private UUID[] impactedBugIds;
@@ -23,4 +24,11 @@ public class ImpactAnalysisResponse {
     private String analysisStatus;
     private Instant analyzedAt;
     private String analyzedBy;
+
+    @Data
+    public static class DiagramItem {
+        private UUID id;
+        private String name;
+        private String diagramType;
+    }
 }

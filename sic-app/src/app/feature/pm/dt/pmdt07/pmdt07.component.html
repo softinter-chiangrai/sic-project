@@ -131,27 +131,15 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1 flex-wrap">
-                  <!-- Submit (Draft Only) -->
-                  @if (cr.status === 'DRAFT') {
-                    <button
-                      (click)="submitRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
-                      title="ส่งขออนุมัติ"
-                    >
-                      ส่งขออนุมัติ
-                    </button>
-                  }
 
-                  <!-- Implement / Close CR (Approved Only) -->
-                  @if (cr.status === 'APPROVED') {
-                    <button
-                      (click)="implementRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-purple-500 hover:bg-purple-600 transition-all"
-                      title="ปิด Change Request"
-                    >
-                      ปิด CR
-                    </button>
-                  }
+                  <!-- View Detail -->
+                  <button
+                    (click)="goToView(cr.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="ดูรายละเอียดข้อมูล Change Request"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
 
                   <!-- Edit (เฉพาะ DRAFT และ SUBMITTED แต่ SUBMITTED จะ disable) -->
                   <button
@@ -161,15 +149,6 @@
                     title="แก้ไขรายละเอียด"
                   >
                     <i class="bi bi-pencil"></i>
-                  </button>
-
-                  <!-- Impact Analysis -->
-                  <button
-                    (click)="goToImpact(cr.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="Impact Analysis"
-                  >
-                    <i class="bi bi-diagram-3"></i>
                   </button>
 
                   <!-- Delete -->

@@ -4,6 +4,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
+export interface ImpactDiagramItem {
+    id: string;
+    name: string;
+    diagramType?: string;
+}
+
 export interface ImpactAnalysis {
     id?: string;
     changeRequestId: string;
@@ -21,6 +27,7 @@ export interface ImpactAnalysis {
     impactedTestCaseIds?: string[];
     impactedBugIds?: string[];
     impactedDiagramIds?: string[];
+    impactedDiagrams?: ImpactDiagramItem[];
     impactedTableNames?: string[];
     analysisStatus?: 'AUTO' | 'MANUAL';
     analyzedAt?: string;
