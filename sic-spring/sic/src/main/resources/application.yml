@@ -17,6 +17,9 @@ spring:
     schemas: public
     table: flyway_schema_history
 
+  devtools:
+    add-properties: false
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -90,13 +93,13 @@ logging:
   pattern:
     console: "%msg%n"
   level:
-    root: INFO
-    com.softinter.sicapi: DEBUG
-    org.springframework.mail: DEBUG
-    com.softinter.sicapi.service.impl: ERROR
-    org.springframework.security: WARN
-    org.flywaydb: INFO
-    org.springframework.transaction: DEBUG
-    org.hibernate.SQL: WARN
+    root: WARN
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.apache.tomcat: WARN
+    com.zaxxer.hikari: WARN
+    org.springframework.messaging: WARN
+    org.springframework.web.socket: WARN
+    org.springframework.data.repository: WARN
 
 spring.main.banner-mode: off

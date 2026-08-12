@@ -1,108 +1,20 @@
+// src/app/feature/pm/dt/pmdt25/pmdt25.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
+import { delay, finalize } from 'rxjs/operators';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { Pmdt25Service } from './pmdt25.service';
+import { DocumentVersionModel } from './pmdt25.model';
 
-// ===== Model =====
-export interface DocumentVersionModel {
-  id: string;
-  documentType: string;
-  documentCode: string;
-  title: string;
-  version: string;
-  status: string;
-  changedBy: string;
-  changedDate: string;
-  changeSummary: string;
-  previousVersion: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
-
-// ===== Form =====
-class Pmdt25Form {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      documentType: [null, [Validators.required]],
-      documentCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      version: [null, [Validators.required, Validators.maxLength(20)]],
-      status: ['Draft', [Validators.required]],
-      changedBy: [null, [Validators.maxLength(100)]],
-      changedDate: [null, [Validators.required]],
-      changeSummary: [null, [Validators.required, Validators.maxLength(1000)]],
-      previousVersion: [null, [Validators.maxLength(20)]],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt25Service {
-  private mockVersions: DocumentVersionModel[] = [
-    {
-      id: '1',
-      documentType: 'Requirement',
-      documentCode: 'REQ-001',
-      title: 'ระบบ Login',
-      version: 'v1.0',
-      status: 'Draft',
-      changedBy: 'สมหญิง รักเรียน',
-      changedDate: '2024-01-15 09:00:00',
-      changeSummary: 'สร้างเอกสาร Requirement ฉบับแรก',
-      previousVersion: '-',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  apiGetComboboxDocument = '/api/version/combobox-document';
-  apiGetLovDocumentType = '/api/version/lov-type';
-  apiGetLovStatus = '/api/version/lov-status';
-
-  save(data: DocumentVersionModel): Observable<string> {
-    console.log('📝 Saving version:', data);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getVersion(id: string): Observable<DocumentVersionModel> {
-    const found = this.mockVersions.find((v) => v.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const empty: DocumentVersionModel = {
-      id: '',
-      documentType: '',
-      documentCode: '',
-      title: '',
-      version: '',
-      status: 'Draft',
-      changedBy: '',
-      changedDate: '',
-      changeSummary: '',
-      previousVersion: '-',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(empty).pipe(delay(300));
-  }
-}
 
 // ===== Component =====
 @Component({
@@ -127,23 +39,26 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt25Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly navigation = inject(NavigationService);
 
   form!: FormGroup;
   isEdit = false;
   versionId: string | null = null;
-  isLoading = false;
+  isLoading = signal(false);
+  isSaving = signal(false);
+  versions = signal<DocumentVersionModel[]>([]);
+  loadingVersions = signal(false);
 
   // ===== Options =====
   documentTypes = [
-    'Requirement',
+    'REQUIREMENT',
+    'SPECIFICATION',
+    'DIAGRAM',
+    'DELIVERY',
+    'INVOICE',
+    'MANUAL',
     'DFD',
-    'ER Diagram',
-    'Specification',
-    'Test Case',
-    'User Manual',
-    'Delivery Document',
-    'Contract',
-    'Change Request',
+    'ER',
   ];
   statusOptions = ['Draft', 'Approved', 'Active'];
 
@@ -161,34 +76,89 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
       }
     });
 
-    // เมื่อเปลี่ยน documentType ให้โหลด document codes
-    this.form.get('documentType')?.valueChanges.subscribe((type) => {
-      this.form.patchValue({ documentCode: null });
+    // When document type or document ID changes, load versions
+    this.form.get('documentType')?.valueChanges.subscribe(() => {
+      this.loadVersions();
+    });
+
+    this.form.get('documentId')?.valueChanges.subscribe(() => {
+      this.loadVersions();
     });
   }
 
   initForm(): void {
-    this.form = Pmdt25Form.createForm(this.fb);
-  }
-
-  loadVersion(id: string) {
-    this.isLoading = true;
-    this.service.getVersion(id).subscribe({
-      next: (data) => {
-        this.form.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลเวอร์ชันสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลเวอร์ชันรหัสนี้');
-        this.router.navigate(['/feature/pm/version']);
-      },
+    this.form = this.fb.group({
+      id: [null],
+      documentType: [null, [Validators.required]],
+      documentId: [null, [Validators.required]],
+      versionNo: [null, [Validators.required, Validators.maxLength(20)]],
+      changeSummary: [null, [Validators.maxLength(2000)]],
+      filePath: [null, [Validators.maxLength(500)]],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
     });
   }
 
+  loadVersion(id: string) {
+    this.isLoading.set(true);
+    this.service.getVersion(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.form.patchValue(data);
+          this.isLoading.set(false);
+          console.log('✅ โหลดข้อมูลเวอร์ชันสำเร็จ:', data);
+          this.loadVersions();
+        },
+        error: (error) => {
+          this.isLoading.set(false);
+          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลเวอร์ชันรหัสนี้');
+          this.router.navigate(['/feature/pm/version']);
+        },
+      });
+  }
+
+  loadVersions() {
+    const documentType = this.form.get('documentType')?.value;
+    const documentId = this.form.get('documentId')?.value;
+
+    if (!documentType || !documentId) {
+      this.versions.set([]);
+      return;
+    }
+
+    this.loadingVersions.set(true);
+    this.service.getVersions(documentType, documentId)
+      .pipe(finalize(() => this.loadingVersions.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.versions.set(data);
+          console.log(`✅ โหลดประวัติเวอร์ชัน ${data.length} รายการ`);
+        },
+        error: (error) => {
+          console.error('❌ โหลดประวัติเวอร์ชันไม่สำเร็จ:', error);
+          this.versions.set([]);
+          this.dialog.warn('ไม่พบประวัติเวอร์ชัน', 'ไม่สามารถโหลดประวัติเวอร์ชันของเอกสารนี้ได้');
+        },
+      });
+  }
+
   onBack(): void {
+    if (this.form.dirty) {
+      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
+        .then((confirmed) => {
+          if (confirmed) {
+            this.navigateToList();
+          }
+        });
+    } else {
+      this.navigateToList();
+    }
+  }
+
+  private navigateToList(): void {
     this.router.navigate(['/feature/pm/version']);
   }
 
@@ -199,27 +169,108 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    this.isSaving.set(true);
     const data = this.form.value;
-    this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลเวอร์ชันถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/version']);
+
+    // Set state for create/update
+    if (!this.isEdit) {
+      data.state = 4; // ADDED
+      data.rowVersion = 0;
+    } else {
+      data.state = 3; // MODIFIED
+    }
+
+    this.service.saveVersion(data)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลเวอร์ชันถูกบันทึกเรียบร้อย')
+            .then(() => {
+              this.form.markAsPristine();
+              this.loadVersions();
+              if (!this.isEdit) {
+                this.router.navigate(['/feature/pm/version']);
+              }
+            });
+        },
+        error: (error) => {
+          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  deleteVersion(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบเวอร์ชันนี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteVersion(id).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'เวอร์ชันถูกลบแล้ว');
+              this.loadVersions();
+            },
+            error: (error) => {
+              this.dialog.error('ลบไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  deleteAllVersions() {
+    const documentType = this.form.get('documentType')?.value;
+    const documentId = this.form.get('documentId')?.value;
+
+    if (!documentType || !documentId) {
+      this.dialog.warn('ไม่พบเอกสาร', 'กรุณาเลือกประเภทและรหัสเอกสาร');
+      return;
+    }
+
+    this.dialog.confirm(
+      'ยืนยันการลบทั้งหมด',
+      `คุณต้องการลบประวัติเวอร์ชันทั้งหมดของเอกสารนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถกู้คืนได้`
+    ).then((confirmed) => {
+      if (confirmed) {
+        this.service.deleteVersionsByDocument(documentType, documentId).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ประวัติเวอร์ชันทั้งหมดถูกลบแล้ว');
+            this.versions.set([]);
+          },
+          error: (error) => {
+            this.dialog.error('ลบไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+          },
         });
-      },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
+      }
     });
   }
 
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      Approved: 'อนุมัติ',
-      Active: 'ใช้งาน',
-    };
-    return map[status] || status;
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+  }
+
+  getStatusClass(isActive: boolean): string {
+    return isActive
+      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  viewVersion(id: string) {
+    this.router.navigate(['/feature/pm/version', id, 'view']);
   }
 }
 

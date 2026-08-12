@@ -1,25 +1,17 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import {
-  SicButtonComponent,
-  SicDatepickerComponent,
-  SicTimepickerComponent,
-  SicColorpickerComponent,
-  SicInputComponent,
-  SicInputAreaComponent,
-  SicFlexComponent,
-  SicGridComponent,
-} from 'sic-ng';
-
+import { environment } from '../../../../../../environments/environment';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { Pmdt01AModel } from './pmdt01A.model';
 import { Pmdt01AService } from './pmdt01A.service';
-import { Pmdt01AForm } from './pmdt01A.form';
-import { Pmdt01AModel, Pmdt01APageData } from './pmdt01A.model';
-import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 
 @Component({
   selector: 'app-pmdt01A',
@@ -27,89 +19,171 @@ import { DialogService } from '../../../../../core/services/dialog.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicColorpickerComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicFlexComponent,
-    SicGridComponent,
+    SicComboboxComponent,
+    RouterModule,
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt01A.component.html',
 })
-export class Pmdt01AComponent implements OnInit, CanComponentDeactivate {
+export class Pmdt01AComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private phaseService = inject(Pmdt01AService);
+  private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private service = inject(Pmdt01AService);
-  private dialog = inject(DialogService);
+  private businessService = inject(BusinessService);
 
-  phaseData!: SicFromData<Pmdt01AModel>;
+  @ViewChild('ownerCombobox') ownerCombobox!: SicComboboxComponent;
+
   projectId = '';
-  isSaving = signal(false);
+  phaseId: string | null = null;
+  isEdit = false;
+  data: Pmdt01AModel | null = null;
+  userApiUrl = '';
+  selectedOwners: { id: string; name: string }[] = [];
 
-  pageDirty = (): boolean => this.phaseData?.isChanged ?? false;
+  form = this.fb.group({
+    phaseName: ['', Validators.required],
+    description: [''],
+    startDate: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endDate: ['', Validators.required],
+    endTime: ['', Validators.required],
+    color: [''],
+  });
+
+  get excludeOwnerValues(): string[] {
+    return this.selectedOwners.map((o) => o.id);
+  }
 
   ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
+    }
+
     this.route.queryParams.subscribe((params) => {
       this.projectId = params['projectId'] || '';
     });
 
-    const resolved = this.route.snapshot.data['form'] as Pmdt01APageData;
-    if (resolved && resolved.phaseData) {
-      this.phaseData = resolved.phaseData;
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.phaseId = id;
+        this.isEdit = true;
+        this.loadPhase(id);
+      } else {
+        this.isEdit = false;
+        this.phaseId = null;
+      }
+    });
+  }
+
+  loadPhase(id: string) {
+    this.phaseService.getPhaseById(id).subscribe({
+      next: (data) => {
+        this.data = data;
+        this.patchForm(data);
+      },
+      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+    });
+  }
+
+  patchForm(data: Pmdt01AModel) {
+    const startDate = data.startDate ? data.startDate.split('T')[0] : '';
+    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const endDate = data.endDate ? data.endDate.split('T')[0] : '';
+    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+
+    if (data.owner) {
+      this.selectedOwners = data.owner
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((val) => ({ id: val, name: val }));
     } else {
-      const form = Pmdt01AForm.createForm(this.fb);
-      this.phaseData = new SicFromData<Pmdt01AModel>(form);
+      this.selectedOwners = [];
     }
 
-    if (!this.phaseData.value.id) {
-      this.phaseData.formGroup.patchValue({ projectId: this.projectId });
+    this.form.patchValue({
+      phaseName: data.phaseName,
+      description: data.description,
+      startDate: startDate,
+      startTime: startTime,
+      endDate: endDate,
+      endTime: endTime,
+      color: data.color || '',
+    });
+  }
+
+  onOwnerSelect(item: any) {
+    if (!item) return;
+    const userId = item.value;
+    const userName = item.text;
+    if (this.selectedOwners.some((o) => o.id === userId || o.name === userName)) {
+      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
+      if (this.ownerCombobox) this.ownerCombobox.clearSelection();
+      return;
     }
+    this.selectedOwners.push({ id: userId, name: userName });
+    if (this.ownerCombobox) this.ownerCombobox.clearSelection();
+  }
+
+  removeOwner(index: number) {
+    this.selectedOwners.splice(index, 1);
+  }
+
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    let dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
   }
 
   onSubmit() {
-    if (this.phaseData.invalid) {
-      this.phaseData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+    if (this.form.invalid) {
+      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
-    const payload = this.phaseData.value;
-    const phaseId = payload.id;
-    this.isSaving.set(true);
+    const raw = this.form.value;
+    const ownerString = this.selectedOwners.map((o) => o.name).join(', ');
 
-    const request$ = phaseId
-      ? this.service.updatePhase(phaseId, payload)
-      : this.service.createPhase(payload);
+    const phasePayload: Partial<Pmdt01AModel> = {
+      projectId: this.projectId,
+      phaseName: raw.phaseName!,
+      description: raw.description || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime!),
+      endDate: this.buildISOString(raw.endDate, raw.endTime!),
+      owner: ownerString || undefined,
+      color: raw.color || undefined,
+    };
 
-    request$.subscribe({
+    const request =
+      this.isEdit && this.phaseId
+        ? this.phaseService.updatePhase(this.phaseId, phasePayload)
+        : this.phaseService.createPhase(phasePayload);
+
+    request.subscribe({
       next: () => {
-        this.isSaving.set(false);
-        this.dialog.success('บันทึกสำเร็จ', '');
-        this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId } });
+        this.dialog.success(
+          'สำเร็จ',
+          this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
+        );
+        this.router.navigate(['/feature/pm/pmdt01'], {
+          queryParams: { projectId: this.projectId },
+        });
       },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกได้');
-      },
+      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
     });
   }
 
   cancel() {
-    if (this.phaseData.isChanged) {
-      this.dialog
-        .confirm('ยืนยัน', 'คุณต้องการยกเลิกการแก้ไข ข้อมูลที่ยังไม่บันทึกจะหายไป?')
-        .then((confirmed) => {
-          if (confirmed) {
-            this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId } });
-          }
-        });
-    } else {
-      this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId } });
-    }
+    this.router.navigate(['/feature/pm/pmdt01'], {
+      queryParams: { projectId: this.projectId },
+    });
   }
-}
+}

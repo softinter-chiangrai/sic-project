@@ -17,13 +17,16 @@ import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.service.EditSessionService;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PmRequirementServiceImpl implements PmRequirementService {
@@ -32,22 +35,23 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final EditSessionService editSessionService;
     private final SuUploadRepository uploadRepository;
     private final FileStorageService fileStorageService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
     public Page<PmRequirementResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
-    Page<PmRequirement> page;
-    if (keyword != null && !keyword.isBlank() && status != null && !status.isBlank()) {
-        page = requirementRepository.searchByKeywordAndStatusAndProject(businessId, projectId, keyword, status, pageable);
-    } else if (keyword != null && !keyword.isBlank()) {
-        page = requirementRepository.searchByKeywordAndProject(businessId, projectId, keyword, pageable);
-    } else if (status != null && !status.isBlank()) {
-        page = requirementRepository.findAllByStatusAndProject(businessId, projectId, status, pageable);
-    } else {
-        page = requirementRepository.findAllByBusinessIdAndProjectId(businessId, projectId, pageable);
+        Page<PmRequirement> page;
+        if (keyword != null && !keyword.isBlank() && status != null && !status.isBlank()) {
+            page = requirementRepository.searchByKeywordAndStatusAndProject(businessId, projectId, keyword, status, pageable);
+        } else if (keyword != null && !keyword.isBlank()) {
+            page = requirementRepository.searchByKeywordAndProject(businessId, projectId, keyword, pageable);
+        } else if (status != null && !status.isBlank()) {
+            page = requirementRepository.findAllByStatusAndProject(businessId, projectId, status, pageable);
+        } else {
+            page = requirementRepository.findAllByBusinessIdAndProjectId(businessId, projectId, pageable);
+        }
+        return page.map(this::toResponse);
     }
-    return page.map(this::toResponse);
-}
 
     @Override
     @Transactional(readOnly = true)
@@ -61,12 +65,13 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     @Transactional
     public PmRequirementResponse save(PmRequirementRequest request, UUID businessId, String userId) {
         PmRequirement requirement;
-        EntityState state = EntityState.values()[request.getState()];
+        EntityState state = EntityState.values()[request.getState() != null ? request.getState() : 0];
 
         List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
         UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
 
         if (state == EntityState.ADDED) {
+            // ===== CREATE NEW =====
             requirement = new PmRequirement();
             requirement.setBusinessId(businessId);
             requirement.setCreatedBy(userId);
@@ -74,10 +79,21 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setIsDelete(false);
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
+            requirement.setVersion("v1.0");
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
             requirement = requirementRepository.save(requirement);
+
+            // ✅ Create initial version
+            documentVersionService.createVersion(
+                    "REQUIREMENT",
+                    requirement.getId(),
+                    requirement.getVersion(),
+                    "Initial version"
+            );
+
         } else if (state == EntityState.MODIFIED) {
+            // ===== UPDATE EXISTING =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
 
@@ -92,12 +108,45 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(requirement.getRowVersion())) {
                 throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
             }
+
+            String oldStatus = requirement.getStatus();
+            String oldVersion = requirement.getVersion();
+            if (oldVersion == null) oldVersion = "v1.0";
+
             requirement.setUpdatedBy(userId);
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
-            requirement = requirementRepository.save(requirement);
+
+            // ✅ Increment version if status changed to Approved
+            if ("Approved".equals(request.getStatus()) && !"Approved".equals(oldStatus)) {
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                requirement.setVersion(newVersion);
+                requirement = requirementRepository.save(requirement);
+
+                documentVersionService.createVersion(
+                        "REQUIREMENT",
+                        requirement.getId(),
+                        newVersion,
+                        "Status changed to Approved"
+                );
+            } else {
+                // ✅ Save version on every update (optional - can be configured)
+                requirement = requirementRepository.save(requirement);
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                requirement.setVersion(newVersion);
+                requirement = requirementRepository.save(requirement);
+
+                documentVersionService.createVersion(
+                        "REQUIREMENT",
+                        requirement.getId(),
+                        newVersion,
+                        request.getTitle() + " (updated)"
+                );
+            }
+
         } else if (state == EntityState.DELETED) {
+            // ===== SOFT DELETE =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
             requirement.setIsDelete(true);
@@ -105,7 +154,11 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setDeleteBy(userId);
             requirement.setDeleteDate(Instant.now());
             requirementRepository.save(requirement);
+
+            // ✅ Soft delete all versions
+            documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
             return toResponse(requirement);
+
         } else {
             throw new IllegalArgumentException("Invalid state: " + state);
         }
@@ -128,6 +181,9 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         requirement.setDeleteBy(userId);
         requirement.setDeleteDate(Instant.now());
         requirementRepository.save(requirement);
+
+        // ✅ Soft delete all versions
+        documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
     }
 
     private void mapRequestToEntity(PmRequirementRequest request, PmRequirement entity) {
@@ -140,8 +196,12 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         entity.setBusinessValue(request.getBusinessValue());
         entity.setAcceptanceCriteria(request.getAcceptanceCriteria());
         entity.setProjectId(request.getProjectId());
-        entity.setVersion(request.getVersion());
-        entity.setStatus(request.getStatus());
+        if (request.getVersion() != null) {
+            entity.setVersion(request.getVersion());
+        }
+        if (request.getStatus() != null) {
+            entity.setStatus(request.getStatus());
+        }
         if (request.getIsActive() != null) {
             entity.setIsActive(request.getIsActive());
         }

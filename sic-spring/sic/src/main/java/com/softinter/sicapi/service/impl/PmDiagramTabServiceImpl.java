@@ -1,4 +1,3 @@
-// sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
@@ -21,6 +20,7 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.service.EditSessionService;
+import com.softinter.sicapi.service.DocumentVersionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,8 +42,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmCustomerProjectRepository customerProjectRepository;
     private final PmRequirementRepository requirementRepository;
     private final TraceLinkService traceLinkService;
-    private final PmTraceLinkRepository traceLinkRepository;   // ✅ เพิ่ม repository
+    private final PmTraceLinkRepository traceLinkRepository;
     private final EditSessionService editSessionService;
+    private final DocumentVersionService documentVersionService;
 
     // ===== CREATE =====
     @Override
@@ -149,6 +150,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
         }
 
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                diagramType,
+                saved.getId(),
+                "v1.0",
+                "Initial version"
+        );
+
         return toResponse(saved);
     }
 
@@ -164,10 +173,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             // ตรวจสอบว่า Requirement มีอยู่จริง
             PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
                     .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
-
-            // ลบ Trace Link เก่า (ถ้ามี) ก่อนสร้างใหม่
-            // (ต้องมี method ใน TraceLinkService)
-            // traceLinkService.deleteLinksBySourceAndTarget("REQUIREMENT", oldRequirementId, "DIAGRAM", tab.getId());
 
             // สร้าง Trace Link ใหม่
             String diagramType = tab.getDiagramType().toUpperCase();
@@ -201,6 +206,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 throw new IllegalArgumentException("Diagram does not belong to the specified project ID");
             }
 
+            String oldVersion = getCurrentVersion(tab);
+
             if (request.getName() != null) {
                 tab.setName(request.getName());
             }
@@ -216,24 +223,42 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
             if (request.getGraphData() != null) {
                 tab.setGraphData(request.getGraphData());
+                createVersion(tab, "Graph data updated");
             }
             if (request.getIsActive() != null) {
                 tab.setIsActive(request.getIsActive());
             }
 
             PmDiagramTab saved = tabRepository.save(tab);
+
+            // ✅ Create document version
+            String newVersion = documentVersionService.incrementVersion(oldVersion);
+            documentVersionService.createVersion(
+                    saved.getDiagramType().toUpperCase(),
+                    saved.getId(),
+                    newVersion,
+                    "Updated: " + saved.getName()
+            );
+
             return toResponse(saved);
+
         } else if (state == EntityState.DELETED) {
             tab.setIsDelete(true);
             tab.setDeleteDate(Instant.now());
             tabRepository.save(tab);
+            
+            // ✅ Soft delete all versions
+            documentVersionService.deleteVersionsByDocument(
+                    tab.getDiagramType().toUpperCase(),
+                    tab.getId()
+            );
             return toResponse(tab);
         }
 
         return toResponse(tab);
     }
 
-    // ===== DELETE (แก้ไขแล้ว) =====
+    // ===== DELETE =====
     @Override
     @Transactional
     public void deleteTab(UUID id) {
@@ -269,6 +294,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setIsDelete(true);
         tab.setDeleteDate(Instant.now());
         tabRepository.save(tab);
+
+        // ✅ 3. Soft delete all versions
+        documentVersionService.deleteVersionsByDocument(
+                tab.getDiagramType().toUpperCase(),
+                tab.getId()
+        );
     }
 
     // ===== DUPLICATE =====
@@ -294,6 +325,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         createVersion(saved, "Duplicated from " + original.getName());
 
         // TODO: คัดลอก Trace Links จากต้นฉบับ (ถ้าต้องการ)
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                saved.getDiagramType().toUpperCase(),
+                saved.getId(),
+                "v1.0",
+                "Duplicated from " + original.getName()
+        );
 
         return toResponse(saved);
     }
@@ -360,6 +399,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Restored from version " + version.getVersionNumber());
 
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                saved.getDiagramType().toUpperCase(),
+                saved.getId(),
+                "v" + version.getVersionNumber(),
+                "Restored from version " + version.getVersionNumber()
+        );
+
         return toResponse(saved);
     }
 
@@ -388,6 +435,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         version.setVersionNumber(nextVersion);
         version.setChangeComment(comment);
         versionRepository.save(version);
+    }
+
+    private String getCurrentVersion(PmDiagramTab tab) {
+        if (tab.getId() == null) return "v1.0";
+        List<PmDiagramVersion> versions = versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
+        if (versions.isEmpty()) return "v1.0";
+        return "v" + versions.get(0).getVersionNumber();
     }
 
     private PmDiagramTabResponse toResponse(PmDiagramTab tab) {

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Bean;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +37,9 @@ import com.softinter.sicapi.repository.pm.PmSpecificationValidationRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationVersionRepository;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.EditSessionService;
+
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final PmRequirementRepository requirementRepository;
     private final ObjectMapper objectMapper;
     private final EditSessionService editSessionService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -103,7 +105,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
 
         if (state == EntityState.ADDED || request.getId() == null) {
-            // Create new
+            // ===== CREATE NEW =====
             if (specificationRepository.existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(businessId, request.getSpecificationCode())) {
                 throw new RuntimeException("รหัส Specification นี้มีอยู่แล้ว: " + request.getSpecificationCode());
             }
@@ -113,10 +115,18 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("1.0");
+            spec.setVersion("v1.0");
             spec.setStatus("Draft");
             mapRequestToEntity(request, spec);
             spec = specificationRepository.save(spec);
+
+            // ✅ Create initial version
+            documentVersionService.createVersion(
+                    "SPECIFICATION",
+                    spec.getId(),
+                    spec.getVersion(),
+                    "Initial version"
+            );
 
             // สร้าง Trace Links จาก Requirement
             if (request.getRequirements() != null) {
@@ -133,6 +143,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             createVersionSnapshot(spec, "Initial version");
 
         } else if (state == EntityState.MODIFIED) {
+            // ===== UPDATE EXISTING =====
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
 
@@ -147,7 +158,10 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
             }
 
+            String oldStatus = spec.getStatus();
             String oldVersion = spec.getVersion();
+            if (oldVersion == null) oldVersion = "v1.0";
+
             spec.setUpdatedBy(userId);
             spec.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, spec);
@@ -155,15 +169,37 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // จัดการ Trace Links
             updateRequirementLinks(spec, request.getRequirements());
 
-            // Increment version if status changed to Approved or Released
+            // ✅ Increment version if status changed to Approved or Released
             if ("Approved".equals(request.getStatus()) || "Released".equals(request.getStatus())) {
-                spec.setVersion(incrementVersion(oldVersion));
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                spec.setVersion(newVersion);
+                spec = specificationRepository.save(spec);
+
+                documentVersionService.createVersion(
+                        "SPECIFICATION",
+                        spec.getId(),
+                        newVersion,
+                        "Status changed to " + request.getStatus()
+                );
                 createVersionSnapshot(spec, "Status changed to " + request.getStatus());
+            } else {
+                // ✅ Save version on every update
+                spec = specificationRepository.save(spec);
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                spec.setVersion(newVersion);
+                spec = specificationRepository.save(spec);
+
+                documentVersionService.createVersion(
+                        "SPECIFICATION",
+                        spec.getId(),
+                        newVersion,
+                        request.getTitle() + " (updated)"
+                );
+                createVersionSnapshot(spec, request.getTitle() + " (updated)");
             }
 
-            spec = specificationRepository.save(spec);
-
         } else if (state == EntityState.DELETED) {
+            // ===== SOFT DELETE =====
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
             spec.setIsDelete(true);
@@ -173,6 +209,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             // Soft delete trace links ที่เกี่ยวข้อง
             deleteRequirementTraceLinks(spec.getId());
+
+            // ✅ Soft delete all versions
+            documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
 
             return spec.getId();
 
@@ -200,6 +239,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // Soft delete trace links
         deleteRequirementTraceLinks(spec.getId());
+
+        // ✅ Soft delete all versions
+        documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
     }
 
     @Override
@@ -401,7 +443,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             String newNum = String.format("%.1f", val);
             return (currentVersion.startsWith("v") || currentVersion.startsWith("V")) ? "v" + newNum : newNum;
         } catch (NumberFormatException e) {
-            return "1.1";
+            return "v1.1";
         }
     }
 

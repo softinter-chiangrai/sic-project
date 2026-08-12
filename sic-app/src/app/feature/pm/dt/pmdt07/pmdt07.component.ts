@@ -12,7 +12,6 @@ import { ChangeRequestService } from './change-request.service';
 
 import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
 
-
 @Component({
   selector: 'app-pmdt07',
   standalone: true,
@@ -133,10 +132,15 @@ export class Pmdt07Component implements OnInit {
   }
 
   goToImpact(id: string) {
-  this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
-    queryParams: { showImpact: true } // optional
-  });
-}
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
+      queryParams: { showImpact: true } // optional
+    });
+  }
+
+  // ✅ ไปที่หน้า Approval Center
+  goToApproval(crId: string) {
+    this.router.navigate(['/feature/pm/approval', crId]);
+  }
 
   deleteChangeRequest(id: string) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
@@ -152,6 +156,8 @@ export class Pmdt07Component implements OnInit {
     });
   }
 
+  // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
+
   submitRequest(id: string) {
     this.crService.submitForApproval(id).subscribe({
       next: () => {
@@ -159,30 +165,6 @@ export class Pmdt07Component implements OnInit {
         this.loadChangeRequests();
       },
       error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
-    });
-  }
-
-  approveRequest(id: string) {
-    this.crService.approve(id).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'อนุมัติ Change Request เรียบร้อยแล้ว');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถอนุมัติได้')
-    });
-  }
-
-  rejectRequest(id: string) {
-    this.dialog.confirm('ปฏิเสธคำขอ', 'คุณต้องการปฏิเสธ Change Request นี้ใช่หรือไม่?').then((ok) => {
-      if (ok) {
-        this.crService.reject(id).subscribe({
-          next: () => {
-            this.dialog.success('สำเร็จ', 'ปฏิเสธ Change Request เรียบร้อยแล้ว');
-            this.loadChangeRequests();
-          },
-          error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปฏิเสธได้')
-        });
-      }
     });
   }
 
@@ -206,7 +188,8 @@ export class Pmdt07Component implements OnInit {
     });
   }
 
-  // ✅ ปรับ getStatusClass ให้ครอบคลุมสถานะทั้งหมด
+  // ===== Helper =====
+
   getStatusClass(status: string): string {
     if (!status) return 'bg-gray-100 text-gray-600';
     const map: Record<string, string> = {
@@ -232,7 +215,6 @@ export class Pmdt07Component implements OnInit {
     return map[status] || 'bg-gray-100 text-gray-600';
   }
 
-  // ✅ ปรับ getStatusText ให้ครอบคลุมสถานะทั้งหมด และเปลี่ยน Submitted เป็น รออนุมัติ
   getStatusText(status: string): string {
     if (!status) return 'ร่าง';
     const map: Record<string, string> = {

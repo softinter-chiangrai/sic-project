@@ -1,71 +1,48 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import {
-  SicButtonComponent,
-  SicCardComponent,
-  SicFlexComponent,
-  SicGridComponent,
-  SicSpinnerComponent,
-  SicTextComponent,
-} from 'sic-ng';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Pmdt01Service } from './pmdt01.service';
 import { PhaseModel } from './pmdt01.model';
+import { Pmdt01Service } from './pmdt01.service';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    SicButtonComponent,
-    SicCardComponent,
-    SicFlexComponent,
-    SicGridComponent,
-    SicSpinnerComponent,
-    SicTextComponent,
-  ],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [CommonModule],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private service = inject(Pmdt01Service);
+  private phaseService = inject(Pmdt01Service);
   private dialog = inject(DialogService);
 
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
-  isLoading = signal<boolean>(false);
-  error = signal<string | null>(null);
+  isLoading = signal(false);
 
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       const pid = params['projectId'];
       if (pid) {
         this.projectId.set(pid);
-        this.loadPhases(pid);
+        this.loadPhases();
       } else {
         this.router.navigate(['/feature/pm/pmrt02']);
       }
     });
   }
 
-  loadPhases(projectId: string) {
-    if (!projectId) return;
+  loadPhases() {
     this.isLoading.set(true);
-    this.error.set(null);
-    this.service.getPhases(projectId).subscribe({
-      next: (data) => {
-        this.phases.set(data || []);
-        this.isLoading.set(false);
-      },
+    this.phaseService.getPhases(this.projectId()).subscribe({
+      next: (data) => this.phases.set(data),
       error: (err) => {
-        this.error.set(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
-        this.isLoading.set(false);
+        console.error(err);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลด Phase ได้');
       },
+      complete: () => this.isLoading.set(false),
     });
   }
 
@@ -94,35 +71,35 @@ export class Pmdt01Component implements OnInit {
       .confirm('ยืนยันการลบ', `คุณต้องการลบ Phase "${phase.phaseName}" ใช่หรือไม่?`)
       .then((confirmed) => {
         if (confirmed) {
-          this.service.deletePhase(phase.id).subscribe({
-            next: () => {
-              this.dialog.success('ลบ Phase สำเร็จ', '');
-              this.loadPhases(this.projectId());
-            },
-            error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาด'),
+          this.phaseService.deletePhase(phase.id).subscribe({
+            next: () => this.loadPhases(),
+            error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
           });
         }
       });
   }
 
+  // ===== Utility Methods =====
   getStatusClass(status?: string): string {
+    if (!status) return 'bg-gray-100 text-gray-600';
     const map: Record<string, string> = {
       'Not Started': 'bg-gray-100 text-gray-600',
       'In Progress': 'bg-blue-100 text-blue-700',
       Done: 'bg-emerald-100 text-emerald-700',
       Delayed: 'bg-red-100 text-red-700',
     };
-    return map[status || ''] || 'bg-gray-100 text-gray-600';
+    return map[status] || 'bg-gray-100 text-gray-600';
   }
 
   getStatusText(status?: string): string {
+    if (!status) return '';
     const map: Record<string, string> = {
       'Not Started': 'ยังไม่เริ่ม',
       'In Progress': 'กำลังดำเนินการ',
       Done: 'เสร็จสิ้น',
       Delayed: 'ล่าช้า',
     };
-    return map[status || ''] || status || '-';
+    return map[status] || status;
   }
 
   formatDate(dateStr?: string): string {

@@ -141,23 +141,7 @@
                       ส่งขออนุมัติ
                     </button>
                   }
-                  <!-- Approve / Reject (Submitted Only) -->
-                  @if (cr.status === 'SUBMITTED') {
-                    <button
-                      (click)="approveRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-emerald-500 hover:bg-emerald-600 transition-all"
-                      title="อนุมัติ"
-                    >
-                      อนุมัติ
-                    </button>
-                    <button
-                      (click)="rejectRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-all"
-                      title="ปฏิเสธ"
-                    >
-                      ปฏิเสธ
-                    </button>
-                  }
+
                   <!-- Implement / Close CR (Approved Only) -->
                   @if (cr.status === 'APPROVED') {
                     <button
@@ -168,6 +152,8 @@
                       ปิด CR
                     </button>
                   }
+
+                  <!-- Edit (เฉพาะ DRAFT และ SUBMITTED แต่ SUBMITTED จะ disable) -->
                   <button
                     (click)="goToEdit(cr.id)"
                     [disabled]="cr.status !== 'DRAFT' && cr.status !== 'SUBMITTED'"
@@ -176,6 +162,8 @@
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
+
+                  <!-- Impact Analysis -->
                   <button
                     (click)="goToImpact(cr.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
@@ -183,6 +171,8 @@
                   >
                     <i class="bi bi-diagram-3"></i>
                   </button>
+
+                  <!-- Delete -->
                   <button
                     (click)="deleteChangeRequest(cr.id)"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
