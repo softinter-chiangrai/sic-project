@@ -1,22 +1,21 @@
 // src/app/feature/pm/dt/pmdt25/pmdt25.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay, finalize } from 'rxjs/operators';
+import { finalize } from 'rxjs';
+
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicCheckboxComponent } from '../../../../core/component/sic-checkbox/sic-checkbox.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-import { Pmdt25Service } from './pmdt25.service';
 import { DocumentVersionModel } from './pmdt25.model';
+import { Pmdt25Service } from './pmdt25.service';
 
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt25',
   standalone: true,
@@ -28,10 +27,10 @@ import { DocumentVersionModel } from './pmdt25.model';
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    SicCheckboxComponent,
   ],
   templateUrl: './pmdt25.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
@@ -44,23 +43,16 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   form!: FormGroup;
   isEdit = false;
   versionId: string | null = null;
+
+  // ✅ ใช้ signal() และเรียกใช้ด้วย () ใน template
   isLoading = signal(false);
   isSaving = signal(false);
   versions = signal<DocumentVersionModel[]>([]);
   loadingVersions = signal(false);
 
   // ===== Options =====
-  documentTypes = [
-    'REQUIREMENT',
-    'SPECIFICATION',
-    'DIAGRAM',
-    'DELIVERY',
-    'INVOICE',
-    'MANUAL',
-    'DFD',
-    'ER',
-  ];
-  statusOptions = ['Draft', 'Approved', 'Active'];
+  // ไม่ต้องใช้ documentTypes hardcode แล้ว เพราะใช้ Combobox จาก API
+  // statusOptions จะใช้ Combobox จาก API ด้วย
 
   pageDirty = () => this.form?.dirty ?? false;
 
@@ -76,11 +68,12 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
       }
     });
 
-    // When document type or document ID changes, load versions
+    // เมื่อ documentType เปลี่ยน ให้โหลด versions และ combobox
     this.form.get('documentType')?.valueChanges.subscribe(() => {
       this.loadVersions();
     });
 
+    // เมื่อ documentId เปลี่ยน ให้โหลด versions
     this.form.get('documentId')?.valueChanges.subscribe(() => {
       this.loadVersions();
     });
@@ -107,12 +100,9 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: (data) => {
           this.form.patchValue(data);
-          this.isLoading.set(false);
-          console.log('✅ โหลดข้อมูลเวอร์ชันสำเร็จ:', data);
           this.loadVersions();
         },
         error: (error) => {
-          this.isLoading.set(false);
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลเวอร์ชันรหัสนี้');
           this.router.navigate(['/feature/pm/version']);
@@ -172,7 +162,7 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
     this.isSaving.set(true);
     const data = this.form.value;
 
-    // Set state for create/update
+    // Set state
     if (!this.isEdit) {
       data.state = 4; // ADDED
       data.rowVersion = 0;

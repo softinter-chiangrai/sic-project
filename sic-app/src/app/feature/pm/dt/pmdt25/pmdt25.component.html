@@ -1,5 +1,7 @@
+<!-- src/app/feature/pm/dt/pmdt25/pmdt25.component.html -->
+
 <!-- ===== LOADING ===== -->
-@if (isLoading) {
+@if (isLoading()) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
     <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลเวอร์ชัน...</p>
@@ -7,7 +9,7 @@
 }
 
 <!-- ===== FORM ===== -->
-@if (!isLoading && form) {
+@if (!isLoading()) {
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
 
@@ -24,93 +26,42 @@
           label="ประเภทเอกสาร"
           formControlName="documentType"
           [apiUrl]="service.apiGetLovDocumentType"
+          valueField="value"
+          textField="text"
           [required]="true"
-        ></sic-combobox>
-        @if (form.get('documentType')?.touched && form.get('documentType')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภทเอกสาร</p>
-        }
-      </div>
-
-      <!-- Document Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="รหัสเอกสาร"
-          formControlName="documentCode"
-          [apiUrl]="service.apiGetComboboxDocument"
-          [params]="{ type: $safeNavigationMigration(form.get('documentType')?.value) }"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('documentCode')?.touched && form.get('documentCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกรหัสเอกสาร</p>
-        }
-      </div>
-
-      <!-- Title -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อเอกสาร"
-          formControlName="title"
-          [required]="true"
-          placeholder="ระบบ Login"
-        ></sic-input>
-        @if (form.get('title')?.touched && form.get('title')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อเอกสาร</p>
-        }
-      </div>
-
-      <!-- Version -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="เวอร์ชัน"
-          formControlName="version"
-          [required]="true"
-          placeholder="v1.0"
-        ></sic-input>
-        @if (form.get('version')?.touched && form.get('version')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเวอร์ชัน</p>
-        }
-      </div>
-
-      <!-- Previous Version -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="เวอร์ชันก่อนหน้า"
-          formControlName="previousVersion"
-          placeholder="v1.0 หรือ -"
-        ></sic-input>
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovStatus"
-          [required]="true"
+          [errorMessages]="{ required: 'กรุณาเลือกประเภทเอกสาร' }"
         ></sic-combobox>
       </div>
 
-      <!-- Changed By -->
+      <!-- Document ID (ใช้ Input แทน Combobox เพื่อความง่าย) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="ผู้เปลี่ยนแปลง"
-          formControlName="changedBy"
-          placeholder="สมหญิง รักเรียน"
+          label="รหัสเอกสาร (UUID)"
+          formControlName="documentId"
+          placeholder="กรอกรหัส UUID ของเอกสาร เช่น 8cf71cfc-da0d-44cd-bd81-27dc83793807"
+          [required]="true"
+          [errorMessages]="{ required: 'กรุณากรอกรหัสเอกสาร' }"
         ></sic-input>
+        <p class="text-xs text-[var(--text-muted)] mt-1">
+          คัดลอกรหัส UUID จากหน้าเอกสารที่ต้องการดูประวัติเวอร์ชัน
+        </p>
       </div>
 
-      <!-- Changed Date -->
+      <!-- Version No -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="วันที่เปลี่ยนแปลง"
-          type="text"
-          formControlName="changedDate"
+          label="เลขเวอร์ชัน"
+          formControlName="versionNo"
           [required]="true"
-          placeholder="DD/MM/YYYY HH:MM"
+          placeholder="เช่น v1.0"
+          [errorMessages]="{
+            required: 'กรุณาระบุเลขเวอร์ชัน',
+            maxlength: 'เลขเวอร์ชันต้องไม่เกิน 20 ตัวอักษร'
+          }"
         ></sic-input>
-        @if (form.get('changedDate')?.touched && form.get('changedDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เปลี่ยนแปลง</p>
-        }
+        <p class="text-xs text-[var(--text-muted)] mt-1">
+          * ระบบจะเพิ่มเลขเวอร์ชันอัตโนมัติเมื่อบันทึก แต่สามารถแก้ไขได้
+        </p>
       </div>
 
       <!-- Change Summary -->
@@ -118,23 +69,24 @@
         <sic-input-area
           label="สรุปการเปลี่ยนแปลง"
           formControlName="changeSummary"
-          [required]="true"
           [rows]="3"
           placeholder="ระบุรายละเอียดการเปลี่ยนแปลงในเวอร์ชันนี้"
         ></sic-input-area>
-        @if (form.get('changeSummary')?.touched && form.get('changeSummary')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุสรุปการเปลี่ยนแปลง</p>
-        }
+      </div>
+
+      <!-- File Path (Optional) -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="พาธไฟล์ (ถ้ามี)"
+          formControlName="filePath"
+          placeholder="/path/to/file.pdf"
+        ></sic-input>
       </div>
 
       <!-- Active Status -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
+          <sic-checkbox formControlName="isActive"></sic-checkbox>
           <span class="text-[var(--text-active)]">เปิดใช้งานเวอร์ชันนี้</span>
         </label>
       </div>
@@ -144,7 +96,7 @@
         <div class="flex-1">
           <sic-button
             [fullWidth]="true"
-            [type]="'button'"
+            type="button"
             variant="secondary"
             (click)="onBack()"
           >
@@ -155,15 +107,129 @@
         <div class="flex-1">
           <sic-button
             [fullWidth]="true"
-            [type]="'submit'"
+            type="submit"
             variant="primary"
+            [disabled]="isSaving() || form.invalid"
           >
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+            @if (isSaving()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving() ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
           </sic-button>
         </div>
       </div>
 
     </div>
   </form>
+}
+
+<!-- ===== HISTORY TABLE ===== -->
+@if (!isLoading()) {
+  <div class="mt-8 border-t border-[var(--border)] pt-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
+        ประวัติเวอร์ชัน
+        <span class="text-sm font-normal text-[var(--text-muted)]">
+          ({{ versions().length }} รายการ)
+        </span>
+      </h3>
+      @if (versions().length > 0) {
+        <button
+          type="button"
+          (click)="deleteAllVersions()"
+          class="text-xs text-[var(--crm-danger)] hover:underline"
+        >
+          <i class="bi bi-trash"></i> ลบทั้งหมด
+        </button>
+      }
+    </div>
+
+    @if (loadingVersions()) {
+      <div class="flex items-center justify-center py-8 gap-3">
+        <div class="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <span class="text-sm text-[var(--text-muted)]">กำลังโหลดประวัติ...</span>
+      </div>
+    }
+
+    @if (!loadingVersions() && versions().length === 0) {
+      <div class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
+        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
+        <p>ยังไม่มีประวัติเวอร์ชัน</p>
+        <p class="text-sm">เลือกประเภทและรหัสเอกสารเพื่อดูประวัติ</p>
+      </div>
+    }
+
+    @if (versions().length > 0) {
+      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+        <table class="w-full text-sm">
+          <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                เวอร์ชัน
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                สรุปการเปลี่ยนแปลง
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                ผู้สร้าง
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                วันที่สร้าง
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                สถานะ
+              </th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                จัดการ
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border)]">
+            @for (version of versions(); track version.id) {
+              <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+                <td class="px-4 py-3 font-mono font-semibold text-[var(--text-active)]">
+                  {{ version.versionNo }}
+                </td>
+                <td class="px-4 py-3 text-[var(--text)] max-w-[200px] truncate">
+                  {{ version.changeSummary || '-' }}
+                </td>
+                <td class="px-4 py-3 text-[var(--text-active)]">
+                  {{ version.createdBy || '-' }}
+                </td>
+                <td class="px-4 py-3 text-[var(--text-muted)] text-sm">
+                  {{ formatDate(version.createdDate) }}
+                </td>
+                <td class="px-4 py-3">
+                  <span [class]="getStatusClass(version.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getStatusText(version.isActive) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <div class="flex items-center justify-center gap-1">
+                    <button
+                      (click)="viewVersion(version.id)"
+                      class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                      title="ดูรายละเอียด"
+                    >
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button
+                      (click)="deleteVersion(version.id)"
+                      class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                      title="ลบ"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
 }
