@@ -4,7 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, lastValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { RequirementModel } from './pmdt05.component';
+import { RequirementModel } from './pmdt05.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,12 +13,7 @@ export class RequirementExportService {
   private http = inject(HttpClient);
   private apiBaseUrl = environment.apiBaseUrl;
 
-  /**
-   * Export Requirement to specified format
-   * @param data Requirement data to export
-   * @param format 'pdf' | 'docx' | 'html'
-   * @returns Blob of the exported file
-   */
+
   async exportRequirement(data: RequirementModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
     const url = `${this.apiBaseUrl}/api/requirement/export`;
 

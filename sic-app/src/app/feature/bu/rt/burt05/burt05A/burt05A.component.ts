@@ -6,8 +6,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { DialogService } from '../../../../../core/services/dialog.service';
-// ✅ แก้ไข: เปลี่ยนจาก Pmrt30Service เป็น burt05Service
-import { burt05Service, Program } from '../burt05.service';
+import { Program } from '../burt05.model';
+import { burt05Service } from '../burt05.service';
 
 @Component({
   selector: 'app-burt05A',
@@ -20,7 +20,6 @@ export class Burt05AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  // ✅ แก้ไข: เปลี่ยนจาก Pmrt30Service เป็น burt05Service
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
 

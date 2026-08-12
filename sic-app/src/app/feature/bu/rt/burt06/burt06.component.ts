@@ -6,7 +6,9 @@ import { finalize } from 'rxjs';
 
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalFlow, Burt06Service } from './burt06.service';
+import { ApprovalFlow } from './burt06.model';
+import { Burt06Service } from './burt06.service';
+
 
 @Component({
   selector: 'app-burt06',

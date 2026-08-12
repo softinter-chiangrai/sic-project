@@ -11,7 +11,9 @@ import {
 } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.component';
 import { SicOrganizationalChartNode } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.model';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { burt03Service, type Role } from './burt03.service';
+import { Role } from './burt03.model';
+import { burt03Service } from './burt03.service';
+
 
 @Component({
   selector: 'app-burt03',

@@ -40,4 +40,7 @@ export interface ApprovalItem {
   dueDate?: string;
   approver: string;
   status: string;
+  comment?: string;        
+  attachments?: string[];  
+  isActive?: boolean;      
 }

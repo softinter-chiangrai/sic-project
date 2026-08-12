@@ -10,8 +10,9 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
-// ✅ แก้ไข: เปลี่ยนจาก Pmrt29Service เป็น burt04Service
-import { ComboboxRole, burt04Service } from '../burt04.service';
+import { ComboboxRole } from '../burt04.model';
+import { burt04Service } from '../burt04.service';
+
 
 @Component({
   selector: 'app-burt04A',

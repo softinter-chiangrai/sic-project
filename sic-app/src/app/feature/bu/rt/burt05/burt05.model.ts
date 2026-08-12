@@ -44,7 +44,8 @@ export interface CreateProgramWithPermissionsRequest {
   programIcon?: string;
   routePath?: string;
   sortOrder?: number;
-  permissions: RolePermission[];
+  isActive: boolean;             
+  rolePermissions: RolePermission[]; 
 }
 
 export interface TreeNode {

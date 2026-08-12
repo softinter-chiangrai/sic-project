@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
-import { ProjectModel } from './pmrt02A.component';
+import { ProjectModel } from './pmrt02A.model';
+
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02AService {

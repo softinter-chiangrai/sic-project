@@ -25,8 +25,9 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { Burt06Service, type ApprovalFlow, type ApprovalFlowStep } from '../burt06.service';
 import { UserOption } from './burt06A.model';
+import { ApprovalFlowStep, ApprovalFlow } from '../burt06.model';
+import { Burt06Service } from '../burt06.service';
 
 
 @Component({
