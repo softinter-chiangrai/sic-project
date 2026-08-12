@@ -94,6 +94,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 diagramType, saved.getId(),
                 TraceRelationship.DESIGNED_BY
         );
+        traceLinkService.createLink(
+                request.getProjectId(),
+                "REQUIREMENT", request.getRequirementId(),
+                "DIAGRAM", saved.getId(),
+                TraceRelationship.DESIGNED_BY
+        );
 
         // 5. สร้าง Trace Link เพิ่มเติม (ถ้ามี relatedRequirementIds)
         if (request.getRelatedRequirementIds() != null) {
@@ -106,6 +112,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                             request.getProjectId(),
                             "REQUIREMENT", reqId,
                             diagramType, saved.getId(),
+                            TraceRelationship.DESIGNED_BY
+                    );
+                    traceLinkService.createLink(
+                            request.getProjectId(),
+                            "REQUIREMENT", reqId,
+                            "DIAGRAM", saved.getId(),
                             TraceRelationship.DESIGNED_BY
                     );
                 }
@@ -180,6 +192,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                     tab.getProjectId(),
                     "REQUIREMENT", request.getRequirementId(),
                     diagramType, tab.getId(),
+                    TraceRelationship.DESIGNED_BY
+            );
+            traceLinkService.createLink(
+                    tab.getProjectId(),
+                    "REQUIREMENT", request.getRequirementId(),
+                    "DIAGRAM", tab.getId(),
                     TraceRelationship.DESIGNED_BY
             );
         }

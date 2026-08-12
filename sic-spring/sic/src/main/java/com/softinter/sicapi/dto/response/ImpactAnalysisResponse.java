@@ -1,8 +1,6 @@
-// src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java
 package com.softinter.sicapi.dto.response;
 
 import lombok.Data;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,23 +9,18 @@ public class ImpactAnalysisResponse {
     private UUID id;
     private UUID changeRequestId;
 
-    private String dfdImpact;
-    private String erImpact;
-    private String uiImpact;
-    private String apiImpact;
-    private String testImpact;
-    private Integer mandayImpact;
-    private Integer timelineImpact;
-    private String costImpact;
-
+    // 6 ฟิลด์ที่ใช้จริงตามที่คุณบอก
     private UUID[] impactedRequirementIds;
     private UUID[] impactedSpecIds;
+    private UUID[] impactedDiagramIds;
     private UUID[] impactedTaskIds;
     private UUID[] impactedTestCaseIds;
     private UUID[] impactedBugIds;
-    private String[] impactedTableNames;
 
-    private String analysisStatus; // AUTO / MANUAL
+    // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
+    private Integer mandayImpact;
+    private Integer timelineImpact;
+    private String analysisStatus;
     private Instant analyzedAt;
     private String analyzedBy;
 }

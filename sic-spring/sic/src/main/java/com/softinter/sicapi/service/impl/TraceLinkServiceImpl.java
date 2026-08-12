@@ -107,8 +107,14 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         Map<String, Set<UUID>> impactedMap = new HashMap<>();
 
         for (PmTraceLink link : trace) {
-            impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
-                    .add(link.getTargetId());
+            if (link.getSourceId() != null && !link.getSourceId().equals(sourceId)) {
+                impactedMap.computeIfAbsent(link.getSourceType(), k -> new HashSet<>())
+                        .add(link.getSourceId());
+            }
+            if (link.getTargetId() != null && !link.getTargetId().equals(sourceId)) {
+                impactedMap.computeIfAbsent(link.getTargetType(), k -> new HashSet<>())
+                        .add(link.getTargetId());
+            }
         }
 
         ImpactTraceResult result = new ImpactTraceResult();

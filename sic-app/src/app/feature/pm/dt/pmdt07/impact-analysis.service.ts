@@ -20,6 +20,7 @@ export interface ImpactAnalysis {
     impactedTaskIds?: string[];
     impactedTestCaseIds?: string[];
     impactedBugIds?: string[];
+    impactedDiagramIds?: string[];
     impactedTableNames?: string[];
     analysisStatus?: 'AUTO' | 'MANUAL';
     analyzedAt?: string;

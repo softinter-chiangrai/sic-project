@@ -67,6 +67,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedTaskIds(request.getImpactedTaskIds());
         analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
         analysis.setImpactedBugIds(request.getImpactedBugIds());
+        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
         analysis.setImpactedTableNames(request.getImpactedTableNames());
 
         if (analysis.getAnalysisStatus() == null) {
@@ -115,6 +116,16 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
         UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
 
+        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
+        Set<UUID> diagramSet = new java.util.HashSet<>();
+        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
+        for (String dType : diagramTypes) {
+            if (impacted.containsKey(dType)) {
+                diagramSet.addAll(impacted.get(dType));
+            }
+        }
+        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
+
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(changeRequestId)
                 .orElse(new ChangeImpactAnalysis());
@@ -125,13 +136,25 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedTaskIds(taskIds);
         analysis.setImpactedTestCaseIds(testCaseIds);
         analysis.setImpactedBugIds(bugIds);
+        analysis.setImpactedDiagramIds(diagramIds);
         analysis.setImpactedTableNames(new String[0]);
+
+        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
+        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
+            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+            analysis.setMandayImpact(calculatedManday);
+        }
+        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
+            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
+            analysis.setTimelineImpact(calculatedDays);
+        }
+
         analysis.setAnalysisStatus("AUTO");
         analysis.setAnalyzedAt(Instant.now());
         analysis.setAnalyzedBy(currentUserService.getUserId());
 
         ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Auto-detect using Trace completed and saved for change request: {}", changeRequestId);
+        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
 
         return toResponse(saved);
     }
@@ -144,26 +167,24 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
-        ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
-        dto.setId(entity.getId());
-        dto.setChangeRequestId(entity.getChangeRequest().getId());
-        dto.setDfdImpact(entity.getDfdImpact());
-        dto.setErImpact(entity.getErImpact());
-        dto.setUiImpact(entity.getUiImpact());
-        dto.setApiImpact(entity.getApiImpact());
-        dto.setTestImpact(entity.getTestImpact());
-        dto.setMandayImpact(entity.getMandayImpact());
-        dto.setTimelineImpact(entity.getTimelineImpact());
-        dto.setCostImpact(entity.getCostImpact());
-        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
-        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
-        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
-        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
-        dto.setImpactedBugIds(entity.getImpactedBugIds());
-        dto.setImpactedTableNames(entity.getImpactedTableNames());
-        dto.setAnalysisStatus(entity.getAnalysisStatus());
-        dto.setAnalyzedAt(entity.getAnalyzedAt());
-        dto.setAnalyzedBy(entity.getAnalyzedBy());
-        return dto;
-    }
+    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
+    
+    dto.setId(entity.getId());
+    dto.setChangeRequestId(entity.getChangeRequest().getId());
+    
+    dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
+    dto.setImpactedSpecIds(entity.getImpactedSpecIds());
+    dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
+    dto.setImpactedTaskIds(entity.getImpactedTaskIds());
+    dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
+    dto.setImpactedBugIds(entity.getImpactedBugIds());
+    
+    dto.setMandayImpact(entity.getMandayImpact());
+    dto.setTimelineImpact(entity.getTimelineImpact());
+    dto.setAnalysisStatus(entity.getAnalysisStatus());
+    dto.setAnalyzedAt(entity.getAnalyzedAt());
+    dto.setAnalyzedBy(entity.getAnalyzedBy());
+    
+    return dto;
+}
 }

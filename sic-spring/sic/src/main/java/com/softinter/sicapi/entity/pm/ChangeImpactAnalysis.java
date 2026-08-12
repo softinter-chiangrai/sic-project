@@ -67,6 +67,10 @@ public class ChangeImpactAnalysis extends BaseEntity {
     private UUID[] impactedBugIds;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_diagram_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedDiagramIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "impacted_table_names", columnDefinition = "TEXT[]")
     private String[] impactedTableNames;
 
