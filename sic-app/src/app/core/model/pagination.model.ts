@@ -7,5 +7,6 @@ export interface PaginationResponse<T> {
         pageSize: number;
         totalElements: number;
         totalPages: number;
+        sorts?: any[];
     };
 }

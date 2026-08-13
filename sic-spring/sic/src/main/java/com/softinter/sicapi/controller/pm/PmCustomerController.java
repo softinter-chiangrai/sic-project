@@ -1,9 +1,10 @@
 package com.softinter.sicapi.controller.pm;
 
+import static com.softinter.sicapi.util.PaginationUtil.of;
+
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -18,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmCustomerRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmCustomerResponse;
 import com.softinter.sicapi.service.PmCustomerService;
-import com.softinter.sicapi.util.PaginationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,8 +42,11 @@ public class PmCustomerController {
 
     @PostMapping
     @Operation(summary = "สร้างข้อมูลลูกค้าใหม่")
-    public ResponseEntity<PmCustomerResponse> create(@Valid @RequestBody PmCustomerRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(PmCustomerService.create(request));
+    public ResponseEntity<PmCustomerResponse> create(
+            @RequestParam(required = false) UUID businessId,
+            @Valid @RequestBody PmCustomerRequest request) {
+        UUID effectiveBusinessId = businessId != null ? businessId : BusinessContextHolder.getBusinessId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(PmCustomerService.create(effectiveBusinessId, request));
     }
 
     @PutMapping("/{id}")
@@ -79,7 +83,7 @@ public class PmCustomerController {
     public ResponseEntity<PaginationResponse<PmCustomerResponse>> getAll(
             @RequestParam UUID businessId,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(PaginationUtil.of(PmCustomerService.findAllByBusiness(businessId, pageable)));
+        return ResponseEntity.ok(of(PmCustomerService.findAllByBusiness(businessId, pageable)));
     }
 
     @GetMapping("/search")
@@ -88,7 +92,7 @@ public class PmCustomerController {
             @RequestParam UUID businessId,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(PaginationUtil.of(PmCustomerService.search(businessId, keyword, pageable)));
+        return ResponseEntity.ok(of(PmCustomerService.search(businessId, keyword, pageable)));
     }
 
     @GetMapping("/active")

@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.util.PaginationUtil;
+
 @RestController
 @RequestMapping("/api/pm/contracts")
 @RequiredArgsConstructor
@@ -35,16 +38,15 @@ public class PmCustomerContractController {
     // ===== รายการสัญญา =====
     @GetMapping
     @Operation(summary = "ดึงรายการสัญญาแบบแบ่งหน้า")
-    public ResponseEntity<Page<PmCustomerContractResponse>> getContracts(
+    public ResponseEntity<PaginationResponse<PmCustomerContractResponse>> getContracts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String contractType,
             @PageableDefault(size = 10, sort = "contractNo", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         UUID businessId = businessAccessService.getBusinessId();
-        return ResponseEntity.ok(
-                contractService.getContracts(businessId, keyword, status, contractType, pageable)
-        );
+        Page<PmCustomerContractResponse> pageResult = contractService.getContracts(businessId, keyword, status, contractType, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     // ===== ดึงข้อมูลสัญญาเดี่ยว =====

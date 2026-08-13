@@ -41,10 +41,6 @@ export interface CustomerFormData {
   customer: SicFromData<CustomerModel>;
 }
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+
+
+

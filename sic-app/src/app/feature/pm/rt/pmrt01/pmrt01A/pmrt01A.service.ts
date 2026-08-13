@@ -2,7 +2,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CustomerModel, PageResponse } from './pmrt01A.model';
+import { CustomerModel } from './pmrt01A.model';
+import { PaginationResponse } from '../../../../../../core/model/sic-base-model';
 import { environment } from '../../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +28,7 @@ export class Pmrt01AService {
     keyword?: string,
     sortBy?: string,
     sortDir?: 'asc' | 'desc'
-  ): Observable<PageResponse<CustomerModel>> {
+  ): Observable<PaginationResponse<CustomerModel>> {
     let params = new HttpParams()
       .set('businessId', businessId)
       .set('page', page.toString())
@@ -35,7 +36,7 @@ export class Pmrt01AService {
     if (keyword) params = params.set('keyword', keyword);
     if (sortBy) params = params.set('sortBy', sortBy);
     if (sortDir) params = params.set('sortDir', sortDir);
-    return this.http.get<PageResponse<CustomerModel>>(this.baseUrl, { params });
+    return this.http.get<PaginationResponse<CustomerModel>>(this.baseUrl, { params });
   }
 
   getCustomer(id: string): Observable<CustomerModel> {
@@ -60,12 +61,12 @@ export class Pmrt01AService {
     return this.http.get<CustomerModel[]>(`${this.baseUrl}/active`, { params });
   }
 
-  searchCustomers(businessId: string, keyword: string, page: number, size: number) {
+  searchCustomers(businessId: string, keyword: string, page: number, size: number): Observable<PaginationResponse<CustomerModel>> {
     const params = new HttpParams()
       .set('businessId', businessId)
       .set('keyword', keyword)
       .set('page', page.toString())
       .set('size', size.toString());
-    return this.http.get<PageResponse<CustomerModel>>(`${this.baseUrl}/search`, { params });
+    return this.http.get<PaginationResponse<CustomerModel>>(`${this.baseUrl}/search`, { params });
   }
 }

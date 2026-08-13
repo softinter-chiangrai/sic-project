@@ -17,7 +17,7 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
-import { Contract, PageResponse } from './pmrt04.model';
+import { Contract, PaginationResponse } from './pmrt04.model';
 
 @Component({
   selector: 'app-pmrt04',
@@ -154,15 +154,17 @@ export class Pmrt04Component implements OnInit {
     }
 
     this.http
-      .get<PageResponse<Contract>>(this.apiUrl, { params })
+      .get<PaginationResponse<Contract>>(this.apiUrl, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.contracts.set(response.content || []);
-          this.totalItems.set(response.totalElements || 0);
+          const items = response.data || (response as any).content || [];
+          const total = response.pageable?.totalElements ?? (response as any).totalElements ?? 0;
+          this.contracts.set(items);
+          this.totalItems.set(total);
 
           if (this.filterCustomerId() && !this.filterCustomerName()) {
-            const firstContract = response.content?.[0];
+            const firstContract = items[0];
             if (firstContract?.customerName) {
               this.filterCustomerName.set(firstContract.customerName);
             }

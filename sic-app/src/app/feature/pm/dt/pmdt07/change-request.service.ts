@@ -6,13 +6,7 @@ import { environment } from '../../../../../environments/environment';
 import type { ChangeRequest, ImpactAnalysis } from './change-request.model';
 
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+import { PaginationResponse } from '../../../../core/model/sic-base-model';
 
 @Injectable({ providedIn: 'root' })
 export class ChangeRequestService {
@@ -28,7 +22,7 @@ export class ChangeRequestService {
     keyword?: string;
     page?: number;
     size?: number;
-  }): Observable<PageResponse<ChangeRequest>> {
+  }): Observable<PaginationResponse<ChangeRequest>> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -37,7 +31,7 @@ export class ChangeRequestService {
         }
       });
     }
-    return this.http.get<PageResponse<ChangeRequest>>(this.baseUrl, { params: httpParams });
+    return this.http.get<PaginationResponse<ChangeRequest>>(this.baseUrl, { params: httpParams });
   }
 
   getChangeRequest(id: string): Observable<ChangeRequest> {

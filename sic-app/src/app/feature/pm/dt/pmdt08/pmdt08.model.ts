@@ -27,15 +27,4 @@ export interface PmSpecificationModel {
     isActive?: boolean;
 }
 
-export interface ComboboxItem {
-    value: string;
-    text: string;
-}
 
-export interface PageResponse<T> {
-    content: T[];
-    totalElements: number;
-    totalPages: number;
-    size: number;
-    number: number;
-}

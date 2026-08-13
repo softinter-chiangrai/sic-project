@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { PageResponse, PmCustomerProject } from './pmrt02.model';
+import { PaginationResponse } from '../../../../core/model/sic-base-model';
+import { PmCustomerProject } from './pmrt02.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02Service {
@@ -23,7 +24,7 @@ export class Pmrt02Service {
     size?: number;
     sortBy?: string;
     sortDir?: 'asc' | 'desc';
-  }): Observable<PageResponse<PmCustomerProject>> {
+  }): Observable<PaginationResponse<PmCustomerProject>> {
     let httpParams = new HttpParams().set('businessId', this.getBusinessId());
 
     if (params.customerId) httpParams = httpParams.set('customerId', params.customerId);
@@ -35,7 +36,7 @@ export class Pmrt02Service {
     if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
     if (params.sortDir) httpParams = httpParams.set('sortDir', params.sortDir);
 
-    return this.http.get<PageResponse<PmCustomerProject>>(this.baseUrl, { params: httpParams });
+    return this.http.get<PaginationResponse<PmCustomerProject>>(this.baseUrl, { params: httpParams });
   }
 
   getProject(id: string): Observable<PmCustomerProject> {

@@ -40,10 +40,11 @@ public class SuUserBusinessMemberController {
 
     @GetMapping
     @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
-    public ResponseEntity<Page<SuUserBusinessMemberResponse>> getMembers(
+    public ResponseEntity<PaginationResponse<SuUserBusinessMemberResponse>> getMembers(
             @RequestParam UUID businessId,
             @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(memberService.getMembers(businessId, pageable));
+        Page<SuUserBusinessMemberResponse> pageResult = memberService.getMembers(businessId, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @PostMapping

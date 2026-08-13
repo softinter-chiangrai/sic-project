@@ -42,10 +42,6 @@ export interface Contract {
   rowVersion?: number;
 }
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+import { PaginationResponse } from '../../../../core/model/sic-base-model';
+
+export { PaginationResponse };

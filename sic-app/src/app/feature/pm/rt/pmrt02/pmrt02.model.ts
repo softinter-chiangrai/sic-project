@@ -41,12 +41,6 @@ export interface PmCustomerProject {
   updatedDate?: string;
 }
 
-export interface PageResponse<T> {
-  data: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    totalElements: number;
-    totalPages: number;
-  };
-}
+import { PaginationResponse } from '../../../../core/model/sic-base-model';
+
+export { PaginationResponse };

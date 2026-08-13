@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.util.PaginationUtil;
+
 @RestController
 @RequestMapping("/api/discussion")
 @RequiredArgsConstructor
@@ -36,11 +39,11 @@ public class DiscussionController {
 
     @GetMapping("/project/{projectId}")
     @Operation(summary = "Get project discussion posts")
-    public ResponseEntity<Page<PostResponse>> getPosts(
+    public ResponseEntity<PaginationResponse<PostResponse>> getPosts(
             @PathVariable UUID projectId,
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostResponse> posts = discussionService.getPosts(projectId, "PROJECT", pageable);
-        return ResponseEntity.ok(posts);
+        return ResponseEntity.ok(PaginationUtil.of(posts));
     }
 
     @GetMapping("/post/{postId}/replies")
