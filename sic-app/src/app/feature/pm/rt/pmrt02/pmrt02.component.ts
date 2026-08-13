@@ -95,6 +95,16 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
+    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    if (resolved && resolved.data) {
+      this.projects.set(resolved.data || []);
+      this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+      const first = resolved.data?.[0];
+      if (first?.customerName) {
+        this.filterCustomerName.set(first.customerName);
+      }
+    }
+
     this.route.queryParams.subscribe((params) => {
       let customerId = params['customerId'] || this.customerState.getCustomerId();
       if (!customerId) {
@@ -105,9 +115,10 @@ export class Pmrt02Component implements OnInit {
 
       this.customerState.setCustomer(customerId);
       this.filterCustomerId.set(customerId);
-      this.filterCustomerName.set('');
 
-      this.loadProjects();
+      if (!resolved || !resolved.data) {
+        this.loadProjects();
+      }
     });
   }
 

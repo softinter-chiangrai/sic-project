@@ -9,6 +9,7 @@ import { burt05Resolver } from './rt/burt05/burt05.resolver';
 import { burt05AResolver } from './rt/burt05/burt05A/burt05A.resolver';
 import { burt06Resolver } from './rt/burt06/burt06.resolver';
 import { burt06AResolver } from './rt/burt06/burt06A/burt06A.resolver';
+import { burp01Resolver } from './rp/burp01/burp01.resolver';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 
 export const routes: Routes = [
@@ -101,6 +102,7 @@ export const routes: Routes = [
   {
     path: 'burp01',
     loadComponent: () => import('./rp/burp01/burp01.component').then((m) => m.Burp01Component),
+    resolve: { form: burp01Resolver },
   },
 
   // ===== Business Invite =====

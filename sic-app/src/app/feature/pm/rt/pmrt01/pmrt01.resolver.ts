@@ -1,35 +1,24 @@
 // src/app/feature/pm/rt/pmrt01/pmrt01.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmrt01Service } from './pmrt01.service';
-import { Pmrt01Form } from './pmrt01.form';
-import { Pmrt01Model, Pmrt01PageData } from './pmrt01.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { ResolveFn } from '@angular/router';
+import { catchError, of } from 'rxjs';
+import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { CustomerModel } from './pmrt01A/pmrt01A.model';
 
-export const pmrt01Resolver: ResolveFn<Pmrt01PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmrt01Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+export const pmrt01Resolver: ResolveFn<PaginationResponse<CustomerModel> | null> = (route) => {
+  const service = inject(Pmrt01AService);
+  const businessId = (typeof localStorage !== 'undefined' ? localStorage.getItem('businessId') : null) || '';
 
-  const form = Pmrt01Form.createForm(fb);
-
-  if (!id) {
-    return { customerData: new SicFromData<Pmrt01Model>(form) };
+  if (!businessId) {
+    return of(null);
   }
 
-  try {
-    const data = await lastValueFrom(service.getCustomer(id));
-    if (data) {
-      form.patchValue(data as any);
-      return { customerData: new SicFromData<Pmrt01Model>(form, data as any) };
-    }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  }
+  return service.getCustomers(businessId, 0, 10).pipe(
+    catchError((err) => {
+      console.error('pmrt01Resolver load customers error:', err);
+      return of(null);
+    })
+  );
 };
+

@@ -1,36 +1,30 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-
-import { Pmrt02Form } from './pmrt02.form';
-import { Pmrt02Model, Pmrt02PageData } from './pmrt02.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { ResolveFn } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { Pmrt02Service } from './pmrt02.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { PmCustomerProject } from './pmrt02.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
-export const pmrt02Resolver: ResolveFn<Pmrt02PageData> = async (route) => {
-  const fb = inject(FormBuilder);
+export const pmrt02Resolver: ResolveFn<PaginationResponse<PmCustomerProject> | null> = (route) => {
   const service = inject(Pmrt02Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+  const customerState = inject(CustomerStateService);
+  const customerId = route.queryParams['customerId'] || customerState.getCustomerId() || undefined;
 
-  const form = Pmrt02Form.createForm(fb);
-
-  if (!id) {
-    return { projectData: new SicFromData<Pmrt02Model>(form) };
-  }
-
-  try {
-    const data = await lastValueFrom(service.getProject(id));
-    if (data) {
-      form.patchValue(data as any);
-      return { projectData: new SicFromData<Pmrt02Model>(form, data as any) };
-    }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  }
+  return service
+    .getProjects({
+      customerId,
+      page: 1,
+      size: 10,
+      sortBy: 'projectCode',
+      sortDir: 'asc',
+    })
+    .pipe(
+      catchError((err) => {
+        console.error('pmrt02Resolver load projects error:', err);
+        return of(null);
+      })
+    );
 };
+

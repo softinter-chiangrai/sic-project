@@ -23,11 +23,18 @@ export class Pmdt01Component implements OnInit {
   isLoading = signal(false);
 
   ngOnInit() {
+    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    if (resolved && Array.isArray(resolved)) {
+      this.phases.set(resolved);
+    }
+
     this.route.queryParams.subscribe((params) => {
       const pid = params['projectId'];
       if (pid) {
         this.projectId.set(pid);
-        this.loadPhases();
+        if (!resolved || !Array.isArray(resolved)) {
+          this.loadPhases();
+        }
       } else {
         this.router.navigate(['/feature/pm/pmrt02']);
       }

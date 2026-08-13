@@ -2,11 +2,23 @@
 import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
+import { lastValueFrom, EMPTY, catchError, of } from 'rxjs';
 import { Pmdt01Service } from './pmdt01.service';
 import { Pmdt01Form } from './pmdt01.form';
 import { PhaseModel, PhasePageData } from './pmdt01.model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+
+export const pmdt01Resolver: ResolveFn<PhaseModel[] | null> = (route) => {
+  const service = inject(Pmdt01Service);
+  const projectId = route.queryParams['projectId'];
+  if (!projectId) return of(null);
+  return service.getPhases(projectId).pipe(
+    catchError((err) => {
+      console.error('pmdt01Resolver error:', err);
+      return of(null);
+    })
+  );
+};
 
 export const pmdt01EditResolver: ResolveFn<PhasePageData> = async (route) => {
   const fb = inject(FormBuilder);

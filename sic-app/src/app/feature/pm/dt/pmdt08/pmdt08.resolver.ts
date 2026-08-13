@@ -3,12 +3,28 @@
 import { inject } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ResolveFn, Router } from '@angular/router';
-import { catchError, EMPTY, map, tap } from 'rxjs';
+import { catchError, EMPTY, map, of, tap } from 'rxjs';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Pmdt08Form } from './pmdt08.form';
 
 import { Pmdt08Service } from './pmdt08.service';
 import { PmSpecificationModel } from './pmdt08.model';
+
+export const pmdt08Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> | null> = (route) => {
+    const service = inject(Pmdt08Service);
+    const customerState = inject(CustomerStateService);
+    const projectId = route.queryParams['projectId'] || customerState.getProjectId();
+
+    return service.getSpecifications({ projectId, page: 0, size: 10 }).pipe(
+        catchError((err) => {
+            console.error('pmdt08Resolver error:', err);
+            return of(null);
+        })
+    );
+};
+
 
 export const pmdt08CreateResolver: ResolveFn<Pmdt08Form> = (route) => {
     const fb = inject(FormBuilder);

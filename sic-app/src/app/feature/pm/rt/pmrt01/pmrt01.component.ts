@@ -9,7 +9,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
@@ -28,6 +28,7 @@ import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 })
 export class Pmrt01Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
@@ -100,7 +101,11 @@ export class Pmrt01Component implements OnInit {
 
   ngOnInit() {
     this.businessId = localStorage.getItem('businessId') || '';
-    if (this.businessId) {
+    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    if (resolved && resolved.data) {
+      this.customers.set(resolved.data || []);
+      this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+    } else if (this.businessId) {
       this.loadCustomers();
     }
   }

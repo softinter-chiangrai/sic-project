@@ -63,7 +63,15 @@ export class Pmdt04Component implements OnInit {
   protected Math = Math;
 
   ngOnInit() {
-    this.loadRequirements();
+    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    if (resolved && resolved.data) {
+      const data = resolved.data || [];
+      this.requirements.set(data);
+      this.totalItems.set(resolved.totalElements || data.length || 0);
+      this.loadApprovalStatuses(data);
+    } else {
+      this.loadRequirements();
+    }
   }
 
   // ===== Load Data =====

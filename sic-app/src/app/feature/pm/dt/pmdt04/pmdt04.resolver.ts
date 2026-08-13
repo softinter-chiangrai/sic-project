@@ -1,35 +1,30 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt04Service } from './pmdt04.service';
-import { Pmdt04Form } from './pmdt04.form';
-import { Pmdt04Model, Pmdt04PageData } from './pmdt04.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { ResolveFn } from '@angular/router';
+import { catchError, of } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
-export const pmdt04Resolver: ResolveFn<Pmdt04PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmdt04Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+export const pmdt04Resolver: ResolveFn<any> = (route) => {
+  const http = inject(HttpClient);
+  const customerState = inject(CustomerStateService);
+  const projectId = route.queryParams['projectId'] || customerState.getProjectId();
 
-  const form = Pmdt04Form.createForm(fb);
-
-  if (!id) {
-    return { requirementData: new SicFromData<Pmdt04Model>(form) };
+  if (!projectId) {
+    return of(null);
   }
 
-  try {
-    const data = await lastValueFrom(service.getRequirementById(id));
-    if (data) {
-      form.patchValue(data);
-      return { requirementData: new SicFromData<Pmdt04Model>(form, data) };
-    }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  }
+  const params = new HttpParams()
+    .set('page', '0')
+    .set('size', '10')
+    .set('projectId', projectId);
+
+  return http.get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params }).pipe(
+    catchError((err) => {
+      console.error('pmdt04Resolver error:', err);
+      return of(null);
+    })
+  );
 };
+

@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
@@ -21,6 +21,7 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt08Component implements OnInit {
+    private route = inject(ActivatedRoute);
     private service = inject(Pmdt08Service);
     private router = inject(Router);
     private dialog = inject(DialogService);
@@ -54,7 +55,13 @@ export class Pmdt08Component implements OnInit {
     Math = Math;
 
     ngOnInit(): void {
-        this.loadData();
+        const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+        if (resolved && resolved.data) {
+            this.specs.set(resolved.data || []);
+            this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+        } else {
+            this.loadData();
+        }
     }
 
     loadData(): void {

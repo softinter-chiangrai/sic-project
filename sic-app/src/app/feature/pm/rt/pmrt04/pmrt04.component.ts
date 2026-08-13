@@ -85,6 +85,18 @@ export class Pmrt04Component implements OnInit {
   ngOnInit() {
     this.loadContractTypes();
 
+    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    if (resolved && resolved.project) {
+      const project = resolved.project;
+      const contractsRes = resolved.contracts;
+      this.filterCustomerId.set(project.customerId);
+      this.filterCustomerName.set(project.customerName);
+      if (contractsRes) {
+        this.contracts.set(contractsRes.data || []);
+        this.totalItems.set(contractsRes.pageable?.totalElements || contractsRes.data?.length || 0);
+      }
+    }
+
     this.route.queryParams.subscribe((params) => {
       const projectId = params['projectId'];
 
@@ -96,19 +108,21 @@ export class Pmrt04Component implements OnInit {
 
       this.filterProjectId.set(projectId);
 
-      this.projectService.getProject(projectId).subscribe({
-        next: (project) => {
-          this.filterCustomerId.set(project.customerId);
-          this.filterCustomerName.set(project.customerName);
-          this.currentPage.set(1);
-          this.loadContracts();
-        },
-        error: (err) => {
-          console.error('Error loading project:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
-        },
-      });
+      if (!resolved || !resolved.project) {
+        this.projectService.getProject(projectId).subscribe({
+          next: (project) => {
+            this.filterCustomerId.set(project.customerId);
+            this.filterCustomerName.set(project.customerName);
+            this.currentPage.set(1);
+            this.loadContracts();
+          },
+          error: (err) => {
+            console.error('Error loading project:', err);
+            this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
+            this.navigation.navigate(['/feature/pm/pmrt02']);
+          },
+        });
+      }
     });
   }
 
