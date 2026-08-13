@@ -102,24 +102,6 @@
         </div>
       </div>
 
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
-          สถานะ <span class="text-red-500">*</span>
-        </label>
-        <select
-          formControlName="status"
-          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-        >
-          @for (status of statusOptions; track status) {
-            <option [value]="status">{{ getStatusText(status) }}</option>
-          }
-        </select>
-        @if (form.get('status')?.touched && form.get('status')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
-        }
-      </div>
-
       <!-- Dependency -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input

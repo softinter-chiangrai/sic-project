@@ -105,19 +105,8 @@
                     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
                         <sic-input label="โมดูล" formControlName="module"></sic-input>
                     </div>
-                    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-                        <div class="flex-1">
-                            <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
-                        </div>
-                        <div class="flex-1">
-                            <sic-combobox
-                                label="สถานะ"
-                                formControlName="status"
-                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS'"
-                                valueField="value"
-                                textField="text"
-                            ></sic-combobox>
-                        </div>
+                    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+                        <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
                     </div>
                     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
                         <div class="flex-1">

@@ -5044,24 +5044,6 @@ export interface Project {
         </div>
       </div>
 
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
-          สถานะ <span class="text-red-500">*</span>
-        </label>
-        <select
-          formControlName="status"
-          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-        >
-          @for (status of statusOptions; track status) {
-            <option [value]="status">{{ getStatusText(status) }}</option>
-          }
-        </select>
-        @if (form.get('status')?.touched && form.get('status')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
-        }
-      </div>
-
       <!-- Dependency -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
@@ -5191,24 +5173,6 @@ export interface Project {
         ></sic-input-area>
         @if (form.get('actualResult')?.touched && form.get('actualResult')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุผลลัพธ์ที่ได้จริง</p>
-        }
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
-          สถานะการทดสอบ <span class="text-red-500">*</span>
-        </label>
-        <select
-          formControlName="status"
-          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-        >
-          @for (status of statusOptions; track status) {
-            <option [value]="status">{{ getStatusText(status) }}</option>
-          }
-        </select>
-        @if (form.get('status')?.touched && form.get('status')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
         }
       </div>
 
@@ -5362,16 +5326,6 @@ export interface Project {
         @if (form.get('deliveryDate')?.touched && form.get('deliveryDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่ส่งมอบ</p>
         }
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovStatus"
-          [required]="true"
-        ></sic-combobox>
       </div>
 
       <!-- ===== CHECKLIST ===== -->
@@ -5647,16 +5601,6 @@ export interface Project {
             </span>
           }
         </div>
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovPaymentStatus"
-          [required]="true"
-        ></sic-combobox>
       </div>
 
       <!-- Notes -->
@@ -6052,30 +5996,17 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
         </div>
       </div>
 
-      <!-- ✅ Status & Priority (ใช้ Select ธรรมดาแทน Combobox) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">สถานะโครงการ</label>
-          <select
-            formControlName="status"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-          >
-            @for (status of statusOptions; track status) {
-              <option [value]="status">{{ status }}</option>
-            }
-          </select>
-        </div>
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ระดับความสำคัญ</label>
-          <select
-            formControlName="priority"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-          >
-            @for (priority of priorityOptions; track priority) {
-              <option [value]="priority">{{ priority }}</option>
-            }
-          </select>
-        </div>
+      <!-- ✅ Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ระดับความสำคัญ</label>
+        <select
+          formControlName="priority"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
+        >
+          @for (priority of priorityOptions; track priority) {
+            <option [value]="priority">{{ priority }}</option>
+          }
+        </select>
       </div>
 
       <!-- Description -->
@@ -37790,16 +37721,6 @@ export class Pmdt09Service {
         ></sic-input>
       </div>
 
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovStatus"
-          [required]="true"
-        ></sic-combobox>
-      </div>
-
       <!-- Version -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
@@ -38270,14 +38191,6 @@ export default Pmdt10Component;
             label="ระดับความรุนแรง"
             formControlName="severity"
             [apiUrl]="service.apiGetLovSeverity"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-        <div class="flex-1">
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="service.apiGetLovStatus"
             [required]="true"
           ></sic-combobox>
         </div>
@@ -38805,24 +38718,14 @@ export default Pmdt11Component;
         </div>
       </div>
 
-      <!-- Status & Priority -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="service.apiGetLovStatus"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-        <div class="flex-1">
-          <sic-combobox
-            label="ลำดับความสำคัญ"
-            formControlName="priority"
-            [apiUrl]="service.apiGetLovPriority"
-            [required]="true"
-          ></sic-combobox>
-        </div>
+      <!-- Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลำดับความสำคัญ"
+          formControlName="priority"
+          [apiUrl]="service.apiGetLovPriority"
+          [required]="true"
+        ></sic-combobox>
       </div>
 
       <!-- Dependency -->
@@ -39211,7 +39114,6 @@ export class Pmdt13Service {
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
   ],
@@ -39770,7 +39672,6 @@ export class Pmdt15Service {
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
   ],
@@ -39972,7 +39873,6 @@ export class Pmdt16Service {
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
   ],
@@ -40327,14 +40227,6 @@ export default Pmdt16Component;
             label="ลำดับความสำคัญ"
             formControlName="priority"
             [apiUrl]="service.apiGetLovPriority"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-        <div class="flex-1">
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="service.apiGetLovStatus"
             [required]="true"
           ></sic-combobox>
         </div>
@@ -41075,16 +40967,6 @@ export default Pmdt18Component;
           formControlName="version"
           placeholder="v1.0"
         ></sic-input>
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะ"
-          formControlName="status"
-          [apiUrl]="service.apiGetLovStatus"
-          [required]="true"
-        ></sic-combobox>
       </div>
 
       <!-- Active Status -->
@@ -42221,14 +42103,6 @@ export default Pmdt21Component;
             label="ระดับความรุนแรง"
             formControlName="severity"
             [apiUrl]="service.apiGetLovSeverity"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-        <div class="flex-1">
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="service.apiGetLovStatus"
             [required]="true"
           ></sic-combobox>
         </div>
@@ -48759,39 +48633,6 @@ public class PmDiagramTabResponse {
     private Instant updatedDate;
     private Integer versionCount;
     private Integer rowVersion;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmRequirementResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.UUID;
-
-@Data
-public class PmRequirementResponse {
-    private UUID id;
-    private String requirementCode;
-    private String title;
-    private String description;
-    private String requirementType;
-    private String source;
-    private String priority;
-    private String businessValue;
-    private String acceptanceCriteria;
-    private UUID projectId;
-    private String projectName;
-    private String createdBy;
-    private String version;
-    private String status;
-    private Boolean isActive;
-    private Instant createdDate;
-    private Instant updatedDate;
-    private Integer rowVersion;
-    private UUID uploadGroupId;
-    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
 }
 </file>
 
@@ -57031,7 +56872,6 @@ import { ProjectModel } from './pmrt02A.model';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
@@ -58990,6 +58830,41 @@ public class SaveImpactAnalysisRequest {
     private UUID[] impactedBugIds;
     private UUID[] impactedDiagramIds;
     private String[] impactedTableNames;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PmRequirementResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Data
+public class PmRequirementResponse {
+    private UUID id;
+    private String requirementCode;
+    private String title;
+    private String description;
+    private String requirementType;
+    private String source;
+    private String priority;
+    private String businessValue;
+    private String acceptanceCriteria;
+    private UUID projectId;
+    private String projectName;
+    private UUID customerId;
+    private String customerName;
+    private String createdBy;
+    private String version;
+    private String status;
+    private Boolean isActive;
+    private Instant createdDate;
+    private Instant updatedDate;
+    private Integer rowVersion;
+    private UUID uploadGroupId;
+    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
 }
 </file>
 
@@ -61136,465 +61011,6 @@ export interface ApprovalItem {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.html">
-<!-- src/app/feature/pm/dt/pmdt04/pmdt04.component.html -->
-<div class="space-y-5 p-0.5">
-
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
-        รายการ Requirement
-      </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
-    </button>
-  </div>
-
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหารหัส, ชื่อ..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
-    </div>
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      <option value="Draft">ร่าง</option>
-      <option value="In Review">อยู่ระหว่างตรวจสอบ</option>
-      <option value="Approved">อนุมัติแล้ว</option>
-      <option value="Changed">เปลี่ยนแปลง</option>
-      <option value="Cancelled">ยกเลิก</option>
-    </select>
-  </div>
-
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th (click)="onSortChange('requirementCode')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
-              รหัส
-              @if (sortBy() === 'requirementCode') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('title')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]">
-              ชื่อ
-              @if (sortBy() === 'title') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('projectName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]">
-              โครงการ
-              @if (sortBy() === 'projectName') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('priority')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]">
-              Priority
-              @if (sortBy() === 'priority') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('status')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
-              สถานะ
-              @if (sortBy() === 'status') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
-              อนุมัติ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px] hidden md:table-cell">
-              เวอร์ชัน
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (req of requirements(); track req.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  {{ req.requirementCode }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <div class="font-medium text-[var(--text-active)]">{{ req.title }}</div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text)]">{{ req.projectName }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getPriorityClass(req.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ req.priority }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(req.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(req.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                @if (req.approvalStatus) {
-                  <span [class]="getApprovalStatusClass(req.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                    {{ getApprovalStatusText(req.approvalStatus) }}
-                  </span>
-                } @else {
-                  <span class="text-xs text-[var(--text-muted)]">-</span>
-                }
-              </td>
-              <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm hidden md:table-cell">
-                {{ req.version }}
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <!-- ปุ่ม View ไป pmrt05 -->
-                  <button
-                    (click)="goToView(req.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดู Dashboard"
-                  >
-                    <i class="bi bi-speedometer2"></i>
-                  </button>
-                  <!-- ปุ่ม Edit ใช้ routerLink -->
-                  <a
-                    [routerLink]="['/feature/pm/requirement', req.id, 'edit']"
-                    [queryParams]="{ projectId: customerState.getProjectId() }"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  <!-- ปุ่มลบ -->
-                  <button
-                    (click)="deleteRequirement(req.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="8" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Requirement</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Requirement ใหม่</p>
-                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
-                    <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- PAGINATION -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
-        - <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
-        จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
-      </div>
-      <div class="flex gap-1">
-        <button (click)="onPageChange(currentPage() - 1)" [disabled]="!hasPrevious()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        @for (page of pageNumbers(); track page) {
-          <button (click)="onPageChange(page)" [class]="page === currentPage() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'">
-            {{ page }}
-          </button>
-        }
-        <button (click)="onPageChange(currentPage() + 1)" [disabled]="!hasNext()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.html">
-<!-- src/app/feature/pm/dt/pmdt05/pmdt05.component.html -->
-
-<div class="space-y-4 p-0.5">
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <button
-        (click)="onBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <h1 class="text-xl font-bold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่' }}
-        </h1>
-        @if (isEdit) {
-          <p class="text-xs text-[var(--text-muted)]">
-            รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
-          </p>
-        }
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2 flex-wrap">
-      <!-- Auto-save status -->
-      <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
-        {{ getAutoSaveText() }}
-      </span>
-
-      <!-- View Mode Toggle -->
-      <div class="view-mode-toggle">
-        <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
-          <i class="bi bi-layout-split"></i>
-        </button>
-        <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
-          <i class="bi bi-eye"></i>
-        </button>
-      </div>
-
-      <!-- Export Buttons -->
-      <div class="flex gap-1">
-        <button
-          (click)="exportRequirement('pdf')"
-          [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
-          title="ส่งออก PDF"
-        >
-          <i class="bi bi-filetype-pdf"></i>
-          PDF
-        </button>
-        <button
-          (click)="exportRequirement('docx')"
-          [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
-          title="ส่งออก Word"
-        >
-          <i class="bi bi-file-word"></i>
-          DOCX
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== LOADING ===== -->
-  @if (isLoading) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- ===== MAIN LAYOUT ===== -->
-  @if (!isLoading) {
-    <div class="pmdt05-layout" [class.pmdt05-layout--split]="viewMode === 'split'" [class.pmdt05-layout--edit-only]="viewMode === 'edit'" [class.pmdt05-layout--preview-only]="viewMode === 'preview'">
-      <!-- ===== EDIT PANEL ===== -->
-      @if (viewMode !== 'preview') {
-        <div class="pmdt05-panel pmdt05-panel--edit">
-          <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-input
-                label="รหัส Requirement"
-                formControlName="requirementCode"
-                [required]="true"
-                placeholder="REQ-001"
-              ></sic-input>
-              <sic-input
-                label="ชื่อ Requirement"
-                formControlName="title"
-                [required]="true"
-                placeholder="ระบบ Login"
-              ></sic-input>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <sic-combobox
-                label="ประเภท Requirement"
-                formControlName="requirementType"
-                [apiUrl]="service.apiGetLovRequirementType"
-                [required]="true"
-              ></sic-combobox>
-              <sic-combobox
-                label="ลำดับความสำคัญ"
-                formControlName="priority"
-                [apiUrl]="service.apiGetLovPriority"
-                [required]="true"
-              ></sic-combobox>
-              <sic-combobox
-                label="สถานะ"
-                formControlName="status"
-                [apiUrl]="service.apiGetLovStatus"
-              ></sic-combobox>
-            </div>
-
-            <!-- Description (ใช้ sic-tiptap-editor) -->
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-medium text-[var(--text-active)]">
-                  รายละเอียด <span class="text-red-500">*</span>
-                </span>
-                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-              </div>
-              <sic-tiptap-editor
-                formControlName="description"
-                placeholderInput="กรอกรายละเอียด Requirement..."
-                minHeightInput="150px"
-              ></sic-tiptap-editor>
-              @if (form.get('description')?.touched && form.get('description')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
-              }
-            </div>
-
-            <!-- เอกสารแนบ -->
-            <div class="space-y-1">
-              <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
-              <sic-upload
-                formControlName="uploadGroupData"
-                [uploadGroupId]="$safeNavigationMigration(form.get('uploadGroupId')?.value)"
-                [multiple]="true"
-                category="all"
-                [visibility]="1"
-                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Requirement"
-              ></sic-upload>
-            </div>
-
-            <!-- Active -->
-            <div>
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  formControlName="isActive"
-                  class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-                />
-                <span class="text-[var(--text-active)]">เปิดใช้งาน Requirement</span>
-              </label>
-            </div>
-
-            <!-- Approval Flow -->
-            <div class="border-t border-[var(--border)] pt-4 mt-2">
-              <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                การอนุมัติ
-              </div>
-              <div class="grid grid-cols-1 gap-4">
-                <sic-combobox
-                  label="กระบวนการอนุมัติ"
-                  [apiUrl]="service.apiGetApprovals"
-                  valueField="id"
-                  textField="flowName"
-                  placeholder="เลือกกระบวนการอนุมัติ"
-                  [clearable]="true"
-                  (selectionChanged)="selectedFlowId = $event?.id"
-                ></sic-combobox>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-              <sic-button
-                [fullWidth]="false"
-                type="button"
-                variant="secondary"
-                (click)="onBack()"
-              >
-                <i class="bi bi-arrow-left"></i>
-                ย้อนกลับ
-              </sic-button>
-              <sic-button
-                [fullWidth]="true"
-                type="submit"
-                variant="primary"
-                [disabled]="isSaving || form.invalid || !selectedFlowId"
-              >
-                @if (isSaving) {
-                  <i class="bi bi-arrow-repeat animate-spin"></i>
-                } @else {
-                  <i class="bi bi-floppy"></i>
-                }
-                {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-              </sic-button>
-            </div>
-
-            <!-- Hidden fields -->
-            <input type="hidden" formControlName="id" />
-            <input type="hidden" formControlName="state" />
-            <input type="hidden" formControlName="rowVersion" />
-          </form>
-        </div>
-      }
-
-      <!-- ===== PREVIEW PANEL ===== -->
-      @if (viewMode !== 'edit') {
-        <div class="pmdt05-panel pmdt05-panel--preview">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-eye text-[var(--crm-primary)]"></i>
-              ตัวอย่างเอกสาร
-            </h3>
-            <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
-          </div>
-          <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
-        </div>
-      }
-    </div>
-  }
-</div>
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.model.ts">
 // src/app/feature/pm/dt/pmdt06/diagram.model.ts
 export interface DiagramProject {
@@ -61816,19 +61232,8 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
                     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
                         <sic-input label="โมดูล" formControlName="module"></sic-input>
                     </div>
-                    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-                        <div class="flex-1">
-                            <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
-                        </div>
-                        <div class="flex-1">
-                            <sic-combobox
-                                label="สถานะ"
-                                formControlName="status"
-                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS'"
-                                valueField="value"
-                                textField="text"
-                            ></sic-combobox>
-                        </div>
+                    <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+                        <sic-input label="เวอร์ชัน" formControlName="version" [disabled]="true"></sic-input>
                     </div>
                     <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
                         <div class="flex-1">
@@ -65931,269 +65336,248 @@ export class Pmdt02CComponent implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts">
-// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import type { ApprovalStatus } from '../pmdt03/approval.model';
-import { ApprovalService } from '../pmdt03/approval.service';
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.html">
+<!-- src/app/feature/pm/dt/pmdt04/pmdt04.component.html -->
+<div class="space-y-5 p-0.5">
 
-import { RequirementItem } from './pmdt04.model';
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
+        รายการ Requirement
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
+    </button>
+  </div>
 
-
-@Component({
-  selector: 'app-pmdt04',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt04.component.html',
-})
-export class Pmdt04Component implements OnInit {
-  private http = inject(HttpClient);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private approvalService = inject(ApprovalService);
-  private navigation = inject(NavigationService);
-  public customerState = inject(CustomerStateService); // ✅ เปลี่ยนเป็น public
-
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('requirementCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
-  protected requirements = signal<RequirementItem[]>([]);
-
-  protected totalItems = signal(0);
-
-  // ===== Computed =====
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
-
-  ngOnInit() {
-    this.loadRequirements();
-  }
-
-  // ===== Load Data =====
-  loadRequirements() {
-    const projectId = this.customerState.getProjectId();
-    if (!projectId) {
-      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
-      this.navigation.navigate(['/feature/pm/pmrt02']);
-      return;
-    }
-
-    this.isLoading.set(true);
-    const params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString())
-      .set('keyword', this.searchTerm() || '')
-      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
-      .set('sortBy', this.sortBy())
-      .set('sortDir', this.sortDir())
-      .set('projectId', projectId);
-
-    this.http
-      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (res) => {
-          const data = res.data || [];
-          this.requirements.set(data);
-          this.totalItems.set(res.totalElements || 0);
-          this.loadApprovalStatuses(data);
-        },
-        error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
-          this.requirements.set([]);
-          this.totalItems.set(0);
-        },
-      });
-  }
-
-  loadApprovalStatuses(requirements: RequirementItem[]) {
-
-    requirements.forEach((req) => {
-      this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
-        next: (approval) => {
-          this.requirements.update((list) =>
-            list.map((item) =>
-              item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
-            ),
-          );
-        },
-        error: () => {
-          // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
-        },
-      });
-    });
-  }
-
-  // ===== Event Handlers =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadRequirements();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadRequirements();
-  }
-
-  // ===== Navigation =====
-  goToAdd() {
-    this.navigation.navigate(['/feature/pm/requirement/new']);
-  }
-
-  goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
-  }
-
-  goToView(id: string) {
-    const projectId = this.customerState.getProjectId();
-    const requirement = this.requirements().find(r => r.id === id);
-    this.navigation.navigate(['/feature/pm/pmrt05'], {
-      queryParams: {
-        requirementId: id,
-        projectId: projectId,
-        requirementTitle: requirement?.title || ''
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
       }
-    });
+    </div>
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      <option value="Draft">ร่าง</option>
+      <option value="In Review">อยู่ระหว่างตรวจสอบ</option>
+      <option value="Approved">อนุมัติแล้ว</option>
+      <option value="Changed">เปลี่ยนแปลง</option>
+      <option value="Cancelled">ยกเลิก</option>
+    </select>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
   }
 
-  deleteRequirement(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
-      if (ok) {
-        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
-          next: () => {
-            this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
-            this.loadRequirements();
-          },
-          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
-        });
-      }
-    });
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th (click)="onSortChange('requirementCode')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
+              รหัส
+              @if (sortBy() === 'requirementCode') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('title')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]">
+              ชื่อ
+              @if (sortBy() === 'title') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('projectName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]">
+              โครงการ
+              @if (sortBy() === 'projectName') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('priority')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]">
+              Priority
+              @if (sortBy() === 'priority') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th (click)="onSortChange('status')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
+              สถานะ
+              @if (sortBy() === 'status') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+              อนุมัติ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px] hidden md:table-cell">
+              เวอร์ชัน
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (req of requirements(); track req.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ req.requirementCode }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div>
+                  <div class="font-medium text-[var(--text-active)]">{{ req.title }}</div>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text)]">{{ req.projectName }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getPriorityClass(req.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ req.priority }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(req.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(req.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                @if (req.approvalStatus) {
+                  <span [class]="getApprovalStatusClass(req.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getApprovalStatusText(req.approvalStatus) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm hidden md:table-cell">
+                {{ req.version }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
+                  <button
+                    (click)="goToView(req.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดูผังความสัมพันธ์ (pmrt05)"
+                  >
+                    <i class="bi bi-file-earmark-text"></i>
+                  </button>
+                  <!-- ปุ่ม View เอกสาร (เปิดหน้าฟอร์มแบบอ่านอย่างเดียว) -->
+                  <a
+                    [routerLink]="['/feature/pm/requirement', req.id, 'view']"
+                    [queryParams]="{ projectId: customerState.getProjectId() }"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                    title="ดูข้อมูล (View Only)"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </a>
+                
+                  
+                  <!-- ปุ่ม Edit ใช้ routerLink -->
+                  <a
+                    [routerLink]="['/feature/pm/requirement', req.id, 'edit']"
+                    [queryParams]="{ projectId: customerState.getProjectId() }"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <!-- ปุ่ม Print เอกสาร -->
+                  <button
+                    (click)="printDocument(req)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="พิมพ์เอกสาร"
+                  >
+                    <i class="bi bi-printer"></i>
+                  </button>
+                  <!-- ปุ่มลบ -->
+                  <button
+                    (click)="deleteRequirement(req.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบ"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Requirement</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Requirement ใหม่</p>
+                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
+                    <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 
-  // ===== Utility =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Draft'];
+  <!-- PAGINATION -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        - <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
+      </div>
+      <div class="flex gap-1">
+        <button (click)="onPageChange(currentPage() - 1)" [disabled]="!hasPrevious()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (page of pageNumbers(); track page) {
+          <button (click)="onPageChange(page)" [class]="page === currentPage() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'">
+            {{ page }}
+          </button>
+        }
+        <button (click)="onPageChange(currentPage() + 1)" [disabled]="!hasNext()" class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
   }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  getPriorityClass(priority: string): string {
-    const map: Record<string, string> = {
-      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return map[priority] || map["Won't"];
-  }
-
-  getApprovalStatusClass(status?: string): string {
-    const map: Record<string, string> = {
-      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
-  }
-
-  getApprovalStatusText(status?: string): string {
-    const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
-    };
-    return status ? map[status] || '-' : '-';
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-}
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05-preview/pmdt05-preview.component.ts">
@@ -66469,6 +65853,237 @@ export class SicRequirementPreviewComponent implements OnChanges {
     return map[priority] || priority;
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.html">
+<!-- src/app/feature/pm/dt/pmdt05/pmdt05.component.html -->
+
+<div class="space-y-4 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="onBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <h1 class="text-xl font-bold text-[var(--text-active)]">
+          {{ isViewOnly ? 'ดูข้อมูล Requirement' : (isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่') }}
+        </h1>
+        @if (isEdit || isViewOnly) {
+          <p class="text-xs text-[var(--text-muted)]">
+            รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Auto-save status -->
+      <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+        {{ getAutoSaveText() }}
+      </span>
+
+      <!-- View Mode Toggle -->
+      <div class="view-mode-toggle">
+        <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+          <i class="bi bi-layout-split"></i>
+        </button>
+        <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+
+      <!-- Export Buttons -->
+      <div class="flex gap-1">
+        <button
+          (click)="exportRequirement('pdf')"
+          [disabled]="isSaving || form.invalid"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
+          title="ส่งออก PDF"
+        >
+          <i class="bi bi-filetype-pdf"></i>
+          PDF
+        </button>
+        <button
+          (click)="exportRequirement('docx')"
+          [disabled]="isSaving || form.invalid"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
+          title="ส่งออก Word"
+        >
+          <i class="bi bi-file-word"></i>
+          DOCX
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  @if (!isLoading) {
+    <div class="pmdt05-layout" [class.pmdt05-layout--split]="viewMode === 'split'" [class.pmdt05-layout--edit-only]="viewMode === 'edit'" [class.pmdt05-layout--preview-only]="viewMode === 'preview'">
+      <!-- ===== EDIT PANEL ===== -->
+      @if (viewMode !== 'preview') {
+        <div class="pmdt05-panel pmdt05-panel--edit">
+          <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <sic-input
+                label="รหัส Requirement"
+                formControlName="requirementCode"
+                [required]="true"
+                placeholder="REQ-001"
+              ></sic-input>
+              <sic-input
+                label="ชื่อ Requirement"
+                formControlName="title"
+                [required]="true"
+                placeholder="ระบบ Login"
+              ></sic-input>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <sic-combobox
+                label="ประเภท Requirement"
+                formControlName="requirementType"
+                [apiUrl]="service.apiGetLovRequirementType"
+                [required]="true"
+              ></sic-combobox>
+              <sic-combobox
+                label="ลำดับความสำคัญ"
+                formControlName="priority"
+                [apiUrl]="service.apiGetLovPriority"
+                [required]="true"
+              ></sic-combobox>
+            </div>
+
+            <!-- Description (ใช้ sic-tiptap-editor) -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-medium text-[var(--text-active)]">
+                  รายละเอียด <span class="text-red-500">*</span>
+                </span>
+                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+              </div>
+              <sic-tiptap-editor
+                formControlName="description"
+                placeholderInput="กรอกรายละเอียด Requirement..."
+                minHeightInput="150px"
+              ></sic-tiptap-editor>
+              @if (form.get('description')?.touched && form.get('description')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+              }
+            </div>
+
+            <!-- เอกสารแนบ -->
+            <div class="space-y-1">
+              <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+              <sic-upload
+                formControlName="uploadGroupData"
+                [uploadGroupId]="$safeNavigationMigration(form.get('uploadGroupId')?.value)"
+                [multiple]="true"
+                category="all"
+                [visibility]="1"
+                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Requirement"
+              ></sic-upload>
+            </div>
+
+            <!-- Active -->
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  formControlName="isActive"
+                  class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+                />
+                <span class="text-[var(--text-active)]">เปิดใช้งาน Requirement</span>
+              </label>
+            </div>
+
+            <!-- Approval Flow -->
+            <div class="border-t border-[var(--border)] pt-4 mt-2">
+              <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                การอนุมัติ
+              </div>
+              <div class="grid grid-cols-1 gap-4">
+                <sic-combobox
+                  label="กระบวนการอนุมัติ"
+                  [apiUrl]="service.apiGetApprovals"
+                  valueField="id"
+                  textField="flowName"
+                  placeholder="เลือกกระบวนการอนุมัติ"
+                  [clearable]="true"
+                  (selectionChanged)="selectedFlowId = $event?.id"
+                ></sic-combobox>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+              <sic-button
+                [fullWidth]="isViewOnly"
+                type="button"
+                variant="secondary"
+                (click)="onBack()"
+              >
+                <i class="bi bi-arrow-left"></i>
+                ย้อนกลับ
+              </sic-button>
+              @if (!isViewOnly) {
+                <sic-button
+                  [fullWidth]="true"
+                  type="submit"
+                  variant="primary"
+                  [disabled]="isSaving || form.invalid || !selectedFlowId"
+                >
+                  @if (isSaving) {
+                    <i class="bi bi-arrow-repeat animate-spin"></i>
+                  } @else {
+                    <i class="bi bi-floppy"></i>
+                  }
+                  {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                </sic-button>
+              }
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" formControlName="id" />
+            <input type="hidden" formControlName="state" />
+            <input type="hidden" formControlName="rowVersion" />
+          </form>
+        </div>
+      }
+
+      <!-- ===== PREVIEW PANEL ===== -->
+      @if (viewMode !== 'edit') {
+        <div class="pmdt05-panel pmdt05-panel--preview">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-eye text-[var(--crm-primary)]"></i>
+              ตัวอย่างเอกสาร
+            </h3>
+            <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+          </div>
+          <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
+        </div>
+      }
+    </div>
+  }
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html">
@@ -67689,306 +67304,6 @@ public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> 
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmRequirementServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.UUID;
-import java.util.List;
-import java.util.ArrayList;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.request.PmRequirementRequest;
-import com.softinter.sicapi.dto.response.PmRequirementResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.pm.PmRequirement;
-import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.service.PmRequirementService;
-import com.softinter.sicapi.service.EditSessionService;
-import com.softinter.sicapi.service.DocumentVersionService;
-import com.softinter.sicapi.repository.su.SuUploadRepository;
-import com.softinter.sicapi.service.FileStorageService;
-import com.softinter.sicapi.entity.su.SuUpload;
-import com.softinter.sicapi.entity.ex.StorageUploadReference;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmRequirementServiceImpl implements PmRequirementService {
-
-    private final PmRequirementRepository requirementRepository;
-    private final EditSessionService editSessionService;
-    private final SuUploadRepository uploadRepository;
-    private final FileStorageService fileStorageService;
-    private final DocumentVersionService documentVersionService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PmRequirementResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
-        Page<PmRequirement> page;
-        if (keyword != null && !keyword.isBlank() && status != null && !status.isBlank()) {
-            page = requirementRepository.searchByKeywordAndStatusAndProject(businessId, projectId, keyword, status, pageable);
-        } else if (keyword != null && !keyword.isBlank()) {
-            page = requirementRepository.searchByKeywordAndProject(businessId, projectId, keyword, pageable);
-        } else if (status != null && !status.isBlank()) {
-            page = requirementRepository.findAllByStatusAndProject(businessId, projectId, status, pageable);
-        } else {
-            page = requirementRepository.findAllByBusinessIdAndProjectId(businessId, projectId, pageable);
-        }
-        return page.map(this::toResponse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmRequirementResponse findById(UUID id, UUID businessId) {
-        PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Requirement not found"));
-        return toResponse(requirement);
-    }
-
-    @Override
-    @Transactional
-    public PmRequirementResponse save(PmRequirementRequest request, UUID businessId, String userId) {
-        PmRequirement requirement;
-        EntityState state = EntityState.values()[request.getState() != null ? request.getState() : 0];
-
-        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
-        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
-
-        if (state == EntityState.ADDED) {
-            // ===== CREATE NEW =====
-            requirement = new PmRequirement();
-            requirement.setBusinessId(businessId);
-            requirement.setCreatedBy(userId);
-            requirement.setCreatedDate(Instant.now());
-            requirement.setIsDelete(false);
-            requirement.setStatus("Draft");
-            requirement.setIsActive(true);
-            requirement.setVersion("v1.0");
-            mapRequestToEntity(request, requirement);
-            requirement.setUploadGroupId(finalUploadGroupId);
-            requirement = requirementRepository.save(requirement);
-
-            // ✅ Create initial version
-            documentVersionService.createVersion(
-                    "REQUIREMENT",
-                    requirement.getId(),
-                    requirement.getVersion(),
-                    "Initial version"
-            );
-
-        } else if (state == EntityState.MODIFIED) {
-            // ===== UPDATE EXISTING =====
-            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
-
-            // Edit Guard: Check if the document status is NOT Draft, then require assignee rights.
-            if (!"DRAFT".equalsIgnoreCase(requirement.getStatus())) {
-                if (!editSessionService.canEdit("REQUIREMENT", requirement.getId(), userId)) {
-                    throw new IllegalStateException("This document is locked because it is not in Draft. A Change Request is required to edit it.");
-                }
-            }
-
-            // check rowVersion
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(requirement.getRowVersion())) {
-                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
-            }
-
-            String oldStatus = requirement.getStatus();
-            String oldVersion = requirement.getVersion();
-            if (oldVersion == null) oldVersion = "v1.0";
-
-            requirement.setUpdatedBy(userId);
-            requirement.setUpdatedDate(Instant.now());
-            mapRequestToEntity(request, requirement);
-            requirement.setUploadGroupId(finalUploadGroupId);
-
-            // ✅ Increment version if status changed to Approved
-            if ("Approved".equals(request.getStatus()) && !"Approved".equals(oldStatus)) {
-                String newVersion = documentVersionService.incrementVersion(oldVersion);
-                requirement.setVersion(newVersion);
-                requirement = requirementRepository.save(requirement);
-
-                documentVersionService.createVersion(
-                        "REQUIREMENT",
-                        requirement.getId(),
-                        newVersion,
-                        "Status changed to Approved"
-                );
-            } else {
-                // ✅ Save version on every update (optional - can be configured)
-                requirement = requirementRepository.save(requirement);
-                String newVersion = documentVersionService.incrementVersion(oldVersion);
-                requirement.setVersion(newVersion);
-                requirement = requirementRepository.save(requirement);
-
-                documentVersionService.createVersion(
-                        "REQUIREMENT",
-                        requirement.getId(),
-                        newVersion,
-                        request.getTitle() + " (updated)"
-                );
-            }
-
-        } else if (state == EntityState.DELETED) {
-            // ===== SOFT DELETE =====
-            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
-            requirement.setIsDelete(true);
-            requirement.setIsActive(false);
-            requirement.setDeleteBy(userId);
-            requirement.setDeleteDate(Instant.now());
-            requirementRepository.save(requirement);
-
-            // ✅ Soft delete all versions
-            documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
-            return toResponse(requirement);
-
-        } else {
-            throw new IllegalArgumentException("Invalid state: " + state);
-        }
-
-        // Sync Uploads
-        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
-            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
-        }
-
-        return toResponse(requirement);
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id, UUID businessId, String userId) {
-        PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Requirement not found"));
-        requirement.setIsDelete(true);
-        requirement.setIsActive(false);
-        requirement.setDeleteBy(userId);
-        requirement.setDeleteDate(Instant.now());
-        requirementRepository.save(requirement);
-
-        // ✅ Soft delete all versions
-        documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
-    }
-
-    private void mapRequestToEntity(PmRequirementRequest request, PmRequirement entity) {
-        entity.setRequirementCode(request.getRequirementCode());
-        entity.setTitle(request.getTitle());
-        entity.setDescription(request.getDescription());
-        entity.setRequirementType(request.getRequirementType());
-        entity.setSource(request.getSource());
-        entity.setPriority(request.getPriority());
-        entity.setBusinessValue(request.getBusinessValue());
-        entity.setAcceptanceCriteria(request.getAcceptanceCriteria());
-        entity.setProjectId(request.getProjectId());
-        if (request.getVersion() != null) {
-            entity.setVersion(request.getVersion());
-        }
-        if (request.getStatus() != null) {
-            entity.setStatus(request.getStatus());
-        }
-        if (request.getIsActive() != null) {
-            entity.setIsActive(request.getIsActive());
-        }
-    }
-
-    private PmRequirementResponse toResponse(PmRequirement entity) {
-        PmRequirementResponse response = new PmRequirementResponse();
-        response.setId(entity.getId());
-        response.setRequirementCode(entity.getRequirementCode());
-        response.setTitle(entity.getTitle());
-        response.setDescription(entity.getDescription());
-        response.setRequirementType(entity.getRequirementType());
-        response.setSource(entity.getSource());
-        response.setPriority(entity.getPriority());
-        response.setBusinessValue(entity.getBusinessValue());
-        response.setAcceptanceCriteria(entity.getAcceptanceCriteria());
-        response.setProjectId(entity.getProjectId());
-        if (entity.getProject() != null) {
-            response.setProjectName(entity.getProject().getProjectName());
-        }
-        response.setCreatedBy(entity.getCreatedBy());
-        response.setVersion(entity.getVersion());
-        response.setStatus(entity.getStatus());
-        response.setIsActive(entity.getIsActive());
-        response.setCreatedDate(entity.getCreatedDate());
-        response.setUpdatedDate(entity.getUpdatedDate());
-        response.setRowVersion(entity.getRowVersion());
-
-        UUID uploadGroupId = entity.getUploadGroupId();
-        response.setUploadGroupId(uploadGroupId);
-
-        List<StorageUploadReference> uploadData = new ArrayList<>();
-        if (uploadGroupId != null) {
-            List<SuUpload> uploads = uploadRepository
-                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
-
-            for (SuUpload upload : uploads) {
-                StorageUploadReference ref = new StorageUploadReference();
-                ref.setId(upload.getId());
-                ref.setUploadGroupId(uploadGroupId);
-                ref.setFileName(upload.getFileName());
-                ref.setContentType(upload.getContentType());
-                ref.setFileSize(upload.getFileSize());
-
-                // TODO: ทำให้ baseUrl configurable
-                String baseUrl = "http://localhost:5265";
-                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
-
-                ref.setState(EntityState.DETACHED.getEntityStateCode());
-                ref.setIsActive(upload.getIsActive());
-                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
-                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
-
-                uploadData.add(ref);
-            }
-        }
-        response.setUploadGroupData(uploadData);
-
-        return response;
-    }
-
-    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
-        if (existingGroupId != null) {
-            return existingGroupId;
-        }
-        if (references == null || references.isEmpty()) {
-            return null;
-        }
-        for (StorageUploadReference ref : references) {
-            if (ref.getUploadGroupId() != null) {
-                return ref.getUploadGroupId();
-            }
-            if (ref.getId() != null) {
-                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
-                if (upload != null && upload.getUploadGroupId() != null) {
-                    return upload.getUploadGroupId();
-                }
-            }
-        }
-        return null;
-    }
-
-    private String mapVisibilityToString(com.softinter.sicapi.entity.enums.FileVisibility visibility) {
-        if (visibility == null) return "Public";
-        switch (visibility) {
-            case UPLOADER_ONLY: return "UploaderOnly";
-            case BUSINESS_ONLY: return "BusinessOnly";
-            case ANYONE_WITH_LINK: return "AnyoneWithLink";
-            case PUBLIC: return "Public";
-            default: return "Public";
-        }
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java">
 // src/main/java/com/softinter/sicapi/service/impl/TraceLinkServiceImpl.java
 package com.softinter.sicapi.service.impl;
@@ -68975,6 +68290,335 @@ export class Pmdt01Component implements OnInit {
   }
 
   formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt04/pmdt04.component.ts">
+// src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import type { ApprovalStatus } from '../pmdt03/approval.model';
+import { ApprovalService } from '../pmdt03/approval.service';
+
+import { RequirementItem } from './pmdt04.model';
+
+
+@Component({
+  selector: 'app-pmdt04',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt04.component.html',
+})
+export class Pmdt04Component implements OnInit {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
+  private navigation = inject(NavigationService);
+  public customerState = inject(CustomerStateService); // ✅ เปลี่ยนเป็น public
+
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('requirementCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+  protected requirements = signal<RequirementItem[]>([]);
+
+  protected totalItems = signal(0);
+
+  // ===== Computed =====
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  protected Math = Math;
+
+  ngOnInit() {
+    this.loadRequirements();
+  }
+
+  // ===== Load Data =====
+  loadRequirements() {
+    const projectId = this.customerState.getProjectId();
+    if (!projectId) {
+      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
+      this.navigation.navigate(['/feature/pm/pmrt02']);
+      return;
+    }
+
+    this.isLoading.set(true);
+    const params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString())
+      .set('keyword', this.searchTerm() || '')
+      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
+      .set('sortBy', this.sortBy())
+      .set('sortDir', this.sortDir())
+      .set('projectId', projectId);
+
+    this.http
+      .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          const data = res.data || [];
+          this.requirements.set(data);
+          this.totalItems.set(res.totalElements || 0);
+          this.loadApprovalStatuses(data);
+        },
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
+          this.requirements.set([]);
+          this.totalItems.set(0);
+        },
+      });
+  }
+
+  loadApprovalStatuses(requirements: RequirementItem[]) {
+
+    requirements.forEach((req) => {
+      this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
+        next: (approval) => {
+          this.requirements.update((list) =>
+            list.map((item) =>
+              item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
+            ),
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
+        },
+      });
+    });
+  }
+
+  // ===== Event Handlers =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadRequirements();
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+    this.loadRequirements();
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadRequirements();
+  }
+
+  // ===== Navigation =====
+  goToAdd() {
+    this.navigation.navigate(['/feature/pm/requirement/new']);
+  }
+
+  goToEdit(id: string) {
+    this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+  }
+
+  goToView(id: string) {
+    const projectId = this.customerState.getProjectId();
+    const requirement = this.requirements().find(r => r.id === id);
+    this.navigation.navigate(['/feature/pm/pmrt05'], {
+      queryParams: {
+        requirementId: id,
+        projectId: projectId,
+        requirementTitle: requirement?.title || ''
+      }
+    });
+  }
+
+  printDocument(req: RequirementItem) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Requirement - ${req.requirementCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${req.requirementCode || '-'}] ${req.title || 'Requirement Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสเอกสาร</td>
+            <td>${req.requirementCode || '-'}</td>
+            <td class="label">เวอร์ชัน</td>
+            <td>${req.version || '1.0'}</td>
+          </tr>
+          <tr>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${req.projectName || '-'}</td>
+            <td class="label">ผู้สร้าง</td>
+            <td>${req.createdBy || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${req.priority || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${req.status || '-'}</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>รายละเอียด</h3>
+          <div>${req.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 300);
+  }
+
+  deleteRequirement(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
+            this.loadRequirements();
+          },
+          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
+        });
+      }
+    });
+  }
+
+  // ===== Utility =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || map['Draft'];
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      Approved: 'อนุมัติแล้ว',
+      Changed: 'เปลี่ยนแปลง',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return map[priority] || map["Won't"];
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
+  }
+
+  formatDate(dateStr: string): string {
     if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
@@ -70157,367 +69801,6 @@ export class Pmrt03Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.html">
-<!-- src/app/feature/pm/rt/pmrt05/pmrt05.component.html -->
-<div class="space-y-6 p-0.5">
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-4">
-      <button
-        (click)="goBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <h1 class="text-2xl font-bold text-[var(--text-active)]">
-            {{ requirement()?.title || 'Requirement' }}
-          </h1>
-          <span
-            class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
-          >
-            {{ requirement()?.requirementCode }}
-          </span>
-          <span
-            [class]="
-              getStatusClass(requirement()?.status || '') +
-              ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-            "
-          >
-            {{ getStatusText(requirement()?.status || '') }}
-          </span>
-          @if (!requirement()?.isActive) {
-            <span
-              class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            >
-              ปิดใช้งาน
-            </span>
-          }
-        </div>
-        <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
-          <span><i class="bi bi-briefcase"></i> {{ requirement()?.projectName }}</span>
-          <span><i class="bi bi-person"></i> {{ requirement()?.createdBy }}</span>
-          <span
-            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdDate || requirement()?.createdAt || '') }}</span
-          >
-          <span><i class="bi bi-tag"></i> {{ requirement()?.priority }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- ===== REQUIREMENT DETAIL ===== -->
-  @if (!isLoading() && requirement(); as req) {
-    <sic-card>
-      <div>
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">คำอธิบาย</p>
-
-        <!-- แสดงเนื้อหาแบบเต็มเมื่อขยาย -->
-        @if (isExpanded()) {
-          <div class="text-sm text-[var(--text)] prose prose-sm max-w-none whitespace-pre-wrap leading-relaxed" [innerHTML]="req.description || '-'"></div>
-        } @else {
-          <!-- แสดงเนื้อหาแบบย่อ (ข้อความธรรมดา) -->
-          <p class="text-sm text-[var(--text)] whitespace-pre-wrap leading-relaxed line-clamp-3">{{ getShortDescription(req.description) }}</p>
-        }
-
-        <!-- ปุ่มดูเพิ่ม / ย่อ (แสดงเฉพาะเมื่อเนื้อหายาว) -->
-        @if (isLongDescription(req.description)) {
-          <button
-            (click)="toggleExpand()"
-            class="text-xs font-medium text-[var(--crm-primary)] hover:underline mt-3 inline-flex items-center gap-1.5 focus:outline-none"
-          >
-            <span>{{ isExpanded() ? 'ย่อเนื้อหา' : 'ดูเนื้อหาเพิ่มเติม' }}</span>
-            <i class="bi" [class.bi-chevron-up]="isExpanded()" [class.bi-chevron-down]="!isExpanded()"></i>
-          </button>
-        }
-      </div>
-    </sic-card>
-  }
-
-  <!-- ===== QUICK ACTIONS ===== -->
-  <div>
-    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
-      <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
-      สร้างเอกสารที่เกี่ยวข้อง
-    </h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-      <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
-      <button
-        (click)="createDiagram()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-diagram-3 text-xl text-[var(--crm-primary)]"></i>
-        <span>Diagram</span>
-      </button>
-      <!-- ปุ่มอื่น ๆ ตามเดิม -->
-      <button
-        (click)="createSpec()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
-        <span>Specification</span>
-      </button>
-
-      <button
-        (click)="createDesignReview()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
-        <span>Design Review</span>
-      </button>
-      <button
-        (click)="createTask()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
-        <span>Task</span>
-      </button>
-      <button
-        (click)="createTest()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-clipboard-data text-xl text-[var(--crm-primary)]"></i>
-        <span>Test Case</span>
-      </button>
-      <button
-        (click)="createBug()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
-        <span>Bug</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== RELATED ITEMS ===== -->
-  <div>
-    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
-      <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-      ความสัมพันธ์ (Trace Links)
-    </h2>
-
-    @if (traceLinks().length === 0) {
-      <div
-        class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
-      >
-        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
-        <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
-        <p class="text-sm">ใช้ปุ่มด้านบนเพื่อสร้างเอกสารใหม่</p>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Diagrams (DFD + ER) -->
-        @if (diagrams().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-                Diagrams
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of diagrams(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span
-                      class="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                      [class.bg-blue-100]="item.type === 'DFD'"
-                      [class.text-blue-700]="item.type === 'DFD'"
-                      [class.bg-emerald-100]="item.type === 'ER'"
-                      [class.text-emerald-700]="item.type === 'ER'"
-                    >
-                      {{ item.type }}
-                    </span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Specification -->
-        @if (specList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
-                Specification
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of specList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Task -->
-        @if (taskList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-                Task
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of taskList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Test Case -->
-        @if (testList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
-                Test Case
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of testList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Bug -->
-        @if (bugList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-bug text-[var(--crm-danger)]"></i>
-                Bug
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of bugList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Change Request -->
-        @if (changeRequestList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
-                Change Request
-              </span>
-              <span class="text-xs text-[var(--text-muted)]"
-                >{{ changeRequestList().length }} รายการ</span
-              >
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of changeRequestList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Design Review -->
-        @if (designReviewList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-                Design Review
-              </span>
-              <span class="text-xs text-[var(--text-muted)]"
-                >{{ designReviewList().length }} รายการ</span
-              >
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of designReviewList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-      </div>
-    }
-  </div>
-</div>
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmSpecification.java">
 package com.softinter.sicapi.entity.pm;
 
@@ -70661,6 +69944,323 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
     Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
     boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmRequirementServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.dto.request.PmRequirementRequest;
+import com.softinter.sicapi.dto.response.PmRequirementResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.service.PmRequirementService;
+import com.softinter.sicapi.service.EditSessionService;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
+
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmRequirementServiceImpl implements PmRequirementService {
+
+    private final PmRequirementRepository requirementRepository;
+    private final EditSessionService editSessionService;
+    private final SuUploadRepository uploadRepository;
+    private final FileStorageService fileStorageService;
+    private final DocumentVersionService documentVersionService;
+    private final SuProfileRepository profileRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmRequirementResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
+        Page<PmRequirement> page;
+        if (keyword != null && !keyword.isBlank() && status != null && !status.isBlank()) {
+            page = requirementRepository.searchByKeywordAndStatusAndProject(businessId, projectId, keyword, status, pageable);
+        } else if (keyword != null && !keyword.isBlank()) {
+            page = requirementRepository.searchByKeywordAndProject(businessId, projectId, keyword, pageable);
+        } else if (status != null && !status.isBlank()) {
+            page = requirementRepository.findAllByStatusAndProject(businessId, projectId, status, pageable);
+        } else {
+            page = requirementRepository.findAllByBusinessIdAndProjectId(businessId, projectId, pageable);
+        }
+        return page.map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmRequirementResponse findById(UUID id, UUID businessId) {
+        PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        return toResponse(requirement);
+    }
+
+    @Override
+    @Transactional
+    public PmRequirementResponse save(PmRequirementRequest request, UUID businessId, String userId) {
+        PmRequirement requirement;
+        EntityState state = EntityState.values()[request.getState() != null ? request.getState() : 0];
+
+        List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
+        UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
+
+        if (state == EntityState.ADDED) {
+            // ===== CREATE NEW =====
+            requirement = new PmRequirement();
+            requirement.setBusinessId(businessId);
+            requirement.setCreatedBy(userId);
+            requirement.setCreatedDate(Instant.now());
+            requirement.setIsDelete(false);
+            requirement.setStatus("Draft");
+            requirement.setIsActive(true);
+            requirement.setVersion("v1.0");
+            mapRequestToEntity(request, requirement);
+            requirement.setUploadGroupId(finalUploadGroupId);
+            requirement = requirementRepository.save(requirement);
+
+            // ✅ Create initial version
+            documentVersionService.createVersion(
+                    "REQUIREMENT",
+                    requirement.getId(),
+                    requirement.getVersion(),
+                    "Initial version"
+            );
+
+        } else if (state == EntityState.MODIFIED) {
+            // ===== UPDATE EXISTING =====
+            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+
+            // Edit Guard: Check if the document status is NOT Draft, then require assignee rights.
+            if (!"DRAFT".equalsIgnoreCase(requirement.getStatus())) {
+                if (!editSessionService.canEdit("REQUIREMENT", requirement.getId(), userId)) {
+                    throw new IllegalStateException("This document is locked because it is not in Draft. A Change Request is required to edit it.");
+                }
+            }
+
+            // check rowVersion
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(requirement.getRowVersion())) {
+                throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+            }
+
+            String oldStatus = requirement.getStatus();
+            String oldVersion = requirement.getVersion();
+            if (oldVersion == null) oldVersion = "v1.0";
+
+            requirement.setUpdatedBy(userId);
+            requirement.setUpdatedDate(Instant.now());
+            mapRequestToEntity(request, requirement);
+            requirement.setUploadGroupId(finalUploadGroupId);
+
+            // ✅ Increment version if status changed to Approved
+            if ("Approved".equals(request.getStatus()) && !"Approved".equals(oldStatus)) {
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                requirement.setVersion(newVersion);
+                requirement = requirementRepository.save(requirement);
+
+                documentVersionService.createVersion(
+                        "REQUIREMENT",
+                        requirement.getId(),
+                        newVersion,
+                        "Status changed to Approved"
+                );
+            } else {
+                // ✅ Save version on every update (optional - can be configured)
+                requirement = requirementRepository.save(requirement);
+                String newVersion = documentVersionService.incrementVersion(oldVersion);
+                requirement.setVersion(newVersion);
+                requirement = requirementRepository.save(requirement);
+
+                documentVersionService.createVersion(
+                        "REQUIREMENT",
+                        requirement.getId(),
+                        newVersion,
+                        request.getTitle() + " (updated)"
+                );
+            }
+
+        } else if (state == EntityState.DELETED) {
+            // ===== SOFT DELETE =====
+            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+            requirement.setIsDelete(true);
+            requirement.setIsActive(false);
+            requirement.setDeleteBy(userId);
+            requirement.setDeleteDate(Instant.now());
+            requirementRepository.save(requirement);
+
+            // ✅ Soft delete all versions
+            documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+            return toResponse(requirement);
+
+        } else {
+            throw new IllegalArgumentException("Invalid state: " + state);
+        }
+
+        // Sync Uploads
+        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+        }
+
+        return toResponse(requirement);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id, UUID businessId, String userId) {
+        PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        requirement.setIsDelete(true);
+        requirement.setIsActive(false);
+        requirement.setDeleteBy(userId);
+        requirement.setDeleteDate(Instant.now());
+        requirementRepository.save(requirement);
+
+        // ✅ Soft delete all versions
+        documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+    }
+
+    private void mapRequestToEntity(PmRequirementRequest request, PmRequirement entity) {
+        entity.setRequirementCode(request.getRequirementCode());
+        entity.setTitle(request.getTitle());
+        entity.setDescription(request.getDescription());
+        entity.setRequirementType(request.getRequirementType());
+        entity.setSource(request.getSource());
+        entity.setPriority(request.getPriority());
+        entity.setBusinessValue(request.getBusinessValue());
+        entity.setAcceptanceCriteria(request.getAcceptanceCriteria());
+        entity.setProjectId(request.getProjectId());
+        if (request.getVersion() != null) {
+            entity.setVersion(request.getVersion());
+        }
+        if (request.getStatus() != null) {
+            entity.setStatus(request.getStatus());
+        }
+        if (request.getIsActive() != null) {
+            entity.setIsActive(request.getIsActive());
+        }
+    }
+
+    private PmRequirementResponse toResponse(PmRequirement entity) {
+        PmRequirementResponse response = new PmRequirementResponse();
+        response.setId(entity.getId());
+        response.setRequirementCode(entity.getRequirementCode());
+        response.setTitle(entity.getTitle());
+        response.setDescription(entity.getDescription());
+        response.setRequirementType(entity.getRequirementType());
+        response.setSource(entity.getSource());
+        response.setPriority(entity.getPriority());
+        response.setBusinessValue(entity.getBusinessValue());
+        response.setAcceptanceCriteria(entity.getAcceptanceCriteria());
+        response.setProjectId(entity.getProjectId());
+        if (entity.getProject() != null) {
+            response.setProjectName(entity.getProject().getProjectName());
+            if (entity.getProject().getCustomerId() != null) {
+                response.setCustomerId(entity.getProject().getCustomerId());
+            }
+            if (entity.getProject().getCustomer() != null) {
+                String customerName = entity.getProject().getCustomer().getCompanyNameLocal();
+                if (customerName == null || customerName.isBlank()) {
+                    customerName = entity.getProject().getCustomer().getCompanyNameEn();
+                }
+                response.setCustomerName(customerName);
+            }
+        }
+        String createdByName = profileRepository.findByUserId(entity.getCreatedBy())
+                .map(LocalizationHelper::getFullName)
+                .orElse(entity.getCreatedBy());
+        response.setCreatedBy(createdByName);
+        response.setVersion(entity.getVersion());
+        response.setStatus(entity.getStatus());
+        response.setIsActive(entity.getIsActive());
+        response.setCreatedDate(entity.getCreatedDate());
+        response.setUpdatedDate(entity.getUpdatedDate());
+        response.setRowVersion(entity.getRowVersion());
+
+        UUID uploadGroupId = entity.getUploadGroupId();
+        response.setUploadGroupId(uploadGroupId);
+
+        List<StorageUploadReference> uploadData = new ArrayList<>();
+        if (uploadGroupId != null) {
+            List<SuUpload> uploads = uploadRepository
+                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(uploadGroupId);
+
+            for (SuUpload upload : uploads) {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(uploadGroupId);
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+
+                // TODO: ทำให้ baseUrl configurable
+                String baseUrl = "http://localhost:5265";
+                ref.setAccessUrl(baseUrl + "/api/storage/avatar/" + uploadGroupId);
+
+                ref.setState(EntityState.DETACHED.getEntityStateCode());
+                ref.setIsActive(upload.getIsActive());
+                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+
+                uploadData.add(ref);
+            }
+        }
+        response.setUploadGroupData(uploadData);
+
+        return response;
+    }
+
+    private UUID resolveUploadGroupId(UUID existingGroupId, List<StorageUploadReference> references) {
+        if (existingGroupId != null) {
+            return existingGroupId;
+        }
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        for (StorageUploadReference ref : references) {
+            if (ref.getUploadGroupId() != null) {
+                return ref.getUploadGroupId();
+            }
+            if (ref.getId() != null) {
+                SuUpload upload = uploadRepository.findById(ref.getId()).orElse(null);
+                if (upload != null && upload.getUploadGroupId() != null) {
+                    return upload.getUploadGroupId();
+                }
+            }
+        }
+        return null;
+    }
+
+    private String mapVisibilityToString(com.softinter.sicapi.entity.enums.FileVisibility visibility) {
+        if (visibility == null) return "Public";
+        switch (visibility) {
+            case UPLOADER_ONLY: return "UploaderOnly";
+            case BUSINESS_ONLY: return "BusinessOnly";
+            case ANYONE_WITH_LINK: return "AnyoneWithLink";
+            case PUBLIC: return "Public";
+            default: return "Public";
+        }
+    }
 }
 </file>
 
@@ -71371,6 +70971,763 @@ export class Pmdt04AComponent implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.html">
+<!-- src/app/feature/pm/rt/pmrt05/pmrt05.component.html -->
+<div class="space-y-6 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <button
+        (click)="goBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-bold text-[var(--text-active)]">
+            {{ requirement()?.title || 'Requirement' }}
+          </h1>
+          <span
+            class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
+          >
+            {{ requirement()?.requirementCode }}
+          </span>
+          <span
+            [class]="
+              getStatusClass(requirement()?.status || '') +
+              ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+            "
+          >
+            {{ getStatusText(requirement()?.status || '') }}
+          </span>
+          @if (!requirement()?.isActive) {
+            <span
+              class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+            >
+              ปิดใช้งาน
+            </span>
+          }
+        </div>
+        <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
+          <span><i class="bi bi-briefcase"></i> {{ requirement()?.projectName }}</span>
+          <span><i class="bi bi-person"></i> {{ requirement()?.createdBy }}</span>
+          <span
+            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdDate || requirement()?.createdAt || '') }}</span
+          >
+          @if (requirement()?.customerName) {
+            <span><i class="bi bi-building"></i> {{ requirement()?.customerName }}</span>
+          }
+          <span><i class="bi bi-tag"></i> {{ requirement()?.priority }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== REQUIREMENT DETAIL ===== -->
+  @if (!isLoading() && requirement(); as req) {
+    <sic-card>
+      <div>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">คำอธิบาย</p>
+
+        <!-- แสดงเนื้อหาแบบเต็มเมื่อขยาย -->
+        @if (isExpanded()) {
+          <div class="text-sm text-[var(--text)] prose prose-sm max-w-none whitespace-pre-wrap leading-relaxed" [innerHTML]="req.description || '-'"></div>
+        } @else {
+          <!-- แสดงเนื้อหาแบบย่อ (ข้อความธรรมดา) -->
+          <p class="text-sm text-[var(--text)] whitespace-pre-wrap leading-relaxed line-clamp-3">{{ getShortDescription(req.description) }}</p>
+        }
+
+        <!-- ปุ่มดูเพิ่ม / ย่อ (แสดงเฉพาะเมื่อเนื้อหายาว) -->
+        @if (isLongDescription(req.description)) {
+          <button
+            (click)="toggleExpand()"
+            class="text-xs font-medium text-[var(--crm-primary)] hover:underline mt-3 inline-flex items-center gap-1.5 focus:outline-none"
+          >
+            <span>{{ isExpanded() ? 'ย่อเนื้อหา' : 'ดูเนื้อหาเพิ่มเติม' }}</span>
+            <i class="bi" [class.bi-chevron-up]="isExpanded()" [class.bi-chevron-down]="!isExpanded()"></i>
+          </button>
+        }
+      </div>
+    </sic-card>
+  }
+
+  <!-- ===== QUICK ACTIONS ===== -->
+  <div>
+    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+      <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
+      สร้างเอกสารที่เกี่ยวข้อง
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
+      <button
+        (click)="createDiagram()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-diagram-3 text-xl text-[var(--crm-primary)]"></i>
+        <span>Diagram</span>
+      </button>
+      <!-- ปุ่มอื่น ๆ ตามเดิม -->
+      <button
+        (click)="createSpec()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
+        <span>Specification</span>
+      </button>
+
+      <button
+        (click)="createDesignReview()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
+        <span>Design Review</span>
+      </button>
+      <button
+        (click)="createTask()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
+        <span>Task</span>
+      </button>
+      <button
+        (click)="createTest()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-clipboard-data text-xl text-[var(--crm-primary)]"></i>
+        <span>Test Case</span>
+      </button>
+      <button
+        (click)="createBug()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
+        <span>Bug</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== RELATED ITEMS ===== -->
+  <div>
+    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+      <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+      ความสัมพันธ์ (Trace Links)
+    </h2>
+
+    @if (traceLinks().length === 0) {
+      <div
+        class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
+      >
+        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
+        <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
+        <p class="text-sm">ใช้ปุ่มด้านบนเพื่อสร้างเอกสารใหม่</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Diagrams (DFD + ER) -->
+        @if (diagrams().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+                Diagrams
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of diagrams(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span
+                      class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                      [class.bg-blue-100]="item.type === 'DFD'"
+                      [class.text-blue-700]="item.type === 'DFD'"
+                      [class.bg-emerald-100]="item.type === 'ER'"
+                      [class.text-emerald-700]="item.type === 'ER'"
+                    >
+                      {{ item.type }}
+                    </span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Specification -->
+        @if (specList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
+                Specification
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of specList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Task -->
+        @if (taskList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
+                Task
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of taskList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Test Case -->
+        @if (testList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
+                Test Case
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of testList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Bug -->
+        @if (bugList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-bug text-[var(--crm-danger)]"></i>
+                Bug
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of bugList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Change Request -->
+        @if (changeRequestList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
+                Change Request
+              </span>
+              <span class="text-xs text-[var(--text-muted)]"
+                >{{ changeRequestList().length }} รายการ</span
+              >
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of changeRequestList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Design Review -->
+        @if (designReviewList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+                Design Review
+              </span>
+              <span class="text-xs text-[var(--text-muted)]"
+                >{{ designReviewList().length }} รายการ</span
+              >
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of designReviewList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+      </div>
+    }
+  </div>
+</div>
+</file>
+
+<file path="sic-app/src/app/app.config.ts">
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
+import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { provideEnvironmentNgxMask } from 'ngx-mask';
+import { routes } from './app.routes';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { AuthService } from './core/auth/auth.service';
+import { LanguageService } from './core/services/language.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  APP_TRANSLATE_MODULE_CODE,
+  APP_TRANSLATE_PROGRAM_CODE,
+  AppTranslateLoader
+} from './core/services/app-translate-loader.service';
+import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
+import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+import { provideMarkdown } from 'ngx-markdown';
+import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideAteEditor } from '@flogeez/angular-tiptap-editor';
+import { provideSicTheme, provideSicConfig } from 'sic-ng';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideAnimations(),
+    provideAngularQuery(new QueryClient()),
+    provideRouter(routes),
+    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
+    provideEnvironmentNgxMask(),
+    provideSicNumberConfig({ decimal: 2 }),
+    provideOAuthClient(),
+    provideMarkdown(),
+    provideAteEditor(),
+    provideAngularQuery(new QueryClient()),
+    provideAppInitializer(() => inject(AuthService).initializeAuth()),
+    provideAppInitializer(() => inject(LanguageService).initLanguage()),
+    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
+    AppTranslateLoader,
+    provideTranslateService({
+      lang: 'th',
+      fallbackLang: 'en',
+      loader: {
+        provide: TranslateLoader,
+        useExisting: AppTranslateLoader
+      }
+    }),
+    provideSicTheme({ mode: 'system', theme: 'forest' }),
+    provideSicConfig({
+      decimals: 2,
+      dateFormat: 'dd/MM/yyyy',
+      era: 'BE',
+      locale: 'th',
+      loadingImage: '/assets/brand-loader.gif',
+      maxUploadSizeMb: 20,
+      pageSize: 25,
+      messages: {
+        // sic-combobox
+        noOptions: 'ไม่มีตัวเลือก',
+        // sic-input-comment @mention
+        noMatches: 'ไม่พบรายการที่ตรงกัน',
+        loading: 'กำลังโหลด…',
+        attachFile: 'แนบไฟล์',
+        removeFile: 'ลบไฟล์แนบ',
+        // sic-upload
+        dragDropHint: 'ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์',
+        // sic-navbar
+        noNotifications: 'ไม่มีการแจ้งเตือน',
+        viewAllNotifications: 'ดูการแจ้งเตือนทั้งหมด',
+        // sic-calendar
+        noEvents: 'ไม่มีกิจกรรม',
+        // sic-dialog common dialog
+        cancel: 'ยกเลิก',
+        confirm: 'ยืนยัน',
+        close: 'ปิด',
+        // sic-gridpanel
+        gridLoading: 'กำลังโหลด...',
+        gridSaving: 'กำลังบันทึกข้อมูล...',
+        gridLoadingOverlay: 'กำลังโหลดข้อมูล...',
+        gridNoData: 'ไม่พบข้อมูล',
+        gridNoChangedData: 'ไม่มีข้อมูลที่เปลี่ยนแปลง',
+        gridNoDataHint: 'ลองปรับคำค้นหา หรือเพิ่มแถวใหม่',
+        gridNoChangedDataHint: 'ลองปิดโหมด review เพื่อดูทุกแถว',
+        gridPageSizeSuffix: ' รายการ',
+        // sic-search
+        noResults: 'ไม่พบผลลัพธ์',
+        // sic-masonry / sic-calendar-timeline / sic-card-stack
+        noItems: 'ไม่มีรายการ',
+        masonryLoading: 'กำลังโหลดเพิ่มเติม...',
+        // sic-drag-drop
+        dragDropEmptyList: 'วางรายการที่นี่',
+        // sic-stepper
+        stepperPrevious: 'ย้อนกลับ',
+        stepperNext: 'ถัดไป',
+        stepperSkip: 'ข้าม',
+        stepperFinish: 'เสร็จสิ้น',
+        // sic-code
+        codeCopy: 'คัดลอก',
+        codeCopied: 'คัดลอกแล้ว',
+        // sic-calendar-timeline view switcher
+        calendarTimelineViewLabel: 'มุมมอง',
+        calendarTimelineDay: 'วัน',
+        calendarTimelineWeek: 'สัปดาห์',
+        calendarTimelineMonth: 'เดือน',
+        // sic-video-player
+        playVideo: 'เล่นวิดีโอ',
+        // sicCanDeactivateGuard
+        unsavedChangesTitle: 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก',
+        unsavedChangesMessage: 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?',
+      },
+    }),
+  ]
+};
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
+import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
+import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
+
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
+import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.ImpactAnalysisService;
+import com.softinter.sicapi.service.TraceLinkService;
+
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
+
+    private final ChangeImpactAnalysisRepository repository;
+    private final PmChangeRequestRepository changeRequestRepository;
+    private final PmDiagramTabRepository diagramTabRepository;
+    private final CurrentUserService currentUserService;
+    private final TraceLinkService traceLinkService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
+        return repository.findByChangeRequestId(changeRequestId)
+                .map(this::toResponse)
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public UUID save(SaveImpactAnalysisRequest request) {
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(request.getChangeRequestId())
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(request.getChangeRequestId())
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setDfdImpact(request.getDfdImpact());
+        analysis.setErImpact(request.getErImpact());
+        analysis.setUiImpact(request.getUiImpact());
+        analysis.setApiImpact(request.getApiImpact());
+        analysis.setTestImpact(request.getTestImpact());
+        analysis.setMandayImpact(request.getMandayImpact());
+        analysis.setTimelineImpact(request.getTimelineImpact());
+        analysis.setCostImpact(request.getCostImpact());
+
+        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
+        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
+        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
+        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
+        analysis.setImpactedBugIds(request.getImpactedBugIds());
+        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
+        analysis.setImpactedTableNames(request.getImpactedTableNames());
+
+        if (analysis.getAnalysisStatus() == null) {
+            analysis.setAnalysisStatus("MANUAL");
+        }
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
+        return saved.getId();
+    }
+
+    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
+        try {
+            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
+            return autoDetectUsingTrace(changeRequestId);
+        } catch (Exception e) {
+            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
+            return null;
+        }
+    }
+
+    @Override
+    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
+        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
+
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        UUID targetId = changeRequest.getTargetId();
+        String targetType = changeRequest.getTargetType();
+
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
+                targetId);
+
+        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
+
+        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
+        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
+        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
+        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
+        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
+
+        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
+        Set<UUID> diagramSet = new java.util.HashSet<>();
+        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
+        for (String dType : diagramTypes) {
+            if (impacted.containsKey(dType)) {
+                diagramSet.addAll(impacted.get(dType));
+            }
+        }
+        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(changeRequestId)
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setImpactedRequirementIds(reqIds);
+        analysis.setImpactedSpecIds(specIds);
+        analysis.setImpactedTaskIds(taskIds);
+        analysis.setImpactedTestCaseIds(testCaseIds);
+        analysis.setImpactedBugIds(bugIds);
+        analysis.setImpactedDiagramIds(diagramIds);
+        analysis.setImpactedTableNames(new String[0]);
+
+        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
+        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
+            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+            analysis.setMandayImpact(calculatedManday);
+        }
+        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
+            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
+            analysis.setTimelineImpact(calculatedDays);
+        }
+
+        analysis.setAnalysisStatus("AUTO");
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id) {
+        repository.deleteById(id);
+        log.info("Impact Analysis deleted: {}", id);
+    }
+
+    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
+    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
+    
+    dto.setId(entity.getId());
+    dto.setChangeRequestId(entity.getChangeRequest().getId());
+    
+        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
+        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
+        dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
+
+        if (entity.getImpactedDiagramIds() != null && entity.getImpactedDiagramIds().length > 0) {
+            java.util.List<ImpactAnalysisResponse.DiagramItem> diagramItems = new java.util.ArrayList<>();
+            for (UUID diagramId : entity.getImpactedDiagramIds()) {
+                ImpactAnalysisResponse.DiagramItem item = new ImpactAnalysisResponse.DiagramItem();
+                item.setId(diagramId);
+                diagramTabRepository.findById(diagramId).ifPresentOrElse(d -> {
+                    item.setName(d.getName());
+                    item.setDiagramType(d.getDiagramType());
+                }, () -> {
+                    item.setName("Diagram " + diagramId.toString().substring(0, 8));
+                });
+                diagramItems.add(item);
+            }
+            dto.setImpactedDiagrams(diagramItems);
+        }
+
+        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
+        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
+        dto.setImpactedBugIds(entity.getImpactedBugIds());
+    
+    dto.setMandayImpact(entity.getMandayImpact());
+    dto.setTimelineImpact(entity.getTimelineImpact());
+    dto.setAnalysisStatus(entity.getAnalysisStatus());
+    dto.setAnalyzedAt(entity.getAnalyzedAt());
+    dto.setAnalyzedBy(entity.getAnalyzedBy());
+    
+    return dto;
+}
+}
+</file>
+
+<file path=".repomixignore">
+# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
+dist/
+build/
+out/
+sic-api/
+sic-auth/
+sic-database/
+sic-storage/
+.kilo/
+.github/
+Migrations/
+resources/
+drawio-dev/
+component/ 
+public/
+
+
+# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
+**/.angular/
+**/.vscode/
+**/.editorconfig
+**/.gitignore
+**/.postcssrc.json
+**/angular.json
+**/package-lock.json
+**/package.json
+**/README.md
+**/tsconfig.app.json
+**/tsconfig.json
+**/tsconfig.spec.json
+**/tmp_do_not_use.txt
+
+# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
+src/assets/
+public/images/
+
+# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.txt
+*.xml
+*.gitignore
+*.md
+*.json
+*.gitattributes
+*.css
+*.mjs
+
+# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
+**/Migrations/
+**/App_Data/
+**/bin/
+**/obj/
+**/node_modules/
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.ts">
 // src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
 
@@ -71588,6 +71945,7 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
   // ===== Form =====
   form!: FormGroup;
   isEdit = false;
+  isViewOnly = false;
   reqId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -71615,17 +71973,23 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   // ===== CanDeactivate =====
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 
   // ===== Lifecycle =====
   ngOnInit(): void {
     this.initForm();
     this.loadFlows();
 
+    // Check if current route is view mode
+    const isViewRoute = this.router.url.includes('/view');
+    if (isViewRoute) {
+      this.isViewOnly = true;
+    }
+
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
-        this.isEdit = true;
+        this.isEdit = !this.isViewOnly;
         this.reqId = id;
         this.loadRequirement(id);
       } else {
@@ -71710,6 +72074,10 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
         this.form.patchValue(data);
         this.isLoading = false;
         this.form.markAsPristine();
+
+        if (this.isViewOnly) {
+          this.form.disable();
+        }
 
         // If loaded data doesn't have projectName but has projectId, try to fetch it
         if (!data.projectName && data.projectId) {
@@ -72117,399 +72485,6 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
 }
 
 export default Pmdt05Component;
-</file>
-
-<file path="sic-app/src/app/app.config.ts">
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
-import { provideOAuthClient } from 'angular-oauth2-oidc';
-import { provideEnvironmentNgxMask } from 'ngx-mask';
-import { routes } from './app.routes';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { AuthService } from './core/auth/auth.service';
-import { LanguageService } from './core/services/language.service';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import {
-  APP_TRANSLATE_MODULE_CODE,
-  APP_TRANSLATE_PROGRAM_CODE,
-  AppTranslateLoader
-} from './core/services/app-translate-loader.service';
-import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
-import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
-import { provideMarkdown } from 'ngx-markdown';
-import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { provideAteEditor } from '@flogeez/angular-tiptap-editor';
-import { provideSicTheme, provideSicConfig } from 'sic-ng';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideAnimations(),
-    provideAngularQuery(new QueryClient()),
-    provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
-    provideEnvironmentNgxMask(),
-    provideSicNumberConfig({ decimal: 2 }),
-    provideOAuthClient(),
-    provideMarkdown(),
-    provideAteEditor(),
-    provideAngularQuery(new QueryClient()),
-    provideAppInitializer(() => inject(AuthService).initializeAuth()),
-    provideAppInitializer(() => inject(LanguageService).initLanguage()),
-    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
-    AppTranslateLoader,
-    provideTranslateService({
-      lang: 'th',
-      fallbackLang: 'en',
-      loader: {
-        provide: TranslateLoader,
-        useExisting: AppTranslateLoader
-      }
-    }),
-    provideSicTheme({ mode: 'system', theme: 'forest' }),
-    provideSicConfig({
-      decimals: 2,
-      dateFormat: 'dd/MM/yyyy',
-      era: 'BE',
-      locale: 'th',
-      loadingImage: '/assets/brand-loader.gif',
-      maxUploadSizeMb: 20,
-      pageSize: 25,
-      messages: {
-        // sic-combobox
-        noOptions: 'ไม่มีตัวเลือก',
-        // sic-input-comment @mention
-        noMatches: 'ไม่พบรายการที่ตรงกัน',
-        loading: 'กำลังโหลด…',
-        attachFile: 'แนบไฟล์',
-        removeFile: 'ลบไฟล์แนบ',
-        // sic-upload
-        dragDropHint: 'ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์',
-        // sic-navbar
-        noNotifications: 'ไม่มีการแจ้งเตือน',
-        viewAllNotifications: 'ดูการแจ้งเตือนทั้งหมด',
-        // sic-calendar
-        noEvents: 'ไม่มีกิจกรรม',
-        // sic-dialog common dialog
-        cancel: 'ยกเลิก',
-        confirm: 'ยืนยัน',
-        close: 'ปิด',
-        // sic-gridpanel
-        gridLoading: 'กำลังโหลด...',
-        gridSaving: 'กำลังบันทึกข้อมูล...',
-        gridLoadingOverlay: 'กำลังโหลดข้อมูล...',
-        gridNoData: 'ไม่พบข้อมูล',
-        gridNoChangedData: 'ไม่มีข้อมูลที่เปลี่ยนแปลง',
-        gridNoDataHint: 'ลองปรับคำค้นหา หรือเพิ่มแถวใหม่',
-        gridNoChangedDataHint: 'ลองปิดโหมด review เพื่อดูทุกแถว',
-        gridPageSizeSuffix: ' รายการ',
-        // sic-search
-        noResults: 'ไม่พบผลลัพธ์',
-        // sic-masonry / sic-calendar-timeline / sic-card-stack
-        noItems: 'ไม่มีรายการ',
-        masonryLoading: 'กำลังโหลดเพิ่มเติม...',
-        // sic-drag-drop
-        dragDropEmptyList: 'วางรายการที่นี่',
-        // sic-stepper
-        stepperPrevious: 'ย้อนกลับ',
-        stepperNext: 'ถัดไป',
-        stepperSkip: 'ข้าม',
-        stepperFinish: 'เสร็จสิ้น',
-        // sic-code
-        codeCopy: 'คัดลอก',
-        codeCopied: 'คัดลอกแล้ว',
-        // sic-calendar-timeline view switcher
-        calendarTimelineViewLabel: 'มุมมอง',
-        calendarTimelineDay: 'วัน',
-        calendarTimelineWeek: 'สัปดาห์',
-        calendarTimelineMonth: 'เดือน',
-        // sic-video-player
-        playVideo: 'เล่นวิดีโอ',
-        // sicCanDeactivateGuard
-        unsavedChangesTitle: 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก',
-        unsavedChangesMessage: 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?',
-      },
-    }),
-  ]
-};
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
-import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
-import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
-
-import com.softinter.sicapi.entity.pm.PmChangeRequest;
-import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
-import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.ImpactAnalysisService;
-import com.softinter.sicapi.service.TraceLinkService;
-
-import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
-
-    private final ChangeImpactAnalysisRepository repository;
-    private final PmChangeRequestRepository changeRequestRepository;
-    private final PmDiagramTabRepository diagramTabRepository;
-    private final CurrentUserService currentUserService;
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
-        return repository.findByChangeRequestId(changeRequestId)
-                .map(this::toResponse)
-                .orElse(null);
-    }
-
-    @Override
-    @Transactional
-    public UUID save(SaveImpactAnalysisRequest request) {
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(request.getChangeRequestId())
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(request.getChangeRequestId())
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setDfdImpact(request.getDfdImpact());
-        analysis.setErImpact(request.getErImpact());
-        analysis.setUiImpact(request.getUiImpact());
-        analysis.setApiImpact(request.getApiImpact());
-        analysis.setTestImpact(request.getTestImpact());
-        analysis.setMandayImpact(request.getMandayImpact());
-        analysis.setTimelineImpact(request.getTimelineImpact());
-        analysis.setCostImpact(request.getCostImpact());
-
-        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
-        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
-        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
-        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
-        analysis.setImpactedBugIds(request.getImpactedBugIds());
-        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
-        analysis.setImpactedTableNames(request.getImpactedTableNames());
-
-        if (analysis.getAnalysisStatus() == null) {
-            analysis.setAnalysisStatus("MANUAL");
-        }
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
-        return saved.getId();
-    }
-
-    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
-        try {
-            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
-            return autoDetectUsingTrace(changeRequestId);
-        } catch (Exception e) {
-            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
-            return null;
-        }
-    }
-
-    @Override
-    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
-        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
-
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        UUID targetId = changeRequest.getTargetId();
-        String targetType = changeRequest.getTargetType();
-
-        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
-                targetId);
-
-        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
-
-        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
-        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
-        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
-        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
-        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
-
-        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
-        Set<UUID> diagramSet = new java.util.HashSet<>();
-        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
-        for (String dType : diagramTypes) {
-            if (impacted.containsKey(dType)) {
-                diagramSet.addAll(impacted.get(dType));
-            }
-        }
-        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(changeRequestId)
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setImpactedRequirementIds(reqIds);
-        analysis.setImpactedSpecIds(specIds);
-        analysis.setImpactedTaskIds(taskIds);
-        analysis.setImpactedTestCaseIds(testCaseIds);
-        analysis.setImpactedBugIds(bugIds);
-        analysis.setImpactedDiagramIds(diagramIds);
-        analysis.setImpactedTableNames(new String[0]);
-
-        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
-        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
-            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
-            analysis.setMandayImpact(calculatedManday);
-        }
-        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
-            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
-            analysis.setTimelineImpact(calculatedDays);
-        }
-
-        analysis.setAnalysisStatus("AUTO");
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        repository.deleteById(id);
-        log.info("Impact Analysis deleted: {}", id);
-    }
-
-    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
-    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
-    
-    dto.setId(entity.getId());
-    dto.setChangeRequestId(entity.getChangeRequest().getId());
-    
-        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
-        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
-        dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
-
-        if (entity.getImpactedDiagramIds() != null && entity.getImpactedDiagramIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.DiagramItem> diagramItems = new java.util.ArrayList<>();
-            for (UUID diagramId : entity.getImpactedDiagramIds()) {
-                ImpactAnalysisResponse.DiagramItem item = new ImpactAnalysisResponse.DiagramItem();
-                item.setId(diagramId);
-                diagramTabRepository.findById(diagramId).ifPresentOrElse(d -> {
-                    item.setName(d.getName());
-                    item.setDiagramType(d.getDiagramType());
-                }, () -> {
-                    item.setName("Diagram " + diagramId.toString().substring(0, 8));
-                });
-                diagramItems.add(item);
-            }
-            dto.setImpactedDiagrams(diagramItems);
-        }
-
-        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
-        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
-        dto.setImpactedBugIds(entity.getImpactedBugIds());
-    
-    dto.setMandayImpact(entity.getMandayImpact());
-    dto.setTimelineImpact(entity.getTimelineImpact());
-    dto.setAnalysisStatus(entity.getAnalysisStatus());
-    dto.setAnalyzedAt(entity.getAnalyzedAt());
-    dto.setAnalyzedBy(entity.getAnalyzedBy());
-    
-    return dto;
-}
-}
-</file>
-
-<file path=".repomixignore">
-# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
-dist/
-build/
-out/
-sic-api/
-sic-auth/
-sic-database/
-sic-storage/
-.kilo/
-.github/
-Migrations/
-resources/
-drawio-dev/
-component/ 
-public/
-
-
-# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
-**/.angular/
-**/.vscode/
-**/.editorconfig
-**/.gitignore
-**/.postcssrc.json
-**/angular.json
-**/package-lock.json
-**/package.json
-**/README.md
-**/tsconfig.app.json
-**/tsconfig.json
-**/tsconfig.spec.json
-**/tmp_do_not_use.txt
-
-# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
-src/assets/
-public/images/
-
-# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-*.mp4
-*.txt
-*.xml
-*.gitignore
-*.md
-*.json
-*.gitattributes
-*.css
-*.mjs
-
-# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
-**/Migrations/
-**/App_Data/
-**/bin/
-**/obj/
-**/node_modules/
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
@@ -79734,6 +79709,13 @@ export const PM_ROUTES: Routes = [
     data: { targetType: 'REQUIREMENT' },
     resolve: { form: pmdt05Resolver },
     canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'requirement/:id/view',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { form: pmdt05Resolver },
   },
   {
     path: 'requirement/:id/approval',

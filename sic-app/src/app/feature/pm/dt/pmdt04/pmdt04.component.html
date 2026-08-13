@@ -149,6 +149,14 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
+                  <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
+                  <button
+                    (click)="goToView(req.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดูผังความสัมพันธ์ (pmrt05)"
+                  >
+                    <i class="bi bi-file-earmark-text"></i>
+                  </button>
                   <!-- ปุ่ม View เอกสาร (เปิดหน้าฟอร์มแบบอ่านอย่างเดียว) -->
                   <a
                     [routerLink]="['/feature/pm/requirement', req.id, 'view']"
@@ -158,22 +166,8 @@
                   >
                     <i class="bi bi-eye"></i>
                   </a>
-                  <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
-                  <button
-                    (click)="goToView(req.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูผังความสัมพันธ์ (pmrt05)"
-                  >
-                    <i class="bi bi-file-earmark-text"></i>
-                  </button>
-                  <!-- ปุ่ม Print เอกสาร -->
-                  <button
-                    (click)="printDocument(req)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="พิมพ์เอกสาร"
-                  >
-                    <i class="bi bi-printer"></i>
-                  </button>
+                
+                  
                   <!-- ปุ่ม Edit ใช้ routerLink -->
                   <a
                     [routerLink]="['/feature/pm/requirement', req.id, 'edit']"
@@ -183,6 +177,14 @@
                   >
                     <i class="bi bi-pencil"></i>
                   </a>
+                  <!-- ปุ่ม Print เอกสาร -->
+                  <button
+                    (click)="printDocument(req)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="พิมพ์เอกสาร"
+                  >
+                    <i class="bi bi-printer"></i>
+                  </button>
                   <!-- ปุ่มลบ -->
                   <button
                     (click)="deleteRequirement(req.id)"

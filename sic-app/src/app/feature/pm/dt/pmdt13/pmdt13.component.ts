@@ -58,7 +58,6 @@ export class Pmdt13Service {
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
   ],

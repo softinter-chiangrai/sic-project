@@ -152,24 +152,14 @@
         </div>
       </div>
 
-      <!-- Status & Priority -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-combobox
-            label="สถานะ"
-            formControlName="status"
-            [apiUrl]="service.apiGetLovStatus"
-            [required]="true"
-          ></sic-combobox>
-        </div>
-        <div class="flex-1">
-          <sic-combobox
-            label="ลำดับความสำคัญ"
-            formControlName="priority"
-            [apiUrl]="service.apiGetLovPriority"
-            [required]="true"
-          ></sic-combobox>
-        </div>
+      <!-- Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลำดับความสำคัญ"
+          formControlName="priority"
+          [apiUrl]="service.apiGetLovPriority"
+          [required]="true"
+        ></sic-combobox>
       </div>
 
       <!-- Dependency -->

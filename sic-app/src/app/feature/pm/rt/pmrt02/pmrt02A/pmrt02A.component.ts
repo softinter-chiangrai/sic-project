@@ -27,7 +27,6 @@ import { ProjectModel } from './pmrt02A.model';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
-    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
