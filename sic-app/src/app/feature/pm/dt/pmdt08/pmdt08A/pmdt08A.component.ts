@@ -204,10 +204,21 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.formChangeSubscription?.unsubscribe();
     }
 
+    specificationTypeOptions = [
+        { value: 'UI Specification', text: 'UI Specification' },
+        { value: 'API Specification', text: 'API Specification' },
+        { value: 'Business Rule Specification', text: 'Business Rule Specification' },
+        { value: 'Report Specification', text: 'Report Specification' },
+        { value: 'Data Specification', text: 'Data Specification' },
+        { value: 'Integration Specification', text: 'Integration Specification' },
+        { value: 'Permission Specification', text: 'Permission Specification' },
+    ];
+
     initForm(): void {
         this.form = this.fb.group({
             id: [null],
             specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
+            specificationType: [null, [Validators.required]],
             title: [null, [Validators.required, Validators.maxLength(255)]],
             module: [null, [Validators.maxLength(100)]],
             version: [{ value: 'v1.0', disabled: true }],

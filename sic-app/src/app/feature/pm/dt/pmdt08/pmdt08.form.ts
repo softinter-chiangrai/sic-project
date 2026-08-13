@@ -8,6 +8,7 @@ export class Pmdt08Form {
         return fb.group({
             id: [null],
             specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
+            specificationType: [null],
             title: [null, [Validators.required, Validators.maxLength(255)]],
             module: [null, [Validators.maxLength(100)]],
             version: [{ value: '1.0', disabled: true }],

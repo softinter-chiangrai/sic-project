@@ -60,7 +60,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("specificationCode")), pattern),
                         cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("module")), pattern)
+                        cb.like(cb.lower(root.get("specificationType")), pattern)
                 ));
             }
 
@@ -274,16 +274,13 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
     private void mapRequestToEntity(PmSpecificationRequest request, PmSpecification entity) {
         entity.setSpecificationCode(request.getSpecificationCode());
+        entity.setSpecificationType(request.getSpecificationType());
         entity.setTitle(request.getTitle());
-        entity.setModule(request.getModule());
         entity.setPriority(request.getPriority());
         entity.setOwner(request.getOwner());
         entity.setEstimatedManday(request.getEstimatedManday());
         entity.setDescription(request.getDescription());  // ✅ เนื้อหาทั้งหมดจาก Tiptap
         entity.setUploadGroupId(request.getUploadGroupId());
-        entity.setIsAiGenerated(false);
-        entity.setGeneratedFromRequirementId(request.getGeneratedFromRequirementId());
-        entity.setGeneratedFromDiagramId(request.getGeneratedFromDiagramId());
 
         if (request.getIsActive() != null) {
             entity.setIsActive(request.getIsActive());
@@ -295,7 +292,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             entity.setVersion(request.getVersion());
         }
 
-        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
     }
 
     private PmSpecificationResponse toResponse(PmSpecification spec) {
@@ -303,10 +299,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         response.setId(spec.getId());
         response.setSpecificationCode(spec.getSpecificationCode());
+        response.setSpecificationType(spec.getSpecificationType());
         response.setTitle(spec.getTitle());
-        response.setModule(spec.getModule());
         response.setVersion(spec.getVersion());
-        response.setStatus(spec.getStatus());
         response.setPriority(spec.getPriority());
         response.setOwner(spec.getOwner());
         response.setEstimatedManday(spec.getEstimatedManday());
@@ -314,32 +309,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         response.setUploadGroupId(spec.getUploadGroupId());
         response.setIsActive(spec.getIsActive());
 
-        response.setIsAiGenerated(spec.getIsAiGenerated());
-        response.setAiGeneratedAt(spec.getAiGeneratedAt());
-        response.setGeneratedFromRequirementId(spec.getGeneratedFromRequirementId());
-        response.setGeneratedFromDiagramId(spec.getGeneratedFromDiagramId());
-
         // Project
         if (spec.getProject() != null) {
             response.setProjectId(spec.getProject().getId());
             response.setProjectName(spec.getProject().getProjectName());
         }
 
-        // Requirement (ถ้ามี trace link)
-        if (spec.getGeneratedFromRequirementId() != null) {
-            UUID reqId = spec.getGeneratedFromRequirementId();
-            response.setRequirementId(reqId);
-            requirementRepository.findById(reqId).ifPresent(req -> {
-                response.setRequirementCode(req.getRequirementCode());
-                response.setRequirementTitle(req.getTitle());
-            });
-        }
-
         response.setRowVersion(spec.getRowVersion());
         response.setCreatedDate(spec.getCreatedDate());
         response.setUpdatedDate(spec.getUpdatedDate());
-
-        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
 
         return response;
     }

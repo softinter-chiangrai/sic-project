@@ -2,6 +2,8 @@
 export interface PmSpecificationModel {
     id?: string;
     specificationCode: string;
+    specificationType?: string;
+    specType?: string;
     title: string;
     module?: string;
     version?: string;

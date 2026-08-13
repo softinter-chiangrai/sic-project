@@ -68,7 +68,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">ชื่อเรื่อง</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">โมดูล</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">ประเภท</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">Manday</th>
@@ -90,7 +90,9 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="text-[var(--text)]">{{ spec.module || '-' }}</span>
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400">
+                                    {{ spec.specificationType || spec.specType || '-' }}
+                                </span>
                             </td>
                             <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
                                 {{ spec.version || '1.0' }}

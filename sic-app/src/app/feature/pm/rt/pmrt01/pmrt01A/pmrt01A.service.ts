@@ -9,9 +9,8 @@ import { PaginationResponse } from '../../../../../core/model/pagination.model';
 @Injectable({ providedIn: 'root' })
 export class Pmrt01AService {
   private http = inject(HttpClient);
-  private baseUrl = environment.apiBaseUrl + '/api/su-customer';
+  private baseUrl = environment.apiBaseUrl + '/api/pm/customers';
 
-  // Combobox endpoints (คงเดิม)
   apiGetLovPersonType = environment.apiBaseUrl + '/api/business/lov-person-type';
   apiGetComboboxTitle = environment.apiBaseUrl + '/api/business/combobox-title';
   apiGetComboboxCountry = environment.apiBaseUrl + '/api/business/combobox-country';

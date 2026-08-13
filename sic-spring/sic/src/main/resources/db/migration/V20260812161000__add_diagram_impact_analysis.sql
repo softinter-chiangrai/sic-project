@@ -72,3 +72,22 @@ ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS upload_group_id UUID;
 
 -- ลบคอลัมน์ spec_code ที่ไม่ได้ใช้แล้ว
 ALTER TABLE pm_specification DROP COLUMN spec_code;
+
+
+-- 1. ลบ columns ที่ไม่ต้องการ
+ALTER TABLE pm_specification 
+    DROP COLUMN IF EXISTS module,
+    DROP COLUMN IF EXISTS ui_action,
+    DROP COLUMN IF EXISTS validation_rule,
+    DROP COLUMN IF EXISTS permission,
+    DROP COLUMN IF EXISTS dependency,
+    DROP COLUMN IF EXISTS approval_status,
+    DROP COLUMN IF EXISTS is_ai_generated,
+    DROP COLUMN IF EXISTS ai_generated_at,
+    DROP COLUMN IF EXISTS generated_from_requirement_id,
+    DROP COLUMN IF EXISTS generated_from_diagram_id;
+
+-- 2. เปลี่ยนชื่อ column
+ALTER TABLE pm_specification 
+    RENAME COLUMN spec_type TO specification_type;
+

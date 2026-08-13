@@ -78,7 +78,7 @@ export class SpecificationExportService {
     <span>👤 เจ้าของ: ${data.owner || data.createdBy || '-'}</span>
     <span>📅 สร้างเมื่อ: ${data.createdAt ? new Date(data.createdAt).toLocaleString('th-TH') : '-'}</span>
     <span>📁 โครงการ: ${data.projectName || '-'}</span>
-    <span>🧩 โมดูล: ${data.module || '-'}</span>
+    <span>🏷️ ประเภท: ${data.specificationType || data.specType || '-'}</span>
     <span>⏱️ Manday: ${data.estimatedManday || 0} วัน</span>
   </div>
 

@@ -81,13 +81,23 @@
             @if (viewMode !== 'preview') {
                 <div class="pmdt08-panel pmdt08-panel--edit">
                     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-input
                                 label="รหัส Specification"
                                 formControlName="specificationCode"
                                 [required]="true"
                                 placeholder="SPEC-001">
                             </sic-input>
+                            <sic-combobox
+                                label="ประเภท Specification"
+                                formControlName="specificationType"
+                                [options]="specificationTypeOptions"
+                                valueField="value"
+                                textField="text"
+                                placeholder="เลือกประเภท Specification"
+                                [clearable]="true"
+                                [required]="true">
+                            </sic-combobox>
                             <sic-input
                                 label="ชื่อเรื่อง"
                                 formControlName="title"
@@ -106,12 +116,12 @@
                                 [required]="true">
                             </sic-combobox>
                             <sic-combobox
-                                label="เจ้าของ"
+                                label="ผู้รับผิดชอบ"
                                 formControlName="owner"
                                 [apiUrl]="userApiUrl"
                                 valueField="value"
                                 textField="text"
-                                placeholder="เลือกเจ้าของ"
+                                placeholder="เลือกผู้รับผิดชอบ"
                                 [clearable]="true">
                             </sic-combobox>
                             <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>

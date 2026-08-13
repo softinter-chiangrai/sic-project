@@ -16,6 +16,9 @@ import { PmSpecificationModel } from '../pmdt08.model';
       <div class="spec-preview__header">
         <div class="spec-preview__badge">
           <span class="badge badge--code">{{ data.specificationCode }}</span>
+          @if (data.specificationType || data.specType) {
+            <span class="badge badge--type bg-indigo-500/10 text-indigo-500">{{ data.specificationType || data.specType }}</span>
+          }
           <span class="badge" [class]="'badge--' + getStatusClass(data.status)">
             {{ getStatusText(data.status) }}
           </span>
@@ -36,8 +39,8 @@ import { PmSpecificationModel } from '../pmdt08.model';
           <h3 class="section-title">📋 ข้อมูลทั่วไป</h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">โมดูล</span>
-              <span class="info-value">{{ data.module || '-' }}</span>
+              <span class="info-label">ประเภท Spec</span>
+              <span class="info-value">{{ data.specificationType || data.specType || '-' }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Manday โดยประมาณ</span>

@@ -19,6 +19,7 @@ public class PmSpecificationRequest {
     @NotBlank(message = "ชื่อเรื่องห้ามว่าง")
     private String title;
 
+    private String specificationType;
     private String module;
     private String version;
     private String status;

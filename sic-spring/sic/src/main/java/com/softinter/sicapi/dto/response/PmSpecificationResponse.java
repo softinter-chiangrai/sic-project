@@ -10,6 +10,7 @@ public class PmSpecificationResponse {
 
     private UUID id;
     private String specificationCode;
+    private String specificationType;
     private String title;
     private String module;
     private String version;
