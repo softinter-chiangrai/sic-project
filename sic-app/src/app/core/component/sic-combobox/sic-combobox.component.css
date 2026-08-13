@@ -233,3 +233,56 @@
 .sic-combobox[data-disabled='true'] .sic-combobox__label {
   color: var(--text-muted);
 }
+
+.sic-combobox__field--multiple {
+  flex-wrap: wrap;
+  padding-left: 0.35rem;
+  row-gap: 0.35rem;
+}
+
+.sic-combobox__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.sic-combobox__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--crm-primary) 12%, var(--sidebar));
+  color: var(--text-active);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.sic-combobox__chip-label {
+  white-space: nowrap;
+}
+
+.sic-combobox__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sic-combobox__chip-remove:hover {
+  background: color-mix(in srgb, var(--crm-danger) 20%, transparent);
+  color: var(--crm-danger);
+}

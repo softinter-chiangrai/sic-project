@@ -68,7 +68,18 @@ export class SicComboboxOptionTemplate {
 })
 export class SicComboboxComponent implements ControlValueAccessor, AfterContentInit, AfterViewInit, OnDestroy {
   @Input() label?: string;
-  @Input({ required: true }) apiUrl = '';
+  @Input() apiUrl = '';
+  private _options: any[] = [];
+  @Input()
+  set options(val: any[]) {
+    this._options = Array.isArray(val) ? val : [];
+    if (this.ready) {
+      this.syncSelectedDisplay();
+    }
+  }
+  get options(): any[] {
+    return this._options;
+  }
   @Input() params: Record<string, any> = {};
   @Input() paging = true;
   @Input() pageSize = 10;
@@ -85,18 +96,39 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   @Input() hint?: string;
   @Input() errorMessages: Record<string, string> = {};
   @Input() excludeValues: any[] = [];
+  @Input() multiple = false;
+
+  get selectedValues(): any[] {
+    if (!this.multiple) return [];
+    if (Array.isArray(this.value)) {
+      return this.value.map((v) => this.extractItemValue(v));
+    }
+    return [];
+  }
 
   get filteredOptions(): any[] {
-    if (!this.excludeValues || this.excludeValues.length === 0) {
-      return this.options;
+    let list = this.options;
+    if (this.excludeValues && this.excludeValues.length > 0) {
+      list = list.filter((item) => {
+        const itemVal = this.resolveValue(item);
+        if (!this.multiple && itemVal === this.value) {
+          return true;
+        }
+        return !this.excludeValues.some((ex) => this.areValuesEqual(ex, itemVal));
+      });
     }
-    return this.options.filter((item) => {
-      const itemVal = this.resolveValue(item);
-      if (itemVal === this.value) {
-        return true;
+
+    if (this.multiple) {
+      const selVals = this.selectedValues;
+      if (selVals.length > 0) {
+        list = list.filter((item) => {
+          const itemVal = this.resolveValue(item);
+          return !selVals.some((sv) => this.areValuesEqual(sv, itemVal));
+        });
       }
-      return !this.excludeValues.includes(itemVal);
-    });
+    }
+
+    return list;
   }
 
   @Output() selectionChanged = new EventEmitter<any>();
@@ -117,8 +149,8 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   inputText = '';
   selectedText = '';
   selectedItem: unknown = null;
+  selectedItems: any[] = [];
   value: any = null;
-  options: any[] = [];
   activeIndex = -1;
   pageNumber = 1;
   totalPages = 1;
@@ -218,6 +250,15 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   }
 
   writeValue(value: any): void {
+    if (this.multiple) {
+      const rawArray = Array.isArray(value)
+        ? value
+        : (value !== null && value !== undefined && value !== '' ? [value] : []);
+      this.value = rawArray.map((v) => this.normalizeControlValue(v)).filter((v) => v !== null);
+      this.syncMultipleSelectedItems();
+      return;
+    }
+
     const normalizedValue = this.normalizeControlValue(value);
     this.value = normalizedValue;
 
@@ -288,6 +329,15 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
       this.loading = false;
       this.activeIndex = -1;
 
+      if (this.multiple) {
+        this.inputText = '';
+        this.searchTerm = '';
+        this.dropdownPanelStyle = {};
+        this.closeDropdownHandle = null;
+        this.cdr.markForCheck();
+        return;
+      }
+
       if (!this.inputText.trim()) {
         this.selectedItem = null;
         this.selectedText = '';
@@ -344,7 +394,7 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     this.searchTerm = term.trim();
 
     if (!this.searchTerm) {
-      if (this.value !== null || this.selectedItem !== null) {
+      if (!this.multiple && (this.value !== null || this.selectedItem !== null)) {
         this.selectedItem = null;
         this.selectedText = '';
         this.value = null;
@@ -411,6 +461,12 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
       return;
     }
 
+    if (event.key === 'Backspace' && this.multiple && !this.inputText && this.selectedItems.length > 0) {
+      const lastItem = this.selectedItems[this.selectedItems.length - 1];
+      this.removeSelectedItem(lastItem);
+      return;
+    }
+
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       if (!this.opened) {
@@ -459,6 +515,32 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
       return;
     }
 
+    if (this.multiple) {
+      const itemVal = this.resolveValue(item);
+      const currentVals = Array.isArray(this.value) ? [...this.value] : [];
+
+      if (!currentVals.some((v) => this.areValuesEqual(v, itemVal))) {
+        currentVals.push(itemVal);
+        this.value = currentVals;
+
+        if (!this.selectedItems.some((s) => this.areValuesEqual(this.resolveValue(s), itemVal))) {
+          this.selectedItems = [...this.selectedItems, item];
+        }
+      }
+
+      this.onChange(this.value);
+      this.selectionChanged.emit(this.selectedItems);
+      this.markTouched();
+
+      this.inputText = '';
+      this.searchTerm = '';
+      this.activeIndex = -1;
+
+      this.scheduleDropdownPositionUpdate();
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.selectedItem = item;
     this.selectedText = this.resolveLabel(item);
     this.inputText = this.selectedText;
@@ -485,9 +567,44 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     }, 0);
   }
 
+  removeSelectedItem(item: any, event?: MouseEvent): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (this.disabled || this.readonly) {
+      return;
+    }
+
+    const itemVal = this.resolveValue(item);
+    if (this.multiple && Array.isArray(this.value)) {
+      this.value = this.value.filter((v) => !this.areValuesEqual(v, itemVal));
+      this.selectedItems = this.selectedItems.filter((s) => !this.areValuesEqual(this.resolveValue(s), itemVal));
+
+      this.onChange(this.value);
+      this.selectionChanged.emit(this.selectedItems);
+      this.markTouched();
+      this.scheduleDropdownPositionUpdate();
+      this.cdr.markForCheck();
+    }
+  }
+
   clearSelection(event?: MouseEvent): void {
     event?.preventDefault();
     event?.stopPropagation();
+
+    if (this.multiple) {
+      this.selectedItems = [];
+      this.value = [];
+      this.inputText = '';
+      this.searchTerm = '';
+      this.activeIndex = -1;
+      this.onChange([]);
+      this.selectionChanged.emit([]);
+      this.markTouched();
+      this.scheduleDropdownPositionUpdate();
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.selectedItem = null;
     this.selectedText = '';
@@ -523,10 +640,16 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   }
 
   resolveValue(item: any): any {
+    if (typeof item !== 'object' || item === null) {
+      return item;
+    }
     return item?.[this.valueField] ?? item?.value ?? item?.id ?? null;
   }
 
   resolveLabel(item: any): string {
+    if (typeof item !== 'object' || item === null) {
+      return String(item ?? '');
+    }
     const localizedLabel = this.resolveLocalizedLabel(item);
     const configuredLabel =
       this.textField === 'messageEn' || this.textField === 'messageLocal'
@@ -659,6 +782,11 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   }
 
   private syncSelectedDisplay(): void {
+    if (this.multiple) {
+      this.syncMultipleSelectedItems();
+      return;
+    }
+
     const matched = this.options.find((item) => this.resolveValue(item) === this.value);
     if (!matched) {
       if (!this.value) {
@@ -675,6 +803,51 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     if (!this.searchTerm || this.inputText === previousSelectedText) {
       this.inputText = this.selectedText;
     }
+  }
+
+  private extractItemValue(item: any): any {
+    if (item === null || item === undefined) return null;
+    if (typeof item === 'object') {
+      return item[this.valueField] ?? item.value ?? item.id ?? item;
+    }
+    return item;
+  }
+
+  private areValuesEqual(a: any, b: any): boolean {
+    const valA = this.extractItemValue(a);
+    const valB = this.extractItemValue(b);
+    if (valA === valB) return true;
+    if (valA !== null && valA !== undefined && valB !== null && valB !== undefined) {
+      return String(valA) === String(valB);
+    }
+    return false;
+  }
+
+  private syncMultipleSelectedItems(): void {
+    if (!this.multiple) return;
+    if (!Array.isArray(this.value) || this.value.length === 0) {
+      this.selectedItems = [];
+      return;
+    }
+
+    const updatedItems: any[] = [];
+    for (const val of this.value) {
+      const valId = this.extractItemValue(val);
+      const matchedInOptions = this.options.find((opt) => this.areValuesEqual(this.resolveValue(opt), valId));
+      const matchedInSelected = this.selectedItems.find((item) => this.areValuesEqual(this.resolveValue(item), valId));
+
+      if (matchedInOptions) {
+        updatedItems.push(matchedInOptions);
+      } else if (matchedInSelected) {
+        updatedItems.push(matchedInSelected);
+      } else if (typeof val === 'object' && val !== null) {
+        updatedItems.push(val);
+      } else {
+        updatedItems.push({ [this.valueField]: val, [this.textField]: String(val) });
+      }
+    }
+
+    this.selectedItems = updatedItems;
   }
 
   private loadValueById(value: any): void {

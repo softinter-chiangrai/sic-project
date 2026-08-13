@@ -12,13 +12,35 @@
     <div
       #fieldContainer
       class="sic-combobox__field"
+      [class.sic-combobox__field--multiple]="multiple"
       [attr.data-invalid]="showError ? 'true' : null">
+      
+      @if (multiple && selectedItems.length > 0) {
+        <div class="sic-combobox__chips">
+          @for (item of selectedItems; track trackOption($index, item)) {
+            <span class="sic-combobox__chip">
+              <span class="sic-combobox__chip-label">{{ resolveLabel(item) }}</span>
+              @if (!readonly && !disabled) {
+                <button
+                  type="button"
+                  class="sic-combobox__chip-remove"
+                  tabindex="-1"
+                  (mousedown)="preventMouseDown($event)"
+                  (click)="removeSelectedItem(item, $event)">
+                  <i class="bi bi-x"></i>
+                </button>
+              }
+            </span>
+          }
+        </div>
+      }
+
       <input
         #fieldInput
         class="sic-combobox__field-input"
         type="text"
         [value]="inputText"
-        [placeholder]="placeholder"
+        [placeholder]="(multiple && selectedItems.length > 0) ? '' : placeholder"
         [disabled]="disabled"
         [readonly]="readonly"
         (focus)="onFieldFocus()"
@@ -28,7 +50,7 @@
         (keydown)="handleFieldKeydown($event)" />
 
       <span class="sic-combobox__field-actions">
-        @if (clearable && value !== null && value !== undefined && !readonly && !disabled) {
+        @if (clearable && !readonly && !disabled && ((!multiple && value !== null && value !== undefined) || (multiple && selectedItems.length > 0))) {
           <span
             class="sic-combobox__clear"
             role="button"

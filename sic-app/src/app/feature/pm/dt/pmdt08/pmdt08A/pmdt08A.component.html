@@ -147,6 +147,11 @@
                             </sic-upload>
                         </div>
 
+                        <!-- Active -->
+                        <div>
+                            <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+                        </div>
+
                         <!-- Approval Flow -->
                         <div class="border-t border-[var(--border)] pt-4 mt-2">
                             <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
@@ -174,22 +179,17 @@
                         <input type="hidden" formControlName="projectName" />
                         <input type="hidden" formControlName="createdBy" />
 
-                        <!-- Bottom Actions & Active -->
-                        <div class="flex items-center justify-between pt-3 border-t border-[var(--border)] mt-4">
-                            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium">
-                                <sic-checkbox formControlName="isActive">เปิดใช้งาน</sic-checkbox>
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <sic-button type="button" variant="secondary" (click)="onBack()">
-                                    <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                        <!-- Buttons -->
+                        <div class="flex gap-3 pt-3 border-t border-[var(--border)] mt-4">
+                            <sic-button type="button" variant="secondary" (click)="onBack()">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </sic-button>
+                            @if (!isViewOnly) {
+                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
                                 </sic-button>
-                                @if (!isViewOnly) {
-                                    <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
-                                        @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-                                        {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-                                    </sic-button>
-                                }
-                            </div>
+                            }
                         </div>
                     </form>
                 </div>

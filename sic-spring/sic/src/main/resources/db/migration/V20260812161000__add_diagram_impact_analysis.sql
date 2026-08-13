@@ -69,3 +69,6 @@ ALTER TABLE pm_specification
 
 -- 5. (Optional) ถ้ายังไม่มี upload_group_id ให้เพิ่ม (สำหรับไฟล์แนบ)
 ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS upload_group_id UUID;
+
+-- ลบคอลัมน์ spec_code ที่ไม่ได้ใช้แล้ว
+ALTER TABLE pm_specification DROP COLUMN spec_code;
