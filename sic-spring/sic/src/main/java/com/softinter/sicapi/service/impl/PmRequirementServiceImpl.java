@@ -23,6 +23,9 @@ import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +39,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final SuUploadRepository uploadRepository;
     private final FileStorageService fileStorageService;
     private final DocumentVersionService documentVersionService;
+    private final SuProfileRepository profileRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -221,8 +225,21 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         response.setProjectId(entity.getProjectId());
         if (entity.getProject() != null) {
             response.setProjectName(entity.getProject().getProjectName());
+            if (entity.getProject().getCustomerId() != null) {
+                response.setCustomerId(entity.getProject().getCustomerId());
+            }
+            if (entity.getProject().getCustomer() != null) {
+                String customerName = entity.getProject().getCustomer().getCompanyNameLocal();
+                if (customerName == null || customerName.isBlank()) {
+                    customerName = entity.getProject().getCustomer().getCompanyNameEn();
+                }
+                response.setCustomerName(customerName);
+            }
         }
-        response.setCreatedBy(entity.getCreatedBy());
+        String createdByName = profileRepository.findByUserId(entity.getCreatedBy())
+                .map(LocalizationHelper::getFullName)
+                .orElse(entity.getCreatedBy());
+        response.setCreatedBy(createdByName);
         response.setVersion(entity.getVersion());
         response.setStatus(entity.getStatus());
         response.setIsActive(entity.getIsActive());

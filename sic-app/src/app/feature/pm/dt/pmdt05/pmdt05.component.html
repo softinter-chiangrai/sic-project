@@ -13,9 +13,9 @@
       </button>
       <div>
         <h1 class="text-xl font-bold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่' }}
+          {{ isViewOnly ? 'ดูข้อมูล Requirement' : (isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่') }}
         </h1>
-        @if (isEdit) {
+        @if (isEdit || isViewOnly) {
           <p class="text-xs text-[var(--text-muted)]">
             รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
           </p>
@@ -182,7 +182,7 @@
             <!-- Action Buttons -->
             <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
               <sic-button
-                [fullWidth]="false"
+                [fullWidth]="isViewOnly"
                 type="button"
                 variant="secondary"
                 (click)="onBack()"
@@ -190,19 +190,21 @@
                 <i class="bi bi-arrow-left"></i>
                 ย้อนกลับ
               </sic-button>
-              <sic-button
-                [fullWidth]="true"
-                type="submit"
-                variant="primary"
-                [disabled]="isSaving || form.invalid || !selectedFlowId"
-              >
-                @if (isSaving) {
-                  <i class="bi bi-arrow-repeat animate-spin"></i>
-                } @else {
-                  <i class="bi bi-floppy"></i>
-                }
-                {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-              </sic-button>
+              @if (!isViewOnly) {
+                <sic-button
+                  [fullWidth]="true"
+                  type="submit"
+                  variant="primary"
+                  [disabled]="isSaving || form.invalid || !selectedFlowId"
+                >
+                  @if (isSaving) {
+                    <i class="bi bi-arrow-repeat animate-spin"></i>
+                  } @else {
+                    <i class="bi bi-floppy"></i>
+                  }
+                  {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                </sic-button>
+              }
             </div>
 
             <!-- Hidden fields -->

@@ -246,6 +246,13 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
   {
+    path: 'requirement/:id/view',
+    loadComponent: () =>
+      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { form: pmdt05Resolver },
+  },
+  {
     path: 'requirement/:id/approval',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),

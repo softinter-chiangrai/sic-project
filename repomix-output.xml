@@ -34176,190 +34176,6 @@ export class Burt05AService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/bu/rt/burt05/burt05.component.html">
-<!-- src/app/feature/bu/rt/burt05/burt05.component.html -->
-
-<div class="space-y-5 p-0.5">
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-        จัดการโปรแกรม
-      </h1>
-      <span
-        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
-      >
-        {{ programs().length }} โปรแกรม
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่มโปรแกรม
-    </button>
-  </div>
-
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- TREE TABLE -->
-  @if (!isLoading() && treeData().length > 0) {
-    <div class="overflow-x-auto bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)]">
-          <tr>
-            <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[260px]"
-            >
-              โปรแกรม
-            </th>
-            <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]"
-            >
-              รหัส
-            </th>
-            <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[70px]"
-            >
-              ลำดับ
-            </th>
-            <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]"
-            >
-              Route
-            </th>
-            <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]"
-            >
-              สถานะ
-            </th>
-            <th
-              class="px-4 py-2.5 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[220px]"
-            >
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (flatNode of visibleNodes(); track flatNode.id) {
-            <tr>
-              <td class="px-4 py-2">
-                <div
-                  class="flex items-center gap-1.5"
-                  [style.padding-left.px]="flatNode.level * 20"
-                >
-                  @if (flatNode.children.length > 0) {
-                    <button
-                      (click)="toggleExpand(flatNode.id)"
-                      class="w-4 h-4 flex items-center justify-center rounded hover:bg-[var(--sidebar-hover)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-active)]"
-                    >
-                      <i
-                        class="bi text-xs"
-                        [class.bi-chevron-right]="!isExpanded(flatNode.id)"
-                        [class.bi-chevron-down]="isExpanded(flatNode.id)"
-                      ></i>
-                    </button>
-                  } @else {
-                    <span class="w-4"></span>
-                  }
-
-                  <i
-                    class="bi text-[var(--text-muted)] text-sm"
-                    [class]="flatNode.icon || 'bi-file-earmark'"
-                  ></i>
-
-                  <span
-                    class="font-medium text-[var(--text-active)] cursor-pointer"
-                    (click)="toggleExpand(flatNode.id)"
-                  >
-                    {{ flatNode.name }}
-                  </span>
-
-                  @if (flatNode.children.length > 0) {
-                    <span class="text-xs text-[var(--text-muted)]"
-                      >[{{ flatNode.children.length }}]</span
-                    >
-                  }
-                </div>
-              </td>
-
-              <td class="px-4 py-2">
-                <span class="text-xs font-mono text-[var(--crm-primary)]">{{ flatNode.code }}</span>
-              </td>
-
-              <td class="px-4 py-2">
-                <span class="text-xs text-[var(--text-muted)]">{{ flatNode.sortOrder }}</span>
-              </td>
-
-              <td class="px-4 py-2">
-                <span class="text-xs text-[var(--text-muted)] font-mono truncate block max-w-[120px]">
-                  {{ flatNode.routePath || '-' }}
-                </span>
-              </td>
-
-              <td class="px-4 py-2">
-                <span
-                  class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  [class]="getStatusClass(flatNode.isActive)"
-                >
-                  {{ flatNode.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
-                </span>
-              </td>
-
-              <td class="px-4 py-2 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <button
-                    (click)="goToEdit(flatNode)"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button
-                    (click)="deleteProgram(flatNode)"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="ลบ"
-                    [disabled]="flatNode.children.length > 0"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- NO DATA -->
-  @if (!isLoading() && treeData().length === 0) {
-    <div class="flex flex-col items-center justify-center py-16 gap-4">
-      <i class="bi bi-diagram-3 text-6xl text-[var(--text-muted)] opacity-30"></i>
-      <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีโปรแกรมในระบบ</p>
-      <p class="text-sm text-[var(--text-muted)]">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
-      <button
-        (click)="goToAdd()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-      >
-        <i class="bi bi-plus-lg"></i>
-        สร้างโปรแกรมแรก
-      </button>
-    </div>
-  }
-</div>
-</file>
-
 <file path="sic-app/src/app/feature/bu/rt/burt05/burt05.form.ts">
 // src/app/feature/bu/rt/burt05/burt05.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -45752,59 +45568,6 @@ export class Pmrt04Service {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.model.ts">
-// src/app/feature/pm/rt/pmrt05/pmrt05.model.ts
-import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-
-export interface Pmrt05Model extends SicBaseStateModel {
-  id: string;
-  projectId: string;
-}
-
-export interface Pmrt05PageData {
-  requirementDetail: RequirementDetail;
-  traceLinks: TraceLink[];
-}
-
-export interface TraceLink {
-  id: string;
-  sourceType: string;
-  sourceId: string;
-  targetType: string;
-  targetId: string;
-  relationshipType: string;
-}
-
-export interface RequirementDetail {
-  id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName: string;
-  customerId: string;
-  customerName: string;
-  status: string;
-  version: string;
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-}
-
-export interface RelatedItem {
-  id: string;
-  name: string;
-  code?: string;
-  type: string;
-  link: string;
-  color?: string;
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.resolver.ts">
 // src/app/feature/pm/rt/pmrt05/pmrt05.resolver.ts
 import { inject } from '@angular/core';
@@ -54475,218 +54238,188 @@ export class Burt05AComponent implements OnInit {
 export default Burt05AComponent;
 </file>
 
-<file path="sic-app/src/app/feature/bu/rt/burt05/burt05.component.ts">
-// src/app/feature/bu/rt/burt05/burt05.component.ts
+<file path="sic-app/src/app/feature/bu/rt/burt05/burt05.component.html">
+<!-- src/app/feature/bu/rt/burt05/burt05.component.html -->
 
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { Program, TreeNode } from './burt05.model';
-import { burt05Service } from './burt05.service';
+<div class="space-y-5 p-0.5">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+        จัดการโปรแกรม
+      </h1>
+      <span
+        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
+      >
+        {{ programs().length }} โปรแกรม
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่มโปรแกรม
+    </button>
+  </div>
 
-/** FlatNode = TreeNode + level */
-type FlatNode = TreeNode & { level: number };
-
-/** Helper: ดึงชื่อจาก Program หรือ TreeNode */
-function getProgramName(program: Program | TreeNode): string {
-  if ('name' in program) {
-    return program.name; // TreeNode
-  }
-  return program.programNameEn || 'ไม่ระบุชื่อ'; // Program
-}
-
-@Component({
-  selector: 'app-burt05',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './burt05.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['./burt05.component.css'],
-})
-export class Burt05Component implements OnInit {
-  private service = inject(burt05Service);
-  private dialog = inject(DialogService);
-  private router = inject(Router);
-
-  isLoading = signal(false);
-  programs = signal<Program[]>([]);
-  treeData = signal<TreeNode[]>([]);
-
-  // เก็บ ID ของ node ที่ขยาย
-  expandedIds = signal<Set<string>>(new Set());
-
-  // คำนวณรายการ node ที่จะแสดง
-  visibleNodes = computed<FlatNode[]>(() => {
-    const tree = this.treeData();
-    const expanded = this.expandedIds();
-    const result: FlatNode[] = [];
-
-    const flatten = (nodes: TreeNode[], level: number) => {
-      for (const node of nodes) {
-        result.push({ ...node, level });
-        if (expanded.has(node.id) && node.children.length > 0) {
-          flatten(node.children, level + 1);
-        }
-      }
-    };
-
-    flatten(tree, 0);
-    return result;
-  });
-
-  ngOnInit() {
-    this.loadData();
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
   }
 
-  loadData() {
-    this.isLoading.set(true);
-    this.service.getPrograms().subscribe({
-      next: (programs) => {
-        this.programs.set(programs);
-        this.buildTree(programs);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโปรแกรมได้');
-      },
-    });
+  <!-- TREE TABLE -->
+  @if (!isLoading() && treeData().length > 0) {
+    <div class="overflow-x-auto bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)]">
+          <tr>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[260px]"
+            >
+              โปรแกรม
+            </th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]"
+            >
+              รหัส
+            </th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[70px]"
+            >
+              ลำดับ
+            </th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]"
+            >
+              Route
+            </th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]"
+            >
+              สถานะ
+            </th>
+            <th
+              class="px-4 py-2.5 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[220px]"
+            >
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (flatNode of visibleNodes(); track flatNode.id) {
+            <tr>
+              <td class="px-4 py-2">
+                <div
+                  class="flex items-center gap-1.5"
+                  [style.padding-left.px]="flatNode.level * 20"
+                >
+                  @if (flatNode.children.length > 0) {
+                    <button
+                      (click)="toggleExpand(flatNode.id)"
+                      class="w-4 h-4 flex items-center justify-center rounded hover:bg-[var(--sidebar-hover)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-active)]"
+                    >
+                      <i
+                        class="bi text-xs"
+                        [class.bi-chevron-right]="!isExpanded(flatNode.id)"
+                        [class.bi-chevron-down]="isExpanded(flatNode.id)"
+                      ></i>
+                    </button>
+                  } @else {
+                    <span class="w-4"></span>
+                  }
+
+                  <i
+                    class="bi text-[var(--text-muted)] text-sm"
+                    [class]="flatNode.icon || 'bi-file-earmark'"
+                  ></i>
+
+                  <span
+                    class="font-medium text-[var(--text-active)] cursor-pointer"
+                    (click)="toggleExpand(flatNode.id)"
+                  >
+                    {{ flatNode.name }}
+                  </span>
+
+                  @if (flatNode.children.length > 0) {
+                    <span class="text-xs text-[var(--text-muted)]"
+                      >[{{ flatNode.children.length }}]</span
+                    >
+                  }
+                </div>
+              </td>
+
+              <td class="px-4 py-2">
+                <span class="text-xs font-mono text-[var(--crm-primary)]">{{ flatNode.code }}</span>
+              </td>
+
+              <td class="px-4 py-2">
+                <span class="text-xs text-[var(--text-muted)]">{{ flatNode.sortOrder }}</span>
+              </td>
+
+              <td class="px-4 py-2">
+                <span class="text-xs text-[var(--text-muted)] font-mono truncate block max-w-[120px]">
+                  {{ flatNode.routePath || '-' }}
+                </span>
+              </td>
+
+              <td class="px-4 py-2">
+                <span
+                  class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [class]="getStatusClass(flatNode.isActive)"
+                >
+                  {{ flatNode.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                </span>
+              </td>
+
+              <td class="px-4 py-2 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    (click)="goToEdit(flatNode)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    (click)="deleteProgram(flatNode)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="ลบ"
+                    [disabled]="flatNode.children.length > 0"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 
-  /** สร้างต้นไม้จาก List ของ Program */
-  buildTree(programs: Program[]) {
-    const map = new Map<string, TreeNode>();
-    const roots: TreeNode[] = [];
-
-    programs.forEach((p) => {
-      const node: TreeNode = {
-        id: p.id!,
-        code: p.programCode,
-        name: p.programName,
-        nameLocal: p.programNameLocal,
-        icon: p.programIcon || 'bi bi-file',
-        routePath: p.routePath || '',
-        sortOrder: p.sortOrder || 0,
-        isActive: p.isActive,
-        children: [],
-        parentProgramId: p.parentProgramId,
-        level: 0,
-      };
-      map.set(p.id!, node);
-    });
-
-    programs.forEach((p) => {
-      const node = map.get(p.id!);
-      if (!node) return;
-
-      if (p.parentProgramId && map.has(p.parentProgramId)) {
-        const parent = map.get(p.parentProgramId)!;
-        parent.children.push(node);
-        node.level = parent.level + 1;
-      } else {
-        roots.push(node);
-      }
-    });
-
-    // เรียงลำดับ
-    const sortChildren = (nodes: TreeNode[]) => {
-      nodes.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      nodes.forEach((node) => sortChildren(node.children));
-    };
-    sortChildren(roots);
-
-    this.treeData.set(roots);
-    this.expandAll();
+  <!-- NO DATA -->
+  @if (!isLoading() && treeData().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <i class="bi bi-diagram-3 text-6xl text-[var(--text-muted)] opacity-30"></i>
+      <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีโปรแกรมในระบบ</p>
+      <p class="text-sm text-[var(--text-muted)]">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+      >
+        <i class="bi bi-plus-lg"></i>
+        สร้างโปรแกรมแรก
+      </button>
+    </div>
   }
-
-  /** ขยายทุกโหนด */
-  expandAll() {
-    const allIds = this.getAllNodeIds(this.treeData());
-    this.expandedIds.set(allIds);
-  }
-
-  /** ดึง ID ทั้งหมดจากต้นไม้ */
-  getAllNodeIds(nodes: TreeNode[]): Set<string> {
-    const ids = new Set<string>();
-    const traverse = (nodes: TreeNode[]) => {
-      for (const node of nodes) {
-        ids.add(node.id);
-        traverse(node.children);
-      }
-    };
-    traverse(nodes);
-    return ids;
-  }
-
-  /** สลับสถานะขยาย/ย่อ */
-  toggleExpand(id: string) {
-    this.expandedIds.update((set) => {
-      const newSet = new Set(set);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }
-
-  /** ตรวจสอบว่าขยายอยู่หรือไม่ */
-  isExpanded(id: string): boolean {
-    return this.expandedIds().has(id);
-  }
-
-  // ---------- Navigation & Actions ----------
-  goToAdd() {
-    this.router.navigate(['/feature/bu/burt05/new']);
-  }
-
-  goToEdit(program: Program | TreeNode) {
-    this.router.navigate(['/feature/bu/burt05', program.id, 'edit']);
-  }
-
-  goToPermissions(program: Program | TreeNode) {
-    this.router.navigate(['/feature/bu/burt05', program.id, 'permissions']);
-  }
-
-  deleteProgram(program: Program | TreeNode) {
-    const hasChildren = this.programs().some((p) => p.parentProgramId === program.id);
-    if (hasChildren) {
-      this.dialog.error('ไม่สามารถลบได้', 'โปรแกรมนี้มีโปรแกรมย่อย กรุณาลบโปรแกรมย่อยก่อน');
-      return;
-    }
-
-    const programName = getProgramName(program);
-
-    this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบโปรแกรม "${programName}" ใช่หรือไม่?`)
-      .then((confirmed) => {
-        if (confirmed) {
-          this.service.deleteProgram(program.id!).subscribe({
-            next: () => {
-              this.dialog.success('ลบสำเร็จ', 'โปรแกรมถูกลบเรียบร้อย');
-              this.loadData();
-            },
-            error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        }
-      });
-  }
-
-  // ✅ แก้ไขฟังก์ชันนี้ให้ใช้ CSS Variables แทน hard-coded colors
-  getStatusClass(isActive: boolean): string {
-    return isActive
-      ? 'bg-[var(--crm-success)]/10 text-[var(--crm-success)]'   // สีเขียวของระบบ
-      : 'bg-[var(--text-muted)]/10 text-[var(--text-muted)]';     // สีเทาของระบบ
-  }
-
-  getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-  }
-}
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/bu/rt/burt06/burt06A/burt06A.model.ts">
@@ -58364,6 +58097,60 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.model.ts">
+// src/app/feature/pm/rt/pmrt05/pmrt05.model.ts
+import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+
+export interface Pmrt05Model extends SicBaseStateModel {
+  id: string;
+  projectId: string;
+}
+
+export interface Pmrt05PageData {
+  requirementDetail: RequirementDetail;
+  traceLinks: TraceLink[];
+}
+
+export interface TraceLink {
+  id: string;
+  sourceType: string;
+  sourceId: string;
+  targetType: string;
+  targetId: string;
+  relationshipType: string;
+}
+
+export interface RequirementDetail {
+  id: string;
+  requirementCode: string;
+  title: string;
+  description: string;
+  priority: string;
+  businessValue: string;
+  acceptanceCriteria: string;
+  projectId: string;
+  projectName: string;
+  customerId: string;
+  customerName: string;
+  status: string;
+  version: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt?: string;
+  createdDate?: string;
+}
+
+export interface RelatedItem {
+  id: string;
+  name: string;
+  code?: string;
+  type: string;
+  link: string;
+  color?: string;
+}
+</file>
+
 <file path="sic-app/src/app/tutorial/tutorial.component.ts">
 
 </file>
@@ -61016,6 +60803,220 @@ export class Burt03Component implements OnInit {
       return fallbackColors[Math.abs(hash) % fallbackColors.length];
     }
     return fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/bu/rt/burt05/burt05.component.ts">
+// src/app/feature/bu/rt/burt05/burt05.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { Program, TreeNode } from './burt05.model';
+import { burt05Service } from './burt05.service';
+
+/** FlatNode = TreeNode + level */
+type FlatNode = TreeNode & { level: number };
+
+/** Helper: ดึงชื่อจาก Program หรือ TreeNode */
+function getProgramName(program: Program | TreeNode): string {
+  if ('name' in program) {
+    return program.name; // TreeNode
+  }
+  return program.programNameEn || 'ไม่ระบุชื่อ'; // Program
+}
+
+@Component({
+  selector: 'app-burt05',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './burt05.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./burt05.component.css'],
+})
+export class Burt05Component implements OnInit {
+  private service = inject(burt05Service);
+  private dialog = inject(DialogService);
+  private router = inject(Router);
+
+  isLoading = signal(false);
+  programs = signal<Program[]>([]);
+  treeData = signal<TreeNode[]>([]);
+
+  // เก็บ ID ของ node ที่ขยาย
+  expandedIds = signal<Set<string>>(new Set());
+
+  // คำนวณรายการ node ที่จะแสดง
+  visibleNodes = computed<FlatNode[]>(() => {
+    const tree = this.treeData();
+    const expanded = this.expandedIds();
+    const result: FlatNode[] = [];
+
+    const flatten = (nodes: TreeNode[], level: number) => {
+      for (const node of nodes) {
+        result.push({ ...node, level });
+        if (expanded.has(node.id) && node.children.length > 0) {
+          flatten(node.children, level + 1);
+        }
+      }
+    };
+
+    flatten(tree, 0);
+    return result;
+  });
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.service.getPrograms().subscribe({
+      next: (programs) => {
+        this.programs.set(programs);
+        this.buildTree(programs);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโปรแกรมได้');
+      },
+    });
+  }
+
+  /** สร้างต้นไม้จาก List ของ Program */
+  buildTree(programs: Program[]) {
+    const map = new Map<string, TreeNode>();
+    const roots: TreeNode[] = [];
+
+    programs.forEach((p) => {
+      const node: TreeNode = {
+        id: p.id!,
+        code: p.programCode,
+        name: p.programName,
+        nameLocal: p.programNameLocal,
+        icon: p.programIcon || 'bi bi-file',
+        routePath: p.routePath || '',
+        sortOrder: p.sortOrder || 0,
+        isActive: p.isActive,
+        children: [],
+        parentProgramId: p.parentProgramId,
+        level: 0,
+      };
+      map.set(p.id!, node);
+    });
+
+    programs.forEach((p) => {
+      const node = map.get(p.id!);
+      if (!node) return;
+
+      if (p.parentProgramId && map.has(p.parentProgramId)) {
+        const parent = map.get(p.parentProgramId)!;
+        parent.children.push(node);
+        node.level = parent.level + 1;
+      } else {
+        roots.push(node);
+      }
+    });
+
+    // เรียงลำดับ
+    const sortChildren = (nodes: TreeNode[]) => {
+      nodes.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      nodes.forEach((node) => sortChildren(node.children));
+    };
+    sortChildren(roots);
+
+    this.treeData.set(roots);
+    this.expandAll();
+  }
+
+  /** ขยายทุกโหนด */
+  expandAll() {
+    const allIds = this.getAllNodeIds(this.treeData());
+    this.expandedIds.set(allIds);
+  }
+
+  /** ดึง ID ทั้งหมดจากต้นไม้ */
+  getAllNodeIds(nodes: TreeNode[]): Set<string> {
+    const ids = new Set<string>();
+    const traverse = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        ids.add(node.id);
+        traverse(node.children);
+      }
+    };
+    traverse(nodes);
+    return ids;
+  }
+
+  /** สลับสถานะขยาย/ย่อ */
+  toggleExpand(id: string) {
+    this.expandedIds.update((set) => {
+      const newSet = new Set(set);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }
+
+  /** ตรวจสอบว่าขยายอยู่หรือไม่ */
+  isExpanded(id: string): boolean {
+    return this.expandedIds().has(id);
+  }
+
+  // ---------- Navigation & Actions ----------
+  goToAdd() {
+    this.router.navigate(['/feature/bu/burt05/new']);
+  }
+
+  goToEdit(program: Program | TreeNode) {
+    this.router.navigate(['/feature/bu/burt05', program.id, 'edit']);
+  }
+
+  goToPermissions(program: Program | TreeNode) {
+    this.router.navigate(['/feature/bu/burt05', program.id, 'permissions']);
+  }
+
+  deleteProgram(program: Program | TreeNode) {
+    const hasChildren = this.programs().some((p) => p.parentProgramId === program.id);
+    if (hasChildren) {
+      this.dialog.error('ไม่สามารถลบได้', 'โปรแกรมนี้มีโปรแกรมย่อย กรุณาลบโปรแกรมย่อยก่อน');
+      return;
+    }
+
+    const programName = getProgramName(program);
+
+    this.dialog
+      .confirm('ยืนยันการลบ', `คุณต้องการลบโปรแกรม "${programName}" ใช่หรือไม่?`)
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteProgram(program.id!).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'โปรแกรมถูกลบเรียบร้อย');
+              this.loadData();
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  // ✅ แก้ไขฟังก์ชันนี้ให้ใช้ CSS Variables แทน hard-coded colors
+  getStatusClass(isActive: boolean): string {
+    return isActive
+      ? 'bg-[var(--crm-success)]/10 text-[var(--crm-success)]'   // สีเขียวของระบบ
+      : 'bg-[var(--text-muted)]/10 text-[var(--text-muted)]';     // สีเทาของระบบ
+  }
+
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 }
 </file>
@@ -67002,357 +67003,6 @@ export class Pmdt08AComponent implements OnInit, CanComponentDeactivate {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.html">
-<!-- src/app/feature/pm/rt/pmrt05/pmrt05.component.html -->
-<div class="space-y-6 p-0.5">
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-4">
-      <button
-        (click)="goBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <h1 class="text-2xl font-bold text-[var(--text-active)]">
-            {{ requirement()?.title || 'Requirement' }}
-          </h1>
-          <span
-            class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
-          >
-            {{ requirement()?.requirementCode }}
-          </span>
-          <span
-            [class]="
-              getStatusClass(requirement()?.status || '') +
-              ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-            "
-          >
-            {{ getStatusText(requirement()?.status || '') }}
-          </span>
-          @if (!requirement()?.isActive) {
-            <span
-              class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            >
-              ปิดใช้งาน
-            </span>
-          }
-        </div>
-        <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
-          <span><i class="bi bi-briefcase"></i> {{ requirement()?.projectName }}</span>
-          <span><i class="bi bi-person"></i> {{ requirement()?.createdBy }}</span>
-          <span
-            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdAt || '') }}</span
-          >
-          <span><i class="bi bi-tag"></i> {{ requirement()?.priority }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- ===== REQUIREMENT DETAIL ===== -->
-  @if (!isLoading() && requirement(); as req) {
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คำอธิบาย</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.description || '-' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คุณค่าทางธุรกิจ</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.businessValue || '-' }}</p>
-        </div>
-        <div class="md:col-span-2">
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">เงื่อนไขการยอมรับ</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.acceptanceCriteria || '-' }}</p>
-        </div>
-      </div>
-  }
-
-  <!-- ===== QUICK ACTIONS ===== -->
-  <div>
-    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
-      <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
-      สร้างเอกสารที่เกี่ยวข้อง
-    </h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-      <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
-      <button
-        (click)="createDiagram()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-diagram-3 text-xl text-[var(--crm-primary)]"></i>
-        <span>Diagram</span>
-      </button>
-      <!-- ปุ่มอื่น ๆ ตามเดิม -->
-      <button
-        (click)="createSpec()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
-        <span>Specification</span>
-      </button>
-
-      <button
-        (click)="createDesignReview()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
-        <span>Design Review</span>
-      </button>
-      <button
-        (click)="createTask()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
-        <span>Task</span>
-      </button>
-      <button
-        (click)="createTest()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-clipboard-data text-xl text-[var(--crm-primary)]"></i>
-        <span>Test Case</span>
-      </button>
-      <button
-        (click)="createBug()"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-      >
-        <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
-        <span>Bug</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== RELATED ITEMS ===== -->
-  <div>
-    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
-      <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-      ความสัมพันธ์ (Trace Links)
-    </h2>
-
-    @if (traceLinks().length === 0) {
-      <div
-        class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
-      >
-        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
-        <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
-        <p class="text-sm">ใช้ปุ่มด้านบนเพื่อสร้างเอกสารใหม่</p>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Diagrams (DFD + ER) -->
-        @if (diagrams().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-                Diagrams
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of diagrams(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span
-                      class="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                      [class.bg-blue-100]="item.type === 'DFD'"
-                      [class.text-blue-700]="item.type === 'DFD'"
-                      [class.bg-emerald-100]="item.type === 'ER'"
-                      [class.text-emerald-700]="item.type === 'ER'"
-                    >
-                      {{ item.type }}
-                    </span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Specification -->
-        @if (specList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
-                Specification
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of specList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Task -->
-        @if (taskList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-                Task
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of taskList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Test Case -->
-        @if (testList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
-                Test Case
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of testList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Bug -->
-        @if (bugList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-bug text-[var(--crm-danger)]"></i>
-                Bug
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} รายการ</span>
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of bugList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Change Request -->
-        @if (changeRequestList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
-                Change Request
-              </span>
-              <span class="text-xs text-[var(--text-muted)]"
-                >{{ changeRequestList().length }} รายการ</span
-              >
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of changeRequestList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-
-        <!-- Design Review -->
-        @if (designReviewList().length > 0) {
-          <sic-card>
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
-              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-                Design Review
-              </span>
-              <span class="text-xs text-[var(--text-muted)]"
-                >{{ designReviewList().length }} รายการ</span
-              >
-            </div>
-            <ul class="mt-2 space-y-1">
-              @for (item of designReviewList(); track item.id) {
-                <li>
-                  <a
-                    [routerLink]="item.link"
-                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
-                  >
-                    <span class="font-mono text-xs">{{ item.code }}</span>
-                    <span>{{ item.name }}</span>
-                  </a>
-                </li>
-              }
-            </ul>
-          </sic-card>
-        }
-      </div>
-    }
-  </div>
-</div>
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalController.java">
 // ============================================================
 // 8. PmApprovalController.java (เพิ่ม endpoint)
@@ -70507,6 +70157,367 @@ export class Pmrt03Component implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.html">
+<!-- src/app/feature/pm/rt/pmrt05/pmrt05.component.html -->
+<div class="space-y-6 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <button
+        (click)="goBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-bold text-[var(--text-active)]">
+            {{ requirement()?.title || 'Requirement' }}
+          </h1>
+          <span
+            class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
+          >
+            {{ requirement()?.requirementCode }}
+          </span>
+          <span
+            [class]="
+              getStatusClass(requirement()?.status || '') +
+              ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+            "
+          >
+            {{ getStatusText(requirement()?.status || '') }}
+          </span>
+          @if (!requirement()?.isActive) {
+            <span
+              class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+            >
+              ปิดใช้งาน
+            </span>
+          }
+        </div>
+        <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
+          <span><i class="bi bi-briefcase"></i> {{ requirement()?.projectName }}</span>
+          <span><i class="bi bi-person"></i> {{ requirement()?.createdBy }}</span>
+          <span
+            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdDate || requirement()?.createdAt || '') }}</span
+          >
+          <span><i class="bi bi-tag"></i> {{ requirement()?.priority }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+      ></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== REQUIREMENT DETAIL ===== -->
+  @if (!isLoading() && requirement(); as req) {
+    <sic-card>
+      <div>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">คำอธิบาย</p>
+
+        <!-- แสดงเนื้อหาแบบเต็มเมื่อขยาย -->
+        @if (isExpanded()) {
+          <div class="text-sm text-[var(--text)] prose prose-sm max-w-none whitespace-pre-wrap leading-relaxed" [innerHTML]="req.description || '-'"></div>
+        } @else {
+          <!-- แสดงเนื้อหาแบบย่อ (ข้อความธรรมดา) -->
+          <p class="text-sm text-[var(--text)] whitespace-pre-wrap leading-relaxed line-clamp-3">{{ getShortDescription(req.description) }}</p>
+        }
+
+        <!-- ปุ่มดูเพิ่ม / ย่อ (แสดงเฉพาะเมื่อเนื้อหายาว) -->
+        @if (isLongDescription(req.description)) {
+          <button
+            (click)="toggleExpand()"
+            class="text-xs font-medium text-[var(--crm-primary)] hover:underline mt-3 inline-flex items-center gap-1.5 focus:outline-none"
+          >
+            <span>{{ isExpanded() ? 'ย่อเนื้อหา' : 'ดูเนื้อหาเพิ่มเติม' }}</span>
+            <i class="bi" [class.bi-chevron-up]="isExpanded()" [class.bi-chevron-down]="!isExpanded()"></i>
+          </button>
+        }
+      </div>
+    </sic-card>
+  }
+
+  <!-- ===== QUICK ACTIONS ===== -->
+  <div>
+    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+      <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
+      สร้างเอกสารที่เกี่ยวข้อง
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
+      <button
+        (click)="createDiagram()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-diagram-3 text-xl text-[var(--crm-primary)]"></i>
+        <span>Diagram</span>
+      </button>
+      <!-- ปุ่มอื่น ๆ ตามเดิม -->
+      <button
+        (click)="createSpec()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
+        <span>Specification</span>
+      </button>
+
+      <button
+        (click)="createDesignReview()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
+        <span>Design Review</span>
+      </button>
+      <button
+        (click)="createTask()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
+        <span>Task</span>
+      </button>
+      <button
+        (click)="createTest()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-clipboard-data text-xl text-[var(--crm-primary)]"></i>
+        <span>Test Case</span>
+      </button>
+      <button
+        (click)="createBug()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-bug text-xl text-[var(--crm-danger)]"></i>
+        <span>Bug</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== RELATED ITEMS ===== -->
+  <div>
+    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+      <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+      ความสัมพันธ์ (Trace Links)
+    </h2>
+
+    @if (traceLinks().length === 0) {
+      <div
+        class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
+      >
+        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
+        <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
+        <p class="text-sm">ใช้ปุ่มด้านบนเพื่อสร้างเอกสารใหม่</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Diagrams (DFD + ER) -->
+        @if (diagrams().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+                Diagrams
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of diagrams(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span
+                      class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                      [class.bg-blue-100]="item.type === 'DFD'"
+                      [class.text-blue-700]="item.type === 'DFD'"
+                      [class.bg-emerald-100]="item.type === 'ER'"
+                      [class.text-emerald-700]="item.type === 'ER'"
+                    >
+                      {{ item.type }}
+                    </span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Specification -->
+        @if (specList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
+                Specification
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of specList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Task -->
+        @if (taskList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
+                Task
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of taskList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Test Case -->
+        @if (testList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
+                Test Case
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of testList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Bug -->
+        @if (bugList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-bug text-[var(--crm-danger)]"></i>
+                Bug
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} รายการ</span>
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of bugList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Change Request -->
+        @if (changeRequestList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
+                Change Request
+              </span>
+              <span class="text-xs text-[var(--text-muted)]"
+                >{{ changeRequestList().length }} รายการ</span
+              >
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of changeRequestList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+
+        <!-- Design Review -->
+        @if (designReviewList().length > 0) {
+          <sic-card>
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+                Design Review
+              </span>
+              <span class="text-xs text-[var(--text-muted)]"
+                >{{ designReviewList().length }} รายการ</span
+              >
+            </div>
+            <ul class="mt-2 space-y-1">
+              @for (item of designReviewList(); track item.id) {
+                <li>
+                  <a
+                    [routerLink]="item.link"
+                    class="text-sm text-[var(--crm-primary)] hover:underline flex items-center gap-2"
+                  >
+                    <span class="font-mono text-xs">{{ item.code }}</span>
+                    <span>{{ item.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </sic-card>
+        }
+      </div>
+    }
+  </div>
+</div>
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/entity/pm/PmSpecification.java">
 package com.softinter.sicapi.entity.pm;
 
@@ -72108,355 +72119,6 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
 export default Pmdt05Component;
 </file>
 
-<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.ts">
-// src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
-
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-
-import { RequirementDetail, TraceLink, RelatedItem, Pmrt05PageData } from './pmrt05.model';
-
-
-@Component({
-  selector: 'app-pmrt05',
-  standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
-  templateUrl: './pmrt05.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./pmrt05.component.css'],
-})
-export class Pmrt05Component implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private http = inject(HttpClient);
-  private dialog = inject(DialogService);
-  private navigation = inject(NavigationService);
-  private customerState = inject(CustomerStateService);
-
-  // ===== State =====
-  isLoading = signal(false);
-  requirement = signal<RequirementDetail | null>(null);
-  traceLinks = signal<TraceLink[]>([]);
-  projectId = signal<string | null>(null);
-  requirementId = signal<string | null>(null);
-
-  // ===== Computed groups =====
-  dfdList = signal<RelatedItem[]>([]);
-  erList = signal<RelatedItem[]>([]);
-  specList = signal<RelatedItem[]>([]);
-  taskList = signal<RelatedItem[]>([]);
-  testList = signal<RelatedItem[]>([]);
-  bugList = signal<RelatedItem[]>([]);
-  changeRequestList = signal<RelatedItem[]>([]);
-  designReviewList = signal<RelatedItem[]>([]);
-
-  diagrams = computed(() => {
-    const dfd = this.dfdList();
-    const er = this.erList();
-    return [...dfd, ...er].sort((a, b) => a.type.localeCompare(b.type));
-  });
-
-  // ===== Lifecycle =====
-  ngOnInit() {
-    const pageData: Pmrt05PageData = this.route.snapshot.data['pageData'];
-    if (pageData && pageData.requirementDetail) {
-      this.requirement.set(pageData.requirementDetail);
-      this.projectId.set(pageData.requirementDetail.projectId);
-      this.requirementId.set(pageData.requirementDetail.id);
-      if (pageData.traceLinks) {
-        this.traceLinks.set(pageData.traceLinks);
-        this.groupLinks(pageData.traceLinks);
-      }
-    } else {
-      this.route.queryParams.subscribe((params) => {
-        const reqId = params['requirementId'];
-        const projId = params['projectId'];
-        if (!reqId || !projId) {
-          this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
-          return;
-        }
-        this.requirementId.set(reqId);
-        this.projectId.set(projId);
-        this.loadRequirement(reqId);
-        this.loadTraceLinks(reqId);
-      });
-    }
-  }
-
-
-  // ===== Load Data =====
-  loadRequirement(id: string) {
-    this.isLoading.set(true);
-    this.http
-      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (data) => {
-          this.requirement.set(data);
-          this.projectId.set(data.projectId);
-        },
-        error: (err) => {
-          console.error('Load requirement error:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
-        },
-      });
-  }
-
-  loadTraceLinks(reqId: string) {
-    this.http
-      .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
-      .subscribe({
-        next: (links) => {
-          this.traceLinks.set(links);
-          this.groupLinks(links);
-        },
-        error: (err) => {
-          console.error('Load trace links error:', err);
-          this.traceLinks.set([]);
-          this.groupLinks([]);
-        },
-      });
-  }
-
-  private groupLinks(links: TraceLink[]) {
-    const dfd: RelatedItem[] = [];
-    const er: RelatedItem[] = [];
-    const spec: RelatedItem[] = [];
-    const task: RelatedItem[] = [];
-    const test: RelatedItem[] = [];
-    const bug: RelatedItem[] = [];
-    const cr: RelatedItem[] = [];
-    const review: RelatedItem[] = [];
-
-    const projectId = this.projectId();
-
-    links.forEach((link) => {
-      const type = link.targetType;
-      const id = link.targetId;
-      const item: RelatedItem = {
-        id: id,
-        name: id,
-        type: type,
-        link: this.buildLink(type, id, projectId),
-        code: id.slice(0, 8),
-      };
-
-      switch (type) {
-        case 'DFD':
-          dfd.push(item);
-          break;
-        case 'ER':
-          er.push(item);
-          break;
-        case 'SPECIFICATION':
-          spec.push(item);
-          break;
-        case 'TASK':
-          task.push(item);
-          break;
-        case 'TEST_CASE':
-          test.push(item);
-          break;
-        case 'BUG':
-          bug.push(item);
-          break;
-        case 'CHANGE_REQUEST':
-          cr.push(item);
-          break;
-        case 'DESIGN_REVIEW':
-          review.push(item);
-          break;
-        default:
-          break;
-      }
-    });
-
-    this.dfdList.set(dfd);
-    this.erList.set(er);
-    this.specList.set(spec);
-    this.taskList.set(task);
-    this.testList.set(test);
-    this.bugList.set(bug);
-    this.changeRequestList.set(cr);
-    this.designReviewList.set(review);
-  }
-
-  private buildLink(type: string, id: string, projectId: string | null): string {
-    const base = '/feature/pm';
-    switch (type) {
-      case 'DFD':
-      case 'ER':
-        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
-      case 'SPECIFICATION':
-        return `${base}/pmdt08A/${id}/edit`; // ✅ แก้ไข: ใช้ pmdt08A แทน pmdt10
-      case 'TASK':
-        return `${base}/task/${id}/edit`;
-      case 'TEST_CASE':
-        return `${base}/test-case/${id}/edit`;
-      case 'BUG':
-        return `${base}/bug/${id}/edit`;
-      case 'CHANGE_REQUEST':
-        return `${base}/pmdt07/${id}/edit`;
-      case 'DESIGN_REVIEW':
-        return `${base}/design-review/${id}/edit`;
-      default:
-        return '#';
-    }
-  }
-
-  // ===== Navigation Actions =====
-  goBack() {
-    this.navigation.navigate(['/feature/pm/pmrt02']);
-  }
-
-  // ✅ แก้ไข: สร้าง Specification -> ใช้ pmdt08A
-  createSpec() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createDiagram(): void {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    const reqTitle = this.requirement()?.title || '';
-    if (!reqId || !projId) {
-      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/diagram'], {
-      queryParams: {
-        projectId: projId,
-        requirementId: reqId,
-        requirementTitle: reqTitle,
-        openCreate: 'true',
-      },
-    });
-  }
-
-  createChangeRequest() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createDesignReview() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt11/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createTask() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.specList().length === 0) {
-      this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt12/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createTest() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนสร้าง Test Case');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt16/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  createBug() {
-    const reqId = this.requirementId();
-    const projId = this.projectId();
-    if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนแจ้ง Bug');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt17/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
-    });
-  }
-
-  // ===== Helper =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
-  }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  getPriorityClass(priority: string): string {
-    const map: Record<string, string> = {
-      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    };
-    return map[priority] || map["Won't"];
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
-  }
-}
-</file>
-
 <file path="sic-app/src/app/app.config.ts">
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -73143,6 +72805,466 @@ export class SqlExportDialogComponent implements OnInit {
 
   close() {
     this.dialogService.close();
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.ts">
+// src/app/feature/pm/rt/pmrt05/pmrt05.component.ts
+
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize, forkJoin, of, catchError, map, Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { RequirementDetail, TraceLink, RelatedItem, Pmrt05PageData } from './pmrt05.model';
+
+@Component({
+  selector: 'app-pmrt05',
+  standalone: true,
+  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
+  templateUrl: './pmrt05.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./pmrt05.component.css'],
+})
+export class Pmrt05Component implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
+
+  // ===== State =====
+  isLoading = signal(false);
+  requirement = signal<RequirementDetail | null>(null);
+  traceLinks = signal<TraceLink[]>([]);
+  projectId = signal<string | null>(null);
+  requirementId = signal<string | null>(null);
+
+  // ===== Expand state =====
+  isExpanded = signal(false);
+
+  // ===== Computed groups =====
+  dfdList = signal<RelatedItem[]>([]);
+  erList = signal<RelatedItem[]>([]);
+  specList = signal<RelatedItem[]>([]);
+  taskList = signal<RelatedItem[]>([]);
+  testList = signal<RelatedItem[]>([]);
+  bugList = signal<RelatedItem[]>([]);
+  changeRequestList = signal<RelatedItem[]>([]);
+  designReviewList = signal<RelatedItem[]>([]);
+
+  diagrams = computed(() => {
+    const dfd = this.dfdList();
+    const er = this.erList();
+    return [...dfd, ...er].sort((a, b) => a.type.localeCompare(b.type));
+  });
+
+  // ===== Toggle expand =====
+  toggleExpand() {
+    this.isExpanded.update(v => !v);
+  }
+
+  // ===== Check if description is long (strip HTML) =====
+  isLongDescription(html: string | null | undefined): boolean {
+    if (!html) return false;
+    const plainText = html.replace(/<[^>]*>/g, '').trim();
+    return plainText.length > 150 || html.includes('\n') || html.includes('<p>') || html.includes('<br>');
+  }
+
+  // ===== Get short description (strip HTML + truncate) =====
+  getShortDescription(html: string | null | undefined): string {
+    if (!html) return '-';
+    const plainText = html.replace(/<[^>]*>/g, '').trim();
+    if (plainText.length <= 150) return plainText;
+    return plainText.substring(0, 150) + '...';
+  }
+
+  // ===== Lifecycle =====
+  ngOnInit() {
+    const pageData: Pmrt05PageData = this.route.snapshot.data['pageData'];
+    if (pageData && pageData.requirementDetail) {
+      this.requirement.set(pageData.requirementDetail);
+      this.projectId.set(pageData.requirementDetail.projectId);
+      this.requirementId.set(pageData.requirementDetail.id);
+      if (pageData.traceLinks) {
+        this.traceLinks.set(pageData.traceLinks);
+        this.groupLinks(pageData.traceLinks);
+      }
+    } else {
+      this.route.queryParams.subscribe((params) => {
+        const reqId = params['requirementId'];
+        const projId = params['projectId'];
+        if (!reqId || !projId) {
+          this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
+          this.navigation.navigate(['/feature/pm/pmrt02']);
+          return;
+        }
+        this.requirementId.set(reqId);
+        this.projectId.set(projId);
+        this.loadRequirement(reqId);
+        this.loadTraceLinks(reqId);
+      });
+    }
+  }
+
+  // ===== Load Data =====
+  loadRequirement(id: string) {
+    this.isLoading.set(true);
+    this.http
+      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.requirement.set(data);
+          this.projectId.set(data.projectId);
+        },
+        error: (err) => {
+          console.error('Load requirement error:', err);
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
+          this.navigation.navigate(['/feature/pm/pmrt02']);
+        },
+      });
+  }
+
+  loadTraceLinks(reqId: string) {
+    this.http
+      .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)
+      .subscribe({
+        next: (links) => {
+          this.traceLinks.set(links);
+          this.groupLinks(links);
+        },
+        error: (err) => {
+          console.error('Load trace links error:', err);
+          this.traceLinks.set([]);
+          this.groupLinks([]);
+        },
+      });
+  }
+
+  private fetchItemDetails(type: string, id: string): Observable<{ code: string; name: string }> {
+    let url = '';
+    switch (type) {
+      case 'DFD':
+      case 'ER':
+        url = `${environment.apiBaseUrl}/api/diagram/tabs/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.tabCode || data?.name || id.slice(0, 8),
+            name: data?.name || data?.tabCode || `${type} Diagram`,
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
+        );
+      case 'SPECIFICATION':
+        url = `${environment.apiBaseUrl}/api/pm/specifications/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.specificationCode || data?.specCode || 'SPEC',
+            name: data?.title || data?.specificationCode || 'Specification',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Specification' }))
+        );
+      case 'TASK':
+        url = `${environment.apiBaseUrl}/api/pm/tasks/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.taskCode || 'TASK',
+            name: data?.taskName || data?.title || 'Task',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Task' }))
+        );
+      case 'CHANGE_REQUEST':
+        url = `${environment.apiBaseUrl}/api/pm/change-requests/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.crNumber || data?.crCode || 'CR',
+            name: data?.changeTitle || data?.title || 'Change Request',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Change Request' }))
+        );
+      case 'TEST_CASE':
+        url = `${environment.apiBaseUrl}/api/pm/test-case/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.testCode || 'TC',
+            name: data?.title || data?.testCase || 'Test Case',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Test Case' }))
+        );
+      case 'BUG':
+        url = `${environment.apiBaseUrl}/api/pm/bug/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.bugCode || 'BUG',
+            name: data?.title || 'Bug',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Bug' }))
+        );
+      case 'DESIGN_REVIEW':
+        url = `${environment.apiBaseUrl}/api/pm/design-review/${id}`;
+        return this.http.get<any>(url).pipe(
+          map((data) => ({
+            code: data?.reviewCode || 'DR',
+            name: data?.title || 'Design Review',
+          })),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Design Review' }))
+        );
+      default:
+        return of({ code: id.slice(0, 8), name: id });
+    }
+  }
+
+  private groupLinks(links: TraceLink[]) {
+    if (!links || links.length === 0) {
+      this.dfdList.set([]);
+      this.erList.set([]);
+      this.specList.set([]);
+      this.taskList.set([]);
+      this.testList.set([]);
+      this.bugList.set([]);
+      this.changeRequestList.set([]);
+      this.designReviewList.set([]);
+      return;
+    }
+
+    const projectId = this.projectId();
+    const requests$ = links.map((link) =>
+      this.fetchItemDetails(link.targetType, link.targetId).pipe(
+        map((details) => ({
+          id: link.targetId,
+          name: details.name,
+          code: details.code,
+          type: link.targetType,
+          link: this.buildLink(link.targetType, link.targetId, projectId),
+        }))
+      )
+    );
+
+    forkJoin(requests$).subscribe({
+      next: (items: RelatedItem[]) => {
+        const dfd: RelatedItem[] = [];
+        const er: RelatedItem[] = [];
+        const spec: RelatedItem[] = [];
+        const task: RelatedItem[] = [];
+        const test: RelatedItem[] = [];
+        const bug: RelatedItem[] = [];
+        const cr: RelatedItem[] = [];
+        const review: RelatedItem[] = [];
+
+        items.forEach((item) => {
+          switch (item.type) {
+            case 'DFD':
+              dfd.push(item);
+              break;
+            case 'ER':
+              er.push(item);
+              break;
+            case 'SPECIFICATION':
+              spec.push(item);
+              break;
+            case 'TASK':
+              task.push(item);
+              break;
+            case 'TEST_CASE':
+              test.push(item);
+              break;
+            case 'BUG':
+              bug.push(item);
+              break;
+            case 'CHANGE_REQUEST':
+              cr.push(item);
+              break;
+            case 'DESIGN_REVIEW':
+              review.push(item);
+              break;
+            default:
+              break;
+          }
+        });
+
+        this.dfdList.set(dfd);
+        this.erList.set(er);
+        this.specList.set(spec);
+        this.taskList.set(task);
+        this.testList.set(test);
+        this.bugList.set(bug);
+        this.changeRequestList.set(cr);
+        this.designReviewList.set(review);
+      },
+      error: (err) => {
+        console.error('Error fetching link details:', err);
+      },
+    });
+  }
+
+  private buildLink(type: string, id: string, projectId: string | null): string {
+    const base = '/feature/pm';
+    switch (type) {
+      case 'DFD':
+      case 'ER':
+        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
+      case 'SPECIFICATION':
+        return `${base}/pmdt08A/${id}/edit`;
+      case 'TASK':
+        return `${base}/task/${id}/edit`;
+      case 'TEST_CASE':
+        return `${base}/test-case/${id}/edit`;
+      case 'BUG':
+        return `${base}/bug/${id}/edit`;
+      case 'CHANGE_REQUEST':
+        return `${base}/pmdt07/${id}/edit`;
+      case 'DESIGN_REVIEW':
+        return `${base}/design-review/${id}/edit`;
+      default:
+        return '#';
+    }
+  }
+
+  // ===== Navigation Actions =====
+  goBack() {
+    this.navigation.navigate(['/feature/pm/pmrt02']);
+  }
+
+  createSpec() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createDiagram(): void {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    const reqTitle = this.requirement()?.title || '';
+    if (!reqId || !projId) {
+      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/diagram'], {
+      queryParams: {
+        projectId: projId,
+        requirementId: reqId,
+        requirementTitle: reqTitle,
+        openCreate: 'true',
+      },
+    });
+  }
+
+  createChangeRequest() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createDesignReview() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt11/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createTask() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.specList().length === 0) {
+      this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt12/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createTest() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.taskList().length === 0) {
+      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนสร้าง Test Case');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt16/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createBug() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!reqId || !projId) return;
+    if (this.taskList().length === 0) {
+      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนแจ้ง Bug');
+      return;
+    }
+    this.navigation.navigate(['/feature/pm/pmdt17/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  // ===== Helper =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      Approved: 'อนุมัติแล้ว',
+      Changed: 'เปลี่ยนแปลง',
+      Cancelled: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
+
+  getPriorityClass(priority: string): string {
+    const map: Record<string, string> = {
+      Must: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Should: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Could: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      "Won't": 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return map[priority] || map["Won't"];
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
   }
 }
 </file>
@@ -75369,6 +75491,212 @@ export class Pmdt02Component implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
+// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
+
+import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  inject,
+  signal,
+  viewChild,
+  ChangeDetectionStrategy
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MarkdownModule } from 'ngx-markdown';
+import { Subject, takeUntil } from 'rxjs';
+import type { ChatMessage } from '../diagram.model';
+import { DiagramService, PmChatResponse } from '../diagram.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+
+
+@Component({
+  selector: 'app-pmdt06A',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MarkdownModule],
+  templateUrl: './pmdt06A.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./pmdt06A.component.css'],
+})
+export class pmdt06AComponent implements AfterViewInit, OnDestroy {
+  private _diagramId: string | null = null;
+  @Input()
+  set diagramId(value: string | null) {
+    if (value && value !== this._diagramId) {
+      this._diagramId = value;
+      this.loadChatHistory(value);
+    } else if (!value) {
+      this._diagramId = null;
+      this.messages.set([]);
+    }
+  }
+  get diagramId(): string | null {
+    return this._diagramId;
+  }
+
+  private diagramService = inject(DiagramService);
+  private dialogService = inject(DialogService);
+  private destroy$ = new Subject<void>();
+
+  messages = signal<ChatMessage[]>([]);
+  userInput = '';
+  isLoading = signal(false);
+  // ✅ เพิ่ม signal เก็บสถานะการคัดลอกของแต่ละข้อความ (key = message.id)
+  copiedStatus = signal<Record<string, boolean>>({});
+
+  chatContainer = viewChild<ElementRef>('chatContainer');
+
+  ngAfterViewInit() {
+    // Nothing extra needed
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadChatHistory(diagramId: string) {
+    if (!diagramId) return;
+    this.diagramService
+      .getChatHistory(diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (history) => {
+          this.messages.set(history);
+          this.scrollToBottom();
+        },
+        error: () => {
+          console.warn('Failed to load chat history for diagram:', diagramId);
+          this.messages.set([]);
+        },
+      });
+  }
+
+  sendMessage() {
+    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      diagramId: this.diagramId,
+      userId: 'current-user',
+      role: 'user',
+      content: this.userInput.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    this.messages.update((m) => [...m, userMessage]);
+    const input = this.userInput.trim();
+    this.userInput = '';
+    this.isLoading.set(true);
+    this.scrollToBottom();
+
+    this.diagramService
+      .sendChatMessage(this.diagramId, input)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PmChatResponse) => {
+          const assistantMsg: ChatMessage = {
+            id: response.id || crypto.randomUUID(),
+            diagramId: response.diagramId || this.diagramId!,
+            userId: response.createdBy || 'system',
+            role: response.role || 'assistant',
+            content: response.content,
+            contextData: response.contextData,
+            createdAt: response.createdDate || new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, assistantMsg]);
+          this.isLoading.set(false);
+          this.scrollToBottom();
+          // No automatic import anymore
+        },
+        error: (err) => {
+          console.error('Chat error:', err);
+          this.isLoading.set(false);
+          const errorMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            diagramId: this.diagramId!,
+            userId: 'system',
+            role: 'assistant',
+            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
+            createdAt: new Date().toISOString(),
+          };
+          this.messages.update((m) => [...m, errorMsg]);
+          this.scrollToBottom();
+        },
+      });
+  }
+
+  // ฟังก์ชันดึง Mermaid code จากข้อความ
+  getMermaidCode(content: string): string | null {
+    const match = content.match(/```mermaid\s*([\s\S]*?)```/);
+    return match ? match[1].trim() : null;
+  }
+
+  // ✅ ฟังก์ชันคัดลอก Mermaid code (รับ messageId ด้วย)
+  copyMermaidCode(content: string, messageId: string): void {
+    const code = this.getMermaidCode(content);
+    if (!code) return;
+
+    // ฟังก์ชันที่เรียกเมื่อคัดลอกสำเร็จ
+    const markAsCopied = () => {
+      this.copiedStatus.update((status) => ({ ...status, [messageId]: true }));
+      // เปลี่ยนกลับเป็น false หลังจาก 2 วินาที
+      setTimeout(() => {
+        this.copiedStatus.update((status) => ({ ...status, [messageId]: false }));
+      }, 2000);
+    };
+
+    // ใช้ Clipboard API ถ้ารองรับ
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(code)
+        .then(() => markAsCopied())
+        .catch(() => this.fallbackCopy(code, markAsCopied));
+    } else {
+      // fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
+      this.fallbackCopy(code, markAsCopied);
+    }
+  }
+
+  // ✅ fallback copy (รับ callback เมื่อสำเร็จ)
+  private fallbackCopy(text: string, onSuccess?: () => void): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      if (onSuccess) onSuccess();
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+    textarea.remove();
+  }
+
+  clearChat() {
+    if (!this.diagramId) return;
+    this.diagramService
+      .clearChatHistory(this.diagramId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.messages.set([]);
+      });
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      const container = this.chatContainer()?.nativeElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 50);
   }
 }
 </file>
@@ -77756,212 +78084,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts">
-// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.ts
-
-import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  Input,
-  OnDestroy,
-  inject,
-  signal,
-  viewChild,
-  ChangeDetectionStrategy
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MarkdownModule } from 'ngx-markdown';
-import { Subject, takeUntil } from 'rxjs';
-import type { ChatMessage } from '../diagram.model';
-import { DiagramService, PmChatResponse } from '../diagram.service';
-import { DialogService } from '../../../../../core/services/dialog.service';
-
-
-@Component({
-  selector: 'app-pmdt06A',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownModule],
-  templateUrl: './pmdt06A.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./pmdt06A.component.css'],
-})
-export class pmdt06AComponent implements AfterViewInit, OnDestroy {
-  private _diagramId: string | null = null;
-  @Input()
-  set diagramId(value: string | null) {
-    if (value && value !== this._diagramId) {
-      this._diagramId = value;
-      this.loadChatHistory(value);
-    } else if (!value) {
-      this._diagramId = null;
-      this.messages.set([]);
-    }
-  }
-  get diagramId(): string | null {
-    return this._diagramId;
-  }
-
-  private diagramService = inject(DiagramService);
-  private dialogService = inject(DialogService);
-  private destroy$ = new Subject<void>();
-
-  messages = signal<ChatMessage[]>([]);
-  userInput = '';
-  isLoading = signal(false);
-  // ✅ เพิ่ม signal เก็บสถานะการคัดลอกของแต่ละข้อความ (key = message.id)
-  copiedStatus = signal<Record<string, boolean>>({});
-
-  chatContainer = viewChild<ElementRef>('chatContainer');
-
-  ngAfterViewInit() {
-    // Nothing extra needed
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  loadChatHistory(diagramId: string) {
-    if (!diagramId) return;
-    this.diagramService
-      .getChatHistory(diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (history) => {
-          this.messages.set(history);
-          this.scrollToBottom();
-        },
-        error: () => {
-          console.warn('Failed to load chat history for diagram:', diagramId);
-          this.messages.set([]);
-        },
-      });
-  }
-
-  sendMessage() {
-    if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
-
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      diagramId: this.diagramId,
-      userId: 'current-user',
-      role: 'user',
-      content: this.userInput.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    this.messages.update((m) => [...m, userMessage]);
-    const input = this.userInput.trim();
-    this.userInput = '';
-    this.isLoading.set(true);
-    this.scrollToBottom();
-
-    this.diagramService
-      .sendChatMessage(this.diagramId, input)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: PmChatResponse) => {
-          const assistantMsg: ChatMessage = {
-            id: response.id || crypto.randomUUID(),
-            diagramId: response.diagramId || this.diagramId!,
-            userId: response.createdBy || 'system',
-            role: response.role || 'assistant',
-            content: response.content,
-            contextData: response.contextData,
-            createdAt: response.createdDate || new Date().toISOString(),
-          };
-          this.messages.update((m) => [...m, assistantMsg]);
-          this.isLoading.set(false);
-          this.scrollToBottom();
-          // No automatic import anymore
-        },
-        error: (err) => {
-          console.error('Chat error:', err);
-          this.isLoading.set(false);
-          const errorMsg: ChatMessage = {
-            id: crypto.randomUUID(),
-            diagramId: this.diagramId!,
-            userId: 'system',
-            role: 'assistant',
-            content: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่',
-            createdAt: new Date().toISOString(),
-          };
-          this.messages.update((m) => [...m, errorMsg]);
-          this.scrollToBottom();
-        },
-      });
-  }
-
-  // ฟังก์ชันดึง Mermaid code จากข้อความ
-  getMermaidCode(content: string): string | null {
-    const match = content.match(/```mermaid\s*([\s\S]*?)```/);
-    return match ? match[1].trim() : null;
-  }
-
-  // ✅ ฟังก์ชันคัดลอก Mermaid code (รับ messageId ด้วย)
-  copyMermaidCode(content: string, messageId: string): void {
-    const code = this.getMermaidCode(content);
-    if (!code) return;
-
-    // ฟังก์ชันที่เรียกเมื่อคัดลอกสำเร็จ
-    const markAsCopied = () => {
-      this.copiedStatus.update((status) => ({ ...status, [messageId]: true }));
-      // เปลี่ยนกลับเป็น false หลังจาก 2 วินาที
-      setTimeout(() => {
-        this.copiedStatus.update((status) => ({ ...status, [messageId]: false }));
-      }, 2000);
-    };
-
-    // ใช้ Clipboard API ถ้ารองรับ
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(code)
-        .then(() => markAsCopied())
-        .catch(() => this.fallbackCopy(code, markAsCopied));
-    } else {
-      // fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
-      this.fallbackCopy(code, markAsCopied);
-    }
-  }
-
-  // ✅ fallback copy (รับ callback เมื่อสำเร็จ)
-  private fallbackCopy(text: string, onSuccess?: () => void): void {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      if (onSuccess) onSuccess();
-    } catch (e) {
-      console.warn('Copy failed', e);
-    }
-    textarea.remove();
-  }
-
-  clearChat() {
-    if (!this.diagramId) return;
-    this.diagramService
-      .clearChatHistory(this.diagramId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.messages.set([]);
-      });
-  }
-
-  private scrollToBottom() {
-    setTimeout(() => {
-      const container = this.chatContainer()?.nativeElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }, 50);
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts">
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
@@ -78340,309 +78462,6 @@ export class Pmdt07AComponent implements OnInit {
         return status === 'AUTO' ? 'วิเคราะห์อัตโนมัติ' : 'วิเคราะห์ด้วยตนเอง';
     }
 }
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html">
-<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
-<div class="space-y-5 p-0.5">
-  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Target Type Selection -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
-          <select
-            formControlName="targetType"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
-          >
-            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
-            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
-            <option value="TASK">งาน (Task)</option>
-          </select>
-        </div>
-
-        <!-- Target Document Combobox -->
-        <div>
-          <sic-combobox
-            label="เอกสารที่ขอเปลี่ยนแปลง"
-            formControlName="targetId"
-            [apiUrl]="targetDocumentApiUrl()"
-            [params]="{ projectId: projectId }"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
-          ></sic-combobox>
-        </div>
-
-        <!-- Title -->
-        <div class="md:col-span-2">
-          <sic-input
-            label="หัวข้อคำขอเปลี่ยนแปลง"
-            formControlName="title"
-            [required]="true"
-            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
-          ></sic-input>
-        </div>
-
-        <!-- Description -->
-        <div class="md:col-span-2">
-          <sic-input-area
-            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
-            formControlName="description"
-            [rows]="3"
-            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
-          ></sic-input-area>
-        </div>
-
-        <!-- Change Reason -->
-        <div>
-          <sic-combobox
-            label="สาเหตุการเปลี่ยนแปลง"
-            formControlName="changeReason"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
-            valueField="value"
-            textField="text"
-          ></sic-combobox>
-        </div>
-
-        <!-- Assignee -->
-        <div>
-          <sic-combobox
-            #assigneeCombobox
-            label="ผู้รับมอบหมาย"
-            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
-            valueField="value"
-            textField="text"
-            [excludeValues]="selectedAssigneeIds()"
-            (selectionChanged)="onAssigneeSelected($event, assigneeCombobox)"
-          ></sic-combobox>
-
-          <!-- List of selected assignees -->
-          <div class="flex flex-wrap gap-2 mt-2">
-            @for (assignee of selectedAssignees(); track assignee.userId) {
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 font-medium">
-                {{ assignee.userName }}
-                <button type="button" class="hover:text-red-500 focus:outline-none flex items-center" (click)="removeAssignee(assignee.userId)">
-                  <i class="bi bi-x text-base font-bold leading-none"></i>
-                </button>
-              </span>
-            }
-          </div>
-
-          <input type="hidden" formControlName="assigneeId" />
-          @if (form.get('assigneeId')?.touched && form.get('assigneeId')?.errors?.['required']) {
-            <p class="text-red-500 text-xs mt-1">กรุณาเลือกผู้รับมอบหมาย</p>
-          }
-        </div>
-
-        <!-- Hidden projectId -->
-        <input type="hidden" formControlName="projectId" />
-      </div>
-
-      <!-- Approval Flow Selection -->
-      <div class="border-t border-[var(--border)] pt-4 mt-2">
-        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            label="เลือกกระบวนการอนุมัติ"
-            [apiUrl]="documenttypeapiUrl"
-            valueField="id"
-            textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
-            [clearable]="true"
-            (selectionChanged)="selectedFlowId = $event?.id"
-          ></sic-combobox>
-        </div>
-
-        @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
-          </p>
-        }
-      </div>
-
-      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit || isView) {
-        <div class="border-t border-[var(--border)] pt-4 mt-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              ผลกระทบที่คาดการณ์ (Impact Analysis)
-              @if (isLoadingImpact()) {
-                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
-                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
-                </span>
-              }
-            </h4>
-            @if (!isView) {
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  (click)="refreshImpact()"
-                  [disabled]="isLoadingImpact()"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-                >
-                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                  วิเคราะห์ใหม่
-                </button>
-              </div>
-            }
-          </div>
-
-          @if (showImpactSection() && impactData(); as impact) {
-            <div class="mt-3 space-y-3">
-              <!-- สรุปผลกระทบ -->
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedRequirementIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedSpecIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-amber-500">
-                    {{ impact.impactedDiagramIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTaskIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Task</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTestCaseIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedBugIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
-                </div>
-              </div>
-
-              <!-- รายละเอียดเพิ่มเติม -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
-                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
-                    {{ getImpactStatusText(impact.analysisStatus) }}
-                  </span>
-                  @if (impact.analyzedAt) {
-                    <span class="text-[var(--text-muted)] ml-2 text-xs">
-                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
-                    </span>
-                  }
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
-                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
-                  @if (impact.timelineImpact) {
-                    <span class="text-[var(--text-muted)] ml-4">
-                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
-                    </span>
-                  }
-                </div>
-                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
-                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
-                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
-                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
-                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
-                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
-                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
-                    </div>
-                  </div>
-                }
-              </div>
-
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
-                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">เอกสารและ Diagram ที่ได้รับผลกระทบ (ID):</p>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    @for (id of impact.impactedRequirementIds; track id) {
-                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedSpecIds; track id) {
-                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
-                    }
-                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
-                      @for (diag of impact.impactedDiagrams; track diag.id) {
-                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedDiagramIds; track id) {
-                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
-                      }
-                    }
-                    @for (id of impact.impactedTaskIds; track id) {
-                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedTestCaseIds; track id) {
-                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedBugIds; track id) {
-                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else if (!isLoadingImpact()) {
-            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
-              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
-              @if (!isView) {
-                <button
-                  type="button"
-                  (click)="refreshImpact()"
-                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
-                >
-                  คลิกเพื่อวิเคราะห์อัตโนมัติ
-                </button>
-              }
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Actions -->
-      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-        @if (isView) {
-          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
-        } @else {
-          <sic-button type="submit" variant="primary" [disabled]="isSaving">
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
-            }
-            {{
-              isSaving
-                ? 'กำลังบันทึก...'
-                : selectedFlowId
-                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                  : (isEdit ? 'บันทึก' : 'สร้าง')
-            }}
-          </sic-button>
-          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
-        }
-      </div>
-    </form>
-</div>
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
@@ -79152,6 +78971,309 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return dto;
     }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html">
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
+<div class="space-y-5 p-0.5">
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Target Type Selection -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
+          <select
+            formControlName="targetType"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
+          >
+            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
+            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
+            <option value="TASK">งาน (Task)</option>
+          </select>
+        </div>
+
+        <!-- Target Document Combobox -->
+        <div>
+          <sic-combobox
+            label="เอกสารที่ขอเปลี่ยนแปลง"
+            formControlName="targetId"
+            [apiUrl]="targetDocumentApiUrl()"
+            [params]="{ projectId: projectId }"
+            valueField="value"
+            textField="text"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
+          ></sic-combobox>
+        </div>
+
+        <!-- Title -->
+        <div class="md:col-span-2">
+          <sic-input
+            label="หัวข้อคำขอเปลี่ยนแปลง"
+            formControlName="title"
+            [required]="true"
+            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
+          ></sic-input>
+        </div>
+
+        <!-- Description -->
+        <div class="md:col-span-2">
+          <sic-input-area
+            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
+            formControlName="description"
+            [rows]="3"
+            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
+          ></sic-input-area>
+        </div>
+
+        <!-- Change Reason -->
+        <div>
+          <sic-combobox
+            label="สาเหตุการเปลี่ยนแปลง"
+            formControlName="changeReason"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
+            valueField="value"
+            textField="text"
+          ></sic-combobox>
+        </div>
+
+        <!-- Assignee -->
+        <div>
+          <sic-combobox
+            #assigneeCombobox
+            label="ผู้รับมอบหมาย"
+            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
+            valueField="value"
+            textField="text"
+            [excludeValues]="selectedAssigneeIds()"
+            (selectionChanged)="onAssigneeSelected($event, assigneeCombobox)"
+          ></sic-combobox>
+
+          <!-- List of selected assignees -->
+          <div class="flex flex-wrap gap-2 mt-2">
+            @for (assignee of selectedAssignees(); track assignee.userId) {
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 font-medium">
+                {{ assignee.userName }}
+                <button type="button" class="hover:text-red-500 focus:outline-none flex items-center" (click)="removeAssignee(assignee.userId)">
+                  <i class="bi bi-x text-base font-bold leading-none"></i>
+                </button>
+              </span>
+            }
+          </div>
+
+          <input type="hidden" formControlName="assigneeId" />
+          @if (form.get('assigneeId')?.touched && form.get('assigneeId')?.errors?.['required']) {
+            <p class="text-red-500 text-xs mt-1">กรุณาเลือกผู้รับมอบหมาย</p>
+          }
+        </div>
+
+        <!-- Hidden projectId -->
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <!-- Approval Flow Selection -->
+      <div class="border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          กระบวนการอนุมัติ
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="เลือกกระบวนการอนุมัติ"
+            [apiUrl]="documenttypeapiUrl"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId = $event?.id"
+          ></sic-combobox>
+        </div>
+
+        @if (!selectedFlowId && flows.length > 0) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
+          </p>
+        }
+      </div>
+
+      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
+      @if (isEdit || isView) {
+        <div class="border-t border-[var(--border)] pt-4 mt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+              ผลกระทบที่คาดการณ์ (Impact Analysis)
+              @if (isLoadingImpact()) {
+                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
+                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
+                </span>
+              }
+            </h4>
+            @if (!isView) {
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  [disabled]="isLoadingImpact()"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+                >
+                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                  วิเคราะห์ใหม่
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (showImpactSection() && impactData(); as impact) {
+            <div class="mt-3 space-y-3">
+              <!-- สรุปผลกระทบ -->
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedRequirementIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedSpecIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-amber-500">
+                    {{ impact.impactedDiagramIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTaskIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Task</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTestCaseIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedBugIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
+                </div>
+              </div>
+
+              <!-- รายละเอียดเพิ่มเติม -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
+                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
+                    {{ getImpactStatusText(impact.analysisStatus) }}
+                  </span>
+                  @if (impact.analyzedAt) {
+                    <span class="text-[var(--text-muted)] ml-2 text-xs">
+                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                  }
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
+                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
+                  @if (impact.timelineImpact) {
+                    <span class="text-[var(--text-muted)] ml-4">
+                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
+                    </span>
+                  }
+                </div>
+                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
+                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
+                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
+                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
+                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
+                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
+                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
+                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
+                  <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    @for (id of impact.impactedRequirementIds; track id) {
+                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedSpecIds; track id) {
+                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+                    }
+                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
+                      @for (diag of impact.impactedDiagrams; track diag.id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedDiagramIds; track id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                      }
+                    }
+                    @for (id of impact.impactedTaskIds; track id) {
+                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedTestCaseIds; track id) {
+                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedBugIds; track id) {
+                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (!isLoadingImpact()) {
+            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
+              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
+              @if (!isView) {
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                >
+                  คลิกเพื่อวิเคราะห์อัตโนมัติ
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+        @if (isView) {
+          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
+        } @else {
+          <sic-button type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+            }
+            {{
+              isSaving
+                ? 'กำลังบันทึก...'
+                : selectedFlowId
+                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                  : (isEdit ? 'บันทึก' : 'สร้าง')
+            }}
+          </sic-button>
+          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        }
+      </div>
+    </form>
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt06/pmdt06.component.html">

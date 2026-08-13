@@ -214,6 +214,7 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
   // ===== Form =====
   form!: FormGroup;
   isEdit = false;
+  isViewOnly = false;
   reqId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -241,17 +242,23 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   // ===== CanDeactivate =====
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 
   // ===== Lifecycle =====
   ngOnInit(): void {
     this.initForm();
     this.loadFlows();
 
+    // Check if current route is view mode
+    const isViewRoute = this.router.url.includes('/view');
+    if (isViewRoute) {
+      this.isViewOnly = true;
+    }
+
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
-        this.isEdit = true;
+        this.isEdit = !this.isViewOnly;
         this.reqId = id;
         this.loadRequirement(id);
       } else {
@@ -336,6 +343,10 @@ export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivat
         this.form.patchValue(data);
         this.isLoading = false;
         this.form.markAsPristine();
+
+        if (this.isViewOnly) {
+          this.form.disable();
+        }
 
         // If loaded data doesn't have projectName but has projectId, try to fetch it
         if (!data.projectName && data.projectId) {

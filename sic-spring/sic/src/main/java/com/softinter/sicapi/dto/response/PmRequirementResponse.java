@@ -18,6 +18,8 @@ public class PmRequirementResponse {
     private String acceptanceCriteria;
     private UUID projectId;
     private String projectName;
+    private UUID customerId;
+    private String customerName;
     private String createdBy;
     private String version;
     private String status;
