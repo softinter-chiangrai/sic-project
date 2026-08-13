@@ -17,7 +17,8 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
-import { Contract, PaginationResponse } from './pmrt04.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { Contract } from './pmrt04.model';
 
 @Component({
   selector: 'app-pmrt04',

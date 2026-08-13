@@ -4,9 +4,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type { ChangeRequest, ImpactAnalysis } from './change-request.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 
 @Injectable({ providedIn: 'root' })
 export class ChangeRequestService {

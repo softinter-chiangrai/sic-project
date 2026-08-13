@@ -18,6 +18,7 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { Pmdt08Service } from '../pmdt08.service';
 import { PmSpecificationModel } from '../pmdt08.model';
@@ -123,8 +124,11 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     private auth = inject(AuthService);
     private approvalService = inject(ApprovalService);
     private http = inject(HttpClient);
+    private businessService = inject(BusinessService);
 
     apiBaseUrl = environment.apiBaseUrl;
+    userApiUrl = '';
+    businessId: string | null = null;
 
     // Form
     form!: FormGroup;
@@ -155,6 +159,19 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     ngOnInit(): void {
         this.initForm();
         this.loadFlows();
+
+        this.businessId = this.businessService.getCurrentBusinessId();
+        if (this.businessId) {
+            this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${this.businessId}`;
+        } else {
+            const stored = localStorage.getItem('businessId');
+            if (stored) {
+                this.businessId = stored;
+                this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${stored}`;
+            } else {
+                this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members`;
+            }
+        }
 
         const isViewRoute = this.router.url.includes('/view');
         if (isViewRoute) this.isViewOnly = true;
@@ -292,9 +309,38 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             .subscribe();
     }
 
+    private extractUploadGroupId(rawGroupId: any): string | null {
+        if (!rawGroupId) return null;
+        if (typeof rawGroupId === 'string') return rawGroupId.trim() || null;
+        if (Array.isArray(rawGroupId) && rawGroupId.length > 0) {
+            const firstFile = rawGroupId[0];
+            if (typeof firstFile === 'string') return firstFile;
+            return firstFile?.uploadGroupId || firstFile?.id || firstFile?.uploadId || null;
+        }
+        if (typeof rawGroupId === 'object') {
+            return rawGroupId.uploadGroupId || rawGroupId.id || rawGroupId.uploadId || null;
+        }
+        return null;
+    }
+
+    private prepareSubmitData(): PmSpecificationModel {
+        const rawData = { ...this.form.value };
+        const uploadGroupId = this.extractUploadGroupId(rawData.uploadGroupId);
+        rawData.uploadGroupId = uploadGroupId || null;
+
+        if (rawData.estimatedManday !== null && rawData.estimatedManday !== undefined && (rawData.estimatedManday as any) !== '') {
+            const num = Number(rawData.estimatedManday);
+            rawData.estimatedManday = isNaN(num) ? undefined : num;
+        } else {
+            rawData.estimatedManday = undefined;
+        }
+
+        return rawData;
+    }
+
     private performAutoSave(): void {
         if (this.isSaving || this.isAutoSaving) return;
-        const data = this.form.value as PmSpecificationModel;
+        const data = this.prepareSubmitData();
         if (!data.title && !data.description) return;
 
         this.isAutoSaving = true;
@@ -355,13 +401,13 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     // ===== Preview Data =====
     getPreviewData(): PmSpecificationModel {
-        return this.form.value;
+        return this.prepareSubmitData();
     }
 
     // ===== Export =====
     async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
         try {
-            const data = this.form.value as PmSpecificationModel;
+            const data = this.prepareSubmitData();
             const blob = await this.exportService.exportSpecification(data, format);
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -388,7 +434,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         this.isSaving = true;
-        const data = this.form.value as PmSpecificationModel;
+        const data = this.prepareSubmitData();
         data.state = this.isEdit ? 3 : 4;
         if (!this.isEdit) data.rowVersion = 0;
 

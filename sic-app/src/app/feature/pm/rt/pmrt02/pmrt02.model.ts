@@ -41,6 +41,4 @@ export interface PmCustomerProject {
   updatedDate?: string;
 }
 
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 
-export { PaginationResponse };

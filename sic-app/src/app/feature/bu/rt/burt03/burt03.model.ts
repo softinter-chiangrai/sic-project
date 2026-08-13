@@ -30,7 +30,4 @@ export interface Role {
   color?: string;
 }
 
-export interface ComboboxItem {
-  value: string;
-  text: string;
-}
+

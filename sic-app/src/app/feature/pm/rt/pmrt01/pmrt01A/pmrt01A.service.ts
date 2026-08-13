@@ -3,8 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CustomerModel } from './pmrt01A.model';
-import { PaginationResponse } from '../../../../../../core/model/sic-base-model';
 import { environment } from '../../../../../../environments/environment';
+import { PaginationResponse } from '../../../../../core/model/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt01AService {

@@ -4,7 +4,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { Role, ComboboxItem } from './burt03.model';
+import { ComboboxItem } from '../../../../core/model/sic-base-model';
+import { Role } from './burt03.model';
 
 @Injectable({ providedIn: 'root' })
 export class burt03Service {

@@ -307,13 +307,15 @@ sic-app/
                 pmdt08A.model.ts
                 pmdt08A.resolver.ts
                 pmdt08A.service.ts
+              pmdt08-preview/
+                Pmdt08PreviewComponent.ts
               pmdt08.component.html
               pmdt08.component.ts
               pmdt08.form.ts
               pmdt08.model.ts
               pmdt08.resolver.ts
               pmdt08.service.ts
-              sic-specification-preview.component.ts
+              specification-export.service.ts
             pmdt09/
               pmdt09A/
                 pmdt09A.component.html
@@ -5365,7 +5367,7 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     title="ดู Dashboard"
                   >
-                    <i class="bi bi-speedometer2"></i>
+                    <i class="bi bi-file-earmark-text"></i>
                   </button>
                   <button
                     (click)="goToEdit(project.id)"
@@ -36236,14 +36238,14 @@ export class Pmdt08AService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/sic-specification-preview.component.ts">
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08-preview/Pmdt08PreviewComponent.ts">
 // src/app/feature/pm/dt/pmdt08/pmdt08-preview/pmdt08-preview.component.ts
 
 import { Component, Input, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { PmSpecificationModel } from './pmdt08.model';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
+import { PmSpecificationModel } from '../pmdt08.model';
 
 
 @Component({
@@ -36454,6 +36456,107 @@ export class Pmdt08PreviewComponent implements OnChanges {
         };
         return map[status || 'Draft'] || status || 'ร่าง';
     }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/specification-export.service.ts">
+// src/app/feature/pm/dt/pmdt08/specification-export.service.ts
+
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { PmSpecificationModel } from './pmdt08.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SpecificationExportService {
+  private http = inject(HttpClient);
+  private apiBaseUrl = environment.apiBaseUrl;
+
+  async exportSpecification(data: PmSpecificationModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
+    const url = `${this.apiBaseUrl}/api/pm/specification/export`;
+
+    const payload = {
+      specificationId: data.id,
+      format: format,
+      data: data,
+    };
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: format === 'pdf' ? 'application/pdf' : 
+              format === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+              'text/html',
+    });
+
+    try {
+      const response = await lastValueFrom(
+        this.http.post(url, payload, {
+          headers: headers,
+          responseType: 'blob',
+        })
+      );
+      return response;
+    } catch {
+      // Fallback: client-side HTML printable blob if backend export endpoint is not implemented yet
+      const htmlContent = this.generatePreviewHtml(data);
+      return new Blob([htmlContent], { type: 'text/html' });
+    }
+  }
+
+  generatePreviewHtml(data: PmSpecificationModel): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${data.title || 'Specification'}</title>
+  <style>
+    body { font-family: 'Sarabun', Arial, sans-serif; max-width: 900px; margin: 2rem auto; padding: 2rem; line-height: 1.7; color: #1a1a2e; }
+    h1 { font-size: 1.8rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.75rem; }
+    h2 { font-size: 1.3rem; color: #1a1a2e; margin-top: 1.5rem; }
+    .meta { display: flex; flex-wrap: wrap; gap: 1rem; color: #6b7280; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .badge-code { background: #e0f2fe; color: #0369a1; }
+    .badge-status { background: #f3f4f6; color: #6b7280; }
+    .badge-version { background: #f3f4f6; color: #6b7280; }
+    .content { margin-top: 1.5rem; }
+    .content h3 { margin-top: 1.25rem; color: #1a1a2e; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+    .content ul, .content ol { padding-left: 1.5rem; }
+    .content img { max-width: 100%; border-radius: 0.5rem; }
+    .footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.7rem; color: #9ca3af; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="badge badge-code">${data.specificationCode || 'N/A'}</div>
+  <span class="badge badge-status">${data.status || 'Draft'}</span>
+  <span class="badge badge-version">v${data.version || '1.0'}</span>
+  
+  <h1>${data.title || 'Untitled Specification'}</h1>
+  
+  <div class="meta">
+    <span>👤 เจ้าของ: ${data.owner || data.createdBy || '-'}</span>
+    <span>📅 สร้างเมื่อ: ${data.createdAt ? new Date(data.createdAt).toLocaleString('th-TH') : '-'}</span>
+    <span>📁 โครงการ: ${data.projectName || '-'}</span>
+    <span>🧩 โมดูล: ${data.module || '-'}</span>
+    <span>⏱️ Manday: ${data.estimatedManday || 0} วัน</span>
+  </div>
+
+  <div class="content">
+    <h2>📝 รายละเอียด Specification</h2>
+    ${data.description || '<p><em>ไม่มีรายละเอียด</em></p>'}
+  </div>
+
+  <div class="footer">
+    <span>เอกสารนี้ใช้เพื่อการตรวจสอบและอนุมัติ Specification</span>
+    <span>สร้างเมื่อ ${data.createdAt ? new Date(data.createdAt).toLocaleString('th-TH') : '-'}</span>
+  </div>
+</body>
+</html>
+    `;
+  }
 }
 </file>
 
@@ -50190,11 +50293,6 @@ export interface Role {
   isDelete?: boolean;
   color?: string;
 }
-
-export interface ComboboxItem {
-  value: string;
-  text: string;
-}
 </file>
 
 <file path="sic-app/src/app/feature/bu/rt/burt03/burt03.service.ts">
@@ -50204,7 +50302,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { Role, ComboboxItem } from './burt03.model';
+import { ComboboxItem } from '../../../../core/model/sic-base-model';
+import { Role } from './burt03.model';
 
 @Injectable({ providedIn: 'root' })
 export class burt03Service {
@@ -52491,388 +52590,6 @@ export interface ChangeRequestItem {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.html">
-<!-- src/app/feature/pm/dt/pmdt08/pmdt08.component.html -->
-<div class="space-y-5 p-0.5">
-    <!-- HEADER -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
-                รายการ Specification
-            </h1>
-            <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-                {{ totalItems() }} รายการ
-            </span>
-        </div>
-        <button
-            (click)="goToAdd()"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-        >
-            <i class="bi bi-plus-lg"></i> เพิ่ม Specification
-        </button>
-    </div>
-
-    <!-- FILTERS -->
-    <div class="flex flex-wrap gap-3 items-center">
-        <div class="relative flex-1 min-w-[200px]">
-            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
-            <input
-                type="text"
-                class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-                placeholder="ค้นหารหัส, ชื่อ, โมดูล..."
-                [value]="searchTerm()"
-                (input)="onSearch($event)"
-            />
-            @if (searchTerm()) {
-                <button
-                    (click)="clearSearch()"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-                >
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
-            }
-        </div>
-
-        <select
-            (change)="onFilterChange($event)"
-            [value]="filterStatus()"
-            class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
-        >
-            <option value="all">📊 ทุกสถานะ</option>
-            @for (status of ['Draft','Review','Approved','Released']; track status) {
-                <option [value]="status">{{ getStatusText(status) }}</option>
-            }
-        </select>
-    </div>
-
-    <!-- LOADING -->
-    @if (isLoading()) {
-        <div class="flex flex-col items-center justify-center py-12 gap-3">
-            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-        </div>
-    }
-
-    <!-- TABLE -->
-    @if (!isLoading()) {
-        <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-            <table class="w-full text-sm">
-                <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">ชื่อเรื่อง</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">โมดูล</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">Manday</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[160px]">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[var(--border)]">
-                    @for (spec of specs(); track spec.id) {
-                        <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-                            <td class="px-4 py-3">
-                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                                    {{ spec.specificationCode }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div>
-                                    <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
-                                    <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ spec.description | slice:0:100 }}</div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="text-[var(--text)]">{{ spec.module || '-' }}</span>
-                            </td>
-                            <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
-                                {{ spec.version || '1.0' }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span [class]="getStatusClass(spec.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                                    {{ getStatusText(spec.status || 'Draft') }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-[var(--text-active)] font-mono">
-                                {{ spec.estimatedManday || 0 }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button
-                                        (click)="goToView(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-                                        title="ดูข้อมูล"
-                                    >
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button
-                                        (click)="goToEdit(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                                        title="แก้ไข"
-                                    >
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button
-                                        (click)="deleteSpec(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                                        title="ลบ"
-                                    >
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    } @empty {
-                        <tr>
-                            <td colspan="7" class="px-4 py-12 text-center">
-                                <div class="flex flex-col items-center gap-3">
-                                    <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                                    <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Specification</p>
-                                    <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Specification ใหม่</p>
-                                    <button
-                                        (click)="goToAdd()"
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                                    >
-                                        <i class="bi bi-plus-lg"></i> เพิ่ม Specification
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-
-    <!-- PAGINATION -->
-    @if (totalItems() > 0) {
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-            <div class="text-sm text-[var(--text-muted)]">
-                แสดง
-                <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
-                -
-                <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
-                จาก
-                <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-                รายการ
-            </div>
-
-            <div class="flex gap-1">
-                <button
-                    (click)="onPageChange(currentPage() - 1)"
-                    [disabled]="!hasPrevious()"
-                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                >
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-
-                @for (page of pageNumbers(); track page) {
-                    <button
-                        (click)="onPageChange(page)"
-                        [class]="page === currentPage()
-                            ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-                            : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
-                    >
-                        {{ page }}
-                    </button>
-                }
-
-                <button
-                    (click)="onPageChange(currentPage() + 1)"
-                    [disabled]="!hasNext()"
-                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                >
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-    }
-</div>
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.ts">
-// src/app/feature/pm/dt/pmdt08/pmdt08.component.ts
-
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { Pmdt08Service } from './pmdt08.service';
-import { PmSpecificationModel } from './pmdt08.model';
-import { PaginationResponse } from '../../../../core/model/pagination.model';
-
-@Component({
-    selector: 'app-pmdt08',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    templateUrl: './pmdt08.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class Pmdt08Component implements OnInit {
-    private service = inject(Pmdt08Service);
-    private router = inject(Router);
-    private dialog = inject(DialogService);
-    private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
-
-    isLoading = signal(false);
-    specs = signal<PmSpecificationModel[]>([]);
-    totalItems = signal(0);
-    currentPage = signal(1);
-    pageSize = signal(10);
-    searchTerm = signal('');
-    filterStatus = signal('all');
-
-    totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-    hasPrevious = computed(() => this.currentPage() > 1);
-    hasNext = computed(() => this.currentPage() < this.totalPages());
-
-    pageNumbers = computed(() => {
-        const total = this.totalPages();
-        const current = this.currentPage();
-        const range = 5;
-        let start = Math.max(1, current - Math.floor(range / 2));
-        let end = Math.min(total, start + range - 1);
-        if (end - start < range - 1) {
-            start = Math.max(1, end - range + 1);
-        }
-        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    });
-
-    Math = Math;
-
-    ngOnInit(): void {
-        this.loadData();
-    }
-
-    loadData(): void {
-        this.isLoading.set(true);
-        const params = {
-            keyword: this.searchTerm() || undefined,
-            status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-            page: this.currentPage() - 1,
-            size: this.pageSize(),
-            sortBy: 'createdDate',
-            sortDir: 'desc',
-        };
-
-        this.service.getList(params)
-            .pipe(finalize(() => this.isLoading.set(false)))
-            .subscribe({
-                next: (res: PaginationResponse<PmSpecificationModel>) => {
-                    this.specs.set(res.data || []);
-                    this.totalItems.set(res.pageable?.totalElements || 0);
-                },
-                error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
-                    this.specs.set([]);
-                    this.totalItems.set(0);
-                },
-            });
-    }
-
-    onSearch(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        this.searchTerm.set(input.value);
-        this.currentPage.set(1);
-        this.loadData();
-    }
-
-    clearSearch(): void {
-        this.searchTerm.set('');
-        this.currentPage.set(1);
-        this.loadData();
-    }
-
-    onFilterChange(event: Event): void {
-        const select = event.target as HTMLSelectElement;
-        this.filterStatus.set(select.value);
-        this.currentPage.set(1);
-        this.loadData();
-    }
-
-    onPageChange(page: number): void {
-        if (page < 1 || page > this.totalPages()) return;
-        this.currentPage.set(page);
-        this.loadData();
-    }
-
-    goToAdd(): void {
-        const projectId = this.customerState.getProjectId();
-        if (projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams: { projectId } });
-        } else {
-            this.navigation.navigate(['/feature/pm/pmdt08/new']);
-        }
-    }
-
-    goToEdit(id: string): void {
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit']);
-    }
-
-    goToView(id: string): void {
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view']);
-    }
-
-    deleteSpec(id: string): void {
-        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
-            .then((ok) => {
-                if (ok) {
-                    this.service.delete(id).subscribe({
-                        next: () => {
-                            this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
-                            this.loadData();
-                        },
-                        error: (err) => {
-                            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-                        },
-                    });
-                }
-            });
-    }
-
-    getStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-            Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-            Released: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-        };
-        return map[status] || 'bg-gray-100 text-gray-600';
-    }
-
-    getStatusText(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'ร่าง',
-            Review: 'ตรวจสอบ',
-            Approved: 'อนุมัติ',
-            Released: 'เผยแพร่',
-        };
-        return map[status] || status;
-    }
-
-    formatDate(dateStr: string): string {
-        if (!dateStr) return '-';
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('th-TH', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-            });
-        } catch {
-            return dateStr;
-        }
-    }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.form.ts">
 // src/app/feature/pm/dt/pmdt08/pmdt08.form.ts
 
@@ -52922,10 +52639,11 @@ import { ResolveFn, Router } from '@angular/router';
 import { catchError, EMPTY, map, tap } from 'rxjs';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 import { Pmdt08Form } from './pmdt08.form';
-import { Pmdt08FormData, PmSpecificationModel } from './pmdt08.model';
-import { Pmdt08Service } from './pmdt08.service';
 
-export const pmdt08CreateResolver: ResolveFn<Pmdt08FormData> = (route) => {
+import { Pmdt08Service } from './pmdt08.service';
+import { PmSpecificationModel } from './pmdt08.model';
+
+export const pmdt08CreateResolver: ResolveFn<Pmdt08Form> = (route) => {
     const fb = inject(FormBuilder);
     const form = Pmdt08Form.createForm(fb);
 
@@ -52944,14 +52662,14 @@ export const pmdt08CreateResolver: ResolveFn<Pmdt08FormData> = (route) => {
     };
 };
 
-export const pmdt08EditResolver: ResolveFn<Pmdt08FormData> = (route) => {
+export const pmdt08EditResolver: ResolveFn<Pmdt08Form> = (route) => {
     const fb = inject(FormBuilder);
     const service = inject(Pmdt08Service);
     const router = inject(Router);
     const id = route.params['id'];
     const form = Pmdt08Form.createForm(fb);
 
-    return service.getById(id).pipe(
+    return service.getSpecification(id).pipe(
         tap((data) => {
             form.patchValue(data);
             form.updateValueAndValidity();
@@ -55467,10 +55185,6 @@ export interface PmCustomerProject {
   createdDate?: string;
   updatedDate?: string;
 }
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
-
-export { PaginationResponse };
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt02/pmrt02.service.ts">
@@ -55479,8 +55193,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 import { PmCustomerProject } from './pmrt02.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02Service {
@@ -55494,8 +55208,8 @@ export class Pmrt02Service {
   getProjects(params: {
     customerId?: string;
     keyword?: string;
-    startDate?: string;   // ✅ เพิ่ม
-    endDate?: string;     // ✅ เพิ่ม
+    startDate?: string;   
+    endDate?: string;     
     page?: number;
     size?: number;
     sortBy?: string;
@@ -56385,7 +56099,8 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
-import { Contract, PaginationResponse } from './pmrt04.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { Contract } from './pmrt04.model';
 
 @Component({
   selector: 'app-pmrt04',
@@ -56765,10 +56480,6 @@ export interface Contract {
   createdAt: string;
   rowVersion?: number;
 }
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
-
-export { PaginationResponse };
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.model.ts">
@@ -60068,6 +59779,442 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
 };
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
+// src/app/feature/pm/dt/pmdt06/diagram.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import type {
+  ChatMessage,
+  DiagramModel,
+  DiagramProject,
+  DiagramType,
+  DiagramVersion,
+} from './diagram.model';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+
+export interface PmChatResponse {
+  id: string;
+  diagramId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  contextData: any;
+  createdBy: string;
+  createdDate: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DiagramService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiBaseUrl;
+
+  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
+  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
+  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
+  private pmrt02Service = inject(Pmrt02Service);
+
+  projects$ = this.projectsSubject.asObservable();
+  tabs$ = this.tabsSubject.asObservable();
+  activeTabId$ = this.activeTabIdSubject.asObservable();
+
+  getProjectName(projectId: string): Observable<string> {
+    return this.pmrt02Service.getProject(projectId).pipe(
+      map(project => project.projectName)
+    );
+  }
+
+  getProjects(): Observable<DiagramProject[]> {
+    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
+      .pipe(
+        map(response => {
+          const items = response?.content || response?.data || [];
+          return items.map((p: any) => ({
+            id: p.id,
+            name: p.projectName,
+            description: p.description,
+            isFavorite: false,
+            lastOpened: p.updatedDate || p.createdDate,
+            createdAt: p.createdDate,
+            updatedAt: p.updatedDate
+          }));
+        })
+      );
+  }
+
+  createProject(name: string, description?: string): Observable<DiagramProject> {
+    return this.http
+      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
+      .pipe(
+        tap((project) => {
+          const current = this.projectsSubject.value;
+          this.projectsSubject.next([...current, project]);
+        }),
+      );
+  }
+
+  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
+    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
+      tap((updated) => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
+      }),
+    );
+  }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
+      tap(() => {
+        const current = this.projectsSubject.value;
+        this.projectsSubject.next(current.filter((p) => p.id !== id));
+      }),
+    );
+  }
+
+  getTabs(projectId: string): Observable<DiagramModel[]> {
+    return this.http
+      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
+      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
+  }
+
+  // ✅ แก้ไข: เพิ่ม requirementId
+  createTab(
+    projectId: string,
+    name: string,
+    type: DiagramType,
+    script?: string,
+    requirementId?: string  // ✅ เพิ่มพารามิเตอร์
+  ): Observable<DiagramModel> {
+    const payload = {
+      projectId,
+      name,
+      diagramType: type,
+      mermaidScript: script || '',
+      requirementId: requirementId || null,  // ✅ ส่งไป Backend
+      metadata: {},
+      sortOrder: this.tabsSubject.value.length + 1,
+    };
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
+      tap((tab) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next([...current, tab]);
+      }),
+    );
+  }
+
+  updateTab(tab: DiagramModel): Observable<DiagramModel> {
+    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
+      tap((updated) => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
+      }),
+    );
+  }
+
+  deleteTab(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        this.tabsSubject.next(current.filter((t) => t.id !== id));
+      }),
+    );
+  }
+
+  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
+      tap(() => {
+        const current = this.tabsSubject.value;
+        const updated = current.map((t) => {
+          const order = tabs.find((o) => o.id === t.id);
+          return order ? { ...t, sortOrder: order.sortOrder } : t;
+        });
+        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
+      }),
+    );
+  }
+
+  duplicateTab(id: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
+  }
+
+  getVersions(tabId: string): Observable<DiagramVersion[]> {
+    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
+  }
+
+  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
+    return this.http.post<DiagramModel>(
+      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
+      {},
+    );
+  }
+
+  getChatHistory(tabId: string): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  sendChatMessage(
+    tabId: string,
+    message: string,
+  ): Observable<PmChatResponse> {
+    return this.http.post<PmChatResponse>(
+      `${this.apiUrl}/api/diagram/chat`,
+      { diagramId: tabId, message }
+    );
+  }
+
+  clearChatHistory(tabId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  }
+
+  generateDiagram(
+    prompt: string,
+    context?: any,
+  ): Observable<{ script: string; type: DiagramType; name: string }> {
+    return this.http.post<{ script: string; type: DiagramType; name: string }>(
+      `${this.apiUrl}/api/diagram/ai/generate`,
+      { prompt, context },
+    );
+  }
+
+  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
+      script,
+      instruction,
+    });
+  }
+
+  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
+    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
+      script,
+      errorMessage,
+    });
+  }
+
+  convertDiagram(
+    script: string,
+    targetType: DiagramType,
+  ): Observable<{ script: string; type: DiagramType }> {
+    return this.http.post<{ script: string; type: DiagramType }>(
+      `${this.apiUrl}/api/diagram/ai/convert`,
+      { script, targetType },
+    );
+  }
+
+  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      responseType: 'blob',
+    });
+  }
+
+  exportProject(projectId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
+      responseType: 'blob',
+    });
+  }
+
+  setActiveTab(tabId: string | null) {
+    this.activeTabIdSubject.next(tabId);
+  }
+
+  getActiveTab(): string | null {
+    return this.activeTabIdSubject.value;
+  }
+
+  clearState() {
+    this.projectsSubject.next([]);
+    this.tabsSubject.next([]);
+    this.activeTabIdSubject.next(null);
+  }
+
+  getDiagram(id: string): Observable<DiagramModel> {
+    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+}
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
+// src/app/core/component/sic-drawio/drawio-connector.service.ts
+
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class DrawioConnectorService {
+  private iframe: HTMLIFrameElement | null = null;
+  private pendingMessages: any[] = [];
+  private drawioReady = false;
+
+  private isReadySubject = new BehaviorSubject<boolean>(false);
+  isReady$ = this.isReadySubject.asObservable();
+
+  private xmlSubject = new Subject<string>();
+  xml$ = this.xmlSubject.asObservable();
+
+  private errorSubject = new Subject<string>();
+  error$ = this.errorSubject.asObservable();
+
+  init(iframe: HTMLIFrameElement): void {
+    this.iframe = iframe;
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+  }
+
+  postMessage(data: any, force = false): void {
+    if (!this.iframe?.contentWindow) {
+      this.pendingMessages.push(data);
+      return;
+    }
+    if (!this.drawioReady && !force) {
+      this.pendingMessages.push(data);
+      return;
+    }
+    try {
+      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+      console.log('[Draw.io] SEND:', data);
+    } catch (e) {
+      console.error('[Draw.io] postMessage error:', e);
+      this.errorSubject.next('Failed to send message to Draw.io');
+    }
+  }
+
+  private flushQueue(): void {
+    if (!this.drawioReady) return;
+    while (this.pendingMessages.length > 0) {
+      const msg = this.pendingMessages.shift();
+      try {
+        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
+        console.log('[Draw.io] SEND QUEUE:', msg);
+      } catch (e) {
+        console.error('[Draw.io] flushQueue error:', e);
+      }
+    }
+  }
+
+  loadXml(xml?: string, force = false): void {
+    if (!xml || xml.trim() === '') {
+      xml = this.getEmptyDiagramXml();
+    }
+    this.postMessage({ action: 'load', xml, autosave: false }, force);
+  }
+
+  getEmptyDiagramXml(): string {
+    return `<mxfile>
+<diagram id="page1" name="Page-1">
+<mxGraphModel>
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>`;
+  }
+
+  requestXml(): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
+      this.errorSubject.next('Draw.io not ready to export');
+      return;
+    }
+    this.postMessage({ action: 'export', format: 'xml' });
+  }
+
+  insertMermaid(mermaidScript: string, pageName?: string): void {
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
+      this.pendingMessages.push({
+        action: 'mermaid',
+        mermaid: mermaidScript,
+        title: pageName || 'AI Generated Diagram'
+      });
+      return;
+    }
+    this.postMessage({
+      action: 'mermaid',
+      mermaid: mermaidScript,
+      title: pageName || 'AI Generated Diagram'
+    });
+  }
+
+  handleMessage(event: MessageEvent): void {
+    if (!event.origin.includes('diagrams.net')) return;
+
+    let data: any;
+    try {
+      if (typeof event.data === 'string') {
+        if (event.data === 'ready') {
+          data = { event: 'ready' };
+        } else {
+          data = JSON.parse(event.data);
+        }
+      } else {
+        data = event.data;
+      }
+    } catch (e) {
+      console.warn('[Draw.io] Failed to parse message:', event.data);
+      return;
+    }
+
+    console.log('[Draw.io] EVENT:', data);
+
+    if (data.event === 'configure') {
+      // ✅ เปิดใช้งาน autosave ในการตอบกลับ configure
+      const reply = {
+        action: 'configure',
+        config: {
+          defaultFonts: [],
+          defaultLibraries: true,
+          autosave: true   // <--- สำคัญมาก
+        }
+      };
+      try {
+        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
+        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true');
+      } catch (e) {
+        console.error('[Draw.io] Configure response error:', e);
+      }
+      return;
+    }
+
+    if (data.event === 'init' || data.event === 'ready') {
+      console.log('[Draw.io] READY received');
+      this.drawioReady = true;
+      this.isReadySubject.next(true);
+      this.flushQueue();
+      return;
+    }
+
+    // ✅ จัดการ event save (ส่งโดย Draw.io เมื่อ autosave ทำงาน)
+    if (data.event === 'save') {
+      console.log('[Draw.io] ✅ SAVE event received – requesting XML for auto‑save...');
+      this.requestXml();
+      return;
+    }
+
+    if (data.event === 'export' && data.xml) {
+      console.log('[Draw.io] XML export received');
+      this.xmlSubject.next(data.xml);
+      return;
+    }
+
+    if (data.event === 'error') {
+      console.error('[Draw.io] Error event:', data);
+      this.errorSubject.next(data.message || 'Unknown Draw.io error');
+    }
+  }
+
+  reset(): void {
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
+    this.pendingMessages = [];
+    this.xmlSubject = new Subject<string>();
+    this.errorSubject = new Subject<string>();
+    console.log('[Draw.io] Service reset');
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/change-request.service.ts">
 // src/app/core/services/change-request.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -60075,9 +60222,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type { ChangeRequest, ImpactAnalysis } from './change-request.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 
 @Injectable({ providedIn: 'root' })
 export class ChangeRequestService {
@@ -60158,54 +60304,384 @@ export class ChangeRequestService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.service.ts">
-// src/app/feature/pm/dt/pmdt08/pmdt08.service.ts
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.html">
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08.component.html -->
+<div class="space-y-5 p-0.5">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
+                รายการ Specification
+            </h1>
+            <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+                {{ totalItems() }} รายการ
+            </span>
+        </div>
+        <button
+            (click)="goToAdd()"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+        >
+            <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+        </button>
+    </div>
 
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { PmSpecificationModel } from './pmdt08.model';
-
-@Injectable({ providedIn: 'root' })
-export class Pmdt08Service {
-    private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
-
-    // Combobox endpoints
-    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
-    apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
-    apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
-    apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
-    apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
-
-    // CRUD
-    getSpecification(id: string): Observable<PmSpecificationModel> {
-        return this.http.get<PmSpecificationModel>(`${this.baseUrl}/${id}`);
-    }
-
-    save(data: PmSpecificationModel): Observable<any> {
-        return this.http.post(this.baseUrl, data);
-    }
-
-    autoSave(data: PmSpecificationModel): Observable<any> {
-        return this.http.post(this.baseUrl, data);
-    }
-
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
-    }
-
-    // ✅ ใช้ PaginationResponse จาก core/model
-    getList(params: any): Observable<PaginationResponse<PmSpecificationModel>> {
-        let httpParams = new HttpParams();
-        Object.keys(params).forEach(key => {
-            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-                httpParams = httpParams.set(key, String(params[key]));
+    <!-- FILTERS -->
+    <div class="flex flex-wrap gap-3 items-center">
+        <div class="relative flex-1 min-w-[200px]">
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+            <input
+                type="text"
+                class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+                placeholder="ค้นหารหัส, ชื่อ, โมดูล..."
+                [value]="searchTerm()"
+                (input)="onSearch($event)"
+            />
+            @if (searchTerm()) {
+                <button
+                    (click)="clearSearch()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+                >
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
             }
-        });
-        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
+        </div>
+
+        <select
+            (change)="onFilterChange($event)"
+            [value]="filterStatus()"
+            class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
+        >
+            <option value="all">📊 ทุกสถานะ</option>
+            @for (status of ['Draft','Review','Approved','Released']; track status) {
+                <option [value]="status">{{ getStatusText(status) }}</option>
+            }
+        </select>
+    </div>
+
+    <!-- LOADING -->
+    @if (isLoading()) {
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
+
+    <!-- TABLE -->
+    @if (!isLoading()) {
+        <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+            <table class="w-full text-sm">
+                <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">ชื่อเรื่อง</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">โมดูล</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">Manday</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[160px]">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border)]">
+                    @for (spec of specs(); track spec.id) {
+                        <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                                    {{ spec.specificationCode }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div>
+                                    <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
+                                    <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ spec.description | slice:0:100 }}</div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-[var(--text)]">{{ spec.module || '-' }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
+                                {{ spec.version || '1.0' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span [class]="getStatusClass(spec.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                                    {{ getStatusText(spec.status || 'Draft') }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-[var(--text-active)] font-mono">
+                                {{ spec.estimatedManday || 0 }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button
+                                        (click)="goToView(spec.id!)"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                                        title="ดูข้อมูล"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button
+                                        (click)="goToEdit(spec.id!)"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+                                        title="แก้ไข"
+                                    >
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button
+                                        (click)="deleteSpec(spec.id!)"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                        title="ลบ"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="7" class="px-4 py-12 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                                    <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Specification</p>
+                                    <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Specification ใหม่</p>
+                                    <button
+                                        (click)="goToAdd()"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                                    >
+                                        <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <!-- PAGINATION -->
+    @if (totalItems() > 0) {
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div class="text-sm text-[var(--text-muted)]">
+                แสดง
+                <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+                -
+                <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+                จาก
+                <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+                รายการ
+            </div>
+
+            <div class="flex gap-1">
+                <button
+                    (click)="onPageChange(currentPage() - 1)"
+                    [disabled]="!hasPrevious()"
+                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                @for (page of pageNumbers(); track page) {
+                    <button
+                        (click)="onPageChange(page)"
+                        [class]="page === currentPage()
+                            ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+                            : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+                    >
+                        {{ page }}
+                    </button>
+                }
+
+                <button
+                    (click)="onPageChange(currentPage() + 1)"
+                    [disabled]="!hasNext()"
+                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.component.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.component.ts
+
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { Pmdt08Service } from './pmdt08.service';
+import { PmSpecificationModel } from './pmdt08.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+
+@Component({
+    selector: 'app-pmdt08',
+    standalone: true,
+    imports: [CommonModule, RouterModule],
+    templateUrl: './pmdt08.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Pmdt08Component implements OnInit {
+    private service = inject(Pmdt08Service);
+    private router = inject(Router);
+    private dialog = inject(DialogService);
+    private navigation = inject(NavigationService);
+    private customerState = inject(CustomerStateService);
+
+    isLoading = signal(false);
+    specs = signal<PmSpecificationModel[]>([]);
+    totalItems = signal(0);
+    currentPage = signal(1);
+    pageSize = signal(10);
+    searchTerm = signal('');
+    filterStatus = signal('all');
+
+    totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+    hasPrevious = computed(() => this.currentPage() > 1);
+    hasNext = computed(() => this.currentPage() < this.totalPages());
+
+    pageNumbers = computed(() => {
+        const total = this.totalPages();
+        const current = this.currentPage();
+        const range = 5;
+        let start = Math.max(1, current - Math.floor(range / 2));
+        let end = Math.min(total, start + range - 1);
+        if (end - start < range - 1) {
+            start = Math.max(1, end - range + 1);
+        }
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    });
+
+    Math = Math;
+
+    ngOnInit(): void {
+        this.loadData();
+    }
+
+    loadData(): void {
+        this.isLoading.set(true);
+        const params = {
+            keyword: this.searchTerm() || undefined,
+            status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
+            page: this.currentPage() - 1,
+            size: this.pageSize(),
+            sortBy: 'createdDate',
+            sortDir: 'desc',
+        };
+
+        this.service.getList(params)
+            .pipe(finalize(() => this.isLoading.set(false)))
+            .subscribe({
+                next: (res: PaginationResponse<PmSpecificationModel>) => {
+                    this.specs.set(res.data || []);
+                    this.totalItems.set(res.pageable?.totalElements || 0);
+                },
+                error: () => {
+                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
+                    this.specs.set([]);
+                    this.totalItems.set(0);
+                },
+            });
+    }
+
+    onSearch(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        this.searchTerm.set(input.value);
+        this.currentPage.set(1);
+        this.loadData();
+    }
+
+    clearSearch(): void {
+        this.searchTerm.set('');
+        this.currentPage.set(1);
+        this.loadData();
+    }
+
+    onFilterChange(event: Event): void {
+        const select = event.target as HTMLSelectElement;
+        this.filterStatus.set(select.value);
+        this.currentPage.set(1);
+        this.loadData();
+    }
+
+    onPageChange(page: number): void {
+        if (page < 1 || page > this.totalPages()) return;
+        this.currentPage.set(page);
+        this.loadData();
+    }
+
+    goToAdd(): void {
+        const projectId = this.customerState.getProjectId();
+        if (projectId) {
+            this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams: { projectId } });
+        } else {
+            this.navigation.navigate(['/feature/pm/pmdt08/new']);
+        }
+    }
+
+    goToEdit(id: string): void {
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit']);
+    }
+
+    goToView(id: string): void {
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view']);
+    }
+
+    deleteSpec(id: string): void {
+        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
+            .then((ok) => {
+                if (ok) {
+                    this.service.delete(id).subscribe({
+                        next: () => {
+                            this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
+                            this.loadData();
+                        },
+                        error: (err) => {
+                            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                        },
+                    });
+                }
+            });
+    }
+
+    getStatusClass(status: string): string {
+        const map: Record<string, string> = {
+            Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+            Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            Released: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        };
+        return map[status] || 'bg-gray-100 text-gray-600';
+    }
+
+    getStatusText(status: string): string {
+        const map: Record<string, string> = {
+            Draft: 'ร่าง',
+            Review: 'ตรวจสอบ',
+            Approved: 'อนุมัติ',
+            Released: 'เผยแพร่',
+        };
+        return map[status] || status;
+    }
+
+    formatDate(dateStr: string): string {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch {
+            return dateStr;
+        }
     }
 }
 </file>
@@ -60352,7 +60828,7 @@ export * from './pmdt09.model';
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt09/pmdt09.model.ts">
 // src/app/feature/pm/dt/pmdt09/pmdt09.model.ts
-import { SicBaseStateModel, PaginationResponse } from '../../../../core/model/sic-base-model';
+import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 
 export interface Pmdt09Model extends SicBaseStateModel {
@@ -60368,8 +60844,6 @@ export interface Pmdt09Model extends SicBaseStateModel {
 export interface Pmdt09PageData {
   discussionData: SicFromData<Pmdt09Model>;
 }
-
-export { PaginationResponse };
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -61226,8 +61700,8 @@ export class Pmrt01Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (pageData) => {
-          this.customers.set(pageData.content);
-          this.totalItems.set(pageData.totalElements);
+          this.customers.set(pageData.data || []);
+          this.totalItems.set(pageData.pageable?.totalElements || 0);
         },
         error: (err) => {
           console.error('Load customers error', err);
@@ -64591,442 +65065,6 @@ export class SicRequirementPreviewComponent implements OnChanges {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/diagram.service.ts">
-// src/app/feature/pm/dt/pmdt06/diagram.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type {
-  ChatMessage,
-  DiagramModel,
-  DiagramProject,
-  DiagramType,
-  DiagramVersion,
-} from './diagram.model';
-import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
-
-export interface PmChatResponse {
-  id: string;
-  diagramId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  contextData: any;
-  createdBy: string;
-  createdDate: string;
-}
-
-@Injectable({ providedIn: 'root' })
-export class DiagramService {
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiBaseUrl;
-
-  private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
-  private tabsSubject = new BehaviorSubject<DiagramModel[]>([]);
-  private activeTabIdSubject = new BehaviorSubject<string | null>(null);
-  private pmrt02Service = inject(Pmrt02Service);
-
-  projects$ = this.projectsSubject.asObservable();
-  tabs$ = this.tabsSubject.asObservable();
-  activeTabId$ = this.activeTabIdSubject.asObservable();
-
-  getProjectName(projectId: string): Observable<string> {
-    return this.pmrt02Service.getProject(projectId).pipe(
-      map(project => project.projectName)
-    );
-  }
-
-  getProjects(): Observable<DiagramProject[]> {
-    return this.http.get<any>(`${this.apiUrl}/api/pm/customer-projects?page=0&size=100`)
-      .pipe(
-        map(response => {
-          const items = response?.content || response?.data || [];
-          return items.map((p: any) => ({
-            id: p.id,
-            name: p.projectName,
-            description: p.description,
-            isFavorite: false,
-            lastOpened: p.updatedDate || p.createdDate,
-            createdAt: p.createdDate,
-            updatedAt: p.updatedDate
-          }));
-        })
-      );
-  }
-
-  createProject(name: string, description?: string): Observable<DiagramProject> {
-    return this.http
-      .post<DiagramProject>(`${this.apiUrl}/api/diagram/projects`, { name, description })
-      .pipe(
-        tap((project) => {
-          const current = this.projectsSubject.value;
-          this.projectsSubject.next([...current, project]);
-        }),
-      );
-  }
-
-  updateProject(id: string, data: Partial<DiagramProject>): Observable<DiagramProject> {
-    return this.http.put<DiagramProject>(`${this.apiUrl}/api/diagram/projects/${id}`, data).pipe(
-      tap((updated) => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.map((p) => (p.id === id ? updated : p)));
-      }),
-    );
-  }
-
-  deleteProject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/projects/${id}`).pipe(
-      tap(() => {
-        const current = this.projectsSubject.value;
-        this.projectsSubject.next(current.filter((p) => p.id !== id));
-      }),
-    );
-  }
-
-  getTabs(projectId: string): Observable<DiagramModel[]> {
-    return this.http
-      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
-      .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
-  }
-
-  // ✅ แก้ไข: เพิ่ม requirementId
-  createTab(
-    projectId: string,
-    name: string,
-    type: DiagramType,
-    script?: string,
-    requirementId?: string  // ✅ เพิ่มพารามิเตอร์
-  ): Observable<DiagramModel> {
-    const payload = {
-      projectId,
-      name,
-      diagramType: type,
-      mermaidScript: script || '',
-      requirementId: requirementId || null,  // ✅ ส่งไป Backend
-      metadata: {},
-      sortOrder: this.tabsSubject.value.length + 1,
-    };
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs`, payload).pipe(
-      tap((tab) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next([...current, tab]);
-      }),
-    );
-  }
-
-  updateTab(tab: DiagramModel): Observable<DiagramModel> {
-    return this.http.put<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${tab.id}`, tab).pipe(
-      tap((updated) => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.map((t) => (t.id === updated.id ? updated : t)));
-      }),
-    );
-  }
-
-  deleteTab(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/tabs/${id}`).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        this.tabsSubject.next(current.filter((t) => t.id !== id));
-      }),
-    );
-  }
-
-  reorderTabs(tabs: { id: string; sortOrder: number }[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/api/diagram/tabs/reorder`, { tabs }).pipe(
-      tap(() => {
-        const current = this.tabsSubject.value;
-        const updated = current.map((t) => {
-          const order = tabs.find((o) => o.id === t.id);
-          return order ? { ...t, sortOrder: order.sortOrder } : t;
-        });
-        this.tabsSubject.next(updated.sort((a, b) => a.sortOrder - b.sortOrder));
-      }),
-    );
-  }
-
-  duplicateTab(id: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}/duplicate`, {});
-  }
-
-  getVersions(tabId: string): Observable<DiagramVersion[]> {
-    return this.http.get<DiagramVersion[]>(`${this.apiUrl}/api/diagram/tabs/${tabId}/versions`);
-  }
-
-  restoreVersion(tabId: string, versionId: string): Observable<DiagramModel> {
-    return this.http.post<DiagramModel>(
-      `${this.apiUrl}/api/diagram/tabs/${tabId}/restore/${versionId}`,
-      {},
-    );
-  }
-
-  getChatHistory(tabId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  sendChatMessage(
-    tabId: string,
-    message: string,
-  ): Observable<PmChatResponse> {
-    return this.http.post<PmChatResponse>(
-      `${this.apiUrl}/api/diagram/chat`,
-      { diagramId: tabId, message }
-    );
-  }
-
-  clearChatHistory(tabId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
-  }
-
-  generateDiagram(
-    prompt: string,
-    context?: any,
-  ): Observable<{ script: string; type: DiagramType; name: string }> {
-    return this.http.post<{ script: string; type: DiagramType; name: string }>(
-      `${this.apiUrl}/api/diagram/ai/generate`,
-      { prompt, context },
-    );
-  }
-
-  improveDiagram(script: string, instruction: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/improve`, {
-      script,
-      instruction,
-    });
-  }
-
-  fixDiagram(script: string, errorMessage: string): Observable<{ script: string }> {
-    return this.http.post<{ script: string }>(`${this.apiUrl}/api/diagram/ai/fix`, {
-      script,
-      errorMessage,
-    });
-  }
-
-  convertDiagram(
-    script: string,
-    targetType: DiagramType,
-  ): Observable<{ script: string; type: DiagramType }> {
-    return this.http.post<{ script: string; type: DiagramType }>(
-      `${this.apiUrl}/api/diagram/ai/convert`,
-      { script, targetType },
-    );
-  }
-
-  exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
-      responseType: 'blob',
-    });
-  }
-
-  exportProject(projectId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
-      responseType: 'blob',
-    });
-  }
-
-  setActiveTab(tabId: string | null) {
-    this.activeTabIdSubject.next(tabId);
-  }
-
-  getActiveTab(): string | null {
-    return this.activeTabIdSubject.value;
-  }
-
-  clearState() {
-    this.projectsSubject.next([]);
-    this.tabsSubject.next([]);
-    this.activeTabIdSubject.next(null);
-  }
-
-  getDiagram(id: string): Observable<DiagramModel> {
-    return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/drawio-connector.service.ts">
-// src/app/core/component/sic-drawio/drawio-connector.service.ts
-
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
-
-@Injectable({ providedIn: 'root' })
-export class DrawioConnectorService {
-  private iframe: HTMLIFrameElement | null = null;
-  private pendingMessages: any[] = [];
-  private drawioReady = false;
-
-  private isReadySubject = new BehaviorSubject<boolean>(false);
-  isReady$ = this.isReadySubject.asObservable();
-
-  private xmlSubject = new Subject<string>();
-  xml$ = this.xmlSubject.asObservable();
-
-  private errorSubject = new Subject<string>();
-  error$ = this.errorSubject.asObservable();
-
-  init(iframe: HTMLIFrameElement): void {
-    this.iframe = iframe;
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-  }
-
-  postMessage(data: any, force = false): void {
-    if (!this.iframe?.contentWindow) {
-      this.pendingMessages.push(data);
-      return;
-    }
-    if (!this.drawioReady && !force) {
-      this.pendingMessages.push(data);
-      return;
-    }
-    try {
-      this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
-      console.log('[Draw.io] SEND:', data);
-    } catch (e) {
-      console.error('[Draw.io] postMessage error:', e);
-      this.errorSubject.next('Failed to send message to Draw.io');
-    }
-  }
-
-  private flushQueue(): void {
-    if (!this.drawioReady) return;
-    while (this.pendingMessages.length > 0) {
-      const msg = this.pendingMessages.shift();
-      try {
-        this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
-        console.log('[Draw.io] SEND QUEUE:', msg);
-      } catch (e) {
-        console.error('[Draw.io] flushQueue error:', e);
-      }
-    }
-  }
-
-  loadXml(xml?: string, force = false): void {
-    if (!xml || xml.trim() === '') {
-      xml = this.getEmptyDiagramXml();
-    }
-    this.postMessage({ action: 'load', xml, autosave: false }, force);
-  }
-
-  getEmptyDiagramXml(): string {
-    return `<mxfile>
-<diagram id="page1" name="Page-1">
-<mxGraphModel>
-<root>
-<mxCell id="0"/>
-<mxCell id="1" parent="0"/>
-</root>
-</mxGraphModel>
-</diagram>
-</mxfile>`;
-  }
-
-  requestXml(): void {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot request XML, Draw.io not ready');
-      this.errorSubject.next('Draw.io not ready to export');
-      return;
-    }
-    this.postMessage({ action: 'export', format: 'xml' });
-  }
-
-  insertMermaid(mermaidScript: string, pageName?: string): void {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
-      this.pendingMessages.push({
-        action: 'mermaid',
-        mermaid: mermaidScript,
-        title: pageName || 'AI Generated Diagram'
-      });
-      return;
-    }
-    this.postMessage({
-      action: 'mermaid',
-      mermaid: mermaidScript,
-      title: pageName || 'AI Generated Diagram'
-    });
-  }
-
-  handleMessage(event: MessageEvent): void {
-    if (!event.origin.includes('diagrams.net')) return;
-
-    let data: any;
-    try {
-      if (typeof event.data === 'string') {
-        if (event.data === 'ready') {
-          data = { event: 'ready' };
-        } else {
-          data = JSON.parse(event.data);
-        }
-      } else {
-        data = event.data;
-      }
-    } catch (e) {
-      console.warn('[Draw.io] Failed to parse message:', event.data);
-      return;
-    }
-
-    console.log('[Draw.io] EVENT:', data);
-
-    if (data.event === 'configure') {
-      // ✅ เปิดใช้งาน autosave ในการตอบกลับ configure
-      const reply = {
-        action: 'configure',
-        config: {
-          defaultFonts: [],
-          defaultLibraries: true,
-          autosave: true   // <--- สำคัญมาก
-        }
-      };
-      try {
-        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
-        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true');
-      } catch (e) {
-        console.error('[Draw.io] Configure response error:', e);
-      }
-      return;
-    }
-
-    if (data.event === 'init' || data.event === 'ready') {
-      console.log('[Draw.io] READY received');
-      this.drawioReady = true;
-      this.isReadySubject.next(true);
-      this.flushQueue();
-      return;
-    }
-
-    // ✅ จัดการ event save (ส่งโดย Draw.io เมื่อ autosave ทำงาน)
-    if (data.event === 'save') {
-      console.log('[Draw.io] ✅ SAVE event received – requesting XML for auto‑save...');
-      this.requestXml();
-      return;
-    }
-
-    if (data.event === 'export' && data.xml) {
-      console.log('[Draw.io] XML export received');
-      this.xmlSubject.next(data.xml);
-      return;
-    }
-
-    if (data.event === 'error') {
-      console.error('[Draw.io] Error event:', data);
-      this.errorSubject.next(data.message || 'Unknown Draw.io error');
-    }
-  }
-
-  reset(): void {
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
-    this.pendingMessages = [];
-    this.xmlSubject = new Subject<string>();
-    this.errorSubject = new Subject<string>();
-    console.log('[Draw.io] Service reset');
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts">
 // src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts
 import { HttpClient } from '@angular/common/http';
@@ -65087,438 +65125,54 @@ export class ImpactAnalysisService {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts">
-// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.service.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.service.ts
 
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
-import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
-import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
-import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
-import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../../core/services/customer-state.service';
-import { AuthService } from '../../../../../core/auth/auth.service';
-import { Pmdt08Service } from '../pmdt08.service';
-import { PmSpecificationModel } from '../pmdt08.model';
-import { Pmdt08PreviewComponent } from '../pmdt08-preview/pmdt08-preview.component';
-import { ApprovalService } from '../../pmdt03/approval.service';
-import type { ApprovalFlow } from '../../pmdt03/approval.model';
-import { HttpClient } from '@angular/common/http';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { PmSpecificationModel } from './pmdt08.model';
 
-@Component({
-    selector: 'app-pmdt08a',
-    standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterModule,
-        SicButtonComponent,
-        SicComboboxComponent,
-        SicInputComponent,
-        SicNumberComponent,
-        SicTiptapEditorComponent,
-        SicUploadComponent,
-        SicCheckboxComponent,
-        SicApprovalComponent,
-        SicDatePipe,
-        Pmdt08PreviewComponent
-    ],
-    templateUrl: './pmdt08A.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    styles: [`
-        .pmdt08-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            height: calc(100vh - 200px);
-            min-height: 600px;
-        }
-        .pmdt08-layout--split { grid-template-columns: 1fr 1fr; }
-        .pmdt08-layout--preview-only { grid-template-columns: 1fr; }
-        .pmdt08-layout--edit-only { grid-template-columns: 1fr; }
-        .pmdt08-panel {
-            overflow-y: auto;
-            padding: 0.5rem;
-            background: var(--sidebar);
-            border-radius: 0.75rem;
-            border: 1px solid var(--border);
-        }
-        .pmdt08-panel--preview { background: var(--bg); }
-        @media (max-width: 768px) {
-            .pmdt08-layout { grid-template-columns: 1fr; height: auto; }
-        }
-        .auto-save-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            background: var(--sidebar-hover);
-        }
-        .auto-save-indicator.saving { color: var(--crm-primary); }
-        .auto-save-indicator.saved { color: var(--crm-success); }
-        .view-mode-toggle {
-            display: flex;
-            gap: 0.25rem;
-            background: var(--bg);
-            border-radius: 0.5rem;
-            padding: 0.25rem;
-            border: 1px solid var(--border);
-        }
-        .view-mode-toggle button {
-            padding: 0.25rem 0.75rem;
-            border: none;
-            border-radius: 0.375rem;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .view-mode-toggle button.active {
-            background: var(--crm-primary);
-            color: white;
-        }
-        .view-mode-toggle button:hover:not(.active) {
-            background: var(--sidebar-hover);
-        }
-    `]
-})
-export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
-    // Dependencies
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    public service = inject(Pmdt08Service);
-    private dialog = inject(DialogService);
-    private fb = inject(FormBuilder);
-    private cdr = inject(ChangeDetectorRef);
-    private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
-    private auth = inject(AuthService);
-    private approvalService = inject(ApprovalService);
+@Injectable({ providedIn: 'root' })
+export class Pmdt08Service {
     private http = inject(HttpClient);
+    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
 
-    apiBaseUrl = environment.apiBaseUrl;
+    // Combobox endpoints
+    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
+    apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
+    apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
+    apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
+    apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
 
-    // Form
-    form!: FormGroup;
-    isEdit = false;
-    isViewOnly = false;
-    specId: string | null = null;
-    isLoading = false;
-    isSaving = false;
-    isAutoSaving = false;
-    lastAutoSaveTime: Date | null = null;
+    // CRUD
+    getSpecification(id: string): Observable<PmSpecificationModel> {
+        return this.http.get<PmSpecificationModel>(`${this.baseUrl}/${id}`);
+    }
 
-    // View Mode
-    viewMode: 'edit' | 'split' | 'preview' = 'split';
+    save(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
+    }
 
-    // Approval Flow
-    flows: ApprovalFlow[] = [];
-    selectedFlowId: string | null = null;
-    isLoadingFlows = false;
+    autoSave(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
+    }
 
-    // Auto-save
-    private autoSaveSubscription: Subscription | null = null;
-    private formChangeSubscription: Subscription | null = null;
-    private autoSaveEnabled = true;
-    private autoSaveInterval = 30000;
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
 
-    pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
-
-    ngOnInit(): void {
-        this.initForm();
-        this.loadFlows();
-
-        const isViewRoute = this.router.url.includes('/view');
-        if (isViewRoute) this.isViewOnly = true;
-
-        this.route.params.subscribe(params => {
-            const id = params['id'];
-            if (id) {
-                this.isEdit = !this.isViewOnly;
-                this.specId = id;
-                this.loadSpecification(id);
-            } else {
-                // New spec
-                this.route.queryParams.subscribe(qParams => {
-                    const pId = qParams['projectId'] || this.customerState.getProjectId();
-                    if (pId) {
-                        this.form.patchValue({ projectId: pId });
-                        this.fetchProjectName(pId);
-                    }
-                });
-                const userName = this.getUserNameFromToken();
-                if (userName) this.form.patchValue({ createdBy: userName });
+    // ✅ ใช้ PaginationResponse จาก core/model
+    getList(params: any): Observable<PaginationResponse<PmSpecificationModel>> {
+        let httpParams = new HttpParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                httpParams = httpParams.set(key, String(params[key]));
             }
         });
-
-        this.setupAutoSave();
-    }
-
-    ngOnDestroy(): void {
-        this.autoSaveSubscription?.unsubscribe();
-        this.formChangeSubscription?.unsubscribe();
-    }
-
-    initForm(): void {
-        this.form = this.fb.group({
-            id: [null],
-            specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
-            title: [null, [Validators.required, Validators.maxLength(255)]],
-            module: [null, [Validators.maxLength(100)]],
-            version: [{ value: 'v1.0', disabled: true }],
-            status: ['Draft'],
-            priority: ['Medium'],
-            owner: [null, [Validators.maxLength(100)]],
-            estimatedManday: [null, [Validators.min(0)]],
-            description: [null, [Validators.required]],
-            uploadGroupId: [null],
-            isAiGenerated: [false],
-            aiGeneratedAt: [null],
-            generatedFromRequirementId: [null],
-            generatedFromDiagramId: [null],
-            projectId: [null],
-            projectName: [null],
-            createdBy: [null],
-            isActive: [true],
-            state: [null],
-            rowVersion: [null]
-        });
-    }
-
-    loadSpecification(id: string) {
-        this.isLoading = true;
-        this.service.getSpecification(id).subscribe({
-            next: (data) => {
-                this.form.patchValue(data);
-                this.isLoading = false;
-                this.form.markAsPristine();
-                if (this.isViewOnly) this.form.disable();
-
-                if (!data.projectName && data.projectId) {
-                    this.fetchProjectName(data.projectId);
-                }
-                if (!data.createdBy) {
-                    const userName = this.getUserNameFromToken();
-                    if (userName) this.form.patchValue({ createdBy: userName });
-                }
-                this.cdr.markForCheck();
-            },
-            error: () => {
-                this.isLoading = false;
-                this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
-                this.navigation.navigate(['/feature/pm/pmdt08']);
-            }
-        });
-    }
-
-    private fetchProjectName(projectId: string): void {
-        this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
-            next: (res) => {
-                const list = Array.isArray(res) ? res : (res.data || []);
-                const project = list.find((p: any) => String(p.value || p.id) === String(projectId));
-                if (project) {
-                    const name = project.projectName || project.name || project.text;
-                    if (name) {
-                        this.form.patchValue({ projectName: name });
-                        this.cdr.markForCheck();
-                    }
-                }
-            },
-            error: () => {}
-        });
-    }
-
-    private getUserNameFromToken(): string | null {
-        const token = this.auth.getAccessToken();
-        if (!token) return null;
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.name || payload.preferred_username || payload.displayName || null;
-        } catch { return null; }
-    }
-
-    loadFlows() {
-        this.isLoadingFlows = true;
-        this.approvalService.getFlowsByDocumentType('SPECIFICATION').subscribe({
-            next: (flows) => {
-                this.flows = flows;
-                this.isLoadingFlows = false;
-                if (flows.length === 1) this.selectedFlowId = flows[0].id;
-            },
-            error: () => { this.isLoadingFlows = false; }
-        });
-    }
-
-    // ===== Auto-save =====
-    private setupAutoSave(): void {
-        if (!this.autoSaveEnabled) return;
-        this.autoSaveSubscription = interval(this.autoSaveInterval)
-            .pipe(
-                takeWhile(() => this.autoSaveEnabled),
-                tap(() => {
-                    if (this.form.dirty && this.form.valid) {
-                        this.performAutoSave();
-                    }
-                })
-            )
-            .subscribe();
-    }
-
-    private performAutoSave(): void {
-        if (this.isSaving || this.isAutoSaving) return;
-        const data = this.form.value as PmSpecificationModel;
-        if (!data.title && !data.description) return;
-
-        this.isAutoSaving = true;
-        this.lastAutoSaveTime = new Date();
-
-        this.service.autoSave(data).subscribe({
-            next: (response: any) => {
-                this.isAutoSaving = false;
-                if (response) {
-                    this.form.patchValue(response);
-                    if (response.id) {
-                        this.specId = response.id;
-                        this.isEdit = true;
-                    }
-                }
-                this.form.markAsPristine({ onlySelf: true });
-                this.cdr.markForCheck();
-            },
-            error: () => {
-                this.isAutoSaving = false;
-                this.cdr.markForCheck();
-            }
-        });
-    }
-
-    getAutoSaveStatus(): string {
-        if (this.isAutoSaving) return 'saving';
-        if (this.lastAutoSaveTime) {
-            const diff = Date.now() - this.lastAutoSaveTime.getTime();
-            if (diff < 5000) return 'saved';
-        }
-        if (this.form.dirty) return 'dirty';
-        return 'idle';
-    }
-
-    getAutoSaveText(): string {
-        const status = this.getAutoSaveStatus();
-        switch (status) {
-            case 'saving': return '💾 กำลังบันทึกอัตโนมัติ...';
-            case 'saved': return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
-            case 'dirty': return '⏳ ยังไม่ได้บันทึก';
-            default: return '💾 บันทึกอัตโนมัติ';
-        }
-    }
-
-    private formatTimeDiff(date: Date | null): string {
-        if (!date) return '';
-        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-        if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
-        return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
-    }
-
-    // ===== View Mode =====
-    setViewMode(mode: 'edit' | 'split' | 'preview'): void {
-        this.viewMode = mode;
-        this.cdr.markForCheck();
-    }
-
-    // ===== Preview Data =====
-    getPreviewData(): PmSpecificationModel {
-        return this.form.value;
-    }
-
-    // ===== Submit =====
-    submit() {
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-            return;
-        }
-
-        if (!this.selectedFlowId) {
-            this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
-            return;
-        }
-
-        this.isSaving = true;
-        const data = this.form.value as PmSpecificationModel;
-        data.state = this.isEdit ? 3 : 4;
-        if (!this.isEdit) data.rowVersion = 0;
-
-        this.service.save(data).subscribe({
-            next: (response: any) => {
-                this.form.markAsPristine();
-                let savedId = data.id || this.specId;
-                if (response && response.id) {
-                    savedId = response.id;
-                    this.form.patchValue(response);
-                    this.specId = savedId;
-                    this.isEdit = true;
-                }
-
-                this.approvalService.submitForApproval({
-                    documentType: 'SPECIFICATION',
-                    documentId: savedId!,
-                    documentCode: data.specificationCode,
-                    documentTitle: data.title,
-                    version: data.version,
-                    flowId: this.selectedFlowId!,
-                    comment: 'ส่งขออนุมัติ Specification'
-                }).subscribe({
-                    next: () => {
-                        this.isSaving = false;
-                        this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
-                            this.navigateBack(data.projectId);
-                        });
-                    },
-                    error: (err) => {
-                        this.isSaving = false;
-                        this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
-                    }
-                });
-            },
-            error: (error) => {
-                this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
-            }
-        });
-    }
-
-    private navigateBack(projectId?: string): void {
-        if (projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
-        } else {
-            this.navigation.navigate(['/feature/pm/pmdt08']);
-        }
-    }
-
-    onBack(): void {
-        const projectId = this.form.get('projectId')?.value;
-        if (this.form.dirty) {
-            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
-                .then(ok => ok && this.navigateBack(projectId));
-        } else {
-            this.navigateBack(projectId);
-        }
+        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
     }
 }
 </file>
@@ -65529,9 +65183,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CreatePostRequest, CreateReplyRequest, Post, Reply, UpdateCommentRequest } from './discussion.model';
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 import { ApiResponse } from './pmdt09.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 
 @Injectable({ providedIn: 'root' })
@@ -65578,8 +65231,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CustomerModel } from './pmrt01A.model';
-import { PaginationResponse } from '../../../../../../core/model/sic-base-model';
 import { environment } from '../../../../../../environments/environment';
+import { PaginationResponse } from '../../../../../core/model/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt01AService {
@@ -68622,36 +68275,457 @@ export class NewDiagramDialogComponent implements OnInit {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.model.ts">
-// src/app/feature/pm/dt/pmdt08/pmdt08.model.ts
-export interface PmSpecificationModel {
-    id?: string;
-    specificationCode: string;
-    title: string;
-    module?: string;
-    version?: string;
-    status?: string;
-    priority?: string;
-    owner?: string;
-    estimatedManday?: number;
-    description?: string;          // เนื้อหาทั้งหมดจาก Tiptap
-    uploadGroupId?: string;
-    uploadGroupData?: any[];
-    isActive?: boolean;
-    isAiGenerated?: boolean;
-    aiGeneratedAt?: string;
-    generatedFromRequirementId?: string;
-    generatedFromDiagramId?: string;
-    projectId?: string;
-    projectName?: string;
-    requirementId?: string;
-    requirementCode?: string;
-    requirementTitle?: string;
-    createdBy?: string;
-    state?: number;
-    rowVersion?: number;
-    createdAt?: string;
-    updatedAt?: string;
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
+
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { Pmdt08Service } from '../pmdt08.service';
+import { PmSpecificationModel } from '../pmdt08.model';
+import { Pmdt08PreviewComponent } from '../pmdt08-preview/Pmdt08PreviewComponent';
+import { SpecificationExportService } from '../specification-export.service';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { HttpClient } from '@angular/common/http';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+
+@Component({
+    selector: 'app-pmdt08a',
+    standalone: true,
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        RouterModule,
+        SicButtonComponent,
+        SicComboboxComponent,
+        SicInputComponent,
+        SicNumberComponent,
+        SicTiptapEditorComponent,
+        SicUploadComponent,
+        SicCheckboxComponent,
+        SicApprovalComponent,
+        SicDatePipe,
+        Pmdt08PreviewComponent
+    ],
+    templateUrl: './pmdt08A.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    styles: [`
+        .pmdt08-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+        .pmdt08-layout--split { grid-template-columns: 1fr 1fr; }
+        .pmdt08-layout--preview-only { grid-template-columns: 1fr; }
+        .pmdt08-layout--edit-only { grid-template-columns: 1fr; }
+        .pmdt08-panel {
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--sidebar);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+        .pmdt08-panel--preview { background: var(--bg); }
+        @media (max-width: 768px) {
+            .pmdt08-layout { grid-template-columns: 1fr; height: auto; }
+        }
+        .auto-save-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: var(--sidebar-hover);
+        }
+        .auto-save-indicator.saving { color: var(--crm-primary); }
+        .auto-save-indicator.saved { color: var(--crm-success); }
+        .view-mode-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
+        }
+        .view-mode-toggle button {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .view-mode-toggle button.active {
+            background: var(--crm-primary);
+            color: white;
+        }
+        .view-mode-toggle button:hover:not(.active) {
+            background: var(--sidebar-hover);
+        }
+    `]
+})
+export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
+    // Dependencies
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    public service = inject(Pmdt08Service);
+    public exportService = inject(SpecificationExportService);
+    private dialog = inject(DialogService);
+    private fb = inject(FormBuilder);
+    private cdr = inject(ChangeDetectorRef);
+    private navigation = inject(NavigationService);
+    private customerState = inject(CustomerStateService);
+    private auth = inject(AuthService);
+    private approvalService = inject(ApprovalService);
+    private http = inject(HttpClient);
+
+    apiBaseUrl = environment.apiBaseUrl;
+
+    // Form
+    form!: FormGroup;
+    isEdit = false;
+    isViewOnly = false;
+    specId: string | null = null;
+    isLoading = false;
+    isSaving = false;
+    isAutoSaving = false;
+    lastAutoSaveTime: Date | null = null;
+
+    // View Mode
+    viewMode: 'edit' | 'split' | 'preview' = 'split';
+
+    // Approval Flow
+    flows: ApprovalFlow[] = [];
+    selectedFlowId: string | null = null;
+    isLoadingFlows = false;
+
+    // Auto-save
+    private autoSaveSubscription: Subscription | null = null;
+    private formChangeSubscription: Subscription | null = null;
+    private autoSaveEnabled = true;
+    private autoSaveInterval = 30000;
+
+    pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
+
+    ngOnInit(): void {
+        this.initForm();
+        this.loadFlows();
+
+        const isViewRoute = this.router.url.includes('/view');
+        if (isViewRoute) this.isViewOnly = true;
+
+        this.route.params.subscribe(params => {
+            const id = params['id'];
+            if (id) {
+                this.isEdit = !this.isViewOnly;
+                this.specId = id;
+                this.loadSpecification(id);
+            } else {
+                // New spec
+                this.route.queryParams.subscribe(qParams => {
+                    const pId = qParams['projectId'] || this.customerState.getProjectId();
+                    if (pId) {
+                        this.form.patchValue({ projectId: pId });
+                        this.fetchProjectName(pId);
+                    }
+                });
+                const userName = this.getUserNameFromToken();
+                if (userName) this.form.patchValue({ createdBy: userName });
+            }
+        });
+
+        this.setupAutoSave();
+    }
+
+    ngOnDestroy(): void {
+        this.autoSaveSubscription?.unsubscribe();
+        this.formChangeSubscription?.unsubscribe();
+    }
+
+    initForm(): void {
+        this.form = this.fb.group({
+            id: [null],
+            specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
+            title: [null, [Validators.required, Validators.maxLength(255)]],
+            module: [null, [Validators.maxLength(100)]],
+            version: [{ value: 'v1.0', disabled: true }],
+            status: ['Draft'],
+            priority: ['Medium'],
+            owner: [null, [Validators.maxLength(100)]],
+            estimatedManday: [null, [Validators.min(0)]],
+            description: [null, [Validators.required]],
+            uploadGroupId: [null],
+            isAiGenerated: [false],
+            aiGeneratedAt: [null],
+            generatedFromRequirementId: [null],
+            generatedFromDiagramId: [null],
+            projectId: [null],
+            projectName: [null],
+            createdBy: [null],
+            isActive: [true],
+            state: [null],
+            rowVersion: [null]
+        });
+    }
+
+    loadSpecification(id: string) {
+        this.isLoading = true;
+        this.service.getSpecification(id).subscribe({
+            next: (data) => {
+                this.form.patchValue(data);
+                this.isLoading = false;
+                this.form.markAsPristine();
+                if (this.isViewOnly) this.form.disable();
+
+                if (!data.projectName && data.projectId) {
+                    this.fetchProjectName(data.projectId);
+                }
+                if (!data.createdBy) {
+                    const userName = this.getUserNameFromToken();
+                    if (userName) this.form.patchValue({ createdBy: userName });
+                }
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isLoading = false;
+                this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
+                this.navigation.navigate(['/feature/pm/pmdt08']);
+            }
+        });
+    }
+
+    private fetchProjectName(projectId: string): void {
+        this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
+            next: (res) => {
+                const list = Array.isArray(res) ? res : (res.data || []);
+                const project = list.find((p: any) => String(p.value || p.id) === String(projectId));
+                if (project) {
+                    const name = project.projectName || project.name || project.text;
+                    if (name) {
+                        this.form.patchValue({ projectName: name });
+                        this.cdr.markForCheck();
+                    }
+                }
+            },
+            error: () => {}
+        });
+    }
+
+    private getUserNameFromToken(): string | null {
+        const token = this.auth.getAccessToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.name || payload.preferred_username || payload.displayName || null;
+        } catch { return null; }
+    }
+
+    loadFlows() {
+        this.isLoadingFlows = true;
+        this.approvalService.getFlowsByDocumentType('SPECIFICATION').subscribe({
+            next: (flows) => {
+                this.flows = flows;
+                this.isLoadingFlows = false;
+                if (flows.length === 1) this.selectedFlowId = flows[0].id;
+            },
+            error: () => { this.isLoadingFlows = false; }
+        });
+    }
+
+    // ===== Auto-save =====
+    private setupAutoSave(): void {
+        if (!this.autoSaveEnabled) return;
+        this.autoSaveSubscription = interval(this.autoSaveInterval)
+            .pipe(
+                takeWhile(() => this.autoSaveEnabled),
+                tap(() => {
+                    if (this.form.dirty && this.form.valid) {
+                        this.performAutoSave();
+                    }
+                })
+            )
+            .subscribe();
+    }
+
+    private performAutoSave(): void {
+        if (this.isSaving || this.isAutoSaving) return;
+        const data = this.form.value as PmSpecificationModel;
+        if (!data.title && !data.description) return;
+
+        this.isAutoSaving = true;
+        this.lastAutoSaveTime = new Date();
+
+        this.service.autoSave(data).subscribe({
+            next: (response: any) => {
+                this.isAutoSaving = false;
+                if (response) {
+                    this.form.patchValue(response);
+                    if (response.id) {
+                        this.specId = response.id;
+                        this.isEdit = true;
+                    }
+                }
+                this.form.markAsPristine({ onlySelf: true });
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isAutoSaving = false;
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
+    getAutoSaveStatus(): string {
+        if (this.isAutoSaving) return 'saving';
+        if (this.lastAutoSaveTime) {
+            const diff = Date.now() - this.lastAutoSaveTime.getTime();
+            if (diff < 5000) return 'saved';
+        }
+        if (this.form.dirty) return 'dirty';
+        return 'idle';
+    }
+
+    getAutoSaveText(): string {
+        const status = this.getAutoSaveStatus();
+        switch (status) {
+            case 'saving': return '💾 กำลังบันทึกอัตโนมัติ...';
+            case 'saved': return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
+            case 'dirty': return '⏳ ยังไม่ได้บันทึก';
+            default: return '💾 บันทึกอัตโนมัติ';
+        }
+    }
+
+    private formatTimeDiff(date: Date | null): string {
+        if (!date) return '';
+        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
+        return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
+    }
+
+    // ===== View Mode =====
+    setViewMode(mode: 'edit' | 'split' | 'preview'): void {
+        this.viewMode = mode;
+        this.cdr.markForCheck();
+    }
+
+    // ===== Preview Data =====
+    getPreviewData(): PmSpecificationModel {
+        return this.form.value;
+    }
+
+    // ===== Export =====
+    async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
+        try {
+            const data = this.form.value as PmSpecificationModel;
+            const blob = await this.exportService.exportSpecification(data, format);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Specification_${data.specificationCode || 'Export'}_${new Date().getTime()}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการส่งออกไฟล์');
+        }
+    }
+
+    // ===== Submit =====
+    submit() {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        if (!this.selectedFlowId) {
+            this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
+            return;
+        }
+
+        this.isSaving = true;
+        const data = this.form.value as PmSpecificationModel;
+        data.state = this.isEdit ? 3 : 4;
+        if (!this.isEdit) data.rowVersion = 0;
+
+        this.service.save(data).subscribe({
+            next: (response: any) => {
+                this.form.markAsPristine();
+                let savedId = data.id || this.specId;
+                if (response && response.id) {
+                    savedId = response.id;
+                    this.form.patchValue(response);
+                    this.specId = savedId;
+                    this.isEdit = true;
+                }
+
+                this.approvalService.submitForApproval({
+                    documentType: 'SPECIFICATION',
+                    documentId: savedId!,
+                    documentCode: data.specificationCode,
+                    documentTitle: data.title,
+                    version: data.version,
+                    flowId: this.selectedFlowId!,
+                    comment: 'ส่งขออนุมัติ Specification'
+                }).subscribe({
+                    next: () => {
+                        this.isSaving = false;
+                        this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                            this.navigateBack(data.projectId);
+                        });
+                    },
+                    error: (err) => {
+                        this.isSaving = false;
+                        this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                    }
+                });
+            },
+            error: (error) => {
+                this.isSaving = false;
+                this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+            }
+        });
+    }
+
+    private navigateBack(projectId?: string): void {
+        if (projectId) {
+            this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
+        } else {
+            this.navigation.navigate(['/feature/pm/pmdt08']);
+        }
+    }
+
+    onBack(): void {
+        const projectId = this.form.get('projectId')?.value;
+        if (this.form.dirty) {
+            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
+                .then(ok => ok && this.navigateBack(projectId));
+        } else {
+            this.navigateBack(projectId);
+        }
+    }
 }
 </file>
 
@@ -69519,6 +69593,68 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 }
 </file>
 
+<file path=".repomixignore">
+# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
+dist/
+build/
+out/
+sic-api/
+sic-auth/
+sic-database/
+sic-storage/
+.kilo/
+.github/
+Migrations/
+resources/
+drawio-dev/
+component/ 
+public/
+
+
+# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
+**/.angular/
+**/.vscode/
+**/.editorconfig
+**/.gitignore
+**/.postcssrc.json
+**/angular.json
+**/package-lock.json
+**/package.json
+**/README.md
+**/tsconfig.app.json
+**/tsconfig.json
+**/tsconfig.spec.json
+**/tmp_do_not_use.txt
+
+# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
+src/assets/
+public/images/
+
+# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.txt
+*.xml
+*.gitignore
+*.md
+*.json
+*.gitattributes
+*.css
+*.mjs
+
+# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
+**/Migrations/
+**/App_Data/
+**/bin/
+**/obj/
+**/node_modules/
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts">
 // src/app/feature/pm/dt/pmdt02/pmdt02.utils.ts
 
@@ -70226,205 +70362,37 @@ export class Pmdt04AComponent implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html">
-<!-- src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html -->
-<div class="space-y-4 p-0.5">
-    <!-- HEADER -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <button
-                (click)="onBack()"
-                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                title="กลับ">
-                <i class="bi bi-arrow-left text-xl"></i>
-            </button>
-            <div>
-                <h1 class="text-xl font-bold text-[var(--text-active)]">
-                    {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
-                </h1>
-                @if (isEdit || isViewOnly) {
-                    <p class="text-xs text-[var(--text-muted)]">
-                        รหัส: {{ form.value.specificationCode }} · เวอร์ชัน: {{ form.value.version }}
-                    </p>
-                }
-            </div>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap">
-            <!-- Auto-save status -->
-            <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
-                {{ getAutoSaveText() }}
-            </span>
-
-            <!-- View Mode Toggle -->
-            <div class="view-mode-toggle">
-                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
-                    <i class="bi bi-layout-split"></i>
-                </button>
-                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
-                    <i class="bi bi-eye"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOADING -->
-    @if (isLoading) {
-        <div class="flex flex-col items-center justify-center py-12 gap-3">
-            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-        </div>
-    }
-
-    <!-- MAIN LAYOUT -->
-    @if (!isLoading) {
-        <div class="pmdt08-layout"
-             [class.pmdt08-layout--split]="viewMode === 'split'"
-             [class.pmdt08-layout--edit-only]="viewMode === 'edit'"
-             [class.pmdt08-layout--preview-only]="viewMode === 'preview'">
-
-            <!-- EDIT PANEL -->
-            @if (viewMode !== 'preview') {
-                <div class="pmdt08-panel pmdt08-panel--edit">
-                    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <sic-input
-                                label="รหัส Specification"
-                                formControlName="specificationCode"
-                                [required]="true"
-                                placeholder="SPEC-001">
-                            </sic-input>
-                            <sic-input
-                                label="ชื่อเรื่อง"
-                                formControlName="title"
-                                [required]="true"
-                                placeholder="Customer Management">
-                            </sic-input>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <sic-combobox
-                                label="โมดูล"
-                                formControlName="module"
-                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=MODULE'"
-                                valueField="value"
-                                textField="text">
-                            </sic-combobox>
-                            <sic-combobox
-                                label="ลำดับความสำคัญ"
-                                formControlName="priority"
-                                [apiUrl]="service.apiGetLovPriority"
-                                valueField="value"
-                                textField="text"
-                                [required]="true">
-                            </sic-combobox>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <sic-input label="เจ้าของ" formControlName="owner" placeholder="สมชาย ใจดี"></sic-input>
-                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
-                        </div>
-
-                        <!-- Tiptap Editor -->
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-sm font-medium text-[var(--text-active)]">
-                                    รายละเอียด <span class="text-red-500">*</span>
-                                </span>
-                                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-                            </div>
-                            <sic-tiptap-editor
-                                formControlName="description"
-                                placeholderInput="กรอกรายละเอียด Specification..."
-                                minHeightInput="200px">
-                            </sic-tiptap-editor>
-                            @if (form.get('description')?.touched && form.get('description')?.invalid) {
-                                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
-                            }
-                        </div>
-
-                        <!-- Attachments -->
-                        <div class="space-y-1">
-                            <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
-                            <sic-upload
-                                formControlName="uploadGroupId"
-                                [multiple]="true"
-                                category="all"
-                                [visibility]="1"
-                                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Specification">
-                            </sic-upload>
-                        </div>
-
-                        <!-- Active -->
-                        <div>
-                            <label class="flex items-center gap-2 cursor-pointer text-sm">
-                                <sic-checkbox formControlName="isActive"></sic-checkbox>
-                                <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
-                            </label>
-                        </div>
-
-                        <!-- Approval Flow -->
-                        <div class="border-t border-[var(--border)] pt-4 mt-2">
-                            <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-                                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                                การอนุมัติ
-                            </div>
-                            <div class="grid grid-cols-1 gap-4">
-                                <sic-combobox
-                                    label="กระบวนการอนุมัติ"
-                                    [apiUrl]="service.apiGetApprovals"
-                                    valueField="id"
-                                    textField="flowName"
-                                    placeholder="เลือกกระบวนการอนุมัติ"
-                                    [clearable]="true"
-                                    (selectionChanged)="selectedFlowId = $event?.id">
-                                </sic-combobox>
-                            </div>
-                        </div>
-
-                        <!-- Hidden fields -->
-                        <input type="hidden" formControlName="id" />
-                        <input type="hidden" formControlName="state" />
-                        <input type="hidden" formControlName="rowVersion" />
-                        <input type="hidden" formControlName="projectId" />
-                        <input type="hidden" formControlName="projectName" />
-                        <input type="hidden" formControlName="createdBy" />
-
-                        <!-- Buttons -->
-                        <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-                            <sic-button type="button" variant="secondary" (click)="onBack()">
-                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
-                            </sic-button>
-                            @if (!isViewOnly) {
-                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
-                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-                                </sic-button>
-                            }
-                        </div>
-                    </form>
-                </div>
-            }
-
-            <!-- PREVIEW PANEL -->
-            @if (viewMode !== 'edit') {
-                <div class="pmdt08-panel pmdt08-panel--preview">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-                            <i class="bi bi-eye text-[var(--crm-primary)]"></i>
-                            ตัวอย่างเอกสาร
-                        </h3>
-                        <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
-                    </div>
-                    <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
-                </div>
-            }
-        </div>
-    }
-</div>
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.model.ts">
+// src/app/feature/pm/dt/pmdt08/pmdt08.model.ts
+export interface PmSpecificationModel {
+    id?: string;
+    specificationCode: string;
+    title: string;
+    module?: string;
+    version?: string;
+    status?: string;
+    priority?: string;
+    owner?: string;
+    estimatedManday?: number;
+    description?: string;          // เนื้อหาทั้งหมดจาก Tiptap
+    uploadGroupId?: string;
+    uploadGroupData?: any[];
+    isActive?: boolean;
+    isAiGenerated?: boolean;
+    aiGeneratedAt?: string;
+    generatedFromRequirementId?: string;
+    generatedFromDiagramId?: string;
+    projectId?: string;
+    projectName?: string;
+    requirementId?: string;
+    requirementCode?: string;
+    requirementTitle?: string;
+    createdBy?: string;
+    state?: number;
+    rowVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.html">
@@ -71192,68 +71160,6 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     return dto;
 }
 }
-</file>
-
-<file path=".repomixignore">
-# ไม่เอาโฟลเดอร์ build และ dist ที่คอมไพล์แล้ว
-dist/
-build/
-out/
-sic-api/
-sic-auth/
-sic-database/
-sic-storage/
-.kilo/
-.github/
-Migrations/
-resources/
-drawio-dev/
-component/ 
-public/
-
-
-# โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)
-**/.angular/
-**/.vscode/
-**/.editorconfig
-**/.gitignore
-**/.postcssrc.json
-**/angular.json
-**/package-lock.json
-**/package.json
-**/README.md
-**/tsconfig.app.json
-**/tsconfig.json
-**/tsconfig.spec.json
-**/tmp_do_not_use.txt
-
-# ไม่เอาโฟลเดอร์เก็บรูปภาพหรือสื่อต่าง ๆ
-src/assets/
-public/images/
-
-# ไม่เอาไฟล์นามสกุลอื่น ๆ ที่ไม่ใช่ไฟล์โค้ดหลัก
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-*.mp4
-*.txt
-*.xml
-*.gitignore
-*.md
-*.json
-*.gitattributes
-*.css
-*.mjs
-
-# ข้ามโฟลเดอร์ที่เก็บข้อมูล ระบบรัน และไลบรารีเสริม
-**/Migrations/
-**/App_Data/
-**/bin/
-**/obj/
-**/node_modules/
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt05/pmdt05.component.ts">
@@ -72310,6 +72216,227 @@ export class SqlExportDialogComponent implements OnInit {
     this.dialogService.close();
   }
 }
+</file>
+
+<file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html">
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html -->
+<div class="space-y-4 p-0.5">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <button
+                (click)="onBack()"
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                title="กลับ">
+                <i class="bi bi-arrow-left text-xl"></i>
+            </button>
+            <div>
+                <h1 class="text-xl font-bold text-[var(--text-active)]">
+                    {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
+                </h1>
+                @if (isEdit || isViewOnly) {
+                    <p class="text-xs text-[var(--text-muted)]">
+                        รหัส: {{ form.value.specificationCode }} · เวอร์ชัน: {{ form.value.version }}
+                    </p>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Auto-save status -->
+            <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+                {{ getAutoSaveText() }}
+            </span>
+
+            <!-- View Mode Toggle -->
+            <div class="view-mode-toggle">
+                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+                    <i class="bi bi-layout-split"></i>
+                </button>
+                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="flex gap-1">
+                <button
+                    (click)="exportSpecification('pdf')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก PDF">
+                    <i class="bi bi-filetype-pdf"></i>
+                    PDF
+                </button>
+                <button
+                    (click)="exportSpecification('docx')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก Word">
+                    <i class="bi bi-file-word"></i>
+                    DOCX
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    @if (isLoading) {
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
+
+    <!-- MAIN LAYOUT -->
+    @if (!isLoading) {
+        <div class="pmdt08-layout"
+             [class.pmdt08-layout--split]="viewMode === 'split'"
+             [class.pmdt08-layout--edit-only]="viewMode === 'edit'"
+             [class.pmdt08-layout--preview-only]="viewMode === 'preview'">
+
+            <!-- EDIT PANEL -->
+            @if (viewMode !== 'preview') {
+                <div class="pmdt08-panel pmdt08-panel--edit">
+                    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-input
+                                label="รหัส Specification"
+                                formControlName="specificationCode"
+                                [required]="true"
+                                placeholder="SPEC-001">
+                            </sic-input>
+                            <sic-input
+                                label="ชื่อเรื่อง"
+                                formControlName="title"
+                                [required]="true"
+                                placeholder="Customer Management">
+                            </sic-input>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <sic-combobox
+                                label="โมดูล"
+                                formControlName="module"
+                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=MODULE'"
+                                valueField="value"
+                                textField="text">
+                            </sic-combobox>
+                            <sic-combobox
+                                label="ลำดับความสำคัญ"
+                                formControlName="priority"
+                                [apiUrl]="service.apiGetLovPriority"
+                                valueField="value"
+                                textField="text"
+                                [required]="true">
+                            </sic-combobox>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-input label="เจ้าของ" formControlName="owner" placeholder="สมชาย ใจดี"></sic-input>
+                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
+                        </div>
+
+                        <!-- Tiptap Editor -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-[var(--text-active)]">
+                                    รายละเอียด <span class="text-red-500">*</span>
+                                </span>
+                                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+                            </div>
+                            <sic-tiptap-editor
+                                formControlName="description"
+                                placeholderInput="กรอกรายละเอียด Specification..."
+                                minHeightInput="200px">
+                            </sic-tiptap-editor>
+                            @if (form.get('description')?.touched && form.get('description')?.invalid) {
+                                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+                            }
+                        </div>
+
+                        <!-- Attachments -->
+                        <div class="space-y-1">
+                            <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+                            <sic-upload
+                                formControlName="uploadGroupId"
+                                [multiple]="true"
+                                category="all"
+                                [visibility]="1"
+                                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Specification">
+                            </sic-upload>
+                        </div>
+
+                        <!-- Active -->
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                <sic-checkbox formControlName="isActive"></sic-checkbox>
+                                <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+                            </label>
+                        </div>
+
+                        <!-- Approval Flow -->
+                        <div class="border-t border-[var(--border)] pt-4 mt-2">
+                            <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+                                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                                การอนุมัติ
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <sic-combobox
+                                    label="กระบวนการอนุมัติ"
+                                    [apiUrl]="service.apiGetApprovals"
+                                    valueField="id"
+                                    textField="flowName"
+                                    placeholder="เลือกกระบวนการอนุมัติ"
+                                    [clearable]="true"
+                                    (selectionChanged)="selectedFlowId = $event?.id">
+                                </sic-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields -->
+                        <input type="hidden" formControlName="id" />
+                        <input type="hidden" formControlName="state" />
+                        <input type="hidden" formControlName="rowVersion" />
+                        <input type="hidden" formControlName="projectId" />
+                        <input type="hidden" formControlName="projectName" />
+                        <input type="hidden" formControlName="createdBy" />
+
+                        <!-- Buttons -->
+                        <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+                            <sic-button type="button" variant="secondary" (click)="onBack()">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </sic-button>
+                            @if (!isViewOnly) {
+                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                                </sic-button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            }
+
+            <!-- PREVIEW PANEL -->
+            @if (viewMode !== 'edit') {
+                <div class="pmdt08-panel pmdt08-panel--preview">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                            <i class="bi bi-eye text-[var(--crm-primary)]"></i>
+                            ตัวอย่างเอกสาร
+                        </h3>
+                        <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+                    </div>
+                    <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
+                </div>
+            }
+        </div>
+    }
+</div>
 </file>
 
 <file path="sic-app/src/app/feature/pm/rt/pmrt05/pmrt05.component.ts">
@@ -76085,9 +76212,9 @@ export class Pmdt09Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.posts.set(response.content || []);
-          this.totalElements.set(response.totalElements || 0);
-          this.totalPages.set(response.totalPages || 0);
+          this.posts.set(response.data || []);
+          this.totalElements.set(response.pageable?.totalElements || 0);
+          this.totalPages.set(response.pageable?.totalPages || 0);
           // Preload attachments
           this.posts().forEach(post => {
             if (post.attachmentGroupId) {
@@ -77393,374 +77520,6 @@ export class Pmdt07AComponent implements OnInit {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmSpecificationServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.request.PmSpecificationRequest;
-import com.softinter.sicapi.dto.response.PmSpecificationResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.enums.TraceRelationship;
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
-import com.softinter.sicapi.entity.pm.PmRequirement;
-import com.softinter.sicapi.entity.pm.PmSpecification;
-import com.softinter.sicapi.entity.pm.PmTraceLink;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
-import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.DocumentVersionService;
-import com.softinter.sicapi.service.EditSessionService;
-import com.softinter.sicapi.service.PmSpecificationService;
-import com.softinter.sicapi.service.TraceLinkService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.criteria.Predicate;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmSpecificationServiceImpl implements PmSpecificationService {
-
-    private final PmSpecificationRepository specificationRepository;
-    private final PmCustomerProjectRepository projectRepository;
-    private final PmRequirementRepository requirementRepository;
-    private final PmTraceLinkRepository traceLinkRepository;
-    private final TraceLinkService traceLinkService;
-    private final CurrentUserService currentUserService;
-    private final EditSessionService editSessionService;
-    private final DocumentVersionService documentVersionService;
-
-    // ===== FIND ALL (with pagination) =====
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PmSpecificationResponse> findAll(UUID businessId, String keyword, String status, Pageable pageable) {
-        Specification<PmSpecification> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("businessId"), businessId));
-            predicates.add(cb.isFalse(root.get("isDelete")));
-
-            if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("specificationCode")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("module")), pattern)
-                ));
-            }
-
-            if (status != null && !status.isBlank() && !"all".equals(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return specificationRepository.findAll(spec, pageable).map(this::toResponse);
-    }
-
-    // ===== FIND BY ID =====
-    @Override
-    @Transactional(readOnly = true)
-    public PmSpecificationResponse findById(UUID id, UUID businessId) {
-        PmSpecification spec = specificationRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-        return toResponse(spec);
-    }
-
-    // ===== FIND BY CODE =====
-    @Override
-    @Transactional(readOnly = true)
-    public PmSpecificationResponse getByCode(UUID businessId, String code) {
-        PmSpecification spec = specificationRepository.findByBusinessIdAndSpecificationCode(businessId, code)
-                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-        return toResponse(spec);
-    }
-
-    // ===== SAVE (Create / Update / Delete) =====
-    @Override
-    @Transactional
-    public UUID save(PmSpecificationRequest request, UUID businessId, String userId) {
-        PmSpecification spec;
-        EntityState state = request.getState() != null
-                ? EntityState.values()[request.getState()]
-                : EntityState.DETACHED;
-
-        // ----- CREATE NEW -----
-        if (state == EntityState.ADDED || request.getId() == null) {
-            // ตรวจสอบรหัสซ้ำ
-            if (specificationRepository.existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(
-                    businessId, request.getSpecificationCode())) {
-                throw new RuntimeException("รหัส Specification นี้มีอยู่แล้ว: " + request.getSpecificationCode());
-            }
-
-            spec = new PmSpecification();
-            spec.setBusinessId(businessId);
-            spec.setCreatedBy(userId);
-            spec.setCreatedDate(Instant.now());
-            spec.setIsDelete(false);
-            spec.setVersion("v1.0");
-            spec.setStatus("Draft");
-            spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-
-            // Mapping ข้อมูล
-            mapRequestToEntity(request, spec);
-
-            // ตั้งค่า Project
-            if (request.getProjectId() != null) {
-                PmCustomerProject project = projectRepository.findById(request.getProjectId())
-                        .orElseThrow(() -> new RuntimeException("ไม่พบโครงการ"));
-                spec.setProject(project);
-            }
-
-            spec = specificationRepository.save(spec);
-
-            // ✅ สร้าง Document Version ผ่าน DocumentVersionService
-            documentVersionService.createVersion(
-                    "SPECIFICATION",
-                    spec.getId(),
-                    spec.getVersion(),
-                    "สร้าง Specification ฉบับแรก"
-            );
-
-            // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
-            if (request.getGeneratedFromRequirementId() != null) {
-                UUID reqId = request.getGeneratedFromRequirementId();
-                if (requirementRepository.existsById(reqId)) {
-                    traceLinkService.createLink(
-                            businessId,
-                            "REQUIREMENT", reqId,
-                            "SPECIFICATION", spec.getId(),
-                            TraceRelationship.DOCUMENTED_BY
-                    );
-                }
-            }
-
-            // ✅ สร้าง Trace Link กับ Diagram (ถ้ามี)
-            if (request.getGeneratedFromDiagramId() != null) {
-                traceLinkService.createLink(
-                        businessId,
-                        "DIAGRAM", request.getGeneratedFromDiagramId(),
-                        "SPECIFICATION", spec.getId(),
-                        TraceRelationship.DESIGNED_BY
-                );
-            }
-
-            return spec.getId();
-        }
-
-        // ----- UPDATE EXISTING -----
-        if (state == EntityState.MODIFIED) {
-            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-
-            // Edit Guard: ถ้าไม่ใช่ Draft และไม่มีสิทธิ์แก้ไข
-            if (!"DRAFT".equalsIgnoreCase(spec.getStatus())) {
-                if (!editSessionService.canEdit("SPECIFICATION", spec.getId(), userId)) {
-                    throw new IllegalStateException(
-                            "เอกสารนี้ถูกล็อกเนื่องจากไม่ใช่สถานะ Draft ต้องใช้ Change Request เพื่อแก้ไข"
-                    );
-                }
-            }
-
-            // ตรวจสอบ RowVersion
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
-                throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
-            }
-
-            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0";
-            String oldStatus = spec.getStatus();
-
-            spec.setUpdatedBy(userId);
-            spec.setUpdatedDate(Instant.now());
-
-            // Mapping ข้อมูล
-            mapRequestToEntity(request, spec);
-
-            // ✅ Increment Version ถ้าสถานะเปลี่ยนเป็น Approved หรือ Released
-            if ("Approved".equals(request.getStatus()) || "Released".equals(request.getStatus())) {
-                String newVersion = incrementVersion(oldVersion);
-                spec.setVersion(newVersion);
-                spec = specificationRepository.save(spec);
-
-                documentVersionService.createVersion(
-                        "SPECIFICATION",
-                        spec.getId(),
-                        newVersion,
-                        "เปลี่ยนสถานะเป็น " + request.getStatus()
-                );
-            } else {
-                // ✅ ทุกการอัปเดตจะเพิ่มเวอร์ชัน
-                String newVersion = incrementVersion(oldVersion);
-                spec.setVersion(newVersion);
-                spec = specificationRepository.save(spec);
-
-                documentVersionService.createVersion(
-                        "SPECIFICATION",
-                        spec.getId(),
-                        newVersion,
-                        request.getTitle() + " (อัปเดต)"
-                );
-            }
-
-            return spec.getId();
-        }
-
-        // ----- SOFT DELETE -----
-        if (state == EntityState.DELETED) {
-            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-
-            spec.setIsDelete(true);
-            spec.setIsActive(false);
-            spec.setDeleteBy(userId);
-            spec.setDeleteDate(Instant.now());
-            specificationRepository.save(spec);
-
-            // ✅ Soft Delete Document Versions
-            documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
-
-            return spec.getId();
-        }
-
-        throw new IllegalArgumentException("Invalid state: " + state);
-    }
-
-    // ===== DELETE =====
-    @Override
-    @Transactional
-    public void delete(UUID id, UUID businessId, String userId) {
-        PmSpecification spec = specificationRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-
-        spec.setIsDelete(true);
-        spec.setIsActive(false);
-        spec.setDeleteBy(userId);
-        spec.setDeleteDate(Instant.now());
-        specificationRepository.save(spec);
-
-        // ✅ Soft Delete Document Versions
-        documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
-    }
-
-    // ===== FIND BY BUSINESS AND PROJECT =====
-    @Override
-    @Transactional(readOnly = true)
-    public List<PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId) {
-        if (projectId != null) {
-            return specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
-        }
-        return specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
-    }
-
-    // ============================================================
-    // PRIVATE HELPER METHODS
-    // ============================================================
-
-    private void mapRequestToEntity(PmSpecificationRequest request, PmSpecification entity) {
-        entity.setSpecificationCode(request.getSpecificationCode());
-        entity.setTitle(request.getTitle());
-        entity.setModule(request.getModule());
-        entity.setPriority(request.getPriority());
-        entity.setOwner(request.getOwner());
-        entity.setEstimatedManday(request.getEstimatedManday());
-        entity.setDescription(request.getDescription());  // ✅ เนื้อหาทั้งหมดจาก Tiptap
-        entity.setUploadGroupId(request.getUploadGroupId());
-        entity.setIsAiGenerated(false);
-        entity.setGeneratedFromRequirementId(request.getGeneratedFromRequirementId());
-        entity.setGeneratedFromDiagramId(request.getGeneratedFromDiagramId());
-
-        if (request.getIsActive() != null) {
-            entity.setIsActive(request.getIsActive());
-        }
-        if (request.getStatus() != null) {
-            entity.setStatus(request.getStatus());
-        }
-        if (request.getVersion() != null) {
-            entity.setVersion(request.getVersion());
-        }
-
-        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
-    }
-
-    private PmSpecificationResponse toResponse(PmSpecification spec) {
-        PmSpecificationResponse response = new PmSpecificationResponse();
-
-        response.setId(spec.getId());
-        response.setSpecificationCode(spec.getSpecificationCode());
-        response.setTitle(spec.getTitle());
-        response.setModule(spec.getModule());
-        response.setVersion(spec.getVersion());
-        response.setStatus(spec.getStatus());
-        response.setPriority(spec.getPriority());
-        response.setOwner(spec.getOwner());
-        response.setEstimatedManday(spec.getEstimatedManday());
-        response.setDescription(spec.getDescription());  // ✅ เนื้อหาทั้งหมด
-        response.setUploadGroupId(spec.getUploadGroupId());
-        response.setIsActive(spec.getIsActive());
-
-        response.setIsAiGenerated(spec.getIsAiGenerated());
-        response.setAiGeneratedAt(spec.getAiGeneratedAt());
-        response.setGeneratedFromRequirementId(spec.getGeneratedFromRequirementId());
-        response.setGeneratedFromDiagramId(spec.getGeneratedFromDiagramId());
-
-        // Project
-        if (spec.getProject() != null) {
-            response.setProjectId(spec.getProject().getId());
-            response.setProjectName(spec.getProject().getProjectName());
-        }
-
-        // Requirement (ถ้ามี trace link)
-        if (spec.getGeneratedFromRequirementId() != null) {
-            UUID reqId = spec.getGeneratedFromRequirementId();
-            response.setRequirementId(reqId);
-            requirementRepository.findById(reqId).ifPresent(req -> {
-                response.setRequirementCode(req.getRequirementCode());
-                response.setRequirementTitle(req.getTitle());
-            });
-        }
-
-        response.setRowVersion(spec.getRowVersion());
-        response.setCreatedDate(spec.getCreatedDate());
-        response.setUpdatedDate(spec.getUpdatedDate());
-
-        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
-
-        return response;
-    }
-
-    private String incrementVersion(String currentVersion) {
-        if (currentVersion == null || currentVersion.isBlank()) {
-            return "v1.0";
-        }
-        try {
-            String numPart = currentVersion;
-            if (currentVersion.startsWith("v") || currentVersion.startsWith("V")) {
-                numPart = currentVersion.substring(1);
-            }
-            double val = Double.parseDouble(numPart);
-            val += 0.1;
-            String newNum = String.format("%.1f", val);
-            return (currentVersion.startsWith("v") || currentVersion.startsWith("V")) ? "v" + newNum : newNum;
-        } catch (NumberFormatException e) {
-            log.warn("ไม่สามารถเพิ่มเวอร์ชันได้: {}, ใช้ v1.0", currentVersion);
-            return "v1.0";
-        }
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDiagramTabServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -78266,6 +78025,374 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         dto.setCreatedBy(version.getCreatedBy());
         dto.setCreatedDate(version.getCreatedDate());
         return dto;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmSpecificationServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.request.PmSpecificationRequest;
+import com.softinter.sicapi.dto.response.PmSpecificationResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.entity.pm.PmTraceLink;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
+import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.service.EditSessionService;
+import com.softinter.sicapi.service.PmSpecificationService;
+import com.softinter.sicapi.service.TraceLinkService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.criteria.Predicate;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmSpecificationServiceImpl implements PmSpecificationService {
+
+    private final PmSpecificationRepository specificationRepository;
+    private final PmCustomerProjectRepository projectRepository;
+    private final PmRequirementRepository requirementRepository;
+    private final PmTraceLinkRepository traceLinkRepository;
+    private final TraceLinkService traceLinkService;
+    private final CurrentUserService currentUserService;
+    private final EditSessionService editSessionService;
+    private final DocumentVersionService documentVersionService;
+
+    // ===== FIND ALL (with pagination) =====
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmSpecificationResponse> findAll(UUID businessId, String keyword, String status, Pageable pageable) {
+        Specification<PmSpecification> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (keyword != null && !keyword.isBlank()) {
+                String pattern = "%" + keyword.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("specificationCode")), pattern),
+                        cb.like(cb.lower(root.get("title")), pattern),
+                        cb.like(cb.lower(root.get("module")), pattern)
+                ));
+            }
+
+            if (status != null && !status.isBlank() && !"all".equals(status)) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return specificationRepository.findAll(spec, pageable).map(this::toResponse);
+    }
+
+    // ===== FIND BY ID =====
+    @Override
+    @Transactional(readOnly = true)
+    public PmSpecificationResponse findById(UUID id, UUID businessId) {
+        PmSpecification spec = specificationRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+        return toResponse(spec);
+    }
+
+    // ===== FIND BY CODE =====
+    @Override
+    @Transactional(readOnly = true)
+    public PmSpecificationResponse getByCode(UUID businessId, String code) {
+        PmSpecification spec = specificationRepository.findByBusinessIdAndSpecificationCode(businessId, code)
+                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+        return toResponse(spec);
+    }
+
+    // ===== SAVE (Create / Update / Delete) =====
+    @Override
+    @Transactional
+    public UUID save(PmSpecificationRequest request, UUID businessId, String userId) {
+        PmSpecification spec;
+        EntityState state = request.getState() != null
+                ? EntityState.values()[request.getState()]
+                : EntityState.DETACHED;
+
+        // ----- CREATE NEW -----
+        if (state == EntityState.ADDED || request.getId() == null) {
+            // ตรวจสอบรหัสซ้ำ
+            if (specificationRepository.existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(
+                    businessId, request.getSpecificationCode())) {
+                throw new RuntimeException("รหัส Specification นี้มีอยู่แล้ว: " + request.getSpecificationCode());
+            }
+
+            spec = new PmSpecification();
+            spec.setBusinessId(businessId);
+            spec.setCreatedBy(userId);
+            spec.setCreatedDate(Instant.now());
+            spec.setIsDelete(false);
+            spec.setVersion("v1.0");
+            spec.setStatus("Draft");
+            spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+            // Mapping ข้อมูล
+            mapRequestToEntity(request, spec);
+
+            // ตั้งค่า Project
+            if (request.getProjectId() != null) {
+                PmCustomerProject project = projectRepository.findById(request.getProjectId())
+                        .orElseThrow(() -> new RuntimeException("ไม่พบโครงการ"));
+                spec.setProject(project);
+            }
+
+            spec = specificationRepository.save(spec);
+
+            // ✅ สร้าง Document Version ผ่าน DocumentVersionService
+            documentVersionService.createVersion(
+                    "SPECIFICATION",
+                    spec.getId(),
+                    spec.getVersion(),
+                    "สร้าง Specification ฉบับแรก"
+            );
+
+            // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
+            if (request.getGeneratedFromRequirementId() != null) {
+                UUID reqId = request.getGeneratedFromRequirementId();
+                if (requirementRepository.existsById(reqId)) {
+                    traceLinkService.createLink(
+                            businessId,
+                            "REQUIREMENT", reqId,
+                            "SPECIFICATION", spec.getId(),
+                            TraceRelationship.DOCUMENTED_BY
+                    );
+                }
+            }
+
+            // ✅ สร้าง Trace Link กับ Diagram (ถ้ามี)
+            if (request.getGeneratedFromDiagramId() != null) {
+                traceLinkService.createLink(
+                        businessId,
+                        "DIAGRAM", request.getGeneratedFromDiagramId(),
+                        "SPECIFICATION", spec.getId(),
+                        TraceRelationship.DESIGNED_BY
+                );
+            }
+
+            return spec.getId();
+        }
+
+        // ----- UPDATE EXISTING -----
+        if (state == EntityState.MODIFIED) {
+            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+            // Edit Guard: ถ้าไม่ใช่ Draft และไม่มีสิทธิ์แก้ไข
+            if (!"DRAFT".equalsIgnoreCase(spec.getStatus())) {
+                if (!editSessionService.canEdit("SPECIFICATION", spec.getId(), userId)) {
+                    throw new IllegalStateException(
+                            "เอกสารนี้ถูกล็อกเนื่องจากไม่ใช่สถานะ Draft ต้องใช้ Change Request เพื่อแก้ไข"
+                    );
+                }
+            }
+
+            // ตรวจสอบ RowVersion
+            if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
+                throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
+            }
+
+            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0";
+            String oldStatus = spec.getStatus();
+
+            spec.setUpdatedBy(userId);
+            spec.setUpdatedDate(Instant.now());
+
+            // Mapping ข้อมูล
+            mapRequestToEntity(request, spec);
+
+            // ✅ Increment Version ถ้าสถานะเปลี่ยนเป็น Approved หรือ Released
+            if ("Approved".equals(request.getStatus()) || "Released".equals(request.getStatus())) {
+                String newVersion = incrementVersion(oldVersion);
+                spec.setVersion(newVersion);
+                spec = specificationRepository.save(spec);
+
+                documentVersionService.createVersion(
+                        "SPECIFICATION",
+                        spec.getId(),
+                        newVersion,
+                        "เปลี่ยนสถานะเป็น " + request.getStatus()
+                );
+            } else {
+                // ✅ ทุกการอัปเดตจะเพิ่มเวอร์ชัน
+                String newVersion = incrementVersion(oldVersion);
+                spec.setVersion(newVersion);
+                spec = specificationRepository.save(spec);
+
+                documentVersionService.createVersion(
+                        "SPECIFICATION",
+                        spec.getId(),
+                        newVersion,
+                        request.getTitle() + " (อัปเดต)"
+                );
+            }
+
+            return spec.getId();
+        }
+
+        // ----- SOFT DELETE -----
+        if (state == EntityState.DELETED) {
+            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+            spec.setIsDelete(true);
+            spec.setIsActive(false);
+            spec.setDeleteBy(userId);
+            spec.setDeleteDate(Instant.now());
+            specificationRepository.save(spec);
+
+            // ✅ Soft Delete Document Versions
+            documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
+
+            return spec.getId();
+        }
+
+        throw new IllegalArgumentException("Invalid state: " + state);
+    }
+
+    // ===== DELETE =====
+    @Override
+    @Transactional
+    public void delete(UUID id, UUID businessId, String userId) {
+        PmSpecification spec = specificationRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+        spec.setIsDelete(true);
+        spec.setIsActive(false);
+        spec.setDeleteBy(userId);
+        spec.setDeleteDate(Instant.now());
+        specificationRepository.save(spec);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
+    }
+
+    // ===== FIND BY BUSINESS AND PROJECT =====
+    @Override
+    @Transactional(readOnly = true)
+    public List<PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId) {
+        if (projectId != null) {
+            return specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        }
+        return specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+    }
+
+    // ============================================================
+    // PRIVATE HELPER METHODS
+    // ============================================================
+
+    private void mapRequestToEntity(PmSpecificationRequest request, PmSpecification entity) {
+        entity.setSpecificationCode(request.getSpecificationCode());
+        entity.setTitle(request.getTitle());
+        entity.setModule(request.getModule());
+        entity.setPriority(request.getPriority());
+        entity.setOwner(request.getOwner());
+        entity.setEstimatedManday(request.getEstimatedManday());
+        entity.setDescription(request.getDescription());  // ✅ เนื้อหาทั้งหมดจาก Tiptap
+        entity.setUploadGroupId(request.getUploadGroupId());
+        entity.setIsAiGenerated(false);
+        entity.setGeneratedFromRequirementId(request.getGeneratedFromRequirementId());
+        entity.setGeneratedFromDiagramId(request.getGeneratedFromDiagramId());
+
+        if (request.getIsActive() != null) {
+            entity.setIsActive(request.getIsActive());
+        }
+        if (request.getStatus() != null) {
+            entity.setStatus(request.getStatus());
+        }
+        if (request.getVersion() != null) {
+            entity.setVersion(request.getVersion());
+        }
+
+        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
+    }
+
+    private PmSpecificationResponse toResponse(PmSpecification spec) {
+        PmSpecificationResponse response = new PmSpecificationResponse();
+
+        response.setId(spec.getId());
+        response.setSpecificationCode(spec.getSpecificationCode());
+        response.setTitle(spec.getTitle());
+        response.setModule(spec.getModule());
+        response.setVersion(spec.getVersion());
+        response.setStatus(spec.getStatus());
+        response.setPriority(spec.getPriority());
+        response.setOwner(spec.getOwner());
+        response.setEstimatedManday(spec.getEstimatedManday());
+        response.setDescription(spec.getDescription());  // ✅ เนื้อหาทั้งหมด
+        response.setUploadGroupId(spec.getUploadGroupId());
+        response.setIsActive(spec.getIsActive());
+
+        response.setIsAiGenerated(spec.getIsAiGenerated());
+        response.setAiGeneratedAt(spec.getAiGeneratedAt());
+        response.setGeneratedFromRequirementId(spec.getGeneratedFromRequirementId());
+        response.setGeneratedFromDiagramId(spec.getGeneratedFromDiagramId());
+
+        // Project
+        if (spec.getProject() != null) {
+            response.setProjectId(spec.getProject().getId());
+            response.setProjectName(spec.getProject().getProjectName());
+        }
+
+        // Requirement (ถ้ามี trace link)
+        if (spec.getGeneratedFromRequirementId() != null) {
+            UUID reqId = spec.getGeneratedFromRequirementId();
+            response.setRequirementId(reqId);
+            requirementRepository.findById(reqId).ifPresent(req -> {
+                response.setRequirementCode(req.getRequirementCode());
+                response.setRequirementTitle(req.getTitle());
+            });
+        }
+
+        response.setRowVersion(spec.getRowVersion());
+        response.setCreatedDate(spec.getCreatedDate());
+        response.setUpdatedDate(spec.getUpdatedDate());
+
+        // ❌ ไม่ต้อง set screens, fields, validations, businessRules, apis
+
+        return response;
+    }
+
+    private String incrementVersion(String currentVersion) {
+        if (currentVersion == null || currentVersion.isBlank()) {
+            return "v1.0";
+        }
+        try {
+            String numPart = currentVersion;
+            if (currentVersion.startsWith("v") || currentVersion.startsWith("V")) {
+                numPart = currentVersion.substring(1);
+            }
+            double val = Double.parseDouble(numPart);
+            val += 0.1;
+            String newNum = String.format("%.1f", val);
+            return (currentVersion.startsWith("v") || currentVersion.startsWith("V")) ? "v" + newNum : newNum;
+        } catch (NumberFormatException e) {
+            log.warn("ไม่สามารถเพิ่มเวอร์ชันได้: {}, ใช้ v1.0", currentVersion);
+            return "v1.0";
+        }
     }
 }
 </file>
@@ -79097,6 +79224,26 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {
+    path: 'pmdt08/new',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08AResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08/:id/edit',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08AResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08/:id/view',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08AResolver },
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
     path: 'pmdt08A/new',
     loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
     resolve: { form: pmdt08AResolver },
@@ -79108,6 +79255,12 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
     resolve: { form: pmdt08AResolver },
     canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'pmdt08A/:id/view',
+    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
+    resolve: { form: pmdt08AResolver },
     canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {

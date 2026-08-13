@@ -129,9 +129,9 @@ export class Pmdt09Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.posts.set(response.content || []);
-          this.totalElements.set(response.totalElements || 0);
-          this.totalPages.set(response.totalPages || 0);
+          this.posts.set(response.data || []);
+          this.totalElements.set(response.pageable?.totalElements || 0);
+          this.totalPages.set(response.pageable?.totalPages || 0);
           // Preload attachments
           this.posts().forEach(post => {
             if (post.attachmentGroupId) {

@@ -113,8 +113,8 @@ export class Pmrt01Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (pageData) => {
-          this.customers.set(pageData.content);
-          this.totalItems.set(pageData.totalElements);
+          this.customers.set(pageData.data || []);
+          this.totalItems.set(pageData.pageable?.totalElements || 0);
         },
         error: (err) => {
           console.error('Load customers error', err);

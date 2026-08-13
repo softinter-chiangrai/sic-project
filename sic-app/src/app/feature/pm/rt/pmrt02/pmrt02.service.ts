@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 import { PmCustomerProject } from './pmrt02.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02Service {
@@ -18,8 +18,8 @@ export class Pmrt02Service {
   getProjects(params: {
     customerId?: string;
     keyword?: string;
-    startDate?: string;   // ✅ เพิ่ม
-    endDate?: string;     // ✅ เพิ่ม
+    startDate?: string;   
+    endDate?: string;     
     page?: number;
     size?: number;
     sortBy?: string;

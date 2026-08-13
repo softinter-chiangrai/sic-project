@@ -42,6 +42,3 @@ export interface Contract {
   rowVersion?: number;
 }
 
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
-
-export { PaginationResponse };

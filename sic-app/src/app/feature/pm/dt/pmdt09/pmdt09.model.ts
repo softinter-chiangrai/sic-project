@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt09/pmdt09.model.ts
-import { SicBaseStateModel, PaginationResponse } from '../../../../core/model/sic-base-model';
+import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 
 export interface Pmdt09Model extends SicBaseStateModel {
@@ -15,8 +15,6 @@ export interface Pmdt09Model extends SicBaseStateModel {
 export interface Pmdt09PageData {
   discussionData: SicFromData<Pmdt09Model>;
 }
-
-export { PaginationResponse };
 
 export interface ApiResponse<T> {
   success: boolean;

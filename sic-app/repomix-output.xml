@@ -38634,7 +38634,7 @@ export class Pmdt04AComponent implements OnInit {
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     title="ดู Dashboard"
                   >
-                    <i class="bi bi-speedometer2"></i>
+                    <i class="bi bi-file-earmark-text"></i>
                   </button>
                   <!-- ปุ่ม Edit ใช้ routerLink -->
                   <a
@@ -56205,7 +56205,7 @@ export class Pmrt02AService {
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     title="ดู Dashboard"
                   >
-                    <i class="bi bi-speedometer2"></i>
+                    <i class="bi bi-file-earmark-text"></i>
                   </button>
                   <button
                     (click)="goToEdit(project.id)"

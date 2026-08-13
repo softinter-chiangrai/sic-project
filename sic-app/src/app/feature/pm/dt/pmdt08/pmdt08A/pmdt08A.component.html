@@ -98,13 +98,6 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-combobox
-                                label="โมดูล"
-                                formControlName="module"
-                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=MODULE'"
-                                valueField="value"
-                                textField="text">
-                            </sic-combobox>
-                            <sic-combobox
                                 label="ลำดับความสำคัญ"
                                 formControlName="priority"
                                 [apiUrl]="service.apiGetLovPriority"
@@ -112,10 +105,15 @@
                                 textField="text"
                                 [required]="true">
                             </sic-combobox>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <sic-input label="เจ้าของ" formControlName="owner" placeholder="สมชาย ใจดี"></sic-input>
+                            <sic-combobox
+                                label="เจ้าของ"
+                                formControlName="owner"
+                                [apiUrl]="userApiUrl"
+                                valueField="value"
+                                textField="text"
+                                placeholder="เลือกเจ้าของ"
+                                [clearable]="true">
+                            </sic-combobox>
                             <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
                         </div>
 
@@ -149,14 +147,6 @@
                             </sic-upload>
                         </div>
 
-                        <!-- Active -->
-                        <div>
-                            <label class="flex items-center gap-2 cursor-pointer text-sm">
-                                <sic-checkbox formControlName="isActive"></sic-checkbox>
-                                <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
-                            </label>
-                        </div>
-
                         <!-- Approval Flow -->
                         <div class="border-t border-[var(--border)] pt-4 mt-2">
                             <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
@@ -184,17 +174,22 @@
                         <input type="hidden" formControlName="projectName" />
                         <input type="hidden" formControlName="createdBy" />
 
-                        <!-- Buttons -->
-                        <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-                            <sic-button type="button" variant="secondary" (click)="onBack()">
-                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
-                            </sic-button>
-                            @if (!isViewOnly) {
-                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
-                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                        <!-- Bottom Actions & Active -->
+                        <div class="flex items-center justify-between pt-3 border-t border-[var(--border)] mt-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                                <sic-checkbox formControlName="isActive">เปิดใช้งาน</sic-checkbox>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <sic-button type="button" variant="secondary" (click)="onBack()">
+                                    <i class="bi bi-arrow-left"></i> ย้อนกลับ
                                 </sic-button>
-                            }
+                                @if (!isViewOnly) {
+                                    <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                        @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+                                        {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                                    </sic-button>
+                                }
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -3,9 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CreatePostRequest, CreateReplyRequest, Post, Reply, UpdateCommentRequest } from './discussion.model';
-
-import { PaginationResponse } from '../../../../core/model/sic-base-model';
 import { ApiResponse } from './pmdt09.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 
 @Injectable({ providedIn: 'root' })
