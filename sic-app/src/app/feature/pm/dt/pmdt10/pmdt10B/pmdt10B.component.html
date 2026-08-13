@@ -1,0 +1,50 @@
+<div class="pmdt10b-container">
+  <div class="form-header">
+    <h2>{{ isEdit() ? '✏️ แก้ไข Test Case' : '➕ บันทึก Test Case ใหม่' }}</h2>
+    <div class="actions">
+      <button sic-button variant="outline" (click)="onBack()">ยกเลิก</button>
+      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="formData.form" class="form-grid">
+    <div class="card">
+      <h3>ข้อมูลทั่วไป</h3>
+      <div class="row">
+        <sic-input formControlName="testCaseCode" label="รหัส Test Case *" [required]="true"></sic-input>
+        <sic-combobox formControlName="scenarioId" label="Test Scenario" [items]="scenarioOptions()"></sic-combobox>
+        <sic-combobox formControlName="priority" label="ความสำคัญ" [items]="priorityOptions"></sic-combobox>
+      </div>
+
+      <div class="row full-width">
+        <sic-input formControlName="title" label="หัวข้อ / ชื่อ Test Case *" [required]="true"></sic-input>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ขั้นตอน & ผลลัพธ์</h3>
+      <sic-input-area formControlName="testStep" label="ขั้นตอนการทดสอบ (Test Steps) *" [required]="true"></sic-input-area>
+      <sic-input-area formControlName="expectedResult" label="ผลลัพธ์ที่คาดหวัง (Expected Result) *" [required]="true"></sic-input-area>
+      <sic-input-area formControlName="actualResult" label="ผลลัพธ์จากการทดสอบจริง (Actual Result)"></sic-input-area>
+    </div>
+
+    <div class="card">
+      <h3>ผลการทดสอบ & ผู้ทดสอบ</h3>
+      <div class="row">
+        <sic-combobox formControlName="testStatus" label="สถานะการทดสอบ" [items]="statusOptions"></sic-combobox>
+        <sic-input formControlName="tester" label="ผู้ทดสอบ"></sic-input>
+        <sic-datepicker formControlName="testDate" label="วันที่ทดสอบ"></sic-datepicker>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>การเชื่อมโยง (Traceability)</h3>
+      <div class="row">
+        <sic-input formControlName="relatedRequirement" label="Requirement อ้างอิง"></sic-input>
+        <sic-input formControlName="relatedSpec" label="Specification อ้างอิง"></sic-input>
+      </div>
+    </div>
+  </form>
+</div>

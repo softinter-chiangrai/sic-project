@@ -356,6 +356,49 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt09Resolver },
   },
 
+  // ===== Task Tracking, Bug & Test Management (pmdt10) =====
+  {
+    path: 'pmdt10',
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then(m => m.Pmdt10Component),
+    canActivate: [customerGuard, projectGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10A',
+    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10A/:id/edit',
+    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10B',
+    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then(m => m.Pmdt10BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10B/:id/edit',
+    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then(m => m.Pmdt10BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10C',
+    loadComponent: () => import('./dt/pmdt10/pmdt10C/pmdt10C.component').then(m => m.Pmdt10CComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'pmdt10/pmdt10C/:id/edit',
+    loadComponent: () => import('./dt/pmdt10/pmdt10C/pmdt10C.component').then(m => m.Pmdt10CComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+  },
+
   // ===== Design Review =====
   {
     path: 'design-review',
@@ -485,11 +528,13 @@ export const PM_ROUTES: Routes = [
     path: 'delivery/new',
     loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'delivery/:id/edit',
     loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'delivery/:id/view',
@@ -507,11 +552,13 @@ export const PM_ROUTES: Routes = [
     path: 'manual/new',
     loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'manual/:id/edit',
     loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'manual/:id/view',
@@ -630,11 +677,13 @@ export const PM_ROUTES: Routes = [
     path: 'version/new',
     loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'version/:id/edit',
     loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'version/:id/view',

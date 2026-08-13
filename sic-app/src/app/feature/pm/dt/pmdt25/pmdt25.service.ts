@@ -34,6 +34,10 @@ export class Pmdt25Service {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  activateVersion(id: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/activate`, {});
+  }
+
   deleteVersionsByDocument(documentType: string, documentId: string): Observable<void> {
     const params = new HttpParams()
       .set('documentType', documentType)

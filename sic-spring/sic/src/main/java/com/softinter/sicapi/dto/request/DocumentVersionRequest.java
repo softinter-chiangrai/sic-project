@@ -16,10 +16,21 @@ public class DocumentVersionRequest {
     @NotNull(message = "Document ID is required")
     private UUID documentId;
 
+    private String documentCode;
+    private UUID projectId;
+
     @NotBlank(message = "Version number is required")
     private String versionNo;
 
     private String changeSummary;
+    private UUID previousVersionId;
+    private String approvalStatus;
+    private String approvedBy;
+    private java.time.Instant approvedDate;
+    private String snapshotData;
+    private UUID fileRefId;
     private String filePath;
     private Boolean isActive;
+    private Integer state;
+    private Integer rowVersion;
 }

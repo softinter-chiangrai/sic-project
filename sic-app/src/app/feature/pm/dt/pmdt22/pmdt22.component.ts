@@ -1,128 +1,24 @@
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { httpResource } from '@angular/common/http';
 
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../core/model/sic-base-model';
 
-// ===== Model =====
-export interface RenewalModel {
-  id: string;
-  originalContractId: string;
-  originalContractNo: string;
-  newContractNo: string;
-  customerId: string;
-  customerName?: string;
-  projectId: string;
-  projectName?: string;
-  startDate: string;
-  endDate: string;
-  contractValue: number;
-  renewalType: 'Extension' | 'Renewal';
-  renewalStatus: string;
-  notes: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
+import { Pmdt22Service } from './pmdt22.service';
+import { Pmdt22Form } from './pmdt22.form';
+import { PmMaRenewalModel } from './pmdt22.model';
+import { apiBaseUrl } from '../../../../core/config/api.config';
 
-// ===== Form =====
-class Pmdt22Form {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      originalContractId: [null, [Validators.required]],
-      originalContractNo: [null],
-      newContractNo: [null, [Validators.required, Validators.maxLength(30)]],
-      customerId: [null, [Validators.required]],
-      customerName: [null],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      contractValue: [null, [Validators.required, Validators.min(0)]],
-      renewalType: ['Renewal', [Validators.required]],
-      renewalStatus: ['รอต่อ', [Validators.required]],
-      notes: [null, [Validators.maxLength(1000)]],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt22Service {
-  private mockRenewals: RenewalModel[] = [
-    {
-      id: '1',
-      originalContractId: '1',
-      originalContractNo: 'CT-001',
-      newContractNo: 'CT-006',
-      customerId: '1',
-      customerName: 'สมชาย ใจดี',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      startDate: '2024-07-01',
-      endDate: '2025-06-30',
-      contractValue: 50000,
-      renewalType: 'Renewal',
-      renewalStatus: 'รอต่อ',
-      notes: 'ต่ออายุสัญญา MA',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  apiGetComboboxCustomer = '/api/renewal/combobox-customer';
-  apiGetComboboxProject = '/api/renewal/combobox-project';
-  apiGetComboboxContract = '/api/renewal/combobox-contract';
-  apiGetLovRenewalType = '/api/renewal/lov-type';
-  apiGetLovRenewalStatus = '/api/renewal/lov-status';
-
-  save(data: RenewalModel): Observable<string> {
-    console.log('📝 Saving renewal:', data);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getRenewal(id: string): Observable<RenewalModel> {
-    const found = this.mockRenewals.find((r) => r.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const empty: RenewalModel = {
-      id: '',
-      originalContractId: '',
-      originalContractNo: '',
-      newContractNo: '',
-      customerId: '',
-      customerName: '',
-      projectId: '',
-      projectName: '',
-      startDate: '',
-      endDate: '',
-      contractValue: 0,
-      renewalType: 'Renewal',
-      renewalStatus: 'รอต่อ',
-      notes: '',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(empty).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt22',
   standalone: true,
@@ -134,95 +30,87 @@ export class Pmdt22Service {
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    SicDatepickerComponent,
   ],
   templateUrl: './pmdt22.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
 })
 export class Pmdt22Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt22Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+  private service = inject(Pmdt22Service);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private dialog = inject(DialogService);
 
-  form!: FormGroup;
-  isEdit = false;
-  renewalId: string | null = null;
-  isLoading = false;
-  originalContractNo = '';
+  formData!: SicFromData<PmMaRenewalModel>;
+  id = signal<string | null>(null);
+  isSaving = signal(false);
 
-  // ===== Options =====
-  renewalTypeOptions = ['Renewal', 'Extension'];
-  renewalStatusOptions = ['ยังไม่ต่อ', 'รอต่อ', 'ต่อแล้ว'];
+  statusOptions = [
+    { value: 'DRAFT', label: 'Draft (ร่างข้อเสนอ)' },
+    { value: 'PROPOSED', label: 'Proposed (เสนอราคาแล้ว)' },
+    { value: 'CONFIRMED', label: 'Confirmed (ตกลงต่อสัญญาแล้ว)' },
+    { value: 'REJECTED', label: 'Rejected (ปฏิเสธการต่อสัญญา)' },
+    { value: 'EXPIRED', label: 'Expired (หมดอายุสัญญาแล้ว)' },
+  ];
 
-  pageDirty = () => this.form?.dirty ?? false;
+  apiContractCombobox = `${apiBaseUrl}/api/pm/customer-contracts/combobox`;
+  apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
+  apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+
+  dataResource = httpResource<PmMaRenewalModel>(
+    () => (this.id() ? `${apiBaseUrl}/api/pm/ma-renewals/${this.id()}` : null),
+    { enabled: !!this.id() }
+  );
+
+  pageDirty = () => this.formData?.dirty ?? false;
+
+  constructor() {
+    effect(() => {
+      const data = this.dataResource.value();
+      if (data) {
+        this.formData.form.patchValue(data);
+      }
+    });
+  }
 
   ngOnInit(): void {
-    this.initForm();
+    this.formData = new SicFromData<PmMaRenewalModel>(Pmdt22Form.createForm(this.fb));
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.renewalId = id;
-        this.loadRenewal(id);
-      }
-    });
-
-    // เมื่อเลือก original contract ให้ดึงข้อมูลอัตโนมัติ
-    this.form.get('originalContractId')?.valueChanges.subscribe((contractId) => {
-      if (contractId) {
-        // TODO: ดึงข้อมูลสัญญาเดิม (customer, project, etc.)
-        // this.loadContractData(contractId);
-      }
-    });
-  }
-
-  initForm(): void {
-    this.form = Pmdt22Form.createForm(this.fb);
-  }
-
-  loadRenewal(id: string) {
-    this.isLoading = true;
-    this.service.getRenewal(id).subscribe({
-      next: (data) => {
-        this.originalContractNo = data.originalContractNo || '';
-        this.form.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูลการต่ออายุสำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลการต่ออายุรหัสนี้');
-        this.router.navigate(['/feature/pm/renewal']);
-      },
-    });
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam) {
+      this.id.set(idParam);
+    } else {
+      this.formData.form.patchValue({ state: SicEntityState.Added });
+    }
   }
 
   onBack(): void {
     this.router.navigate(['/feature/pm/renewal']);
   }
 
-  submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+  submit(): void {
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
+      this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
-    const data = this.form.value;
-    this.service.save(data).subscribe({
+    this.isSaving.set(true);
+    const val = this.formData.value;
+    if (!val.state) {
+      val.state = this.id() ? SicEntityState.Modified : SicEntityState.Added;
+    }
+
+    this.service.save(val).subscribe({
       next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลการต่ออายุถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/renewal']);
-        });
+        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลข้อเสนอต่อสัญญา MA เรียบร้อย');
+        this.formData.form.markAsPristine();
+        this.router.navigate(['/feature/pm/renewal']);
       },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
+      error: (err) => {
+        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'บันทึกข้อมูลไม่สำเร็จ');
       },
+      complete: () => this.isSaving.set(false),
     });
   }
 }

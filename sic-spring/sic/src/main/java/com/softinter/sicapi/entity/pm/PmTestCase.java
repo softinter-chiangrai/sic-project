@@ -14,6 +14,9 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class PmTestCase extends BaseBusinessEntity {
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(name = "scenario_id")
     private UUID scenarioId;
 
@@ -22,6 +25,12 @@ public class PmTestCase extends BaseBusinessEntity {
 
     @Column(name = "test_case_code", nullable = false, length = 30)
     private String testCaseCode;
+
+    @Column(name = "title", length = 255)
+    private String title;
+
+    @Column(name = "priority", length = 20)
+    private String priority;
 
     @Column(name = "test_step", nullable = false, columnDefinition = "TEXT")
     private String testStep;

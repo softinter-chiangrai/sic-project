@@ -14,6 +14,9 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class PmBug extends BaseBusinessEntity {
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(name = "task_id")
     private UUID taskId;
 
@@ -28,6 +31,18 @@ public class PmBug extends BaseBusinessEntity {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "steps_to_reproduce", columnDefinition = "TEXT")
+    private String stepsToReproduce;
+
+    @Column(name = "environment", length = 50)
+    private String environment;
+
+    @Column(name = "issue_type", length = 20)
+    private String issueType = "Bug";
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 
     @Column(name = "severity", nullable = false, length = 20)
     private String severity;

@@ -11,12 +11,14 @@ import java.util.UUID;
 public class PmTestCaseRequest {
 
     private UUID id;
-
-    @NotNull(message = "Scenario ID is required")
+    private UUID projectId;
     private UUID scenarioId;
 
     @NotBlank(message = "Test case code is required")
     private String testCaseCode;
+
+    private String title;
+    private String priority;
 
     @NotBlank(message = "Test step is required")
     private String testStep;

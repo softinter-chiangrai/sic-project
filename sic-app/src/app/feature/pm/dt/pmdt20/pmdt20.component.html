@@ -1,212 +1,125 @@
-<!-- ===== LOADING ===== -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Invoice...</p>
-  </div>
-}
-
-<!-- ===== FORM ===== -->
-@if (!isLoading && form) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลใบแจ้งหนี้' : 'ออกใบแจ้งหนี้' }}
-        </h2>
-      </div>
-
-      <!-- Invoice No -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="เลขที่ใบแจ้งหนี้"
-          formControlName="invoiceNo"
-          [required]="true"
-          placeholder="INV-001"
-        ></sic-input>
-        @if (form.get('invoiceNo')?.touched && form.get('invoiceNo')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขที่ใบแจ้งหนี้</p>
-        }
-      </div>
-
-      <!-- Customer -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ลูกค้า"
-          formControlName="customerId"
-          [apiUrl]="service.apiGetComboboxCustomer"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('customerId')?.touched && form.get('customerId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกลูกค้า</p>
-        }
-      </div>
-
-      <!-- Project -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="โครงการ"
-          formControlName="projectId"
-          [apiUrl]="service.apiGetComboboxProject"
-          [params]="{ customerId: $safeNavigationMigration(form.get('customerId')?.value) }"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
-        }
-      </div>
-
-      <!-- Contract -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สัญญา"
-          formControlName="contractId"
-          [apiUrl]="service.apiGetComboboxContract"
-          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('contractId')?.touched && form.get('contractId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสัญญา</p>
-        }
-      </div>
-
-      <!-- Milestone -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="งวดงาน / Milestone"
-          formControlName="milestone"
-          placeholder="งวดที่ 1 (เริ่มงาน)"
-        ></sic-input>
-      </div>
-
-      <!-- Amount & VAT -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-input
-            label="จำนวนเงิน (บาท)"
-            type="text"
-            formControlName="amount"
-            [required]="true"
-            placeholder="0.00"
-          ></sic-input>
-          @if (form.get('amount')?.touched && form.get('amount')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุจำนวนเงิน</p>
-          }
-        </div>
-        <div class="flex-1">
-          <sic-input
-            label="ภาษีมูลค่าเพิ่ม (บาท)"
-            type="text"
-            formControlName="vat"
-            placeholder="0.00"
-          ></sic-input>
-        </div>
-      </div>
-
-      <!-- Total Amount (Auto Calculate) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <div class="bg-[var(--bg)] rounded-lg p-4 border border-[var(--border)]">
-          <p class="text-sm font-medium text-[var(--text-muted)]">ยอดรวมทั้งสิ้น</p>
-          <p class="text-2xl font-bold text-[var(--text-active)]">
-            {{ formatCurrency(form.get('totalAmount')?.value || 0) }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Due Date -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="วันครบกำหนดชำระ"
-          type="text"
-          formControlName="dueDate"
-          [required]="true"
-          placeholder="DD/MM/YYYY"
-        ></sic-input>
-        @if (form.get('dueDate')?.touched && form.get('dueDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันครบกำหนด</p>
-        }
-      </div>
-
-      <!-- Payment Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="สถานะการชำระเงิน"
-          formControlName="paymentStatus"
-          [apiUrl]="service.apiGetLovPaymentStatus"
-          [required]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- Payment Date -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="วันที่ชำระเงิน"
-          type="text"
-          formControlName="paymentDate"
-          placeholder="DD/MM/YYYY"
-        ></sic-input>
-      </div>
-
-      <!-- Receipt File -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ไฟล์ใบเสร็จ</label>
-        <div class="flex items-center gap-3 flex-wrap">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all"
-          >
-            <i class="bi bi-upload"></i>
-            อัปโหลดไฟล์
-          </button>
-          <span class="text-sm text-[var(--text-muted)]">(PDF, JPG, PNG)</span>
-          @if (form.get('receiptFile')?.value) {
-            <span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-[var(--bg)] border border-[var(--border)] text-xs text-[var(--text)]">
-              <i class="bi bi-file-earmark"></i>
-              {{ form.get('receiptFile')?.value }}
-            </span>
-          }
-        </div>
-      </div>
-
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน Invoice</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'button'"
-            variant="secondary"
-            (click)="onBack()"
-          >
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'submit'"
-            variant="primary"
-          >
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'ออกใบแจ้งหนี้' }}
-          </sic-button>
-        </div>
-      </div>
-
+<div class="p-6 bg-slate-50 min-h-screen">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">
+        {{ id() ? 'แก้ไขใบแจ้งหนี้ (Invoice)' : 'สร้างใบแจ้งหนี้ใหม่ (New Invoice)' }}
+      </h1>
+      <p class="text-sm text-slate-500">จัดการข้อมูลใบแจ้งหนี้และเรียกเก็บเงินโครงการ</p>
     </div>
-  </form>
-}
+    <div class="flex gap-2">
+      <sic-button variant="secondary" (click)="onBack()">ยกเลิก</sic-button>
+      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">บันทึกข้อมูล</sic-button>
+    </div>
+  </div>
+
+  @if (dataResource.isLoading()) {
+    <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูล...</div>
+  } @else {
+    <form [formGroup]="formData.form" class="space-y-6">
+      <!-- Section 1: Core Details -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">ข้อมูลทั่วไป (General Information)</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="ลูกค้า (Customer)"
+            [required]="true"
+            [apiUrl]="apiCustomerCombobox"
+            valueField="id"
+            displayField="customerName"
+            formControlName="customerId"
+          ></sic-combobox>
+
+          <sic-combobox
+            label="โครงการ (Project)"
+            [required]="true"
+            [apiUrl]="apiProjectCombobox"
+            valueField="id"
+            displayField="projectName"
+            formControlName="projectId"
+          ></sic-combobox>
+
+          <sic-combobox
+            label="ประเภทบิล (Billing Type)"
+            [required]="true"
+            [items]="billingTypeOptions"
+            valueField="value"
+            displayField="label"
+            formControlName="billingType"
+          ></sic-combobox>
+
+          <sic-input
+            label="เลขที่ใบแจ้งหนี้ (Invoice No)"
+            placeholder="ระบบจะสร้างให้อัตโนมัติหากว่างไว้"
+            formControlName="invoiceNo"
+          ></sic-input>
+
+          <sic-datepicker
+            label="วันที่ออกบิล (Issue Date)"
+            [required]="true"
+            formControlName="issueDate"
+          ></sic-datepicker>
+
+          <sic-datepicker
+            label="วันครบกำหนดชำระ (Due Date)"
+            [required]="true"
+            formControlName="dueDate"
+          ></sic-datepicker>
+        </div>
+      </div>
+
+      <!-- Section 2: Amounts -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">รายละเอียดจำนวนเงิน (Financial Amounts)</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <sic-input
+            label="ยอดก่อนภาษี (Subtotal Amount)"
+            type="number"
+            [required]="true"
+            formControlName="subtotalAmount"
+          ></sic-input>
+
+          <sic-input
+            label="อัตราภาษี VAT (%)"
+            type="number"
+            formControlName="vatRate"
+          ></sic-input>
+
+          <sic-input
+            label="จำนวนภาษี VAT"
+            type="number"
+            [readonly]="true"
+            formControlName="vatAmount"
+          ></sic-input>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+          <div>
+            <span class="text-sm font-medium text-slate-600">ยอดรวมทั้งสิ้น (Total Amount):</span>
+            <div class="text-2xl font-bold text-indigo-600">
+              {{ (formData.form.get('totalAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
+            </div>
+          </div>
+          <div>
+            <span class="text-sm font-medium text-slate-600">ชำระแล้วสะสม (Paid Amount):</span>
+            <div class="text-2xl font-bold text-emerald-600">
+              {{ (formData.form.get('paidAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Remark -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">หมายเหตุเพิ่มเติม (Remarks)</h2>
+        <sic-input-area
+          label="หมายเหตุ"
+          placeholder="กรอกหมายเหตุ หรือรายละเอียดเงื่อนไขการชำระเงิน"
+          formControlName="remark"
+        ></sic-input-area>
+      </div>
+    </form>
+  }
+</div>

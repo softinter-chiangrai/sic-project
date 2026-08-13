@@ -51,17 +51,48 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             version.setChangeSummary(request.getChangeSummary());
             version.setFilePath(request.getFilePath());
             version.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+            version.setDocumentCode(request.getDocumentCode());
+            version.setProjectId(request.getProjectId());
+            version.setPreviousVersionId(request.getPreviousVersionId());
+            version.setApprovalStatus(request.getApprovalStatus() != null ? request.getApprovalStatus() : "DRAFT");
+            version.setApprovedBy(request.getApprovedBy());
+            version.setApprovedDate(request.getApprovedDate());
+            version.setSnapshotData(request.getSnapshotData());
+            version.setFileRefId(request.getFileRefId());
         } else {
             version = new PmDocumentVersion();
             version.setDocumentType(request.getDocumentType());
             version.setDocumentId(request.getDocumentId());
+            version.setDocumentCode(request.getDocumentCode());
+            version.setProjectId(request.getProjectId());
             version.setVersionNo(request.getVersionNo());
             version.setChangeSummary(request.getChangeSummary());
+            version.setPreviousVersionId(request.getPreviousVersionId());
+            version.setApprovalStatus(request.getApprovalStatus() != null ? request.getApprovalStatus() : "DRAFT");
+            version.setApprovedBy(request.getApprovedBy());
+            version.setApprovedDate(request.getApprovedDate());
+            version.setSnapshotData(request.getSnapshotData());
+            version.setFileRefId(request.getFileRefId());
             version.setFilePath(request.getFilePath());
             version.setIsActive(true);
         }
         version = versionRepository.save(version);
         return version.getId();
+    }
+
+    @Override
+    @Transactional
+    public void activateVersion(UUID id) {
+        PmDocumentVersion target = versionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document version not found"));
+        // Set all other versions of this document to isActive = false
+        List<PmDocumentVersion> allVersions = versionRepository.findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(
+                target.getDocumentType(), target.getDocumentId());
+        for (PmDocumentVersion v : allVersions) {
+            v.setIsActive(v.getId().equals(id));
+            versionRepository.save(v);
+        }
+        log.info("Activated document version {} for document: {} - {}", id, target.getDocumentType(), target.getDocumentId());
     }
 
     @Override
@@ -136,10 +167,19 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         response.setId(version.getId());
         response.setDocumentType(version.getDocumentType());
         response.setDocumentId(version.getDocumentId());
+        response.setDocumentCode(version.getDocumentCode());
+        response.setProjectId(version.getProjectId());
         response.setVersionNo(version.getVersionNo());
         response.setChangeSummary(version.getChangeSummary());
+        response.setPreviousVersionId(version.getPreviousVersionId());
+        response.setApprovalStatus(version.getApprovalStatus());
+        response.setApprovedBy(version.getApprovedBy());
+        response.setApprovedDate(version.getApprovedDate());
+        response.setSnapshotData(version.getSnapshotData());
+        response.setFileRefId(version.getFileRefId());
         response.setFilePath(version.getFilePath());
         response.setIsActive(version.getIsActive());
+        response.setRowVersion(version.getRowVersion());
         response.setCreatedBy(version.getCreatedBy());
         response.setCreatedDate(version.getCreatedDate());
         response.setUpdatedBy(version.getUpdatedBy());

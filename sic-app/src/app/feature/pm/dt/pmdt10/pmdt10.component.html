@@ -1,211 +1,182 @@
-<!-- ===== LOADING ===== -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Specification...</p>
-  </div>
-}
-
-<!-- ===== FORM ===== -->
-@if (!isLoading && form) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูล Specification' : 'เพิ่มข้อมูล Specification' }}
-        </h2>
-      </div>
-
-      <!-- Spec Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="รหัส Specification"
-          formControlName="specCode"
-          [required]="true"
-          placeholder="SPEC-001"
-        ></sic-input>
-        @if (form.get('specCode')?.touched && form.get('specCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Specification</p>
-        }
-      </div>
-
-      <!-- Spec Type -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ประเภท Specification"
-          formControlName="specType"
-          [apiUrl]="service.apiGetLovSpecType"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('specType')?.touched && form.get('specType')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกประเภท</p>
-        }
-      </div>
-
-      <!-- Screen Name -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อหน้าจอ / Feature"
-          formControlName="screenName"
-          [required]="true"
-          placeholder="Customer Management"
-        ></sic-input>
-        @if (form.get('screenName')?.touched && form.get('screenName')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อหน้าจอ</p>
-        }
-      </div>
-
-      <!-- Description -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="คำอธิบาย"
-          formControlName="description"
-          [required]="true"
-          [rows]="2"
-          placeholder="อธิบาย Feature หรือ Specification นี้"
-        ></sic-input-area>
-        @if (form.get('description')?.touched && form.get('description')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุคำอธิบาย</p>
-        }
-      </div>
-
-      <!-- Project -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="โครงการ"
-          formControlName="projectId"
-          [apiUrl]="service.apiGetComboboxProject"
-          [required]="true"
-        ></sic-combobox>
-        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
-        }
-      </div>
-
-      <!-- Related Requirements -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="Requirement ที่เกี่ยวข้อง"
-          formControlName="requirementIds"
-          [apiUrl]="service.apiGetComboboxRequirement"
-          [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
-          [multiple]="true"
-          placeholder="เลือก Requirement..."
-        ></sic-combobox>
-      </div>
-
-      <!-- ER Tables -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ER Tables ที่เกี่ยวข้อง"
-          formControlName="erTables"
-          [options]="erTableOptions"
-          [multiple]="true"
-          placeholder="เลือก ER Tables..."
-        ></sic-combobox>
-      </div>
-
-      <!-- UI Actions -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">UI Actions</label>
-        <div class="flex flex-wrap gap-3">
-          @for (action of uiActionOptions; track action) {
-            <label class="flex items-center gap-2 cursor-pointer text-sm">
-              <input
-                type="checkbox"
-                [value]="action"
-                (change)="onUiActionChange($event)"
-                [checked]="isUiActionChecked(action)"
-                class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-              />
-              {{ action }}
-            </label>
-          }
-        </div>
-        <input type="hidden" formControlName="uiActions" />
-      </div>
-
-      <!-- Validation Rules -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="Validation Rules"
-          formControlName="validationRules"
-          [rows]="2"
-          placeholder="เช่น Tax ID ต้อง 13 หลัก, อีเมลต้องถูกต้อง"
-        ></sic-input-area>
-      </div>
-
-      <!-- Permission -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="สิทธิ์การใช้งาน"
-          formControlName="permission"
-          placeholder="Admin, Sales"
-        ></sic-input>
-      </div>
-
-      <!-- Estimated Manday -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="Estimated Manday (วัน)"
-          type="text"
-          formControlName="estimatedManday"
-          [required]="true"
-          placeholder="3"
-        ></sic-input>
-        @if (form.get('estimatedManday')?.touched && form.get('estimatedManday')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday</p>
-        }
-      </div>
-
-      <!-- Dependency -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="Dependency (สิ่งที่ต้องมีก่อน)"
-          formControlName="dependency"
-          placeholder="ต้องมี Table customers ก่อน"
-        ></sic-input>
-      </div>
-
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน Specification</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'button'"
-            variant="secondary"
-            (click)="onBack()"
-          >
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'submit'"
-            variant="primary"
-          >
-            <i class="bi bi-floppy"></i>
-            {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-          </sic-button>
-        </div>
-      </div>
-
+<div class="pmdt10-container">
+  <!-- Top Bar -->
+  <div class="pmdt10-header">
+    <div class="header-title">
+      <h2>🐞 Task Tracking & Quality Management</h2>
+      <p class="subtitle">จัดการ Bug/Issue, Test Cases และ Test Scenarios ของโครงการ</p>
     </div>
-  </form>
-}
+    <div class="header-actions">
+      @if (activeTab() === 'bugs') {
+        <button sic-button variant="primary" (click)="onCreateBug()">+ สร้าง Bug / Issue</button>
+      } @else if (activeTab() === 'test-cases') {
+        <button sic-button variant="primary" (click)="onCreateTestCase()">+ สร้าง Test Case</button>
+      } @else if (activeTab() === 'scenarios') {
+        <button sic-button variant="primary" (click)="onCreateScenario()">+ สร้าง Test Scenario</button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs Nav -->
+  <div class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab() === 'bugs'" (click)="setTab('bugs')">
+      🐞 Bug & Issue Tracking
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'test-cases'" (click)="setTab('test-cases')">
+      🧪 Test Cases
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'scenarios'" (click)="setTab('scenarios')">
+      📋 Test Scenarios
+    </button>
+  </div>
+
+  <!-- Filter & Search -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <input type="text" [(ngModel)]="keyword" (keyup.enter)="onSearch()" placeholder="ค้นหารหัส, หัวข้อ, คำอธิบาย..." class="form-control" />
+      <button sic-button variant="outline" (click)="onSearch()">ค้นหา</button>
+    </div>
+  </div>
+
+  <!-- Content Areas -->
+  <div class="tab-content">
+    <!-- TAB 1: BUGS -->
+    @if (activeTab() === 'bugs') {
+      <div class="table-card">
+        <table class="sic-table">
+          <thead>
+            <tr>
+              <th>รหัส Bug</th>
+              <th>หัวข้อ Bug / Issue</th>
+              <th>ประเภท</th>
+              <th>ความรุนแรง (Severity)</th>
+              <th>สถานะ</th>
+              <th>ผู้รับผิดชอบ</th>
+              <th>พบเมื่อ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr><td colspan="8" class="text-center">กำลังโหลดข้อมูล...</td></tr>
+            } @else if (bugs().length === 0) {
+              <tr><td colspan="8" class="text-center">ไม่พบรายการ Bug/Issue</td></tr>
+            } @else {
+              @for (bug of bugs(); track bug.id) {
+                <tr>
+                  <td class="font-bold">{{ bug.bugCode }}</td>
+                  <td>
+                    <a (click)="onEditBug(bug.id!)" class="link-title">{{ bug.title }}</a>
+                    @if (bug.environment) {
+                      <span class="env-tag">[{{ bug.environment }}]</span>
+                    }
+                  </td>
+                  <td>{{ bug.issueType || 'Bug' }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="getSeverityClass(bug.severity)">{{ bug.severity }}</span>
+                  </td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(bug.status)">{{ bug.status }}</span>
+                  </td>
+                  <td>{{ bug.assignedTo || '-' }}</td>
+                  <td>{{ bug.foundDate | sicDate }}</td>
+                  <td class="actions">
+                    <button class="btn-icon" (click)="onEditBug(bug.id!)" title="แก้ไข">✏️</button>
+                    <button class="btn-icon text-danger" (click)="onDeleteBug(bug.id!)" title="ลบ">🗑️</button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- TAB 2: TEST CASES -->
+    @if (activeTab() === 'test-cases') {
+      <div class="table-card">
+        <table class="sic-table">
+          <thead>
+            <tr>
+              <th>รหัส Test Case</th>
+              <th>หัวข้อ Test Case</th>
+              <th>Scenario</th>
+              <th>ความสำคัญ</th>
+              <th>ผลการทดสอบ</th>
+              <th>ผู้ทดสอบ</th>
+              <th>วันที่ทดสอบ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr><td colspan="8" class="text-center">กำลังโหลดข้อมูล...</td></tr>
+            } @else if (testCases().length === 0) {
+              <tr><td colspan="8" class="text-center">ไม่พบรายการ Test Case</td></tr>
+            } @else {
+              @for (tc of testCases(); track tc.id) {
+                <tr>
+                  <td class="font-bold">{{ tc.testCaseCode }}</td>
+                  <td>
+                    <a (click)="onEditTestCase(tc.id!)" class="link-title">{{ tc.title || tc.testStep }}</a>
+                  </td>
+                  <td>{{ tc.scenarioName || '-' }}</td>
+                  <td>{{ tc.priority || 'Medium' }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(tc.testStatus)">{{ tc.testStatus }}</span>
+                  </td>
+                  <td>{{ tc.tester || '-' }}</td>
+                  <td>{{ tc.testDate | sicDate }}</td>
+                  <td class="actions">
+                    <button class="btn-icon" (click)="onEditTestCase(tc.id!)" title="แก้ไข">✏️</button>
+                    <button class="btn-icon text-danger" (click)="onDeleteTestCase(tc.id!)" title="ลบ">🗑️</button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- TAB 3: SCENARIOS -->
+    @if (activeTab() === 'scenarios') {
+      <div class="table-card">
+        <table class="sic-table">
+          <thead>
+            <tr>
+              <th>ชื่อ Test Scenario</th>
+              <th>คำอธิบาย</th>
+              <th>Prerequisites</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr><td colspan="5" class="text-center">กำลังโหลดข้อมูล...</td></tr>
+            } @else if (scenarios().length === 0) {
+              <tr><td colspan="5" class="text-center">ไม่พบรายการ Test Scenario</td></tr>
+            } @else {
+              @for (sc of scenarios(); track sc.id) {
+                <tr>
+                  <td class="font-bold">
+                    <a (click)="onEditScenario(sc.id!)" class="link-title">{{ sc.scenarioName }}</a>
+                  </td>
+                  <td>{{ sc.description || '-' }}</td>
+                  <td>{{ sc.prerequisite || '-' }}</td>
+                  <td>
+                    <span class="status-badge status-open">{{ sc.status || 'Active' }}</span>
+                  </td>
+                  <td class="actions">
+                    <button class="btn-icon" (click)="onEditScenario(sc.id!)" title="แก้ไข">✏️</button>
+                    <button class="btn-icon text-danger" (click)="onDeleteScenario(sc.id!)" title="ลบ">🗑️</button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,272 +1,115 @@
-<div class="space-y-5 p-0.5">
-
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
     <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-files text-[var(--crm-primary)]"></i>
-        ควบคุมเวอร์ชันเอกสาร
-      </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
-      </span>
+      <div class="p-3 bg-amber-50 dark:bg-amber-950/50 rounded-xl text-amber-600 dark:text-amber-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          ประวัติเวอร์ชันเอกสาร (Document Version History Timeline)
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          ติดตามประวัติการแก้ไข การอนุมัติเวอร์ชัน (Version Control) และสลับเวอร์ชันที่ใช้งาน
+        </p>
+      </div>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่มเวอร์ชัน
+    <button (click)="goToAdd()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
+      <span>+ บันทึกเวอร์ชันใหม่</span>
     </button>
   </div>
 
-  <!-- ===== FILTERS ===== -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <!-- Search -->
-    <div class="relative flex-1 min-w-[200px]">
-      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+  <!-- Filter Bar -->
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-center">
+    <div class="flex items-center gap-2 w-full md:w-auto">
+      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">ประเภทเอกสาร:</label>
+      <select
+        [value]="filterType()"
+        (change)="onTypeChange($any($event.target).value)"
+        class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none">
+        @for (opt of docTypeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2 flex-1 w-full">
+      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Document ID:</label>
       <input
         type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหาเอกสาร, รหัส, ผู้เปลี่ยน..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
+        [value]="filterDocId()"
+        (input)="onDocIdChange($any($event.target).value)"
+        placeholder="กรอก UUID หรือ รหัสเอกสาร เช่น REQ-001..."
+        class="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 outline-none" />
     </div>
-
-    <!-- Filter: Document Type -->
-    <select
-      (change)="onTypeChange($event)"
-      [value]="filterType()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📋 ทุกประเภท</option>
-      @for (type of documentTypes; track type) {
-        <option [value]="type">{{ type }}</option>
-      }
-    </select>
-
-    <!-- Filter: Status -->
-    <select
-      (change)="onStatusChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      @for (status of statusOptions; track status) {
-        <option [value]="status">{{ status }}</option>
-      }
-    </select>
   </div>
 
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
-
-  <!-- ===== TABLE ===== -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th
-              (click)="onSortChange('documentType')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              ประเภท
-              @if (sortBy() === 'documentType') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('documentCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              รหัสเอกสาร
-              @if (sortBy() === 'documentCode') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('title')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-            >
-              ชื่อเรื่อง
-              @if (sortBy() === 'title') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('version')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]"
-            >
-              เวอร์ชัน
-              @if (sortBy() === 'version') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('status')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              สถานะ
-              @if (sortBy() === 'status') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('changedBy')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px] hidden md:table-cell"
-            >
-              ผู้เปลี่ยน
-              @if (sortBy() === 'changedBy') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[180px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (version of paginatedVersions(); track version.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="text-[var(--text-active)] text-sm">{{ version.documentType }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  {{ version.documentCode }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <div class="font-medium text-[var(--text-active)]">{{ version.title }}</div>
-                  <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ version.changeSummary }}</div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span class="font-mono font-semibold text-[var(--text-active)]">{{ version.version }}</span>
-                @if (version.previousVersion !== '-') {
-                  <div class="text-xs text-[var(--text-muted)]">จาก {{ version.previousVersion }}</div>
-                }
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(version.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ version.status }}
-                </span>
-              </td>
-              <td class="px-4 py-3 hidden md:table-cell">
-                <span class="text-[var(--text-active)]">{{ version.changedBy }}</span>
-                <div class="text-xs text-[var(--text-muted)]">{{ formatDate(version.changedDate) }}</div>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1">
-                  <!-- View -->
-                  <button
-                    (click)="goToView(version.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูข้อมูล"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </button>
-                  <!-- History -->
-                  <button
-                    (click)="goToHistory(version.documentCode)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all"
-                    title="ประวัติเวอร์ชัน"
-                  >
-                    <i class="bi bi-clock-history"></i>
-                  </button>
-                  <!-- Edit -->
-                  <button
-                    (click)="goToEdit(version.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลเวอร์ชันเอกสาร</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มเวอร์ชันใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่มเวอร์ชัน
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- ===== PAGINATION ===== -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
+  <!-- Timeline View -->
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    @if (isLoading()) {
+      <div class="p-8 text-center text-slate-500">กำลังโหลดประวัติเวอร์ชัน...</div>
+    } @else if (!filterDocId()) {
+      <div class="p-12 text-center text-slate-500 space-y-2">
+        <div class="text-3xl">🔍</div>
+        <div>กรุณาระบุ Document ID เพื่อดูไทม์ไลน์เวอร์ชัน</div>
       </div>
-
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
+    } @else if (versions().length === 0) {
+      <div class="p-12 text-center space-y-3">
+        <div class="text-4xl">📜</div>
+        <div class="text-slate-600 dark:text-slate-400 font-medium">ยังไม่มีประวัติเวอร์ชันสำหรับเอกสารนี้</div>
+        <button (click)="goToAdd()" class="text-xs text-amber-600 dark:text-amber-400 hover:underline">
+          + บันทึกเวอร์ชันแรกสำหรับเอกสารนี้
         </button>
+      </div>
+    } @else {
+      <div class="relative border-l-2 border-slate-200 dark:border-slate-700 ml-4 pl-6 space-y-8 py-2">
+        @for (ver of versions(); track ver.id) {
+          <div class="relative group">
+            <!-- Timeline Dot -->
+            <div [class]="'absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white dark:border-slate-800 transition-all ' + (ver.isActive ? 'bg-amber-500 ring-4 ring-amber-100 dark:ring-amber-950 scale-110' : 'bg-slate-300 dark:bg-slate-600')"></div>
 
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="page === currentPage()
-              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
-              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
-            "
-          >
-            {{ page }}
-          </button>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
+                    {{ ver.versionNo }}
+                  </span>
+                  @if (ver.isActive) {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
+                      ★ Active Version
+                    </span>
+                  }
+                </div>
+                <div class="text-xs text-slate-400">
+                  {{ ver.createdDate }} | โดย {{ ver.createdBy || 'System' }}
+                </div>
+              </div>
+
+              <div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+                {{ ver.changeSummary || 'ไม่มีสรุปการเปลี่ยนแปลง' }}
+              </div>
+
+              <div class="flex items-center justify-between pt-3 border-t border-slate-200/60 dark:border-slate-800 text-xs">
+                <div class="text-slate-400">
+                  Document Code: <span class="font-mono text-slate-600 dark:text-slate-400">{{ ver.documentCode || '-' }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  @if (!ver.isActive) {
+                    <button (click)="onActivate(ver.id)" class="text-amber-600 hover:text-amber-700 dark:text-amber-400 font-semibold">
+                      ⚡ ตั้งเป็น Active Version
+                    </button>
+                  }
+                  <button (click)="onDelete(ver.id)" class="text-rose-500 hover:text-rose-700 font-semibold">
+                    ลบ
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
       </div>
-    </div>
-  }
-
+    }
+  </div>
 </div>

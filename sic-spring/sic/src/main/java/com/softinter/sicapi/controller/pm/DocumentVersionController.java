@@ -45,6 +45,13 @@ public class DocumentVersionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
+    @PostMapping("/{id}/activate")
+    @Operation(summary = "Set a specific version as active")
+    public ResponseEntity<Void> activateVersion(@PathVariable UUID id) {
+        versionService.activateVersion(id);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a document version (soft delete)")
     public ResponseEntity<Void> deleteVersion(@PathVariable UUID id) {

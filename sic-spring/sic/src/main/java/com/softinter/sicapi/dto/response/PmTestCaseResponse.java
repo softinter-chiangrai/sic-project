@@ -8,9 +8,12 @@ import java.util.UUID;
 @Data
 public class PmTestCaseResponse {
     private UUID id;
+    private UUID projectId;
     private UUID scenarioId;
     private String scenarioName;
     private String testCaseCode;
+    private String title;
+    private String priority;
     private String testStep;
     private String expectedResult;
     private String actualResult;

@@ -17,6 +17,8 @@ public interface DocumentVersionService {
 
     void deleteVersion(UUID id);
 
+    void activateVersion(UUID id);
+
     // ===== Bulk Operations =====
     void deleteVersionsByDocument(String documentType, UUID documentId);
 

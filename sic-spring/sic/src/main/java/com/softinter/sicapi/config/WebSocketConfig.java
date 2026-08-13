@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final JwtChannelInterceptor jwtChannelInterceptor;   // ✅ inject
+    private final JwtChannelInterceptor jwtChannelInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -27,12 +27,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Register raw WebSocket endpoints
         registry.addEndpoint("/hubs/chat", "/ws")
-                .setAllowedOriginPatterns("http://localhost:4200")
+                .setAllowedOriginPatterns("*");
+
+        // Register SockJS fallback endpoints
+        registry.addEndpoint("/hubs/chat", "/ws")
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 
-    // ✅ เพิ่ม Interceptor
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(jwtChannelInterceptor);

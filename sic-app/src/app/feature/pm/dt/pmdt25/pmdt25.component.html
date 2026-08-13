@@ -1,235 +1,77 @@
-<!-- src/app/feature/pm/dt/pmdt25/pmdt25.component.html -->
-
-<!-- ===== LOADING ===== -->
-@if (isLoading()) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลเวอร์ชัน...</p>
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+  <!-- Header Card -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="p-3 bg-amber-50 dark:bg-amber-950/50 rounded-xl text-amber-600 dark:text-amber-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          {{ isEdit() ? 'แก้ไขบันทึกเวอร์ชันเอกสาร (Edit Version Record)' : 'สร้างบันทึกเวอร์ชันเอกสารใหม่ (New Document Version)' }}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          สร้างหรือแก้ไขประวัติ Version Control ประจำเอกสารโครงการ
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button sic-button variant="outline" (click)="onBack()">
+        ← ยกเลิก / กลับ
+      </button>
+      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        {{ isSaving() ? 'กำลังบันทึก...' : '💾 บันทึกเวอร์ชัน' }}
+      </button>
+    </div>
   </div>
-}
 
-<!-- ===== FORM ===== -->
-@if (!isLoading()) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
+  <!-- Main Form -->
+  <form [formGroup]="formData.form" class="space-y-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
+        📌 รายละเอียดเวอร์ชันเอกสาร (Version Details)
+      </h3>
 
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลเวอร์ชัน' : 'เพิ่มเวอร์ชันเอกสาร' }}
-        </h2>
-      </div>
-
-      <!-- Document Type -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="ประเภทเอกสาร"
           formControlName="documentType"
-          [apiUrl]="service.apiGetLovDocumentType"
+          label="ประเภทเอกสาร (Document Type)"
+          [options]="docTypeOptions"
           valueField="value"
-          textField="text"
-          [required]="true"
-          [errorMessages]="{ required: 'กรุณาเลือกประเภทเอกสาร' }"
-        ></sic-combobox>
-      </div>
+          displayField="label">
+        </sic-combobox>
 
-      <!-- Document ID (ใช้ Input แทน Combobox เพื่อความง่าย) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="รหัสเอกสาร (UUID)"
-          formControlName="documentId"
-          placeholder="กรอกรหัส UUID ของเอกสาร เช่น 8cf71cfc-da0d-44cd-bd81-27dc83793807"
-          [required]="true"
-          [errorMessages]="{ required: 'กรุณากรอกรหัสเอกสาร' }"
-        ></sic-input>
-        <p class="text-xs text-[var(--text-muted)] mt-1">
-          คัดลอกรหัส UUID จากหน้าเอกสารที่ต้องการดูประวัติเวอร์ชัน
-        </p>
-      </div>
+          formControlName="documentCode"
+          label="รหัสเอกสาร (Document Code)"
+          placeholder="เช่น REQ-001, SPEC-002">
+        </sic-input>
 
-      <!-- Version No -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="เลขเวอร์ชัน"
           formControlName="versionNo"
-          [required]="true"
-          placeholder="เช่น v1.0"
-          [errorMessages]="{
-            required: 'กรุณาระบุเลขเวอร์ชัน',
-            maxlength: 'เลขเวอร์ชันต้องไม่เกิน 20 ตัวอักษร'
-          }"
-        ></sic-input>
-        <p class="text-xs text-[var(--text-muted)] mt-1">
-          * ระบบจะเพิ่มเลขเวอร์ชันอัตโนมัติเมื่อบันทึก แต่สามารถแก้ไขได้
-        </p>
+          label="หมายเลขเวอร์ชัน (Version No)"
+          placeholder="เช่น v1.0, v2.1">
+        </sic-input>
       </div>
 
-      <!-- Change Summary -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="สรุปการเปลี่ยนแปลง"
-          formControlName="changeSummary"
-          [rows]="3"
-          placeholder="ระบุรายละเอียดการเปลี่ยนแปลงในเวอร์ชันนี้"
-        ></sic-input-area>
-      </div>
+      <sic-input-area
+        formControlName="changeSummary"
+        label="ประวัติและสรุปการเปลี่ยนแปลง (Changelog Summary)"
+        placeholder="ระบุสิ่งที่เปลี่ยนแปลง แก้ไขเพิ่มเติม หรือรายละเอียด revision...">
+      </sic-input-area>
+    </div>
 
-      <!-- File Path (Optional) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="พาธไฟล์ (ถ้ามี)"
-          formControlName="filePath"
-          placeholder="/path/to/file.pdf"
-        ></sic-input>
-      </div>
+    <!-- File Attachment -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
+        📎 แนบไฟล์ฉบับนี้ (Document Version File)
+      </h3>
 
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <sic-checkbox formControlName="isActive"></sic-checkbox>
-          <span class="text-[var(--text-active)]">เปิดใช้งานเวอร์ชันนี้</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            type="button"
-            variant="secondary"
-            (click)="onBack()"
-          >
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            type="submit"
-            variant="primary"
-            [disabled]="isSaving() || form.invalid"
-          >
-            @if (isSaving()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-floppy"></i>
-            }
-            {{ isSaving() ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-          </sic-button>
-        </div>
-      </div>
-
+      <sic-upload
+        formControlName="fileRefId"
+        [maxFiles]="1">
+      </sic-upload>
     </div>
   </form>
-}
-
-<!-- ===== HISTORY TABLE ===== -->
-@if (!isLoading()) {
-  <div class="mt-8 border-t border-[var(--border)] pt-6">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-        ประวัติเวอร์ชัน
-        <span class="text-sm font-normal text-[var(--text-muted)]">
-          ({{ versions().length }} รายการ)
-        </span>
-      </h3>
-      @if (versions().length > 0) {
-        <button
-          type="button"
-          (click)="deleteAllVersions()"
-          class="text-xs text-[var(--crm-danger)] hover:underline"
-        >
-          <i class="bi bi-trash"></i> ลบทั้งหมด
-        </button>
-      }
-    </div>
-
-    @if (loadingVersions()) {
-      <div class="flex items-center justify-center py-8 gap-3">
-        <div class="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-        <span class="text-sm text-[var(--text-muted)]">กำลังโหลดประวัติ...</span>
-      </div>
-    }
-
-    @if (!loadingVersions() && versions().length === 0) {
-      <div class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
-        <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
-        <p>ยังไม่มีประวัติเวอร์ชัน</p>
-        <p class="text-sm">เลือกประเภทและรหัสเอกสารเพื่อดูประวัติ</p>
-      </div>
-    }
-
-    @if (versions().length > 0) {
-      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <table class="w-full text-sm">
-          <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                เวอร์ชัน
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                สรุปการเปลี่ยนแปลง
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                ผู้สร้าง
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                วันที่สร้าง
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                สถานะ
-              </th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                จัดการ
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--border)]">
-            @for (version of versions(); track version.id) {
-              <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-                <td class="px-4 py-3 font-mono font-semibold text-[var(--text-active)]">
-                  {{ version.versionNo }}
-                </td>
-                <td class="px-4 py-3 text-[var(--text)] max-w-[200px] truncate">
-                  {{ version.changeSummary || '-' }}
-                </td>
-                <td class="px-4 py-3 text-[var(--text-active)]">
-                  {{ version.createdBy || '-' }}
-                </td>
-                <td class="px-4 py-3 text-[var(--text-muted)] text-sm">
-                  {{ formatDate(version.createdDate) }}
-                </td>
-                <td class="px-4 py-3">
-                  <span [class]="getStatusClass(version.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                    {{ getStatusText(version.isActive) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-center">
-                  <div class="flex items-center justify-center gap-1">
-                    <button
-                      (click)="viewVersion(version.id)"
-                      class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                      title="ดูรายละเอียด"
-                    >
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button
-                      (click)="deleteVersion(version.id)"
-                      class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                      title="ลบ"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
-}
+</div>

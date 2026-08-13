@@ -21,7 +21,8 @@ import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
 import { SicCardComponent } from '../sic-card/sic-card.component';
-import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { NotificationService, AppNotification } from '../../services/notification.service';
+import { ChatService } from '../../services/chat.service';
 import {
   BusinessInfoModel,
   MenuItemModel,
@@ -57,10 +58,17 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly service = inject(SicSidebarService);
   private readonly breadcrumbService = inject(BreadcrumbService);
   public readonly router = inject(Router);
+  public readonly notificationSvc = inject(NotificationService);
+  public readonly chatSvc = inject(ChatService);
 
   private readonly ngZone = inject(NgZone);
   private clockTimer?: ReturnType<typeof setInterval>;
   private routerSubscription?: Subscription;
+
+  readonly showNotificationPanel = signal(false);
+  readonly notifications = signal<AppNotification[]>([]);
+  readonly unreadNotificationCount = signal<number>(0);
+
 
   isBack: boolean = false;
   isSearch: boolean = false;
@@ -116,6 +124,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.currentUrl.set(this.router.url);
     this.loadInfomations();
 
+    this.notificationSvc.notifications$.subscribe(n => this.notifications.set(n));
+    this.notificationSvc.unreadCount$.subscribe(c => this.unreadNotificationCount.set(c));
+
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -126,10 +137,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
         this.updateActionFlags();
       });
 
-    // 🔥 แก้ไขตรงนี้: ครอบด้วย runOutsideAngular เพื่อไม่ให้นาฬิกาไปกวน Change Detection หน้าอื่น
+    // 🔥 ครอบด้วย runOutsideAngular เพื่อไม่ให้นาฬิกาไปกวน Change Detection หน้าอื่น
     this.ngZone.runOutsideAngular(() => {
       setTimeout(() => {
-        // เมื่อต้องการอัปเดตค่า Signal (UI ของตัวนาฬิกาเอง) ค่อยดึงกลับเข้าโซนสั้นๆ
         this.ngZone.run(() => this.updateClock());
 
         this.clockTimer = setInterval(() => {
@@ -138,6 +148,19 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
       }, 0);
     });
   }
+
+  toggleNotificationPanel(): void {
+    this.showNotificationPanel.update(v => !v);
+  }
+
+  markNotificationAsRead(id: string): void {
+    this.notificationSvc.markAsRead(id);
+  }
+
+  markAllNotificationsAsRead(): void {
+    this.notificationSvc.markAllAsRead();
+  }
+
 
   loadInfomations(): void {
     this.service.getProfile().subscribe((profile) => (this.profile = profile));

@@ -1,0 +1,58 @@
+<div class="pmdt10a-container">
+  <div class="form-header">
+    <h2>{{ isEdit() ? '✏️ แก้ไข Bug / Issue' : '➕ บันทึก Bug / Issue ใหม่' }}</h2>
+    <div class="actions">
+      <button sic-button variant="outline" (click)="onBack()">ยกเลิก</button>
+      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="formData.form" class="form-grid">
+    <div class="card">
+      <h3>ข้อมูลทั่วไป</h3>
+      <div class="row">
+        <sic-input formControlName="bugCode" label="รหัส Bug *" [required]="true"></sic-input>
+        <sic-combobox formControlName="issueType" label="ประเภท" [items]="issueTypeOptions"></sic-combobox>
+        <sic-combobox formControlName="environment" label="Environment" [items]="environmentOptions"></sic-combobox>
+      </div>
+
+      <div class="row full-width">
+        <sic-input formControlName="title" label="หัวข้อ Bug / Issue *" [required]="true"></sic-input>
+      </div>
+
+      <div class="row">
+        <sic-combobox formControlName="severity" label="ความรุนแรง (Severity) *" [items]="severityOptions" [required]="true"></sic-combobox>
+        <sic-combobox formControlName="priority" label="ความสำคัญ (Priority) *" [items]="priorityOptions" [required]="true"></sic-combobox>
+        <sic-combobox formControlName="status" label="สถานะ" [items]="statusOptions"></sic-combobox>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>รายละเอียด & ขั้นตอน</h3>
+      <sic-input-area formControlName="description" label="รายละเอียดของ Bug"></sic-input-area>
+      <sic-input-area formControlName="stepsToReproduce" label="ขั้นตอนการทำซ้ำ (Steps to Reproduce)"></sic-input-area>
+    </div>
+
+    <div class="card">
+      <h3>ผู้รับผิดชอบ & วันที่</h3>
+      <div class="row">
+        <sic-input formControlName="foundBy" label="ผู้พบ Bug"></sic-input>
+        <sic-input formControlName="assignedTo" label="ผู้รับผิดชอบแก้ไข"></sic-input>
+      </div>
+      <div class="row">
+        <sic-datepicker formControlName="foundDate" label="วันที่พบ"></sic-datepicker>
+        <sic-datepicker formControlName="fixDueDate" label="กำหนดแก้ไขเสร็จ"></sic-datepicker>
+        <sic-datepicker formControlName="fixedDate" label="วันที่แก้ไขเสร็จจริง"></sic-datepicker>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>การเชื่อมโยง (Traceability)</h3>
+      <div class="row">
+        <sic-input formControlName="relatedSpec" label="Specification อ้างอิง"></sic-input>
+      </div>
+    </div>
+  </form>
+</div>

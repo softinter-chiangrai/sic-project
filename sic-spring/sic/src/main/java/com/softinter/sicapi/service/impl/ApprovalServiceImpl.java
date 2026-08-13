@@ -47,7 +47,10 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
 import com.softinter.sicapi.service.ApprovalNotificationService;
 import com.softinter.sicapi.service.ApprovalService;
+import com.softinter.sicapi.dto.request.DocumentVersionRequest;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 
@@ -71,6 +74,8 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ApprovalNotificationService notificationService;
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
+    private final DocumentVersionService versionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -674,6 +679,37 @@ public class ApprovalServiceImpl implements ApprovalService {
                 break;
             default:
                 break;
+        }
+
+        // Auto Create Document Version on Approval
+        try {
+            DocumentVersionRequest versionReq = new DocumentVersionRequest();
+            versionReq.setDocumentType(docType);
+            versionReq.setDocumentId(docId);
+            versionReq.setDocumentCode(approval.getDocumentCode());
+            versionReq.setVersionNo(approval.getVersion() != null ? approval.getVersion() : "v1.0");
+            versionReq.setChangeSummary("Automatic version generated upon approval");
+            versionReq.setApprovalStatus("APPROVED");
+            versionReq.setApprovedBy(approval.getFinalApprover());
+            versionReq.setApprovedDate(Instant.now());
+            versionReq.setIsActive(true);
+            versionService.saveVersion(versionReq);
+            log.info("Auto document version created for {} - {}", docType, docId);
+        } catch (Exception e) {
+            log.error("Error generating auto version on approval: {}", e.getMessage(), e);
+        }
+
+        // Audit Log
+        try {
+            auditLogService.log(
+                    "APPROVE",
+                    "Approval Center / " + docType,
+                    "อนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : docType) + " เรียบร้อยแล้ว",
+                    "Success",
+                    "Final Approver: " + approval.getFinalApprover()
+            );
+        } catch (Exception e) {
+            log.error("Error creating audit log on approval: {}", e.getMessage(), e);
         }
     }
 

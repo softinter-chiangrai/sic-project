@@ -15,11 +15,17 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class PmTestScenario extends BaseBusinessEntity {
 
-    @Column(name = "test_plan_id", nullable = false)
+    @Column(name = "project_id")
+    private UUID projectId;
+
+    @Column(name = "test_plan_id")
     private UUID testPlanId;
 
     @Column(name = "scenario_name", nullable = false, length = 255)
     private String scenarioName;
+
+    @Column(name = "status", length = 20)
+    private String status = "Active";
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;

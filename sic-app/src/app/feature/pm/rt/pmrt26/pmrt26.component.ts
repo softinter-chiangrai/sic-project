@@ -69,6 +69,8 @@ const MOCK_LOGS: AuditLog[] = [
   },
 ];
 
+import { AuditLogService } from './audit-log.service';
+
 @Component({
   selector: 'app-pmrt26',
   standalone: true,
@@ -78,6 +80,7 @@ const MOCK_LOGS: AuditLog[] = [
 })
 export class Pmrt26Component implements OnInit {
   private router = inject(Router);
+  private auditLogService = inject(AuditLogService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -86,12 +89,52 @@ export class Pmrt26Component implements OnInit {
   protected filterUser = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('timestamp');
+  protected sortBy = signal('createdDate');
   protected sortDir = signal<'asc' | 'desc'>('desc');
   protected isLoading = signal(false);
 
   // ===== Data =====
   protected logs = signal<AuditLog[]>(MOCK_LOGS);
+
+  ngOnInit() {
+    this.loadLogs();
+  }
+
+  loadLogs() {
+    this.isLoading.set(true);
+    this.auditLogService.getLogs({
+      searchTerm: this.searchTerm(),
+      module: this.filterModule(),
+      status: this.filterStatus(),
+      username: this.filterUser(),
+      page: this.currentPage(),
+      size: this.pageSize(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
+    }).subscribe({
+      next: (res) => {
+        if (res && res.content && res.content.length > 0) {
+          const mappedLogs: AuditLog[] = res.content.map(item => ({
+            id: item.id,
+            user: item.userFullname || item.username || 'System',
+            action: item.action,
+            module: item.module,
+            description: item.description,
+            ipAddress: item.ipAddress || '-',
+            timestamp: item.createdDate ? item.createdDate : new Date().toISOString(),
+            status: (item.status === 'Failed' || item.status === 'FAILED') ? 'Failed' : 'Success',
+            details: item.details,
+          }));
+          this.logs.set(mappedLogs);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.warn('Backend AuditLog API unavailable, falling back to mock data:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   // ===== Computed =====
   protected filteredLogs = computed(() => {
@@ -144,7 +187,7 @@ export class Pmrt26Component implements OnInit {
   });
 
   protected totalItems = computed(() => this.filteredLogs().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected totalPages = computed(() => Math.max(1, Math.ceil(this.totalItems() / this.pageSize())));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
@@ -190,34 +233,33 @@ export class Pmrt26Component implements OnInit {
   statusOptions = ['Success', 'Failed'];
   userOptions = ['สมชาย ใจดี', 'สมหญิง รักเรียน', 'วิชัย พัฒนาชัย', 'มานี มีทรัพย์', 'สมศักดิ์ รุ่งเรือง'];
 
-  // ===== Lifecycle =====
-  ngOnInit() {
-    // TODO: เรียก API จริง
-  }
-
   // ===== Actions =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadLogs();
   }
 
   onModuleChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterModule.set(select.value);
     this.currentPage.set(1);
+    this.loadLogs();
   }
 
   onStatusChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadLogs();
   }
 
   onUserChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterUser.set(select.value);
     this.currentPage.set(1);
+    this.loadLogs();
   }
 
   onSortChange(field: string) {
@@ -227,16 +269,19 @@ export class Pmrt26Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadLogs();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.loadLogs();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.loadLogs();
   }
 
   // ===== Utility =====

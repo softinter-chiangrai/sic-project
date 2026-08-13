@@ -1,0 +1,24 @@
+<div class="pmdt10c-container">
+  <div class="form-header">
+    <h2>{{ isEdit() ? '✏️ แก้ไข Test Scenario' : '➕ บันทึก Test Scenario ใหม่' }}</h2>
+    <div class="actions">
+      <button sic-button variant="outline" (click)="onBack()">ยกเลิก</button>
+      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="formData.form" class="form-grid">
+    <div class="card">
+      <h3>ข้อมูลทั่วไป</h3>
+      <div class="row">
+        <sic-input formControlName="scenarioName" label="ชื่อ Test Scenario *" [required]="true"></sic-input>
+        <sic-combobox formControlName="status" label="สถานะ" [items]="statusOptions"></sic-combobox>
+      </div>
+
+      <sic-input-area formControlName="description" label="คำอธิบาย / รายละเอียด"></sic-input-area>
+      <sic-input-area formControlName="prerequisite" label="เงื่อนไขเบื้องต้น (Prerequisite)"></sic-input-area>
+    </div>
+  </form>
+</div>

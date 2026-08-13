@@ -11,6 +11,7 @@ import java.util.UUID;
 public class PmBugRequest {
 
     private UUID id;
+    private UUID projectId;
 
     @NotBlank(message = "Bug code is required")
     private String bugCode;
@@ -19,6 +20,10 @@ public class PmBugRequest {
     private String title;
 
     private String description;
+    private String stepsToReproduce;
+    private String environment;
+    private String issueType;
+    private UUID attachmentGroupId;
     private String severity;
     private String priority;
     private String foundBy;
