@@ -14,3 +14,16 @@ export interface SicBaseStateModel {
   state: SicEntityState;
   rowVersion: number;
 }
+
+export interface PageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+}
+
+export interface ComboboxItem {
+    value: string;
+    text: string;
+}

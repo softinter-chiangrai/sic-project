@@ -24,6 +24,13 @@ public class PaginationUtil {
         return response;
     }
 
+    public static <T> PaginationResponse<T> of(org.springframework.data.domain.Page<T> page) {
+        if (page == null) {
+            return of(new ArrayList<>(), 0, 10, 0);
+        }
+        return of(page.getContent(), page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
     public static <T> PaginationResponse<T> ofSingleItem(T item, int pageNumberZeroBased, int pageSize) {
         PaginationResponse<T> response = new PaginationResponse<>();
         if (item != null) {

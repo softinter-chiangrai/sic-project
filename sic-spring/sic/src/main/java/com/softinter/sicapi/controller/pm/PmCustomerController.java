@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.PmCustomerRequest;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmCustomerResponse;
 import com.softinter.sicapi.service.PmCustomerService;
+import com.softinter.sicapi.util.PaginationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,21 +31,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/su-customer")
+@RequestMapping("/api/pm/customers")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-@Tag(name = "PmCustomer", description = "API สำหรับจัดการลูกค้า (ระบบ SU)")
+@Tag(name = "Customer Management", description = "APIs สำหรับจัดการข้อมูลลูกค้า")
 public class PmCustomerController {
 
     private final PmCustomerService PmCustomerService;
 
     @PostMapping
-    @Operation(summary = "สร้างลูกค้าใหม่")
-    public ResponseEntity<PmCustomerResponse> create(
-            @RequestParam UUID businessId,
-            @Valid @RequestBody PmCustomerRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(PmCustomerService.create(businessId, request));
+    @Operation(summary = "สร้างข้อมูลลูกค้าใหม่")
+    public ResponseEntity<PmCustomerResponse> create(@Valid @RequestBody PmCustomerRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(PmCustomerService.create(request));
     }
 
     @PutMapping("/{id}")
@@ -55,14 +54,14 @@ public class PmCustomerController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "ลบลูกค้า (soft delete)")
+    @Operation(summary = "ลบข้อมูลลูกค้า (Soft Delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         PmCustomerService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "ดึงข้อมูลลูกค้าโดย id")
+    @Operation(summary = "ดึงข้อมูลลูกค้าตาม ID")
     public ResponseEntity<PmCustomerResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(PmCustomerService.findById(id));
     }
@@ -77,19 +76,19 @@ public class PmCustomerController {
 
     @GetMapping
     @Operation(summary = "รายการลูกค้าทั้งหมด (แบบแบ่งหน้า)")
-    public ResponseEntity<Page<PmCustomerResponse>> getAll(
+    public ResponseEntity<PaginationResponse<PmCustomerResponse>> getAll(
             @RequestParam UUID businessId,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(PmCustomerService.findAllByBusiness(businessId, pageable));
+        return ResponseEntity.ok(PaginationUtil.of(PmCustomerService.findAllByBusiness(businessId, pageable)));
     }
 
     @GetMapping("/search")
     @Operation(summary = "ค้นหาลูกค้า")
-    public ResponseEntity<Page<PmCustomerResponse>> search(
+    public ResponseEntity<PaginationResponse<PmCustomerResponse>> search(
             @RequestParam UUID businessId,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(PmCustomerService.search(businessId, keyword, pageable));
+        return ResponseEntity.ok(PaginationUtil.of(PmCustomerService.search(businessId, keyword, pageable)));
     }
 
     @GetMapping("/active")

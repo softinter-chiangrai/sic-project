@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -41,16 +39,7 @@ public class PmSpecification extends BaseBusinessEntity {
     private Integer estimatedManday;
 
     @Column(columnDefinition = "TEXT")
-    private String objective;
-
-    @Column(columnDefinition = "TEXT")
-    private String scope;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(columnDefinition = "TEXT")
-    private String remark;
+    private String description;  
 
     @Column(name = "upload_group_id")
     private UUID uploadGroupId;
@@ -75,22 +64,6 @@ public class PmSpecification extends BaseBusinessEntity {
     @Column(name = "generated_from_diagram_id")
     private UUID generatedFromDiagramId;
 
-    // ===== Relationships =====
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationScreen> screens = new ArrayList<>();
-
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationField> fields = new ArrayList<>();
-
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationValidation> validations = new ArrayList<>();
-
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationBusinessRule> businessRules = new ArrayList<>();
-
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationApi> apis = new ArrayList<>();
-
-    @OneToMany(mappedBy = "specification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PmSpecificationVersion> versions = new ArrayList<>();
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 }
