@@ -51,7 +51,7 @@ export class Pmrt19Component implements OnInit {
   }
 
   onDelete(id: string): void {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบระบุคู่มือนี้ใช่หรือไม่?').subscribe((confirmed) => {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบระบุคู่มือนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {

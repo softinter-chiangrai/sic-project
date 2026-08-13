@@ -122,7 +122,7 @@ export class Pmrt26Component implements OnInit {
             description: item.description,
             ipAddress: item.ipAddress || '-',
             timestamp: item.createdDate ? item.createdDate : new Date().toISOString(),
-            status: (item.status === 'Failed' || item.status === 'FAILED') ? 'Failed' : 'Success',
+            status: String(item.status).toUpperCase() === 'FAILED' ? 'Failed' : 'Success',
             details: item.details,
           }));
           this.logs.set(mappedLogs);

@@ -75,7 +75,7 @@ export class Pmrt25Component implements OnInit {
   }
 
   onActivate(id: string): void {
-    this.dialog.confirm('ยืนยัน', 'คุณต้องการตั้งเวอร์ชันนี้เป็น Active Version ใช่หรือไม่?').subscribe((confirmed) => {
+    this.dialog.confirm('ยืนยัน', 'คุณต้องการตั้งเวอร์ชันนี้เป็น Active Version ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.activateVersion(id).subscribe({
           next: () => {
@@ -91,7 +91,7 @@ export class Pmrt25Component implements OnInit {
   }
 
   onDelete(id: string): void {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบบันทึกเวอร์ชันนี้ใช่หรือไม่?').subscribe((confirmed) => {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบบันทึกเวอร์ชันนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.deleteVersion(id).subscribe({
           next: () => {
