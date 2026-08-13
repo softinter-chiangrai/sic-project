@@ -5,15 +5,15 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Pmdt10Service } from '../pmdt10.service';
 import { Pmdt10BForm } from './pmdt10B.form';
 import { PmTestCaseModel } from '../pmdt10.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 
 @Component({
   selector: 'app-pmdt10b',
