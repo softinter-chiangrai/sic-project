@@ -10,7 +10,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/app/feature/pm/dt/pmdt08/Pmdt08PreviewComponent"  ],
   "exclude": [
     "src/**/*.spec.ts"
   ],

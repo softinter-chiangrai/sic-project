@@ -1,30 +1,32 @@
-// src/app/feature/pm/dt/pmdt08A/pmdt08A.component.ts
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ViewChild, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridPanelComponent, SicGridPanelTemplate, SicGridPanelConfig } from '../../../../../core/component/sic-gridpanel/sic-gridpanel.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
-import { Pmdt08Form } from '../pmdt08.form';
-import { PmSpecificationModel, Pmdt08FormData } from '../pmdt08.model';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { Pmdt08Service } from '../pmdt08.service';
-
-
+import { PmSpecificationModel } from '../pmdt08.model';
+import { Pmdt08PreviewComponent } from '../pmdt08-preview/Pmdt08PreviewComponent';
+import { SpecificationExportService } from '../specification-export.service';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { HttpClient } from '@angular/common/http';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 
 @Component({
     selector: 'app-pmdt08a',
@@ -36,353 +38,414 @@ import { Pmdt08Service } from '../pmdt08.service';
         SicButtonComponent,
         SicComboboxComponent,
         SicInputComponent,
-        SicInputAreaComponent,
         SicNumberComponent,
-        SicCheckboxComponent,
-        SicGridPanelComponent,
-        SicGridPanelTemplate,
+        SicTiptapEditorComponent,
         SicUploadComponent,
+        SicCheckboxComponent,
         SicApprovalComponent,
+        SicDatePipe,
+        Pmdt08PreviewComponent
     ],
     templateUrl: './pmdt08A.component.html',
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     styles: [`
-        .spec-tabs {
-            display: flex;
-            gap: 0.25rem;
-            border-bottom: 1px solid var(--border);
-            overflow-x: auto;
-            padding: 0 0.5rem;
+        .pmdt08-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 200px);
+            min-height: 600px;
         }
-        .spec-tabs button {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            font-weight: 500;
+        .pmdt08-layout--split { grid-template-columns: 1fr 1fr; }
+        .pmdt08-layout--preview-only { grid-template-columns: 1fr; }
+        .pmdt08-layout--edit-only { grid-template-columns: 1fr; }
+        .pmdt08-panel {
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--sidebar);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+        .pmdt08-panel--preview { background: var(--bg); }
+        @media (max-width: 768px) {
+            .pmdt08-layout { grid-template-columns: 1fr; height: auto; }
+        }
+        .auto-save-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            border: none;
-            border-bottom: 2px solid transparent;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .spec-tabs button:hover {
-            color: var(--text-active);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
             background: var(--sidebar-hover);
         }
-        .spec-tabs button.active {
-            color: var(--crm-primary);
-            border-bottom-color: var(--crm-primary);
+        .auto-save-indicator.saving { color: var(--crm-primary); }
+        .auto-save-indicator.saved { color: var(--crm-success); }
+        .view-mode-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
         }
-        .spec-tab-content {
-            padding: 1.5rem 0;
+        .view-mode-toggle button {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .view-mode-toggle button.active {
+            background: var(--crm-primary);
+            color: white;
+        }
+        .view-mode-toggle button:hover:not(.active) {
+            background: var(--sidebar-hover);
         }
     `]
 })
-export class Pmdt08AComponent implements OnInit, CanComponentDeactivate {
+export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
+    // Dependencies
     private route = inject(ActivatedRoute);
     private router = inject(Router);
+    public service = inject(Pmdt08Service);
+    public exportService = inject(SpecificationExportService);
     private dialog = inject(DialogService);
-    private navigation = inject(NavigationService);
     private fb = inject(FormBuilder);
     private cdr = inject(ChangeDetectorRef);
-
-    // ✅ ทำให้เป็น public เพื่อใช้ใน template
-    public service = inject(Pmdt08Service);
-    public customerState = inject(CustomerStateService);
+    private navigation = inject(NavigationService);
+    private customerState = inject(CustomerStateService);
+    private auth = inject(AuthService);
+    private approvalService = inject(ApprovalService);
+    private http = inject(HttpClient);
 
     apiBaseUrl = environment.apiBaseUrl;
 
-    formData!: SicFromData<PmSpecificationModel>;
+    // Form
+    form!: FormGroup;
     isEdit = false;
+    isViewOnly = false;
     specId: string | null = null;
     isLoading = false;
     isSaving = false;
-    isGenerating = signal(false);
-    generatedDraft: any = null;
+    isAutoSaving = false;
+    lastAutoSaveTime: Date | null = null;
 
-    // Tab state
-    activeTab = 'general';
+    // View Mode
+    viewMode: 'edit' | 'split' | 'preview' = 'split';
 
-    // Grid Configs for child data
-    screenGridConfig!: SicGridPanelConfig;
-    fieldGridConfig!: SicGridPanelConfig;
-    validationGridConfig!: SicGridPanelConfig;
-    businessRuleGridConfig!: SicGridPanelConfig;
-    apiGridConfig!: SicGridPanelConfig;
+    // Approval Flow
+    flows: ApprovalFlow[] = [];
+    selectedFlowId: string | null = null;
+    isLoadingFlows = false;
 
-    // Requirement & Diagram selection
-    selectedRequirementId: string | null = null;
-    selectedDiagramId: string | null = null;
+    // Auto-save
+    private autoSaveSubscription: Subscription | null = null;
+    private formChangeSubscription: Subscription | null = null;
+    private autoSaveEnabled = true;
+    private autoSaveInterval = 30000;
 
-    pageDirty = () => this.formData?.dirty ?? false;
-
-    // ✅ Combobox URL สำหรับ Requirement
-    get requirementComboboxUrl(): string {
-        const projectId = this.customerState.getProjectId() || '';
-        return `${this.apiBaseUrl}/api/pm/requirement/combobox?projectId=${projectId}`;
-    }
-
-    // ✅ Combobox URL สำหรับ Diagram
-    get diagramComboboxUrl(): string {
-        const projectId = this.customerState.getProjectId() || '';
-        return `${this.apiBaseUrl}/api/diagram/tabs?projectId=${projectId}`;
-    }
+    pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 
     ngOnInit(): void {
-        const resolved: Pmdt08FormData = this.route.snapshot.data['form'];
-        if (resolved && resolved.specification) {
-            this.formData = resolved.specification;
-            if (this.formData.value.id) {
-                this.isEdit = true;
-                this.specId = this.formData.value.id;
-                this.loadRequirementAndDiagramLinks();
-            }
-        } else {
-            const form = Pmdt08Form.createForm(this.fb);
-            this.formData = new SicFromData<PmSpecificationModel>(form);
-        }
+        this.initForm();
+        this.loadFlows();
 
-        // Read query params for creation
-        this.route.queryParams.subscribe(params => {
-            if (params['projectId'] && !this.isEdit) {
-                // Store project context if needed
-            }
-            if (params['requirementId']) {
-                this.selectedRequirementId = params['requirementId'];
-                this.formData.formGroup.patchValue({ generatedFromRequirementId: params['requirementId'] });
-                this.addRequirementLink(params['requirementId']);
-            }
-            if (params['diagramId']) {
-                this.selectedDiagramId = params['diagramId'];
-                this.formData.formGroup.patchValue({ generatedFromDiagramId: params['diagramId'] });
+        const isViewRoute = this.router.url.includes('/view');
+        if (isViewRoute) this.isViewOnly = true;
+
+        this.route.params.subscribe(params => {
+            const id = params['id'];
+            if (id) {
+                this.isEdit = !this.isViewOnly;
+                this.specId = id;
+                this.loadSpecification(id);
+            } else {
+                // New spec
+                this.route.queryParams.subscribe(qParams => {
+                    const pId = qParams['projectId'] || this.customerState.getProjectId();
+                    if (pId) {
+                        this.form.patchValue({ projectId: pId });
+                        this.fetchProjectName(pId);
+                    }
+                });
+                const userName = this.getUserNameFromToken();
+                if (userName) this.form.patchValue({ createdBy: userName });
             }
         });
 
-        this.initGridConfigs();
+        this.setupAutoSave();
     }
 
-    loadRequirementAndDiagramLinks(): void {
-        // Load existing requirements into the grid
-        const reqs = this.formData.value.requirements || [];
-        if (reqs.length > 0) {
-            // The grid will handle display
+    ngOnDestroy(): void {
+        this.autoSaveSubscription?.unsubscribe();
+        this.formChangeSubscription?.unsubscribe();
+    }
+
+    initForm(): void {
+        this.form = this.fb.group({
+            id: [null],
+            specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
+            title: [null, [Validators.required, Validators.maxLength(255)]],
+            module: [null, [Validators.maxLength(100)]],
+            version: [{ value: 'v1.0', disabled: true }],
+            status: ['Draft'],
+            priority: ['Medium'],
+            owner: [null, [Validators.maxLength(100)]],
+            estimatedManday: [null, [Validators.min(0)]],
+            description: [null, [Validators.required]],
+            uploadGroupId: [null],
+            isAiGenerated: [false],
+            aiGeneratedAt: [null],
+            generatedFromRequirementId: [null],
+            generatedFromDiagramId: [null],
+            projectId: [null],
+            projectName: [null],
+            createdBy: [null],
+            isActive: [true],
+            state: [null],
+            rowVersion: [null]
+        });
+    }
+
+    loadSpecification(id: string) {
+        this.isLoading = true;
+        this.service.getSpecification(id).subscribe({
+            next: (data) => {
+                this.form.patchValue(data);
+                this.isLoading = false;
+                this.form.markAsPristine();
+                if (this.isViewOnly) this.form.disable();
+
+                if (!data.projectName && data.projectId) {
+                    this.fetchProjectName(data.projectId);
+                }
+                if (!data.createdBy) {
+                    const userName = this.getUserNameFromToken();
+                    if (userName) this.form.patchValue({ createdBy: userName });
+                }
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isLoading = false;
+                this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
+                this.navigation.navigate(['/feature/pm/pmdt08']);
+            }
+        });
+    }
+
+    private fetchProjectName(projectId: string): void {
+        this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
+            next: (res) => {
+                const list = Array.isArray(res) ? res : (res.data || []);
+                const project = list.find((p: any) => String(p.value || p.id) === String(projectId));
+                if (project) {
+                    const name = project.projectName || project.name || project.text;
+                    if (name) {
+                        this.form.patchValue({ projectName: name });
+                        this.cdr.markForCheck();
+                    }
+                }
+            },
+            error: () => {}
+        });
+    }
+
+    private getUserNameFromToken(): string | null {
+        const token = this.auth.getAccessToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.name || payload.preferred_username || payload.displayName || null;
+        } catch { return null; }
+    }
+
+    loadFlows() {
+        this.isLoadingFlows = true;
+        this.approvalService.getFlowsByDocumentType('SPECIFICATION').subscribe({
+            next: (flows) => {
+                this.flows = flows;
+                this.isLoadingFlows = false;
+                if (flows.length === 1) this.selectedFlowId = flows[0].id;
+            },
+            error: () => { this.isLoadingFlows = false; }
+        });
+    }
+
+    // ===== Auto-save =====
+    private setupAutoSave(): void {
+        if (!this.autoSaveEnabled) return;
+        this.autoSaveSubscription = interval(this.autoSaveInterval)
+            .pipe(
+                takeWhile(() => this.autoSaveEnabled),
+                tap(() => {
+                    if (this.form.dirty && this.form.valid) {
+                        this.performAutoSave();
+                    }
+                })
+            )
+            .subscribe();
+    }
+
+    private performAutoSave(): void {
+        if (this.isSaving || this.isAutoSaving) return;
+        const data = this.form.value as PmSpecificationModel;
+        if (!data.title && !data.description) return;
+
+        this.isAutoSaving = true;
+        this.lastAutoSaveTime = new Date();
+
+        this.service.autoSave(data).subscribe({
+            next: (response: any) => {
+                this.isAutoSaving = false;
+                if (response) {
+                    this.form.patchValue(response);
+                    if (response.id) {
+                        this.specId = response.id;
+                        this.isEdit = true;
+                    }
+                }
+                this.form.markAsPristine({ onlySelf: true });
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isAutoSaving = false;
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
+    getAutoSaveStatus(): string {
+        if (this.isAutoSaving) return 'saving';
+        if (this.lastAutoSaveTime) {
+            const diff = Date.now() - this.lastAutoSaveTime.getTime();
+            if (diff < 5000) return 'saved';
+        }
+        if (this.form.dirty) return 'dirty';
+        return 'idle';
+    }
+
+    getAutoSaveText(): string {
+        const status = this.getAutoSaveStatus();
+        switch (status) {
+            case 'saving': return '💾 กำลังบันทึกอัตโนมัติ...';
+            case 'saved': return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
+            case 'dirty': return '⏳ ยังไม่ได้บันทึก';
+            default: return '💾 บันทึกอัตโนมัติ';
         }
     }
 
-    // ===== Grid Configs =====
-
-    initGridConfigs(): void {
-        this.screenGridConfig = {
-            api: '', // No API, it's local data
-            id: 'id',
-            pageable: false,
-            createRowValue: { isRequired: false },
-            columns: [
-                { label: 'ชื่อหน้าจอ', name: 'screenName', type: 'text', editable: true, width: 180, validators: [Validators.required] },
-                { label: 'คำอธิบาย', name: 'description', type: 'area', editable: true, width: 250 },
-                { label: 'การนำทาง', name: 'navigation', type: 'text', editable: true, width: 200 },
-                { label: 'URL Mockup', name: 'mockupUrl', type: 'text', editable: true, width: 200 },
-            ]
-        };
-
-        this.fieldGridConfig = {
-            api: '',
-            id: 'id',
-            pageable: false,
-            createRowValue: { isRequired: false },
-            columns: [
-                { label: 'ชื่อฟิลด์', name: 'fieldName', type: 'text', editable: true, width: 150, validators: [Validators.required] },
-                { label: 'ชนิดข้อมูล', name: 'dataType', type: 'combobox', editable: true, width: 140,
-                  apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DATA_TYPE`,
-                  valueField: 'value', textField: 'text' },
-                { label: 'Required', name: 'isRequired', type: 'checkbox', editable: true, width: 80 },
-                { label: 'Max Length', name: 'maxLength', type: 'number', editable: true, width: 100 },
-                { label: 'ค่าเริ่มต้น', name: 'defaultValue', type: 'text', editable: true, width: 120 },
-                { label: 'คำอธิบาย', name: 'description', type: 'area', editable: true, width: 200 },
-            ]
-        };
-
-        this.validationGridConfig = {
-            api: '',
-            id: 'id',
-            pageable: false,
-            createRowValue: {},
-            columns: [
-                { label: 'ชนิด', name: 'validationType', type: 'combobox', editable: true, width: 140,
-                  apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov?group=PM&parameterCode=VALIDATION_TYPE`,
-                  valueField: 'value', textField: 'text' },
-                { label: 'Rule', name: 'rule', type: 'area', editable: true, width: 250, validators: [Validators.required] },
-                { label: 'Error Message', name: 'errorMessage', type: 'text', editable: true, width: 200 },
-            ]
-        };
-
-        this.businessRuleGridConfig = {
-            api: '',
-            id: 'id',
-            pageable: false,
-            createRowValue: { severity: 'Medium' },
-            columns: [
-                { label: 'ชื่อกฎ', name: 'ruleName', type: 'text', editable: true, width: 180, validators: [Validators.required] },
-                { label: 'คำอธิบาย', name: 'description', type: 'area', editable: true, width: 250 },
-                { label: 'Severity', name: 'severity', type: 'combobox', editable: true, width: 120,
-                  apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=SEVERITY`,
-                  valueField: 'value', textField: 'text' },
-            ]
-        };
-
-        this.apiGridConfig = {
-            api: '',
-            id: 'id',
-            pageable: false,
-            createRowValue: { httpMethod: 'GET' },
-            columns: [
-                { label: 'Method', name: 'httpMethod', type: 'combobox', editable: true, width: 100,
-                  options: [{ value: 'GET', label: 'GET' }, { value: 'POST', label: 'POST' }, { value: 'PUT', label: 'PUT' }, { value: 'DELETE', label: 'DELETE' }] },
-                { label: 'URL', name: 'url', type: 'text', editable: true, width: 200, validators: [Validators.required] },
-                { label: 'Authentication', name: 'authentication', type: 'text', editable: true, width: 120 },
-            ]
-        };
+    private formatTimeDiff(date: Date | null): string {
+        if (!date) return '';
+        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
+        return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
     }
 
-    // ===== Requirement & Diagram Helpers =====
+    // ===== View Mode =====
+    setViewMode(mode: 'edit' | 'split' | 'preview'): void {
+        this.viewMode = mode;
+        this.cdr.markForCheck();
+    }
 
-    addRequirementLink(reqId: string): void {
-        const current = this.formData.value.requirements || [];
-        if (!current.some(r => r.requirementId === reqId)) {
-            current.push({ requirementId: reqId });
-            this.formData.formGroup.patchValue({ requirements: current });
-            this.formData.formGroup.markAsDirty();
+    // ===== Preview Data =====
+    getPreviewData(): PmSpecificationModel {
+        return this.form.value;
+    }
+
+    // ===== Export =====
+    async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
+        try {
+            const data = this.form.value as PmSpecificationModel;
+            const blob = await this.exportService.exportSpecification(data, format);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Specification_${data.specificationCode || 'Export'}_${new Date().getTime()}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการส่งออกไฟล์');
         }
     }
 
-    removeRequirementLink(index: number): void {
-        const current = this.formData.value.requirements || [];
-        current.splice(index, 1);
-        this.formData.formGroup.patchValue({ requirements: current });
-        this.formData.formGroup.markAsDirty();
-    }
-
-    getRequirementTitle(reqId: string): string {
-        // In real implementation, fetch from cache or service
-        return reqId;
-    }
-
-    onRequirementSelect(event: any): void {
-        if (event && event.value) {
-            this.addRequirementLink(event.value);
-            // Clear the combobox selection after adding
-            // The combobox will be cleared via ViewChild if needed
-        }
-    }
-
-    onDiagramSelect(event: any): void {
-        if (event && event.value) {
-            this.selectedDiagramId = event.value;
-            this.formData.formGroup.patchValue({ generatedFromDiagramId: event.value });
-            this.formData.formGroup.markAsDirty();
-        }
-    }
-
-    // ===== AI Generator =====
-
-    generateDraft(): void {
-        const reqId = this.selectedRequirementId || this.formData.value.generatedFromRequirementId;
-        const diagramId = this.selectedDiagramId || this.formData.value.generatedFromDiagramId;
-
-        if (!reqId || !diagramId) {
-            this.dialog.warn('กรุณาเลือก Requirement และ Diagram', 'ต้องมีทั้ง 2 รายการเพื่อสร้าง Specification');
+    // ===== Submit =====
+    submit() {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
             return;
         }
 
-        this.isGenerating.set(true);
-        this.service.generateDraft(reqId, diagramId)
-            .pipe(finalize(() => this.isGenerating.set(false)))
-            .subscribe({
-                next: (draft) => {
-                    this.generatedDraft = draft;
-                    this.dialog.success('สร้าง Draft สำเร็จ', 'AI ได้สร้าง Specification Draft เรียบร้อย');
-                    this.applyDraftToForm(draft);
-                },
-                error: (err) => {
-                    this.dialog.error('สร้าง Draft ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-                }
-            });
-    }
-
-    applyDraftToForm(draft: any): void {
-        this.formData.formGroup.patchValue({
-            title: draft.title,
-            objective: draft.objective,
-            scope: draft.scope,
-            description: draft.description,
-            priority: draft.priority || 'Medium',
-            estimatedManday: draft.estimatedManday || 0,
-        });
-        this.formData.formGroup.markAsDirty();
-        this.dialog.success('นำ Draft มาใช้', 'ข้อมูลถูกเติมลงในฟอร์มเรียบร้อย');
-        this.generatedDraft = null;
-    }
-
-    // ===== CRUD =====
-
-    navigateToList(): void {
-        this.navigation.navigate(['/feature/pm/pmdt08']);
-    }
-
-    onBack(): void {
-        if (this.formData.dirty) {
-            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
-                .then(ok => ok && this.navigateToList());
-        } else {
-            this.navigateToList();
+        if (!this.selectedFlowId) {
+            this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
+            return;
         }
-    }
 
-    submit(): void {
-        // Collect all data from grids
-        const requirements = this.formData.formGroup.get('requirements')?.value || [];
-        const screens = this.collectGridData('screens');
-        const fields = this.collectGridData('fields');
-        const validations = this.collectGridData('validations');
-        const businessRules = this.collectGridData('businessRules');
-        const apis = this.collectGridData('apis');
-
-        const data = this.formData.value;
-        data.requirements = requirements;
-        data.screens = screens;
-        data.fields = fields;
-        data.validations = validations;
-        data.businessRules = businessRules;
-        data.apis = apis;
-
-        // Set state
+        this.isSaving = true;
+        const data = this.form.value as PmSpecificationModel;
         data.state = this.isEdit ? 3 : 4;
         if (!this.isEdit) data.rowVersion = 0;
 
-        this.isSaving = true;
-        this.service.save(data)
-            .pipe(finalize(() => this.isSaving = false))
-            .subscribe({
-                next: () => {
-                    this.dialog.success('บันทึกสำเร็จ', 'Specification ถูกบันทึกเรียบร้อย');
-                    this.formData.markAsPristine();
-                    this.navigateToList();
-                },
-                error: (err) => {
-                    this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.service.save(data).subscribe({
+            next: (response: any) => {
+                this.form.markAsPristine();
+                let savedId = data.id || this.specId;
+                if (response && response.id) {
+                    savedId = response.id;
+                    this.form.patchValue(response);
+                    this.specId = savedId;
+                    this.isEdit = true;
                 }
-            });
+
+                this.approvalService.submitForApproval({
+                    documentType: 'SPECIFICATION',
+                    documentId: savedId!,
+                    documentCode: data.specificationCode,
+                    documentTitle: data.title,
+                    version: data.version,
+                    flowId: this.selectedFlowId!,
+                    comment: 'ส่งขออนุมัติ Specification'
+                }).subscribe({
+                    next: () => {
+                        this.isSaving = false;
+                        this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                            this.navigateBack(data.projectId);
+                        });
+                    },
+                    error: (err) => {
+                        this.isSaving = false;
+                        this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                    }
+                });
+            },
+            error: (error) => {
+                this.isSaving = false;
+                this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+            }
+        });
     }
 
-    private collectGridData(type: string): any[] {
-        // In real implementation, get data from grid components via ViewChild or from form value
-        // For now, return from form value
-        return this.formData.formGroup.get(type)?.value || [];
+    private navigateBack(projectId?: string): void {
+        if (projectId) {
+            this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
+        } else {
+            this.navigation.navigate(['/feature/pm/pmdt08']);
+        }
     }
 
-    // ===== Tab Switching =====
-    setActiveTab(tab: string): void {
-        this.activeTab = tab;
+    onBack(): void {
+        const projectId = this.form.get('projectId')?.value;
+        if (this.form.dirty) {
+            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
+                .then(ok => ok && this.navigateBack(projectId));
+        } else {
+            this.navigateBack(projectId);
+        }
     }
 }

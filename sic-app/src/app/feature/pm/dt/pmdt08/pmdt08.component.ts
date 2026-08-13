@@ -66,12 +66,12 @@ export class Pmdt08Component implements OnInit {
             sortDir: 'desc',
         };
 
-        this.service.search(params)
+        this.service.getList(params)
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
                 next: (res: PaginationResponse<PmSpecificationModel>) => {
-                    this.specs.set(res.data);
-                    this.totalItems.set(res.pageable.totalElements);
+                    this.specs.set(res.data || []);
+                    this.totalItems.set(res.pageable?.totalElements || 0);
                 },
                 error: () => {
                     this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
@@ -118,6 +118,10 @@ export class Pmdt08Component implements OnInit {
 
     goToEdit(id: string): void {
         this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit']);
+    }
+
+    goToView(id: string): void {
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view']);
     }
 
     deleteSpec(id: string): void {

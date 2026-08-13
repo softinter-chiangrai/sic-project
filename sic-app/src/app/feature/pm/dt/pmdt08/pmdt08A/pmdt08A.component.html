@@ -1,134 +1,218 @@
-<!-- pmdt08A.component.html -->
-
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html -->
 <div class="space-y-4 p-0.5">
-  <!-- Header -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <button (click)="onBack()" ...>กลับ</button>
-      <div>
-        <h1 class="text-xl font-bold text-[var(--text-active)]">
-          {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
-        </h1>
-        @if (isEdit || isViewOnly) {
-          <p class="text-xs text-[var(--text-muted)]">
-            รหัส: {{ form.value.specificationCode }} · เวอร์ชัน: {{ form.value.version }}
-          </p>
-        }
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2 flex-wrap">
-      <!-- Auto-save status -->
-      <span class="auto-save-indicator" ...>{{ getAutoSaveText() }}</span>
-
-      <!-- View Mode Toggle -->
-      <div class="view-mode-toggle">
-        <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'"><i class="bi bi-pencil"></i></button>
-        <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'"><i class="bi bi-layout-split"></i></button>
-        <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'"><i class="bi bi-eye"></i></button>
-      </div>
-
-      <!-- Export Buttons -->
-      <div class="flex gap-1">
-        <button (click)="exportSpecification('pdf')" ...>PDF</button>
-        <button (click)="exportSpecification('docx')" ...>DOCX</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading -->
-  @if (isLoading) { ... }
-
-  <!-- Main Layout -->
-  @if (!isLoading) {
-    <div class="pmdt05-layout" [class.pmdt05-layout--split]="viewMode === 'split'" ...>
-      <!-- Edit Panel -->
-      @if (viewMode !== 'preview') {
-        <div class="pmdt05-panel pmdt05-panel--edit">
-          <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-input label="รหัส Specification" formControlName="specificationCode" required></sic-input>
-              <sic-input label="ชื่อเรื่อง" formControlName="title" required></sic-input>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <sic-combobox label="ประเภท" formControlName="module" [apiUrl]="..."></sic-combobox>
-              <sic-combobox label="ลำดับความสำคัญ" formControlName="priority" [apiUrl]="..."></sic-combobox>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-input label="เจ้าของ" formControlName="owner"></sic-input>
-              <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday"></sic-number>
-            </div>
-
-            <!-- Tiptap Editor -->
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <button
+                (click)="onBack()"
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                title="กลับ">
+                <i class="bi bi-arrow-left text-xl"></i>
+            </button>
             <div>
-              <label class="block text-sm font-medium text-[var(--text-active)] mb-1">เนื้อหา <span class="text-red-500">*</span></label>
-              <sic-tiptap-editor
-                formControlName="description"
-                placeholderInput="กรอกรายละเอียด Specification..."
-                minHeightInput="200px"
-              ></sic-tiptap-editor>
+                <h1 class="text-xl font-bold text-[var(--text-active)]">
+                    {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
+                </h1>
+                @if (isEdit || isViewOnly) {
+                    <p class="text-xs text-[var(--text-muted)]">
+                        รหัส: {{ form.value.specificationCode }} · เวอร์ชัน: {{ form.value.version }}
+                    </p>
+                }
             </div>
-
-            <!-- Upload -->
-            <div>
-              <sic-upload
-                label="เอกสารแนบ"
-                formControlName="uploadGroupData"
-                [uploadGroupId]="form.get('uploadGroupId')?.value"
-                [multiple]="true"
-                category="all"
-                [visibility]="1"
-              ></sic-upload>
-            </div>
-
-            <!-- Active Status -->
-            <div>
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" formControlName="isActive" />
-                <span>เปิดใช้งาน Specification</span>
-              </label>
-            </div>
-
-            <!-- Approval Flow -->
-            <div class="border-t border-[var(--border)] pt-4 mt-2">
-              <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i> การอนุมัติ
-              </div>
-              <sic-combobox
-                label="กระบวนการอนุมัติ"
-                [apiUrl]="service.apiGetApprovals"
-                valueField="id"
-                textField="flowName"
-                (selectionChanged)="selectedFlowId = $event?.id"
-              ></sic-combobox>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-              <sic-button type="button" variant="secondary" (click)="onBack()">ย้อนกลับ</sic-button>
-              @if (!isViewOnly) {
-                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
-                  {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-                </sic-button>
-              }
-            </div>
-          </form>
         </div>
-      }
 
-      <!-- Preview Panel -->
-      @if (viewMode !== 'edit') {
-        <div class="pmdt05-panel pmdt05-panel--preview">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-eye text-[var(--crm-primary)]"></i> ตัวอย่างเอกสาร
-            </h3>
-            <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
-          </div>
-          <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Auto-save status -->
+            <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+                {{ getAutoSaveText() }}
+            </span>
+
+            <!-- View Mode Toggle -->
+            <div class="view-mode-toggle">
+                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+                    <i class="bi bi-layout-split"></i>
+                </button>
+                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="flex gap-1">
+                <button
+                    (click)="exportSpecification('pdf')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก PDF">
+                    <i class="bi bi-filetype-pdf"></i>
+                    PDF
+                </button>
+                <button
+                    (click)="exportSpecification('docx')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก Word">
+                    <i class="bi bi-file-word"></i>
+                    DOCX
+                </button>
+            </div>
         </div>
-      }
     </div>
-  }
+
+    <!-- LOADING -->
+    @if (isLoading) {
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
+
+    <!-- MAIN LAYOUT -->
+    @if (!isLoading) {
+        <div class="pmdt08-layout"
+             [class.pmdt08-layout--split]="viewMode === 'split'"
+             [class.pmdt08-layout--edit-only]="viewMode === 'edit'"
+             [class.pmdt08-layout--preview-only]="viewMode === 'preview'">
+
+            <!-- EDIT PANEL -->
+            @if (viewMode !== 'preview') {
+                <div class="pmdt08-panel pmdt08-panel--edit">
+                    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-input
+                                label="รหัส Specification"
+                                formControlName="specificationCode"
+                                [required]="true"
+                                placeholder="SPEC-001">
+                            </sic-input>
+                            <sic-input
+                                label="ชื่อเรื่อง"
+                                formControlName="title"
+                                [required]="true"
+                                placeholder="Customer Management">
+                            </sic-input>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <sic-combobox
+                                label="โมดูล"
+                                formControlName="module"
+                                [apiUrl]="apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=MODULE'"
+                                valueField="value"
+                                textField="text">
+                            </sic-combobox>
+                            <sic-combobox
+                                label="ลำดับความสำคัญ"
+                                formControlName="priority"
+                                [apiUrl]="service.apiGetLovPriority"
+                                valueField="value"
+                                textField="text"
+                                [required]="true">
+                            </sic-combobox>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-input label="เจ้าของ" formControlName="owner" placeholder="สมชาย ใจดี"></sic-input>
+                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
+                        </div>
+
+                        <!-- Tiptap Editor -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-[var(--text-active)]">
+                                    รายละเอียด <span class="text-red-500">*</span>
+                                </span>
+                                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+                            </div>
+                            <sic-tiptap-editor
+                                formControlName="description"
+                                placeholderInput="กรอกรายละเอียด Specification..."
+                                minHeightInput="200px">
+                            </sic-tiptap-editor>
+                            @if (form.get('description')?.touched && form.get('description')?.invalid) {
+                                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+                            }
+                        </div>
+
+                        <!-- Attachments -->
+                        <div class="space-y-1">
+                            <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+                            <sic-upload
+                                formControlName="uploadGroupId"
+                                [multiple]="true"
+                                category="all"
+                                [visibility]="1"
+                                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Specification">
+                            </sic-upload>
+                        </div>
+
+                        <!-- Active -->
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                <sic-checkbox formControlName="isActive"></sic-checkbox>
+                                <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+                            </label>
+                        </div>
+
+                        <!-- Approval Flow -->
+                        <div class="border-t border-[var(--border)] pt-4 mt-2">
+                            <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+                                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                                การอนุมัติ
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <sic-combobox
+                                    label="กระบวนการอนุมัติ"
+                                    [apiUrl]="service.apiGetApprovals"
+                                    valueField="id"
+                                    textField="flowName"
+                                    placeholder="เลือกกระบวนการอนุมัติ"
+                                    [clearable]="true"
+                                    (selectionChanged)="selectedFlowId = $event?.id">
+                                </sic-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields -->
+                        <input type="hidden" formControlName="id" />
+                        <input type="hidden" formControlName="state" />
+                        <input type="hidden" formControlName="rowVersion" />
+                        <input type="hidden" formControlName="projectId" />
+                        <input type="hidden" formControlName="projectName" />
+                        <input type="hidden" formControlName="createdBy" />
+
+                        <!-- Buttons -->
+                        <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+                            <sic-button type="button" variant="secondary" (click)="onBack()">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </sic-button>
+                            @if (!isViewOnly) {
+                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                                </sic-button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            }
+
+            <!-- PREVIEW PANEL -->
+            @if (viewMode !== 'edit') {
+                <div class="pmdt08-panel pmdt08-panel--preview">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                            <i class="bi bi-eye text-[var(--crm-primary)]"></i>
+                            ตัวอย่างเอกสาร
+                        </h3>
+                        <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+                    </div>
+                    <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
+                </div>
+            }
+        </div>
+    }
 </div>

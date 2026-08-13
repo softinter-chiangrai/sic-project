@@ -1,5 +1,4 @@
 // src/app/feature/pm/dt/pmdt08/pmdt08.model.ts
-
 export interface PmSpecificationModel {
     id?: string;
     specificationCode: string;
@@ -10,21 +9,23 @@ export interface PmSpecificationModel {
     priority?: string;
     owner?: string;
     estimatedManday?: number;
-    description?: string;          
+    description?: string;          // เนื้อหาทั้งหมดจาก Tiptap
     uploadGroupId?: string;
     uploadGroupData?: any[];
+    isActive?: boolean;
     isAiGenerated?: boolean;
     aiGeneratedAt?: string;
     generatedFromRequirementId?: string;
     generatedFromDiagramId?: string;
+    projectId?: string;
+    projectName?: string;
+    requirementId?: string;
+    requirementCode?: string;
+    requirementTitle?: string;
+    createdBy?: string;
     state?: number;
     rowVersion?: number;
     createdAt?: string;
     updatedAt?: string;
-    projectId?: string;
-    projectName?: string;
-    createdBy?: string;
-    isActive?: boolean;
 }
-
 

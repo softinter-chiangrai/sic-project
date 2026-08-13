@@ -5,66 +5,45 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { PmSpecificationModel, ComboboxItem } from './pmdt08.model';
-
+import { PmSpecificationModel } from './pmdt08.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt08Service {
     private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/specification';
+    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
 
-    // ===== CRUD =====
-    search(params: {
-        keyword?: string;
-        status?: string;
-        page?: number;
-        size?: number;
-        sortBy?: string;
-        sortDir?: string;
-    }): Observable<PaginationResponse<PmSpecificationModel>> {
-        let httpParams = new HttpParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                httpParams = httpParams.set(key, String(value));
-            }
-        });
-        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
-    }
+    // Combobox endpoints
+    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
+    apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
+    apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
+    apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
+    apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
 
-    getById(id: string): Observable<PmSpecificationModel> {
+    // CRUD
+    getSpecification(id: string): Observable<PmSpecificationModel> {
         return this.http.get<PmSpecificationModel>(`${this.baseUrl}/${id}`);
     }
 
-    getByCode(code: string): Observable<PmSpecificationModel> {
-        return this.http.get<PmSpecificationModel>(`${this.baseUrl}/code/${code}`);
+    save(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
     }
 
-    save(data: PmSpecificationModel): Observable<string> {
-        return this.http.post<string>(this.baseUrl, data);
+    autoSave(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
     }
 
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/${id}`);
     }
 
-    // ===== AI Generator =====
-    generateDraft(requirementId: string, diagramId: string): Observable<any> {
-        const params = new HttpParams()
-            .set('requirementId', requirementId)
-            .set('diagramId', diagramId);
-        return this.http.post<any>(`${this.baseUrl}/generate/draft`, null, { params });
-    }
-
-    // ===== Combobox APIs =====
-    getComboboxRequirements(projectId: string): Observable<ComboboxItem[]> {
-        return this.http.get<ComboboxItem[]>(
-            `${environment.apiBaseUrl}/api/pm/requirement/combobox?projectId=${projectId}`
-        );
-    }
-
-    getComboboxDiagrams(projectId: string): Observable<ComboboxItem[]> {
-        return this.http.get<ComboboxItem[]>(
-            `${environment.apiBaseUrl}/api/diagram/tabs?projectId=${projectId}`
-        );
+    // ✅ ใช้ PaginationResponse จาก core/model
+    getList(params: any): Observable<PaginationResponse<PmSpecificationModel>> {
+        let httpParams = new HttpParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                httpParams = httpParams.set(key, String(params[key]));
+            }
+        });
+        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
     }
 }
