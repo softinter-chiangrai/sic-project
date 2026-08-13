@@ -106,29 +106,12 @@
                                 {{ spec.estimatedManday || 0 }}
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button
-                                        (click)="goToView(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-                                        title="ดูข้อมูล"
-                                    >
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button
-                                        (click)="goToEdit(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                                        title="แก้ไข"
-                                    >
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button
-                                        (click)="deleteSpec(spec.id!)"
-                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                                        title="ลบ"
-                                    >
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                                <sic-table-actions
+                                    (onView)="goToView(spec.id!)"
+                                    (onPrint)="printDocument(spec)"
+                                    (onEdit)="goToEdit(spec.id!)"
+                                    (onDelete)="deleteSpec(spec.id!)"
+                                ></sic-table-actions>
                             </td>
                         </tr>
                     } @empty {

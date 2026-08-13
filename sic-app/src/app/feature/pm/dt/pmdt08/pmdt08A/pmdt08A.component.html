@@ -40,8 +40,16 @@
                 </button>
             </div>
 
-            <!-- Export Buttons -->
+            <!-- Export & Print Buttons -->
             <div class="flex gap-1">
+                <button
+                    (click)="printSpecification()"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50 transition-all"
+                    title="พิมพ์เอกสาร">
+                    <i class="bi bi-printer"></i>
+                    พิมพ์
+                </button>
                 <button
                     (click)="exportSpecification('pdf')"
                     [disabled]="isSaving || form.invalid"
@@ -122,7 +130,8 @@
                                 valueField="value"
                                 textField="text"
                                 placeholder="เลือกผู้รับผิดชอบ"
-                                [clearable]="true">
+                                [clearable]="true"
+                                [multiple]="true">
                             </sic-combobox>
                             <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
                         </div>

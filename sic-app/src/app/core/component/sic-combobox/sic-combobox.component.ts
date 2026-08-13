@@ -108,6 +108,12 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
 
   get filteredOptions(): any[] {
     let list = this.options;
+
+    if (!this.apiUrl && this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      list = list.filter((item) => this.resolveLabel(item).toLowerCase().includes(term));
+    }
+
     if (this.excludeValues && this.excludeValues.length > 0) {
       list = list.filter((item) => {
         const itemVal = this.resolveValue(item);
@@ -253,7 +259,9 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     if (this.multiple) {
       const rawArray = Array.isArray(value)
         ? value
-        : (value !== null && value !== undefined && value !== '' ? [value] : []);
+        : (typeof value === 'string' && value.trim()
+            ? value.split(',').map((s) => s.trim()).filter(Boolean)
+            : (value !== null && value !== undefined && value !== '' ? [value] : []));
       this.value = rawArray.map((v) => this.normalizeControlValue(v)).filter((v) => v !== null);
       this.syncMultipleSelectedItems();
       return;
@@ -401,6 +409,13 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
         this.onChange(null);
         this.selectionChanged.emit(null);
       }
+    }
+
+    if (!this.apiUrl) {
+      this.opened = true;
+      this.loading = false;
+      this.cdr.markForCheck();
+      return;
     }
 
     this.pageNumber = 1;
@@ -702,9 +717,6 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
 
   private loadOptions(reset: boolean): void {
     if (!this.apiUrl) {
-      this.options = [];
-      this.totalElements = 0;
-      this.totalPages = 1;
       this.loading = false;
       return;
     }

@@ -3,19 +3,35 @@ import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export interface Pmdt08AModel extends SicBaseStateModel {
-  id: string;
-  projectId: string;
-  taskCode: string;
-  taskName: string;
-  description?: string;
-  assignedTo?: string;
-  startDate: string;
-  endDate: string;
-  estimateManday: number;
+  id?: string;
+  specificationCode: string;
+  specificationType?: string;
+  specType?: string;
+  title: string;
+  module?: string;
+  version?: string;
+  status?: string;
   priority?: string;
-  color?: string;
+  owner?: string;
+  estimatedManday?: number;
+  description?: string;
+  uploadGroupId?: string;
+  uploadGroupData?: any[];
+  isActive?: boolean;
+  isAiGenerated?: boolean;
+  aiGeneratedAt?: string;
+  generatedFromRequirementId?: string;
+  generatedFromDiagramId?: string;
+  projectId?: string;
+  projectName?: string;
+  requirementId?: string;
+  requirementCode?: string;
+  requirementTitle?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Pmdt08APageData {
-  taskData: SicFromData<Pmdt08AModel>;
+  specData: SicFromData<Pmdt08AModel>;
 }

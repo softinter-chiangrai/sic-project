@@ -12,10 +12,12 @@ import { ChangeRequestService } from './change-request.service';
 
 import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
 
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+
 @Component({
   selector: 'app-pmdt07',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt07.component.html',
 })

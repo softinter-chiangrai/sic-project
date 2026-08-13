@@ -34,6 +34,7 @@ public class PmSpecificationRequest {
     private Boolean isActive;
 
     // ===== Traceability =====
+    private UUID requirementId;
     private UUID generatedFromRequirementId;
     private UUID generatedFromDiagramId;
 

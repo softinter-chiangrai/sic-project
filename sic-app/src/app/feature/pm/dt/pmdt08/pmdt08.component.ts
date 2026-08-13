@@ -11,10 +11,12 @@ import { Pmdt08Service } from './pmdt08.service';
 import { PmSpecificationModel } from './pmdt08.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+
 @Component({
     selector: 'app-pmdt08',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, SicTableActionsComponent],
     templateUrl: './pmdt08.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -122,6 +124,75 @@ export class Pmdt08Component implements OnInit {
 
     goToView(id: string): void {
         this.navigation.navigate(['/feature/pm/pmdt08', id, 'view']);
+    }
+
+    printDocument(spec: PmSpecificationModel): void {
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+            return;
+        }
+
+        const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Specification - ${spec.specificationCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสเอกสาร</td>
+            <td>${spec.specificationCode || '-'}</td>
+            <td class="label">เวอร์ชัน</td>
+            <td>${spec.version || '1.0'}</td>
+          </tr>
+          <tr>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${spec.projectName || '-'}</td>
+            <td class="label">ประเภท</td>
+            <td>${spec.specificationType || spec.specType || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${spec.priority || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${this.getStatusText(spec.status || 'Draft')}</td>
+          </tr>
+          <tr>
+            <td class="label">ผู้สร้าง</td>
+            <td>${spec.createdBy || '-'}</td>
+            <td class="label">Manday (วัน)</td>
+            <td>${spec.estimatedManday || 0}</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>รายละเอียด / ข้อกำหนด</h3>
+          <div>${spec.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 300);
     }
 
     deleteSpec(id: string): void {

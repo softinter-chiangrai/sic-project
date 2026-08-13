@@ -31,7 +31,7 @@ public class PmSpecification extends BaseBusinessEntity {
     @Column(name = "priority", length = 20)
     private String priority = "Medium";
 
-    @Column(name = "owner", length = 100)
+    @Column(name = "owner", length = 500)
     private String owner;
 
     @Column(name = "estimated_manday")

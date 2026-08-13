@@ -128,6 +128,14 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 spec.setProject(project);
             }
 
+            // ตั้งค่า Requirement
+            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId() : request.getGeneratedFromRequirementId();
+            if (targetReqId != null) {
+                PmRequirement requirement = requirementRepository.findById(targetReqId)
+                        .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
+                spec.setRequirement(requirement);
+            }
+
             spec = specificationRepository.save(spec);
 
             // ✅ สร้าง Document Version ผ่าน DocumentVersionService
@@ -139,11 +147,12 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             );
 
             // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
+            UUID projectIdForTrace = spec.getProject() != null ? spec.getProject().getId() : request.getProjectId();
             if (request.getGeneratedFromRequirementId() != null) {
                 UUID reqId = request.getGeneratedFromRequirementId();
                 if (requirementRepository.existsById(reqId)) {
                     traceLinkService.createLink(
-                            businessId,
+                            projectIdForTrace,
                             "REQUIREMENT", reqId,
                             "SPECIFICATION", spec.getId(),
                             TraceRelationship.DOCUMENTED_BY
@@ -154,7 +163,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // ✅ สร้าง Trace Link กับ Diagram (ถ้ามี)
             if (request.getGeneratedFromDiagramId() != null) {
                 traceLinkService.createLink(
-                        businessId,
+                        projectIdForTrace,
                         "DIAGRAM", request.getGeneratedFromDiagramId(),
                         "SPECIFICATION", spec.getId(),
                         TraceRelationship.DESIGNED_BY

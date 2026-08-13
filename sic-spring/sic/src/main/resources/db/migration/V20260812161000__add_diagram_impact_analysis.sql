@@ -91,3 +91,8 @@ ALTER TABLE pm_specification
 ALTER TABLE pm_specification 
     RENAME COLUMN spec_type TO specification_type;
 
+-- 3. ให้ requirement_id เป็น nullable (รองรับ Specification ที่สร้างโดยตรงโดยไม่อ้างอิง requirement)
+ALTER TABLE pm_specification 
+    ALTER COLUMN requirement_id DROP NOT NULL;
+
+

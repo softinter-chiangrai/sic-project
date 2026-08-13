@@ -14,10 +14,12 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { RequirementItem } from './pmdt04.model';
 
 
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -163,6 +165,10 @@ export class Pmdt04Component implements OnInit {
 
   goToEdit(id: string) {
     this.navigation.navigate(['/feature/pm/requirement', id, 'edit']);
+  }
+
+  goToViewOnly(id: string) {
+    this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
   }
 
   goToView(id: string) {

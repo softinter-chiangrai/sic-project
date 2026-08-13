@@ -132,33 +132,12 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1 flex-wrap">
 
-                  <!-- View Detail -->
-                  <button
-                    (click)="goToView(cr.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="ดูรายละเอียดข้อมูล Change Request"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </button>
-
-                  <!-- Edit (เฉพาะ DRAFT และ SUBMITTED แต่ SUBMITTED จะ disable) -->
-                  <button
-                    (click)="goToEdit(cr.id)"
-                    [disabled]="cr.status !== 'DRAFT' && cr.status !== 'SUBMITTED'"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="แก้ไขรายละเอียด"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-
-                  <!-- Delete -->
-                  <button
-                    (click)="deleteChangeRequest(cr.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
+                  <sic-table-actions
+                    [showPrint]="false"
+                    (onView)="goToView(cr.id)"
+                    (onEdit)="goToEdit(cr.id)"
+                    (onDelete)="deleteChangeRequest(cr.id)"
+                  ></sic-table-actions>
                 </div>
               </td>
             </tr>

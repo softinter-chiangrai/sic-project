@@ -22,6 +22,7 @@ import { BusinessService } from '../../../../../core/services/business.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { Pmdt08Service } from '../pmdt08.service';
 import { PmSpecificationModel } from '../pmdt08.model';
+import { Pmdt08AForm } from './pmdt08A.form';
 import { Pmdt08PreviewComponent } from '../pmdt08-preview/Pmdt08PreviewComponent';
 import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
@@ -190,6 +191,17 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                         this.form.patchValue({ projectId: pId });
                         this.fetchProjectName(pId);
                     }
+                    const reqId = qParams['requirementId'];
+                    if (reqId) {
+                        this.form.patchValue({ 
+                            requirementId: reqId,
+                            generatedFromRequirementId: reqId 
+                        });
+                    }
+                    const diagId = qParams['diagramId'];
+                    if (diagId) {
+                        this.form.patchValue({ generatedFromDiagramId: diagId });
+                    }
                 });
                 const userName = this.getUserNameFromToken();
                 if (userName) this.form.patchValue({ createdBy: userName });
@@ -215,30 +227,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     ];
 
     initForm(): void {
-        this.form = this.fb.group({
-            id: [null],
-            specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
-            specificationType: [null, [Validators.required]],
-            title: [null, [Validators.required, Validators.maxLength(255)]],
-            module: [null, [Validators.maxLength(100)]],
-            version: [{ value: 'v1.0', disabled: true }],
-            status: ['Draft'],
-            priority: ['Medium'],
-            owner: [null, [Validators.maxLength(100)]],
-            estimatedManday: [null, [Validators.min(0)]],
-            description: [null, [Validators.required]],
-            uploadGroupId: [null],
-            isAiGenerated: [false],
-            aiGeneratedAt: [null],
-            generatedFromRequirementId: [null],
-            generatedFromDiagramId: [null],
-            projectId: [null],
-            projectName: [null],
-            createdBy: [null],
-            isActive: [true],
-            state: [null],
-            rowVersion: [null]
-        });
+        this.form = Pmdt08AForm.createForm(this.fb);
     }
 
     loadSpecification(id: string) {
@@ -339,6 +328,10 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const uploadGroupId = this.extractUploadGroupId(rawData.uploadGroupId);
         rawData.uploadGroupId = uploadGroupId || null;
 
+        if (Array.isArray(rawData.owner)) {
+            rawData.owner = rawData.owner.filter((o: any) => o !== null && o !== undefined && String(o).trim() !== '').join(', ');
+        }
+
         if (rawData.estimatedManday !== null && rawData.estimatedManday !== undefined && (rawData.estimatedManday as any) !== '') {
             const num = Number(rawData.estimatedManday);
             rawData.estimatedManday = isNaN(num) ? undefined : num;
@@ -415,6 +408,77 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         return this.prepareSubmitData();
     }
 
+    // ===== Print =====
+    printSpecification(): void {
+        const spec = this.getPreviewData();
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+            return;
+        }
+
+        const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Specification - ${spec.specificationCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสเอกสาร</td>
+            <td>${spec.specificationCode || '-'}</td>
+            <td class="label">เวอร์ชัน</td>
+            <td>${spec.version || '1.0'}</td>
+          </tr>
+          <tr>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${spec.projectName || '-'}</td>
+            <td class="label">ประเภท</td>
+            <td>${spec.specificationType || spec.specType || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${spec.priority || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${spec.status || 'Draft'}</td>
+          </tr>
+          <tr>
+            <td class="label">ผู้สร้าง / Owner</td>
+            <td>${spec.owner || spec.createdBy || '-'}</td>
+            <td class="label">Manday (วัน)</td>
+            <td>${spec.estimatedManday || 0}</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>รายละเอียด / ข้อกำหนด</h3>
+          <div>${spec.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 300);
+    }
+
     // ===== Export =====
     async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
         try {
@@ -452,12 +516,13 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.service.save(data).subscribe({
             next: (response: any) => {
                 this.form.markAsPristine();
-                let savedId = data.id || this.specId;
-                if (response && response.id) {
-                    savedId = response.id;
-                    this.form.patchValue(response);
+                let savedId = typeof response === 'string' ? response : (response?.id || data.id || this.specId);
+                if (savedId) {
                     this.specId = savedId;
                     this.isEdit = true;
+                    if (typeof response === 'object' && response !== null) {
+                        this.form.patchValue(response);
+                    }
                 }
 
                 this.approvalService.submitForApproval({
