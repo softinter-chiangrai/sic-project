@@ -37,7 +37,8 @@ export interface RequirementDetail {
   version: string;
   isActive: boolean;
   createdBy: string;
-  createdAt: string;
+  createdAt?: string;
+  createdDate?: string;
 }
 
 export interface RelatedItem {

@@ -40,7 +40,7 @@
           <span><i class="bi bi-briefcase"></i> {{ requirement()?.projectName }}</span>
           <span><i class="bi bi-person"></i> {{ requirement()?.createdBy }}</span>
           <span
-            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdAt || '') }}</span
+            ><i class="bi bi-calendar"></i> {{ formatDate(requirement()?.createdDate || requirement()?.createdAt || '') }}</span
           >
           <span><i class="bi bi-tag"></i> {{ requirement()?.priority }}</span>
         </div>
@@ -60,20 +60,30 @@
 
   <!-- ===== REQUIREMENT DETAIL ===== -->
   @if (!isLoading() && requirement(); as req) {
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คำอธิบาย</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.description || '-' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">คุณค่าทางธุรกิจ</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.businessValue || '-' }}</p>
-        </div>
-        <div class="md:col-span-2">
-          <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">เงื่อนไขการยอมรับ</p>
-          <p class="text-sm text-[var(--text)] mt-1">{{ req.acceptanceCriteria || '-' }}</p>
-        </div>
+    <sic-card>
+      <div>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">คำอธิบาย</p>
+
+        <!-- แสดงเนื้อหาแบบเต็มเมื่อขยาย -->
+        @if (isExpanded()) {
+          <div class="text-sm text-[var(--text)] prose prose-sm max-w-none whitespace-pre-wrap leading-relaxed" [innerHTML]="req.description || '-'"></div>
+        } @else {
+          <!-- แสดงเนื้อหาแบบย่อ (ข้อความธรรมดา) -->
+          <p class="text-sm text-[var(--text)] whitespace-pre-wrap leading-relaxed line-clamp-3">{{ getShortDescription(req.description) }}</p>
+        }
+
+        <!-- ปุ่มดูเพิ่ม / ย่อ (แสดงเฉพาะเมื่อเนื้อหายาว) -->
+        @if (isLongDescription(req.description)) {
+          <button
+            (click)="toggleExpand()"
+            class="text-xs font-medium text-[var(--crm-primary)] hover:underline mt-3 inline-flex items-center gap-1.5 focus:outline-none"
+          >
+            <span>{{ isExpanded() ? 'ย่อเนื้อหา' : 'ดูเนื้อหาเพิ่มเติม' }}</span>
+            <i class="bi" [class.bi-chevron-up]="isExpanded()" [class.bi-chevron-down]="!isExpanded()"></i>
+          </button>
+        }
       </div>
+    </sic-card>
   }
 
   <!-- ===== QUICK ACTIONS ===== -->

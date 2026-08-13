@@ -34183,19 +34183,19 @@ export class Burt05AService {
   <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-        <i class="bi bi-diagram-3 text-blue-500"></i>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
         จัดการโปรแกรม
       </h1>
       <span
-        class="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-0.5 rounded-full border border-gray-200 dark:border-gray-600"
+        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
       >
         {{ programs().length }} โปรแกรม
       </span>
     </div>
     <button
       (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
     >
       <i class="bi bi-plus-lg"></i>
       เพิ่มโปรแกรม
@@ -34206,47 +34206,45 @@ export class Burt05AService {
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div
-        class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-gray-500">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
     </div>
   }
 
-  <!-- TREE TABLE (ไม่มีเส้นขอบและไม่มี hover) -->
+  <!-- TREE TABLE -->
   @if (!isLoading() && treeData().length > 0) {
-    <!-- ลบ border และ rounded-xl ออก -->
-    <div class="overflow-x-auto bg-white dark:bg-gray-900 shadow-sm">
+    <div class="overflow-x-auto bg-[var(--sidebar)] shadow-sm">
       <table class="w-full text-sm">
-        <!-- ลบเส้นใต้หัวตาราง -->
-        <thead class="bg-gray-50 dark:bg-gray-800">
+        <thead class="bg-[var(--bg)]">
           <tr>
             <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[260px]"
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[260px]"
             >
               โปรแกรม
             </th>
             <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[100px]"
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]"
             >
               รหัส
             </th>
             <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[70px]"
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[70px]"
             >
               ลำดับ
             </th>
             <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[120px]"
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]"
             >
               Route
             </th>
             <th
-              class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[80px]"
+              class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]"
             >
               สถานะ
             </th>
             <th
-              class="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[220px]"
+              class="px-4 py-2.5 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[220px]"
             >
               จัดการ
             </th>
@@ -34254,19 +34252,16 @@ export class Burt05AService {
         </thead>
         <tbody>
           @for (flatNode of visibleNodes(); track flatNode.id) {
-            <!-- ลบ hover และ border-bottom ออก -->
             <tr>
-              <!-- ชื่อโปรแกรม + tree indent -->
               <td class="px-4 py-2">
                 <div
                   class="flex items-center gap-1.5"
                   [style.padding-left.px]="flatNode.level * 20"
                 >
-                  <!-- ปุ่ม toggle -->
                   @if (flatNode.children.length > 0) {
                     <button
                       (click)="toggleExpand(flatNode.id)"
-                      class="w-4 h-4 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      class="w-4 h-4 flex items-center justify-center rounded hover:bg-[var(--sidebar-hover)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-active)]"
                     >
                       <i
                         class="bi text-xs"
@@ -34278,82 +34273,61 @@ export class Burt05AService {
                     <span class="w-4"></span>
                   }
 
-                  <!-- ไอคอน -->
                   <i
-                    class="bi text-gray-500 dark:text-gray-400 text-sm"
+                    class="bi text-[var(--text-muted)] text-sm"
                     [class]="flatNode.icon || 'bi-file-earmark'"
                   ></i>
 
-                  <!-- ชื่อโปรแกรม (คลิกเพื่อขยาย/ย่อ) -->
                   <span
-                    class="font-medium text-gray-800 dark:text-white cursor-pointer"
+                    class="font-medium text-[var(--text-active)] cursor-pointer"
                     (click)="toggleExpand(flatNode.id)"
                   >
                     {{ flatNode.name }}
                   </span>
 
-                  <!-- จำนวนลูก -->
                   @if (flatNode.children.length > 0) {
-                    <span class="text-xs text-gray-400 dark:text-gray-500"
+                    <span class="text-xs text-[var(--text-muted)]"
                       >[{{ flatNode.children.length }}]</span
                     >
                   }
                 </div>
               </td>
 
-              <!-- รหัส -->
               <td class="px-4 py-2">
-                <span class="text-xs font-mono text-blue-600 dark:text-blue-400">{{
-                  flatNode.code
-                }}</span>
+                <span class="text-xs font-mono text-[var(--crm-primary)]">{{ flatNode.code }}</span>
               </td>
 
-              <!-- ลำดับ -->
               <td class="px-4 py-2">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  flatNode.sortOrder
-                }}</span>
+                <span class="text-xs text-[var(--text-muted)]">{{ flatNode.sortOrder }}</span>
               </td>
 
-              <!-- Route -->
               <td class="px-4 py-2">
-                <span
-                  class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate block max-w-[120px]"
-                >
+                <span class="text-xs text-[var(--text-muted)] font-mono truncate block max-w-[120px]">
                   {{ flatNode.routePath || '-' }}
                 </span>
               </td>
 
-              <!-- สถานะ -->
               <td class="px-4 py-2">
                 <span
                   class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  [class.bg-emerald-100]="flatNode.isActive"
-                  [class.text-emerald-700]="flatNode.isActive"
-                  [class.bg-gray-200]="!flatNode.isActive"
-                  [class.text-gray-600]="!flatNode.isActive"
-                  [class.dark:bg-emerald-900/30]="flatNode.isActive"
-                  [class.dark:text-emerald-400]="flatNode.isActive"
-                  [class.dark:bg-gray-700]="!flatNode.isActive"
-                  [class.dark:text-gray-400]="!flatNode.isActive"
+                  [class]="getStatusClass(flatNode.isActive)"
                 >
                   {{ flatNode.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
                 </span>
               </td>
 
-              <!-- จัดการ -->
               <td class="px-4 py-2 text-center">
                 <div class="flex items-center justify-center gap-1">
                   <button
                     (click)="goToEdit(flatNode)"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     title="แก้ไข"
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button
                     (click)="deleteProgram(flatNode)"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     title="ลบ"
                     [disabled]="flatNode.children.length > 0"
                   >
@@ -34371,12 +34345,12 @@ export class Burt05AService {
   <!-- NO DATA -->
   @if (!isLoading() && treeData().length === 0) {
     <div class="flex flex-col items-center justify-center py-16 gap-4">
-      <i class="bi bi-diagram-3 text-6xl text-gray-300 dark:text-gray-600"></i>
-      <p class="text-lg font-medium text-gray-700 dark:text-gray-300">ยังไม่มีโปรแกรมในระบบ</p>
-      <p class="text-sm text-gray-500">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
+      <i class="bi bi-diagram-3 text-6xl text-[var(--text-muted)] opacity-30"></i>
+      <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีโปรแกรมในระบบ</p>
+      <p class="text-sm text-[var(--text-muted)]">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
       <button
         (click)="goToAdd()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
       >
         <i class="bi bi-plus-lg"></i>
         สร้างโปรแกรมแรก
@@ -54511,8 +54485,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { Program, TreeNode } from './burt05.model';
 import { burt05Service } from './burt05.service';
 
-
-/** FlatNode = TreeNode ที่เพิ่ม level เพื่อจัด indent */
+/** FlatNode = TreeNode + level */
 type FlatNode = TreeNode & { level: number };
 
 /** Helper: ดึงชื่อจาก Program หรือ TreeNode */
@@ -54528,8 +54501,8 @@ function getProgramName(program: Program | TreeNode): string {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './burt05.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrl: './burt05.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./burt05.component.css'],
 })
 export class Burt05Component implements OnInit {
   private service = inject(burt05Service);
@@ -54540,10 +54513,10 @@ export class Burt05Component implements OnInit {
   programs = signal<Program[]>([]);
   treeData = signal<TreeNode[]>([]);
 
-  // เก็บ ID ของ node ที่ขยาย (ใช้ Set เพื่อเพิ่ม/ลบได้เร็ว)
+  // เก็บ ID ของ node ที่ขยาย
   expandedIds = signal<Set<string>>(new Set());
 
-  // คำนวณรายการ node ที่จะแสดง (เฉพาะ node ที่ขยาย)
+  // คำนวณรายการ node ที่จะแสดง
   visibleNodes = computed<FlatNode[]>(() => {
     const tree = this.treeData();
     const expanded = this.expandedIds();
@@ -54624,7 +54597,6 @@ export class Burt05Component implements OnInit {
     sortChildren(roots);
 
     this.treeData.set(roots);
-    // ขยายทั้งหมดให้เห็นโครงสร้าง
     this.expandAll();
   }
 
@@ -54660,7 +54632,7 @@ export class Burt05Component implements OnInit {
     });
   }
 
-  /** ตรวจสอบว่าขยายอยู่หรือไม่ (ใช้ใน template) */
+  /** ตรวจสอบว่าขยายอยู่หรือไม่ */
   isExpanded(id: string): boolean {
     return this.expandedIds().has(id);
   }
@@ -54704,10 +54676,11 @@ export class Burt05Component implements OnInit {
       });
   }
 
+  // ✅ แก้ไขฟังก์ชันนี้ให้ใช้ CSS Variables แทน hard-coded colors
   getStatusClass(isActive: boolean): string {
     return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+      ? 'bg-[var(--crm-success)]/10 text-[var(--crm-success)]'   // สีเขียวของระบบ
+      : 'bg-[var(--text-muted)]/10 text-[var(--text-muted)]';     // สีเทาของระบบ
   }
 
   getStatusText(isActive: boolean): string {
@@ -59233,68 +59206,6 @@ public class SaveImpactAnalysisRequest {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChangeRequestResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-@Data
-public class ChangeRequestResponse {
-    private UUID id;
-    private UUID projectId;
-    private String targetType;
-    private UUID targetId;
-    private String title;
-    private String description;
-    private String changeReason;
-    private String requesterId;
-    private String requesterName;
-    private String assigneeId;
-    private String assigneeName;
-    private String status;
-    private String targetVersion;
-    private String approvedBy;
-    private Instant approvedAt;
-    private Instant implementedAt;
-    private Instant createdDate;
-    private List<CrAssigneeResponse> assignees;
-    private List<ChangeImpactResponse> impacts;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java">
-package com.softinter.sicapi.dto.response;
-
-import lombok.Data;
-import java.time.Instant;
-import java.util.UUID;
-
-@Data
-public class ImpactAnalysisResponse {
-    private UUID id;
-    private UUID changeRequestId;
-
-    // 6 ฟิลด์ที่ใช้จริงตามที่คุณบอก
-    private UUID[] impactedRequirementIds;
-    private UUID[] impactedSpecIds;
-    private UUID[] impactedDiagramIds;
-    private UUID[] impactedTaskIds;
-    private UUID[] impactedTestCaseIds;
-    private UUID[] impactedBugIds;
-
-    // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
-    private Integer mandayImpact;
-    private Integer timelineImpact;
-    private String analysisStatus;
-    private Instant analyzedAt;
-    private String analyzedBy;
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/PostResponse.java">
 package com.softinter.sicapi.dto.response;
 
@@ -60629,30 +60540,6 @@ public class TaskServiceImpl implements TaskService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ChangeRequestService.java">
-package com.softinter.sicapi.service;
-
-import com.softinter.sicapi.dto.request.ChangeRequestRequest;
-import com.softinter.sicapi.dto.response.ChangeRequestResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import org.springframework.data.domain.Pageable;
-
-import java.util.UUID;
-
-public interface ChangeRequestService {
-    ChangeRequestResponse createChangeRequest(ChangeRequestRequest request);
-    ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request);
-    ChangeRequestResponse getChangeRequest(UUID id);
-    PaginationResponse<ChangeRequestResponse> listChangeRequests(String targetType, UUID targetId, String status, Pageable pageable);
-    void deleteChangeRequest(UUID id);
-    ChangeRequestResponse submitForApproval(UUID id);
-    ChangeRequestResponse approve(UUID id, String approvedBy);
-    ChangeRequestResponse reject(UUID id, String reason);
-    ChangeRequestResponse implement(UUID id);
-    ChangeRequestResponse markAssigneeComplete(UUID changeRequestId, String userId, UUID targetId);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/DiagramSqlService.java">
 // src/main/java/com/softinter/sicapi/service/DiagramSqlService.java
 package com.softinter.sicapi.service;
@@ -61818,59 +61705,6 @@ export const DIAGRAM_DEFAULTS: Record<DiagramType, string> = {
   'Use Case':
     'usecaseDiagram\n  actor User\n  actor Admin\n  User --> (Login)\n  Admin --> (Manage Users)\n  (Login) ..> (Verify Credentials) : include',
 };
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts">
-// src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-
-export interface ImpactAnalysis {
-    id?: string;
-    changeRequestId: string;
-    dfdImpact?: string;
-    erImpact?: string;
-    uiImpact?: string;
-    apiImpact?: string;
-    testImpact?: string;
-    mandayImpact?: number;
-    timelineImpact?: number;
-    costImpact?: string;
-    impactedRequirementIds?: string[];
-    impactedSpecIds?: string[];
-    impactedTaskIds?: string[];
-    impactedTestCaseIds?: string[];
-    impactedBugIds?: string[];
-    impactedDiagramIds?: string[];
-    impactedTableNames?: string[];
-    analysisStatus?: 'AUTO' | 'MANUAL';
-    analyzedAt?: string;
-    analyzedBy?: string;
-}
-
-@Injectable({ providedIn: 'root' })
-export class ImpactAnalysisService {
-    private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/impact-analysis';
-
-    getByChangeRequest(changeRequestId: string): Observable<ImpactAnalysis> {
-        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
-    }
-
-    autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {
-        return this.http.post<ImpactAnalysis>(`${this.baseUrl}/auto-detect-trace/${changeRequestId}`, {});
-    }
-
-    save(data: ImpactAnalysis): Observable<string> {
-        return this.http.post<string>(`${this.baseUrl}/save`, data);
-    }
-
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
-    }
-}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html">
@@ -64176,91 +64010,6 @@ export class Feature {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmChangeRequestController.java">
-package com.softinter.sicapi.controller.pm;
-
-import com.softinter.sicapi.dto.request.ChangeRequestRequest;
-import com.softinter.sicapi.dto.response.ChangeRequestResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.service.ChangeRequestService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/pm/change-requests")
-@RequiredArgsConstructor
-public class PmChangeRequestController {
-
-    private final ChangeRequestService changeRequestService;
-
-    @PostMapping
-    public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(changeRequestService.createChangeRequest(request));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ChangeRequestResponse> update(@PathVariable UUID id, @Valid @RequestBody ChangeRequestRequest request) {
-        return ResponseEntity.ok(changeRequestService.updateChangeRequest(id, request));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ChangeRequestResponse> get(@PathVariable UUID id) {
-        return ResponseEntity.ok(changeRequestService.getChangeRequest(id));
-    }
-
-    @GetMapping
-    public ResponseEntity<PaginationResponse<ChangeRequestResponse>> list(
-            @RequestParam(required = false) String targetType,
-            @RequestParam(required = false) UUID targetId,
-            @RequestParam(required = false) String status,
-            @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(changeRequestService.listChangeRequests(targetType, targetId, status, pageable));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        changeRequestService.deleteChangeRequest(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/submit")
-    public ResponseEntity<ChangeRequestResponse> submit(@PathVariable UUID id) {
-        return ResponseEntity.ok(changeRequestService.submitForApproval(id));
-    }
-
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<ChangeRequestResponse> approve(@PathVariable UUID id) {
-        // TODO: get current user as approver
-        return ResponseEntity.ok(changeRequestService.approve(id, "system"));
-    }
-
-    @PostMapping("/{id}/reject")
-    public ResponseEntity<ChangeRequestResponse> reject(@PathVariable UUID id) {
-        return ResponseEntity.ok(changeRequestService.reject(id, "reason"));
-    }
-
-    @PostMapping("/{id}/implement")
-    public ResponseEntity<ChangeRequestResponse> implement(@PathVariable UUID id) {
-        return ResponseEntity.ok(changeRequestService.implement(id));
-    }
-
-    @PostMapping("/{id}/assignees/complete")
-    public ResponseEntity<ChangeRequestResponse> completeAssignee(
-            @PathVariable UUID id,
-            @RequestParam String userId,
-            @RequestParam UUID targetId) {
-        return ResponseEntity.ok(changeRequestService.markAssigneeComplete(id, userId, targetId));
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmSpecificationRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -64361,6 +64110,77 @@ public class PmSpecificationRequest {
         private String authentication;
         private Integer state;
         private Integer rowVersion;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ChangeRequestResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class ChangeRequestResponse {
+    private UUID id;
+    private UUID projectId;
+    private String projectName;
+    private String targetType;
+    private UUID targetId;
+    private String title;
+    private String description;
+    private String changeReason;
+    private String requesterId;
+    private String requesterName;
+    private String assigneeId;
+    private String assigneeName;
+    private String status;
+    private String targetVersion;
+    private String approvedBy;
+    private Instant approvedAt;
+    private Instant implementedAt;
+    private Instant createdDate;
+    private List<CrAssigneeResponse> assignees;
+    private List<ChangeImpactResponse> impacts;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/response/ImpactAnalysisResponse.java">
+package com.softinter.sicapi.dto.response;
+
+import lombok.Data;
+import java.time.Instant;
+import java.util.UUID;
+
+@Data
+public class ImpactAnalysisResponse {
+    private UUID id;
+    private UUID changeRequestId;
+
+    // 6 ฟิลด์ที่ใช้จริงตามที่คุณบอก
+    private UUID[] impactedRequirementIds;
+    private UUID[] impactedSpecIds;
+    private UUID[] impactedDiagramIds;
+    private java.util.List<DiagramItem> impactedDiagrams;
+    private UUID[] impactedTaskIds;
+    private UUID[] impactedTestCaseIds;
+    private UUID[] impactedBugIds;
+
+    // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
+    private Integer mandayImpact;
+    private Integer timelineImpact;
+    private String analysisStatus;
+    private Instant analyzedAt;
+    private String analyzedBy;
+
+    @Data
+    public static class DiagramItem {
+        private UUID id;
+        private String name;
+        private String diagramType;
     }
 }
 </file>
@@ -64942,6 +64762,30 @@ public interface ApprovalService {
     void validateDocument(String documentType, UUID documentId);
 
     CancelApprovalResponse cancelByFlow(UUID flowId, String reason);
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/ChangeRequestService.java">
+package com.softinter.sicapi.service;
+
+import com.softinter.sicapi.dto.request.ChangeRequestRequest;
+import com.softinter.sicapi.dto.response.ChangeRequestResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import org.springframework.data.domain.Pageable;
+
+import java.util.UUID;
+
+public interface ChangeRequestService {
+    ChangeRequestResponse createChangeRequest(ChangeRequestRequest request);
+    ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request);
+    ChangeRequestResponse getChangeRequest(UUID id);
+    PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, Pageable pageable);
+    void deleteChangeRequest(UUID id);
+    ChangeRequestResponse submitForApproval(UUID id);
+    ChangeRequestResponse approve(UUID id, String approvedBy);
+    ChangeRequestResponse reject(UUID id, String reason);
+    ChangeRequestResponse implement(UUID id);
+    ChangeRequestResponse markAssigneeComplete(UUID changeRequestId, String userId, UUID targetId);
 }
 </file>
 
@@ -66707,260 +66551,64 @@ export class SicRequirementPreviewComponent implements OnChanges {
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.html">
-<!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
-<div class="space-y-5 p-0.5">
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts">
+// src/app/feature/pm/dt/pmdt07/impact-analysis.service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
-        Change Request
-      </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
-      </span>
-    </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่ม Change Request
-    </button>
-  </div>
+export interface ImpactDiagramItem {
+    id: string;
+    name: string;
+    diagramType?: string;
+}
 
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหารหัส, ชื่อ, โครงการ..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
-    </div>
+export interface ImpactAnalysis {
+    id?: string;
+    changeRequestId: string;
+    dfdImpact?: string;
+    erImpact?: string;
+    uiImpact?: string;
+    apiImpact?: string;
+    testImpact?: string;
+    mandayImpact?: number;
+    timelineImpact?: number;
+    costImpact?: string;
+    impactedRequirementIds?: string[];
+    impactedSpecIds?: string[];
+    impactedTaskIds?: string[];
+    impactedTestCaseIds?: string[];
+    impactedBugIds?: string[];
+    impactedDiagramIds?: string[];
+    impactedDiagrams?: ImpactDiagramItem[];
+    impactedTableNames?: string[];
+    analysisStatus?: 'AUTO' | 'MANUAL';
+    analyzedAt?: string;
+    analyzedBy?: string;
+}
 
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      <option value="Draft">ร่าง</option>
-      <option value="Submitted">รออนุมัติ</option>
-      <option value="Approved">อนุมัติ</option>
-      <option value="Rejected">ปฏิเสธ</option>
-      <option value="Implemented">ดำเนินการแล้ว</option>
-    </select>
-  </div>
+@Injectable({ providedIn: 'root' })
+export class ImpactAnalysisService {
+    private http = inject(HttpClient);
+    private baseUrl = environment.apiBaseUrl + '/api/pm/impact-analysis';
 
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+    getByChangeRequest(changeRequestId: string): Observable<ImpactAnalysis> {
+        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
+    }
 
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              รหัส
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ชื่อคำขอ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
-              โครงการ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ผู้เกี่ยวข้อง / ผู้แก้ไข
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              สถานะ
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (cr of changeRequests(); track cr.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  CR-{{ cr.id.substring(0, 8).toUpperCase() }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="font-medium text-[var(--text-active)]">{{ cr.title }}</div>
-                <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ cr.description }}</div>
-              </td>
-              <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
-              <td class="px-4 py-3">
-                <div class="space-y-1">
-                  @for (assignee of cr.assignees; track assignee.id) {
-                    <div class="flex items-center gap-1.5 text-xs">
-                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="assignee.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                      <span class="font-medium">{{ assignee.userName }}</span>
-                      <span class="text-[10px] text-[var(--text-muted)]">({{ assignee.targetType }})</span>
-                      @if (assignee.status !== 'COMPLETED' && cr.status === 'APPROVED') {
-                        <button
-                          (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
-                          class="px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-[10px] hover:bg-[var(--crm-primary)]/20 transition-all ml-1"
-                        >
-                          แก้ไขเสร็จแล้ว
-                        </button>
-                      }
-                    </div>
-                  } @empty {
-                    <span class="text-xs text-[var(--text-muted)]">-</span>
-                  }
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(cr.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(cr.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1 flex-wrap">
-                  <!-- Submit (Draft Only) -->
-                  @if (cr.status === 'DRAFT') {
-                    <button
-                      (click)="submitRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 transition-all"
-                      title="ส่งขออนุมัติ"
-                    >
-                      ส่งขออนุมัติ
-                    </button>
-                  }
+    autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {
+        return this.http.post<ImpactAnalysis>(`${this.baseUrl}/auto-detect-trace/${changeRequestId}`, {});
+    }
 
-                  <!-- Implement / Close CR (Approved Only) -->
-                  @if (cr.status === 'APPROVED') {
-                    <button
-                      (click)="implementRequest(cr.id)"
-                      class="px-2 py-1 rounded text-xs font-medium text-white bg-purple-500 hover:bg-purple-600 transition-all"
-                      title="ปิด Change Request"
-                    >
-                      ปิด CR
-                    </button>
-                  }
+    save(data: ImpactAnalysis): Observable<string> {
+        return this.http.post<string>(`${this.baseUrl}/save`, data);
+    }
 
-                  <!-- Edit (เฉพาะ DRAFT และ SUBMITTED แต่ SUBMITTED จะ disable) -->
-                  <button
-                    (click)="goToEdit(cr.id)"
-                    [disabled]="cr.status !== 'DRAFT' && cr.status !== 'SUBMITTED'"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="แก้ไขรายละเอียด"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-
-                  <!-- Impact Analysis -->
-                  <button
-                    (click)="goToImpact(cr.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="Impact Analysis"
-                  >
-                    <i class="bi bi-diagram-3"></i>
-                  </button>
-
-                  <!-- Delete -->
-                  <button
-                    (click)="deleteChangeRequest(cr.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Change Request ใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่ม Change Request
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <!-- PAGINATION -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
-      </div>
-
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="page === currentPage() 
-              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' 
-              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
-
-</div>
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
+}
 </file>
 
 <file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts">
@@ -67919,6 +67567,92 @@ public class PmApprovalController {
     @Operation(summary = "Get default approval flow for document type")
     public ResponseEntity<ApprovalFlowResponse> getDefaultFlow(@PathVariable String documentType) {
         return ResponseEntity.ok(flowService.getFlowByDocumentType(documentType));
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmChangeRequestController.java">
+package com.softinter.sicapi.controller.pm;
+
+import com.softinter.sicapi.dto.request.ChangeRequestRequest;
+import com.softinter.sicapi.dto.response.ChangeRequestResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.service.ChangeRequestService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/pm/change-requests")
+@RequiredArgsConstructor
+public class PmChangeRequestController {
+
+    private final ChangeRequestService changeRequestService;
+
+    @PostMapping
+    public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(changeRequestService.createChangeRequest(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ChangeRequestResponse> update(@PathVariable UUID id, @Valid @RequestBody ChangeRequestRequest request) {
+        return ResponseEntity.ok(changeRequestService.updateChangeRequest(id, request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ChangeRequestResponse> get(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.getChangeRequest(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<PaginationResponse<ChangeRequestResponse>> list(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String targetType,
+            @RequestParam(required = false) UUID targetId,
+            @RequestParam(required = false) String status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(changeRequestService.listChangeRequests(projectId, targetType, targetId, status, pageable));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        changeRequestService.deleteChangeRequest(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<ChangeRequestResponse> submit(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.submitForApproval(id));
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ChangeRequestResponse> approve(@PathVariable UUID id) {
+        // TODO: get current user as approver
+        return ResponseEntity.ok(changeRequestService.approve(id, "system"));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ChangeRequestResponse> reject(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.reject(id, "reason"));
+    }
+
+    @PostMapping("/{id}/implement")
+    public ResponseEntity<ChangeRequestResponse> implement(@PathVariable UUID id) {
+        return ResponseEntity.ok(changeRequestService.implement(id));
+    }
+
+    @PostMapping("/{id}/assignees/complete")
+    public ResponseEntity<ChangeRequestResponse> completeAssignee(
+            @PathVariable UUID id,
+            @RequestParam String userId,
+            @RequestParam UUID targetId) {
+        return ResponseEntity.ok(changeRequestService.markAssigneeComplete(id, userId, targetId));
     }
 }
 </file>
@@ -70176,6 +69910,241 @@ export class NewDiagramDialogComponent implements OnInit {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.html">
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
+<div class="space-y-5 p-0.5">
+
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
+        Change Request
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่ม Change Request
+    </button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อ, โครงการ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      <option value="Draft">ร่าง</option>
+      <option value="Submitted">รออนุมัติ</option>
+      <option value="Approved">อนุมัติ</option>
+      <option value="Rejected">ปฏิเสธ</option>
+      <option value="Implemented">ดำเนินการแล้ว</option>
+    </select>
+  </div>
+
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              รหัส
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+              ชื่อคำขอ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
+              โครงการ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+              ผู้เกี่ยวข้อง / ผู้แก้ไข
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (cr of changeRequests(); track cr.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  CR-{{ cr.id.substring(0, 8).toUpperCase() }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[var(--text-active)]">{{ cr.title }}</div>
+                <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ cr.description }}</div>
+              </td>
+              <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
+              <td class="px-4 py-3">
+                <div class="space-y-1">
+                  @for (assignee of cr.assignees; track assignee.id) {
+                    <div class="flex items-center gap-1.5 text-xs">
+                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="assignee.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                      <span class="font-medium">{{ assignee.userName }}</span>
+                      <span class="text-[10px] text-[var(--text-muted)]">({{ assignee.targetType }})</span>
+                      @if (assignee.status !== 'COMPLETED' && cr.status === 'APPROVED') {
+                        <button
+                          (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
+                          class="px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-[10px] hover:bg-[var(--crm-primary)]/20 transition-all ml-1"
+                        >
+                          แก้ไขเสร็จแล้ว
+                        </button>
+                      }
+                    </div>
+                  } @empty {
+                    <span class="text-xs text-[var(--text-muted)]">-</span>
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(cr.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(cr.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1 flex-wrap">
+
+                  <!-- View Detail -->
+                  <button
+                    (click)="goToView(cr.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    title="ดูรายละเอียดข้อมูล Change Request"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <!-- Edit (เฉพาะ DRAFT และ SUBMITTED แต่ SUBMITTED จะ disable) -->
+                  <button
+                    (click)="goToEdit(cr.id)"
+                    [disabled]="cr.status !== 'DRAFT' && cr.status !== 'SUBMITTED'"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="แก้ไขรายละเอียด"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <!-- Delete -->
+                  <button
+                    (click)="deleteChangeRequest(cr.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                    title="ลบ"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Change Request ใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    เพิ่ม Change Request
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- PAGINATION -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
+      </div>
+
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="page === currentPage() 
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' 
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
+</file>
+
 <file path="sic-app/src/app/feature/pm/rt/pmrt03/pmrt03.component.ts">
 // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
 
@@ -70681,199 +70650,6 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
     Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
     boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
-import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
-import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
-
-import com.softinter.sicapi.entity.pm.PmChangeRequest;
-import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
-import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
-import com.softinter.sicapi.service.CurrentUserService;
-import com.softinter.sicapi.service.ImpactAnalysisService;
-import com.softinter.sicapi.service.TraceLinkService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
-
-    private final ChangeImpactAnalysisRepository repository;
-    private final PmChangeRequestRepository changeRequestRepository;
-    private final CurrentUserService currentUserService;
-    private final TraceLinkService traceLinkService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
-        return repository.findByChangeRequestId(changeRequestId)
-                .map(this::toResponse)
-                .orElse(null);
-    }
-
-    @Override
-    @Transactional
-    public UUID save(SaveImpactAnalysisRequest request) {
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(request.getChangeRequestId())
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(request.getChangeRequestId())
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setDfdImpact(request.getDfdImpact());
-        analysis.setErImpact(request.getErImpact());
-        analysis.setUiImpact(request.getUiImpact());
-        analysis.setApiImpact(request.getApiImpact());
-        analysis.setTestImpact(request.getTestImpact());
-        analysis.setMandayImpact(request.getMandayImpact());
-        analysis.setTimelineImpact(request.getTimelineImpact());
-        analysis.setCostImpact(request.getCostImpact());
-
-        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
-        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
-        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
-        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
-        analysis.setImpactedBugIds(request.getImpactedBugIds());
-        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
-        analysis.setImpactedTableNames(request.getImpactedTableNames());
-
-        if (analysis.getAnalysisStatus() == null) {
-            analysis.setAnalysisStatus("MANUAL");
-        }
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
-        return saved.getId();
-    }
-
-    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
-        try {
-            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
-            return autoDetectUsingTrace(changeRequestId);
-        } catch (Exception e) {
-            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
-            return null;
-        }
-    }
-
-    @Override
-    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
-        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
-
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        UUID targetId = changeRequest.getTargetId();
-        String targetType = changeRequest.getTargetType();
-
-        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
-                targetId);
-
-        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
-
-        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
-        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
-        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
-        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
-        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
-
-        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
-        Set<UUID> diagramSet = new java.util.HashSet<>();
-        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
-        for (String dType : diagramTypes) {
-            if (impacted.containsKey(dType)) {
-                diagramSet.addAll(impacted.get(dType));
-            }
-        }
-        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
-
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(changeRequestId)
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
-        analysis.setImpactedRequirementIds(reqIds);
-        analysis.setImpactedSpecIds(specIds);
-        analysis.setImpactedTaskIds(taskIds);
-        analysis.setImpactedTestCaseIds(testCaseIds);
-        analysis.setImpactedBugIds(bugIds);
-        analysis.setImpactedDiagramIds(diagramIds);
-        analysis.setImpactedTableNames(new String[0]);
-
-        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
-        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
-            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
-            analysis.setMandayImpact(calculatedManday);
-        }
-        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
-            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
-            analysis.setTimelineImpact(calculatedDays);
-        }
-
-        analysis.setAnalysisStatus("AUTO");
-        analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
-
-        ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
-
-        return toResponse(saved);
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        repository.deleteById(id);
-        log.info("Impact Analysis deleted: {}", id);
-    }
-
-    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
-    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
-    
-    dto.setId(entity.getId());
-    dto.setChangeRequestId(entity.getChangeRequest().getId());
-    
-    dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
-    dto.setImpactedSpecIds(entity.getImpactedSpecIds());
-    dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
-    dto.setImpactedTaskIds(entity.getImpactedTaskIds());
-    dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
-    dto.setImpactedBugIds(entity.getImpactedBugIds());
-    
-    dto.setMandayImpact(entity.getMandayImpact());
-    dto.setTimelineImpact(entity.getTimelineImpact());
-    dto.setAnalysisStatus(entity.getAnalysisStatus());
-    dto.setAnalyzedAt(entity.getAnalyzedAt());
-    dto.setAnalyzedBy(entity.getAnalyzedBy());
-    
-    return dto;
-}
 }
 </file>
 
@@ -72799,420 +72575,216 @@ export const appConfig: ApplicationConfig = {
 };
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ChangeRequestServiceImpl.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ImpactAnalysisServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.dto.request.ChangeRequestRequest;
-import com.softinter.sicapi.dto.response.ChangeRequestResponse;
-import com.softinter.sicapi.dto.response.CrAssigneeResponse;
-import com.softinter.sicapi.dto.response.ChangeImpactResponse;
-import com.softinter.sicapi.dto.response.PaginationResponse;
-import com.softinter.sicapi.entity.pm.*;
-import com.softinter.sicapi.repository.pm.*;
-import com.softinter.sicapi.repository.su.SuProfileRepository;
-import com.softinter.sicapi.service.*;
-import com.softinter.sicapi.util.LocalizationHelper;
-import com.softinter.sicapi.util.PaginationUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.criteria.Predicate;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
+import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
+import com.softinter.sicapi.entity.pm.ChangeImpactAnalysis;
+
+import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
+import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.ImpactAnalysisService;
+import com.softinter.sicapi.service.TraceLinkService;
+
+import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ChangeRequestServiceImpl implements ChangeRequestService {
+public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
+    private final ChangeImpactAnalysisRepository repository;
     private final PmChangeRequestRepository changeRequestRepository;
-    private final PmRequirementRepository requirementRepository;
-    private final PmSpecificationRepository specificationRepository;
-    private final PmTaskRepository taskRepository;
-    private final SuProfileRepository profileRepository;
-    private final EditSessionService editSessionService;
+    private final PmDiagramTabRepository diagramTabRepository;
     private final CurrentUserService currentUserService;
-    private final PmCrAssigneeRepository pmCrAssigneeRepository;
-    private final PmChangeImpactRepository pmChangeImpactRepository;
-    private final ApprovalService approvalService;
-
-    @Override
-    @Transactional
-    public ChangeRequestResponse createChangeRequest(ChangeRequestRequest request) {
-        validateTargetExists(request.getTargetType(), request.getTargetId());
-
-        // ตรวจสอบสถานะเอกสารเป้าหมาย ห้ามเป็น DRAFT
-        String docStatus = getDocumentStatus(request.getTargetType(), request.getTargetId());
-        if ("DRAFT".equalsIgnoreCase(docStatus)) {
-            throw new IllegalStateException("Draft documents can be edited directly without a Change Request.");
-        }
-
-        List<PmChangeRequest> activeCRs = changeRequestRepository.findActiveByTarget(
-                request.getTargetType(), request.getTargetId()
-        );
-        if (!activeCRs.isEmpty()) {
-            throw new IllegalStateException("There is already an active Change Request for this document.");
-        }
-
-        PmChangeRequest cr = new PmChangeRequest();
-        cr.setProjectId(request.getProjectId());
-        cr.setTargetType(request.getTargetType());
-        cr.setTargetId(request.getTargetId());
-        cr.setTitle(request.getTitle());
-        cr.setDescription(request.getDescription());
-        cr.setChangeReason(request.getChangeReason());
-        cr.setRequesterId(currentUserService.getUserId());
-        cr.setStatus("DRAFT");
-        cr.setTargetVersion(request.getTargetVersion());
-        cr.setAssigneeId(request.getAssigneeId());
-        cr.setCreatedBy(currentUserService.getUserId());
-        cr.setCreatedDate(Instant.now());
-
-        cr = changeRequestRepository.save(cr);
-
-        // บันทึก Assignees
-        if (request.getAssignees() != null) {
-            for (var aReq : request.getAssignees()) {
-                PmCrAssignee assignee = new PmCrAssignee();
-                assignee.setChangeRequest(cr);
-                assignee.setUserId(aReq.getUserId());
-                assignee.setTargetType(aReq.getTargetType());
-                assignee.setTargetId(aReq.getTargetId());
-                assignee.setStatus("PENDING");
-                pmCrAssigneeRepository.save(assignee);
-            }
-        }
-
-        return toResponse(cr);
-    }
-
-    @Override
-    @Transactional
-    public ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        if (!"DRAFT".equals(cr.getStatus()) && !"SUBMITTED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Cannot update Change Request in status: " + cr.getStatus());
-        }
-
-        cr.setTitle(request.getTitle());
-        cr.setDescription(request.getDescription());
-        cr.setChangeReason(request.getChangeReason());
-        cr.setTargetVersion(request.getTargetVersion());
-        cr.setAssigneeId(request.getAssigneeId());
-        cr.setUpdatedBy(currentUserService.getUserId());
-        cr.setUpdatedDate(Instant.now());
-
-        // อัปเดต Assignees (ลบเดิม สร้างใหม่)
-        List<PmCrAssignee> existing = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        for (var a : existing) {
-            a.setIsDelete(true);
-            pmCrAssigneeRepository.save(a);
-        }
-
-        if (request.getAssignees() != null) {
-            for (var aReq : request.getAssignees()) {
-                PmCrAssignee assignee = new PmCrAssignee();
-                assignee.setChangeRequest(cr);
-                assignee.setUserId(aReq.getUserId());
-                assignee.setTargetType(aReq.getTargetType());
-                assignee.setTargetId(aReq.getTargetId());
-                assignee.setStatus("PENDING");
-                pmCrAssigneeRepository.save(assignee);
-            }
-        }
-
-        cr = changeRequestRepository.save(cr);
-        return toResponse(cr);
-    }
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
-    public ChangeRequestResponse getChangeRequest(UUID id) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-        return toResponse(cr);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PaginationResponse<ChangeRequestResponse> listChangeRequests(String targetType, UUID targetId, String status, Pageable pageable) {
-        Specification<PmChangeRequest> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.isFalse(root.get("isDelete")));
-
-            if (targetType != null) {
-                predicates.add(cb.equal(root.get("targetType"), targetType));
-            }
-            if (targetId != null) {
-                predicates.add(cb.equal(root.get("targetId"), targetId));
-            }
-            if (status != null && !status.isBlank()) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        Page<PmChangeRequest> page = changeRequestRepository.findAll(spec, pageable);
-        List<ChangeRequestResponse> data = page.getContent().stream()
+    public ImpactAnalysisResponse getByChangeRequest(UUID changeRequestId) {
+        return repository.findByChangeRequestId(changeRequestId)
                 .map(this::toResponse)
-                .toList();
-
-        return PaginationUtil.of(data, page.getNumber(), page.getSize(), page.getTotalElements());
+                .orElse(null);
     }
 
     @Override
     @Transactional
-    public void deleteChangeRequest(UUID id) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
+    public UUID save(SaveImpactAnalysisRequest request) {
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(request.getChangeRequestId())
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
-        cr.setIsDelete(true);
-        cr.setDeleteBy(currentUserService.getUserId());
-        cr.setDeleteDate(Instant.now());
-        changeRequestRepository.save(cr);
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(request.getChangeRequestId())
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setDfdImpact(request.getDfdImpact());
+        analysis.setErImpact(request.getErImpact());
+        analysis.setUiImpact(request.getUiImpact());
+        analysis.setApiImpact(request.getApiImpact());
+        analysis.setTestImpact(request.getTestImpact());
+        analysis.setMandayImpact(request.getMandayImpact());
+        analysis.setTimelineImpact(request.getTimelineImpact());
+        analysis.setCostImpact(request.getCostImpact());
+
+        analysis.setImpactedRequirementIds(request.getImpactedRequirementIds());
+        analysis.setImpactedSpecIds(request.getImpactedSpecIds());
+        analysis.setImpactedTaskIds(request.getImpactedTaskIds());
+        analysis.setImpactedTestCaseIds(request.getImpactedTestCaseIds());
+        analysis.setImpactedBugIds(request.getImpactedBugIds());
+        analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
+        analysis.setImpactedTableNames(request.getImpactedTableNames());
+
+        if (analysis.getAnalysisStatus() == null) {
+            analysis.setAnalysisStatus("MANUAL");
+        }
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Impact Analysis saved (MANUAL) for change request: {}", request.getChangeRequestId());
+        return saved.getId();
+    }
+
+    // ✅ ใช้ REQUIRES_NEW เพื่อไม่ให้ rollback กระทบ transaction หลัก
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ImpactAnalysisResponse autoDetect(UUID changeRequestId) {
+        try {
+            log.info("Starting auto-detect (legacy) for change request: {}", changeRequestId);
+            return autoDetectUsingTrace(changeRequestId);
+        } catch (Exception e) {
+            log.error("Auto-detect failed for change request: {}", changeRequestId, e);
+            return null;
+        }
+    }
+
+    @Override
+    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
+        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
+
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        UUID targetId = changeRequest.getTargetId();
+        String targetType = changeRequest.getTargetType();
+
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
+                targetId);
+
+        Map<String, Set<UUID>> impacted = traceResult.getImpacted();
+
+        UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
+        UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
+        UUID[] taskIds = impacted.getOrDefault("TASK", Set.of()).toArray(UUID[]::new);
+        UUID[] testCaseIds = impacted.getOrDefault("TEST_CASE", Set.of()).toArray(UUID[]::new);
+        UUID[] bugIds = impacted.getOrDefault("BUG", Set.of()).toArray(UUID[]::new);
+
+        // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
+        Set<UUID> diagramSet = new java.util.HashSet<>();
+        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
+        for (String dType : diagramTypes) {
+            if (impacted.containsKey(dType)) {
+                diagramSet.addAll(impacted.get(dType));
+            }
+        }
+        UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(changeRequestId)
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setImpactedRequirementIds(reqIds);
+        analysis.setImpactedSpecIds(specIds);
+        analysis.setImpactedTaskIds(taskIds);
+        analysis.setImpactedTestCaseIds(testCaseIds);
+        analysis.setImpactedBugIds(bugIds);
+        analysis.setImpactedDiagramIds(diagramIds);
+        analysis.setImpactedTableNames(new String[0]);
+
+        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
+        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
+            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+            analysis.setMandayImpact(calculatedManday);
+        }
+        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
+            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
+            analysis.setTimelineImpact(calculatedDays);
+        }
+
+        analysis.setAnalysisStatus("AUTO");
+        analysis.setAnalyzedAt(Instant.now());
+        analysis.setAnalyzedBy(currentUserService.getUserId());
+
+        ChangeImpactAnalysis saved = repository.save(analysis);
+        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
+
+        return toResponse(saved);
     }
 
     @Override
     @Transactional
-    public ChangeRequestResponse submitForApproval(UUID id) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        if (!"DRAFT".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only DRAFT Change Request can be submitted.");
-        }
-
-        // ค้นหาหรือระบุ flow สำหรับอนุมัติ Change Request (สมมติว่าใช้ flow ตัวแรกที่ผูกกับ Change Request หรือกำหนดดีฟอลต์)
-        // เนื่องจาก ApprovalServiceImpl มี helper `updateDocumentStatusOnSubmit` ที่จะคอยอัปเดตเป็น SUBMITTED ให้เมื่อ submit สำเร็จ
-        // เราทำการเรียก submitForApproval ไปที่ ApprovalService
-        com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
-        submitReq.setDocumentType("CHANGE_REQUEST");
-        submitReq.setDocumentId(cr.getId());
-        submitReq.setDocumentCode("CR-" + cr.getId().toString().substring(0, 8).toUpperCase());
-        submitReq.setDocumentTitle(cr.getTitle());
-        submitReq.setComment("ส่งขออนุมัติ Change Request: " + cr.getTitle());
-        
-        approvalService.submitForApproval(submitReq);
-
-        return toResponse(cr);
+    public void delete(UUID id) {
+        repository.deleteById(id);
+        log.info("Impact Analysis deleted: {}", id);
     }
 
-    @Override
-    @Transactional
-    public ChangeRequestResponse approve(UUID id, String approvedBy) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+    private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
+    ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
+    
+    dto.setId(entity.getId());
+    dto.setChangeRequestId(entity.getChangeRequest().getId());
+    
+        dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
+        dto.setImpactedSpecIds(entity.getImpactedSpecIds());
+        dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
 
-        cr.setStatus("APPROVED");
-        cr.setApprovedBy(approvedBy);
-        cr.setApprovedAt(Instant.now());
-        cr.setUpdatedBy(currentUserService.getUserId());
-        cr.setUpdatedDate(Instant.now());
-        cr = changeRequestRepository.save(cr);
-
-        // สร้าง Edit Session ให้ Assignee
-        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        for (PmCrAssignee assignee : assignees) {
-            editSessionService.createEditSession(cr.getId(), assignee.getTargetType(), assignee.getTargetId(), assignee.getUserId());
-        }
-
-        return toResponse(cr);
-    }
-
-    @Override
-    @Transactional
-    public ChangeRequestResponse reject(UUID id, String reason) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        cr.setStatus("REJECTED");
-        cr.setUpdatedBy(currentUserService.getUserId());
-        cr.setUpdatedDate(Instant.now());
-        if (reason != null && !reason.isBlank()) {
-            cr.setDescription(cr.getDescription() + "\n[Rejected] " + reason);
-        }
-        cr = changeRequestRepository.save(cr);
-        return toResponse(cr);
-    }
-
-    @Override
-    @Transactional
-    public ChangeRequestResponse implement(UUID id) {
-        PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        if (!"APPROVED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only APPROVED Change Request can be implemented.");
-        }
-
-        cr.setStatus("IMPLEMENTED");
-        cr.setImplementedAt(Instant.now());
-        cr.setUpdatedBy(currentUserService.getUserId());
-        cr.setUpdatedDate(Instant.now());
-        cr = changeRequestRepository.save(cr);
-
-        // ปิด Edit Session สำหรับเอกสารเป้าหมายทั้งหมด และเปลี่ยนสถานะเอกสารเป็น CHANGED
-        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        for (PmCrAssignee assignee : assignees) {
-            editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
-            updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
-        }
-
-        // สำหรับ target หลักของ CR เอง
-        editSessionService.closeEditSession(cr.getTargetType(), cr.getTargetId());
-        updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "CHANGED");
-
-        return toResponse(cr);
-    }
-
-    @Override
-    @Transactional
-    public ChangeRequestResponse markAssigneeComplete(UUID changeRequestId, String userId, UUID targetId) {
-        PmCrAssignee assignee = pmCrAssigneeRepository.findByUserIdAndChangeRequestIdAndIsDeleteFalse(userId, changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Assignee not found for this user in the Change Request"));
-
-        assignee.setStatus("COMPLETED");
-        assignee.setCompletedAt(Instant.now());
-        pmCrAssigneeRepository.save(assignee);
-
-        // ปิด Edit Session ของ Assignee คนนี้
-        editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
-        updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
-
-        // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
-        List<PmCrAssignee> pending = pmCrAssigneeRepository.findByChangeRequestIdAndStatusAndIsDeleteFalse(changeRequestId, "PENDING");
-        PmChangeRequest cr = changeRequestRepository.findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-        if (pending.isEmpty()) {
-            cr.setStatus("IMPLEMENTED");
-            cr.setImplementedAt(Instant.now());
-            changeRequestRepository.save(cr);
-        }
-
-        return toResponse(cr);
-    }
-
-    // ============================ Helper Methods ============================
-
-    private String getDocumentStatus(String targetType, UUID targetId) {
-        switch (targetType.toUpperCase()) {
-            case "REQUIREMENT":
-                return requirementRepository.findById(targetId).map(PmRequirement::getStatus).orElse("DRAFT");
-            case "SPECIFICATION":
-                return specificationRepository.findById(targetId).map(PmSpecification::getStatus).orElse("DRAFT");
-            default:
-                return "DRAFT";
-        }
-    }
-
-    private void updateDocumentStatus(String targetType, UUID targetId, String newStatus) {
-        switch (targetType.toUpperCase()) {
-            case "REQUIREMENT":
-                requirementRepository.findById(targetId).ifPresent(r -> {
-                    r.setStatus(newStatus);
-                    requirementRepository.save(r);
+        if (entity.getImpactedDiagramIds() != null && entity.getImpactedDiagramIds().length > 0) {
+            java.util.List<ImpactAnalysisResponse.DiagramItem> diagramItems = new java.util.ArrayList<>();
+            for (UUID diagramId : entity.getImpactedDiagramIds()) {
+                ImpactAnalysisResponse.DiagramItem item = new ImpactAnalysisResponse.DiagramItem();
+                item.setId(diagramId);
+                diagramTabRepository.findById(diagramId).ifPresentOrElse(d -> {
+                    item.setName(d.getName());
+                    item.setDiagramType(d.getDiagramType());
+                }, () -> {
+                    item.setName("Diagram " + diagramId.toString().substring(0, 8));
                 });
-                break;
-            case "SPECIFICATION":
-                specificationRepository.findById(targetId).ifPresent(s -> {
-                    s.setStatus(newStatus);
-                    specificationRepository.save(s);
-                });
-                break;
+                diagramItems.add(item);
+            }
+            dto.setImpactedDiagrams(diagramItems);
         }
-    }
 
-    private void validateTargetExists(String targetType, UUID targetId) {
-        switch (targetType.toUpperCase()) {
-            case "REQUIREMENT":
-                if (!requirementRepository.existsById(targetId)) {
-                    throw new RuntimeException("Requirement not found: " + targetId);
-                }
-                break;
-            case "SPECIFICATION":
-                if (!specificationRepository.existsById(targetId)) {
-                    throw new RuntimeException("Specification not found: " + targetId);
-                }
-                break;
-            case "TASK":
-                if (!taskRepository.existsById(targetId)) {
-                    throw new RuntimeException("Task not found: " + targetId);
-                }
-                break;
-            case "DFD":
-            case "ER":
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported target type: " + targetType);
-        }
-    }
-
-    private ChangeRequestResponse toResponse(PmChangeRequest cr) {
-        ChangeRequestResponse response = new ChangeRequestResponse();
-        response.setId(cr.getId());
-        response.setProjectId(cr.getProjectId());
-        response.setTargetType(cr.getTargetType());
-        response.setTargetId(cr.getTargetId());
-        response.setTitle(cr.getTitle());
-        response.setDescription(cr.getDescription());
-        response.setChangeReason(cr.getChangeReason());
-        response.setRequesterId(cr.getRequesterId());
-        response.setRequesterName(getUserName(cr.getRequesterId()));
-        response.setAssigneeId(cr.getAssigneeId());
-        response.setAssigneeName(getUserName(cr.getAssigneeId()));
-        response.setStatus(cr.getStatus());
-        response.setTargetVersion(cr.getTargetVersion());
-        response.setApprovedBy(cr.getApprovedBy());
-        response.setApprovedAt(cr.getApprovedAt());
-        response.setImplementedAt(cr.getImplementedAt());
-        response.setCreatedDate(cr.getCreatedDate());
-
-        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        response.setAssignees(assignees.stream().map(this::toAssigneeResponse).collect(Collectors.toList()));
-
-        List<PmChangeImpact> impacts = pmChangeImpactRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        response.setImpacts(impacts.stream().map(this::toImpactResponse).collect(Collectors.toList()));
-
-        return response;
-    }
-
-    private CrAssigneeResponse toAssigneeResponse(PmCrAssignee a) {
-        CrAssigneeResponse resp = new CrAssigneeResponse();
-        resp.setId(a.getId());
-        resp.setUserId(a.getUserId());
-        resp.setUserName(getUserName(a.getUserId()));
-        resp.setTargetType(a.getTargetType());
-        resp.setTargetId(a.getTargetId());
-        resp.setStatus(a.getStatus());
-        resp.setCompletedAt(a.getCompletedAt());
-        return resp;
-    }
-
-    private ChangeImpactResponse toImpactResponse(PmChangeImpact i) {
-        ChangeImpactResponse resp = new ChangeImpactResponse();
-        resp.setId(i.getId());
-        resp.setImpactedType(i.getImpactedType());
-        resp.setImpactedId(i.getImpactedId());
-        resp.setImpactedTitle(i.getImpactedTitle());
-        resp.setImpactLevel(i.getImpactLevel());
-        return resp;
-    }
-
-    private String getUserName(String userId) {
-        if (userId == null) return userId;
-        return profileRepository.findByUserId(userId)
-                .map(LocalizationHelper::getFullName)
-                .orElse(userId);
-    }
+        dto.setImpactedTaskIds(entity.getImpactedTaskIds());
+        dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
+        dto.setImpactedBugIds(entity.getImpactedBugIds());
+    
+    dto.setMandayImpact(entity.getMandayImpact());
+    dto.setTimelineImpact(entity.getTimelineImpact());
+    dto.setAnalysisStatus(entity.getAnalysisStatus());
+    dto.setAnalyzedAt(entity.getAnalyzedAt());
+    dto.setAnalyzedBy(entity.getAnalyzedBy());
+    
+    return dto;
+}
 }
 </file>
 
@@ -73571,251 +73143,6 @@ export class SqlExportDialogComponent implements OnInit {
 
   close() {
     this.dialogService.close();
-  }
-}
-</file>
-
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.ts">
-// src/app/feature/pm/dt/pmdt07/pmdt07.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-
-import { ChangeRequestService } from './change-request.service';
-
-import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
-
-@Component({
-  selector: 'app-pmdt07',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt07.component.html',
-})
-export class Pmdt07Component implements OnInit {
-  private http = inject(HttpClient);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private navigation = inject(NavigationService);
-  private crService = inject(ChangeRequestService);
-  private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
-
-  // ใช้ Math ใน template
-  readonly Math = Math;
-
-  // State
-  isLoading = signal(false);
-  changeRequests = signal<ChangeRequestItem[]>([]);
-
-  totalItems = signal(0);
-  currentPage = signal(1);
-  pageSize = signal(10);
-  searchTerm = signal('');
-  filterStatus = signal('all');
-  projectId = signal<string | null>(null);
-
-  // Computed
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  hasPrevious = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  ngOnInit() {
-    this.route.queryParams.subscribe((queryParams) => {
-      this.projectId.set(queryParams['projectId'] || null);
-      this.loadChangeRequests();
-    });
-  }
-
-  loadChangeRequests() {
-    this.isLoading.set(true);
-    let params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString())
-      .set('keyword', this.searchTerm() || '')
-      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus());
-
-    if (this.projectId()) {
-      params = params.set('projectId', this.projectId()!);
-    }
-
-    this.http
-      .get<any>(this.baseUrl, { params })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (res) => {
-          this.changeRequests.set(res.data || []);
-          this.totalItems.set(res.pageable?.totalElements || 0);
-        },
-        error: () =>
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
-      });
-  }
-
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadChangeRequests();
-  }
-
-  goToAdd() {
-    if (this.projectId()) {
-      this.navigation.navigate(['/feature/pm/pmdt07/new'], {
-        queryParams: { projectId: this.projectId() },
-      });
-    } else {
-      this.navigation.navigate(['/feature/pm/pmdt07/new']);
-    }
-  }
-
-  goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
-  }
-
-  goToImpact(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
-      queryParams: { showImpact: true } // optional
-    });
-  }
-
-  // ✅ ไปที่หน้า Approval Center
-  goToApproval(crId: string) {
-    this.router.navigate(['/feature/pm/approval', crId]);
-  }
-
-  deleteChangeRequest(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
-      if (ok) {
-        this.http.delete(`${this.baseUrl}/${id}`).subscribe({
-          next: () => {
-            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
-            this.loadChangeRequests();
-          },
-          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
-        });
-      }
-    });
-  }
-
-  // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
-
-  submitRequest(id: string) {
-    this.crService.submitForApproval(id).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
-    });
-  }
-
-  implementRequest(id: string) {
-    this.crService.implement(id).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
-    });
-  }
-
-  completeAssigneeTask(id: string, userId: string, targetId: string) {
-    this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
-    });
-  }
-
-  // ===== Helper =====
-
-  getStatusClass(status: string): string {
-    if (!status) return 'bg-gray-100 text-gray-600';
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600',
-      DRAFT: 'bg-gray-100 text-gray-600',
-      Submitted: 'bg-blue-100 text-blue-700',
-      SUBMITTED: 'bg-blue-100 text-blue-700',
-      'In Review': 'bg-blue-100 text-blue-700',
-      IN_REVIEW: 'bg-blue-100 text-blue-700',
-      Pending: 'bg-yellow-100 text-yellow-700',
-      PENDING: 'bg-yellow-100 text-yellow-700',
-      Approved: 'bg-emerald-100 text-emerald-700',
-      APPROVED: 'bg-emerald-100 text-emerald-700',
-      Rejected: 'bg-red-100 text-red-700',
-      REJECTED: 'bg-red-100 text-red-700',
-      Implemented: 'bg-purple-100 text-purple-700',
-      IMPLEMENTED: 'bg-purple-100 text-purple-700',
-      'Need Revision': 'bg-orange-100 text-orange-700',
-      NEED_REVISION: 'bg-orange-100 text-orange-700',
-      Cancelled: 'bg-gray-300 text-gray-700',
-      CANCELLED: 'bg-gray-300 text-gray-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
-  }
-
-  getStatusText(status: string): string {
-    if (!status) return 'ร่าง';
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      DRAFT: 'ร่าง',
-      Submitted: 'รออนุมัติ',
-      SUBMITTED: 'รออนุมัติ',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
-      Pending: 'รอดำเนินการ',
-      PENDING: 'รอดำเนินการ',
-      Approved: 'อนุมัติ',
-      APPROVED: 'อนุมัติ',
-      Rejected: 'ปฏิเสธ',
-      REJECTED: 'ปฏิเสธ',
-      Implemented: 'ดำเนินการแล้ว',
-      IMPLEMENTED: 'ดำเนินการแล้ว',
-      'Need Revision': 'ต้องแก้ไข',
-      NEED_REVISION: 'ต้องแก้ไข',
-      Cancelled: 'ยกเลิก',
-      CANCELLED: 'ยกเลิก',
-    };
-    return map[status] || status;
   }
 }
 </file>
@@ -74652,6 +73979,431 @@ public class ApprovalServiceImpl implements ApprovalService {
         if (userId == null) {
             return null;
         }
+        return profileRepository.findByUserId(userId)
+                .map(LocalizationHelper::getFullName)
+                .orElse(userId);
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ChangeRequestServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.request.ChangeRequestRequest;
+import com.softinter.sicapi.dto.response.ChangeRequestResponse;
+import com.softinter.sicapi.dto.response.CrAssigneeResponse;
+import com.softinter.sicapi.dto.response.ChangeImpactResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.entity.pm.*;
+import com.softinter.sicapi.repository.pm.*;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.service.*;
+import com.softinter.sicapi.util.LocalizationHelper;
+import com.softinter.sicapi.util.PaginationUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.criteria.Predicate;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ChangeRequestServiceImpl implements ChangeRequestService {
+
+    private final PmChangeRequestRepository changeRequestRepository;
+    private final PmRequirementRepository requirementRepository;
+    private final PmSpecificationRepository specificationRepository;
+    private final PmTaskRepository taskRepository;
+    private final SuProfileRepository profileRepository;
+    private final EditSessionService editSessionService;
+    private final CurrentUserService currentUserService;
+    private final PmCrAssigneeRepository pmCrAssigneeRepository;
+    private final PmChangeImpactRepository pmChangeImpactRepository;
+    private final PmCustomerProjectRepository projectRepository;
+    private final ApprovalService approvalService;
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse createChangeRequest(ChangeRequestRequest request) {
+        validateTargetExists(request.getTargetType(), request.getTargetId());
+
+        // ตรวจสอบสถานะเอกสารเป้าหมาย ห้ามเป็น DRAFT
+        String docStatus = getDocumentStatus(request.getTargetType(), request.getTargetId());
+        if ("DRAFT".equalsIgnoreCase(docStatus)) {
+            throw new IllegalStateException("Draft documents can be edited directly without a Change Request.");
+        }
+
+        List<PmChangeRequest> activeCRs = changeRequestRepository.findActiveByTarget(
+                request.getTargetType(), request.getTargetId()
+        );
+        if (!activeCRs.isEmpty()) {
+            throw new IllegalStateException("There is already an active Change Request for this document.");
+        }
+
+        PmChangeRequest cr = new PmChangeRequest();
+        cr.setProjectId(request.getProjectId());
+        cr.setTargetType(request.getTargetType());
+        cr.setTargetId(request.getTargetId());
+        cr.setTitle(request.getTitle());
+        cr.setDescription(request.getDescription());
+        cr.setChangeReason(request.getChangeReason());
+        cr.setRequesterId(currentUserService.getUserId());
+        cr.setStatus("DRAFT");
+        cr.setTargetVersion(request.getTargetVersion());
+        cr.setAssigneeId(request.getAssigneeId());
+        cr.setCreatedBy(currentUserService.getUserId());
+        cr.setCreatedDate(Instant.now());
+
+        cr = changeRequestRepository.save(cr);
+
+        // บันทึก Assignees
+        if (request.getAssignees() != null) {
+            for (var aReq : request.getAssignees()) {
+                PmCrAssignee assignee = new PmCrAssignee();
+                assignee.setChangeRequest(cr);
+                assignee.setUserId(aReq.getUserId());
+                assignee.setTargetType(aReq.getTargetType());
+                assignee.setTargetId(aReq.getTargetId());
+                assignee.setStatus("PENDING");
+                pmCrAssigneeRepository.save(assignee);
+            }
+        }
+
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        if (!"DRAFT".equals(cr.getStatus()) && !"SUBMITTED".equals(cr.getStatus())) {
+            throw new IllegalStateException("Cannot update Change Request in status: " + cr.getStatus());
+        }
+
+        cr.setTitle(request.getTitle());
+        cr.setDescription(request.getDescription());
+        cr.setChangeReason(request.getChangeReason());
+        cr.setTargetVersion(request.getTargetVersion());
+        cr.setAssigneeId(request.getAssigneeId());
+        cr.setUpdatedBy(currentUserService.getUserId());
+        cr.setUpdatedDate(Instant.now());
+
+        // อัปเดต Assignees (ลบเดิม สร้างใหม่)
+        List<PmCrAssignee> existing = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+        for (var a : existing) {
+            a.setIsDelete(true);
+            pmCrAssigneeRepository.save(a);
+        }
+
+        if (request.getAssignees() != null) {
+            for (var aReq : request.getAssignees()) {
+                PmCrAssignee assignee = new PmCrAssignee();
+                assignee.setChangeRequest(cr);
+                assignee.setUserId(aReq.getUserId());
+                assignee.setTargetType(aReq.getTargetType());
+                assignee.setTargetId(aReq.getTargetId());
+                assignee.setStatus("PENDING");
+                pmCrAssigneeRepository.save(assignee);
+            }
+        }
+
+        cr = changeRequestRepository.save(cr);
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChangeRequestResponse getChangeRequest(UUID id) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, Pageable pageable) {
+        Specification<PmChangeRequest> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (targetType != null) {
+                predicates.add(cb.equal(root.get("targetType"), targetType));
+            }
+            if (targetId != null) {
+                predicates.add(cb.equal(root.get("targetId"), targetId));
+            }
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<PmChangeRequest> page = changeRequestRepository.findAll(spec, pageable);
+        List<ChangeRequestResponse> data = page.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return PaginationUtil.of(data, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    @Override
+    @Transactional
+    public void deleteChangeRequest(UUID id) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+        cr.setIsDelete(true);
+        cr.setDeleteBy(currentUserService.getUserId());
+        cr.setDeleteDate(Instant.now());
+        changeRequestRepository.save(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse submitForApproval(UUID id) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        if (!"DRAFT".equals(cr.getStatus())) {
+            throw new IllegalStateException("Only DRAFT Change Request can be submitted.");
+        }
+
+        // ค้นหาหรือระบุ flow สำหรับอนุมัติ Change Request (สมมติว่าใช้ flow ตัวแรกที่ผูกกับ Change Request หรือกำหนดดีฟอลต์)
+        // เนื่องจาก ApprovalServiceImpl มี helper `updateDocumentStatusOnSubmit` ที่จะคอยอัปเดตเป็น SUBMITTED ให้เมื่อ submit สำเร็จ
+        // เราทำการเรียก submitForApproval ไปที่ ApprovalService
+        com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
+        submitReq.setDocumentType("CHANGE_REQUEST");
+        submitReq.setDocumentId(cr.getId());
+        submitReq.setDocumentCode("CR-" + cr.getId().toString().substring(0, 8).toUpperCase());
+        submitReq.setDocumentTitle(cr.getTitle());
+        submitReq.setComment("ส่งขออนุมัติ Change Request: " + cr.getTitle());
+        
+        approvalService.submitForApproval(submitReq);
+
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse approve(UUID id, String approvedBy) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        cr.setStatus("APPROVED");
+        cr.setApprovedBy(approvedBy);
+        cr.setApprovedAt(Instant.now());
+        cr.setUpdatedBy(currentUserService.getUserId());
+        cr.setUpdatedDate(Instant.now());
+        cr = changeRequestRepository.save(cr);
+
+        // สร้าง Edit Session ให้ Assignee
+        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+        for (PmCrAssignee assignee : assignees) {
+            editSessionService.createEditSession(cr.getId(), assignee.getTargetType(), assignee.getTargetId(), assignee.getUserId());
+        }
+
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse reject(UUID id, String reason) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        cr.setStatus("REJECTED");
+        cr.setUpdatedBy(currentUserService.getUserId());
+        cr.setUpdatedDate(Instant.now());
+        if (reason != null && !reason.isBlank()) {
+            cr.setDescription(cr.getDescription() + "\n[Rejected] " + reason);
+        }
+        cr = changeRequestRepository.save(cr);
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse implement(UUID id) {
+        PmChangeRequest cr = changeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        if (!"APPROVED".equals(cr.getStatus())) {
+            throw new IllegalStateException("Only APPROVED Change Request can be implemented.");
+        }
+
+        cr.setStatus("IMPLEMENTED");
+        cr.setImplementedAt(Instant.now());
+        cr.setUpdatedBy(currentUserService.getUserId());
+        cr.setUpdatedDate(Instant.now());
+        cr = changeRequestRepository.save(cr);
+
+        // ปิด Edit Session สำหรับเอกสารเป้าหมายทั้งหมด และเปลี่ยนสถานะเอกสารเป็น CHANGED
+        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+        for (PmCrAssignee assignee : assignees) {
+            editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
+            updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
+        }
+
+        // สำหรับ target หลักของ CR เอง
+        editSessionService.closeEditSession(cr.getTargetType(), cr.getTargetId());
+        updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "CHANGED");
+
+        return toResponse(cr);
+    }
+
+    @Override
+    @Transactional
+    public ChangeRequestResponse markAssigneeComplete(UUID changeRequestId, String userId, UUID targetId) {
+        PmCrAssignee assignee = pmCrAssigneeRepository.findByUserIdAndChangeRequestIdAndIsDeleteFalse(userId, changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Assignee not found for this user in the Change Request"));
+
+        assignee.setStatus("COMPLETED");
+        assignee.setCompletedAt(Instant.now());
+        pmCrAssigneeRepository.save(assignee);
+
+        // ปิด Edit Session ของ Assignee คนนี้
+        editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
+        updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
+
+        // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
+        List<PmCrAssignee> pending = pmCrAssigneeRepository.findByChangeRequestIdAndStatusAndIsDeleteFalse(changeRequestId, "PENDING");
+        PmChangeRequest cr = changeRequestRepository.findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+        if (pending.isEmpty()) {
+            cr.setStatus("IMPLEMENTED");
+            cr.setImplementedAt(Instant.now());
+            changeRequestRepository.save(cr);
+        }
+
+        return toResponse(cr);
+    }
+
+    // ============================ Helper Methods ============================
+
+    private String getDocumentStatus(String targetType, UUID targetId) {
+        switch (targetType.toUpperCase()) {
+            case "REQUIREMENT":
+                return requirementRepository.findById(targetId).map(PmRequirement::getStatus).orElse("DRAFT");
+            case "SPECIFICATION":
+                return specificationRepository.findById(targetId).map(PmSpecification::getStatus).orElse("DRAFT");
+            default:
+                return "DRAFT";
+        }
+    }
+
+    private void updateDocumentStatus(String targetType, UUID targetId, String newStatus) {
+        switch (targetType.toUpperCase()) {
+            case "REQUIREMENT":
+                requirementRepository.findById(targetId).ifPresent(r -> {
+                    r.setStatus(newStatus);
+                    requirementRepository.save(r);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(targetId).ifPresent(s -> {
+                    s.setStatus(newStatus);
+                    specificationRepository.save(s);
+                });
+                break;
+        }
+    }
+
+    private void validateTargetExists(String targetType, UUID targetId) {
+        switch (targetType.toUpperCase()) {
+            case "REQUIREMENT":
+                if (!requirementRepository.existsById(targetId)) {
+                    throw new RuntimeException("Requirement not found: " + targetId);
+                }
+                break;
+            case "SPECIFICATION":
+                if (!specificationRepository.existsById(targetId)) {
+                    throw new RuntimeException("Specification not found: " + targetId);
+                }
+                break;
+            case "TASK":
+                if (!taskRepository.existsById(targetId)) {
+                    throw new RuntimeException("Task not found: " + targetId);
+                }
+                break;
+            case "DFD":
+            case "ER":
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported target type: " + targetType);
+        }
+    }
+
+    private ChangeRequestResponse toResponse(PmChangeRequest cr) {
+        ChangeRequestResponse response = new ChangeRequestResponse();
+        response.setId(cr.getId());
+        response.setProjectId(cr.getProjectId());
+        if (cr.getProjectId() != null) {
+            projectRepository.findById(cr.getProjectId())
+                    .ifPresent(p -> response.setProjectName(p.getProjectName()));
+        }
+        response.setTargetType(cr.getTargetType());
+        response.setTargetId(cr.getTargetId());
+        response.setTitle(cr.getTitle());
+        response.setDescription(cr.getDescription());
+        response.setChangeReason(cr.getChangeReason());
+        response.setRequesterId(cr.getRequesterId());
+        response.setRequesterName(getUserName(cr.getRequesterId()));
+        response.setAssigneeId(cr.getAssigneeId());
+        response.setAssigneeName(getUserName(cr.getAssigneeId()));
+        response.setStatus(cr.getStatus());
+        response.setTargetVersion(cr.getTargetVersion());
+        response.setApprovedBy(cr.getApprovedBy());
+        response.setApprovedAt(cr.getApprovedAt());
+        response.setImplementedAt(cr.getImplementedAt());
+        response.setCreatedDate(cr.getCreatedDate());
+
+        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+        response.setAssignees(assignees.stream().map(this::toAssigneeResponse).collect(Collectors.toList()));
+
+        List<PmChangeImpact> impacts = pmChangeImpactRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+        response.setImpacts(impacts.stream().map(this::toImpactResponse).collect(Collectors.toList()));
+
+        return response;
+    }
+
+    private CrAssigneeResponse toAssigneeResponse(PmCrAssignee a) {
+        CrAssigneeResponse resp = new CrAssigneeResponse();
+        resp.setId(a.getId());
+        resp.setUserId(a.getUserId());
+        resp.setUserName(getUserName(a.getUserId()));
+        resp.setTargetType(a.getTargetType());
+        resp.setTargetId(a.getTargetId());
+        resp.setStatus(a.getStatus());
+        resp.setCompletedAt(a.getCompletedAt());
+        return resp;
+    }
+
+    private ChangeImpactResponse toImpactResponse(PmChangeImpact i) {
+        ChangeImpactResponse resp = new ChangeImpactResponse();
+        resp.setId(i.getId());
+        resp.setImpactedType(i.getImpactedType());
+        resp.setImpactedId(i.getImpactedId());
+        resp.setImpactedTitle(i.getImpactedTitle());
+        resp.setImpactLevel(i.getImpactLevel());
+        return resp;
+    }
+
+    private String getUserName(String userId) {
+        if (userId == null) return userId;
         return profileRepository.findByUserId(userId)
                 .map(LocalizationHelper::getFullName)
                 .orElse(userId);
@@ -75621,374 +75373,252 @@ export class Pmdt02Component implements OnInit {
 }
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts">
-// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.ts">
+// src/app/feature/pm/dt/pmdt07/pmdt07.component.ts
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import {
-    FormBuilder,
-    FormGroup,
-    FormsModule,
-    ReactiveFormsModule,
-    Validators,
-} from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../../core/services/customer-state.service';
-import { ApprovalService } from '../../pmdt03/approval.service';
-import type { ApprovalFlow } from '../../pmdt03/approval.model';
-import { BusinessService } from '../../../../../core/services/business.service';
-import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
+import { environment } from '../../../../../environments/environment';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 
-import { ChangeRequestFormModel } from './pmdt07A.model';
+import { ChangeRequestService } from './change-request.service';
 
+import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
 
 @Component({
-    selector: 'app-pmdt07a',
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        RouterModule,
-        SicButtonComponent,
-        SicInputComponent,
-        SicInputAreaComponent,
-        SicComboboxComponent,
-        SicNumberComponent,
-        SicCardComponent,
-    ],
-    changeDetection: ChangeDetectionStrategy.Eager,
-    templateUrl: './pmdt07A.component.html',
+  selector: 'app-pmdt07',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './pmdt07.component.html',
 })
-export class Pmdt07AComponent implements OnInit {
-    private fb = inject(FormBuilder);
-    private http = inject(HttpClient);
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private dialog = inject(DialogService);
-    private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
-    private approvalService = inject(ApprovalService);
-    private businessService = inject(BusinessService);
-    private impactService = inject(ImpactAnalysisService);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
+export class Pmdt07Component implements OnInit {
+  private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private crService = inject(ChangeRequestService);
+  private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
-    get businessId() {
-        return this.businessService.getCurrentBusinessId();
+  // ใช้ Math ใน template
+  readonly Math = Math;
+
+  // State
+  isLoading = signal(false);
+  changeRequests = signal<ChangeRequestItem[]>([]);
+
+  totalItems = signal(0);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  projectId = signal<string | null>(null);
+
+  // Computed
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  hasPrevious = computed(() => this.currentPage() > 1);
+  hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
     }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
 
-    environment = environment;
-    readonly Math = Math;
-
-    isEdit = false;
-    changeRequestId: string | null = null;
-    isLoading = false;
-    isSaving = false;
-    projectId: string | null = null;
-
-    // ===== Approval Flow =====
-    flows: ApprovalFlow[] = [];
-    selectedFlowId: string | null = null;
-    isLoadingFlows = false;
-
-    // ===== Impact Analysis =====
-    impactData = signal<ImpactAnalysis | null>(null);
-    isLoadingImpact = signal(false);
-    showImpactSection = signal(false);
-
-    // ===== Form =====
-    form: FormGroup = this.fb.group({
-        id: [null],
-        projectId: [null],
-        targetType: ['REQUIREMENT', Validators.required],
-        targetId: [null, Validators.required],
-        title: [null, Validators.required],
-        description: [null],
-        changeReason: [null],
-        assigneeId: [null, Validators.required],
-        rowVersion: [null],
+  ngOnInit() {
+    this.route.queryParams.subscribe((queryParams) => {
+      this.projectId.set(queryParams['projectId'] || null);
+      this.loadChangeRequests();
     });
+  }
 
-    selectedTargetType = signal('REQUIREMENT');
-    selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
-    selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
+  loadChangeRequests() {
+    this.isLoading.set(true);
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString())
+      .set('keyword', this.searchTerm() || '')
+      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus());
 
-    documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
-
-    // ===== Methods =====
-
-    onAssigneeSelected(item: any, combobox: any) {
-        if (item && item.value) {
-            const exists = this.selectedAssignees().some(a => a.userId === item.value);
-            if (!exists) {
-                this.selectedAssignees.update(arr => [...arr, { userId: item.value, userName: item.text }]);
-                this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
-                this.form.get('assigneeId')?.markAsDirty();
-                this.form.get('assigneeId')?.markAsTouched();
-            }
-            combobox.writeValue(null);
-        }
+    if (this.projectId()) {
+      params = params.set('projectId', this.projectId()!);
     }
 
-    removeAssignee(userId: string) {
-        this.selectedAssignees.update(arr => arr.filter(a => a.userId !== userId));
-        this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
-        this.form.get('assigneeId')?.markAsDirty();
-        this.form.get('assigneeId')?.markAsTouched();
-    }
+    this.http
+      .get<any>(this.baseUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.changeRequests.set(res.data || []);
+          this.totalItems.set(res.pageable?.totalElements || 0);
+        },
+        error: () =>
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
+      });
+  }
 
-    targetDocumentApiUrl = computed(() => {
-        const type = this.selectedTargetType();
-        if (type === 'REQUIREMENT') {
-            return environment.apiBaseUrl + '/api/pm/requirement/combobox';
-        } else if (type === 'SPECIFICATION') {
-            return environment.apiBaseUrl + '/api/pm/specification/combobox';
-        } else if (type === 'TASK') {
-            return environment.apiBaseUrl + '/api/pm/tasks/combobox';
-        }
-        return '';
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadChangeRequests();
+  }
+
+  goToAdd() {
+    if (this.projectId()) {
+      this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+        queryParams: { projectId: this.projectId() },
+      });
+    } else {
+      this.navigation.navigate(['/feature/pm/pmdt07/new']);
+    }
+  }
+
+  goToEdit(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
+  }
+
+  goToView(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'view']);
+  }
+
+  goToImpact(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
+      queryParams: { showImpact: true } // optional
     });
+  }
 
-    ngOnInit() {
-        this.route.params.subscribe((params) => {
-            const id = params['id'];
-            if (id) {
-                this.isEdit = true;
-                this.changeRequestId = id;
-                this.loadChangeRequest(id);
-                // โหลด Impact Analysis เฉพาะตอนแก้ไข
-                this.loadImpactAnalysis(id);
-            }
+  // ✅ ไปที่หน้า Approval Center
+  goToApproval(crId: string) {
+    this.router.navigate(['/feature/pm/approval', crId]);
+  }
+
+  deleteChangeRequest(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.http.delete(`${this.baseUrl}/${id}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
+            this.loadChangeRequests();
+          },
+          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
         });
+      }
+    });
+  }
 
-        this.route.queryParams.subscribe((qParams) => {
-            if (qParams['projectId']) {
-                this.projectId = qParams['projectId'];
-                this.form.patchValue({ projectId: this.projectId });
-            }
-        });
+  // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
 
-        this.form.get('targetType')?.valueChanges.subscribe((val) => {
-            this.selectedTargetType.set(val);
-            this.form.get('targetId')?.setValue(null);
-        });
+  submitRequest(id: string) {
+    this.crService.submitForApproval(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
+    });
+  }
 
-        this.loadFlows();
-    }
+  implementRequest(id: string) {
+    this.crService.implement(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
+    });
+  }
 
-    loadFlows() {
-        this.isLoadingFlows = true;
-        this.approvalService
-            .getFlowsByDocumentType('CHANGE_REQUEST')
-            .pipe(finalize(() => (this.isLoadingFlows = false)))
-            .subscribe({
-                next: (flows) => {
-                    this.flows = flows;
-                    if (flows.length === 1) {
-                        this.selectedFlowId = flows[0].id;
-                    }
-                },
-                error: () => {
-                    console.warn('ไม่สามารถโหลด Approval Flow สำหรับ Change Request');
-                },
-            });
-    }
+  completeAssigneeTask(id: string, userId: string, targetId: string) {
+    this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
+    });
+  }
 
-    loadChangeRequest(id: string) {
-        this.isLoading = true;
-        this.http
-            .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
+  // ===== Helper =====
 
-            .pipe(finalize(() => (this.isLoading = false)))
-            .subscribe({
-                next: (data) => {
-                    if (data.targetType) {
-                        this.selectedTargetType.set(data.targetType);
-                    }
-                    this.form.patchValue(data);
-                    if (data.assignees && data.assignees.length > 0) {
-                        this.selectedAssignees.set(
-                            data.assignees.map((a) => ({
-                                userId: a.userId,
-                                userName: a.userName || a.userId,
-                            }))
-                        );
-                        this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
-                    } else if (data.assigneeId) {
-                        this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
-                        this.form.get('assigneeId')?.setValue(data.assigneeId);
-                    } else {
-                        this.selectedAssignees.set([]);
-                        this.form.get('assigneeId')?.setValue(null);
-                    }
-                    if (data.projectId) {
-                        this.projectId = data.projectId;
-                    }
-                    this.isLoading = false;
-                },
-                error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Change Request นี้');
-                    this.navigation.navigate(['/feature/pm/pmdt07']);
-                },
-            });
-    }
+  getStatusClass(status: string): string {
+    if (!status) return 'bg-gray-100 text-gray-600';
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600',
+      DRAFT: 'bg-gray-100 text-gray-600',
+      Submitted: 'bg-blue-100 text-blue-700',
+      SUBMITTED: 'bg-blue-100 text-blue-700',
+      'In Review': 'bg-blue-100 text-blue-700',
+      IN_REVIEW: 'bg-blue-100 text-blue-700',
+      Pending: 'bg-yellow-100 text-yellow-700',
+      PENDING: 'bg-yellow-100 text-yellow-700',
+      Approved: 'bg-emerald-100 text-emerald-700',
+      APPROVED: 'bg-emerald-100 text-emerald-700',
+      Rejected: 'bg-red-100 text-red-700',
+      REJECTED: 'bg-red-100 text-red-700',
+      Implemented: 'bg-purple-100 text-purple-700',
+      IMPLEMENTED: 'bg-purple-100 text-purple-700',
+      'Need Revision': 'bg-orange-100 text-orange-700',
+      NEED_REVISION: 'bg-orange-100 text-orange-700',
+      Cancelled: 'bg-gray-300 text-gray-700',
+      CANCELLED: 'bg-gray-300 text-gray-700',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
 
-    // ===== Impact Analysis Methods =====
-    loadImpactAnalysis(id: string) {
-        this.isLoadingImpact.set(true);
-        this.impactService.getByChangeRequest(id)
-            .pipe(finalize(() => this.isLoadingImpact.set(false)))
-            .subscribe({
-                next: (data) => {
-                    if (data && data.id) {
-                        this.impactData.set(data);
-                        this.showImpactSection.set(true);
-                    } else {
-                        // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                        this.autoDetectImpact();
-                    }
-                },
-                error: () => {
-                    // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                    this.autoDetectImpact();
-                }
-            });
-    }
-
-    autoDetectImpact() {
-        const id = this.changeRequestId;
-        if (!id) return;
-
-        this.isLoadingImpact.set(true);
-        this.impactService.autoDetect(id)
-            .pipe(finalize(() => this.isLoadingImpact.set(false)))
-            .subscribe({
-                next: (data) => {
-                    this.impactData.set(data);
-                    this.showImpactSection.set(true);
-                    if (data && data.id) {
-                        this.dialog.success('วิเคราะห์ผลกระทบ', 'ระบบวิเคราะห์ผลกระทบอัตโนมัติเรียบร้อย');
-                    }
-                },
-                error: (err) => {
-                    console.error('Auto detect impact failed:', err);
-                    this.showImpactSection.set(false);
-                }
-            });
-    }
-
-    refreshImpact() {
-        this.autoDetectImpact();
-    }
-
-    // ===== CRUD =====
-    save() {
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-            return;
-        }
-
-        this.isSaving = true;
-        const data = { ...this.form.value };
-
-        if (!data.projectId && this.projectId) {
-            data.projectId = this.projectId;
-        }
-
-        data.assignees = this.selectedAssignees().map(a => ({
-            userId: a.userId,
-            targetType: data.targetType,
-            targetId: data.targetId
-        }));
-
-        if (this.isEdit && this.changeRequestId) {
-            data.state = 3;
-        } else {
-            data.state = 4;
-            data.rowVersion = 0;
-        }
-
-        const saveRequest = this.isEdit && this.changeRequestId
-            ? this.http.put(`${this.baseUrl}/${this.changeRequestId}`, data)
-            : this.http.post(this.baseUrl, data);
-
-        saveRequest.subscribe({
-            next: (res: any) => {
-                const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
-
-                if (this.selectedFlowId && id) {
-                    this.approvalService
-                        .submitForApproval({
-                            documentType: 'CHANGE_REQUEST',
-                            documentId: id,
-                            documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
-                            documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
-                            flowId: this.selectedFlowId,
-                            comment: 'ส่งขออนุมัติ Change Request',
-                        })
-                        .pipe(finalize(() => (this.isSaving = false)))
-                        .subscribe({
-                            next: () => {
-                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย');
-                                this.navigateBack();
-                            },
-                            error: (err) => {
-                                this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-                            },
-                        });
-                } else {
-                    this.isSaving = false;
-                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
-                    this.navigateBack();
-                }
-            },
-            error: (err) => {
-                this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-        });
-    }
-
-    private navigateBack() {
-        if (this.projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt07'], {
-                queryParams: { projectId: this.projectId }
-            });
-        } else {
-            this.navigation.navigate(['/feature/pm/pmdt07']);
-        }
-    }
-
-    cancel() {
-        this.navigateBack();
-    }
-
-    // ===== Helper =====
-    getImpactLabel(count: number | undefined, label: string): string {
-        if (!count || count === 0) return `${label}: -`;
-        return `${label}: ${count} รายการ`;
-    }
-
-    getImpactStatusClass(status?: string): string {
-        if (status === 'AUTO') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    }
-
-    getImpactStatusText(status?: string): string {
-        return status === 'AUTO' ? 'วิเคราะห์อัตโนมัติ' : 'วิเคราะห์ด้วยตนเอง';
-    }
+  getStatusText(status: string): string {
+    if (!status) return 'ร่าง';
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      DRAFT: 'ร่าง',
+      Submitted: 'รออนุมัติ',
+      SUBMITTED: 'รออนุมัติ',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
+      Pending: 'รอดำเนินการ',
+      PENDING: 'รอดำเนินการ',
+      Approved: 'อนุมัติ',
+      APPROVED: 'อนุมัติ',
+      Rejected: 'ปฏิเสธ',
+      REJECTED: 'ปฏิเสธ',
+      Implemented: 'ดำเนินการแล้ว',
+      IMPLEMENTED: 'ดำเนินการแล้ว',
+      'Need Revision': 'ต้องแก้ไข',
+      NEED_REVISION: 'ต้องแก้ไข',
+      Cancelled: 'ยกเลิก',
+      CANCELLED: 'ยกเลิก',
+    };
+    return map[status] || status;
+  }
 }
 </file>
 
@@ -78332,6 +77962,386 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
 }
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts">
+// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+    FormBuilder,
+    FormGroup,
+    FormsModule,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { BusinessService } from '../../../../../core/services/business.service';
+import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
+
+import { ChangeRequestFormModel } from './pmdt07A.model';
+
+
+@Component({
+    selector: 'app-pmdt07a',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        RouterModule,
+        SicButtonComponent,
+        SicInputComponent,
+        SicInputAreaComponent,
+        SicComboboxComponent,
+        SicNumberComponent,
+        SicCardComponent,
+    ],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    templateUrl: './pmdt07A.component.html',
+})
+export class Pmdt07AComponent implements OnInit {
+    private fb = inject(FormBuilder);
+    private http = inject(HttpClient);
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private dialog = inject(DialogService);
+    private navigation = inject(NavigationService);
+    private customerState = inject(CustomerStateService);
+    private approvalService = inject(ApprovalService);
+    private businessService = inject(BusinessService);
+    private impactService = inject(ImpactAnalysisService);
+    private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
+
+    get businessId() {
+        return this.businessService.getCurrentBusinessId();
+    }
+
+    environment = environment;
+    readonly Math = Math;
+
+    isEdit = false;
+    isView = false;
+    changeRequestId: string | null = null;
+    isLoading = false;
+    isSaving = false;
+    projectId: string | null = null;
+
+    // ===== Approval Flow =====
+    flows: ApprovalFlow[] = [];
+    selectedFlowId: string | null = null;
+    isLoadingFlows = false;
+
+    // ===== Impact Analysis =====
+    impactData = signal<ImpactAnalysis | null>(null);
+    isLoadingImpact = signal(false);
+    showImpactSection = signal(false);
+
+    // ===== Form =====
+    form: FormGroup = this.fb.group({
+        id: [null],
+        projectId: [null],
+        targetType: ['REQUIREMENT', Validators.required],
+        targetId: [null, Validators.required],
+        title: [null, Validators.required],
+        description: [null],
+        changeReason: [null],
+        assigneeId: [null, Validators.required],
+        rowVersion: [null],
+    });
+
+    selectedTargetType = signal('REQUIREMENT');
+    selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
+    selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
+
+    documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
+
+    // ===== Methods =====
+
+    onAssigneeSelected(item: any, combobox: any) {
+        if (item && item.value) {
+            const exists = this.selectedAssignees().some(a => a.userId === item.value);
+            if (!exists) {
+                this.selectedAssignees.update(arr => [...arr, { userId: item.value, userName: item.text }]);
+                this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
+                this.form.get('assigneeId')?.markAsDirty();
+                this.form.get('assigneeId')?.markAsTouched();
+            }
+            combobox.writeValue(null);
+        }
+    }
+
+    removeAssignee(userId: string) {
+        this.selectedAssignees.update(arr => arr.filter(a => a.userId !== userId));
+        this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
+        this.form.get('assigneeId')?.markAsDirty();
+        this.form.get('assigneeId')?.markAsTouched();
+    }
+
+    targetDocumentApiUrl = computed(() => {
+        const type = this.selectedTargetType();
+        if (type === 'REQUIREMENT') {
+            return environment.apiBaseUrl + '/api/pm/requirement/combobox';
+        } else if (type === 'SPECIFICATION') {
+            return environment.apiBaseUrl + '/api/pm/specification/combobox';
+        } else if (type === 'TASK') {
+            return environment.apiBaseUrl + '/api/pm/tasks/combobox';
+        }
+        return '';
+    });
+
+    ngOnInit() {
+        const currentUrl = this.router.url;
+        if (currentUrl.endsWith('/view') || currentUrl.includes('/view?')) {
+            this.isView = true;
+        }
+
+        this.route.params.subscribe((params) => {
+            const id = params['id'];
+            if (id) {
+                this.isEdit = !this.isView;
+                this.changeRequestId = id;
+                this.loadChangeRequest(id);
+                // โหลด Impact Analysis เฉพาะตอนแก้ไข/ดูรายละเอียด
+                this.loadImpactAnalysis(id);
+            }
+        });
+
+        this.route.queryParams.subscribe((qParams) => {
+            if (qParams['projectId']) {
+                this.projectId = qParams['projectId'];
+                this.form.patchValue({ projectId: this.projectId });
+            }
+        });
+
+        this.form.get('targetType')?.valueChanges.subscribe((val) => {
+            this.selectedTargetType.set(val);
+            this.form.get('targetId')?.setValue(null);
+        });
+
+        this.loadFlows();
+    }
+
+    loadFlows() {
+        this.isLoadingFlows = true;
+        this.approvalService
+            .getFlowsByDocumentType('CHANGE_REQUEST')
+            .pipe(finalize(() => (this.isLoadingFlows = false)))
+            .subscribe({
+                next: (flows) => {
+                    this.flows = flows;
+                    if (flows.length === 1) {
+                        this.selectedFlowId = flows[0].id;
+                    }
+                },
+                error: () => {
+                    console.warn('ไม่สามารถโหลด Approval Flow สำหรับ Change Request');
+                },
+            });
+    }
+
+    loadChangeRequest(id: string) {
+        this.isLoading = true;
+        this.http
+            .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
+
+            .pipe(finalize(() => (this.isLoading = false)))
+            .subscribe({
+                next: (data) => {
+                    if (data.targetType) {
+                        this.selectedTargetType.set(data.targetType);
+                    }
+                    this.form.patchValue(data);
+                    if (data.assignees && data.assignees.length > 0) {
+                        this.selectedAssignees.set(
+                            data.assignees.map((a) => ({
+                                userId: a.userId,
+                                userName: a.userName || a.userId,
+                            }))
+                        );
+                        this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
+                    } else if (data.assigneeId) {
+                        this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
+                        this.form.get('assigneeId')?.setValue(data.assigneeId);
+                    } else {
+                        this.selectedAssignees.set([]);
+                        this.form.get('assigneeId')?.setValue(null);
+                    }
+                    if (data.projectId) {
+                        this.projectId = data.projectId;
+                    }
+                    if (this.isView) {
+                        this.form.disable();
+                    }
+                    this.isLoading = false;
+                },
+                error: () => {
+                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Change Request นี้');
+                    this.navigation.navigate(['/feature/pm/pmdt07']);
+                },
+            });
+    }
+
+    // ===== Impact Analysis Methods =====
+    loadImpactAnalysis(id: string) {
+        this.isLoadingImpact.set(true);
+        this.impactService.getByChangeRequest(id)
+            .pipe(finalize(() => this.isLoadingImpact.set(false)))
+            .subscribe({
+                next: (data) => {
+                    if (data && data.id) {
+                        this.impactData.set(data);
+                        this.showImpactSection.set(true);
+                    } else {
+                        // ถ้ายังไม่มี Impact ให้ auto detect ทันที
+                        this.autoDetectImpact();
+                    }
+                },
+                error: () => {
+                    // ถ้ายังไม่มี Impact ให้ auto detect ทันที
+                    this.autoDetectImpact();
+                }
+            });
+    }
+
+    autoDetectImpact() {
+        const id = this.changeRequestId;
+        if (!id) return;
+
+        this.isLoadingImpact.set(true);
+        this.impactService.autoDetect(id)
+            .pipe(finalize(() => this.isLoadingImpact.set(false)))
+            .subscribe({
+                next: (data) => {
+                    this.impactData.set(data);
+                    this.showImpactSection.set(true);
+                    if (data && data.id) {
+                        this.dialog.success('วิเคราะห์ผลกระทบ', 'ระบบวิเคราะห์ผลกระทบอัตโนมัติเรียบร้อย');
+                    }
+                },
+                error: (err) => {
+                    console.error('Auto detect impact failed:', err);
+                    this.showImpactSection.set(false);
+                }
+            });
+    }
+
+    refreshImpact() {
+        this.autoDetectImpact();
+    }
+
+    // ===== CRUD =====
+    save() {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        this.isSaving = true;
+        const data = { ...this.form.value };
+
+        if (!data.projectId && this.projectId) {
+            data.projectId = this.projectId;
+        }
+
+        data.assignees = this.selectedAssignees().map(a => ({
+            userId: a.userId,
+            targetType: data.targetType,
+            targetId: data.targetId
+        }));
+
+        if (this.isEdit && this.changeRequestId) {
+            data.state = 3;
+        } else {
+            data.state = 4;
+            data.rowVersion = 0;
+        }
+
+        const saveRequest = this.isEdit && this.changeRequestId
+            ? this.http.put(`${this.baseUrl}/${this.changeRequestId}`, data)
+            : this.http.post(this.baseUrl, data);
+
+        saveRequest.subscribe({
+            next: (res: any) => {
+                const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
+
+                if (this.selectedFlowId && id) {
+                    this.approvalService
+                        .submitForApproval({
+                            documentType: 'CHANGE_REQUEST',
+                            documentId: id,
+                            documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
+                            documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
+                            flowId: this.selectedFlowId,
+                            comment: 'ส่งขออนุมัติ Change Request',
+                        })
+                        .pipe(finalize(() => (this.isSaving = false)))
+                        .subscribe({
+                            next: () => {
+                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย');
+                                this.navigateBack();
+                            },
+                            error: (err) => {
+                                this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                            },
+                        });
+                } else {
+                    this.isSaving = false;
+                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
+                    this.navigateBack();
+                }
+            },
+            error: (err) => {
+                this.isSaving = false;
+                this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+        });
+    }
+
+    private navigateBack() {
+        if (this.projectId) {
+            this.navigation.navigate(['/feature/pm/pmdt07'], {
+                queryParams: { projectId: this.projectId }
+            });
+        } else {
+            this.navigation.navigate(['/feature/pm/pmdt07']);
+        }
+    }
+
+    cancel() {
+        this.navigateBack();
+    }
+
+    // ===== Helper =====
+    getImpactLabel(count: number | undefined, label: string): string {
+        if (!count || count === 0) return `${label}: -`;
+        return `${label}: ${count} รายการ`;
+    }
+
+    getImpactStatusClass(status?: string): string {
+        if (status === 'AUTO') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    }
+
+    getImpactStatusText(status?: string): string {
+        return status === 'AUTO' ? 'วิเคราะห์อัตโนมัติ' : 'วิเคราะห์ด้วยตนเอง';
+    }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html">
 <!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
 <div class="space-y-5 p-0.5">
@@ -78456,7 +78466,7 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
       </div>
 
       <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit) {
+      @if (isEdit || isView) {
         <div class="border-t border-[var(--border)] pt-4 mt-2">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
@@ -78468,17 +78478,19 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
                 </span>
               }
             </h4>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                [disabled]="isLoadingImpact()"
-                class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-              >
-                <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                วิเคราะห์ใหม่
-              </button>
-            </div>
+            @if (!isView) {
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  [disabled]="isLoadingImpact()"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+                >
+                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                  วิเคราะห์ใหม่
+                </button>
+              </div>
+            }
           </div>
 
           @if (showImpactSection() && impactData(); as impact) {
@@ -78569,8 +78581,14 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
                     @for (id of impact.impactedSpecIds; track id) {
                       <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
                     }
-                    @for (id of impact.impactedDiagramIds; track id) {
-                      <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
+                      @for (diag of impact.impactedDiagrams; track diag.id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedDiagramIds; track id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                      }
                     }
                     @for (id of impact.impactedTaskIds; track id) {
                       <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
@@ -78589,13 +78607,15 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
             <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
               <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
               <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
-              <button
-                type="button"
-                (click)="refreshImpact()"
-                class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
-              >
-                คลิกเพื่อวิเคราะห์อัตโนมัติ
-              </button>
+              @if (!isView) {
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                >
+                  คลิกเพื่อวิเคราะห์อัตโนมัติ
+                </button>
+              }
             </div>
           }
         </div>
@@ -78603,19 +78623,23 @@ export class pmdt06AComponent implements AfterViewInit, OnDestroy {
 
       <!-- Actions -->
       <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-        <sic-button type="submit" variant="primary" [disabled]="isSaving">
-          @if (isSaving) {
-            <i class="bi bi-arrow-repeat animate-spin me-1"></i>
-          }
-          {{
-            isSaving
-              ? 'กำลังบันทึก...'
-              : selectedFlowId
-                ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                : (isEdit ? 'บันทึก' : 'สร้าง')
-          }}
-        </sic-button>
-        <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        @if (isView) {
+          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
+        } @else {
+          <sic-button type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+            }
+            {{
+              isSaving
+                ? 'กำลังบันทึก...'
+                : selectedFlowId
+                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                  : (isEdit ? 'บันทึก' : 'สร้าง')
+            }}
+          </sic-button>
+          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        }
       </div>
     </form>
 </div>

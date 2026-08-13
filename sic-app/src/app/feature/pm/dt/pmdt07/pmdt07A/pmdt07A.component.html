@@ -228,7 +228,7 @@
 
               @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
                 <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">เอกสารและ Diagram ที่ได้รับผลกระทบ (ID):</p>
+                  <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
                   <div class="flex flex-wrap gap-1 mt-1">
                     @for (id of impact.impactedRequirementIds; track id) {
                       <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>

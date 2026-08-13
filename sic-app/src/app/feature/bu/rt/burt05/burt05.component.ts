@@ -7,8 +7,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { Program, TreeNode } from './burt05.model';
 import { burt05Service } from './burt05.service';
 
-
-/** FlatNode = TreeNode ที่เพิ่ม level เพื่อจัด indent */
+/** FlatNode = TreeNode + level */
 type FlatNode = TreeNode & { level: number };
 
 /** Helper: ดึงชื่อจาก Program หรือ TreeNode */
@@ -24,8 +23,8 @@ function getProgramName(program: Program | TreeNode): string {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './burt05.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrl: './burt05.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./burt05.component.css'],
 })
 export class Burt05Component implements OnInit {
   private service = inject(burt05Service);
@@ -36,10 +35,10 @@ export class Burt05Component implements OnInit {
   programs = signal<Program[]>([]);
   treeData = signal<TreeNode[]>([]);
 
-  // เก็บ ID ของ node ที่ขยาย (ใช้ Set เพื่อเพิ่ม/ลบได้เร็ว)
+  // เก็บ ID ของ node ที่ขยาย
   expandedIds = signal<Set<string>>(new Set());
 
-  // คำนวณรายการ node ที่จะแสดง (เฉพาะ node ที่ขยาย)
+  // คำนวณรายการ node ที่จะแสดง
   visibleNodes = computed<FlatNode[]>(() => {
     const tree = this.treeData();
     const expanded = this.expandedIds();
@@ -120,7 +119,6 @@ export class Burt05Component implements OnInit {
     sortChildren(roots);
 
     this.treeData.set(roots);
-    // ขยายทั้งหมดให้เห็นโครงสร้าง
     this.expandAll();
   }
 
@@ -156,7 +154,7 @@ export class Burt05Component implements OnInit {
     });
   }
 
-  /** ตรวจสอบว่าขยายอยู่หรือไม่ (ใช้ใน template) */
+  /** ตรวจสอบว่าขยายอยู่หรือไม่ */
   isExpanded(id: string): boolean {
     return this.expandedIds().has(id);
   }
@@ -200,13 +198,15 @@ export class Burt05Component implements OnInit {
       });
   }
 
+  // ✅ แก้ไขฟังก์ชันนี้ให้ใช้ CSS Variables แทน hard-coded colors
   getStatusClass(isActive: boolean): string {
     return isActive
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+      ? 'bg-[var(--crm-success)]/10 text-[var(--crm-success)]'   // สีเขียวของระบบ
+      : 'bg-[var(--text-muted)]/10 text-[var(--text-muted)]';     // สีเทาของระบบ
   }
 
   getStatusText(isActive: boolean): string {
     return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
   }
 }
+
