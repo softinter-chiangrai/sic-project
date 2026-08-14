@@ -30,6 +30,7 @@ import {
   SidebarItem,
 } from './sic-sidebar.model';
 import { SicSidebarService, SidebarAction } from './sic-sidebar.service';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 
 @Component({
   selector: 'sic-sidebar',

@@ -1,4 +1,5 @@
 import { SicEntityState } from "./sic-entity-state";
+export { SicEntityState };
 
 export interface SicBaseModel {
   id: string;

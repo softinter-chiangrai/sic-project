@@ -27,8 +27,7 @@ CREATE TABLE IF NOT EXISTS pm_delivery (
     created_by          VARCHAR(100) NOT NULL DEFAULT 'system',
     created_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_by          VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    xmin                xid
+    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_pm_delivery_project ON pm_delivery(project_id, business_id);
@@ -50,8 +49,7 @@ CREATE TABLE IF NOT EXISTS pm_delivery_checklist (
     created_by      VARCHAR(100) NOT NULL DEFAULT 'system',
     created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_by      VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    xmin            xid
+    updated_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- 3. pm_user_manual
@@ -73,8 +71,7 @@ CREATE TABLE IF NOT EXISTS pm_user_manual (
     created_by          VARCHAR(100) NOT NULL DEFAULT 'system',
     created_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_by          VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    xmin                xid
+    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_pm_user_manual_project ON pm_user_manual(project_id, business_id);
@@ -95,8 +92,7 @@ CREATE TABLE IF NOT EXISTS pm_user_manual_section (
     created_by          VARCHAR(100) NOT NULL DEFAULT 'system',
     created_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_by          VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    xmin                xid
+    updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- 5. Enhancements to pm_document_version

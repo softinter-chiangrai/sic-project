@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../core/types/form.type';
 import { Pmrt02Model } from './pmrt02.model';
+import { ToForm } from '../../../../core/types/form.type';
 
 export class Pmrt02Form {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Pmrt02Model>> {

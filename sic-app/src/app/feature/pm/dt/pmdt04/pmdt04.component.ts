@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
@@ -26,6 +26,7 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 export class Pmdt04Component implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private dialog = inject(DialogService);
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);

@@ -1,7 +1,8 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../core/types/form.type';
+
 import { Pmrt04Model } from './pmrt04.model';
+import { ToForm } from '../../../../core/types/form.type';
 
 export class Pmrt04Form {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Pmrt04Model>> {

@@ -119,6 +119,7 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnDestr
   @Input() uploadGroupId: string | null = null;
   @Input() chunkSize = 5 * 1024 * 1024;
   @Input() accept?: string;
+  @Input() maxFiles?: number;
   @Input() businessId?: string;
   @Input() emptyText = 'Drop files here or click to browse';
   @Input() helperText = 'Multiple files supported';
@@ -552,9 +553,12 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnDestr
     this.markTouched();
 
     const filteredFiles = this.filterAcceptedFiles(files);
-    const acceptedFiles = this.multiple ? filteredFiles : filteredFiles.slice(0, 1);
+    let acceptedFiles = this.multiple ? filteredFiles : filteredFiles.slice(0, 1);
     if (!this.multiple) {
       void Promise.all(this.items.map((item) => this.removeItem(item)));
+    } else if (this.maxFiles && this.maxFiles > 0) {
+      const remainingSlots = Math.max(0, this.maxFiles - this.items.length);
+      acceptedFiles = acceptedFiles.slice(0, remainingSlots);
     }
 
     for (const file of acceptedFiles) {

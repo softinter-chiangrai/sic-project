@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02B/pmdt02B.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../../core/types/form.type';
 import { WorkPackageModel } from './pmdt02B.model';
+import { ToForm } from '../../../../../core/types/form.type';
 
 export class Pmdt02BForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<WorkPackageModel>> {

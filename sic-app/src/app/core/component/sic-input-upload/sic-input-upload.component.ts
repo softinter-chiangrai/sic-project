@@ -79,6 +79,7 @@ export class SicInputUploadComponent implements ControlValueAccessor, OnInit, On
   @Input() uploadGroupId: string | null = null;
   @Input() chunkSize = 5 * 1024 * 1024;
   @Input() accept?: string;
+  @Input() maxFiles?: number;
   @Input() businessId?: string;
   @Input() emptyText = 'Upload files';
   @Input() helperText = 'Images and videos';

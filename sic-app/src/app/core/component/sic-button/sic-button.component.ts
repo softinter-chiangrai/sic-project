@@ -19,6 +19,7 @@ export class SicButtonComponent {
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
   @Input() disabled = false;
+  @Input() loading = false;
   @Input() fullWidth = false;
   @Input() iconOnly = false;
 

@@ -72,7 +72,7 @@ export class Pmdt19Component implements OnInit, CanComponentDeactivate {
 
     const queryProj = this.route.snapshot.queryParams['projectId'];
     if (queryProj) {
-      this.formData.form.controls.projectId.setValue(queryProj);
+      this.formData.form.controls['projectId'].setValue(queryProj);
     }
 
     const paramId = this.route.snapshot.params['id'];

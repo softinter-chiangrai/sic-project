@@ -7,6 +7,7 @@ import { httpResource } from '@angular/common/http';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicInputNumberComponent } from '../../../../core/component/sic-input-number/sic-input-number.component';
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
@@ -29,6 +30,7 @@ import { apiBaseUrl } from '../../../../core/config/api.config';
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
+    SicInputNumberComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
   ],
@@ -56,9 +58,8 @@ export class Pmdt20Component implements OnInit, CanComponentDeactivate {
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
 
-  dataResource = httpResource<PmInvoiceModel>(
-    () => (this.id() ? `${apiBaseUrl}/api/pm/invoices/${this.id()}` : null),
-    { enabled: !!this.id() }
+  dataResource = httpResource<PmInvoiceModel>(() =>
+    this.id() ? `${apiBaseUrl}/api/pm/invoices/${this.id()}` : undefined
   );
 
   pageDirty = () => this.formData?.dirty ?? false;

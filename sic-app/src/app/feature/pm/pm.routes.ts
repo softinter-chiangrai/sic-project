@@ -667,19 +667,19 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'payment/new',
-    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
+    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt20AResolver },
   },
   {
     path: 'payment/:id/edit',
-    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
+    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt20AResolver },
   },
   {
     path: 'payment/:id/view',
-    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt21Component),
+    loadComponent: () => import('./dt/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt20AResolver },
   },

@@ -113,7 +113,7 @@ export class Pmdt10Component implements OnInit {
     this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Bug/Issue นี้ใช่หรือไม่?').then(ok => {
       if (ok) {
         this.service.deleteBug(id).subscribe(() => {
-          this.dialog.success('ลบสำเร็จ');
+          this.dialog.success('ลบสำเร็จ', 'ข้อมูล Bug/Issue ถูกลบเรียบร้อย');
           this.loadData();
         });
       }
@@ -132,7 +132,7 @@ export class Pmdt10Component implements OnInit {
     this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Test Case นี้ใช่หรือไม่?').then(ok => {
       if (ok) {
         this.service.deleteTestCase(id).subscribe(() => {
-          this.dialog.success('ลบสำเร็จ');
+          this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Case ถูกลบเรียบร้อย');
           this.loadData();
         });
       }
@@ -151,7 +151,7 @@ export class Pmdt10Component implements OnInit {
     this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Test Scenario นี้ใช่หรือไม่?').then(ok => {
       if (ok) {
         this.service.deleteTestScenario(id).subscribe(() => {
-          this.dialog.success('ลบสำเร็จ');
+          this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Scenario ถูกลบเรียบร้อย');
           this.loadData();
         });
       }

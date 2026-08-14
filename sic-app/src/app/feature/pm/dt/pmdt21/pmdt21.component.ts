@@ -71,9 +71,8 @@ export class Pmdt21Component implements OnInit, CanComponentDeactivate {
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
 
-  dataResource = httpResource<PmMaTicketModel>(
-    () => (this.id() ? `${apiBaseUrl}/api/pm/ma-tickets/${this.id()}` : null),
-    { enabled: !!this.id() }
+  dataResource = httpResource<PmMaTicketModel>(() =>
+    this.id() ? `${apiBaseUrl}/api/pm/ma-tickets/${this.id()}` : undefined
   );
 
   pageDirty = () => this.formData?.dirty ?? false;

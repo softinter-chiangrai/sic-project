@@ -51,12 +51,11 @@
             formControlName="paymentMethod"
           ></sic-combobox>
 
-          <sic-input
+          <sic-input-number
             label="จำนวนเงินที่ชำระ (Amount)"
-            type="number"
-            [required]="true"
             formControlName="amount"
-          ></sic-input>
+            [min]="0"
+          ></sic-input-number>
 
           <sic-input
             label="เลขที่อ้างอิงโอนเงิน / เลขที่เช็ค"

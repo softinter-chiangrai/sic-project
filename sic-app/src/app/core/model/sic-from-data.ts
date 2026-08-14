@@ -45,6 +45,10 @@ export class SicFromData<TModel extends object & SicStateModel> {
     return this.sourceFormGroup;
   }
 
+  get form(): FormGroup {
+    return this.sourceFormGroup;
+  }
+
   get invalid(): boolean {
     return this.sourceFormGroup.invalid;
   }
@@ -69,6 +73,13 @@ export class SicFromData<TModel extends object & SicStateModel> {
 
   markAllAsTouched(): void {
     this.sourceFormGroup.markAllAsTouched();
+  }
+
+  markAsDirty(): void {
+    this.sourceFormGroup.markAsDirty();
+    if (this.currentState === SicEntityState.Unchanged || this.currentState === SicEntityState.Detached) {
+      this.writeState(SicEntityState.Modified);
+    }
   }
 
   markAsPristine(): void {

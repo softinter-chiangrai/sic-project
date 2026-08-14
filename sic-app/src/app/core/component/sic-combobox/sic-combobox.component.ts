@@ -80,6 +80,13 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   get options(): any[] {
     return this._options;
   }
+  @Input()
+  set items(val: any[]) {
+    this.options = val;
+  }
+  get items(): any[] {
+    return this.options;
+  }
   @Input() params: Record<string, any> = {};
   @Input() paging = true;
   @Input() pageSize = 10;

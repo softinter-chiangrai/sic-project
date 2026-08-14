@@ -1,7 +1,8 @@
 // src/app/feature/bu/rt/burt05/burt05A/burt05A.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../../core/types/form.type';
+
 import { Burt05AModel } from './burt05A.model';
+import { ToForm } from '../../../../../core/types/form.type';
 
 export class Burt05AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Burt05AModel>> {

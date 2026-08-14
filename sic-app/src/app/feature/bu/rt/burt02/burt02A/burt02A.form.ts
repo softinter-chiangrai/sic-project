@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToForm } from '../../../../../core/types/form.type';
 import { Burt02AModel } from './burt02A.model';
 
+
 export class Burt02AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Burt02AModel>> {
     return fb.group<ToForm<Burt02AModel>>({

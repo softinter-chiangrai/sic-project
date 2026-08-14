@@ -78,7 +78,7 @@ export class Pmdt18Component implements OnInit, CanComponentDeactivate {
     const nav = this.router.getCurrentNavigation();
     const queryProj = this.route.snapshot.queryParams['projectId'];
     if (queryProj) {
-      this.formData.form.controls.projectId.setValue(queryProj);
+      this.formData.form.controls['projectId']?.setValue(queryProj);
     }
 
     const paramId = this.route.snapshot.params['id'];
@@ -112,7 +112,7 @@ export class Pmdt18Component implements OnInit, CanComponentDeactivate {
   }
 
   runGateCheck(projectId?: string, deliveryId?: string): void {
-    const projId = projectId || this.formData.form.controls.projectId.value;
+    const projId = projectId || this.formData.form.controls['projectId']?.value;
     if (!projId) return;
 
     this.isLoadingGateCheck.set(true);

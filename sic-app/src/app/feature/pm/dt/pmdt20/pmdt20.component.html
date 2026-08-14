@@ -74,25 +74,23 @@
         <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">รายละเอียดจำนวนเงิน (Financial Amounts)</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <sic-input
+          <sic-input-number
             label="ยอดก่อนภาษี (Subtotal Amount)"
-            type="number"
-            [required]="true"
+            [min]="0"
             formControlName="subtotalAmount"
-          ></sic-input>
+          ></sic-input-number>
 
-          <sic-input
+          <sic-input-number
             label="อัตราภาษี VAT (%)"
-            type="number"
+            [min]="0"
             formControlName="vatRate"
-          ></sic-input>
+          ></sic-input-number>
 
-          <sic-input
+          <sic-input-number
             label="จำนวนภาษี VAT"
-            type="number"
             [readonly]="true"
             formControlName="vatAmount"
-          ></sic-input>
+          ></sic-input-number>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">

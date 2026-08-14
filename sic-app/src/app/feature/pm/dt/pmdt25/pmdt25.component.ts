@@ -67,9 +67,9 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
     const qId = this.route.snapshot.queryParams['documentId'];
     const qCode = this.route.snapshot.queryParams['documentCode'];
 
-    if (qType) this.formData.form.controls.documentType.setValue(qType);
-    if (qId) this.formData.form.controls.documentId.setValue(qId);
-    if (qCode) this.formData.form.controls.documentCode.setValue(qCode);
+    if (qType) (this.formData.form.controls as any)['documentType']?.setValue(qType);
+    if (qId) (this.formData.form.controls as any)['documentId']?.setValue(qId);
+    if (qCode) (this.formData.form.controls as any)['documentCode']?.setValue(qCode);
 
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {

@@ -57,10 +57,10 @@ export class Pmdt22Component implements OnInit, CanComponentDeactivate {
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
 
-  dataResource = httpResource<PmMaRenewalModel>(
-    () => (this.id() ? `${apiBaseUrl}/api/pm/ma-renewals/${this.id()}` : null),
-    { enabled: !!this.id() }
+  dataResource = httpResource<PmMaRenewalModel>(() =>
+  this.id() ? `${apiBaseUrl}/api/pm/ma-renewals/${this.id()}` : undefined
   );
+
 
   pageDirty = () => this.formData?.dirty ?? false;
 

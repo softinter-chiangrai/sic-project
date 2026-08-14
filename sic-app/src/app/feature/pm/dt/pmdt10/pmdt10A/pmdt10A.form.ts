@@ -1,6 +1,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../core/types/form.type';
 import { PmBugModel } from '../pmdt10.model';
+import { ToForm } from '../../../../../core/types/form.type';
+
 
 export class Pmdt10AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmBugModel>> {

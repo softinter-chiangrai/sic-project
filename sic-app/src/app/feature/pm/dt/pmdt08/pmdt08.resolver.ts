@@ -17,7 +17,7 @@ export const pmdt08Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> 
     const customerState = inject(CustomerStateService);
     const projectId = route.queryParams['projectId'] || customerState.getProjectId();
 
-    return service.getSpecifications({ projectId, page: 0, size: 10 }).pipe(
+    return service.getList({ projectId, page: 0, size: 10 }).pipe(
         catchError((err) => {
             console.error('pmdt08Resolver error:', err);
             return of(null);
