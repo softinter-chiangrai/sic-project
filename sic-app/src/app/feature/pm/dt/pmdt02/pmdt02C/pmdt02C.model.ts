@@ -13,6 +13,7 @@ export interface TaskRequest {
   estimateManday: number;
   priority?: string;
   color?: string;
+  status?: string;
   assigneeIds?: string[];
 }
 

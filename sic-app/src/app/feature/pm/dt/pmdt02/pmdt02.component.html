@@ -67,6 +67,12 @@
         [class]="rightTab() === 'gantt' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
         <i class="bi bi-bar-chart mr-1"></i> Gantt Chart
       </button>
+      <button
+        (click)="switchTab('kanban')"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
+        [class]="rightTab() === 'kanban' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi bi-kanban mr-1"></i> Kanban Board
+      </button>
     </div>
 
     <!-- ===== TAB 1: LIST ===== -->
@@ -135,7 +141,7 @@
                               <div class="flex items-center gap-2 min-w-0">
                                 <i class="bi bi-circle text-[0.55rem] text-[var(--text-muted)]"></i>
                                 <span class="text-sm text-[var(--text)] truncate">{{ task.taskName }}</span>
-                                <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ task.assignedTo || '-' }})</span>
+                                <span class="text-xs text-[var(--text-muted)] flex-shrink-0">({{ getTaskAssigneeDisplay(task) }})</span>
                                 <span [class]="getStatusClass(task.status) + ' inline-block px-1.5 py-0.5 rounded-full text-[0.55rem] font-medium flex-shrink-0'">
                                   {{ getStatusText(task.status) }}
                                 </span>
@@ -384,6 +390,32 @@
             </ng-template>
           </sic-calendar-timeline>
         </div>
+      </div>
+    }
+
+    <!-- ===== TAB 4: KANBAN BOARD ===== -->
+    @if (rightTab() === 'kanban') {
+      <div class="mt-2">
+        <sic-kanban
+          [tasks]="allPhaseTasks()"
+          [workPackages]="allWorkPackages()"
+          [milestones]="phase()?.milestones || []"
+          (taskStatusChange)="onKanbanTaskStatusChange($event)"
+          (taskClick)="onKanbanTaskClick($event)"
+          (taskEdit)="onKanbanTaskClick($event)"
+          (taskDelete)="onKanbanTaskDelete($event)"
+          (taskCreate)="onKanbanTaskCreate($event)"
+          (workPackageStatusChange)="onKanbanWpStatusChange($event)"
+          (workPackageClick)="onKanbanWpClick($event)"
+          (workPackageEdit)="onKanbanWpClick($event)"
+          (workPackageDelete)="onKanbanWpDelete($event)"
+          (workPackageCreate)="onKanbanWpCreate($event)"
+          (milestoneStatusChange)="onKanbanMilestoneStatusChange($event)"
+          (milestoneClick)="onKanbanMilestoneClick($event)"
+          (milestoneEdit)="onKanbanMilestoneClick($event)"
+          (milestoneDelete)="onKanbanMilestoneDelete($event)"
+          (milestoneCreate)="onKanbanMilestoneCreate($event)">
+        </sic-kanban>
       </div>
     }
 

@@ -38,9 +38,6 @@ export class Pmdt02CComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private businessService = inject(BusinessService);
-
-  @ViewChild('assigneeCombobox') assigneeCombobox!: SicComboboxComponent;
-
   workPackageId = '';
   projectId = '';
   phaseId = '';
@@ -132,31 +129,21 @@ export class Pmdt02CComponent implements OnInit {
     }
   }
 
-  // ✅ เมื่อเลือกจาก combobox
-  onAssigneeSelect(item: any) {
-    if (!item) return;
-    const userId = item.value;
-    const current = this.assigneeIds.value || [];
-    if (current.includes(userId)) {
-      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
-      this.assigneeCombobox.clearSelection();
-      return;
+  // ✅ เมื่อเลือกจาก combobox multiple
+  onAssigneeSelectionChanged(items: any[]) {
+    if (!Array.isArray(items)) return;
+    items.forEach((item) => {
+      if (item && item.value && item.text) {
+        this.assigneeNames[item.value] = item.text;
+      }
+    });
+
+    const firstItem = items.find((it) => it && (it.text || it.name));
+    if (firstItem) {
+      this.form.patchValue({ assignedTo: firstItem.text || firstItem.name });
+    } else if (items.length === 0) {
+      this.form.patchValue({ assignedTo: null });
     }
-    this.assigneeNames[userId] = item.text;
-    this.assigneeIds.setValue([...current, userId]);
-    this.assigneeCombobox.clearSelection();
-  }
-
-  // ✅ ลบผู้รับผิดชอบ (แก้ไขแล้ว: เพิ่ม type ให้ id)
-  removeAssignee(userId: string) {
-    const current = this.assigneeIds.value || [];
-    this.assigneeIds.setValue(current.filter((id: string) => id !== userId));
-    delete this.assigneeNames[userId];
-  }
-
-  // ✅ ดูชื่อจาก userId
-  getAssigneeName(userId: string): string {
-    return this.assigneeNames[userId] || userId;
   }
 
   private buildISOString(date: any, time: string): string {

@@ -148,26 +148,7 @@
                             <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <sic-combobox
-                                label="อ้างอิงจาก Requirement"
-                                formControlName="requirementId"
-                                [apiUrl]="service.apiGetComboboxRequirement"
-                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                                placeholder="-- ไม่ระบุ --"
-                                [clearable]="true">
-                            </sic-combobox>
-                            <sic-combobox
-                                label="อ้างอิงจาก Diagram"
-                                formControlName="generatedFromDiagramId"
-                                [apiUrl]="service.apiGetComboboxDiagram"
-                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                                valueField="id"
-                                textField="name"
-                                placeholder="-- ไม่ระบุ --"
-                                [clearable]="true">
-                            </sic-combobox>
-                        </div>
+
 
                         <!-- Tiptap Editor -->
                         <div>

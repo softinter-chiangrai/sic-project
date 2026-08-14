@@ -26,34 +26,17 @@
 
     <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
     <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบร่วม</label>
-      
-      <!-- Combobox เลือกทีละคน -->
       <sic-combobox
-        #assigneeCombobox
+        label="ผู้รับผิดชอบร่วม"
+        formControlName="assigneeIds"
         [apiUrl]="assignedToApiUrl"
         valueField="value"
         textField="text"
         placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
         [clearable]="true"
-        [excludeValues]="assigneeIds.value || []"
-        (selectionChanged)="onAssigneeSelect($event)"
+        [multiple]="true"
+        (selectionChanged)="onAssigneeSelectionChanged($event)"
       ></sic-combobox>
-
-      <!-- แสดงรายชื่อที่เลือกเป็น Chips -->
-      <div class="mt-2 flex flex-wrap gap-2">
-        @for (userId of assigneeIds.value || []; track userId) {
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-            {{ getAssigneeName(userId) }}
-            <button type="button" (click)="removeAssignee(userId)" class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors" title="ลบ">
-              <i class="bi bi-x-lg text-xs"></i>
-            </button>
-          </span>
-        }
-        @if ((assigneeIds.value || []).length === 0) {
-          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีผู้รับผิดชอบร่วม</span>
-        }
-      </div>
     </div>
 
     <!-- Start Date + Time -->

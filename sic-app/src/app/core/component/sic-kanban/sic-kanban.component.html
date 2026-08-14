@@ -1,0 +1,453 @@
+<!-- src/app/core/component/sic-kanban/sic-kanban.component.html -->
+<div class="kanban-board-container">
+
+  <!-- ===== TOOLBAR (View Mode, Search, Filters, Quick Add) ===== -->
+  <div class="kanban-toolbar">
+    <div class="kanban-toolbar-left">
+      <!-- View Mode Switcher (Milestone / Work Package / Task) -->
+      <div class="kanban-view-mode-toggle">
+        <button
+          type="button"
+          class="kanban-view-mode-btn"
+          [class.active]="viewMode() === 'milestone'"
+          (click)="setViewMode('milestone')"
+          title="มุมมอง Milestone"
+        >
+          <i class="bi bi-flag"></i> Milestone
+        </button>
+        <button
+          type="button"
+          class="kanban-view-mode-btn"
+          [class.active]="viewMode() === 'workPackage'"
+          (click)="setViewMode('workPackage')"
+          title="มุมมอง Work Package"
+        >
+          <i class="bi bi-box"></i> Work Package
+        </button>
+        <button
+          type="button"
+          class="kanban-view-mode-btn"
+          [class.active]="viewMode() === 'task'"
+          (click)="setViewMode('task')"
+          title="มุมมอง Task"
+        >
+          <i class="bi bi-check2-square"></i> Task
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="kanban-search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          class="kanban-search-input"
+          [placeholder]="viewMode() === 'task' ? 'ค้นหา Task...' : (viewMode() === 'workPackage' ? 'ค้นหา Work Package...' : 'ค้นหา Milestone...')"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+
+      <!-- Filters in Task View -->
+      @if (viewMode() === 'task') {
+        <!-- Work Package Filter Combobox -->
+        @if (wpOptions().length > 0) {
+          <div class="kanban-combobox-wrapper">
+            <sic-combobox
+              [options]="wpOptions()"
+              [ngModel]="selectedWpFilter()"
+              (ngModelChange)="selectedWpFilter.set($event)"
+              placeholder="📦 ทุก Work Package"
+              [clearable]="true"
+            >
+            </sic-combobox>
+          </div>
+        }
+
+        <!-- Priority Filter Combobox -->
+        <div class="kanban-combobox-wrapper">
+          <sic-combobox
+            [options]="priorityOptions"
+            [ngModel]="selectedPriorityFilter()"
+            (ngModelChange)="selectedPriorityFilter.set($event)"
+            placeholder="🚩 ทุกความสำคัญ"
+            [clearable]="true"
+          >
+          </sic-combobox>
+        </div>
+
+        <!-- Assignee Filter Combobox -->
+        @if (assigneeOptions().length > 0) {
+          <div class="kanban-combobox-wrapper">
+            <sic-combobox
+              [options]="assigneeOptions()"
+              [ngModel]="selectedAssigneeFilter()"
+              (ngModelChange)="selectedAssigneeFilter.set($event)"
+              placeholder="👤 ทุกผู้รับผิดชอบ"
+              [clearable]="true"
+            >
+            </sic-combobox>
+          </div>
+        }
+      }
+
+      <!-- Filters in Work Package View -->
+      @if (viewMode() === 'workPackage') {
+        @if (milestoneOptions().length > 0) {
+          <div class="kanban-combobox-wrapper">
+            <sic-combobox
+              [options]="milestoneOptions()"
+              [ngModel]="selectedMilestoneFilter()"
+              (ngModelChange)="selectedMilestoneFilter.set($event)"
+              placeholder="🚩 ทุก Milestone"
+              [clearable]="true"
+            >
+            </sic-combobox>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="kanban-toolbar-right">
+      @if (!readonly) {
+        <button
+          type="button"
+          (click)="onAddItem()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all shadow-sm cursor-pointer"
+        >
+          <i class="bi bi-plus-lg"></i>
+          {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ===== COLUMNS (CDK DROP LIST GROUP) ===== -->
+  <div class="kanban-columns-wrapper" cdkDropListGroup>
+    @for (column of columns; track column.id) {
+      <div class="kanban-column">
+        <!-- Column Header -->
+        <div class="kanban-column-header">
+          <div class="kanban-column-title-wrap">
+            <span
+              class="kanban-status-badge"
+              [style.background]="column.bgLight"
+              [style.color]="column.textColor"
+            >
+              <span
+                class="kanban-status-dot"
+                [style.background]="column.dotColor"
+              ></span>
+              {{ column.name }}
+            </span>
+            <span class="kanban-column-count">{{ getColumnItemCount(column) }}</span>
+          </div>
+
+          @if (!readonly) {
+            <button
+              type="button"
+              class="kanban-column-add-btn"
+              (click)="onAddItem(column.statuses[0])"
+              [title]="'เพิ่มในสถานะ ' + column.name"
+            >
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          }
+        </div>
+
+        <!-- ================= MODE 1: TASK VIEW ================= -->
+        @if (viewMode() === 'task') {
+          @let colTasks = getColumnTasks(column);
+          <div
+            [id]="'kanban-col-' + column.id"
+            class="kanban-card-list"
+            cdkDropList
+            [cdkDropListData]="colTasks"
+            (cdkDropListDropped)="onDropTask($event, column)"
+          >
+            @for (task of colTasks; track task.id) {
+              <div
+                class="kanban-card"
+                cdkDrag
+                [cdkDragDisabled]="readonly"
+                (click)="onCardClick(task)"
+              >
+                <!-- Card Header: Code + Actions -->
+                <div class="kanban-card-header">
+                  <span class="kanban-card-code">{{ task.taskCode || 'TASK' }}</span>
+                  
+                  @if (!readonly) {
+                    <div class="kanban-card-actions">
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn"
+                        (click)="onEditClick(task, $event)"
+                        title="แก้ไข Task"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn delete"
+                        (click)="onDeleteClick(task, $event)"
+                        title="ลบ Task"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Card Title -->
+                <h4 class="kanban-card-title">{{ task.taskName }}</h4>
+
+                <!-- Work Package / Phase Badge -->
+                <div class="kanban-card-wp" [title]="task.workPackageName || ''">
+                  <i class="bi bi-box text-[var(--crm-primary)]"></i>
+                  <span>{{ task.workPackageName || 'Work Package' }}</span>
+                </div>
+
+                <!-- Card Meta (Date, Priority, Assignee) -->
+                <div class="kanban-card-meta">
+                  <div class="kanban-card-meta-left">
+                    <!-- Date -->
+                    @if (task.endDate) {
+                      <span
+                        class="kanban-card-date"
+                        [class.overdue]="isOverdue(task.endDate, task.status)"
+                        [title]="'กำหนดส่ง: ' + formatDate(task.endDate)"
+                      >
+                        <i class="bi bi-calendar3"></i>
+                        {{ formatDate(task.endDate) }}
+                      </span>
+                    }
+
+                    <!-- Priority Flag -->
+                    @if (task.priority) {
+                      <span
+                        class="kanban-priority-flag"
+                        [ngClass]="getPriorityClass(task.priority)"
+                        [title]="'ระดับความสำคัญ: ' + task.priority"
+                      >
+                        <i class="bi bi-flag-fill"></i>
+                        {{ getPriorityLabel(task.priority) }}
+                      </span>
+                    }
+                  </div>
+
+                  <div class="kanban-card-meta-right">
+                    <!-- Manday -->
+                    @if (task.estimateManday) {
+                      <span class="kanban-manday-tag" title="Estimate Manday">
+                        {{ task.estimateManday }} MD
+                      </span>
+                    }
+
+                    <!-- Assignee Avatars -->
+                    @let assignees = getTaskAssignees(task);
+                    @if (assignees.length > 0) {
+                      <div class="flex items-center -space-x-1.5 flex-shrink-0" [title]="'ผู้รับผิดชอบ: ' + assignees.join(', ')">
+                        @for (person of assignees.slice(0, 3); track person) {
+                          <span class="kanban-avatar-circle" [title]="person">
+                            {{ getInitials(person) }}
+                          </span>
+                        }
+                        @if (assignees.length > 3) {
+                          <span class="kanban-avatar-circle !bg-gray-600 !text-[0.6rem]" [title]="assignees.slice(3).join(', ')">
+                            +{{ assignees.length - 3 }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (colTasks.length === 0) {
+              <div class="kanban-empty-column">
+                ไม่มีงานในสถานะนี้
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ================= MODE 2: WORK PACKAGE VIEW ================= -->
+        @if (viewMode() === 'workPackage') {
+          @let colWps = getColumnWorkPackages(column);
+          <div
+            [id]="'kanban-col-' + column.id"
+            class="kanban-card-list"
+            cdkDropList
+            [cdkDropListData]="colWps"
+            (cdkDropListDropped)="onDropWorkPackage($event, column)"
+          >
+            @for (wp of colWps; track wp.id) {
+              <div
+                class="kanban-card kanban-card--wp"
+                cdkDrag
+                [cdkDragDisabled]="readonly"
+                (click)="onWpCardClick(wp)"
+              >
+                <!-- Card Header -->
+                <div class="kanban-card-header">
+                  <span class="kanban-card-badge-wp">
+                    <i class="bi bi-box"></i> Work Package
+                  </span>
+                  
+                  @if (!readonly) {
+                    <div class="kanban-card-actions">
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn"
+                        (click)="onWpEditClick(wp, $event)"
+                        title="แก้ไข Work Package"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn delete"
+                        (click)="onWpDeleteClick(wp, $event)"
+                        title="ลบ Work Package"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Card Title -->
+                <h4 class="kanban-card-title">{{ wp.packageName }}</h4>
+
+                <!-- Milestone Badge -->
+                @if (wp.milestoneName) {
+                  <div class="kanban-card-wp" [title]="'Milestone: ' + wp.milestoneName">
+                    <i class="bi bi-flag text-amber-500"></i>
+                    <span>{{ wp.milestoneName }}</span>
+                  </div>
+                }
+
+                <!-- Meta (Dates & Task Count) -->
+                <div class="kanban-card-meta">
+                  <div class="kanban-card-meta-left">
+                    @if (wp.startDate || wp.endDate) {
+                      <span class="kanban-card-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ formatDate(wp.startDate) }} - {{ formatDate(wp.endDate) }}
+                      </span>
+                    }
+                  </div>
+                  <div class="kanban-card-meta-right">
+                    <span class="kanban-manday-tag" title="จำนวนงานใน Work Package">
+                      <i class="bi bi-list-task mr-0.5"></i> {{ wp.tasks?.length || 0 }} งาน
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (colWps.length === 0) {
+              <div class="kanban-empty-column">
+                ไม่มี Work Package ในสถานะนี้
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ================= MODE 3: MILESTONE VIEW ================= -->
+        @if (viewMode() === 'milestone') {
+          @let colMs = getColumnMilestones(column);
+          <div
+            [id]="'kanban-col-' + column.id"
+            class="kanban-card-list"
+            cdkDropList
+            [cdkDropListData]="colMs"
+            (cdkDropListDropped)="onDropMilestone($event, column)"
+          >
+            @for (ms of colMs; track ms.id) {
+              <div
+                class="kanban-card kanban-card--milestone"
+                cdkDrag
+                [cdkDragDisabled]="readonly"
+                (click)="onMilestoneCardClick(ms)"
+              >
+                <!-- Card Header -->
+                <div class="kanban-card-header">
+                  <span class="kanban-card-badge-milestone" [style.color]="ms.color || '#eab308'">
+                    <i class="bi bi-flag-fill"></i> Milestone
+                  </span>
+                  
+                  @if (!readonly) {
+                    <div class="kanban-card-actions">
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn"
+                        (click)="onMilestoneEditClick(ms, $event)"
+                        title="แก้ไข Milestone"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="kanban-card-action-btn delete"
+                        (click)="onMilestoneDeleteClick(ms, $event)"
+                        title="ลบ Milestone"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Card Title -->
+                <h4 class="kanban-card-title">{{ ms.milestoneName }}</h4>
+
+                @if (ms.description) {
+                  <p class="kanban-card-desc">{{ ms.description }}</p>
+                }
+
+                <!-- Meta (Due Date & WP Count) -->
+                <div class="kanban-card-meta">
+                  <div class="kanban-card-meta-left">
+                    @if (ms.dueDate) {
+                      <span class="kanban-card-date" [title]="'กำหนดส่ง: ' + formatDate(ms.dueDate)">
+                        <i class="bi bi-calendar-check"></i>
+                        {{ formatDate(ms.dueDate) }}
+                      </span>
+                    }
+                  </div>
+                  <div class="kanban-card-meta-right">
+                    <span class="kanban-manday-tag" title="จำนวน Work Package ใน Milestone">
+                      <i class="bi bi-box mr-0.5"></i> {{ ms.workPackages?.length || 0 }} WPs
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (colMs.length === 0) {
+              <div class="kanban-empty-column">
+                ไม่มี Milestone ในสถานะนี้
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Column Footer (+ Add Item Button) -->
+        @if (!readonly) {
+          <div class="kanban-column-footer">
+            <button
+              type="button"
+              class="kanban-add-task-btn"
+              (click)="onAddItem(column.statuses[0])"
+            >
+              <i class="bi bi-plus-lg"></i>
+              {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

@@ -97,6 +97,18 @@ public class TaskServiceImpl implements TaskService {
         task.setEstimateManday(request.getEstimateManday());
         task.setPriority(request.getPriority());
         task.setColor(request.getColor());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            task.setStatus(request.getStatus());
+            if ("Done".equalsIgnoreCase(request.getStatus()) || "Completed".equalsIgnoreCase(request.getStatus())) {
+                if (task.getActualEnd() == null) {
+                    task.setActualEnd(Instant.now());
+                }
+            } else if ("In Progress".equalsIgnoreCase(request.getStatus()) || "Doing".equalsIgnoreCase(request.getStatus())) {
+                if (task.getActualStart() == null) {
+                    task.setActualStart(Instant.now());
+                }
+            }
+        }
 
         task = taskRepository.save(task);
 

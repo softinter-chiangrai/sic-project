@@ -271,6 +271,15 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
             : (value !== null && value !== undefined && value !== '' ? [value] : []));
       this.value = rawArray.map((v) => this.normalizeControlValue(v)).filter((v) => v !== null);
       this.syncMultipleSelectedItems();
+
+      // If we have selected values, options are empty and apiUrl exists, fetch options to resolve labels
+      const hasUnresolved = this.value.some((val: any) => {
+        const valId = this.extractItemValue(val);
+        return !this.options.some((opt) => this.areValuesEqual(this.resolveValue(opt), valId));
+      });
+      if (hasUnresolved && this.apiUrl) {
+        setTimeout(() => this.loadMultipleOptions(), 0);
+      }
       return;
     }
 
@@ -867,6 +876,54 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     }
 
     this.selectedItems = updatedItems;
+  }
+
+  private loadMultipleOptions(): void {
+    if (!this.apiUrl) {
+      return;
+    }
+
+    this.cancelPendingLoad();
+    this.loading = true;
+
+    const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
+      params: this.buildParams(),
+    }).subscribe({
+      next: (response) => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+
+        const items = Array.isArray(response) ? response : (response.data ?? []);
+        const pageable = Array.isArray(response) ? null : (response.pageable ?? null);
+
+        setTimeout(() => {
+          if (this.loadSubscription !== subscription) {
+            return;
+          }
+
+          this.options = items;
+          this.pageNumber = pageable?.pageNumber ?? this.pageNumber;
+          this.totalPages = Math.max(1, pageable?.totalPages ?? 1);
+          this.totalElements = pageable?.totalElements ?? items.length;
+          this.loading = false;
+          this.loadSubscription = null;
+
+          this.syncMultipleSelectedItems();
+          this.cdr.markForCheck();
+        }, 0);
+      },
+      error: () => {
+        if (this.loadSubscription !== subscription) {
+          return;
+        }
+        this.loading = false;
+        this.loadSubscription = null;
+        this.cdr.markForCheck();
+      },
+    });
+
+    this.loadSubscription = subscription as any;
   }
 
   private loadValueById(value: any): void {

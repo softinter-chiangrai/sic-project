@@ -26,6 +26,12 @@ import {
   SicCalendarView,
   SicDatepickerComponent,
 } from 'sic-ng';
+import {
+  SicKanbanComponent,
+  KanbanStatusChangeEvent,
+  KanbanWpStatusChangeEvent,
+  KanbanMilestoneStatusChangeEvent,
+} from '../../../../core/component/sic-kanban/sic-kanban.component';
 import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from './pmdt02.utils';
 
 import { FormsModule } from '@angular/forms';
@@ -43,6 +49,7 @@ export type { CalendarItemDetail };
     SicCalendarComponent,
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
+    SicKanbanComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',
@@ -70,7 +77,7 @@ export class Pmdt02Component implements OnInit {
   expandedMilestone = signal<string | null>(null);
   expandedWorkPackage = signal<string | null>(null);
 
-  rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
+  rightTab = signal<'list' | 'calendar' | 'gantt' | 'kanban'>('list');
   calendarEra = signal<SicCalendarEra>('BE');
   calendarView = signal<SicCalendarView>('grid');
   timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
@@ -91,9 +98,45 @@ export class Pmdt02Component implements OnInit {
     color: '#8b5cf6',
   };
 
-  switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
+  switchTab(tab: 'list' | 'calendar' | 'gantt' | 'kanban'): void {
     this.rightTab.set(tab);
   }
+
+  // ===== KANBAN DATA (ALL TASKS & WORKPACKAGES IN THIS PHASE) =====
+  allPhaseTasks = computed<TaskResponse[]>(() => {
+    const p = this.phase();
+    if (!p || !p.milestones) return [];
+    const tasks: TaskResponse[] = [];
+    for (const ms of p.milestones) {
+      if (ms.workPackages) {
+        for (const wp of ms.workPackages) {
+          if (wp.tasks) {
+            for (const t of wp.tasks) {
+              tasks.push({
+                ...t,
+                workPackageName: t.workPackageName || wp.packageName,
+              });
+            }
+          }
+        }
+      }
+    }
+    return tasks;
+  });
+
+  allWorkPackages = computed<WorkPackageResponse[]>(() => {
+    const p = this.phase();
+    if (!p || !p.milestones) return [];
+    const wps: WorkPackageResponse[] = [];
+    for (const ms of p.milestones) {
+      if (ms.workPackages) {
+        for (const wp of ms.workPackages) {
+          wps.push(wp);
+        }
+      }
+    }
+    return wps;
+  });
 
   // ===== HELPER: convert string | Date to YYYY-MM-DD =====
   private toDateString(value: string | Date | undefined | null): string {
@@ -578,6 +621,185 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
+  // ===== KANBAN ACTIONS =====
+  onKanbanTaskStatusChange(event: KanbanStatusChangeEvent): void {
+    const payload = {
+      workPackageId: event.task.workPackageId,
+      taskCode: event.task.taskCode,
+      taskName: event.task.taskName,
+      description: event.task.description,
+      assignedTo: event.task.assignedTo,
+      startDate: event.task.startDate,
+      endDate: event.task.endDate,
+      estimateManday: event.task.estimateManday,
+      priority: event.task.priority,
+      status: event.newStatus,
+      assigneeIds: event.task.assigneeIds,
+    };
+
+    this.taskService.updateTask(event.taskId, payload).subscribe({
+      next: () => {
+        // Re-load phase to refresh task status, completed count, and progress bar
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.phaseService.getPhaseById(currentPhaseId).subscribe({
+            next: (data) => this.phase.set(data),
+            error: (err) => console.error('Failed to reload phase after task status update', err),
+          });
+        }
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.phaseService.getPhaseById(currentPhaseId).subscribe({
+            next: (data) => this.phase.set(data),
+          });
+        }
+      },
+    });
+  }
+
+  onKanbanTaskClick(task: TaskResponse): void {
+    this.router.navigate(['/feature/pm/task', task.id, 'edit'], {
+      queryParams: {
+        workPackageId: task.workPackageId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  onKanbanTaskDelete(task: TaskResponse): void {
+    this.deleteTask(task, new Event('click'));
+  }
+
+  onKanbanTaskCreate(event: { status: string; workPackageId?: string }): void {
+    const wps = this.allWorkPackages();
+    const wpId = event.workPackageId || (wps.length > 0 ? wps[0].id : undefined);
+    if (!wpId) {
+      this.dialog.error('ไม่พบ Work Package', 'กรุณาสร้าง Work Package ก่อนเพิ่ม Task');
+      return;
+    }
+    this.router.navigate(['/feature/pm/task/new'], {
+      queryParams: {
+        workPackageId: wpId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  // ===== KANBAN WORK PACKAGE ACTIONS =====
+  onKanbanWpStatusChange(event: KanbanWpStatusChangeEvent): void {
+    const payload = {
+      milestoneId: event.workPackage.milestoneId,
+      packageName: event.workPackage.packageName,
+      description: event.workPackage.description,
+      startDate: event.workPackage.startDate,
+      endDate: event.workPackage.endDate,
+      color: event.workPackage.color,
+      status: event.newStatus,
+    };
+
+    this.wpService.updateWorkPackage(event.workPackageId, payload).subscribe({
+      next: () => {
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.loadMilestones(currentPhaseId);
+        }
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.loadMilestones(currentPhaseId);
+        }
+      },
+    });
+  }
+
+  onKanbanWpClick(wp: WorkPackageResponse): void {
+    this.router.navigate(['/feature/pm/work-package', wp.id, 'edit'], {
+      queryParams: {
+        milestoneId: wp.milestoneId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  onKanbanWpDelete(wp: WorkPackageResponse): void {
+    this.deleteWorkPackage(wp, new Event('click'));
+  }
+
+  onKanbanWpCreate(event: { status: string; milestoneId?: string }): void {
+    const msList = this.phase()?.milestones || [];
+    const msId = event.milestoneId || (msList.length > 0 ? msList[0].id : undefined);
+    if (!msId) {
+      this.dialog.error('ไม่พบ Milestone', 'กรุณาสร้าง Milestone ก่อนเพิ่ม Work Package');
+      return;
+    }
+    this.router.navigate(['/feature/pm/work-package/new'], {
+      queryParams: {
+        milestoneId: msId,
+        projectId: this.projectId(),
+        phaseId: this.currentPhaseId(),
+      },
+    });
+  }
+
+  // ===== KANBAN MILESTONE ACTIONS =====
+  onKanbanMilestoneStatusChange(event: KanbanMilestoneStatusChangeEvent): void {
+    const payload = {
+      phaseId: event.milestone.phaseId,
+      milestoneName: event.milestone.milestoneName,
+      description: event.milestone.description,
+      dueDate: event.milestone.dueDate,
+      color: event.milestone.color,
+      status: event.newStatus,
+    };
+
+    this.milestoneService.updateMilestone(event.milestoneId, payload).subscribe({
+      next: () => {
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.loadMilestones(currentPhaseId);
+        }
+      },
+      error: (err) => {
+        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        const currentPhaseId = this.currentPhaseId();
+        if (currentPhaseId) {
+          this.loadMilestones(currentPhaseId);
+        }
+      },
+    });
+  }
+
+  onKanbanMilestoneClick(ms: MilestoneResponse): void {
+    this.router.navigate(['/feature/pm/milestone', ms.id, 'edit'], {
+      queryParams: {
+        projectId: this.projectId(),
+      },
+    });
+  }
+
+  onKanbanMilestoneDelete(ms: MilestoneResponse): void {
+    this.deleteMilestone(ms, new Event('click'));
+  }
+
+  onKanbanMilestoneCreate(event: { status: string }): void {
+    const phaseId = this.currentPhaseId();
+    if (!phaseId) return;
+    this.router.navigate(['/feature/pm/milestone/new'], {
+      queryParams: {
+        phaseId,
+        projectId: this.projectId(),
+      },
+    });
+  }
+
   // ===== NAVIGATION TO FULLSCREEN GANTT =====
   goToGanttFullscreen() {
     const phaseId = this.currentPhaseId();
@@ -941,6 +1163,19 @@ export class Pmdt02Component implements OnInit {
       Cancelled: 'ยกเลิก',
     };
     return map[status] || status;
+  }
+
+  getTaskAssigneeDisplay(task: TaskResponse): string {
+    if (task.assigneeNames) {
+      if (Array.isArray(task.assigneeNames)) {
+        const names = task.assigneeNames.filter(Boolean);
+        if (names.length > 0) return names.join(', ');
+      } else if (typeof task.assigneeNames === 'object') {
+        const names = Object.values(task.assigneeNames).filter(Boolean);
+        if (names.length > 0) return names.join(', ');
+      }
+    }
+    return task.assignedTo || '-';
   }
 
   formatDate(dateStr: string): string {

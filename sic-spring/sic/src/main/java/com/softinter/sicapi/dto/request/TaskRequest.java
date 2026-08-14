@@ -18,6 +18,7 @@ public class TaskRequest {
     private Integer estimateManday;
     private String priority;
     private String color;
+    private String status;
     private List<String> assigneeIds;
 
     // ===== เพิ่มสำหรับ Traceability =====
