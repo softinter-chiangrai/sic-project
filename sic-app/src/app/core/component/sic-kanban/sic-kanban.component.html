@@ -62,32 +62,6 @@
             </sic-combobox>
           </div>
         }
-
-        <!-- Priority Filter Combobox -->
-        <div class="kanban-combobox-wrapper">
-          <sic-combobox
-            [options]="priorityOptions"
-            [ngModel]="selectedPriorityFilter()"
-            (ngModelChange)="selectedPriorityFilter.set($event)"
-            placeholder="🚩 ทุกความสำคัญ"
-            [clearable]="true"
-          >
-          </sic-combobox>
-        </div>
-
-        <!-- Assignee Filter Combobox -->
-        @if (assigneeOptions().length > 0) {
-          <div class="kanban-combobox-wrapper">
-            <sic-combobox
-              [options]="assigneeOptions()"
-              [ngModel]="selectedAssigneeFilter()"
-              (ngModelChange)="selectedAssigneeFilter.set($event)"
-              placeholder="👤 ทุกผู้รับผิดชอบ"
-              [clearable]="true"
-            >
-            </sic-combobox>
-          </div>
-        }
       }
 
       <!-- Filters in Work Package View -->
@@ -104,6 +78,32 @@
             </sic-combobox>
           </div>
         }
+      }
+
+      <!-- Priority Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
+      <div class="kanban-combobox-wrapper">
+        <sic-combobox
+          [options]="priorityOptions"
+          [ngModel]="selectedPriorityFilter()"
+          (ngModelChange)="selectedPriorityFilter.set($event)"
+          placeholder="🚩 ทุกความสำคัญ"
+          [clearable]="true"
+        >
+        </sic-combobox>
+      </div>
+
+      <!-- Assignee Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
+      @if (assigneeOptions().length > 0) {
+        <div class="kanban-combobox-wrapper">
+          <sic-combobox
+            [options]="assigneeOptions()"
+            [ngModel]="selectedAssigneeFilter()"
+            (ngModelChange)="selectedAssigneeFilter.set($event)"
+            placeholder="👤 ทุกผู้รับผิดชอบ"
+            [clearable]="true"
+          >
+          </sic-combobox>
+        </div>
       }
     </div>
 

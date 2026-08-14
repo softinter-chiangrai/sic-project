@@ -200,8 +200,11 @@ export class SicKanbanComponent {
   assigneeOptions = computed(() => {
     const set = new Set<string>();
     for (const t of this._tasks()) {
-      if (t.assignedTo) {
-        set.add(t.assignedTo);
+      const assignees = this.getTaskAssignees(t);
+      for (const a of assignees) {
+        if (a && a.trim()) {
+          set.add(a.trim());
+        }
       }
     }
     return Array.from(set).map((a) => ({
@@ -243,7 +246,10 @@ export class SicKanbanComponent {
     }
 
     if (assignee) {
-      list = list.filter((t) => t.assignedTo === assignee);
+      list = list.filter((t) => {
+        const assignees = this.getTaskAssignees(t);
+        return assignees.includes(assignee) || t.assignedTo === assignee;
+      });
     }
 
     return list;
@@ -253,6 +259,8 @@ export class SicKanbanComponent {
     let list = this._workPackages();
     const query = this.searchQuery().trim().toLowerCase();
     const msId = this.selectedMilestoneFilter();
+    const priority = this.selectedPriorityFilter();
+    const assignee = this.selectedAssigneeFilter();
 
     if (query) {
       list = list.filter(
@@ -267,12 +275,35 @@ export class SicKanbanComponent {
       list = list.filter((wp) => wp.milestoneId === msId);
     }
 
+    if (priority) {
+      list = list.filter((wp) => {
+        const wpTasks = (wp.tasks && wp.tasks.length > 0)
+          ? wp.tasks
+          : this._tasks().filter((t) => t.workPackageId === wp.id);
+        return wpTasks.some((t) => (t.priority || '').toLowerCase() === priority.toLowerCase());
+      });
+    }
+
+    if (assignee) {
+      list = list.filter((wp) => {
+        const wpTasks = (wp.tasks && wp.tasks.length > 0)
+          ? wp.tasks
+          : this._tasks().filter((t) => t.workPackageId === wp.id);
+        return wpTasks.some((t) => {
+          const assignees = this.getTaskAssignees(t);
+          return assignees.includes(assignee) || t.assignedTo === assignee;
+        });
+      });
+    }
+
     return list;
   });
 
   filteredMilestones = computed(() => {
     let list = this._milestones();
     const query = this.searchQuery().trim().toLowerCase();
+    const priority = this.selectedPriorityFilter();
+    const assignee = this.selectedAssigneeFilter();
 
     if (query) {
       list = list.filter(
@@ -280,6 +311,35 @@ export class SicKanbanComponent {
           (ms.milestoneName && ms.milestoneName.toLowerCase().includes(query)) ||
           (ms.description && ms.description.toLowerCase().includes(query))
       );
+    }
+
+    if (priority) {
+      list = list.filter((ms) => {
+        // Collect all tasks under this milestone via work packages or global tasks
+        const msWpIds = new Set((ms.workPackages || []).map((wp) => wp.id));
+        const msTasks = this._tasks().filter((t) => msWpIds.has(t.workPackageId));
+        const hasDirectTask = (ms.workPackages || []).some((wp) =>
+          (wp.tasks || []).some((t) => (t.priority || '').toLowerCase() === priority.toLowerCase())
+        );
+        return hasDirectTask || msTasks.some((t) => (t.priority || '').toLowerCase() === priority.toLowerCase());
+      });
+    }
+
+    if (assignee) {
+      list = list.filter((ms) => {
+        const msWpIds = new Set((ms.workPackages || []).map((wp) => wp.id));
+        const msTasks = this._tasks().filter((t) => msWpIds.has(t.workPackageId));
+        const hasDirectTask = (ms.workPackages || []).some((wp) =>
+          (wp.tasks || []).some((t) => {
+            const assignees = this.getTaskAssignees(t);
+            return assignees.includes(assignee) || t.assignedTo === assignee;
+          })
+        );
+        return hasDirectTask || msTasks.some((t) => {
+          const assignees = this.getTaskAssignees(t);
+          return assignees.includes(assignee) || t.assignedTo === assignee;
+        });
+      });
     }
 
     return list;
