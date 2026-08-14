@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     @Async
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logAsync(AuditLogRequest request) {
         try {
             SuAuditLog entity = new SuAuditLog();
@@ -38,7 +39,12 @@ public class AuditLogServiceImpl implements AuditLogService {
             entity.setAction(request.getAction());
             entity.setModule(request.getModule());
             entity.setDescription(request.getDescription());
+            entity.setTargetType(request.getTargetType());
+            entity.setTargetId(request.getTargetId());
+            entity.setOldValue(request.getOldValue());
+            entity.setNewValue(request.getNewValue());
             entity.setIpAddress(request.getIpAddress());
+            entity.setUserAgent(request.getUserAgent());
             entity.setStatus(request.getStatus() != null ? request.getStatus() : "Success");
             entity.setDetails(request.getDetails());
             entity.setBusinessId(request.getBusinessId());
@@ -53,6 +59,12 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional
     public void log(String action, String module, String description, String status, String details) {
+        log(action, module, description, null, null, null, null, status, details);
+    }
+
+    @Override
+    @Transactional
+    public void log(String action, String module, String description, String targetType, UUID targetId, String oldValue, String newValue, String status, String details) {
         AuditLogRequest request = new AuditLogRequest();
         try {
             request.setUserId(currentUserService.getUserId());
@@ -83,6 +95,10 @@ public class AuditLogServiceImpl implements AuditLogService {
         request.setAction(action);
         request.setModule(module);
         request.setDescription(description);
+        request.setTargetType(targetType);
+        request.setTargetId(targetId);
+        request.setOldValue(oldValue);
+        request.setNewValue(newValue);
         request.setStatus(status != null ? status : "Success");
         request.setDetails(details);
 
@@ -108,7 +124,12 @@ public class AuditLogServiceImpl implements AuditLogService {
         response.setAction(entity.getAction());
         response.setModule(entity.getModule());
         response.setDescription(entity.getDescription());
+        response.setTargetType(entity.getTargetType());
+        response.setTargetId(entity.getTargetId());
+        response.setOldValue(entity.getOldValue());
+        response.setNewValue(entity.getNewValue());
         response.setIpAddress(entity.getIpAddress());
+        response.setUserAgent(entity.getUserAgent());
         response.setStatus(entity.getStatus());
         response.setDetails(entity.getDetails());
         response.setBusinessId(entity.getBusinessId());

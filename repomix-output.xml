@@ -12427,6 +12427,39 @@ public class ExExampleController {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/DiagramSqlController.java">
+// src/main/java/com/softinter/sicapi/controller/pm/DiagramSqlController.java
+package com.softinter.sicapi.controller.pm;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.softinter.sicapi.dto.request.GenerateSqlRequest;
+import com.softinter.sicapi.dto.response.GenerateSqlResponse;
+import com.softinter.sicapi.service.DiagramSqlService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/diagram")
+@RequiredArgsConstructor
+public class DiagramSqlController {
+
+    private final DiagramSqlService diagramSqlService;
+
+    @PostMapping("/generate-sql")
+    public ResponseEntity<GenerateSqlResponse> generateSql(@RequestBody GenerateSqlRequest request) {
+    String sql = diagramSqlService.generateSqlFromXml(request.getXml(), request.getVendor());
+    GenerateSqlResponse response = new GenerateSqlResponse();
+    response.setSql(sql);
+    return ResponseEntity.ok(response);
+}
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/MilestoneController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -14205,6 +14238,19 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ExamplePageRequest extends PageableRequest {
     private String keyword;
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/GenerateSqlRequest.java">
+// dto/request/GenerateSqlRequest.java
+package com.softinter.sicapi.dto.request;
+
+import lombok.Data;
+
+@Data
+public class GenerateSqlRequest {
+    private String xml;
+    private String vendor;
 }
 </file>
 
@@ -21175,6 +21221,163 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/DiagramSqlServiceImpl.java">
+// src/main/java/com/softinter/sicapi/service/impl/DiagramSqlServiceImpl.java
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.service.DiagramSqlService;
+import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.DatabaseModel;
+import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Table;
+import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Column;
+import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Relation;
+
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+
+@Service
+public class DiagramSqlServiceImpl implements DiagramSqlService {
+
+    @Override
+    public String generateSqlFromXml(String xml ) {
+        // ค่าเริ่มต้นเป็น PostgreSQL เพื่อ backward compatibility
+        return generateSqlFromXml(xml, "postgresql");
+    }
+
+    @Override
+    public String generateSqlFromXml(String xml, String vendor) {
+        // 1. แปลง XML → Database Model
+        ErXmlParserServiceImpl parser = new ErXmlParserServiceImpl();
+        DatabaseModel model = parser.parse(xml);
+
+        // 2. แปลง Database Model → SQL ตาม vendor
+        return generate(model, vendor);
+    }
+
+    public String generate(DatabaseModel model, String vendor) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("-- ============================================================\n");
+        sql.append("-- Generated SQL from ER Diagram (").append(vendor).append(")\n");
+        sql.append("-- Generated at: ").append(Instant.now()).append("\n");
+        sql.append("-- ============================================================\n\n");
+
+        // 1. สร้าง Table
+        for (Table table : model.tables) {
+            sql.append(generateCreateTable(table, vendor));
+            sql.append("\n\n");
+        }
+
+        // 2. สร้าง Foreign Key (ถ้ามี)
+        Set<String> createdFks = new HashSet<>();
+        for (Relation rel : model.relations) {
+            String fromTable = rel.from;
+            String toTable = rel.to;
+            String fkName = "fk_" + fromTable + "_" + toTable;
+            if (createdFks.contains(fkName)) continue;
+            createdFks.add(fkName);
+
+            String fkColumn = toTable.toLowerCase() + "_id";
+            
+            sql.append("-- Relation: ").append(fromTable).append(" -> ").append(toTable).append("\n");
+            
+            if ("mysql".equalsIgnoreCase(vendor)) {
+                // MySQL: ADD COLUMN (ไม่มี IF NOT EXISTS) และ FOREIGN KEY syntax
+                sql.append("ALTER TABLE ").append(fromTable)
+                   .append(" ADD COLUMN ").append(fkColumn).append(" CHAR(36);\n");
+                sql.append("ALTER TABLE ").append(fromTable)
+                   .append(" ADD CONSTRAINT ").append(fkName)
+                   .append(" FOREIGN KEY (").append(fkColumn).append(") REFERENCES ").append(toTable).append("(id);\n\n");
+            } else {
+                // PostgreSQL (default)
+                sql.append("ALTER TABLE ").append(fromTable)
+                   .append(" ADD COLUMN IF NOT EXISTS ").append(fkColumn).append(" UUID;\n");
+                sql.append("ALTER TABLE ").append(fromTable)
+                   .append(" ADD CONSTRAINT ").append(fkName)
+                   .append(" FOREIGN KEY (").append(fkColumn).append(") REFERENCES ").append(toTable).append("(id);\n\n");
+            }
+        }
+
+        return sql.toString();
+    }
+
+    private String generateCreateTable(Table table, String vendor) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE TABLE IF NOT EXISTS ").append(table.name).append(" (\n");
+
+        boolean hasPk = false;
+        for (Column col : table.columns) {
+            String colType = mapType(col.type, vendor);
+            sb.append("    ").append(col.name).append(" ").append(colType);
+            if (col.isPrimaryKey) {
+                sb.append(getPrimaryKeySyntax(vendor));
+                hasPk = true;
+            }
+            sb.append(",\n");
+        }
+
+        // ถ้ายังไม่มี PK, เพิ่ม id
+        if (!hasPk) {
+            sb.append("    id ").append(getPrimaryKeySyntax(vendor)).append(",\n");
+        }
+
+        // ตัดคอมมา(,) ตัวสุดท้ายออก
+        String sql = sb.toString();
+        if (sql.endsWith(",\n")) {
+            sql = sql.substring(0, sql.length() - 2) + "\n";
+        }
+
+        sql += ");";
+        return sql;
+    }
+
+    private String getPrimaryKeySyntax(String vendor) {
+        if ("mysql".equalsIgnoreCase(vendor)) {
+            return "CHAR(36) PRIMARY KEY"; // MySQL ใช้ UUID แบบ CHAR(36) หรือจะใช้ BINARY(16) ก็ได้
+            // หรือจะใช้ AUTO_INCREMENT แทนก็ได้ แต่เราใช้ UUID เป็น PK เพื่อความสอดคล้อง
+        } else {
+            // PostgreSQL default
+            return "UUID DEFAULT gen_random_uuid() PRIMARY KEY";
+        }
+    }
+
+    private String mapType(String type, String vendor) {
+        if (type == null) return "TEXT";
+        String upper = type.toUpperCase();
+
+        if ("mysql".equalsIgnoreCase(vendor)) {
+            return switch (upper) {
+                case "INT", "INTEGER" -> "INT";
+                case "BIGINT" -> "BIGINT";
+                case "SMALLINT" -> "SMALLINT";
+                case "VARCHAR", "STRING", "CHAR" -> "VARCHAR(255)";
+                case "TEXT", "LONGTEXT" -> "TEXT";
+                case "BOOL", "BOOLEAN" -> "TINYINT(1)";
+                case "DATE" -> "DATE";
+                case "DATETIME", "TIMESTAMP" -> "DATETIME";
+                case "DECIMAL", "NUMERIC" -> "DECIMAL(19,2)";
+                case "FLOAT", "DOUBLE" -> "DOUBLE";
+                default -> "VARCHAR(255)";
+            };
+        } else {
+            // PostgreSQL (default)
+            return switch (upper) {
+                case "INT", "INTEGER", "BIGINT", "SMALLINT" -> upper;
+                case "VARCHAR", "STRING", "CHAR" -> "VARCHAR(255)";
+                case "TEXT", "LONGTEXT" -> "TEXT";
+                case "BOOL", "BOOLEAN" -> "BOOLEAN";
+                case "DATE" -> "DATE";
+                case "DATETIME", "TIMESTAMP" -> "TIMESTAMPTZ";
+                case "DECIMAL", "NUMERIC" -> "NUMERIC(19,2)";
+                case "FLOAT", "DOUBLE" -> "DOUBLE PRECISION";
+                default -> "TEXT";
+            };
+        }
+    }
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/ErXmlParserServiceImpl.java">
 // src/main/java/com/softinter/sicapi/service/impl/ErXmlParserServiceImpl.java
 package com.softinter.sicapi.service.impl;
@@ -23842,6 +24045,16 @@ public interface CurrentUserService {
     String getIpAddress();
     String getUsername();
     String getEmail();
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/DiagramSqlService.java">
+// src/main/java/com/softinter/sicapi/service/DiagramSqlService.java
+package com.softinter.sicapi.service;
+
+public interface DiagramSqlService {
+    String generateSqlFromXml(String xml, String vendor);
+    String generateSqlFromXml(String xml);
 }
 </file>
 
@@ -32210,14 +32423,14 @@ import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt08AService } from './pmdt08A.service';
+import { Pmdt08Service } from '../pmdt08.service';
 import { Pmdt08AForm } from './pmdt08A.form';
 import { Pmdt08AModel, Pmdt08APageData } from './pmdt08A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export const pmdt08AResolver: ResolveFn<Pmdt08APageData> = async (route) => {
   const fb = inject(FormBuilder);
-  const service = inject(Pmdt08AService);
+  const service = inject(Pmdt08Service);
   const router = inject(Router);
   const id = route.paramMap.get('id');
 
@@ -32228,15 +32441,15 @@ export const pmdt08AResolver: ResolveFn<Pmdt08APageData> = async (route) => {
   }
 
   try {
-    const data = await lastValueFrom(service.getTaskById(id));
+    const data = await lastValueFrom(service.getSpecification(id));
     if (data) {
       form.patchValue(data);
-      return { taskData: new SicFromData<Pmdt08AModel>(form, data) };
+      return { taskData: new SicFromData<Pmdt08AModel>(form, data as unknown as Pmdt08AModel) };
     }
-    router.navigate(['/not-found']);
+    router.navigate(['/feature/pm/pmdt08']);
     return EMPTY as any;
   } catch {
-    router.navigate(['/not-found']);
+    router.navigate(['/feature/pm/pmdt08']);
     return EMPTY as any;
   }
 };
@@ -39484,39 +39697,6 @@ public ResponseEntity<BusinessResponse> getMyBusinessFull() {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/DiagramSqlController.java">
-// src/main/java/com/softinter/sicapi/controller/pm/DiagramSqlController.java
-package com.softinter.sicapi.controller.pm;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.softinter.sicapi.dto.request.GenerateSqlRequest;
-import com.softinter.sicapi.dto.response.GenerateSqlResponse;
-import com.softinter.sicapi.service.DiagramSqlService;
-
-import lombok.RequiredArgsConstructor;
-
-@RestController
-@RequestMapping("/api/diagram")
-@RequiredArgsConstructor
-public class DiagramSqlController {
-
-    private final DiagramSqlService diagramSqlService;
-
-    @PostMapping("/generate-sql")
-    public ResponseEntity<GenerateSqlResponse> generateSql(@RequestBody GenerateSqlRequest request) {
-    String sql = diagramSqlService.generateSqlFromXml(request.getXml(), request.getVendor());
-    GenerateSqlResponse response = new GenerateSqlResponse();
-    response.setSql(sql);
-    return ResponseEntity.ok(response);
-}
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmBugController.java">
 package com.softinter.sicapi.controller.pm;
 
@@ -41355,19 +41535,6 @@ public class EditSessionRequest {
     private UUID targetId;
     private String assigneeId;
     private Integer expiresInHours;
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/GenerateSqlRequest.java">
-// dto/request/GenerateSqlRequest.java
-package com.softinter.sicapi.dto.request;
-
-import lombok.Data;
-
-@Data
-public class GenerateSqlRequest {
-    private String xml;
-    private String vendor;
 }
 </file>
 
@@ -44929,163 +45096,6 @@ public JoinBusinessResponse joinBusiness(String token) {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/DiagramSqlServiceImpl.java">
-// src/main/java/com/softinter/sicapi/service/impl/DiagramSqlServiceImpl.java
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.service.DiagramSqlService;
-import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.DatabaseModel;
-import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Table;
-import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Column;
-import com.softinter.sicapi.service.impl.ErXmlParserServiceImpl.Relation;
-
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
-
-@Service
-public class DiagramSqlServiceImpl implements DiagramSqlService {
-
-    @Override
-    public String generateSqlFromXml(String xml ) {
-        // ค่าเริ่มต้นเป็น PostgreSQL เพื่อ backward compatibility
-        return generateSqlFromXml(xml, "postgresql");
-    }
-
-    @Override
-    public String generateSqlFromXml(String xml, String vendor) {
-        // 1. แปลง XML → Database Model
-        ErXmlParserServiceImpl parser = new ErXmlParserServiceImpl();
-        DatabaseModel model = parser.parse(xml);
-
-        // 2. แปลง Database Model → SQL ตาม vendor
-        return generate(model, vendor);
-    }
-
-    public String generate(DatabaseModel model, String vendor) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("-- ============================================================\n");
-        sql.append("-- Generated SQL from ER Diagram (").append(vendor).append(")\n");
-        sql.append("-- Generated at: ").append(Instant.now()).append("\n");
-        sql.append("-- ============================================================\n\n");
-
-        // 1. สร้าง Table
-        for (Table table : model.tables) {
-            sql.append(generateCreateTable(table, vendor));
-            sql.append("\n\n");
-        }
-
-        // 2. สร้าง Foreign Key (ถ้ามี)
-        Set<String> createdFks = new HashSet<>();
-        for (Relation rel : model.relations) {
-            String fromTable = rel.from;
-            String toTable = rel.to;
-            String fkName = "fk_" + fromTable + "_" + toTable;
-            if (createdFks.contains(fkName)) continue;
-            createdFks.add(fkName);
-
-            String fkColumn = toTable.toLowerCase() + "_id";
-            
-            sql.append("-- Relation: ").append(fromTable).append(" -> ").append(toTable).append("\n");
-            
-            if ("mysql".equalsIgnoreCase(vendor)) {
-                // MySQL: ADD COLUMN (ไม่มี IF NOT EXISTS) และ FOREIGN KEY syntax
-                sql.append("ALTER TABLE ").append(fromTable)
-                   .append(" ADD COLUMN ").append(fkColumn).append(" CHAR(36);\n");
-                sql.append("ALTER TABLE ").append(fromTable)
-                   .append(" ADD CONSTRAINT ").append(fkName)
-                   .append(" FOREIGN KEY (").append(fkColumn).append(") REFERENCES ").append(toTable).append("(id);\n\n");
-            } else {
-                // PostgreSQL (default)
-                sql.append("ALTER TABLE ").append(fromTable)
-                   .append(" ADD COLUMN IF NOT EXISTS ").append(fkColumn).append(" UUID;\n");
-                sql.append("ALTER TABLE ").append(fromTable)
-                   .append(" ADD CONSTRAINT ").append(fkName)
-                   .append(" FOREIGN KEY (").append(fkColumn).append(") REFERENCES ").append(toTable).append("(id);\n\n");
-            }
-        }
-
-        return sql.toString();
-    }
-
-    private String generateCreateTable(Table table, String vendor) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE IF NOT EXISTS ").append(table.name).append(" (\n");
-
-        boolean hasPk = false;
-        for (Column col : table.columns) {
-            String colType = mapType(col.type, vendor);
-            sb.append("    ").append(col.name).append(" ").append(colType);
-            if (col.isPrimaryKey) {
-                sb.append(getPrimaryKeySyntax(vendor));
-                hasPk = true;
-            }
-            sb.append(",\n");
-        }
-
-        // ถ้ายังไม่มี PK, เพิ่ม id
-        if (!hasPk) {
-            sb.append("    id ").append(getPrimaryKeySyntax(vendor)).append(",\n");
-        }
-
-        // ตัดคอมมา(,) ตัวสุดท้ายออก
-        String sql = sb.toString();
-        if (sql.endsWith(",\n")) {
-            sql = sql.substring(0, sql.length() - 2) + "\n";
-        }
-
-        sql += ");";
-        return sql;
-    }
-
-    private String getPrimaryKeySyntax(String vendor) {
-        if ("mysql".equalsIgnoreCase(vendor)) {
-            return "CHAR(36) PRIMARY KEY"; // MySQL ใช้ UUID แบบ CHAR(36) หรือจะใช้ BINARY(16) ก็ได้
-            // หรือจะใช้ AUTO_INCREMENT แทนก็ได้ แต่เราใช้ UUID เป็น PK เพื่อความสอดคล้อง
-        } else {
-            // PostgreSQL default
-            return "UUID DEFAULT gen_random_uuid() PRIMARY KEY";
-        }
-    }
-
-    private String mapType(String type, String vendor) {
-        if (type == null) return "TEXT";
-        String upper = type.toUpperCase();
-
-        if ("mysql".equalsIgnoreCase(vendor)) {
-            return switch (upper) {
-                case "INT", "INTEGER" -> "INT";
-                case "BIGINT" -> "BIGINT";
-                case "SMALLINT" -> "SMALLINT";
-                case "VARCHAR", "STRING", "CHAR" -> "VARCHAR(255)";
-                case "TEXT", "LONGTEXT" -> "TEXT";
-                case "BOOL", "BOOLEAN" -> "TINYINT(1)";
-                case "DATE" -> "DATE";
-                case "DATETIME", "TIMESTAMP" -> "DATETIME";
-                case "DECIMAL", "NUMERIC" -> "DECIMAL(19,2)";
-                case "FLOAT", "DOUBLE" -> "DOUBLE";
-                default -> "VARCHAR(255)";
-            };
-        } else {
-            // PostgreSQL (default)
-            return switch (upper) {
-                case "INT", "INTEGER", "BIGINT", "SMALLINT" -> upper;
-                case "VARCHAR", "STRING", "CHAR" -> "VARCHAR(255)";
-                case "TEXT", "LONGTEXT" -> "TEXT";
-                case "BOOL", "BOOLEAN" -> "BOOLEAN";
-                case "DATE" -> "DATE";
-                case "DATETIME", "TIMESTAMP" -> "TIMESTAMPTZ";
-                case "DECIMAL", "NUMERIC" -> "NUMERIC(19,2)";
-                case "FLOAT", "DOUBLE" -> "DOUBLE PRECISION";
-                default -> "TEXT";
-            };
-        }
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/EditSessionServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -46514,302 +46524,6 @@ public class PmCustomerServiceImpl implements PmCustomerService {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDeliveryServiceImpl.java">
-package com.softinter.sicapi.service.impl;
-
-import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
-import com.softinter.sicapi.dto.request.PmDeliveryRequest;
-import com.softinter.sicapi.dto.response.PmDeliveryChecklistResponse;
-import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
-import com.softinter.sicapi.dto.response.PmDeliveryResponse;
-import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.pm.PmDelivery;
-import com.softinter.sicapi.entity.pm.PmDeliveryChecklist;
-import com.softinter.sicapi.repository.pm.*;
-import com.softinter.sicapi.service.PmDeliveryService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class PmDeliveryServiceImpl implements PmDeliveryService {
-
-    private final PmDeliveryRepository deliveryRepository;
-    private final PmDeliveryChecklistRepository checklistRepository;
-    private final PmRequirementRepository requirementRepository;
-    private final PmSpecificationRepository specificationRepository;
-    private final PmBugRepository bugRepository;
-    private final PmTestCaseRepository testCaseRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmDelivery> page;
-        if (projectId != null) {
-            page = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = deliveryRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-        }
-        return page.map(this::toResponse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDeliveryResponse findById(UUID id, UUID businessId) {
-        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
-        PmDeliveryResponse response = toResponse(delivery);
-        List<PmDeliveryChecklistResponse> checklists = checklistRepository
-                .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId())
-                .stream()
-                .map(this::toChecklistResponse)
-                .collect(Collectors.toList());
-        response.setChecklists(checklists);
-        return response;
-    }
-
-    @Override
-    @Transactional
-    public UUID save(PmDeliveryRequest request, UUID businessId, String userId) {
-        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
-        PmDelivery entity;
-
-        if (state == EntityState.ADDED || request.getId() == null) {
-            entity = new PmDelivery();
-            entity.setBusinessId(businessId);
-            entity.setCreatedBy(userId);
-            entity.setCreatedDate(Instant.now());
-            mapRequestToEntity(request, entity);
-            entity = deliveryRepository.save(entity);
-        } else if (state == EntityState.MODIFIED) {
-            entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
-            if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
-                throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
-            }
-            mapRequestToEntity(request, entity);
-            entity.setUpdatedBy(userId);
-            entity.setUpdatedDate(Instant.now());
-            entity = deliveryRepository.save(entity);
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
-        }
-
-        // Handle Checklist items
-        if (request.getChecklists() != null) {
-            for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
-                EntityState chkState = chkReq.getState() != null ? EntityState.values()[chkReq.getState()] : EntityState.DETACHED;
-                if (chkState == EntityState.ADDED || chkReq.getId() == null) {
-                    PmDeliveryChecklist item = new PmDeliveryChecklist();
-                    item.setDeliveryId(entity.getId());
-                    item.setCreatedBy(userId);
-                    item.setCreatedDate(Instant.now());
-                    mapChecklistRequestToEntity(chkReq, item);
-                    checklistRepository.save(item);
-                } else if (chkState == EntityState.MODIFIED) {
-                    PmDeliveryChecklist item = checklistRepository.findById(chkReq.getId())
-                            .orElseThrow(() -> new RuntimeException("ไม่พบรายการ Checklist"));
-                    mapChecklistRequestToEntity(chkReq, item);
-                    item.setUpdatedBy(userId);
-                    item.setUpdatedDate(Instant.now());
-                    checklistRepository.save(item);
-                } else if (chkState == EntityState.DELETED) {
-                    checklistRepository.findById(chkReq.getId()).ifPresent(item -> {
-                        item.setIsDelete(true);
-                        item.setDeleteBy(userId);
-                        item.setDeleteDate(Instant.now());
-                        checklistRepository.save(item);
-                    });
-                }
-            }
-        }
-
-        return entity.getId();
-    }
-
-    @Override
-    @Transactional
-    public void delete(UUID id, UUID businessId, String userId) {
-        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
-        delivery.setIsDelete(true);
-        delivery.setDeleteBy(userId);
-        delivery.setDeleteDate(Instant.now());
-        deliveryRepository.save(delivery);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PmDeliveryGateCheckResponse gateCheck(UUID deliveryId, UUID projectId, UUID businessId) {
-        List<PmDeliveryGateCheckResponse.GateCheckItem> items = new ArrayList<>();
-        int passedCount = 0;
-
-        // 1. Check Requirements Confirmation
-        long totalReqs = requirementRepository.countByProjectIdAndIsDeleteFalse(projectId);
-        long confirmedReqs = requirementRepository.countByProjectIdAndBaConfirmStatusAndCustomerConfirmStatusAndIsDeleteFalse(projectId, "CONFIRMED", "CONFIRMED");
-        boolean reqPassed = totalReqs > 0 && totalReqs == confirmedReqs;
-        if (reqPassed) passedCount++;
-        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                .category("REQUIREMENT")
-                .name("Requirement Confirmation Gate")
-                .passed(reqPassed)
-                .status(reqPassed ? "OK" : "ERROR")
-                .detail(String.format("อนุมัติแล้ว %d จาก %d รายการ", confirmedReqs, totalReqs))
-                .build());
-
-        // 2. Check Specifications Confirmation
-        long totalSpecs = specificationRepository.countByProjectIdAndIsDeleteFalse(projectId);
-        long confirmedSpecs = specificationRepository.countByProjectIdAndHeadConfirmStatusAndCustomerConfirmStatusAndIsDeleteFalse(projectId, "CONFIRMED", "CONFIRMED");
-        boolean specPassed = totalSpecs > 0 && totalSpecs == confirmedSpecs;
-        if (specPassed) passedCount++;
-        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                .category("SPECIFICATION")
-                .name("Specification Approval Gate")
-                .passed(specPassed)
-                .status(specPassed ? "OK" : "ERROR")
-                .detail(String.format("อนุมัติแล้ว %d จาก %d รายการ", confirmedSpecs, totalSpecs))
-                .build());
-
-        // 3. Check Critical/High Bugs
-        long criticalBugs = bugRepository.countByProjectIdAndSeverityInAndStatusNotAndIsDeleteFalse(projectId, List.of("Critical", "High"), "Closed");
-        boolean bugPassed = criticalBugs == 0;
-        if (bugPassed) passedCount++;
-        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                .category("BUG")
-                .name("Critical/High Bug Closure Gate")
-                .passed(bugPassed)
-                .status(bugPassed ? "OK" : "ERROR")
-                .detail(bugPassed ? "ไม่มี Critical/High Bug ที่ค้างอยู่" : String.format("มี Critical/High Bug ที่ยังไม่ปิด %d รายการ", criticalBugs))
-                .build());
-
-        // 4. Check Test Cases
-        long totalTests = testCaseRepository.countByProjectIdAndIsDeleteFalse(projectId);
-        long passedTests = testCaseRepository.countByProjectIdAndStatusAndIsDeleteFalse(projectId, "PASS");
-        boolean testPassed = totalTests > 0 && totalTests == passedTests;
-        if (testPassed) passedCount++;
-        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                .category("TEST")
-                .name("Test Cases Execution Gate")
-                .passed(testPassed)
-                .status(testPassed ? "OK" : (passedTests > 0 ? "WARNING" : "ERROR"))
-                .detail(String.format("ผ่านการทดสอบ %d จาก %d รายการ", passedTests, totalTests))
-                .build());
-
-        // 5. Checklist items (if deliveryId provided)
-        if (deliveryId != null) {
-            List<PmDeliveryChecklist> checklists = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
-            long checkedCount = checklists.stream().filter(PmDeliveryChecklist::getIsChecked).count();
-            boolean chkPassed = !checklists.isEmpty() && checkedCount == checklists.size();
-            if (chkPassed) passedCount++;
-            items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                    .category("CHECKLIST")
-                    .name("Delivery Checklist Items")
-                    .passed(chkPassed)
-                    .status(chkPassed ? "OK" : "WARNING")
-                    .detail(String.format("ตรวจสอบแล้ว %d จาก %d รายการ", checkedCount, checklists.size()))
-                    .build());
-        }
-
-        int totalChecks = items.size();
-        boolean allPassed = passedCount == totalChecks;
-
-        return PmDeliveryGateCheckResponse.builder()
-                .isPassed(allPassed)
-                .totalChecks(totalChecks)
-                .passedChecks(passedCount)
-                .checkItems(items)
-                .build();
-    }
-
-    private void mapRequestToEntity(PmDeliveryRequest req, PmDelivery entity) {
-        entity.setProjectId(req.getProjectId());
-        entity.setDeliveryCode(req.getDeliveryCode());
-        entity.setDeliveryTitle(req.getDeliveryTitle());
-        entity.setDeliveryType(req.getDeliveryType() != null ? req.getDeliveryType() : "FINAL");
-        entity.setContractId(req.getContractId());
-        entity.setMilestoneId(req.getMilestoneId());
-        entity.setDeliveryDate(req.getDeliveryDate());
-        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "1.0");
-        entity.setReleaseNote(req.getReleaseNote());
-        entity.setDeliverySummary(req.getDeliverySummary());
-        entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
-        entity.setPmApprovedBy(req.getPmApprovedBy());
-        entity.setPmApprovedDate(req.getPmApprovedDate());
-        entity.setCustomerSignedBy(req.getCustomerSignedBy());
-        entity.setCustomerSignedDate(req.getCustomerSignedDate());
-        entity.setAttachmentGroupId(req.getAttachmentGroupId());
-    }
-
-    private void mapChecklistRequestToEntity(PmDeliveryChecklistRequest req, PmDeliveryChecklist entity) {
-        entity.setItemName(req.getItemName());
-        entity.setItemCategory(req.getItemCategory());
-        entity.setIsChecked(req.getIsChecked() != null ? req.getIsChecked() : false);
-        entity.setCheckedBy(req.getCheckedBy());
-        entity.setCheckedDate(req.getCheckedDate());
-        entity.setRemark(req.getRemark());
-        entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
-    }
-
-    private PmDeliveryResponse toResponse(PmDelivery entity) {
-        PmDeliveryResponse res = new PmDeliveryResponse();
-        res.setId(entity.getId());
-        res.setBusinessId(entity.getBusinessId());
-        res.setProjectId(entity.getProjectId());
-        res.setDeliveryCode(entity.getDeliveryCode());
-        res.setDeliveryTitle(entity.getDeliveryTitle());
-        res.setDeliveryType(entity.getDeliveryType());
-        res.setContractId(entity.getContractId());
-        res.setMilestoneId(entity.getMilestoneId());
-        res.setDeliveryDate(entity.getDeliveryDate());
-        res.setDeliveryVersion(entity.getDeliveryVersion());
-        res.setReleaseNote(entity.getReleaseNote());
-        res.setDeliverySummary(entity.getDeliverySummary());
-        res.setStatus(entity.getStatus());
-        res.setPmApprovedBy(entity.getPmApprovedBy());
-        res.setPmApprovedDate(entity.getPmApprovedDate());
-        res.setCustomerSignedBy(entity.getCustomerSignedBy());
-        res.setCustomerSignedDate(entity.getCustomerSignedDate());
-        res.setAttachmentGroupId(entity.getAttachmentGroupId());
-        res.setCreatedBy(entity.getCreatedBy());
-        res.setCreatedDate(entity.getCreatedDate());
-        res.setUpdatedBy(entity.getUpdatedBy());
-        res.setUpdatedDate(entity.getUpdatedDate());
-        res.setRowVersion(entity.getRowVersion());
-        return res;
-    }
-
-    private PmDeliveryChecklistResponse toChecklistResponse(PmDeliveryChecklist entity) {
-        PmDeliveryChecklistResponse res = new PmDeliveryChecklistResponse();
-        res.setId(entity.getId());
-        res.setDeliveryId(entity.getDeliveryId());
-        res.setItemName(entity.getItemName());
-        res.setItemCategory(entity.getItemCategory());
-        res.setIsChecked(entity.getIsChecked());
-        res.setCheckedBy(entity.getCheckedBy());
-        res.setCheckedDate(entity.getCheckedDate());
-        res.setRemark(entity.getRemark());
-        res.setSortOrder(entity.getSortOrder());
-        res.setRowVersion(entity.getRowVersion());
-        return res;
-    }
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmInvoiceServiceImpl.java">
 package com.softinter.sicapi.service.impl;
 
@@ -48110,16 +47824,6 @@ public interface AuditLogService {
     void log(String action, String module, String description, String status, String details);
 
     Page<AuditLogResponse> getLogs(String searchTerm, String module, String status, String username, int page, int size, String sortBy, String sortDir);
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/DiagramSqlService.java">
-// src/main/java/com/softinter/sicapi/service/DiagramSqlService.java
-package com.softinter.sicapi.service;
-
-public interface DiagramSqlService {
-    String generateSqlFromXml(String xml, String vendor);
-    String generateSqlFromXml(String xml);
 }
 </file>
 
@@ -58449,36 +58153,6 @@ public interface PmChangeRequestRepository
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTestCaseRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmTestCase;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-public interface PmTestCaseRepository extends JpaRepository<PmTestCase, UUID>, JpaSpecificationExecutor<PmTestCase> {
-
-    Page<PmTestCase> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
-
-    Page<PmTestCase> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
-
-    List<PmTestCase> findByBusinessIdAndScenarioIdAndIsDeleteFalse(UUID businessId, UUID scenarioId);
-
-    Optional<PmTestCase> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
-
-    long countByProjectIdAndIsDeleteFalse(UUID projectId);
-    long countByProjectIdAndStatusAndIsDeleteFalse(UUID projectId, String status);
-}
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTestScenarioRepository.java">
 package com.softinter.sicapi.repository.pm;
 
@@ -58962,6 +58636,321 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         response.setUpdatedBy(version.getUpdatedBy());
         response.setUpdatedDate(version.getUpdatedDate());
         return response;
+    }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmDeliveryServiceImpl.java">
+package com.softinter.sicapi.service.impl;
+
+import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
+import com.softinter.sicapi.dto.request.PmDeliveryRequest;
+import com.softinter.sicapi.dto.response.PmDeliveryChecklistResponse;
+import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
+import com.softinter.sicapi.dto.response.PmDeliveryResponse;
+import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.pm.PmDelivery;
+import com.softinter.sicapi.entity.pm.PmDeliveryChecklist;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.repository.pm.*;
+import com.softinter.sicapi.service.ApprovalService;
+import com.softinter.sicapi.service.PmDeliveryService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PmDeliveryServiceImpl implements PmDeliveryService {
+
+    private final PmDeliveryRepository deliveryRepository;
+    private final PmDeliveryChecklistRepository checklistRepository;
+    private final PmRequirementRepository requirementRepository;
+    private final PmSpecificationRepository specificationRepository;
+    private final PmBugRepository bugRepository;
+    private final PmTestCaseRepository testCaseRepository;
+
+    private final ApprovalService approvalService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
+        Page<PmDelivery> page;
+        if (projectId != null) {
+            page = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
+        } else {
+            page = deliveryRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+        }
+        return page.map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDeliveryResponse findById(UUID id, UUID businessId) {
+        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+        PmDeliveryResponse response = toResponse(delivery);
+        List<PmDeliveryChecklistResponse> checklists = checklistRepository
+                .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId())
+                .stream()
+                .map(this::toChecklistResponse)
+                .collect(Collectors.toList());
+        response.setChecklists(checklists);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public UUID save(PmDeliveryRequest request, UUID businessId, String userId) {
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
+        PmDelivery entity;
+
+        if (state == EntityState.ADDED) {
+            entity = new PmDelivery();
+            entity.setBusinessId(businessId);
+            entity.setCreatedBy(userId);
+            entity.setCreatedDate(Instant.now());
+            entity.setIsDelete(false);
+            mapRequestToEntity(request, entity);
+            entity = deliveryRepository.save(entity);
+
+            // Save checklists
+            if (request.getChecklists() != null) {
+                for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
+                    PmDeliveryChecklist checklist = new PmDeliveryChecklist();
+                    checklist.setCreatedBy(userId);
+                    checklist.setCreatedDate(Instant.now());
+                    checklist.setIsDelete(false);
+                    checklist.setDeliveryId(entity.getId());
+                    mapChecklistRequestToEntity(chkReq, checklist);
+                    checklistRepository.save(checklist);
+                }
+            }
+        } else if (state == EntityState.MODIFIED) {
+            entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+            mapRequestToEntity(request, entity);
+            entity.setUpdatedBy(userId);
+            entity.setUpdatedDate(Instant.now());
+            entity = deliveryRepository.save(entity);
+
+            // Sync checklists
+            if (request.getChecklists() != null) {
+                for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
+                    EntityState chkState = chkReq.getState() != null ? EntityState.values()[chkReq.getState()] : EntityState.DETACHED;
+                    if (chkState == EntityState.ADDED) {
+                        PmDeliveryChecklist checklist = new PmDeliveryChecklist();
+                        checklist.setCreatedBy(userId);
+                        checklist.setCreatedDate(Instant.now());
+                        checklist.setIsDelete(false);
+                        checklist.setDeliveryId(entity.getId());
+                        mapChecklistRequestToEntity(chkReq, checklist);
+                        checklistRepository.save(checklist);
+                    } else if (chkState == EntityState.MODIFIED) {
+                        checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
+                            mapChecklistRequestToEntity(chkReq, chk);
+                            chk.setUpdatedBy(userId);
+                            chk.setUpdatedDate(Instant.now());
+                            checklistRepository.save(chk);
+                        });
+                    } else if (chkState == EntityState.DELETED) {
+                        checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
+                            chk.setIsDelete(true);
+                            chk.setDeleteBy(userId);
+                            chk.setDeleteDate(Instant.now());
+                            checklistRepository.save(chk);
+                        });
+                    }
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported state: " + state);
+        }
+
+        return entity.getId();
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id, UUID businessId, String userId) {
+        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+        delivery.setIsDelete(true);
+        delivery.setDeleteBy(userId);
+        delivery.setDeleteDate(Instant.now());
+        deliveryRepository.save(delivery);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmDeliveryGateCheckResponse gateCheck(UUID deliveryId, UUID projectId, UUID businessId) {
+        List<PmDeliveryGateCheckResponse.GateCheckItem> items = new ArrayList<>();
+        int passedCount = 0;
+
+        // 1. Check Requirements Confirmation / Approval
+        List<PmRequirement> requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        long totalReqs = requirements.size();
+        long confirmedReqs = requirements.stream()
+                .filter(req -> "Approved".equalsIgnoreCase(req.getStatus()) || approvalService.isApproved("REQUIREMENT", req.getId()))
+                .count();
+        boolean reqPassed = totalReqs > 0 && totalReqs == confirmedReqs;
+        if (reqPassed) passedCount++;
+        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                .category("REQUIREMENT")
+                .name("Requirement Confirmation Gate")
+                .passed(reqPassed)
+                .status(reqPassed ? "OK" : "ERROR")
+                .detail(String.format("อนุมัติแล้ว %d จาก %d รายการ", confirmedReqs, totalReqs))
+                .build());
+
+        // 2. Check Specifications Confirmation / Approval
+        List<PmSpecification> specifications = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        long totalSpecs = specifications.size();
+        long confirmedSpecs = specifications.stream()
+                .filter(spec -> "Approved".equalsIgnoreCase(spec.getStatus()) || approvalService.isApproved("SPECIFICATION", spec.getId()))
+                .count();
+        boolean specPassed = totalSpecs > 0 && totalSpecs == confirmedSpecs;
+        if (specPassed) passedCount++;
+        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                .category("SPECIFICATION")
+                .name("Specification Approval Gate")
+                .passed(specPassed)
+                .status(specPassed ? "OK" : "ERROR")
+                .detail(String.format("อนุมัติแล้ว %d จาก %d รายการ", confirmedSpecs, totalSpecs))
+                .build());
+
+        // 3. Check Critical/High Bugs
+        long criticalBugs = bugRepository.countByProjectIdAndSeverityInAndStatusNotAndIsDeleteFalse(projectId, List.of("Critical", "High"), "Closed");
+        boolean bugPassed = criticalBugs == 0;
+        if (bugPassed) passedCount++;
+        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                .category("BUG")
+                .name("Critical/High Bug Closure Gate")
+                .passed(bugPassed)
+                .status(bugPassed ? "OK" : "ERROR")
+                .detail(bugPassed ? "ไม่มี Critical/High Bug ที่ค้างอยู่" : String.format("มี Critical/High Bug ที่ยังไม่ปิด %d รายการ", criticalBugs))
+                .build());
+
+        // 4. Check Test Cases
+        long totalTests = testCaseRepository.countByProjectIdAndIsDeleteFalse(projectId);
+        long passedTests = testCaseRepository.countByProjectIdAndTestStatusAndIsDeleteFalse(projectId, "PASS");
+        boolean testPassed = totalTests > 0 && totalTests == passedTests;
+        if (testPassed) passedCount++;
+        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                .category("TEST")
+                .name("Test Cases Execution Gate")
+                .passed(testPassed)
+                .status(testPassed ? "OK" : (passedTests > 0 ? "WARNING" : "ERROR"))
+                .detail(String.format("ผ่านการทดสอบ %d จาก %d รายการ", passedTests, totalTests))
+                .build());
+
+        // 5. Checklist items (if deliveryId provided)
+        if (deliveryId != null) {
+            List<PmDeliveryChecklist> checklists = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
+            long checkedCount = checklists.stream().filter(PmDeliveryChecklist::getIsChecked).count();
+            boolean chkPassed = !checklists.isEmpty() && checkedCount == checklists.size();
+            if (chkPassed) passedCount++;
+            items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                    .category("CHECKLIST")
+                    .name("Delivery Checklist Items")
+                    .passed(chkPassed)
+                    .status(chkPassed ? "OK" : "WARNING")
+                    .detail(String.format("ตรวจสอบแล้ว %d จาก %d รายการ", checkedCount, checklists.size()))
+                    .build());
+        }
+
+        int totalChecks = items.size();
+        boolean allPassed = passedCount == totalChecks;
+
+        return PmDeliveryGateCheckResponse.builder()
+                .isPassed(allPassed)
+                .totalChecks(totalChecks)
+                .passedChecks(passedCount)
+                .checkItems(items)
+                .build();
+    }
+
+    private void mapRequestToEntity(PmDeliveryRequest req, PmDelivery entity) {
+        entity.setProjectId(req.getProjectId());
+        entity.setDeliveryCode(req.getDeliveryCode());
+        entity.setDeliveryTitle(req.getDeliveryTitle());
+        entity.setDeliveryType(req.getDeliveryType() != null ? req.getDeliveryType() : "FINAL");
+        entity.setContractId(req.getContractId());
+        entity.setMilestoneId(req.getMilestoneId());
+        entity.setDeliveryDate(req.getDeliveryDate());
+        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "1.0");
+        entity.setReleaseNote(req.getReleaseNote());
+        entity.setDeliverySummary(req.getDeliverySummary());
+        entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
+        entity.setPmApprovedBy(req.getPmApprovedBy());
+        entity.setPmApprovedDate(req.getPmApprovedDate());
+        entity.setCustomerSignedBy(req.getCustomerSignedBy());
+        entity.setCustomerSignedDate(req.getCustomerSignedDate());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
+    }
+
+    private void mapChecklistRequestToEntity(PmDeliveryChecklistRequest req, PmDeliveryChecklist entity) {
+        entity.setItemName(req.getItemName());
+        entity.setItemCategory(req.getItemCategory());
+        entity.setIsChecked(req.getIsChecked() != null ? req.getIsChecked() : false);
+        entity.setCheckedBy(req.getCheckedBy());
+        entity.setCheckedDate(req.getCheckedDate());
+        entity.setRemark(req.getRemark());
+        entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
+    }
+
+    private PmDeliveryResponse toResponse(PmDelivery entity) {
+        PmDeliveryResponse res = new PmDeliveryResponse();
+        res.setId(entity.getId());
+        res.setBusinessId(entity.getBusinessId());
+        res.setProjectId(entity.getProjectId());
+        res.setDeliveryCode(entity.getDeliveryCode());
+        res.setDeliveryTitle(entity.getDeliveryTitle());
+        res.setDeliveryType(entity.getDeliveryType());
+        res.setContractId(entity.getContractId());
+        res.setMilestoneId(entity.getMilestoneId());
+        res.setDeliveryDate(entity.getDeliveryDate());
+        res.setDeliveryVersion(entity.getDeliveryVersion());
+        res.setReleaseNote(entity.getReleaseNote());
+        res.setDeliverySummary(entity.getDeliverySummary());
+        res.setStatus(entity.getStatus());
+        res.setPmApprovedBy(entity.getPmApprovedBy());
+        res.setPmApprovedDate(entity.getPmApprovedDate());
+        res.setCustomerSignedBy(entity.getCustomerSignedBy());
+        res.setCustomerSignedDate(entity.getCustomerSignedDate());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
+        res.setCreatedBy(entity.getCreatedBy());
+        res.setCreatedDate(entity.getCreatedDate());
+        res.setUpdatedBy(entity.getUpdatedBy());
+        res.setUpdatedDate(entity.getUpdatedDate());
+        res.setRowVersion(entity.getRowVersion());
+        return res;
+    }
+
+    private PmDeliveryChecklistResponse toChecklistResponse(PmDeliveryChecklist entity) {
+        PmDeliveryChecklistResponse res = new PmDeliveryChecklistResponse();
+        res.setId(entity.getId());
+        res.setDeliveryId(entity.getDeliveryId());
+        res.setItemName(entity.getItemName());
+        res.setItemCategory(entity.getItemCategory());
+        res.setIsChecked(entity.getIsChecked());
+        res.setCheckedBy(entity.getCheckedBy());
+        res.setCheckedDate(entity.getCheckedDate());
+        res.setRemark(entity.getRemark());
+        res.setSortOrder(entity.getSortOrder());
+        res.setRowVersion(entity.getRowVersion());
+        return res;
     }
 }
 </file>
@@ -64009,74 +63998,34 @@ public class PmTestCase extends BaseBusinessEntity {
 }
 </file>
 
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmRequirementRepository.java">
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTestCaseRepository.java">
 package com.softinter.sicapi.repository.pm;
+
+import com.softinter.sicapi.entity.pm.PmTestCase;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.softinter.sicapi.entity.pm.PmRequirement;
-
 @Repository
-public interface PmRequirementRepository extends JpaRepository<PmRequirement, UUID>, JpaSpecificationExecutor<PmRequirement> {
+public interface PmTestCaseRepository extends JpaRepository<PmTestCase, UUID>, JpaSpecificationExecutor<PmTestCase> {
 
-    // ===== ใหม่: รองรับ projectId =====
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false")
-    Page<PmRequirement> findAllByBusinessIdAndProjectId(@Param("businessId") UUID businessId,
-                                                         @Param("projectId") UUID projectId,
-                                                         Pageable pageable);
+    Page<PmTestCase> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<PmRequirement> searchByKeywordAndProject(@Param("businessId") UUID businessId,
-                                                   @Param("projectId") UUID projectId,
-                                                   @Param("keyword") String keyword,
-                                                   Pageable pageable);
+    Page<PmTestCase> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
 
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status")
-    Page<PmRequirement> findAllByStatusAndProject(@Param("businessId") UUID businessId,
-                                                   @Param("projectId") UUID projectId,
-                                                   @Param("status") String status,
-                                                   Pageable pageable);
+    List<PmTestCase> findByBusinessIdAndScenarioIdAndIsDeleteFalse(UUID businessId, UUID scenarioId);
 
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<PmRequirement> searchByKeywordAndStatusAndProject(@Param("businessId") UUID businessId,
-                                                            @Param("projectId") UUID projectId,
-                                                            @Param("keyword") String keyword,
-                                                            @Param("status") String status,
-                                                            Pageable pageable);
-
-    // ===== เก่า (ยังคงไว้เผื่อใช้ที่อื่น) =====
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false")
-    Page<PmRequirement> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
-
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.id = :id AND r.businessId = :businessId AND r.isDelete = false")
-    Optional<PmRequirement> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
-
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<PmRequirement> searchByKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword, Pageable pageable);
-
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND r.status = :status")
-    Page<PmRequirement> findAllByStatus(@Param("businessId") UUID businessId, @Param("status") String status, Pageable pageable);
-
-    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<PmRequirement> searchByKeywordAndStatus(@Param("businessId") UUID businessId, @Param("keyword") String keyword, @Param("status") String status, Pageable pageable);
-
-    List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
-    List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
-    @Query("SELECT r FROM PmRequirement r WHERE r.id = :id AND r.isDelete = false")
-    Optional<PmRequirement> findByIdAndIsDeleteFalse(@Param("id") UUID id);
+    Optional<PmTestCase> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
-    long countByProjectIdAndBaConfirmStatusAndCustomerConfirmStatusAndIsDeleteFalse(UUID projectId, String baConfirmStatus, String customerConfirmStatus);
+
+    long countByProjectIdAndTestStatusAndIsDeleteFalse(UUID projectId, String testStatus);
 }
 </file>
 
@@ -67565,6 +67514,76 @@ public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
 }
 </file>
 
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmRequirementRepository.java">
+package com.softinter.sicapi.repository.pm;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.softinter.sicapi.entity.pm.PmRequirement;
+
+@Repository
+public interface PmRequirementRepository extends JpaRepository<PmRequirement, UUID>, JpaSpecificationExecutor<PmRequirement> {
+
+    // ===== ใหม่: รองรับ projectId =====
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false")
+    Page<PmRequirement> findAllByBusinessIdAndProjectId(@Param("businessId") UUID businessId,
+                                                         @Param("projectId") UUID projectId,
+                                                         Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeywordAndProject(@Param("businessId") UUID businessId,
+                                                   @Param("projectId") UUID projectId,
+                                                   @Param("keyword") String keyword,
+                                                   Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status")
+    Page<PmRequirement> findAllByStatusAndProject(@Param("businessId") UUID businessId,
+                                                   @Param("projectId") UUID projectId,
+                                                   @Param("status") String status,
+                                                   Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeywordAndStatusAndProject(@Param("businessId") UUID businessId,
+                                                            @Param("projectId") UUID projectId,
+                                                            @Param("keyword") String keyword,
+                                                            @Param("status") String status,
+                                                            Pageable pageable);
+
+    // ===== เก่า (ยังคงไว้เผื่อใช้ที่อื่น) =====
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false")
+    Page<PmRequirement> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.id = :id AND r.businessId = :businessId AND r.isDelete = false")
+    Optional<PmRequirement> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND r.status = :status")
+    Page<PmRequirement> findAllByStatus(@Param("businessId") UUID businessId, @Param("status") String status, Pageable pageable);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p WHERE r.businessId = :businessId AND r.isDelete = false AND r.status = :status AND (LOWER(r.requirementCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmRequirement> searchByKeywordAndStatus(@Param("businessId") UUID businessId, @Param("keyword") String keyword, @Param("status") String status, Pageable pageable);
+
+    List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+    List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+    @Query("SELECT r FROM PmRequirement r WHERE r.id = :id AND r.isDelete = false")
+    Optional<PmRequirement> findByIdAndIsDeleteFalse(@Param("id") UUID id);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+}
+</file>
+
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java">
 // src/main/java/com/softinter/sicapi/repository/pm/PmTraceLinkRepository.java
 package com.softinter.sicapi.repository.pm;
@@ -69189,7 +69208,7 @@ export class NewDiagramDialogComponent implements OnInit {
                             <td class="px-4 py-3">
                                 <div>
                                     <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
-                                    <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ spec.description | slice:0:100 }}</div>
+
                                 </div>
                             </td>
                             <td class="px-4 py-3">
@@ -70601,6 +70620,124 @@ export class Pmrt03Component implements OnInit {
     return Math.min(Math.round((project.usedManday / project.budgetManday) * 100), 100);
   }
 }
+</file>
+
+<file path="sic-app/src/app/app.config.ts">
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
+import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { provideEnvironmentNgxMask } from 'ngx-mask';
+import { routes } from './app.routes';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { AuthService } from './core/auth/auth.service';
+import { LanguageService } from './core/services/language.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  APP_TRANSLATE_MODULE_CODE,
+  APP_TRANSLATE_PROGRAM_CODE,
+  AppTranslateLoader
+} from './core/services/app-translate-loader.service';
+import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
+import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+import { provideMarkdown } from 'ngx-markdown';
+import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideAteEditor } from '@flogeez/angular-tiptap-editor';
+import { provideSicTheme, provideSicConfig } from 'sic-ng';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideAnimations(),
+    provideAngularQuery(new QueryClient()),
+    provideRouter(routes),
+    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
+    provideEnvironmentNgxMask(),
+    provideSicNumberConfig({ decimal: 2 }),
+    provideOAuthClient(),
+    provideMarkdown(),
+    provideAteEditor(),
+    provideAngularQuery(new QueryClient()),
+    provideAppInitializer(() => inject(AuthService).initializeAuth()),
+    provideAppInitializer(() => inject(LanguageService).initLanguage()),
+    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
+    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
+    AppTranslateLoader,
+    provideTranslateService({
+      lang: 'th',
+      fallbackLang: 'en',
+      loader: {
+        provide: TranslateLoader,
+        useExisting: AppTranslateLoader
+      }
+    }),
+    provideSicTheme({ mode: 'system', theme: 'forest' }),
+    provideSicConfig({
+      decimals: 2,
+      dateFormat: 'dd/MM/yyyy',
+      era: 'BE',
+      locale: 'th',
+      loadingImage: '/assets/brand-loader.gif',
+      maxUploadSizeMb: 20,
+      pageSize: 25,
+      messages: {
+        // sic-combobox
+        noOptions: 'ไม่มีตัวเลือก',
+        // sic-input-comment @mention
+        noMatches: 'ไม่พบรายการที่ตรงกัน',
+        loading: 'กำลังโหลด…',
+        attachFile: 'แนบไฟล์',
+        removeFile: 'ลบไฟล์แนบ',
+        // sic-upload
+        dragDropHint: 'ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์',
+        // sic-navbar
+        noNotifications: 'ไม่มีการแจ้งเตือน',
+        viewAllNotifications: 'ดูการแจ้งเตือนทั้งหมด',
+        // sic-calendar
+        noEvents: 'ไม่มีกิจกรรม',
+        // sic-dialog common dialog
+        cancel: 'ยกเลิก',
+        confirm: 'ยืนยัน',
+        close: 'ปิด',
+        // sic-gridpanel
+        gridLoading: 'กำลังโหลด...',
+        gridSaving: 'กำลังบันทึกข้อมูล...',
+        gridLoadingOverlay: 'กำลังโหลดข้อมูล...',
+        gridNoData: 'ไม่พบข้อมูล',
+        gridNoChangedData: 'ไม่มีข้อมูลที่เปลี่ยนแปลง',
+        gridNoDataHint: 'ลองปรับคำค้นหา หรือเพิ่มแถวใหม่',
+        gridNoChangedDataHint: 'ลองปิดโหมด review เพื่อดูทุกแถว',
+        gridPageSizeSuffix: ' รายการ',
+        // sic-search
+        noResults: 'ไม่พบผลลัพธ์',
+        // sic-masonry / sic-calendar-timeline / sic-card-stack
+        noItems: 'ไม่มีรายการ',
+        masonryLoading: 'กำลังโหลดเพิ่มเติม...',
+        // sic-drag-drop
+        dragDropEmptyList: 'วางรายการที่นี่',
+        // sic-stepper
+        stepperPrevious: 'ย้อนกลับ',
+        stepperNext: 'ถัดไป',
+        stepperSkip: 'ข้าม',
+        stepperFinish: 'เสร็จสิ้น',
+        // sic-code
+        codeCopy: 'คัดลอก',
+        codeCopied: 'คัดลอกแล้ว',
+        // sic-calendar-timeline view switcher
+        calendarTimelineViewLabel: 'มุมมอง',
+        calendarTimelineDay: 'วัน',
+        calendarTimelineWeek: 'สัปดาห์',
+        calendarTimelineMonth: 'เดือน',
+        // sic-video-player
+        playVideo: 'เล่นวิดีโอ',
+        // sicCanDeactivateGuard
+        unsavedChangesTitle: 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก',
+        unsavedChangesMessage: 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?',
+      },
+    }),
+  ]
+};
 </file>
 
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmSpecificationController.java">
@@ -72153,6 +72290,303 @@ export class Pmdt04AComponent implements OnInit {
 </div>
 </file>
 
+<file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
+// src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../../environments/environment';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { DialogService } from '../../../../core/services/dialog.service';
+
+import { DiagramPage } from './pmdt06.model';
+
+
+@Component({
+  selector: 'app-sql-export-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SicButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: `
+    <div
+      class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"
+    >
+      <!-- Header -->
+      <div
+        class="flex items-center justify-between border-b px-5 py-4"
+        style="border-color: var(--border);"
+      >
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
+          Generate SQL
+        </h3>
+        <button
+          type="button"
+          class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+          (click)="close()"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Select Page -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Select ER Diagram Page</label
+          >
+          <select
+            [(ngModel)]="selectedPageId"
+            (change)="onPageChange()"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            @for (page of pages(); track page.id) {
+              <option [value]="page.id">{{ page.name }}</option>
+            }
+          </select>
+          @if (pages().length === 0) {
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER,er)
+            </p>
+          }
+        </div>
+
+        <!-- Vendor Selector -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
+            >Database Vendor</label
+          >
+          <select
+            [(ngModel)]="vendor"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+          >
+            <option value="postgresql">PostgreSQL</option>
+            <option value="mysql">MySQL</option>
+          </select>
+        </div>
+
+        <!-- ⭐ NEW: Engine Selection (Parser vs AI) -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Engine</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
+              <span class="text-sm">Parser</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
+              <span class="text-sm">AI</span>
+            </label>
+          </div>
+          @if (engine === 'ai') {
+            <p class="text-xs text-amber-500 mt-1">
+              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve
+              naming.
+            </p>
+          }
+        </div>
+
+        <!-- Generate Button -->
+        <div>
+          <sic-button
+            variant="primary"
+            size="sm"
+            [disabled]="loading() || !selectedPageId"
+            (click)="generate()"
+          >
+            @if (loading()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-play-fill"></i>
+            }
+            {{ loading() ? 'Generating...' : 'Generate SQL' }}
+          </sic-button>
+        </div>
+
+        <!-- SQL Output -->
+        @if (sql()) {
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium text-[var(--text-active)]">Generated SQL</span>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
+                  (click)="copyToClipboard()"
+                >
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button
+                  type="button"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
+                  (click)="download()"
+                >
+                  <i class="bi bi-download"></i> Download .sql
+                </button>
+              </div>
+            </div>
+            <pre
+              class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap"
+              >{{ sql() }}</pre
+            >
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t px-5 py-4 flex justify-end" style="border-color: var(--border);">
+        <sic-button variant="secondary" size="sm" (click)="close()">Close</sic-button>
+      </div>
+    </div>
+  `,
+})
+export class SqlExportDialogComponent implements OnInit {
+  private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
+
+  @Input() xml: string = '';
+
+  pages = signal<DiagramPage[]>([]);
+  selectedPageId: string | null = null;
+  vendor = 'postgresql';
+  engine: 'parser' | 'ai' = 'parser';
+  sql = signal<string>('');
+  loading = signal(false);
+
+  ngOnInit() {
+    this.extractPages(this.xml);
+    if (this.pages().length > 0) {
+      this.selectedPageId = this.pages()[0].id;
+    }
+  }
+
+  private extractPages(xml: string) {
+    if (!xml) return;
+
+    const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
+    const allPages: DiagramPage[] = [];
+    let match;
+
+    while ((match = regex.exec(xml)) !== null) {
+      const fullTag = match[0];
+      const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
+      const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
+
+      const id = idMatch ? idMatch[1] : `page-${allPages.length + 1}`;
+      const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
+      const name = this.decodeHtmlEntities(rawName);
+
+      if (this.isErDiagramPage(name)) {
+        allPages.push({ id, name, xml: fullTag });
+      }
+    }
+
+    this.pages.set(allPages);
+  }
+
+  private isErDiagramPage(name: string): boolean {
+    const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
+    const upperName = name.toUpperCase();
+    return erKeywords.some((keyword) => upperName.includes(keyword.toUpperCase()));
+  }
+
+  private decodeHtmlEntities(text: string): string {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  onPageChange() {
+    this.sql.set('');
+  }
+
+  generate() {
+    if (!this.selectedPageId) {
+      this.dialogService.warn('No page selected', 'Please select a diagram page.');
+      return;
+    }
+
+    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
+    if (!selectedPage) {
+      this.dialogService.warn('Page not found', 'Selected page does not exist.');
+      return;
+    }
+
+    this.loading.set(true);
+
+    const endpoint =
+      this.engine === 'ai'
+        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
+        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
+
+    // ✅ Build payload object
+    const payload = {
+      xml: selectedPage.xml,
+      vendor: this.vendor,
+      pageName: selectedPage.name,
+    };
+
+    // ✅ Log payload to console (for debugging)
+    console.log('📤 Sending to AI (engine: ' + this.engine + '):', payload);
+
+    this.http.post<{ sql: string }>(endpoint, payload).subscribe({
+      next: (res) => {
+        console.log('✅ AI Response:', res);
+        this.sql.set(res.sql);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('❌ AI Error:', err);
+        this.loading.set(false);
+        const msg = err.error?.message || err.message || 'Could not generate SQL.';
+        this.dialogService.error('Generation Failed', msg);
+      },
+    });
+  }
+
+  copyToClipboard() {
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    navigator.clipboard
+      ?.writeText(sqlText)
+      .then(() => {
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      })
+      .catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = sqlText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+      });
+  }
+
+  download() {
+    const sqlText = this.sql();
+    if (!sqlText) return;
+
+    const blob = new Blob([sqlText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  close() {
+    this.dialogService.close();
+  }
+}
+</file>
+
 <file path="sic-app/src/app/feature/pm/dt/pmdt07/pmdt07.component.html">
 <!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
 <div class="space-y-5 p-0.5">
@@ -72805,124 +73239,6 @@ export class Pmrt01AService {
 </div>
 </file>
 
-<file path="sic-app/src/app/app.config.ts">
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
-import { provideOAuthClient } from 'angular-oauth2-oidc';
-import { provideEnvironmentNgxMask } from 'ngx-mask';
-import { routes } from './app.routes';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { AuthService } from './core/auth/auth.service';
-import { LanguageService } from './core/services/language.service';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import {
-  APP_TRANSLATE_MODULE_CODE,
-  APP_TRANSLATE_PROGRAM_CODE,
-  AppTranslateLoader
-} from './core/services/app-translate-loader.service';
-import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
-import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
-import { provideMarkdown } from 'ngx-markdown';
-import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { provideAteEditor } from '@flogeez/angular-tiptap-editor';
-import { provideSicTheme, provideSicConfig } from 'sic-ng';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideAnimations(),
-    provideAngularQuery(new QueryClient()),
-    provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
-    provideEnvironmentNgxMask(),
-    provideSicNumberConfig({ decimal: 2 }),
-    provideOAuthClient(),
-    provideMarkdown(),
-    provideAteEditor(),
-    provideAngularQuery(new QueryClient()),
-    provideAppInitializer(() => inject(AuthService).initializeAuth()),
-    provideAppInitializer(() => inject(LanguageService).initLanguage()),
-    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'TEST' },
-    AppTranslateLoader,
-    provideTranslateService({
-      lang: 'th',
-      fallbackLang: 'en',
-      loader: {
-        provide: TranslateLoader,
-        useExisting: AppTranslateLoader
-      }
-    }),
-    provideSicTheme({ mode: 'system', theme: 'forest' }),
-    provideSicConfig({
-      decimals: 2,
-      dateFormat: 'dd/MM/yyyy',
-      era: 'BE',
-      locale: 'th',
-      loadingImage: '/assets/brand-loader.gif',
-      maxUploadSizeMb: 20,
-      pageSize: 25,
-      messages: {
-        // sic-combobox
-        noOptions: 'ไม่มีตัวเลือก',
-        // sic-input-comment @mention
-        noMatches: 'ไม่พบรายการที่ตรงกัน',
-        loading: 'กำลังโหลด…',
-        attachFile: 'แนบไฟล์',
-        removeFile: 'ลบไฟล์แนบ',
-        // sic-upload
-        dragDropHint: 'ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์',
-        // sic-navbar
-        noNotifications: 'ไม่มีการแจ้งเตือน',
-        viewAllNotifications: 'ดูการแจ้งเตือนทั้งหมด',
-        // sic-calendar
-        noEvents: 'ไม่มีกิจกรรม',
-        // sic-dialog common dialog
-        cancel: 'ยกเลิก',
-        confirm: 'ยืนยัน',
-        close: 'ปิด',
-        // sic-gridpanel
-        gridLoading: 'กำลังโหลด...',
-        gridSaving: 'กำลังบันทึกข้อมูล...',
-        gridLoadingOverlay: 'กำลังโหลดข้อมูล...',
-        gridNoData: 'ไม่พบข้อมูล',
-        gridNoChangedData: 'ไม่มีข้อมูลที่เปลี่ยนแปลง',
-        gridNoDataHint: 'ลองปรับคำค้นหา หรือเพิ่มแถวใหม่',
-        gridNoChangedDataHint: 'ลองปิดโหมด review เพื่อดูทุกแถว',
-        gridPageSizeSuffix: ' รายการ',
-        // sic-search
-        noResults: 'ไม่พบผลลัพธ์',
-        // sic-masonry / sic-calendar-timeline / sic-card-stack
-        noItems: 'ไม่มีรายการ',
-        masonryLoading: 'กำลังโหลดเพิ่มเติม...',
-        // sic-drag-drop
-        dragDropEmptyList: 'วางรายการที่นี่',
-        // sic-stepper
-        stepperPrevious: 'ย้อนกลับ',
-        stepperNext: 'ถัดไป',
-        stepperSkip: 'ข้าม',
-        stepperFinish: 'เสร็จสิ้น',
-        // sic-code
-        codeCopy: 'คัดลอก',
-        codeCopied: 'คัดลอกแล้ว',
-        // sic-calendar-timeline view switcher
-        calendarTimelineViewLabel: 'มุมมอง',
-        calendarTimelineDay: 'วัน',
-        calendarTimelineWeek: 'สัปดาห์',
-        calendarTimelineMonth: 'เดือน',
-        // sic-video-player
-        playVideo: 'เล่นวิดีโอ',
-        // sicCanDeactivateGuard
-        unsavedChangesTitle: 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก',
-        unsavedChangesMessage: 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?',
-      },
-    }),
-  ]
-};
-</file>
-
 <file path="sic-spring/sic/src/main/java/com/softinter/sicapi/dto/request/PmSpecificationRequest.java">
 package com.softinter.sicapi.dto.request;
 
@@ -72968,56 +73284,6 @@ public class PmSpecificationRequest {
     @NotNull(message = "กรุณาเลือกโครงการ")
     private UUID projectId;
 
-}
-</file>
-
-<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmSpecificationRepository.java">
-package com.softinter.sicapi.repository.pm;
-
-import com.softinter.sicapi.entity.pm.PmSpecification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-public interface PmSpecificationRepository extends JpaRepository<PmSpecification, UUID>, JpaSpecificationExecutor<PmSpecification> {
-
-    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(UUID projectId, UUID businessId, Pageable pageable);
-
-    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
-
-    List<PmSpecification> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
-
-    List<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId);
-
-    Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
-
-    List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);
-
-    @Query("SELECT s FROM PmSpecification s LEFT JOIN FETCH s.project p LEFT JOIN FETCH s.requirement r WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
-    Optional<PmSpecification> findByIdWithDetails(@Param("id") UUID id, @Param("businessId") UUID businessId);
-
-     @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false")
-    Page<PmSpecification> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false AND s.specificationCode = :code")
-    Optional<PmSpecification> findByBusinessIdAndSpecificationCode(@Param("businessId") UUID businessId, @Param("code") String code);
-
-    @Query("SELECT s FROM PmSpecification s WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
-    Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
-
-    boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
-
-    long countByProjectIdAndIsDeleteFalse(UUID projectId);
-    long countByProjectIdAndHeadConfirmStatusAndCustomerConfirmStatusAndIsDeleteFalse(UUID projectId, String headConfirmStatus, String customerConfirmStatus);
 }
 </file>
 
@@ -74204,303 +74470,6 @@ export default Pmdt05Component;
 </div>
 </file>
 
-<file path="sic-app/src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts">
-// src/app/feature/pm/dt/pmdt06/sql-export-dialog.component.ts
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { DialogService } from '../../../../core/services/dialog.service';
-
-import { DiagramPage } from './pmdt06.model';
-
-
-@Component({
-  selector: 'app-sql-export-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  template: `
-    <div
-      class="w-[min(92vw,40rem)] max-h-[80vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col"
-    >
-      <!-- Header -->
-      <div
-        class="flex items-center justify-between border-b px-5 py-4"
-        style="border-color: var(--border);"
-      >
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
-          Generate SQL
-        </h3>
-        <button
-          type="button"
-          class="text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-          (click)="close()"
-        >
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <!-- Body -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-4">
-        <!-- Select Page -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-            >Select ER Diagram Page</label
-          >
-          <select
-            [(ngModel)]="selectedPageId"
-            (change)="onPageChange()"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            @for (page of pages(); track page.id) {
-              <option [value]="page.id">{{ page.name }}</option>
-            }
-          </select>
-          @if (pages().length === 0) {
-            <p class="text-xs text-[var(--text-muted)] mt-1">
-              ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER,er)
-            </p>
-          }
-        </div>
-
-        <!-- Vendor Selector -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-            >Database Vendor</label
-          >
-          <select
-            [(ngModel)]="vendor"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            <option value="postgresql">PostgreSQL</option>
-            <option value="mysql">MySQL</option>
-          </select>
-        </div>
-
-        <!-- ⭐ NEW: Engine Selection (Parser vs AI) -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">Engine</label>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" [value]="'parser'" [(ngModel)]="engine" />
-              <span class="text-sm">Parser</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" [value]="'ai'" [(ngModel)]="engine" />
-              <span class="text-sm">AI</span>
-            </label>
-          </div>
-          @if (engine === 'ai') {
-            <p class="text-xs text-amber-500 mt-1">
-              <i class="bi bi-info-circle"></i> AI will adjust data types, add indexes, and improve
-              naming.
-            </p>
-          }
-        </div>
-
-        <!-- Generate Button -->
-        <div>
-          <sic-button
-            variant="primary"
-            size="sm"
-            [disabled]="loading() || !selectedPageId"
-            (click)="generate()"
-          >
-            @if (loading()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-play-fill"></i>
-            }
-            {{ loading() ? 'Generating...' : 'Generate SQL' }}
-          </sic-button>
-        </div>
-
-        <!-- SQL Output -->
-        @if (sql()) {
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm font-medium text-[var(--text-active)]">Generated SQL</span>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
-                  (click)="copyToClipboard()"
-                >
-                  <i class="bi bi-clipboard"></i> Copy
-                </button>
-                <button
-                  type="button"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1"
-                  (click)="download()"
-                >
-                  <i class="bi bi-download"></i> Download .sql
-                </button>
-              </div>
-            </div>
-            <pre
-              class="w-full p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text)] overflow-auto max-h-60 whitespace-pre-wrap"
-              >{{ sql() }}</pre
-            >
-          </div>
-        }
-      </div>
-
-      <!-- Footer -->
-      <div class="border-t px-5 py-4 flex justify-end" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="close()">Close</sic-button>
-      </div>
-    </div>
-  `,
-})
-export class SqlExportDialogComponent implements OnInit {
-  private http = inject(HttpClient);
-  private dialogService = inject(DialogService);
-
-  @Input() xml: string = '';
-
-  pages = signal<DiagramPage[]>([]);
-  selectedPageId: string | null = null;
-  vendor = 'postgresql';
-  engine: 'parser' | 'ai' = 'parser';
-  sql = signal<string>('');
-  loading = signal(false);
-
-  ngOnInit() {
-    this.extractPages(this.xml);
-    if (this.pages().length > 0) {
-      this.selectedPageId = this.pages()[0].id;
-    }
-  }
-
-  private extractPages(xml: string) {
-    if (!xml) return;
-
-    const regex = /<diagram\b[^>]*>([\s\S]*?)<\/diagram>/g;
-    const allPages: DiagramPage[] = [];
-    let match;
-
-    while ((match = regex.exec(xml)) !== null) {
-      const fullTag = match[0];
-      const idMatch = fullTag.match(/id\s*=\s*["']([^"']+)["']/i);
-      const nameMatch = fullTag.match(/name\s*=\s*["']([^"']+)["']/i);
-
-      const id = idMatch ? idMatch[1] : `page-${allPages.length + 1}`;
-      const rawName = nameMatch ? nameMatch[1] : `Page-${allPages.length + 1}`;
-      const name = this.decodeHtmlEntities(rawName);
-
-      if (this.isErDiagramPage(name)) {
-        allPages.push({ id, name, xml: fullTag });
-      }
-    }
-
-    this.pages.set(allPages);
-  }
-
-  private isErDiagramPage(name: string): boolean {
-    const erKeywords = ['ER', 'ERD', 'Entity', 'Database', 'Schema', 'Table'];
-    const upperName = name.toUpperCase();
-    return erKeywords.some((keyword) => upperName.includes(keyword.toUpperCase()));
-  }
-
-  private decodeHtmlEntities(text: string): string {
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-  }
-
-  onPageChange() {
-    this.sql.set('');
-  }
-
-  generate() {
-    if (!this.selectedPageId) {
-      this.dialogService.warn('No page selected', 'Please select a diagram page.');
-      return;
-    }
-
-    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
-    if (!selectedPage) {
-      this.dialogService.warn('Page not found', 'Selected page does not exist.');
-      return;
-    }
-
-    this.loading.set(true);
-
-    const endpoint =
-      this.engine === 'ai'
-        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
-        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
-
-    // ✅ Build payload object
-    const payload = {
-      xml: selectedPage.xml,
-      vendor: this.vendor,
-      pageName: selectedPage.name,
-    };
-
-    // ✅ Log payload to console (for debugging)
-    console.log('📤 Sending to AI (engine: ' + this.engine + '):', payload);
-
-    this.http.post<{ sql: string }>(endpoint, payload).subscribe({
-      next: (res) => {
-        console.log('✅ AI Response:', res);
-        this.sql.set(res.sql);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('❌ AI Error:', err);
-        this.loading.set(false);
-        const msg = err.error?.message || err.message || 'Could not generate SQL.';
-        this.dialogService.error('Generation Failed', msg);
-      },
-    });
-  }
-
-  copyToClipboard() {
-    const sqlText = this.sql();
-    if (!sqlText) return;
-
-    navigator.clipboard
-      ?.writeText(sqlText)
-      .then(() => {
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
-      })
-      .catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = sqlText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
-      });
-  }
-
-  download() {
-    const sqlText = this.sql();
-    if (!sqlText) return;
-
-    const blob = new Blob([sqlText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `schema_${new Date().toISOString().slice(0, 10)}.sql`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  close() {
-    this.dialogService.close();
-  }
-}
-</file>
-
 <file path="sic-app/src/app/feature/pm/dt/pmdt08/pmdt08.model.ts">
 // src/app/feature/pm/dt/pmdt08/pmdt08.model.ts
 export interface PmSpecificationModel {
@@ -74840,17 +74809,17 @@ export class Pmrt05Component implements OnInit {
       case 'ER':
         return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
-        return `${base}/pmdt08A/${id}/edit`;
+        return `${base}/pmdt08`;
       case 'TASK':
-        return `${base}/task/${id}/edit`;
+        return `${base}/task-list`;
       case 'TEST_CASE':
-        return `${base}/test-case/${id}/edit`;
+        return `${base}/test-case`;
       case 'BUG':
-        return `${base}/bug/${id}/edit`;
+        return `${base}/bug`;
       case 'CHANGE_REQUEST':
-        return `${base}/pmdt07/${id}/edit`;
+        return `${base}/pmdt07`;
       case 'DESIGN_REVIEW':
-        return `${base}/design-review/${id}/edit`;
+        return `${base}/design-review`;
       default:
         return '#';
     }
@@ -74862,11 +74831,10 @@ export class Pmrt05Component implements OnInit {
   }
 
   createSpec() {
-    const reqId = this.requirementId();
     const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
+    if (!projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt08'], {
+      queryParams: { projectId: projId },
     });
   }
 
@@ -74993,6 +74961,55 @@ export class Pmrt05Component implements OnInit {
       return dateStr;
     }
   }
+}
+</file>
+
+<file path="sic-spring/sic/src/main/java/com/softinter/sicapi/repository/pm/PmSpecificationRepository.java">
+package com.softinter.sicapi.repository.pm;
+
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PmSpecificationRepository extends JpaRepository<PmSpecification, UUID>, JpaSpecificationExecutor<PmSpecification> {
+
+    Page<PmSpecification> findByProjectIdAndBusinessIdAndIsDeleteFalse(UUID projectId, UUID businessId, Pageable pageable);
+
+    Page<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
+
+    List<PmSpecification> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+
+    List<PmSpecification> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+
+    Optional<PmSpecification> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
+
+    List<PmSpecification> findByRequirementIdAndIsDeleteFalse(UUID requirementId);
+
+    @Query("SELECT s FROM PmSpecification s LEFT JOIN FETCH s.project p LEFT JOIN FETCH s.requirement r WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
+    Optional<PmSpecification> findByIdWithDetails(@Param("id") UUID id, @Param("businessId") UUID businessId);
+
+     @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false")
+    Page<PmSpecification> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
+
+    @Query("SELECT s FROM PmSpecification s WHERE s.businessId = :businessId AND s.isDelete = false AND s.specificationCode = :code")
+    Optional<PmSpecification> findByBusinessIdAndSpecificationCode(@Param("businessId") UUID businessId, @Param("code") String code);
+
+    @Query("SELECT s FROM PmSpecification s WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
+    Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
+
+    boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
 }
 </file>
 
@@ -77077,18 +77094,29 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const data = this.prepareSubmitData();
         if (!data.title && !data.description) return;
 
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
+        } else {
+            data.state = 4; // ADDED
+            data.rowVersion = 0;
+        }
+
         this.isAutoSaving = true;
         this.lastAutoSaveTime = new Date();
 
         this.service.autoSave(data).subscribe({
             next: (response: any) => {
                 this.isAutoSaving = false;
-                if (response) {
+                const savedId = typeof response === 'string' ? response : (response?.id || data.id || this.specId);
+                if (savedId) {
+                    this.specId = savedId;
+                    this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
+                }
+                if (typeof response === 'object' && response !== null) {
                     this.form.patchValue(response);
-                    if (response.id) {
-                        this.specId = response.id;
-                        this.isEdit = true;
-                    }
                 }
                 this.form.markAsPristine({ onlySelf: true });
                 this.cdr.markForCheck();
@@ -77240,8 +77268,14 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         this.isSaving = true;
         const data = this.prepareSubmitData();
-        data.state = this.isEdit ? 3 : 4;
-        if (!this.isEdit) data.rowVersion = 0;
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
+        } else {
+            data.state = 4; // ADDED
+            data.rowVersion = 0;
+        }
 
         this.service.save(data).subscribe({
             next: (response: any) => {
@@ -77250,6 +77284,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 if (savedId) {
                     this.specId = savedId;
                     this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
                     if (typeof response === 'object' && response !== null) {
                         this.form.patchValue(response);
                     }
@@ -77278,7 +77313,8 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             },
             error: (error) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+                const errorMsg = error.error?.message || error.error?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                this.dialog.error('บันทึกไม่สำเร็จ', errorMsg);
             }
         });
     }
@@ -77907,6 +77943,7 @@ import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
@@ -77939,6 +77976,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ApprovalNotificationService notificationService;
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
+    private final PmSpecificationRepository specificationRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -78076,7 +78114,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, Pageable pageable) {
+    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId,
+            Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
@@ -78494,6 +78533,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Requirement not found: " + documentId));
                 break;
+            case "SPECIFICATION":
+                specificationRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Specification not found: " + documentId));
+                break;
             case "CHANGE_REQUEST":
                 changeRequestRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Change Request not found: " + documentId));
@@ -78512,6 +78555,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("In Review");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Review");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -78534,6 +78583,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Approved");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Approved");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -78569,10 +78624,10 @@ public class ApprovalServiceImpl implements ApprovalService {
             auditLogService.log(
                     "APPROVE",
                     "Approval Center / " + docType,
-                    "อนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : docType) + " เรียบร้อยแล้ว",
+                    "อนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : docType)
+                            + " เรียบร้อยแล้ว",
                     "Success",
-                    "Final Approver: " + approval.getFinalApprover()
-            );
+                    "Final Approver: " + approval.getFinalApprover());
         } catch (Exception e) {
             log.error("Error creating audit log on approval: {}", e.getMessage(), e);
         }
@@ -78587,6 +78642,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Draft");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Draft");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -78609,6 +78670,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Draft");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Draft");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -81722,6 +81789,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // ✅ Soft Delete Document Versions
             documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
 
+            // ✅ Soft Delete Trace Links
+            deleteTraceLinksForSpecification(spec.getId(), userId);
+
             return spec.getId();
         }
 
@@ -81743,6 +81813,29 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // ✅ Soft Delete Document Versions
         documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
+
+        // ✅ Soft Delete Trace Links
+        deleteTraceLinksForSpecification(spec.getId(), userId);
+    }
+
+    private void deleteTraceLinksForSpecification(UUID specId, String userId) {
+        // ลบ Trace Link ที่มี Specification นี้เป็น Source
+        List<PmTraceLink> sourceLinks = traceLinkRepository.findBySourceTypeAndSourceId("SPECIFICATION", specId);
+        for (PmTraceLink link : sourceLinks) {
+            link.setIsDelete(true);
+            link.setDeleteBy(userId);
+            link.setDeleteDate(Instant.now());
+            traceLinkRepository.save(link);
+        }
+
+        // ลบ Trace Link ที่มี Specification นี้เป็น Target
+        List<PmTraceLink> targetLinks = traceLinkRepository.findByTargetTypeAndTargetId("SPECIFICATION", specId);
+        for (PmTraceLink link : targetLinks) {
+            link.setIsDelete(true);
+            link.setDeleteBy(userId);
+            link.setDeleteDate(Instant.now());
+            traceLinkRepository.save(link);
+        }
     }
 
     // ===== FIND BY BUSINESS AND PROJECT =====

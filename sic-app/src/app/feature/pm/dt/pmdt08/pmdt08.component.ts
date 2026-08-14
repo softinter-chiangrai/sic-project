@@ -66,7 +66,11 @@ export class Pmdt08Component implements OnInit {
 
     loadData(): void {
         this.isLoading.set(true);
+        const requirementId = this.route.snapshot.queryParams['requirementId'] || this.customerState.getRequirementId();
+        const projectId = this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
         const params = {
+            projectId: projectId || undefined,
+            requirementId: requirementId || undefined,
             keyword: this.searchTerm() || undefined,
             status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
             page: this.currentPage() - 1,
@@ -118,19 +122,32 @@ export class Pmdt08Component implements OnInit {
 
     goToAdd(): void {
         const projectId = this.customerState.getProjectId();
-        if (projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams: { projectId } });
-        } else {
-            this.navigation.navigate(['/feature/pm/pmdt08/new']);
-        }
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
+
+        this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams });
     }
 
     goToEdit(id: string): void {
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit']);
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
+
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit'], { queryParams });
     }
 
     goToView(id: string): void {
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view']);
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
+
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view'], { queryParams });
     }
 
     printDocument(spec: PmSpecificationModel): void {

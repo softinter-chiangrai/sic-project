@@ -126,3 +126,5 @@ CREATE TABLE su_notification (
     delete_by VARCHAR(100),
     delete_date TIMESTAMP
 );
+
+ALTER TABLE pm_specification DROP CONSTRAINT IF EXISTS pm_specification_specification_code_key;

@@ -12,7 +12,12 @@ export interface AuditLog {
   action: string;
   module: string;
   description: string;
+  targetType?: string;
+  targetId?: string;
+  oldValue?: string;
+  newValue?: string;
   ipAddress?: string;
+  userAgent?: string;
   timestamp?: string;
   createdDate?: string;
   status: 'Success' | 'Failed';

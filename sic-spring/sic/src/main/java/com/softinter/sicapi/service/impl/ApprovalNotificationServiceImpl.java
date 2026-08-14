@@ -5,11 +5,14 @@ import com.softinter.sicapi.entity.pm.PmApproval;
 import com.softinter.sicapi.entity.su.SuNotification;
 import com.softinter.sicapi.repository.su.SuNotificationRepository;
 import com.softinter.sicapi.service.ApprovalNotificationService;
+import com.softinter.sicapi.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -18,6 +21,7 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
 
     private final SuNotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional
@@ -32,7 +36,8 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                     "คำขออนุมัติใหม่: " + approval.getDocumentCode(),
                     "มีเอกสาร " + approval.getDocumentTitle() + " รอการอนุมัติจากคุณ",
                     "APPROVAL",
-                    "/pm/approval/" + approval.getId()
+                    "/pm/approval/" + approval.getId(),
+                    approval.getBusinessId()
             );
         }
     }
@@ -48,7 +53,8 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                 "เอกสารผ่านการอนุมัติ: " + approval.getDocumentCode(),
                 "เอกสาร " + approval.getDocumentTitle() + " ผ่านขั้นตอน " + stepName + " แล้ว",
                 "APPROVAL",
-                "/pm/approval/" + approval.getId()
+                "/pm/approval/" + approval.getId(),
+                approval.getBusinessId()
         );
     }
 
@@ -63,7 +69,8 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                 "เอกสารไม่อนุมัติ: " + approval.getDocumentCode(),
                 "เอกสาร " + approval.getDocumentTitle() + " ถูกปฏิเสธในขั้นตอน " + stepName,
                 "APPROVAL",
-                "/pm/approval/" + approval.getId()
+                "/pm/approval/" + approval.getId(),
+                approval.getBusinessId()
         );
     }
 
@@ -78,7 +85,8 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                 "ขอให้แก้ไขเอกสาร: " + approval.getDocumentCode(),
                 "เอกสาร " + approval.getDocumentTitle() + " ต้องการการแก้ไขเพิ่มเติม",
                 "APPROVAL",
-                "/pm/approval/" + approval.getId()
+                "/pm/approval/" + approval.getId(),
+                approval.getBusinessId()
         );
     }
 
@@ -95,7 +103,8 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                     "เตือนการอนุมัติค้างชำระ: " + approval.getDocumentCode(),
                     "คุณมีเอกสาร " + approval.getDocumentTitle() + " รออนุมัติค้างอยู่ในระบบ",
                     "APPROVAL",
-                    "/pm/approval/" + approval.getId()
+                    "/pm/approval/" + approval.getId(),
+                    approval.getBusinessId()
             );
         }
     }
@@ -111,14 +120,18 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
                 "ได้รับมอบหมายการอนุมัติ: " + approval.getDocumentCode(),
                 "คุณได้รับการมอบหมายให้อนุมัติเอกสาร " + approval.getDocumentTitle(),
                 "APPROVAL",
-                "/pm/approval/" + approval.getId()
+                "/pm/approval/" + approval.getId(),
+                approval.getBusinessId()
         );
     }
 
-    private void sendNotification(String recipientUserId, String senderId, String senderName, String title, String message, String type, String linkUrl) {
+    private void sendNotification(String recipientUserId, String senderId, String senderName, String title, String message, String type, String linkUrl, UUID businessId) {
         if (recipientUserId == null || recipientUserId.isBlank()) return;
 
+        UUID targetBusinessId = businessId != null ? businessId : currentUserService.getBusinessId();
+
         SuNotification notification = new SuNotification();
+        notification.setBusinessId(targetBusinessId);
         notification.setRecipientUserId(recipientUserId);
         notification.setSenderId(senderId);
         notification.setSenderName(senderName);

@@ -244,6 +244,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // ✅ Soft Delete Document Versions
             documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
 
+            // ✅ Soft Delete Trace Links
+            deleteTraceLinksForSpecification(spec.getId(), userId);
+
             return spec.getId();
         }
 
@@ -265,6 +268,29 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // ✅ Soft Delete Document Versions
         documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
+
+        // ✅ Soft Delete Trace Links
+        deleteTraceLinksForSpecification(spec.getId(), userId);
+    }
+
+    private void deleteTraceLinksForSpecification(UUID specId, String userId) {
+        // ลบ Trace Link ที่มี Specification นี้เป็น Source
+        List<PmTraceLink> sourceLinks = traceLinkRepository.findBySourceTypeAndSourceId("SPECIFICATION", specId);
+        for (PmTraceLink link : sourceLinks) {
+            link.setIsDelete(true);
+            link.setDeleteBy(userId);
+            link.setDeleteDate(Instant.now());
+            traceLinkRepository.save(link);
+        }
+
+        // ลบ Trace Link ที่มี Specification นี้เป็น Target
+        List<PmTraceLink> targetLinks = traceLinkRepository.findByTargetTypeAndTargetId("SPECIFICATION", specId);
+        for (PmTraceLink link : targetLinks) {
+            link.setIsDelete(true);
+            link.setDeleteBy(userId);
+            link.setDeleteDate(Instant.now());
+            traceLinkRepository.save(link);
+        }
     }
 
     // ===== FIND BY BUSINESS AND PROJECT =====

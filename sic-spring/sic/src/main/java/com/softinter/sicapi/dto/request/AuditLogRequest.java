@@ -12,7 +12,12 @@ public class AuditLogRequest {
     private String action;
     private String module;
     private String description;
+    private String targetType;
+    private UUID targetId;
+    private String oldValue;
+    private String newValue;
     private String ipAddress;
+    private String userAgent;
     private String status = "Success";
     private String details;
     private UUID businessId;

@@ -347,18 +347,29 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const data = this.prepareSubmitData();
         if (!data.title && !data.description) return;
 
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
+        } else {
+            data.state = 4; // ADDED
+            data.rowVersion = 0;
+        }
+
         this.isAutoSaving = true;
         this.lastAutoSaveTime = new Date();
 
         this.service.autoSave(data).subscribe({
             next: (response: any) => {
                 this.isAutoSaving = false;
-                if (response) {
+                const savedId = typeof response === 'string' ? response : (response?.id || data.id || this.specId);
+                if (savedId) {
+                    this.specId = savedId;
+                    this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
+                }
+                if (typeof response === 'object' && response !== null) {
                     this.form.patchValue(response);
-                    if (response.id) {
-                        this.specId = response.id;
-                        this.isEdit = true;
-                    }
                 }
                 this.form.markAsPristine({ onlySelf: true });
                 this.cdr.markForCheck();
@@ -510,8 +521,14 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         this.isSaving = true;
         const data = this.prepareSubmitData();
-        data.state = this.isEdit ? 3 : 4;
-        if (!this.isEdit) data.rowVersion = 0;
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
+        } else {
+            data.state = 4; // ADDED
+            data.rowVersion = 0;
+        }
 
         this.service.save(data).subscribe({
             next: (response: any) => {
@@ -520,6 +537,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 if (savedId) {
                     this.specId = savedId;
                     this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
                     if (typeof response === 'object' && response !== null) {
                         this.form.patchValue(response);
                     }
@@ -548,7 +566,8 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             },
             error: (error) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+                const errorMsg = error.error?.message || error.error?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                this.dialog.error('บันทึกไม่สำเร็จ', errorMsg);
             }
         });
     }

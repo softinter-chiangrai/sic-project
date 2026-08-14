@@ -9,7 +9,12 @@ interface AuditLog {
   action: string;
   module: string;
   description: string;
+  targetType?: string;
+  targetId?: string;
+  oldValue?: string;
+  newValue?: string;
   ipAddress?: string;
+  userAgent?: string;
   timestamp: string;
   status: 'Success' | 'Failed';
   details?: string;
@@ -120,7 +125,12 @@ export class Pmrt26Component implements OnInit {
             action: item.action,
             module: item.module,
             description: item.description,
+            targetType: item.targetType,
+            targetId: item.targetId,
+            oldValue: item.oldValue,
+            newValue: item.newValue,
             ipAddress: item.ipAddress || '-',
+            userAgent: item.userAgent,
             timestamp: item.createdDate ? item.createdDate : new Date().toISOString(),
             status: String(item.status).toUpperCase() === 'FAILED' ? 'Failed' : 'Success',
             details: item.details,

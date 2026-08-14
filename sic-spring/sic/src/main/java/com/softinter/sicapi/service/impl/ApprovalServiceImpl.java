@@ -42,6 +42,7 @@ import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
@@ -74,6 +75,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ApprovalNotificationService notificationService;
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
+    private final PmSpecificationRepository specificationRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -211,7 +213,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId, Pageable pageable) {
+    public PaginationResponse<ApprovalResponse> getApprovalsByDocument(String documentType, UUID documentId,
+            Pageable pageable) {
         Page<PmApproval> pageResult = approvalRepository.findPagedByDocument(documentType, documentId, pageable);
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
@@ -629,6 +632,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Requirement not found: " + documentId));
                 break;
+            case "SPECIFICATION":
+                specificationRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Specification not found: " + documentId));
+                break;
             case "CHANGE_REQUEST":
                 changeRequestRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Change Request not found: " + documentId));
@@ -647,6 +654,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("In Review");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Review");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -669,6 +682,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Approved");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Approved");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -704,10 +723,14 @@ public class ApprovalServiceImpl implements ApprovalService {
             auditLogService.log(
                     "APPROVE",
                     "Approval Center / " + docType,
-                    "อนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : docType) + " เรียบร้อยแล้ว",
+                    "อนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : docType)
+                            + " เรียบร้อยแล้ว",
+                    docType,
+                    docId,
+                    null,
+                    null,
                     "Success",
-                    "Final Approver: " + approval.getFinalApprover()
-            );
+                    "Final Approver: " + approval.getFinalApprover());
         } catch (Exception e) {
             log.error("Error creating audit log on approval: {}", e.getMessage(), e);
         }
@@ -722,6 +745,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Draft");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Draft");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":
@@ -744,6 +773,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Draft");
                     requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(docId).ifPresent(spec -> {
+                    spec.setStatus("Draft");
+                    specificationRepository.save(spec);
                 });
                 break;
             case "CHANGE_REQUEST":

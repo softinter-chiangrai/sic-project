@@ -301,17 +301,17 @@ export class Pmrt05Component implements OnInit {
       case 'ER':
         return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
-        return `${base}/pmdt08A/${id}/edit`;
+        return `${base}/pmdt08`;
       case 'TASK':
-        return `${base}/task/${id}/edit`;
+        return `${base}/task-list`;
       case 'TEST_CASE':
-        return `${base}/test-case/${id}/edit`;
+        return `${base}/test-case`;
       case 'BUG':
-        return `${base}/bug/${id}/edit`;
+        return `${base}/bug`;
       case 'CHANGE_REQUEST':
-        return `${base}/pmdt07/${id}/edit`;
+        return `${base}/pmdt07`;
       case 'DESIGN_REVIEW':
-        return `${base}/design-review/${id}/edit`;
+        return `${base}/design-review`;
       default:
         return '#';
     }
@@ -323,11 +323,10 @@ export class Pmrt05Component implements OnInit {
   }
 
   createSpec() {
-    const reqId = this.requirementId();
     const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08A/new'], {
-      queryParams: { projectId: projId, requirementId: reqId },
+    if (!projId) return;
+    this.navigation.navigate(['/feature/pm/pmdt08'], {
+      queryParams: { projectId: projId },
     });
   }
 
