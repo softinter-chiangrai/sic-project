@@ -43,5 +43,4 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
     boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
-    long countByProjectIdAndHeadConfirmStatusAndCustomerConfirmStatusAndIsDeleteFalse(UUID projectId, String headConfirmStatus, String customerConfirmStatus);
 }

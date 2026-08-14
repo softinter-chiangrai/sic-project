@@ -104,3 +104,25 @@ ALTER TABLE pm_document_version ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255
 ALTER TABLE pm_document_version ADD COLUMN IF NOT EXISTS approved_date TIMESTAMP WITH TIME ZONE;
 ALTER TABLE pm_document_version ADD COLUMN IF NOT EXISTS snapshot_data TEXT;
 ALTER TABLE pm_document_version ADD COLUMN IF NOT EXISTS file_ref_id UUID;
+
+
+
+CREATE TABLE su_notification (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id UUID NOT NULL,
+    recipient_user_id VARCHAR(100) NOT NULL,
+    sender_id VARCHAR(100),
+    sender_name VARCHAR(100),
+    title VARCHAR(255) NOT NULL,
+    message VARCHAR(2000) NOT NULL,
+    type VARCHAR(50),
+    link_url VARCHAR(500),
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_by VARCHAR(100) NOT NULL,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL,
+    updated_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    delete_by VARCHAR(100),
+    delete_date TIMESTAMP
+);
