@@ -96,6 +96,42 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
     }
 
     @Override
+    public String generateRawResponse(String prompt, String systemPrompt) {
+        String effectiveSystemPrompt = (systemPrompt != null && !systemPrompt.isBlank())
+                ? systemPrompt
+                : "You are a professional software engineering AI assistant specialized in System Analysis and Technical Documentation.";
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", new Object[]{
+                Map.of("role", "system", "content", effectiveSystemPrompt),
+                Map.of("role", "user", "content", prompt)
+        });
+        requestBody.put("temperature", 0.7);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + apiKey);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                return root.path("choices").get(0).path("message").path("content").asText();
+            }
+
+            log.error("AI API raw response error: {}", response.getStatusCode());
+            return "{}";
+
+        } catch (Exception e) {
+            log.error("AI service raw response error", e);
+            return "{}";
+        }
+    }
+
+    @Override
     public String extractMermaidScript(String aiResponse) {
         if (aiResponse == null) return null;
         Matcher matcher = MERMAID_BLOCK_PATTERN.matcher(aiResponse);

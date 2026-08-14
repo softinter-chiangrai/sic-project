@@ -11,12 +11,20 @@
                 {{ totalItems() }} รายการ
             </span>
         </div>
-        <button
-            (click)="goToAdd()"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-        >
-            <i class="bi bi-plus-lg"></i> เพิ่ม Specification
-        </button>
+        <div class="flex items-center gap-2">
+            <button
+                (click)="openAiModal()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-md hover:shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5"
+            >
+                <i class="bi bi-stars"></i> สร้างด้วย AI
+            </button>
+            <button
+                (click)="goToAdd()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+            >
+                <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+            </button>
+        </div>
     </div>
 
     <!-- FILTERS -->
@@ -95,7 +103,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
-                                {{ spec.version || '1.0' }}
+                                {{ spec.version ? (spec.version.startsWith('v') || spec.version.startsWith('V') ? spec.version : 'v' + spec.version) : 'v1.0' }}
                             </td>
                             <td class="px-4 py-3">
                                 <span [class]="getStatusClass(spec.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
@@ -176,6 +184,196 @@
                 >
                     <i class="bi bi-chevron-right"></i>
                 </button>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================================ -->
+    <!-- AI SPECIFICATION GENERATOR MODAL -->
+    <!-- ============================================================ -->
+    @if (showAiModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+            <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all">
+                
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                            <i class="bi bi-stars text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-[var(--text-active)] flex items-center gap-2">
+                                สร้าง Specification ด้วย AI
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-semibold border border-purple-500/30">AI Assistant</span>
+                            </h2>
+                            <p class="text-xs text-[var(--text-muted)]">สร้างโครงสร้าง Technical Specification อัตโนมัติจาก Requirement หรือคำอธิบาย</p>
+                        </div>
+                    </div>
+                    <button
+                        (click)="closeAiModal()"
+                        [disabled]="isGeneratingAi()"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors">
+                        <i class="bi bi-x-lg text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                    @if (!aiResult()) {
+                        <div class="space-y-4">
+                            <!-- Requirement Selection (Optional) -->
+                            <div>
+                                <sic-combobox
+                                    label="อ้างอิงจาก Requirement (ถ้ามี)"
+                                    [apiUrl]="service.apiGetComboboxRequirement"
+                                    [params]="{ projectId: customerState.getProjectId() }"
+                                    placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                                    [(ngModel)]="aiForm.requirementId"
+                                    [clearable]="true">
+                                </sic-combobox>
+                                <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                                    💡 หากเลือก Requirement ระบบจะนำเนื้อหา Requirement มาวิเคราะห์ร่วมด้วย
+                                </p>
+                            </div>
+
+                            <!-- Diagram Selection (Optional) -->
+                            <div>
+                                <sic-combobox
+                                    label="อ้างอิงจาก Diagram (ถ้ามี)"
+                                    [apiUrl]="service.apiGetComboboxDiagram"
+                                    [params]="{ projectId: customerState.getProjectId() }"
+                                    valueField="id"
+                                    textField="name"
+                                    placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                                    [(ngModel)]="aiForm.diagramId"
+                                    [clearable]="true">
+                                </sic-combobox>
+                                <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                                    💡 หากเลือก Diagram ระบบจะนำโครงสร้างแผนภาพและ Data Model มาวิเคราะห์สร้าง Specification ร่วมด้วย
+                                </p>
+                            </div>
+
+                            <!-- Specification Type -->
+                            <div>
+                                <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                                    ประเภท Specification
+                                </label>
+                                <select
+                                    [(ngModel)]="aiForm.specificationType"
+                                    class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                    @for (type of specificationTypeOptions; track type) {
+                                        <option [value]="type">{{ type }}</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Custom Prompt / Keyword -->
+                            <div>
+                                <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                                    คำสั่งเพิ่มเติม / หัวข้อความต้องการ (Prompt)
+                                </label>
+                                <textarea
+                                    [(ngModel)]="aiForm.prompt"
+                                    rows="4"
+                                    placeholder="ตัวอย่าง: ระบบจัดการคูปองส่วนลด รองรับการกำหนดวันหมดอายุ จำกัดสิทธิ์การใช้ 1 สิทธิ์ต่อ 1 สมาชิก และมี API สำหรับตรวจสอบความถูกต้องของโค้ดส่วนลด..."
+                                    class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+                                </textarea>
+                            </div>
+
+                            <!-- Loading State inside Modal -->
+                            @if (isGeneratingAi()) {
+                                <div class="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 flex flex-col items-center justify-center gap-3">
+                                    <div class="relative w-12 h-12">
+                                        <div class="w-12 h-12 border-4 border-purple-500/20 border-t-purple-600 rounded-full animate-spin"></div>
+                                        <i class="bi bi-stars absolute inset-0 m-auto text-purple-600 text-base flex items-center justify-center"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-sm font-semibold text-[var(--text-active)]">AI กำลังวิเคราะห์และร่างเอกสาร Specification...</p>
+                                        <p class="text-xs text-[var(--text-muted)]">กำลังสร้าง Screens, ฟิลด์ข้อมูล, กฎการตรวจสอบ และ REST APIs</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    } @else {
+                        <!-- AI Result Preview -->
+                        <div class="space-y-4 animate-fadeIn">
+                            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="bi bi-check-circle-fill text-emerald-500 text-xl"></i>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-400">สร้างเอกสาร Specification สำเร็จ!</h3>
+                                        <p class="text-xs text-[var(--text-muted)]">ตรวจสอบข้อมูลเบื้องต้นด้านล่างก่อนนำไปใช้งาน</p>
+                                    </div>
+                                </div>
+                                <button
+                                    (click)="aiResult.set(null)"
+                                    class="text-xs text-purple-600 hover:text-purple-700 underline font-medium">
+                                    <i class="bi bi-arrow-clockwise"></i> ร่างใหม่
+                                </button>
+                            </div>
+
+                            <!-- Summary Card -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+                                <div>
+                                    <span class="text-xs text-[var(--text-muted)]">ชื่อเอกสาร:</span>
+                                    <p class="text-sm font-semibold text-[var(--text-active)]">{{ aiResult()?.title || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-[var(--text-muted)]">ความสำคัญ (Priority):</span>
+                                    <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{{ aiResult()?.priority || 'Medium' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-[var(--text-muted)]">ประมาณการ Manday:</span>
+                                    <p class="text-sm font-semibold text-[var(--text-active)] font-mono">{{ aiResult()?.estimatedManday || 1 }} วัน</p>
+                                </div>
+                            </div>
+
+                            <!-- Content Preview (Rich HTML preview) -->
+                            <div>
+                                <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                                    ตัวอย่างเนื้อหาที่สร้างขึ้น (Preview)
+                                </label>
+                                <div
+                                    class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] max-h-64 overflow-y-auto prose dark:prose-invert max-w-none"
+                                    [innerHTML]="aiResult()?.generatedHtmlDescription || aiResult()?.description">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+                    <button
+                        (click)="closeAiModal()"
+                        [disabled]="isGeneratingAi()"
+                        class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+                        ยกเลิก
+                    </button>
+
+                    @if (!aiResult()) {
+                        <button
+                            (click)="generateAiSpec()"
+                            [disabled]="isGeneratingAi()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all">
+                            @if (isGeneratingAi()) {
+                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>กำลังสร้าง...</span>
+                            } @else {
+                                <i class="bi bi-stars"></i>
+                                <span>เริ่มสร้าง Specification ด้วย AI</span>
+                            }
+                        </button>
+                    } @else {
+                        <button
+                            (click)="useAiResult()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-500/20 transition-all">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            <span>นำเข้าฟอร์ม & แก้ไขต่อ</span>
+                        </button>
+                    }
+                </div>
+
             </div>
         </div>
     }

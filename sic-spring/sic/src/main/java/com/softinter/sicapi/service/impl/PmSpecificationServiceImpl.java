@@ -17,6 +17,8 @@ import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,6 +43,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmTraceLinkRepository traceLinkRepository;
+    private final SuProfileRepository profileRepository;
     private final TraceLinkService traceLinkService;
     private final CurrentUserService currentUserService;
     private final EditSessionService editSessionService;
@@ -60,8 +63,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("specificationCode")), pattern),
                         cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("specificationType")), pattern)
-                ));
+                        cb.like(cb.lower(root.get("specificationType")), pattern)));
             }
 
             if (status != null && !status.isBlank() && !"all".equals(status)) {
@@ -129,7 +131,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             // ตั้งค่า Requirement
-            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId() : request.getGeneratedFromRequirementId();
+            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId()
+                    : request.getGeneratedFromRequirementId();
             if (targetReqId != null) {
                 PmRequirement requirement = requirementRepository.findById(targetReqId)
                         .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
@@ -143,8 +146,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     "SPECIFICATION",
                     spec.getId(),
                     spec.getVersion(),
-                    "สร้าง Specification ฉบับแรก"
-            );
+                    "สร้าง Specification ฉบับแรก");
 
             // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
             UUID projectIdForTrace = spec.getProject() != null ? spec.getProject().getId() : request.getProjectId();
@@ -155,8 +157,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                             projectIdForTrace,
                             "REQUIREMENT", reqId,
                             "SPECIFICATION", spec.getId(),
-                            TraceRelationship.DOCUMENTED_BY
-                    );
+                            TraceRelationship.DOCUMENTED_BY);
                 }
             }
 
@@ -166,8 +167,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         projectIdForTrace,
                         "DIAGRAM", request.getGeneratedFromDiagramId(),
                         "SPECIFICATION", spec.getId(),
-                        TraceRelationship.DESIGNED_BY
-                );
+                        TraceRelationship.DESIGNED_BY);
             }
 
             return spec.getId();
@@ -182,8 +182,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             if (!"DRAFT".equalsIgnoreCase(spec.getStatus())) {
                 if (!editSessionService.canEdit("SPECIFICATION", spec.getId(), userId)) {
                     throw new IllegalStateException(
-                            "เอกสารนี้ถูกล็อกเนื่องจากไม่ใช่สถานะ Draft ต้องใช้ Change Request เพื่อแก้ไข"
-                    );
+                            "เอกสารนี้ถูกล็อกเนื่องจากไม่ใช่สถานะ Draft ต้องใช้ Change Request เพื่อแก้ไข");
                 }
             }
 
@@ -211,8 +210,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         "SPECIFICATION",
                         spec.getId(),
                         newVersion,
-                        "เปลี่ยนสถานะเป็น " + request.getStatus()
-                );
+                        "เปลี่ยนสถานะเป็น " + request.getStatus());
             } else {
                 // ✅ ทุกการอัปเดตจะเพิ่มเวอร์ชัน
                 String newVersion = incrementVersion(oldVersion);
@@ -223,8 +221,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         "SPECIFICATION",
                         spec.getId(),
                         newVersion,
-                        request.getTitle() + " (อัปเดต)"
-                );
+                        request.getTitle() + " (อัปเดต)");
             }
 
             return spec.getId();
@@ -314,7 +311,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         entity.setPriority(request.getPriority());
         entity.setOwner(request.getOwner());
         entity.setEstimatedManday(request.getEstimatedManday());
-        entity.setDescription(request.getDescription());  // ✅ เนื้อหาทั้งหมดจาก Tiptap
+        entity.setDescription(request.getDescription()); // ✅ เนื้อหาทั้งหมดจาก Tiptap
         entity.setUploadGroupId(request.getUploadGroupId());
 
         if (request.getIsActive() != null) {
@@ -337,6 +334,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         response.setSpecificationType(spec.getSpecificationType());
         response.setTitle(spec.getTitle());
         response.setVersion(spec.getVersion());
+        response.setStatus(spec.getStatus());
         response.setPriority(spec.getPriority());
         response.setOwner(spec.getOwner());
         response.setEstimatedManday(spec.getEstimatedManday());
@@ -350,6 +348,17 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             response.setProjectName(spec.getProject().getProjectName());
         }
 
+        // Requirement
+        if (spec.getRequirement() != null) {
+            response.setRequirementId(spec.getRequirement().getId());
+            response.setRequirementCode(spec.getRequirement().getRequirementCode());
+            response.setRequirementTitle(spec.getRequirement().getTitle());
+        }
+
+        String createdByName = profileRepository.findByUserId(spec.getCreatedBy())
+                .map(LocalizationHelper::getFullName)
+                .orElse(spec.getCreatedBy());
+        response.setCreatedBy(createdByName);
         response.setRowVersion(spec.getRowVersion());
         response.setCreatedDate(spec.getCreatedDate());
         response.setUpdatedDate(spec.getUpdatedDate());

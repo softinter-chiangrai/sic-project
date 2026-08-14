@@ -7,11 +7,13 @@ import java.util.List;
 @Data
 public class SpecificationDraft {
     private String title;
+    private String specificationType;
     private String objective;
     private String scope;
     private String description;
     private String priority;
     private Integer estimatedManday;
+    private String generatedHtmlDescription;
     private List<ScreenDto> screens;
     private List<FieldDto> fields;
     private List<ValidationDto> validations;

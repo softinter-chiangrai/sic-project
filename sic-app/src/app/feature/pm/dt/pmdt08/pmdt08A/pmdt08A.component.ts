@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
@@ -35,6 +35,7 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         ReactiveFormsModule,
         RouterModule,
         SicButtonComponent,
@@ -121,7 +122,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     private fb = inject(FormBuilder);
     private cdr = inject(ChangeDetectorRef);
     private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
+    public customerState = inject(CustomerStateService);
     private auth = inject(AuthService);
     private approvalService = inject(ApprovalService);
     private http = inject(HttpClient);
@@ -148,6 +149,13 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     flows: ApprovalFlow[] = [];
     selectedFlowId: string | null = null;
     isLoadingFlows = false;
+
+    // AI Assistant State
+    showAiAssistModal = false;
+    isGeneratingAiAssist = false;
+    aiAssistRequirementId = '';
+    aiAssistDiagramId = '';
+    aiAssistPrompt = '';
 
     // Auto-save
     private autoSaveSubscription: Subscription | null = null;
@@ -177,6 +185,9 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const isViewRoute = this.router.url.includes('/view');
         if (isViewRoute) this.isViewOnly = true;
 
+        // Check if navigated with AI Draft State
+        const aiDraft = history.state?.aiDraft;
+
         this.route.params.subscribe(params => {
             const id = params['id'];
             if (id) {
@@ -205,10 +216,95 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 });
                 const userName = this.getUserNameFromToken();
                 if (userName) this.form.patchValue({ createdBy: userName });
+                this.form.patchValue({ createdDate: new Date().toISOString() });
+
+                // Pre-fill from AI Draft if available
+                if (aiDraft) {
+                    this.form.patchValue({
+                        title: aiDraft.title || this.form.value.title,
+                        specificationType: aiDraft.specificationType || this.form.value.specificationType,
+                        priority: aiDraft.priority || this.form.value.priority,
+                        estimatedManday: aiDraft.estimatedManday || this.form.value.estimatedManday,
+                        description: aiDraft.description || this.form.value.description,
+                        projectId: aiDraft.projectId || this.form.value.projectId,
+                        requirementId: aiDraft.requirementId || this.form.value.requirementId,
+                        generatedFromRequirementId: aiDraft.requirementId || this.form.value.generatedFromRequirementId,
+                        generatedFromDiagramId: aiDraft.diagramId || this.form.value.generatedFromDiagramId,
+                    });
+                    if (aiDraft.projectId) this.fetchProjectName(aiDraft.projectId);
+                    this.form.markAsDirty();
+                    this.cdr.markForCheck();
+                }
             }
         });
 
         this.setupAutoSave();
+    }
+
+    // ===== AI Assistant In-Form =====
+    openAiAssist(): void {
+        const formVal = this.form.value;
+        this.aiAssistRequirementId = formVal.requirementId || formVal.generatedFromRequirementId || '';
+        this.aiAssistDiagramId = formVal.generatedFromDiagramId || '';
+        this.aiAssistPrompt = '';
+        this.showAiAssistModal = true;
+        this.cdr.markForCheck();
+    }
+
+    closeAiAssist(): void {
+        this.showAiAssistModal = false;
+        this.cdr.markForCheck();
+    }
+
+    generateWithAi(): void {
+        const formVal = this.form.value;
+        const projectId = formVal.projectId || this.customerState.getProjectId();
+        const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
+        const diagramId = this.aiAssistDiagramId || formVal.generatedFromDiagramId;
+        const specType = formVal.specificationType || 'UI Specification';
+
+        this.isGeneratingAiAssist = true;
+        this.cdr.markForCheck();
+
+        this.service.generateDraft({
+            projectId: projectId || undefined,
+            requirementId: requirementId || undefined,
+            diagramId: diagramId || undefined,
+            specificationType: specType,
+            prompt: this.aiAssistPrompt || undefined,
+        }).pipe(finalize(() => {
+            this.isGeneratingAiAssist = false;
+            this.cdr.markForCheck();
+        })).subscribe({
+            next: (draft) => {
+                this.form.patchValue({
+                    title: draft.title || this.form.value.title,
+                    priority: draft.priority || this.form.value.priority,
+                    estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
+                    description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
+                });
+                if (requirementId) {
+                    this.form.patchValue({
+                        requirementId: requirementId,
+                        generatedFromRequirementId: requirementId
+                    });
+                }
+                if (diagramId) {
+                    this.form.patchValue({
+                        generatedFromDiagramId: diagramId
+                    });
+                }
+                if (draft.specificationType) {
+                    this.form.patchValue({ specificationType: draft.specificationType });
+                }
+                this.form.markAsDirty();
+                this.closeAiAssist();
+                this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลและรายละเอียด Specification ลงในฟอร์มเรียบร้อยแล้ว');
+            },
+            error: (err) => {
+                this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+            }
+        });
     }
 
     ngOnDestroy(): void {
@@ -324,7 +420,7 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     private prepareSubmitData(): PmSpecificationModel {
-        const rawData = { ...this.form.value };
+        const rawData = { ...this.form.getRawValue() };
         const uploadGroupId = this.extractUploadGroupId(rawData.uploadGroupId);
         rawData.uploadGroupId = uploadGroupId || null;
 

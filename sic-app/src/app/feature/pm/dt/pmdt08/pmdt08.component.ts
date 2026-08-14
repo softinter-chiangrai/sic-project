@@ -1,7 +1,7 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08.component.ts
-
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -12,21 +12,23 @@ import { PmSpecificationModel } from './pmdt08.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
     selector: 'app-pmdt08',
     standalone: true,
-    imports: [CommonModule, RouterModule, SicTableActionsComponent],
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent],
     templateUrl: './pmdt08.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt08Component implements OnInit {
     private route = inject(ActivatedRoute);
-    private service = inject(Pmdt08Service);
+    public service = inject(Pmdt08Service);
     private router = inject(Router);
     private dialog = inject(DialogService);
     private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
+    public customerState = inject(CustomerStateService);
+    private http = inject(HttpClient);
 
     isLoading = signal(false);
     specs = signal<PmSpecificationModel[]>([]);
@@ -35,6 +37,28 @@ export class Pmdt08Component implements OnInit {
     pageSize = signal(10);
     searchTerm = signal('');
     filterStatus = signal('all');
+
+    // ===== AI Generator Modal State =====
+    showAiModal = signal(false);
+    isGeneratingAi = signal(false);
+    requirementOptions = signal<any[]>([]);
+    aiForm = {
+        requirementId: '',
+        diagramId: '',
+        specificationType: 'UI Specification',
+        prompt: '',
+    };
+    aiResult = signal<any>(null);
+
+    specificationTypeOptions = [
+        'UI Specification',
+        'API Specification',
+        'Business Rule Specification',
+        'Report Specification',
+        'Data Specification',
+        'Integration Specification',
+        'Permission Specification'
+    ];
 
     totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
     hasPrevious = computed(() => this.currentPage() > 1);
@@ -128,6 +152,72 @@ export class Pmdt08Component implements OnInit {
         if (requirementId) queryParams.requirementId = requirementId;
 
         this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams });
+    }
+
+    // ===== AI Generator Methods =====
+    openAiModal(): void {
+        const currentReqId = this.customerState.getRequirementId();
+        this.aiForm.requirementId = currentReqId || '';
+        this.aiForm.diagramId = '';
+        this.aiResult.set(null);
+        this.showAiModal.set(true);
+    }
+
+    closeAiModal(): void {
+        this.showAiModal.set(false);
+        this.aiResult.set(null);
+    }
+
+    generateAiSpec(): void {
+        const projectId = this.customerState.getProjectId();
+        this.isGeneratingAi.set(true);
+
+        this.service.generateDraft({
+            projectId: projectId || undefined,
+            requirementId: this.aiForm.requirementId || undefined,
+            diagramId: this.aiForm.diagramId || undefined,
+            specificationType: this.aiForm.specificationType,
+            prompt: this.aiForm.prompt || undefined,
+        }).pipe(finalize(() => this.isGeneratingAi.set(false))).subscribe({
+            next: (result) => {
+                this.aiResult.set(result);
+            },
+            error: (err) => {
+                this.dialog.error('AI ไม่สามารถสร้างข้อมูลได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI Service');
+            }
+        });
+    }
+
+    useAiResult(): void {
+        const result = this.aiResult();
+        if (!result) return;
+
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.aiForm.requirementId || this.customerState.getRequirementId();
+        const diagramId = this.aiForm.diagramId;
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
+        if (diagramId) queryParams.diagramId = diagramId;
+
+        this.closeAiModal();
+
+        // Pass generated AI data via router navigation state
+        this.router.navigate(['/feature/pm/pmdt08/new'], {
+            queryParams,
+            state: {
+                aiDraft: {
+                    title: result.title,
+                    specificationType: result.specificationType || this.aiForm.specificationType,
+                    priority: result.priority || 'Medium',
+                    estimatedManday: result.estimatedManday || 1,
+                    description: result.generatedHtmlDescription || result.description || '',
+                    requirementId: requirementId || undefined,
+                    diagramId: diagramId || undefined,
+                    projectId: projectId || undefined,
+                }
+            }
+        });
     }
 
     goToEdit(id: string): void {

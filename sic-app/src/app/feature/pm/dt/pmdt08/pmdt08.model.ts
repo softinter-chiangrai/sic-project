@@ -28,6 +28,8 @@ export interface PmSpecificationModel {
     state?: number;
     rowVersion?: number;
     createdAt?: string;
+    createdDate?: string;
     updatedAt?: string;
+    updatedDate?: string;
 }
 

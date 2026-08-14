@@ -36,6 +36,7 @@ public class PmSpecificationResponse {
     private String requirementTitle;
 
     // ===== Metadata =====
+    private String createdBy;
     private Integer rowVersion;
     private Instant createdDate;
     private Instant updatedDate;

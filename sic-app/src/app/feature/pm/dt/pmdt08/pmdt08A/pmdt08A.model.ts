@@ -29,7 +29,9 @@ export interface Pmdt08AModel extends SicBaseStateModel {
   requirementTitle?: string;
   createdBy?: string;
   createdAt?: string;
+  createdDate?: string;
   updatedAt?: string;
+  updatedDate?: string;
 }
 
 export interface Pmdt08APageData {

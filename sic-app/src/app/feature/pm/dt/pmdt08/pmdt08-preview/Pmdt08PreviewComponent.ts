@@ -3,8 +3,11 @@
 import { Component, Input, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { PmSpecificationModel } from '../pmdt08.model';
+import { environment } from '../../../../../../environments/environment';
+import { BusinessService } from '../../../../../core/services/business.service';
 
 
 @Component({
@@ -22,15 +25,15 @@ import { PmSpecificationModel } from '../pmdt08.model';
           <span class="badge" [class]="'badge--' + getStatusClass(data.status)">
             {{ getStatusText(data.status) }}
           </span>
-          <span class="badge badge--version">v{{ data.version }}</span>
+          <span class="badge badge--version">{{ formatVersion(data.version) }}</span>
         </div>
         <h1 class="spec-preview__title">{{ data.title }}</h1>
         <div class="spec-preview__meta">
           <span><i class="bi bi-person"></i> {{ data.createdBy || '-' }}</span>
-          <span><i class="bi bi-calendar3"></i> {{ data.createdAt | sicDate : null : 'DD/MM/YYYY HH:mm' }}</span>
+          <span><i class="bi bi-calendar3"></i> {{ (data.createdDate || data.createdAt) ? ((data.createdDate || data.createdAt) | sicDate : null : 'DD/MM/YYYY HH:mm') : '-' }}</span>
           <span><i class="bi bi-briefcase"></i> {{ data.projectName || '-' }}</span>
           <span><i class="bi bi-tag"></i> {{ data.priority || 'Medium' }}</span>
-          <span><i class="bi bi-person-badge"></i> {{ data.owner || '-' }}</span>
+          <span><i class="bi bi-person-badge"></i> {{ formatOwner(data.owner) }}</span>
         </div>
       </div>
 
@@ -63,7 +66,7 @@ import { PmSpecificationModel } from '../pmdt08.model';
 
       <div class="spec-preview__footer">
         <span class="text-muted">เอกสารนี้ใช้เพื่อการตรวจสอบและอนุมัติ</span>
-        <span class="text-muted">สร้างเมื่อ {{ data.createdAt | sicDate : null : 'DD/MM/YYYY HH:mm' }}</span>
+        <span class="text-muted">สร้างเมื่อ {{ (data.createdDate || data.createdAt) ? ((data.createdDate || data.createdAt) | sicDate : null : 'DD/MM/YYYY HH:mm') : '-' }}</span>
       </div>
     </div>
   `,
@@ -189,6 +192,46 @@ import { PmSpecificationModel } from '../pmdt08.model';
 export class Pmdt08PreviewComponent implements OnChanges {
     @Input() data!: PmSpecificationModel;
     private sanitizer = inject(DomSanitizer);
+    private http = inject(HttpClient);
+    private businessService = inject(BusinessService);
+
+    private memberMap = new Map<string, string>();
+
+    constructor() {
+        this.loadMembers();
+    }
+
+    private loadMembers(): void {
+        let businessId = this.businessService.getCurrentBusinessId();
+        if (!businessId) {
+            businessId = localStorage.getItem('businessId');
+        }
+        const url = businessId
+            ? `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`
+            : `${environment.apiBaseUrl}/api/business/combobox-members`;
+
+        this.http.get<any>(url).subscribe({
+            next: (res) => {
+                const list = Array.isArray(res) ? res : (res.data || []);
+                list.forEach((m: any) => {
+                    const id = String(m.value || m.id || m.userId || '');
+                    const name = m.text || m.name || m.fullName || id;
+                    if (id) {
+                        this.memberMap.set(id, name);
+                    }
+                });
+            },
+            error: () => {}
+        });
+    }
+
+    formatOwner(owner?: string): string {
+        if (!owner) return '-';
+        // Check if owner is comma-separated IDs
+        const parts = owner.split(',').map(s => s.trim()).filter(Boolean);
+        const names = parts.map(part => this.memberMap.get(part) || part);
+        return names.join(', ');
+    }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['data']) {}
@@ -197,6 +240,11 @@ export class Pmdt08PreviewComponent implements OnChanges {
     sanitizeHtml(html: string | null | undefined): SafeHtml {
         if (!html) return '';
         return this.sanitizer.bypassSecurityTrustHtml(html);
+    }
+
+    formatVersion(version?: string): string {
+        if (!version) return 'v1.0';
+        return version.startsWith('v') || version.startsWith('V') ? version : `v${version}`;
     }
 
     getStatusClass(status?: string): string {

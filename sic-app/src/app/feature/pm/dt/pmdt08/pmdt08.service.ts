@@ -17,6 +17,7 @@ export class Pmdt08Service {
     apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
     apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
     apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
+    apiGetComboboxDiagram = `${environment.apiBaseUrl}/api/diagram/tabs`;
     apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
 
     // CRUD
@@ -34,6 +35,17 @@ export class Pmdt08Service {
 
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
+
+    // AI Generator
+    generateDraft(request: {
+        projectId?: string;
+        requirementId?: string;
+        diagramId?: string;
+        specificationType?: string;
+        prompt?: string;
+    }): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/generate/draft`, request);
     }
 
     // ✅ ใช้ PaginationResponse จาก core/model

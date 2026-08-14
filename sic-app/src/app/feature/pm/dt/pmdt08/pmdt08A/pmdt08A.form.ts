@@ -24,6 +24,8 @@ export class Pmdt08AForm {
       projectId: [null],
       projectName: [null],
       createdBy: [null],
+      createdDate: [null],
+      createdAt: [null],
       isActive: [true],
       state: [null],
       rowVersion: [null],

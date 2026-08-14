@@ -1,6 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.GenerateSpecDraftRequest;
 import com.softinter.sicapi.dto.request.PmSpecificationRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -108,10 +109,18 @@ public class PmSpecificationController {
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate specification draft using AI")
     public ResponseEntity<SpecificationDraft> generateDraft(
-            @RequestParam UUID requirementId,
-            @RequestParam UUID diagramId
+            @RequestBody(required = false) GenerateSpecDraftRequest bodyRequest,
+            @RequestParam(required = false) UUID requirementId,
+            @RequestParam(required = false) UUID diagramId
     ) {
-        SpecificationDraft draft = generatorService.generateDraft(requirementId, diagramId);
+        GenerateSpecDraftRequest req = bodyRequest != null ? bodyRequest : new GenerateSpecDraftRequest();
+        if (req.getRequirementId() == null && requirementId != null) {
+            req.setRequirementId(requirementId);
+        }
+        if (req.getDiagramId() == null && diagramId != null) {
+            req.setDiagramId(diagramId);
+        }
+        SpecificationDraft draft = generatorService.generateDraft(req);
         return ResponseEntity.ok(draft);
     }
 

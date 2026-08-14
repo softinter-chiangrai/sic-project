@@ -15,7 +15,7 @@
                 </h1>
                 @if (isEdit || isViewOnly) {
                     <p class="text-xs text-[var(--text-muted)]">
-                        รหัส: {{ form.value.specificationCode }} · เวอร์ชัน: {{ form.value.version }}
+                        รหัส: {{ form.getRawValue().specificationCode || '-' }} · เวอร์ชัน: {{ form.getRawValue().version ? (form.getRawValue().version.startsWith('v') || form.getRawValue().version.startsWith('V') ? form.getRawValue().version : 'v' + form.getRawValue().version) : 'v1.0' }}
                     </p>
                 }
             </div>
@@ -39,6 +39,18 @@
                     <i class="bi bi-eye"></i>
                 </button>
             </div>
+
+            <!-- AI Assistant Button -->
+            @if (!isViewOnly) {
+                <button
+                    type="button"
+                    (click)="openAiAssist()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5"
+                    title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+                    <i class="bi bi-stars"></i>
+                    สร้างเนื้อหาด้วย AI
+                </button>
+            }
 
             <!-- Export & Print Buttons -->
             <div class="flex gap-1">
@@ -136,6 +148,27 @@
                             <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-combobox
+                                label="อ้างอิงจาก Requirement"
+                                formControlName="requirementId"
+                                [apiUrl]="service.apiGetComboboxRequirement"
+                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                                placeholder="-- ไม่ระบุ --"
+                                [clearable]="true">
+                            </sic-combobox>
+                            <sic-combobox
+                                label="อ้างอิงจาก Diagram"
+                                formControlName="generatedFromDiagramId"
+                                [apiUrl]="service.apiGetComboboxDiagram"
+                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                                valueField="id"
+                                textField="name"
+                                placeholder="-- ไม่ระบุ --"
+                                [clearable]="true">
+                            </sic-combobox>
+                        </div>
+
                         <!-- Tiptap Editor -->
                         <div>
                             <div class="flex items-center justify-between mb-1">
@@ -227,6 +260,115 @@
                     <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
                 </div>
             }
+        </div>
+    }
+
+    <!-- ============================================================ -->
+    <!-- AI ASSISTANT MODAL (IN-FORM) -->
+    <!-- ============================================================ -->
+    @if (showAiAssistModal) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+            <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all">
+                
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                            <i class="bi bi-stars text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+                                สร้างและเสริมเนื้อหาด้วย AI
+                            </h2>
+                            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยร่างชื่อ, ฟิลด์, กฎการตรวจสอบ และเนื้อหา Specification ลงฟอร์มนี้</p>
+                        </div>
+                    </div>
+                    <button
+                        (click)="closeAiAssist()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors">
+                        <i class="bi bi-x-lg text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-4">
+                    <!-- Requirement Selection (Optional) -->
+                    <div>
+                        <sic-combobox
+                            label="อ้างอิงจาก Requirement (ถ้ามี)"
+                            [apiUrl]="service.apiGetComboboxRequirement"
+                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                            [(ngModel)]="aiAssistRequirementId"
+                            [clearable]="true">
+                        </sic-combobox>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                            💡 หากเลือก Requirement ระบบจะนำเนื้อหา Requirement มาวิเคราะห์ร่วมด้วย
+                        </p>
+                    </div>
+
+                    <!-- Diagram Selection (Optional) -->
+                    <div>
+                        <sic-combobox
+                            label="อ้างอิงจาก Diagram (ถ้ามี)"
+                            [apiUrl]="service.apiGetComboboxDiagram"
+                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                            valueField="id"
+                            textField="name"
+                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                            [(ngModel)]="aiAssistDiagramId"
+                            [clearable]="true">
+                        </sic-combobox>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                            💡 หากเลือก Diagram ระบบจะนำโครงสร้างแผนภาพและ Data Model มาวิเคราะห์สร้างเนื้อหา Specification
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                            คำสั่ง หรือ ประเด็นความต้องการเพิ่มเติม (Prompt)
+                        </label>
+                        <textarea
+                            [(ngModel)]="aiAssistPrompt"
+                            rows="4"
+                            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'ขอให้เพิ่มข้อกำหนดเกี่ยวกับความปลอดภัย การจำกัดสิทธิ์ Admin และ API สำหรับ Export รายงานเป็น Excel'..."
+                            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+                        </textarea>
+                    </div>
+
+                    @if (isGeneratingAiAssist) {
+                        <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
+                            <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และเรียบเรียงเนื้อหา Specification...</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+                    <button
+                        (click)="closeAiAssist()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+                        ยกเลิก
+                    </button>
+
+                    <button
+                        (click)="generateWithAi()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all">
+                        @if (isGeneratingAiAssist) {
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>กำลังประมวลผล...</span>
+                        } @else {
+                            <i class="bi bi-stars"></i>
+                            <span>สร้างเนื้อหาลงฟอร์ม</span>
+                        }
+                    </button>
+                </div>
+
+            </div>
         </div>
     }
 </div>
