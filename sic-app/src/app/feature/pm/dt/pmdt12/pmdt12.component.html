@@ -1,5 +1,5 @@
 <!-- src/app/feature/pm/dt/pmdt12/pmdt12.component.html -->
-<div class="space-y-5 p-4 max-w-[1600px] mx-auto min-h-screen">
+<div class="space-y-5 w-full">
 
   <!-- ===== 1. HEADER & KPI CARDS ===== -->
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-6 shadow-sm">
@@ -165,6 +165,8 @@
           [tasks]="filteredTasks()"
           [specifications]="specifications()"
           [showToolbar]="false"
+          [allowCreate]="true"
+          [showColumnFooterCreate]="false"
           (taskStatusChange)="onKanbanTaskStatusChange($event)"
           (taskClick)="onKanbanTaskClick($event)"
           (taskEdit)="onKanbanTaskClick($event)"

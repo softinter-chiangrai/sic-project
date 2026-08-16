@@ -454,7 +454,7 @@
         }
 
         <!-- Column Footer (+ Add Item Button) -->
-        @if (!readonly && allowCreate) {
+        @if (!readonly && allowCreate && showColumnFooterCreate) {
           <div class="kanban-column-footer">
             <button
               type="button"

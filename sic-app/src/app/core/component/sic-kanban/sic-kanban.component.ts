@@ -89,6 +89,7 @@ export class SicKanbanComponent {
   @Input() readonly = false;
   @Input() showToolbar = true;
   @Input() allowCreate = true;
+  @Input() showColumnFooterCreate = true;
 
   // ===== OUTPUTS FOR TASK =====
   @Output() taskStatusChange = new EventEmitter<KanbanStatusChangeEvent>();
