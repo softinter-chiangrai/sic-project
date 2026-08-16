@@ -1,106 +1,295 @@
-<!-- ===== LOADING ===== -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+<!-- src/app/feature/pm/dt/pmdt13/pmdt13.component.html -->
+<div class="space-y-5 p-0.5">
+
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
+        รายการ Test Case
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
+    </div>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md cursor-pointer"
+    >
+      <i class="bi bi-plus-lg"></i>
+      เพิ่ม Test Case
+    </button>
   </div>
-}
 
-<!-- ===== FORM ===== -->
-@if (!isLoading && form) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">อัปเดตสถานะงาน</h2>
-        <p class="text-lg text-[var(--text-muted)] mt-1">{{ taskCode }}: {{ taskName }}</p>
-      </div>
-
-      <!-- Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
-          สถานะ <span class="text-red-500">*</span>
-        </label>
-        <select
-          formControlName="status"
-          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
+  <!-- ===== FILTERS ===== -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <!-- Search -->
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, หัวข้อ, ผู้ทดสอบ, ขั้นตอน..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors cursor-pointer"
         >
-          @for (status of statusOptions; track status) {
-            <option [value]="status">{{ getStatusText(status) }}</option>
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Filter: Status -->
+    <select
+      (change)="onFilterStatusChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      @for (status of statusOptions; track status) {
+        <option [value]="status">{{ getStatusText(status) }}</option>
+      }
+    </select>
+
+    <!-- Filter: Priority -->
+    <select
+      (change)="onFilterPriorityChange($event)"
+      [value]="filterPriority()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">⚡ ทุกระดับความสำคัญ</option>
+      @for (p of priorityOptions; track p) {
+        <option [value]="p">{{ p }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== TABLE ===== -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th
+              (click)="onSortChange('testCaseCode')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[110px]"
+            >
+              รหัส
+              @if (sortBy() === 'testCaseCode') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('title')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[160px]"
+            >
+              หัวข้อ / รายละเอียด
+              @if (sortBy() === 'title') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[180px]"
+            >
+              ขั้นตอน & ผลที่คาดหวัง
+            </th>
+            <th
+              (click)="onSortChange('priority')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[90px] hidden lg:table-cell"
+            >
+              Priority
+              @if (sortBy() === 'priority') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              (click)="onSortChange('testStatus')"
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
+            >
+              สถานะ
+              @if (sortBy() === 'testStatus') {
+                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+              }
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[90px]"
+            >
+              ผู้ทดสอบ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (testCase of filteredTestCases(); track testCase.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ testCase.testCaseCode }}
+                </span>
+                @if (testCase.scenarioName) {
+                  <div class="text-xs text-[var(--text-muted)] mt-1 truncate max-w-[120px]" [title]="testCase.scenarioName">
+                    📁 {{ testCase.scenarioName }}
+                  </div>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[var(--text-active)]">{{ testCase.title }}</div>
+                @if (testCase.relatedSpec || testCase.relatedRequirement) {
+                  <div class="text-xs text-[var(--text-muted)] mt-0.5 flex gap-2">
+                    @if (testCase.relatedRequirement) { <span>Req: {{ testCase.relatedRequirement }}</span> }
+                    @if (testCase.relatedSpec) { <span>Spec: {{ testCase.relatedSpec }}</span> }
+                  </div>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <div class="text-xs text-[var(--text)]">
+                  <span class="font-medium text-[var(--text-muted)]">Step:</span> {{ testCase.testStep }}
+                </div>
+                <div class="text-xs text-[var(--text-muted)] mt-0.5">
+                  <span class="font-medium text-[var(--text-muted)]">Expected:</span> {{ testCase.expectedResult }}
+                </div>
+                @if (testCase.actualResult) {
+                  <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                    <span class="font-medium">Actual:</span> {{ testCase.actualResult }}
+                  </div>
+                }
+              </td>
+              <td class="px-4 py-3 hidden lg:table-cell">
+                <span [class]="getPriorityClass(testCase.priority) + ' text-xs'">
+                  {{ testCase.priority || 'Medium' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1.5">
+                  <i class="bi text-sm" [class]="getStatusIcon(testCase.testStatus)"></i>
+                  <span [class]="getStatusClass(testCase.testStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getStatusText(testCase.testStatus) }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-[var(--text-active)] text-sm">{{ testCase.tester || '-' }}</span>
+                @if (testCase.testDate) {
+                  <div class="text-xs text-[var(--text-muted)]">{{ formatDate(testCase.testDate) }}</div>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <!-- View -->
+                  <button
+                    (click)="goToView(testCase.id!)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all cursor-pointer"
+                    title="ดูข้อมูล"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <!-- Execute (บันทึกผลการทดสอบ) -->
+                  <button
+                    (click)="goToExecute(testCase.id!)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
+                    title="ทดสอบ"
+                  >
+                    <i class="bi bi-play-fill"></i>
+                  </button>
+                  <!-- Edit -->
+                  <button
+                    (click)="goToEdit(testCase.id!)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all cursor-pointer"
+                    title="แก้ไข"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <!-- Delete -->
+                  <button
+                    (click)="deleteTestCase(testCase.id!)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all cursor-pointer"
+                    title="ลบ"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Test Case</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Test Case ใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all cursor-pointer"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    เพิ่ม Test Case
+                  </button>
+                </div>
+              </td>
+            </tr>
           }
-        </select>
-        @if (form.get('status')?.touched && form.get('status')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกสถานะ</p>
-        }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ===== PAGINATION ===== -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
       </div>
 
-      <!-- Actual Start & Actual End -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-input
-            label="วันที่เริ่มจริง"
-            type="text"
-            formControlName="actualStart"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-        </div>
-        <div class="flex-1">
-          <sic-input
-            label="วันที่สิ้นสุดจริง"
-            type="text"
-            formControlName="actualEnd"
-            placeholder="DD/MM/YYYY"
-          ></sic-input>
-        </div>
-      </div>
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
 
-      <!-- Actual Manday -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="Manday ที่ใช้จริง"
-          type="text"
-          formControlName="actualManday"
-          placeholder="0"
-        ></sic-input>
-        @if (form.get('actualManday')?.touched && form.get('actualManday')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday</p>
-        }
-      </div>
-
-      <!-- Comment -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="หมายเหตุ / Comment"
-          formControlName="comment"
-          [rows]="2"
-          placeholder="เพิ่มความคิดเห็นหรือรายละเอียดเพิ่มเติม..."
-        ></sic-input-area>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'button'"
-            variant="secondary"
-            (click)="onBack()"
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="page === currentPage()
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all cursor-pointer'
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all cursor-pointer'
+            "
           >
-            <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'submit'"
-            variant="primary"
-          >
-            <i class="bi bi-floppy"></i>
-            อัปเดตสถานะ
-          </sic-button>
-        </div>
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
     </div>
-  </form>
-}
+  }
+
+</div>

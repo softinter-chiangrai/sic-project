@@ -30,9 +30,9 @@ import { pmdt10Resolver, pmdt10AResolver, pmdt10BResolver, pmdt10CResolver } fro
 import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
 import { pmdt12Resolver } from './dt/pmdt12/pmdt12.resolver';
 import { pmdt13Resolver } from './dt/pmdt13/pmdt13.resolver';
+import { pmdt13AResolver } from './dt/pmdt13/pmdt13A/pmdt13A.resolver';
 import { pmdt14Resolver } from './dt/pmdt14/pmdt14.resolver';
 import { pmdt15Resolver } from './dt/pmdt15/pmdt15.resolver';
-import { pmdt16Resolver } from './dt/pmdt16/pmdt16.resolver';
 import { pmdt17Resolver } from './dt/pmdt17/pmdt17.resolver';
 import { pmdt18Resolver } from './dt/pmdt18/pmdt18.resolver';
 import { pmdt19Resolver } from './dt/pmdt19/pmdt19.resolver';
@@ -53,7 +53,6 @@ import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
 import { pmrt11Resolver } from './rt/pmrt11/pmrt11.resolver';
 import { pmrt12Resolver } from './rt/pmrt12/pmrt12.resolver';
 import { pmrt13Resolver } from './rt/pmrt13/pmrt13.resolver';
-import { pmrt16Resolver } from './rt/pmrt16/pmrt16.resolver';
 import { pmrt17Resolver } from './rt/pmrt17/pmrt17.resolver';
 import { pmrt18Resolver } from './rt/pmrt18/pmrt18.resolver';
 import { pmrt19Resolver } from './rt/pmrt19/pmrt19.resolver';
@@ -523,33 +522,51 @@ export const PM_ROUTES: Routes = [
   // ===== Test Case =====
   {
     path: 'test-case',
-    loadComponent: () => import('./rt/pmrt16/pmrt16.component').then((m) => m.Pmrt16Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt16Resolver },
+    resolve: { pageData: pmdt13Resolver },
+  },
+  {
+    path: 'pmdt13',
+    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13Resolver },
   },
   {
     path: 'test-case/new',
-    loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt16Resolver },
+    resolve: { pageData: pmdt13AResolver },
   },
   {
     path: 'test-case/:id/edit',
-    loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt16Resolver },
+    resolve: { pageData: pmdt13AResolver },
   },
   {
     path: 'test-case/:id/view',
-    loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt16Resolver },
+    resolve: { pageData: pmdt13AResolver },
   },
   {
     path: 'test-execution/:id',
-    loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt16Resolver },
+    resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'pmdt13/pmdt13A',
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'pmdt13/pmdt13A/:id',
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13AResolver },
   },
 
   // ===== Bug =====

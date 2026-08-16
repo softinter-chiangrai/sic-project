@@ -1,180 +1,277 @@
+// src/app/feature/pm/dt/pmdt13/pmdt13.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { PmTestCaseModel } from './pmdt13.model';
+import { Pmdt13Service } from './pmdt13.service';
 
-// ===== Model =====
-export interface TaskUpdateModel {
-  id: string;
-  taskCode: string;
-  taskName: string;
-  status: string;
-  actualStart?: string;
-  actualEnd?: string;
-  actualManday: number;
-  comment?: string;
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt13Service {
-  private mockTask: TaskUpdateModel = {
-    id: '2',
-    taskCode: 'TASK-002',
-    taskName: 'พัฒนา Customer API',
-    status: 'In Progress',
-    actualStart: '2024-01-22',
-    actualEnd: '',
-    actualManday: 4,
-    comment: '',
-  };
-
-  updateStatus(data: TaskUpdateModel): Observable<string> {
-    console.log('📝 Updating task status:', data);
-    return of('อัปเดตสถานะสำเร็จ').pipe(delay(500));
-  }
-
-  getTask(id: string): Observable<TaskUpdateModel> {
-    const found = { ...this.mockTask, id: id };
-    return of(found).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt13',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmdt13.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
+  styleUrls: ['./pmdt13.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmdt13Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt13Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+export class Pmdt13Component implements OnInit {
+  private router = inject(Router);
+  private service = inject(Pmdt13Service);
+  private customerState = inject(CustomerStateService);
+  private dialog = inject(DialogService);
 
-  form!: FormGroup;
-  taskId: string | null = null;
-  isLoading = false;
-  taskCode = '';
-  taskName = '';
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected filterPriority = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('testCaseCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+
+  // ===== Data =====
+  protected testCases = signal<PmTestCaseModel[]>([]);
+  protected totalElements = signal(0);
+
+  // ===== Computed =====
+  protected filteredTestCases = computed(() => {
+    let result = this.testCases();
+
+    const status = this.filterStatus();
+    const priority = this.filterPriority();
+
+    if (status !== 'all') {
+      result = result.filter((t) => (t.testStatus || '').toLowerCase() === status.toLowerCase());
+    }
+
+    if (priority !== 'all') {
+      result = result.filter((t) => (t.priority || '').toLowerCase() === priority.toLowerCase());
+    }
+
+    const sortField = this.sortBy();
+    const direction = this.sortDir();
+    return [...result].sort((a, b) => {
+      const aVal = a[sortField as keyof PmTestCaseModel] ?? '';
+      const bVal = b[sortField as keyof PmTestCaseModel] ?? '';
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  });
+
+  protected totalItems = computed(() => this.totalElements());
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
+      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
+      if (page < 1) return i + 1;
+      if (page > total) return total - Math.min(total, 5) + i + 1;
+      return page;
+    });
+  });
+
+  protected Math = Math;
 
   // ===== Options =====
-  statusOptions = [
-    'Todo',
-    'In Progress',
-    'Waiting Review',
-    'Waiting Fix',
-    'Done',
-    'Delayed',
-    'Blocked',
-    'Cancelled',
-  ];
+  statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
+  priorityOptions = ['High', 'Medium', 'Low'];
 
-  pageDirty = () => this.form?.dirty ?? false;
+  // ===== Lifecycle =====
+  ngOnInit() {
+    this.loadData();
+  }
 
-  ngOnInit(): void {
-    this.initForm();
+  loadData() {
+    this.isLoading.set(true);
+    const projectId = this.customerState.getProjectId();
+    const page = this.currentPage() - 1;
+    const size = this.pageSize();
+    const keyword = this.searchTerm().trim();
+    const sortDir = this.sortDir().toUpperCase();
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.taskId = id;
-        this.loadTask(id);
-      } else {
-        this.router.navigate(['/feature/pm/my-tasks']);
+    this.service
+      .getTestCases(projectId, keyword, page, size, 'createdDate', sortDir)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          if (res && res.content) {
+            this.testCases.set(res.content);
+            this.totalElements.set(res.totalElements || res.content.length);
+          } else if (Array.isArray(res)) {
+            this.testCases.set(res);
+            this.totalElements.set(res.length);
+          } else {
+            this.testCases.set([]);
+            this.totalElements.set(0);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to load test cases:', err);
+          this.testCases.set([]);
+          this.totalElements.set(0);
+        },
+      });
+  }
+
+  // ===== Actions =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  onFilterStatusChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+  }
+
+  onFilterPriorityChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterPriority.set(select.value);
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadData();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  goToAdd() {
+    this.router.navigate(['/feature/pm/test-case/new']);
+  }
+
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/test-case', id, 'edit']);
+  }
+
+  goToExecute(id: string) {
+    this.router.navigate(['/feature/pm/test-execution', id]);
+  }
+
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/test-case', id, 'view']);
+  }
+
+  deleteTestCase(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Test Case นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.service.deleteTestCase(id).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Case ถูกลบเรียบร้อย');
+            this.loadData();
+          },
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+          },
+        });
       }
     });
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      id: [null],
-      taskCode: [null],
-      taskName: [null],
-      status: ['Todo', [Validators.required]],
-      actualStart: [null],
-      actualEnd: [null],
-      actualManday: [0, [Validators.min(0)]],
-      comment: [null, [Validators.maxLength(500)]],
-    });
-  }
-
-  loadTask(id: string) {
-    this.isLoading = true;
-    this.service.getTask(id).subscribe({
-      next: (data) => {
-        this.taskCode = data.taskCode;
-        this.taskName = data.taskName;
-        this.form.patchValue(data);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Task รหัสนี้');
-        this.router.navigate(['/feature/pm/my-tasks']);
-      },
-    });
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/my-tasks']);
-  }
-
-  submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
+  // ===== Utility =====
+  getStatusClass(status?: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      case 'fail':
+      case 'failed':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'blocked':
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'pending':
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
-
-    const data = this.form.value;
-    data.id = this.taskId;
-    this.service.updateStatus(data).subscribe({
-      next: () => {
-        this.dialog.success('อัปเดตสำเร็จ', 'สถานะงานถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/my-tasks']);
-        });
-      },
-      error: (error) => {
-        this.dialog.error('อัปเดตไม่สำเร็จ', error);
-      },
-    });
   }
 
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Todo: 'รอเริ่ม',
-      'In Progress': 'กำลังทำ',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Done: 'เสร็จ',
-      Delayed: 'ล่าช้า',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
+  getStatusText(status?: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'ผ่าน';
+      case 'fail':
+      case 'failed':
+        return 'ไม่ผ่าน';
+      case 'blocked':
+        return 'ติดปัญหา';
+      case 'pending':
+      default:
+        return 'รอทดสอบ';
+    }
+  }
+
+  getStatusIcon(status?: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'bi-check2-circle text-emerald-500';
+      case 'fail':
+      case 'failed':
+        return 'bi-x-circle text-red-500';
+      case 'blocked':
+        return 'bi-exclamation-triangle text-yellow-500';
+      case 'pending':
+      default:
+        return 'bi-clock text-gray-400';
+    }
+  }
+
+  getPriorityClass(priority?: string): string {
+    const p = (priority || '').toLowerCase();
+    switch (p) {
+      case 'high':
+      case 'critical':
+        return 'text-red-600 font-semibold';
+      case 'medium':
+        return 'text-amber-600 font-medium';
+      case 'low':
+        return 'text-emerald-600';
+      default:
+        return 'text-gray-500';
+    }
+  }
+
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
   }
 }
 

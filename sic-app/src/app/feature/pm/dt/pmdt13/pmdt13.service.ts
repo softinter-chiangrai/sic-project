@@ -1,0 +1,43 @@
+// src/app/feature/pm/dt/pmdt13/pmdt13.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { PmTestCaseModel, PmTestScenarioModel } from './pmdt13.model';
+
+@Injectable({ providedIn: 'root' })
+export class Pmdt13Service {
+  private http = inject(HttpClient);
+  private apiBase = environment.apiBaseUrl;
+
+  getTestCases(projectId?: string | null, keyword?: string | null, page = 0, size = 10, sortBy = 'createdDate', sortDirection = 'DESC'): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sortBy', sortBy)
+      .set('sortDirection', sortDirection);
+
+    if (projectId) params = params.set('projectId', projectId);
+    if (keyword) params = params.set('keyword', keyword);
+
+    return this.http.get(`${this.apiBase}/api/pm/test-cases/paging`, { params });
+  }
+
+  getTestCaseById(id: string): Observable<PmTestCaseModel> {
+    return this.http.get<PmTestCaseModel>(`${this.apiBase}/api/pm/test-cases/${id}`);
+  }
+
+  saveTestCase(data: Partial<PmTestCaseModel>): Observable<string> {
+    return this.http.post<string>(`${this.apiBase}/api/pm/test-cases/save`, data);
+  }
+
+  deleteTestCase(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBase}/api/pm/test-cases/${id}`);
+  }
+
+  getTestScenarios(projectId?: string | null): Observable<PmTestScenarioModel[]> {
+    let params = new HttpParams();
+    if (projectId) params = params.set('projectId', projectId);
+    return this.http.get<PmTestScenarioModel[]>(`${this.apiBase}/api/pm/test-scenarios`, { params });
+  }
+}

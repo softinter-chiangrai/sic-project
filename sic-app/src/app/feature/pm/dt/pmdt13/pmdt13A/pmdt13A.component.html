@@ -1,0 +1,204 @@
+<!-- src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.html -->
+<!-- ===== LOADING ===== -->
+@if (isLoading()) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+<!-- ===== FORM ===== -->
+@if (!isLoading() && formData && formData.form) {
+  <form [formGroup]="formData.form" (ngSubmit)="onSubmit()" class="space-y-6 max-w-4xl mx-auto py-2">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
+      <div>
+        <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          @if (isExecution()) {
+            🧪 บันทึกผลการทดสอบ (Test Execution)
+          } @else if (isView()) {
+            👁️ รายละเอียด Test Case
+          } @else if (isEdit()) {
+            ✏️ แก้ไข Test Case
+          } @else {
+            ➕ เพิ่ม Test Case ใหม่
+          }
+        </h2>
+        <p class="text-sm text-[var(--text-muted)] mt-1">
+          {{ formData.form.get('testCaseCode')?.value || 'Test Case' }}
+          @if (formData.form.get('title')?.value) {
+            : {{ formData.form.get('title')?.value }}
+          }
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <sic-button
+          variant="secondary"
+          [type]="'button'"
+          (click)="onBack()"
+          [disabled]="isSaving()"
+        >
+          <i class="bi bi-arrow-left"></i>
+          ย้อนกลับ
+        </sic-button>
+        @if (!isView()) {
+          <sic-button
+            variant="primary"
+            [type]="'submit'"
+            [disabled]="isSaving()"
+          >
+            @if (isSaving()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+          </sic-button>
+        }
+      </div>
+    </div>
+
+    <!-- Section 1: ข้อมูลพื้นฐาน -->
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-2">
+        <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+        ข้อมูลทั่วไป
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <sic-input
+            label="รหัส Test Case *"
+            formControlName="testCaseCode"
+            [disabled]="isView() || isExecution()"
+          ></sic-input>
+        </div>
+        <div>
+          <sic-combobox
+            label="Test Scenario"
+            formControlName="scenarioId"
+            [items]="scenarioOptions()"
+            [disabled]="isView() || isExecution()"
+          ></sic-combobox>
+        </div>
+        <div>
+          <sic-combobox
+            label="ความสำคัญ (Priority)"
+            formControlName="priority"
+            [items]="priorityOptions"
+            [disabled]="isView() || isExecution()"
+          ></sic-combobox>
+        </div>
+      </div>
+
+      <div>
+        <sic-input
+          label="หัวข้อ / ชื่อ Test Case *"
+          formControlName="title"
+          [disabled]="isView() || isExecution()"
+          placeholder="เช่น ตรวจสอบการบันทึกข้อมูลลูกค้าใหม่..."
+        ></sic-input>
+      </div>
+    </div>
+
+    <!-- Section 2: ขั้นตอนและผลที่คาดหวัง -->
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-2">
+        <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
+        ขั้นตอน & ผลลัพธ์
+      </h3>
+
+      <div>
+        <sic-input-area
+          label="ขั้นตอนการทดสอบ (Test Steps) *"
+          formControlName="testStep"
+          [rows]="3"
+          [disabled]="isView() || isExecution()"
+          placeholder="1. เปิดหน้าจอเพิ่มลูกค้า&#10;2. กรอกข้อมูลครบถ้วน&#10;3. กดปุ่มบันทึก"
+        ></sic-input-area>
+      </div>
+
+      <div>
+        <sic-input-area
+          label="ผลลัพธ์ที่คาดหวัง (Expected Result) *"
+          formControlName="expectedResult"
+          [rows]="2"
+          [disabled]="isView() || isExecution()"
+          placeholder="ระบบบันทึกข้อมูลสำเร็จและแสดงข้อความแจ้งเตือนสีเขียว"
+        ></sic-input-area>
+      </div>
+
+      <div>
+        <sic-input-area
+          label="ผลลัพธ์ที่ได้จริง (Actual Result)"
+          formControlName="actualResult"
+          [rows]="2"
+          [disabled]="isView()"
+          placeholder="กรอกผลลัพธ์ที่พบจากการทดสอบ..."
+        ></sic-input-area>
+      </div>
+    </div>
+
+    <!-- Section 3: สถานะและผู้ทดสอบ -->
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-2">
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+        ผลการทดสอบ & ผู้ทดสอบ
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <sic-combobox
+            label="สถานะการทดสอบ"
+            formControlName="testStatus"
+            [items]="statusOptions"
+            [disabled]="isView()"
+          ></sic-combobox>
+        </div>
+        <div>
+          <sic-input
+            label="ผู้ทดสอบ (Tester)"
+            formControlName="tester"
+            [disabled]="isView()"
+            placeholder="ชื่อผู้ทำการทดสอบ"
+          ></sic-input>
+        </div>
+        <div>
+          <sic-datepicker
+            label="วันที่ทดสอบ"
+            formControlName="testDate"
+            [disabled]="isView()"
+          ></sic-datepicker>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Traceability -->
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-2">
+        <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+        การเชื่อมโยง (Traceability)
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <sic-input
+            label="Requirement อ้างอิง"
+            formControlName="relatedRequirement"
+            [disabled]="isView() || isExecution()"
+            placeholder="เช่น REQ-001"
+          ></sic-input>
+        </div>
+        <div>
+          <sic-input
+            label="Specification อ้างอิง"
+            formControlName="relatedSpec"
+            [disabled]="isView() || isExecution()"
+            placeholder="เช่น SPEC-001"
+          ></sic-input>
+        </div>
+      </div>
+    </div>
+  </form>
+}
