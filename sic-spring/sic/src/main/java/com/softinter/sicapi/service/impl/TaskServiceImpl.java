@@ -9,6 +9,8 @@ import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.entity.pm.PmTaskAssignee;
 import com.softinter.sicapi.entity.pm.PmWorkPackage;
 import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmPhaseRepository;
 import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
@@ -34,6 +36,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final PmTaskRepository taskRepository;
     private final PmWorkPackageRepository wpRepository;
+    private final PmSpecificationRepository specificationRepository;
     private final PmPhaseRepository phaseRepository;
     private final PmTaskAssigneeRepository taskAssigneeRepository;
     private final SuUserBusinessRepository userBusinessRepository;
@@ -58,8 +61,13 @@ public class TaskServiceImpl implements TaskService {
         task.setEndDate(request.getEndDate());
         task.setEstimateManday(request.getEstimateManday());
         task.setPriority(request.getPriority());
-        task.setStatus("Todo");
+        task.setStatus(request.getStatus() != null ? request.getStatus() : "Todo");
         task.setColor(request.getColor());
+
+        if (request.getSpecificationId() != null) {
+            specificationRepository.findById(request.getSpecificationId())
+                    .ifPresent(task::setSpecification);
+        }
 
         task = taskRepository.save(task);
 
@@ -73,7 +81,7 @@ public class TaskServiceImpl implements TaskService {
                 projectId,
                 "SPECIFICATION", request.getSpecificationId(),
                 "TASK", task.getId(),
-                TraceRelationship.IMPLEMENTED_BY   // ← แก้ไข: ใช้ Enum โดยตรง
+                TraceRelationship.IMPLEMENTED_BY
             );
         }
 
@@ -97,6 +105,12 @@ public class TaskServiceImpl implements TaskService {
         task.setEstimateManday(request.getEstimateManday());
         task.setPriority(request.getPriority());
         task.setColor(request.getColor());
+
+        if (request.getSpecificationId() != null) {
+            specificationRepository.findById(request.getSpecificationId())
+                    .ifPresent(task::setSpecification);
+        }
+
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             task.setStatus(request.getStatus());
             if ("Done".equalsIgnoreCase(request.getStatus()) || "Completed".equalsIgnoreCase(request.getStatus())) {
@@ -115,6 +129,16 @@ public class TaskServiceImpl implements TaskService {
         // ✅ อัปเดตผู้รับผิดชอบร่วม: ลบเก่า แล้วเพิ่มใหม่
         taskAssigneeRepository.deleteByTaskId(taskId);
         saveAssignees(task, request.getAssigneeIds());
+
+        if (request.getSpecificationId() != null && task.getWorkPackage() != null) {
+            UUID projectId = task.getWorkPackage().getMilestone().getPhase().getProject().getId();
+            traceLinkService.createLink(
+                projectId,
+                "SPECIFICATION", request.getSpecificationId(),
+                "TASK", task.getId(),
+                TraceRelationship.IMPLEMENTED_BY
+            );
+        }
 
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
         return toResponse(task);
@@ -141,6 +165,11 @@ public class TaskServiceImpl implements TaskService {
         if (task.getWorkPackage() != null) {
             dto.setWorkPackageId(task.getWorkPackage().getId());
             dto.setWorkPackageName(task.getWorkPackage().getPackageName());
+        }
+        if (task.getSpecification() != null) {
+            dto.setSpecificationId(task.getSpecification().getId());
+            dto.setSpecificationCode(task.getSpecification().getSpecificationCode());
+            dto.setSpecificationTitle(task.getSpecification().getTitle());
         }
         dto.setTaskCode(task.getTaskCode());
         dto.setTaskName(task.getTaskName());
@@ -227,8 +256,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasksByProjectId(UUID projectId) {
-        // TODO: implement if needed
-        return List.of();
+        return taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 }

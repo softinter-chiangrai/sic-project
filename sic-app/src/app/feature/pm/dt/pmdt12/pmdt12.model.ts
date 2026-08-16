@@ -1,6 +1,5 @@
-// src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.model.ts
-import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
+// src/app/feature/pm/dt/pmdt12/pmdt12.model.ts
+import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 
 export interface TaskRequest {
   workPackageId: string;
@@ -62,7 +61,19 @@ export interface TaskModel extends SicBaseStateModel {
   assigneeNames?: Record<string, string>;
 }
 
-export interface TaskPageData {
-  taskData: SicFromData<TaskModel>;
-  taskDetail?: TaskResponse;
+export interface SpecificationSummary {
+  id: string;
+  code: string;
+  title: string;
+  specificationType?: string;
+  status?: string;
+}
+
+export interface WorkPackageOption {
+  id: string;
+  packageName: string;
+  phaseId: string;
+  phaseName: string;
+  milestoneId: string;
+  milestoneName: string;
 }

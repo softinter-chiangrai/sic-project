@@ -456,24 +456,26 @@ export const PM_ROUTES: Routes = [
     resolve: { pageData: pmdt11Resolver },
   },
 
-  // ===== Task (เดิม) =====
+  // ===== Task (PMDT12) =====
   {
     path: 'task-list',
-    loadComponent: () => import('./rt/pmrt12/pmrt12.component').then((m) => m.Pmrt12Component),
+    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt12Resolver },
+  },
+  {
+    path: 'pmdt12',
+    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
+    canActivate: [customerGuard, projectGuard],
   },
   {
     path: 'task-list/new',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt12Resolver },
   },
   {
     path: 'task-list/:id/edit',
     loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt12Resolver },
   },
   {
     path: 'my-tasks',

@@ -108,7 +108,7 @@
                    (click)="toggleMilestone(ms.id)">
                 <div class="flex items-center gap-3 min-w-0">
                   <div class="w-6 h-6 rounded-md bg-[var(--sidebar)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] transition-transform duration-200"
-                       [class.rotate-90]="expandedMilestone() === ms.id">
+                       [class.rotate-90]="isMilestoneExpanded(ms.id)">
                     <i class="bi bi-chevron-right text-xs"></i>
                   </div>
                   <div class="flex items-center gap-2 min-w-0">
@@ -146,7 +146,7 @@
               </div>
 
               <!-- Level 2: Work Packages Container -->
-              @if (expandedMilestone() === ms.id) {
+              @if (isMilestoneExpanded(ms.id)) {
                 <div class="border-t border-[var(--border)] px-4 py-3 bg-[var(--sidebar)]/30 space-y-2">
                   @for (wp of ms.workPackages || []; track wp.id) {
                     <div class="rounded-lg bg-[var(--bg)] border border-[var(--border)] overflow-hidden shadow-xs">
@@ -155,7 +155,7 @@
                            (click)="toggleWorkPackage(wp.id)">
                         <div class="flex items-center gap-2.5 min-w-0">
                           <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] transition-transform duration-200"
-                             [class.rotate-90]="expandedWorkPackage() === wp.id"></i>
+                             [class.rotate-90]="isWorkPackageExpanded(wp.id)"></i>
                           <span class="text-sm font-medium text-[var(--text-active)] truncate">📦 {{ wp.packageName }}</span>
                           <span class="text-[0.7rem] px-1.5 py-0.5 rounded bg-[var(--sidebar)] text-[var(--text-muted)] border border-[var(--border)] font-normal flex-shrink-0">
                             {{ wp.tasks?.length || 0 }} งาน
@@ -183,7 +183,7 @@
                       </div>
 
                       <!-- Level 3: Tasks List Container -->
-                      @if (expandedWorkPackage() === wp.id) {
+                      @if (isWorkPackageExpanded(wp.id)) {
                         <div class="border-t border-[var(--border)] px-3.5 py-2 bg-[var(--sidebar)]/40 space-y-1.5">
                           @for (task of wp.tasks || []; track task.id) {
                             <div class="flex items-center justify-between px-3 py-1.5 rounded-md bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] transition-all">
@@ -292,27 +292,12 @@
               </button>
             </div>
 
-            <!-- Sidebar Quick Actions Bar -->
+            <!-- Sidebar Quick Actions Bar (Only Custom Items / Holidays) -->
             <div class="p-3 border-b border-[var(--border)] bg-[var(--bg)]/20 flex flex-wrap gap-2">
               <button
                 (click)="openAddCustomItemModal(selectedCalendarDate())"
-                class="flex-1 px-2.5 py-1.5 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1">
-                <i class="bi bi-plus-lg"></i> เพิ่มวันหยุด/Event
-              </button>
-              <button
-                (click)="openCreateMilestoneForDate(selectedCalendarDate())"
-                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
-                <i class="bi bi-flag"></i> Milestone
-              </button>
-              <button
-                (click)="openCreateWorkPackageForDate(selectedCalendarDate())"
-                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
-                <i class="bi bi-box-seam"></i> WP
-              </button>
-              <button
-                (click)="openCreateTaskForDate(selectedCalendarDate())"
-                class="px-2.5 py-1.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] rounded-lg text-xs font-medium transition-all flex items-center gap-1">
-                <i class="bi bi-check2-square"></i> Task
+                class="w-full px-3 py-2 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                <i class="bi bi-plus-lg"></i> เพิ่มวันหยุด / Event
               </button>
             </div>
 
@@ -365,7 +350,7 @@
                 <div class="text-center py-12 text-[var(--text-muted)]">
                   <i class="bi bi-calendar-event text-4xl block mb-2 opacity-30"></i>
                   <p class="text-sm font-medium">ไม่มีข้อมูลในวันนี้</p>
-                  <p class="text-xs mt-1">คลิกปุ่มด้านบนเพื่อเพิ่มวันหยุด Event หรือ Milestone</p>
+                  <p class="text-xs mt-1">คลิกปุ่มด้านบนเพื่อเพิ่มวันหยุดหรือ Event</p>
                 </div>
               }
             </div>
@@ -457,21 +442,19 @@
           [tasks]="allPhaseTasks()"
           [workPackages]="allWorkPackages()"
           [milestones]="phase()?.milestones || []"
+          [allowCreate]="false"
           (taskStatusChange)="onKanbanTaskStatusChange($event)"
           (taskClick)="onKanbanTaskClick($event)"
           (taskEdit)="onKanbanTaskClick($event)"
           (taskDelete)="onKanbanTaskDelete($event)"
-          (taskCreate)="onKanbanTaskCreate($event)"
           (workPackageStatusChange)="onKanbanWpStatusChange($event)"
           (workPackageClick)="onKanbanWpClick($event)"
           (workPackageEdit)="onKanbanWpClick($event)"
           (workPackageDelete)="onKanbanWpDelete($event)"
-          (workPackageCreate)="onKanbanWpCreate($event)"
           (milestoneStatusChange)="onKanbanMilestoneStatusChange($event)"
           (milestoneClick)="onKanbanMilestoneClick($event)"
           (milestoneEdit)="onKanbanMilestoneClick($event)"
-          (milestoneDelete)="onKanbanMilestoneDelete($event)"
-          (milestoneCreate)="onKanbanMilestoneCreate($event)">
+          (milestoneDelete)="onKanbanMilestoneDelete($event)">
         </sic-kanban>
       </div>
     }

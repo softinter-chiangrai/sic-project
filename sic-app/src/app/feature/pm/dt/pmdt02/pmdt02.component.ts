@@ -74,8 +74,8 @@ export class Pmdt02Component implements OnInit {
   isLoading = signal(false);
   projectId = signal('');
   currentPhaseId = signal('');
-  expandedMilestone = signal<string | null>(null);
-  expandedWorkPackage = signal<string | null>(null);
+  expandedMilestoneIds = signal<Set<string>>(new Set());
+  expandedWorkPackageIds = signal<Set<string>>(new Set());
 
   rightTab = signal<'list' | 'calendar' | 'gantt' | 'kanban'>('list');
   calendarEra = signal<SicCalendarEra>('BE');
@@ -471,15 +471,33 @@ export class Pmdt02Component implements OnInit {
   }
 
   // ===== TOGGLE =====
+  isMilestoneExpanded(msId: string): boolean {
+    return this.expandedMilestoneIds().has(msId);
+  }
+
   toggleMilestone(msId: string) {
-    this.expandedMilestone.set(this.expandedMilestone() === msId ? null : msId);
+    const current = new Set(this.expandedMilestoneIds());
+    if (current.has(msId)) {
+      current.delete(msId);
+    } else {
+      current.add(msId);
+    }
+    this.expandedMilestoneIds.set(current);
+  }
+
+  isWorkPackageExpanded(wpId: string): boolean {
+    return this.expandedWorkPackageIds().has(wpId);
   }
 
   toggleWorkPackage(wpId: string) {
-    if (this.expandedWorkPackage() !== wpId) {
+    const current = new Set(this.expandedWorkPackageIds());
+    if (current.has(wpId)) {
+      current.delete(wpId);
+    } else {
       this.loadTasksForWorkPackage(wpId);
+      current.add(wpId);
     }
-    this.expandedWorkPackage.set(this.expandedWorkPackage() === wpId ? null : wpId);
+    this.expandedWorkPackageIds.set(current);
   }
 
   getTotalWorkPackages(phase: PhaseResponse): number {
@@ -702,6 +720,16 @@ export class Pmdt02Component implements OnInit {
       status: event.newStatus,
     };
 
+    // Update local state immediately
+    const current = this.phase();
+    if (current?.milestones) {
+      current.milestones.forEach((ms) => {
+        const wp = ms.workPackages?.find((w) => w.id === event.workPackageId);
+        if (wp) wp.status = event.newStatus;
+      });
+      this.phase.set({ ...current });
+    }
+
     this.wpService.updateWorkPackage(event.workPackageId, payload).subscribe({
       next: () => {
         const currentPhaseId = this.currentPhaseId();
@@ -759,6 +787,14 @@ export class Pmdt02Component implements OnInit {
       color: event.milestone.color,
       status: event.newStatus,
     };
+
+    // Update local state immediately
+    const current = this.phase();
+    if (current?.milestones) {
+      const ms = current.milestones.find((m) => m.id === event.milestoneId);
+      if (ms) ms.status = event.newStatus;
+      this.phase.set({ ...current });
+    }
 
     this.milestoneService.updateMilestone(event.milestoneId, payload).subscribe({
       next: () => {

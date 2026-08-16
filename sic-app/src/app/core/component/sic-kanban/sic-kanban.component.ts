@@ -20,6 +20,7 @@ import type { TaskResponse } from '../../../feature/pm/dt/pmdt02/pmdt02C/pmdt02C
 import type { WorkPackageResponse } from '../../../feature/pm/dt/pmdt02/pmdt02B/pmdt02B.model';
 import type { MilestoneResponse } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.model';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
+import { SicAvatarComponent } from '../sic-avatar/sic-avatar.component';
 
 export type KanbanViewMode = 'task' | 'workPackage' | 'milestone';
 
@@ -57,7 +58,7 @@ export interface KanbanMilestoneStatusChangeEvent {
 @Component({
   selector: 'sic-kanban',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, SicComboboxComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, SicComboboxComponent, SicAvatarComponent],
   templateUrl: './sic-kanban.component.html',
   styleUrl: './sic-kanban.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,7 +80,15 @@ export class SicKanbanComponent {
   get milestones(): MilestoneResponse[] {
     return this._milestones();
   }
+  @Input() set specifications(value: { id: string; code: string; title: string }[] | null | undefined) {
+    this._specifications.set(value || []);
+  }
+  get specifications(): { id: string; code: string; title: string }[] {
+    return this._specifications();
+  }
   @Input() readonly = false;
+  @Input() showToolbar = true;
+  @Input() allowCreate = true;
 
   // ===== OUTPUTS FOR TASK =====
   @Output() taskStatusChange = new EventEmitter<KanbanStatusChangeEvent>();
@@ -106,10 +115,12 @@ export class SicKanbanComponent {
   private _tasks = signal<TaskResponse[]>([]);
   private _workPackages = signal<WorkPackageResponse[]>([]);
   private _milestones = signal<MilestoneResponse[]>([]);
+  private _specifications = signal<{ id: string; code: string; title: string }[]>([]);
 
   viewMode = signal<KanbanViewMode>('task');
   searchQuery = signal<string>('');
   selectedWpFilter = signal<string | null>(null);
+  selectedSpecFilter = signal<string | null>(null);
   selectedMilestoneFilter = signal<string | null>(null);
   selectedPriorityFilter = signal<string | null>(null);
   selectedAssigneeFilter = signal<string | null>(null);
@@ -135,31 +146,31 @@ export class SicKanbanComponent {
       dotColor: '#3b82f6',
     },
     {
-      id: 'INTERNAL_REVIEW',
-      name: 'INTERNAL REVIEW',
-      statuses: ['Waiting Review', 'Review', 'INTERNAL_REVIEW', 'Pending Review'],
-      color: '#eab308',
-      textColor: '#fde047',
-      bgLight: 'rgba(234, 179, 8, 0.15)',
-      dotColor: '#eab308',
-    },
-    {
-      id: 'ON_HOLD',
-      name: 'ON HOLD',
-      statuses: ['Waiting Fix', 'On Hold', 'Blocked', 'Delayed', 'ON_HOLD'],
-      color: '#f97316',
-      textColor: '#fdba74',
-      bgLight: 'rgba(249, 115, 22, 0.15)',
-      dotColor: '#f97316',
-    },
-    {
-      id: 'CLIENT_REVIEW',
-      name: 'CLIENT REVIEW',
-      statuses: ['Client Review', 'UAT', 'CLIENT_REVIEW'],
+      id: 'TESTING',
+      name: 'TESTING',
+      statuses: ['Testing', 'Test', 'In Test', 'TESTING', 'UAT', 'Waiting Review', 'Review'],
       color: '#a855f7',
       textColor: '#d8b4fe',
       bgLight: 'rgba(168, 85, 247, 0.15)',
       dotColor: '#a855f7',
+    },
+    {
+      id: 'BUG_FIXING',
+      name: 'BUG FIXING',
+      statuses: ['Bug Fixing', 'Bug', 'Fixing', 'Waiting Fix', 'BUG_FIXING', 'BUG FIXING', 'Blocked'],
+      color: '#ef4444',
+      textColor: '#fca5a5',
+      bgLight: 'rgba(239, 68, 68, 0.15)',
+      dotColor: '#ef4444',
+    },
+    {
+      id: 'ON_HOLD',
+      name: 'ON HOLD',
+      statuses: ['On Hold', 'Delayed', 'ON_HOLD', 'Hold'],
+      color: '#f97316',
+      textColor: '#fdba74',
+      bgLight: 'rgba(249, 115, 22, 0.15)',
+      dotColor: '#f97316',
     },
     {
       id: 'COMPLETE',
@@ -180,6 +191,13 @@ export class SicKanbanComponent {
     return this._workPackages().map((wp) => ({
       value: wp.id,
       text: wp.packageName,
+    }));
+  });
+
+  specOptions = computed(() => {
+    return this._specifications().map((s) => ({
+      value: s.id,
+      text: `[${s.code}] ${s.title}`,
     }));
   });
 
@@ -223,6 +241,7 @@ export class SicKanbanComponent {
     let list = this._tasks();
     const query = this.searchQuery().trim().toLowerCase();
     const wpId = this.selectedWpFilter();
+    const specId = this.selectedSpecFilter();
     const priority = this.selectedPriorityFilter();
     const assignee = this.selectedAssigneeFilter();
 
@@ -233,8 +252,14 @@ export class SicKanbanComponent {
           (t.taskCode && t.taskCode.toLowerCase().includes(query)) ||
           (t.description && t.description.toLowerCase().includes(query)) ||
           (t.assignedTo && t.assignedTo.toLowerCase().includes(query)) ||
-          (t.workPackageName && t.workPackageName.toLowerCase().includes(query))
+          (t.workPackageName && t.workPackageName.toLowerCase().includes(query)) ||
+          (t.specificationCode && t.specificationCode.toLowerCase().includes(query)) ||
+          (t.specificationTitle && t.specificationTitle.toLowerCase().includes(query))
       );
+    }
+
+    if (specId) {
+      list = list.filter((t) => t.specificationId === specId);
     }
 
     if (wpId) {
@@ -545,13 +570,16 @@ export class SicKanbanComponent {
     return list;
   }
 
-  getInitials(name?: string): string {
-    if (!name) return '?';
-    const parts = name.trim().split(' ');
+  getInitials(name?: string | null): string {
+    if (!name || name.trim() === '' || name === 'undefined' || name === 'null') return '?';
+    const cleanName = name.trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+      const first = parts[0][0] || '';
+      const second = parts[1][0] || '';
+      return (first + second).toUpperCase();
     }
-    return name.slice(0, 2).toUpperCase();
+    return cleanName.slice(0, 2).toUpperCase();
   }
 
   formatDate(dateStr?: string): string {

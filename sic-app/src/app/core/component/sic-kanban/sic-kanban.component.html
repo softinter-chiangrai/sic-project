@@ -2,124 +2,140 @@
 <div class="kanban-board-container">
 
   <!-- ===== TOOLBAR (View Mode, Search, Filters, Quick Add) ===== -->
-  <div class="kanban-toolbar">
-    <div class="kanban-toolbar-left">
-      <!-- View Mode Switcher (Milestone / Work Package / Task) -->
-      <div class="kanban-view-mode-toggle">
-        <button
-          type="button"
-          class="kanban-view-mode-btn"
-          [class.active]="viewMode() === 'milestone'"
-          (click)="setViewMode('milestone')"
-          title="มุมมอง Milestone"
-        >
-          <i class="bi bi-flag"></i> Milestone
-        </button>
-        <button
-          type="button"
-          class="kanban-view-mode-btn"
-          [class.active]="viewMode() === 'workPackage'"
-          (click)="setViewMode('workPackage')"
-          title="มุมมอง Work Package"
-        >
-          <i class="bi bi-box"></i> Work Package
-        </button>
-        <button
-          type="button"
-          class="kanban-view-mode-btn"
-          [class.active]="viewMode() === 'task'"
-          (click)="setViewMode('task')"
-          title="มุมมอง Task"
-        >
-          <i class="bi bi-check2-square"></i> Task
-        </button>
-      </div>
+  @if (showToolbar) {
+    <div class="kanban-toolbar">
+      <div class="kanban-toolbar-left">
+        <!-- View Mode Switcher (Milestone / Work Package / Task) -->
+        <div class="kanban-view-mode-toggle">
+          <button
+            type="button"
+            class="kanban-view-mode-btn"
+            [class.active]="viewMode() === 'milestone'"
+            (click)="setViewMode('milestone')"
+            title="มุมมอง Milestone"
+          >
+            <i class="bi bi-flag"></i> Milestone
+          </button>
+          <button
+            type="button"
+            class="kanban-view-mode-btn"
+            [class.active]="viewMode() === 'workPackage'"
+            (click)="setViewMode('workPackage')"
+            title="มุมมอง Work Package"
+          >
+            <i class="bi bi-box"></i> Work Package
+          </button>
+          <button
+            type="button"
+            class="kanban-view-mode-btn"
+            [class.active]="viewMode() === 'task'"
+            (click)="setViewMode('task')"
+            title="มุมมอง Task"
+          >
+            <i class="bi bi-check2-square"></i> Task
+          </button>
+        </div>
 
-      <!-- Search Input -->
-      <div class="kanban-search-box">
-        <i class="bi bi-search"></i>
-        <input
-          type="text"
-          class="kanban-search-input"
-          [placeholder]="viewMode() === 'task' ? 'ค้นหา Task...' : (viewMode() === 'workPackage' ? 'ค้นหา Work Package...' : 'ค้นหา Milestone...')"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event)"
-        />
-      </div>
+        <!-- Search Input -->
+        <div class="kanban-search-box">
+          <i class="bi bi-search"></i>
+          <input
+            type="text"
+            class="kanban-search-input"
+            [placeholder]="viewMode() === 'task' ? 'ค้นหา Task...' : (viewMode() === 'workPackage' ? 'ค้นหา Work Package...' : 'ค้นหา Milestone...')"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
 
-      <!-- Filters in Task View -->
-      @if (viewMode() === 'task') {
-        <!-- Work Package Filter Combobox -->
-        @if (wpOptions().length > 0) {
-          <div class="kanban-combobox-wrapper">
-            <sic-combobox
-              [options]="wpOptions()"
-              [ngModel]="selectedWpFilter()"
-              (ngModelChange)="selectedWpFilter.set($event)"
-              placeholder="📦 ทุก Work Package"
-              [clearable]="true"
-            >
-            </sic-combobox>
-          </div>
+        <!-- Filters in Task View -->
+        @if (viewMode() === 'task') {
+          <!-- Specification Filter Combobox -->
+          @if (specOptions().length > 0) {
+            <div class="kanban-combobox-wrapper">
+              <sic-combobox
+                [options]="specOptions()"
+                [ngModel]="selectedSpecFilter()"
+                (ngModelChange)="selectedSpecFilter.set($event)"
+                placeholder="📜 ทุก Specification"
+                [clearable]="true"
+              >
+              </sic-combobox>
+            </div>
+          }
+
+          <!-- Work Package Filter Combobox -->
+          @if (wpOptions().length > 0) {
+            <div class="kanban-combobox-wrapper">
+              <sic-combobox
+                [options]="wpOptions()"
+                [ngModel]="selectedWpFilter()"
+                (ngModelChange)="selectedWpFilter.set($event)"
+                placeholder="📦 ทุก Work Package"
+                [clearable]="true"
+              >
+              </sic-combobox>
+            </div>
+          }
         }
-      }
 
-      <!-- Filters in Work Package View -->
-      @if (viewMode() === 'workPackage') {
-        @if (milestoneOptions().length > 0) {
-          <div class="kanban-combobox-wrapper">
-            <sic-combobox
-              [options]="milestoneOptions()"
-              [ngModel]="selectedMilestoneFilter()"
-              (ngModelChange)="selectedMilestoneFilter.set($event)"
-              placeholder="🚩 ทุก Milestone"
-              [clearable]="true"
-            >
-            </sic-combobox>
-          </div>
+        <!-- Filters in Work Package View -->
+        @if (viewMode() === 'workPackage') {
+          @if (milestoneOptions().length > 0) {
+            <div class="kanban-combobox-wrapper">
+              <sic-combobox
+                [options]="milestoneOptions()"
+                [ngModel]="selectedMilestoneFilter()"
+                (ngModelChange)="selectedMilestoneFilter.set($event)"
+                placeholder="🚩 ทุก Milestone"
+                [clearable]="true"
+              >
+              </sic-combobox>
+            </div>
+          }
         }
-      }
 
-      <!-- Priority Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
-      <div class="kanban-combobox-wrapper">
-        <sic-combobox
-          [options]="priorityOptions"
-          [ngModel]="selectedPriorityFilter()"
-          (ngModelChange)="selectedPriorityFilter.set($event)"
-          placeholder="🚩 ทุกความสำคัญ"
-          [clearable]="true"
-        >
-        </sic-combobox>
-      </div>
-
-      <!-- Assignee Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
-      @if (assigneeOptions().length > 0) {
+        <!-- Priority Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
         <div class="kanban-combobox-wrapper">
           <sic-combobox
-            [options]="assigneeOptions()"
-            [ngModel]="selectedAssigneeFilter()"
-            (ngModelChange)="selectedAssigneeFilter.set($event)"
-            placeholder="👤 ทุกผู้รับผิดชอบ"
+            [options]="priorityOptions"
+            [ngModel]="selectedPriorityFilter()"
+            (ngModelChange)="selectedPriorityFilter.set($event)"
+            placeholder="🚩 ทุกความสำคัญ"
             [clearable]="true"
           >
           </sic-combobox>
         </div>
-      }
-    </div>
 
-    <div class="kanban-toolbar-right">
-      @if (!readonly) {
-        <button
-          type="button"
-          (click)="onAddItem()"
-          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all shadow-sm cursor-pointer"
-        >
-          <i class="bi bi-plus-lg"></i>
-          {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
-        </button>
-      }
+        <!-- Assignee Filter Combobox (Available for all view modes: Task, Work Package, Milestone) -->
+        @if (assigneeOptions().length > 0) {
+          <div class="kanban-combobox-wrapper">
+            <sic-combobox
+              [options]="assigneeOptions()"
+              [ngModel]="selectedAssigneeFilter()"
+              (ngModelChange)="selectedAssigneeFilter.set($event)"
+              placeholder="👤 ทุกผู้รับผิดชอบ"
+              [clearable]="true"
+            >
+            </sic-combobox>
+          </div>
+        }
+      </div>
+
+      <div class="kanban-toolbar-right">
+        @if (!readonly && allowCreate) {
+          <button
+            type="button"
+            (click)="onAddItem()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all shadow-sm cursor-pointer"
+          >
+            <i class="bi bi-plus-lg"></i>
+            {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
+          </button>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- ===== COLUMNS (CDK DROP LIST GROUP) ===== -->
   <div class="kanban-columns-wrapper" cdkDropListGroup>
@@ -142,7 +158,7 @@
             <span class="kanban-column-count">{{ getColumnItemCount(column) }}</span>
           </div>
 
-          @if (!readonly) {
+          @if (!readonly && allowCreate) {
             <button
               type="button"
               class="kanban-column-add-btn"
@@ -247,9 +263,13 @@
                     @if (assignees.length > 0) {
                       <div class="flex items-center -space-x-1.5 flex-shrink-0" [title]="'ผู้รับผิดชอบ: ' + assignees.join(', ')">
                         @for (person of assignees.slice(0, 3); track person) {
-                          <span class="kanban-avatar-circle" [title]="person">
-                            {{ getInitials(person) }}
-                          </span>
+                          <sic-avatar
+                            [name]="person"
+                            size="sm"
+                            [title]="person"
+                            class="!w-[22px] !h-[22px] !text-[0.65rem] ring-1 ring-[var(--bg,#0f172a)] rounded-full flex-shrink-0"
+                          >
+                          </sic-avatar>
                         }
                         @if (assignees.length > 3) {
                           <span class="kanban-avatar-circle !bg-gray-600 !text-[0.6rem]" [title]="assignees.slice(3).join(', ')">
@@ -434,7 +454,7 @@
         }
 
         <!-- Column Footer (+ Add Item Button) -->
-        @if (!readonly) {
+        @if (!readonly && allowCreate) {
           <div class="kanban-column-footer">
             <button
               type="button"

@@ -11,4 +11,5 @@ public class MilestoneRequest {
     private String description;
     private Instant dueDate;
     private String color;
+    private String status;
 }

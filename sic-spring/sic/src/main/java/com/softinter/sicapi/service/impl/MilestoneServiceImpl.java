@@ -74,6 +74,9 @@ public class MilestoneServiceImpl implements MilestoneService {
         ms.setDescription(request.getDescription());
         ms.setDueDate(request.getDueDate());
         ms.setColor(request.getColor());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            ms.setStatus(request.getStatus());
+        }
         ms = milestoneRepository.save(ms);
         return toResponse(ms);
     }

@@ -71,6 +71,9 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setStartDate(request.getStartDate());
         wp.setEndDate(request.getEndDate());
         wp.setColor(request.getColor());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            wp.setStatus(request.getStatus());
+        }
 
         wp = wpRepository.save(wp);
         return toResponse(wp);

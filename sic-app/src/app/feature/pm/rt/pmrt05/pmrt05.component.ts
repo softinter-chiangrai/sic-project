@@ -301,17 +301,17 @@ export class Pmrt05Component implements OnInit {
       case 'ER':
         return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
       case 'SPECIFICATION':
-        return `${base}/pmdt08`;
+        return `${base}/pmdt08/${id}/edit`;
       case 'TASK':
-        return `${base}/task-list`;
+        return `${base}/task-list/${id}/edit`;
       case 'TEST_CASE':
-        return `${base}/test-case`;
+        return `${base}/test-case/${id}/edit`;
       case 'BUG':
-        return `${base}/bug`;
+        return `${base}/bug/${id}/edit`;
       case 'CHANGE_REQUEST':
-        return `${base}/pmdt07`;
+        return `${base}/pmdt07/${id}/edit`;
       case 'DESIGN_REVIEW':
-        return `${base}/design-review`;
+        return `${base}/design-review/${id}/edit`;
       default:
         return '#';
     }
@@ -325,8 +325,8 @@ export class Pmrt05Component implements OnInit {
   createSpec() {
     const projId = this.projectId();
     if (!projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08'], {
-      queryParams: { projectId: projId },
+    this.navigation.navigate(['/feature/pm/pmdt08/new'], {
+      queryParams: { projectId: projId, requirementId: this.requirementId() },
     });
   }
 
@@ -361,7 +361,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt11/new'], {
+    this.navigation.navigate(['/feature/pm/design-review/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -370,11 +370,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    if (this.specList().length === 0) {
-      this.dialog.warn('ยังไม่มี Specification', 'กรุณาสร้าง Specification ก่อนสร้าง Task');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt12/new'], {
+    this.navigation.navigate(['/feature/pm/task-list/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -383,11 +379,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนสร้าง Test Case');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt16/new'], {
+    this.navigation.navigate(['/feature/pm/test-case/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -396,11 +388,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    if (this.taskList().length === 0) {
-      this.dialog.warn('ยังไม่มี Task', 'กรุณาสร้าง Task ก่อนแจ้ง Bug');
-      return;
-    }
-    this.navigation.navigate(['/feature/pm/pmdt17/new'], {
+    this.navigation.navigate(['/feature/pm/bug/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

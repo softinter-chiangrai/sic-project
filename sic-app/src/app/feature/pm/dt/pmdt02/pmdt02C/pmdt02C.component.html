@@ -6,6 +6,17 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
+    <!-- Specification Selection -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text)] mb-1">Specification (ผูกกับสเปก)</label>
+      <sic-combobox
+        formControlName="specificationId"
+        [options]="specOptions()"
+        placeholder="เลือก Specification (ถ้ามี)..."
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
+
     <!-- Task Code & Name -->
     <div class="grid grid-cols-2 gap-4">
       <div>

@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
@@ -9,12 +9,14 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { HttpClient } from '@angular/common/http';
 import { Pmdt02CService } from './pmdt02C.service';
 import { Pmdt02CForm } from './pmdt02C.form';
 import { TaskModel, TaskRequest, TaskResponse } from './pmdt02C.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmdt02C',
@@ -33,11 +35,13 @@ import { BusinessService } from '../../../../../core/services/business.service';
 })
 export class Pmdt02CComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
   private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private businessService = inject(BusinessService);
+  private customerState = inject(CustomerStateService);
   workPackageId = '';
   projectId = '';
   phaseId = '';
@@ -45,6 +49,7 @@ export class Pmdt02CComponent implements OnInit {
   isEdit = false;
   data: TaskResponse | null = null;
   assignedToApiUrl = '';
+  specOptions = signal<{ value: string; text: string }[]>([]);
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
   assigneeNames: Record<string, string> = {};
@@ -72,8 +77,15 @@ export class Pmdt02CComponent implements OnInit {
 
     this.route.queryParams.subscribe((qParams) => {
       this.workPackageId = qParams['workPackageId'] || '';
-      this.projectId = qParams['projectId'] || '';
+      this.projectId = qParams['projectId'] || this.customerState.getProjectId() || '';
       this.phaseId = qParams['phaseId'] || '';
+
+      if (this.workPackageId) {
+        this.form.patchValue({ workPackageId: this.workPackageId });
+      }
+
+      this.loadSpecifications(this.projectId);
+
       const dateParam = qParams['startDate'] || qParams['date'];
       if (!this.isEdit && dateParam) {
         const cleanDate = dateParam.split('T')[0];
@@ -88,6 +100,36 @@ export class Pmdt02CComponent implements OnInit {
         this.loadTask(this.taskId);
       }
     });
+  }
+
+  loadSpecifications(projectId: string) {
+    this.http
+      .get<any>(`${environment.apiBaseUrl}/api/pm/specifications`, {
+        params: { page: '0', size: '100' },
+      })
+      .subscribe({
+        next: (res) => {
+          const list: any[] = res?.data || res?.content || (Array.isArray(res) ? res : []);
+          const targetProjId = projectId ? String(projectId).toLowerCase() : null;
+          const options = list
+            .filter((item: any) => {
+              if (item.isDelete) return false;
+              if (!targetProjId) return true;
+              const itemProjId = item.projectId
+                ? String(item.projectId).toLowerCase()
+                : item.project?.id
+                ? String(item.project.id).toLowerCase()
+                : null;
+              return !itemProjId || itemProjId === targetProjId;
+            })
+            .map((item: any) => ({
+              value: item.id,
+              text: `[${item.specificationCode || item.specCode || 'SPEC'}] ${item.title || 'Specification'}`,
+            }));
+          this.specOptions.set(options);
+        },
+        error: (err) => console.error('Failed to load specifications in pmdt02C', err),
+      });
   }
 
   loadTask(id: string) {
@@ -107,6 +149,7 @@ export class Pmdt02CComponent implements OnInit {
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
 
     this.form.patchValue({
+      specificationId: data.specificationId || null,
       taskCode: data.taskCode,
       taskName: data.taskName,
       description: data.description,
@@ -163,6 +206,7 @@ export class Pmdt02CComponent implements OnInit {
     const raw = this.form.value;
     const data: TaskRequest = {
       workPackageId: this.workPackageId,
+      specificationId: raw.specificationId || undefined,
       taskCode: raw.taskCode!,
       taskName: raw.taskName!,
       description: raw.description || undefined,
@@ -172,7 +216,7 @@ export class Pmdt02CComponent implements OnInit {
       estimateManday: raw.estimateManday!,
       priority: raw.priority || 'Medium',
       color: raw.color || undefined,
-      assigneeIds: raw.assigneeIds || [], // ✅ ส่ง array ไป
+      assigneeIds: raw.assigneeIds || [],
     };
 
     const request = this.isEdit && this.taskId

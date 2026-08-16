@@ -27,4 +27,9 @@ public class TaskResponse {
     private String priority;
     private List<String> assigneeIds;
     private Map<String, String> assigneeNames; 
+
+    // ===== Traceability =====
+    private UUID specificationId;
+    private String specificationCode;
+    private String specificationTitle;
 }

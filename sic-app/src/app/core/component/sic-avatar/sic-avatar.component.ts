@@ -25,12 +25,17 @@ export class SicAvatarComponent {
   errored = false;
 
   get initials(): string {
-    return this.name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('');
+    if (!this.name || this.name.trim() === '' || this.name === 'undefined' || this.name === 'null') {
+      return '?';
+    }
+    const cleanName = this.name.trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const first = parts[0][0] || '';
+      const second = parts[1][0] || '';
+      return (first + second).toUpperCase();
+    }
+    return cleanName.slice(0, 2).toUpperCase();
   }
 
   handleError(): void {

@@ -14,4 +14,8 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
     List<PmTask> findByWorkPackageIdAndIsDeleteFalse(UUID workPackageId);
 
     List<PmTask> findBySpecificationIdIn(List<UUID> specIds);
+
+    List<PmTask> findBySpecificationIdAndIsDeleteFalse(UUID specId);
+
+    List<PmTask> findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(UUID projectId);
 }
