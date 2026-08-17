@@ -1,6 +1,5 @@
-// sic-app/src/app/feature/bu/rt/burt06/burt06.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -26,6 +25,15 @@ export class Burt06Component implements OnInit {
   isLoading = signal(false);
   flows = signal<ApprovalFlow[]>([]);
 
+  // Pagination & Filtering state
+  currentPage = signal(1);
+  pageSize = signal(10);
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  filterDocumentType = signal('all');
+  sortBy = signal('flowCode');
+  sortDir = signal<'asc' | 'desc'>('asc');
+
   documentTypeMap: Record<string, string> = {
     REQUIREMENT: 'Requirement',
     SPECIFICATION: 'Specification',
@@ -38,6 +46,66 @@ export class Burt06Component implements OnInit {
     TEST_PLAN: 'Test Plan',
     UAT: 'UAT',
   };
+
+  // Filtered list
+  filteredFlows = computed(() => {
+    let list = this.flows();
+    const term = this.searchTerm().toLowerCase().trim();
+    if (term) {
+      list = list.filter(
+        (f) =>
+          f.flowCode.toLowerCase().includes(term) ||
+          f.flowName.toLowerCase().includes(term) ||
+          (f.description && f.description.toLowerCase().includes(term)),
+      );
+    }
+
+    const status = this.filterStatus();
+    if (status === 'active') list = list.filter((f) => f.active);
+    if (status === 'inactive') list = list.filter((f) => !f.active);
+
+    const docType = this.filterDocumentType();
+    if (docType !== 'all') {
+      list = list.filter((f) => f.documentType === docType);
+    }
+
+    const by = this.sortBy();
+    const dir = this.sortDir();
+    list = [...list].sort((a, b) => {
+      const va = String(a[by as keyof ApprovalFlow] ?? '');
+      const vb = String(b[by as keyof ApprovalFlow] ?? '');
+      return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+
+    return list;
+  });
+
+  // Total items & pages
+  totalItems = computed(() => this.filteredFlows().length);
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
+  hasPrevious = computed(() => this.currentPage() > 1);
+  hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  // Paginated slice
+  paginatedFlows = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredFlows().slice(start, start + this.pageSize());
+  });
+
+  // Page numbers for pagination UI
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  Math = Math;
 
   ngOnInit(): void {
     this.loadFlows();
@@ -81,6 +149,44 @@ export class Burt06Component implements OnInit {
           });
       }
     });
+  }
+
+  // ===== Search, Sort, Filter & Pagination Handlers =====
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+  }
+
+  onFilterStatusChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onFilterDocTypeChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filterDocumentType.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onSortChange(field: string): void {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
+    }
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
   }
 
   getApprovalModeText(mode: string): string {

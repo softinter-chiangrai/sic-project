@@ -33,6 +33,20 @@
       </div>
     </div>
 
+    <!-- Warning Banner when Task is NOT ready for testing in Execution Mode -->
+    @if (isExecution() && !isTaskReadyForTest()) {
+      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-start gap-3">
+        <i class="bi bi-exclamation-triangle-fill text-xl mt-0.5"></i>
+        <div>
+          <h4 class="font-semibold text-sm">ยังไม่สามารถทดสอบได้</h4>
+          <p class="text-xs mt-0.5 text-amber-700/80 dark:text-amber-300/80">
+            Task ที่ผูกอยู่กับ Test Case นี้ ปัจจุบันมีสถานะเป็น <b>"{{ linkedTaskStatus() || 'ยังไม่พร้อม' }}"</b> 
+            ระบบจะเปิดให้บันทึกผลการทดสอบได้เมื่อสถานะของ Task เปลี่ยนเป็น <b>"พร้อมทดสอบ (Waiting Review)"</b> เท่านั้น
+          </p>
+        </div>
+      </div>
+    }
+
     <!-- Unified Single Card Form Container -->
     <div class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-8">
       
@@ -69,8 +83,6 @@
             ></sic-combobox>
           </div>
         </div>
-
-        
       </div>
 
       <!-- Section 2: การเชื่อมโยง (Traceability & Task) -->
@@ -133,63 +145,67 @@
           ></sic-tiptap-editor>
         </div>
 
-        <!-- ผลลัพธ์ที่ได้จริง -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-medium text-[var(--text-active)]">
-              ผลลัพธ์ที่ได้จริง (Actual Result)
-            </span>
-            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+        <!-- ผลลัพธ์ที่ได้จริง (แสดงเฉพาะตอน Test Execution หรือ View ที่มีผลแล้ว) -->
+        @if (isExecution() || isView()) {
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-sm font-medium text-[var(--text-active)]">
+                ผลลัพธ์ที่ได้จริง (Actual Result)
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+            </div>
+            <sic-tiptap-editor
+              formControlName="actualResult"
+              placeholderInput="กรอกผลลัพธ์ที่พบจากการทดสอบจริง"
+              minHeightInput="100px"
+              [disabledInput]="isView() || (isExecution() && !isTaskReadyForTest())"
+            ></sic-tiptap-editor>
           </div>
-          <sic-tiptap-editor
-            formControlName="actualResult"
-            placeholderInput="กรอกผลลัพธ์ที่พบจากการทดสอบ"
-            minHeightInput="100px"
-            [disabledInput]="isView()"
-          ></sic-tiptap-editor>
-        </div>
+        }
       </div>
 
-      <!-- Section 4: สถานะและผู้ทดสอบ -->
-      <div class="space-y-4">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-          <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-          ผลการทดสอบ & ผู้ทดสอบ
-        </h3>
+      <!-- Section 4: สถานะและผู้ทดสอบ (แสดงเฉพาะตอน Test Execution หรือ View) -->
+      @if (isExecution() || isView()) {
+        <div class="space-y-4">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+            <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+            ผลการทดสอบ & ผู้ทดสอบ
+          </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <sic-combobox
-              label="สถานะการทดสอบ"
-              formControlName="testStatus"
-              [items]="statusOptions"
-              [disabled]="isView()"
-            ></sic-combobox>
-          </div>
-          <div>
-            <sic-combobox
-              label="ผู้ทดสอบ (Tester)"
-              [apiUrl]="testerApiUrl()"
-              valueField="text"
-              textField="text"
-              [multiple]="true"
-              [disabled]="isView()"
-              [ngModel]="testerValues()"
-              [ngModelOptions]="{standalone: true}"
-              placeholder="เลือกผู้ทดสอบ"
-              (selectionChanged)="onTesterChange($event)"
-            ></sic-combobox>
-            <input type="hidden" formControlName="tester" />
-          </div>
-          <div>
-            <sic-datepicker
-              label="วันที่ทดสอบ"
-              formControlName="testDate"
-              [disabled]="isView()"
-            ></sic-datepicker>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <sic-combobox
+                label="สถานะการทดสอบ *"
+                formControlName="testStatus"
+                [items]="statusOptions"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+              ></sic-combobox>
+            </div>
+            <div>
+              <sic-combobox
+                label="ผู้ทดสอบ (Tester)"
+                [apiUrl]="testerApiUrl()"
+                valueField="text"
+                textField="text"
+                [multiple]="true"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+                [ngModel]="testerValues()"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="เลือกผู้ทดสอบ"
+                (selectionChanged)="onTesterChange($event)"
+              ></sic-combobox>
+              <input type="hidden" formControlName="tester" />
+            </div>
+            <div>
+              <sic-datepicker
+                label="วันที่ทดสอบ"
+                formControlName="testDate"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+              ></sic-datepicker>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       <!-- FOOTER ACTIONS (ปุ่มย้อนกลับ / บันทึก ด้านล่าง) -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
@@ -206,14 +222,14 @@
           <sic-button
             variant="primary"
             [type]="'submit'"
-            [disabled]="isSaving()"
+            [disabled]="isSaving() || (isExecution() && !isTaskReadyForTest())"
           >
             @if (isSaving()) {
               <i class="bi bi-arrow-repeat animate-spin"></i>
             } @else {
               <i class="bi bi-floppy"></i>
             }
-            {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+            {{ isSaving() ? 'กำลังบันทึก...' : (isExecution() ? 'บันทึกผลการทดสอบ' : 'บันทึก Test Case') }}
           </sic-button>
         }
       </div>

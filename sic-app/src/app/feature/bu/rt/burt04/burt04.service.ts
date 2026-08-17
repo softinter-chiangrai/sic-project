@@ -5,7 +5,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
-import { TeamMember, Page, User, ComboboxRole } from './burt04.model';
+import { TeamMember, User, ComboboxRole } from './burt04.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 
 @Injectable({
@@ -33,12 +34,12 @@ export class burt04Service {
     return this.currentBusinessId;
   }
 
-  getMembers(businessId: string, page: number, size: number): Observable<Page<TeamMember>> {
+  getMembers(businessId: string, page: number, size: number): Observable<PaginationResponse<TeamMember>> {
     const params = new HttpParams()
       .set('businessId', businessId)
       .set('page', page.toString())
       .set('size', size.toString());
-    return this.http.get<Page<TeamMember>>(this.memberApiUrl, { params });
+    return this.http.get<PaginationResponse<TeamMember>>(this.memberApiUrl, { params });
   }
 
   addMember(businessId: string, userId: string, roleIds: string[]): Observable<TeamMember> {

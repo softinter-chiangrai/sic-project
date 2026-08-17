@@ -123,12 +123,74 @@
       ></sic-colorpicker>
     </div>
 
+    <!-- ✅ Section: ผลการทดสอบ (Test Cases & Bug Details) เมื่ออยู่ในโหมดแก้ไข -->
+    @if (isEdit) {
+      <div class="pt-4 border-t border-[var(--border)] space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-clipboard2-check text-[var(--crm-primary)]"></i>
+            รายการ Test Cases & ผลการทดสอบ (QA)
+          </h3>
+          <span class="text-xs text-[var(--text-muted)] bg-[var(--bg)] px-2 py-0.5 rounded border border-[var(--border)]">
+            {{ linkedTestCases().length }} เคส
+          </span>
+        </div>
+
+        @if (testCasesLoading()) {
+          <div class="text-xs text-[var(--text-muted)] py-3 text-center">กำลังโหลดรายการ Test Cases...</div>
+        } @else if (linkedTestCases().length === 0) {
+          <div class="text-xs text-[var(--text-muted)] p-3 text-center bg-[var(--bg)]/40 rounded-lg border border-dashed border-[var(--border)]">
+            <i class="bi bi-info-circle mr-1"></i> ยังไม่มี Test Case ที่ผูกกับ Task นี้
+          </div>
+        } @else {
+          <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            @for (tc of linkedTestCases(); track tc.id) {
+              <div 
+                class="p-3 rounded-xl border transition-all text-xs space-y-2"
+                [ngClass]="(tc.testStatus || '').toLowerCase() === 'fail' 
+                  ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800' 
+                  : 'bg-[var(--bg)] border-[var(--border)]'"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-mono font-bold text-[var(--crm-primary)]">{{ tc.testCaseCode }}</span>
+                    <span class="font-semibold text-[var(--text-active)] truncate">{{ tc.title }}</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full text-[0.65rem] shrink-0 {{ getTestStatusBadgeClass(tc.testStatus) }}">
+                    {{ getTestStatusLabel(tc.testStatus) }}
+                  </span>
+                </div>
+
+                <!-- Steps & Expected Result -->
+                @if (tc.testStep) {
+                  <div class="text-[var(--text-muted)] text-[0.7rem] bg-[var(--sidebar)] p-2 rounded-lg border border-[var(--border)]">
+                    <span class="font-bold text-[var(--text)] block mb-0.5">ขั้นตอนการทดสอบ (Steps):</span>
+                    <div class="line-clamp-2" [innerHTML]="tc.testStep"></div>
+                  </div>
+                }
+
+                <!-- Actual Result / Bug details (ถ้ามี) -->
+                @if (tc.actualResult) {
+                  <div class="p-2 rounded-lg text-[0.7rem]" [ngClass]="(tc.testStatus || '').toLowerCase() === 'fail' ? 'bg-rose-100/70 dark:bg-rose-900/30 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-700' : 'bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800'">
+                    <span class="font-bold flex items-center gap-1 mb-0.5">
+                      <i class="bi bi-bug-fill text-rose-500"></i> ผลที่พบจริงจากการทดสอบ (Actual / ปัญหาที่พบ):
+                    </span>
+                    <div [innerHTML]="tc.actualResult"></div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
     <!-- Buttons -->
     <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
-      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all">
+      <button type="submit" [disabled]="form.invalid" class="px-6 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 disabled:opacity-50 transition-all cursor-pointer">
         {{ isEdit ? 'บันทึก' : 'สร้าง' }}
       </button>
-      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+      <button type="button" (click)="cancel()" class="px-6 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
         ยกเลิก
       </button>
     </div>

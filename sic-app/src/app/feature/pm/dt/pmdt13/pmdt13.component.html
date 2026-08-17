@@ -70,6 +70,32 @@
         <option [value]="p">{{ p }}</option>
       }
     </select>
+
+    <!-- Filter: Task Status (Waiting Review / Dev Status) -->
+    <select
+      (change)="onFilterTaskStatusChange($event)"
+      [value]="filterTaskStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">🎯 ทุกสถานะ Task</option>
+      <option value="ready">⏳ พร้อมทดสอบ (Waiting Review)</option>
+      <option value="In Progress">🛠️ กำลังพัฒนา (In Progress)</option>
+      <option value="Waiting Fix">🚨 รอแก้ไข (Waiting Fix)</option>
+      <option value="Done">✅ สำเร็จแล้ว (Done)</option>
+      <option value="Todo">📝 ยังไม่เริ่ม (To Do)</option>
+    </select>
+
+    <!-- Quick Filter Button: Ready to test -->
+    <button
+      type="button"
+      (click)="setQuickFilterReady()"
+      class="px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+      [class]="filterTaskStatus() === 'ready' ? 'bg-amber-500 text-white font-semibold shadow-amber-500/20' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'"
+      title="กรองเฉพาะเคสที่ Dev ส่งงานมาให้ตรวจแล้ว"
+    >
+      <i class="bi bi-hourglass-split"></i>
+      <span>พร้อมทดสอบ ({{ readyToTestCount() }})</span>
+    </button>
   </div>
 
   <!-- ===== LOADING ===== -->
@@ -176,17 +202,18 @@
                   <tr>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[120px]">รหัส Test Case</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">หัวข้อ</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[240px]">ขั้นตอน & ผลที่คาดหวัง</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[90px] hidden lg:table-cell">Priority</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[110px]">สถานะ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[160px]">Task ที่ผูก (Dev Status)</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[200px]">ขั้นตอน & ผลที่คาดหวัง</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px] hidden lg:table-cell">Priority</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">สถานะ Test</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">ผู้ทดสอบ</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">วันที่ทดสอบ</th>
-                    <th class="px-4 py-2.5 text-center font-semibold whitespace-nowrap min-w-[140px]">จัดการ</th>
+                    <th class="px-4 py-2.5 text-center font-semibold whitespace-nowrap min-w-[150px]">จัดการ</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-[var(--border)]">
-                  @for (testCase of group.testCases; track testCase.id) {
-                    <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+                  @for (testCase of getPagedTestCases(group.testCases, group.scenario?.id); track testCase.id) {
+                    <tr class="hover:bg-[var(--sidebar-hover)] transition-colors" [class.bg-amber-50/40]="(testCase.taskStatus || '').toLowerCase() === 'waiting review' || (testCase.taskStatus || '').toLowerCase() === 'review'">
                       <!-- รหัส -->
                       <td class="px-4 py-3 align-top">
                         <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
@@ -199,24 +226,43 @@
                         <div class="font-medium text-[var(--text-active)]">{{ testCase.title }}</div>
                       </td>
 
+                      <!-- Task ที่ผูก & สถานะงานของ Dev -->
+                      <td class="px-4 py-3 align-top">
+                        @if (testCase.taskCode || testCase.taskName) {
+                          <div class="space-y-1">
+                            <div class="text-xs font-medium text-[var(--text-active)] truncate max-w-[180px]" [title]="(testCase.taskCode || '') + ' - ' + (testCase.taskName || '')">
+                              <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+                              <span class="font-mono font-semibold">{{ testCase.taskCode }}</span> {{ testCase.taskName }}
+                            </div>
+                            <div>
+                              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.7rem] font-semibold {{ getTaskStatusClass(testCase.taskStatus) }}">
+                                {{ getTaskStatusLabel(testCase.taskStatus) }}
+                              </span>
+                            </div>
+                          </div>
+                        } @else {
+                          <span class="text-xs text-[var(--text-muted)]">-</span>
+                        }
+                      </td>
+
                       <!-- ขั้นตอน & ผลลัพธ์ -->
                       <td class="px-4 py-3 align-top space-y-1.5">
                         @if (testCase.testStep) {
                           <div class="text-xs">
                             <span class="font-medium text-[var(--text-muted)] block mb-0.5">Step:</span>
-                            <div class="text-[var(--text)] prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.testStep"></div>
+                            <div class="text-[var(--text)] rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.testStep"></div>
                           </div>
                         }
                         @if (testCase.expectedResult) {
                           <div class="text-xs">
                             <span class="font-medium text-[var(--text-muted)] block mb-0.5">Expected:</span>
-                            <div class="text-[var(--text-muted)] prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.expectedResult"></div>
+                            <div class="text-[var(--text-muted)] rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.expectedResult"></div>
                           </div>
                         }
                         @if (testCase.actualResult) {
                           <div class="text-xs">
                             <span class="font-medium text-blue-600 dark:text-blue-400 block mb-0.5">Actual:</span>
-                            <div class="text-blue-600 dark:text-blue-400 prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.actualResult"></div>
+                            <div class="text-blue-600 dark:text-blue-400 rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.actualResult"></div>
                           </div>
                         }
                       </td>
@@ -250,7 +296,17 @@
 
                       <!-- จัดการ -->
                       <td class="px-4 py-3 align-top">
-                        <div class="flex items-center justify-center gap-1">
+                        <div class="flex items-center justify-center gap-1 flex-wrap">
+                          <!-- Execute Test Highlighted Button (When Task is Waiting Review) -->
+                          @if ((testCase.taskStatus || '').toLowerCase() === 'waiting review' || (testCase.taskStatus || '').toLowerCase() === 'review') {
+                            <button
+                              (click)="goToExecute(testCase.id!)"
+                              class="px-2 py-1 rounded-md text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                              title="บันทึกผลการทดสอบทันที"
+                            >
+                              <i class="bi bi-play-circle-fill"></i> ทดสอบ
+                            </button>
+                          }
                           <!-- View -->
                           <button
                             (click)="goToView(testCase.id!)"
@@ -258,14 +314,6 @@
                             title="ดูข้อมูล"
                           >
                             <i class="bi bi-eye"></i>
-                          </button>
-                          <!-- Execute (ทดสอบ) -->
-                          <button
-                            (click)="goToExecute(testCase.id!)"
-                            class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
-                            title="ทดสอบ"
-                          >
-                            <i class="bi bi-play-fill text-base"></i>
                           </button>
                           <!-- Edit -->
                           <button
@@ -288,13 +336,43 @@
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="7" class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
+                      <td colspan="9" class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
                         ไม่มี Test Case ในกลุ่มนี้
                       </td>
                     </tr>
                   }
                 </tbody>
               </table>
+
+              <!-- ACCORDION PAGINATION (When > 10 items) -->
+              @if (group.testCases.length > pageSize) {
+                <div class="flex items-center justify-between px-4 py-2.5 bg-[var(--bg)]/30 border-t border-[var(--border)] text-xs text-[var(--text-muted)]">
+                  <div>
+                    แสดง {{ (getScenarioPage(group.scenario?.id) - 1) * pageSize + 1 }} - {{ (getScenarioPage(group.scenario?.id) * pageSize) > group.testCases.length ? group.testCases.length : (getScenarioPage(group.scenario?.id) * pageSize) }} จากทั้งหมด {{ group.testCases.length }} รายการ
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button
+                      [disabled]="getScenarioPage(group.scenario?.id) <= 1"
+                      (click)="setScenarioPage(group.scenario?.id, getScenarioPage(group.scenario?.id) - 1, $event)"
+                      class="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      title="หน้าก่อนหน้า"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="px-2 py-1 font-medium text-[var(--text-active)]">
+                      {{ getScenarioPage(group.scenario?.id) }} / {{ getScenarioTotalPages(group.testCases.length) }}
+                    </span>
+                    <button
+                      [disabled]="getScenarioPage(group.scenario?.id) >= getScenarioTotalPages(group.testCases.length)"
+                      (click)="setScenarioPage(group.scenario?.id, getScenarioPage(group.scenario?.id) + 1, $event)"
+                      class="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      title="หน้าถัดไป"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           }
 

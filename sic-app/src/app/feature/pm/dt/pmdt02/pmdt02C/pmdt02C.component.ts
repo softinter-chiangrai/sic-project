@@ -50,6 +50,8 @@ export class Pmdt02CComponent implements OnInit {
   data: TaskResponse | null = null;
   assignedToApiUrl = '';
   specOptions = signal<{ value: string; text: string }[]>([]);
+  linkedTestCases = signal<any[]>([]);
+  testCasesLoading = signal(false);
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
   assigneeNames: Record<string, string> = {};
@@ -137,9 +139,51 @@ export class Pmdt02CComponent implements OnInit {
       next: (data) => {
         this.data = data;
         this.patchForm(data);
+        this.loadLinkedTestCases(id, data.projectId || this.projectId);
       },
       error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
     });
+  }
+
+  loadLinkedTestCases(taskId: string, projectId?: string) {
+    this.testCasesLoading.set(true);
+    const params: any = { page: 0, size: 1000 };
+    if (projectId) params.projectId = projectId;
+
+    this.http.get<any>(`${environment.apiBaseUrl}/api/pm/test-cases/paging`, { params }).subscribe({
+      next: (res) => {
+        const list: any[] = res?.content || res?.data || (Array.isArray(res) ? res : []);
+        const matching = list.filter((tc: any) => tc.taskId === taskId && !tc.isDelete);
+        this.linkedTestCases.set(matching);
+        this.testCasesLoading.set(false);
+      },
+      error: () => {
+        this.linkedTestCases.set([]);
+        this.testCasesLoading.set(false);
+      },
+    });
+  }
+
+  getTestStatusBadgeClass(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'pass' || s === 'passed') {
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700';
+    }
+    if (s === 'fail' || s === 'failed') {
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700 font-bold';
+    }
+    if (s === 'blocked') {
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700';
+    }
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+  }
+
+  getTestStatusLabel(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'pass' || s === 'passed') return '✅ ผ่าน (Pass)';
+    if (s === 'fail' || s === 'failed') return '❌ ไม่ผ่าน (Fail)';
+    if (s === 'blocked') return '🚧 ติดปัญหา (Blocked)';
+    return '⏳ รอทดสอบ (Pending)';
   }
 
   patchForm(data: TaskResponse) {

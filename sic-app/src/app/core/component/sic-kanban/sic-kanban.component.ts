@@ -627,5 +627,15 @@ export class SicKanbanComponent {
     if (p.includes('low')) return 'Low';
     return 'Normal';
   }
+
+  onTaskQuickStatusChange(task: TaskResponse, targetStatus: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.taskStatusChange.emit({
+      taskId: task.id,
+      task: task,
+      oldStatus: task.status || 'Todo',
+      newStatus: targetStatus,
+    });
+  }
 }
 

@@ -139,8 +139,9 @@ export class Burt04AComponent implements OnInit {
       .getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (page) => {
-          const mapped = page.content.map((m) => ({
+        next: (res) => {
+          const membersList = res?.data || [];
+          const mapped = membersList.map((m) => ({
             ...m,
             userName: m.userName || m.userId,
             userEmail: m.userEmail || '',
@@ -148,7 +149,7 @@ export class Burt04AComponent implements OnInit {
             isDefault: m.isDefault || false,
           }));
           this.members.set(mapped);
-          this.totalItems.set(page.totalElements);
+          this.totalItems.set(res?.pageable?.totalElements ?? membersList.length);
         },
         error: (err) => {
           console.error('Load members error', err);

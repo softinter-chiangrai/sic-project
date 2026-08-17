@@ -53,6 +53,8 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   testCaseId: string | null = null;
   taskOptions = signal<{ value: string; text: string }[]>([]);
   taskLoading = signal(false);
+  linkedTaskStatus = signal<string | null>(null);
+  isTaskReadyForTest = signal(true);
 
   scenarioOptions = signal<{ value: string; text: string }[]>([]);
   scenarioLoading = signal(false);
@@ -220,6 +222,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     this.service.getTaskById(taskId).subscribe({
       next: (taskDetail) => {
         if (taskDetail) {
+          this.checkTaskStatus(taskDetail.status);
           const specId = taskDetail.specificationId;
           const specCode = taskDetail.specificationCode;
           const specTitle = taskDetail.specificationTitle;
@@ -251,6 +254,18 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  checkTaskStatus(status?: string | null): void {
+    this.linkedTaskStatus.set(status || null);
+    if (!status) {
+      this.isTaskReadyForTest.set(true);
+      return;
+    }
+    const s = status.toLowerCase();
+    // Only 'waiting review' or 'review' is ready for test execution
+    const isReady = s === 'waiting review' || s === 'review';
+    this.isTaskReadyForTest.set(isReady);
+  }
+
   loadTestCase(id: string): void {
     this.isLoading.set(true);
     this.service.getTestCaseById(id).subscribe({
@@ -258,6 +273,15 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         if (data.projectId) {
           this.loadTasks(data.projectId);
           this.loadScenarios(data.projectId);
+        }
+        if (data.taskId) {
+          this.service.getTaskById(data.taskId).subscribe({
+            next: (task) => {
+              if (task) {
+                this.checkTaskStatus(task.status);
+              }
+            },
+          });
         }
         this.formData.form.patchValue(data);
         if (data.scenarioName && !data.scenarioId) {
@@ -287,20 +311,17 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    if (this.isExecution() && !this.isTaskReadyForTest()) {
+      this.dialog.warn(
+        'ไม่สามารถบันทึกผลการทดสอบได้',
+        `Task ที่ผูกอยู่นี้ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Waiting Review)" ปัจจุบันสถานะคือ "${this.linkedTaskStatus() || 'ยังไม่พร้อม'}" รอให้ Dev ส่งงานก่อนจึงจะสามารถทดสอบได้`
+      );
+      return;
+    }
+
     const data = { ...this.formData.value };
     data.state = this.isEdit() || this.isExecution() ? 3 : 4;
-
-    if (this.isExecution() && data.testStatus === 'Fail') {
-      this.dialog.confirm('แจ้งเตือน', 'ต้องการสร้าง Bug จากผลการทดสอบนี้หรือไม่?').then((confirmed) => {
-        if (confirmed) {
-          this.createBugAndSave(data);
-        } else {
-          this.saveExecution(data);
-        }
-      });
-    } else {
-      this.saveExecution(data);
-    }
+    this.saveExecution(data);
   }
 
   saveExecution(data: any) {
@@ -320,32 +341,66 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  createBugAndSave(data: any) {
+  createBugTaskAndSave(data: any) {
     this.isSaving.set(true);
-    const bugData = {
-      projectId: data.projectId,
-      bugCode: 'BUG-' + Math.floor(1000 + Math.random() * 9000),
-      title: `Bug จาก Test Case: ${data.testCaseCode} - ${data.title || ''}`,
-      description: `พบปัญหาในการทดสอบ ${data.testCaseCode}\n\nผลลัพธ์จริง: ${data.actualResult || ''}`,
-      severity: 'Medium',
-      priority: data.priority || 'High',
-      status: 'Open',
-      testCaseId: data.id,
-      testCaseCode: data.testCaseCode,
-      relatedSpec: data.relatedSpec,
-      state: 4,
+
+    // If test case has a related Task, fetch its details to copy workPackageId & specificationId
+    if (data.taskId) {
+      this.service.getTaskById(data.taskId).subscribe({
+        next: (parentTask) => {
+          this.dispatchCreateTask(data, parentTask);
+        },
+        error: () => {
+          this.dispatchCreateTask(data, null);
+        },
+      });
+    } else {
+      this.dispatchCreateTask(data, null);
+    }
+  }
+
+  private dispatchCreateTask(data: any, parentTask: any) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+    
+    // Format description with rich details
+    let desc = `<b>[BUG จากผลการทดสอบ: ${data.testCaseCode || ''}]</b><br/><br/>`;
+    if (data.title) desc += `<b>หัวข้อ:</b> ${data.title}<br/>`;
+    if (data.testStep) desc += `<b>ขั้นตอนการทดสอบ:</b><br/>${data.testStep}<br/>`;
+    if (data.expectedResult) desc += `<b>ผลลัพธ์ที่คาดหวัง:</b><br/>${data.expectedResult}<br/>`;
+    if (data.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${data.actualResult}<br/>`;
+    if (data.tester) desc += `<b>ผู้ทดสอบ:</b> ${data.tester}<br/>`;
+
+    const taskPayload: any = {
+      taskCode: bugCode,
+      taskName: `[BUG] ${data.title || data.testCaseCode}`,
+      description: desc,
+      priority: data.priority === 'High' ? 'Critical' : (data.priority || 'High'),
+      status: 'Waiting Fix', // Put into Waiting Fix column in Kanban
+      startDate: `${todayStr}T09:00:00Z`,
+      endDate: `${todayStr}T18:00:00Z`,
+      estimateManday: 1,
+      workPackageId: parentTask?.workPackageId || null,
+      specificationId: parentTask?.specificationId || null,
+      assignedTo: parentTask?.assignedTo || null,
+      assigneeIds: parentTask?.assigneeIds || [],
     };
 
-    this.service.createBugFromTest(bugData).subscribe({
-      next: () => {
-        this.saveExecution(data);
-      },
-      error: (err) => {
-        console.error('Create bug error:', err);
-        // If bug create fails, still save test case
-        this.saveExecution(data);
-      },
-    });
+    if (taskPayload.workPackageId) {
+      this.service.createTask(taskPayload).subscribe({
+        next: () => {
+          this.saveExecution(data);
+        },
+        error: (err) => {
+          console.error('Error creating bug task:', err);
+          // If task creation fails, still save test case
+          this.saveExecution(data);
+        },
+      });
+    } else {
+      // If no work package linked, proceed to save test case
+      this.saveExecution(data);
+    }
   }
 
   onBack(): void {

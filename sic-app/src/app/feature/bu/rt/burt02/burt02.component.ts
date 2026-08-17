@@ -115,8 +115,8 @@ export class Burt02Component implements OnInit {
     this.roleService.getRoles(businessId).subscribe({
       next: (roles) => {
         this.burt04Service.getMembers(businessId, 0, 1000).subscribe({
-          next: (page) => {
-            const members = page.content || [];
+          next: (res) => {
+            const members = res?.data || [];
             const userCountMap = new Map<string, number>();
 
             members.forEach((member) => {

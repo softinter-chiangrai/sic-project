@@ -443,6 +443,7 @@
           [workPackages]="allWorkPackages()"
           [milestones]="phase()?.milestones || []"
           [allowCreate]="false"
+          [readonly]="false"
           (taskStatusChange)="onKanbanTaskStatusChange($event)"
           (taskClick)="onKanbanTaskClick($event)"
           (taskEdit)="onKanbanTaskClick($event)"

@@ -21,6 +21,7 @@ export interface PmTestCaseModel extends SicBaseStateModel {
   taskId?: string;
   taskCode?: string;
   taskName?: string;
+  taskStatus?: string;
   createdDate?: string;
   updatedDate?: string;
 }

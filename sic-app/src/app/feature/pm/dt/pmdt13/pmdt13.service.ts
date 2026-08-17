@@ -35,6 +35,14 @@ export class Pmdt13Service {
     return this.http.delete<void>(`${this.apiBase}/api/pm/test-cases/${id}`);
   }
 
+  getTaskById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiBase}/api/pm/tasks/${id}`);
+  }
+
+  createTask(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/api/pm/tasks`, data);
+  }
+
   getTestScenarios(projectId?: string | null): Observable<PmTestScenarioModel[]> {
     let params = new HttpParams();
     if (projectId) params = params.set('projectId', projectId);

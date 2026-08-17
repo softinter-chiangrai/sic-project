@@ -269,3 +269,47 @@
   --text-active: var(--dark-text-active);
   --border: var(--dark-border);
 }
+
+/* ========================================================
+   Rich Text / Tiptap HTML Render Styles (lists, formats)
+   ======================================================== */
+.prose-xs ol,
+.prose-sm ol,
+.prose ol,
+.rich-text-content ol,
+[class*="prose"] ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.prose-xs ul,
+.prose-sm ul,
+.prose ul,
+.rich-text-content ul,
+[class*="prose"] ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.prose-xs li,
+.prose-sm li,
+.prose li,
+.rich-text-content li,
+[class*="prose"] li {
+  display: list-item !important;
+  list-style-position: outside !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.prose-xs li > p,
+.prose-sm li > p,
+.prose li > p,
+.rich-text-content li > p,
+[class*="prose"] li > p {
+  display: inline !important;
+  margin: 0 !important;
+}

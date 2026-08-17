@@ -31,6 +31,7 @@ export class Pmdt13Component implements OnInit {
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected filterPriority = signal('all');
+  protected filterTaskStatus = signal('all');
   protected isLoading = signal(false);
 
   // ===== Data =====
@@ -39,6 +40,10 @@ export class Pmdt13Component implements OnInit {
 
   // Track expanded accordion IDs ('unassigned' for null scenario)
   protected expandedScenarioIds = signal<Set<string>>(new Set());
+
+  // Pagination for each scenario test case table (scenarioId -> pageNumber 1-based)
+  protected scenarioPageMap = signal<Map<string, number>>(new Map());
+  protected readonly pageSize = 10;
 
   // ===== Options =====
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
@@ -51,6 +56,7 @@ export class Pmdt13Component implements OnInit {
     const search = this.searchTerm().trim().toLowerCase();
     const status = this.filterStatus();
     const priority = this.filterPriority();
+    const taskStatus = this.filterTaskStatus();
 
     // 1. Filter test cases
     const filteredCases = rawTestCases.filter((tc) => {
@@ -61,6 +67,13 @@ export class Pmdt13Component implements OnInit {
       // Filter priority
       if (priority !== 'all' && (tc.priority || '').toLowerCase() !== priority.toLowerCase()) {
         return false;
+      }
+      // Filter taskStatus
+      if (taskStatus === 'ready') {
+        const ts = (tc.taskStatus || '').toLowerCase();
+        if (ts !== 'waiting review' && ts !== 'review') return false;
+      } else if (taskStatus !== 'all') {
+        if ((tc.taskStatus || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
       }
       // Search keyword
       if (search) {
@@ -144,7 +157,7 @@ export class Pmdt13Component implements OnInit {
 
     forkJoin({
       scenarios: this.service.getTestScenarios(projectId),
-      testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'createdDate', 'DESC'),
+      testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'testCaseCode', 'ASC'),
     })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
@@ -208,25 +221,75 @@ export class Pmdt13Component implements OnInit {
     this.expandedScenarioIds.set(new Set());
   }
 
+  // ===== Scenario Pagination Helpers =====
+  getScenarioPage(scenarioId?: string | null): number {
+    const key = scenarioId || 'unassigned';
+    return this.scenarioPageMap().get(key) || 1;
+  }
+
+  getScenarioTotalPages(totalItems: number): number {
+    return Math.max(1, Math.ceil(totalItems / this.pageSize));
+  }
+
+  setScenarioPage(scenarioId: string | null | undefined, page: number, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    const key = scenarioId || 'unassigned';
+    const current = new Map(this.scenarioPageMap());
+    current.set(key, page);
+    this.scenarioPageMap.set(current);
+  }
+
+  getPagedTestCases(testCases: PmTestCaseModel[], scenarioId?: string | null): PmTestCaseModel[] {
+    const page = this.getScenarioPage(scenarioId);
+    const startIndex = (page - 1) * this.pageSize;
+    return testCases.slice(startIndex, startIndex + this.pageSize);
+  }
+
   // ===== Filters =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.scenarioPageMap.set(new Map());
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.scenarioPageMap.set(new Map());
   }
 
   onFilterStatusChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
+    this.scenarioPageMap.set(new Map());
   }
 
   onFilterPriorityChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterPriority.set(select.value);
+    this.scenarioPageMap.set(new Map());
   }
+
+  onFilterTaskStatusChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterTaskStatus.set(select.value);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  setQuickFilterReady() {
+    if (this.filterTaskStatus() === 'ready') {
+      this.filterTaskStatus.set('all');
+    } else {
+      this.filterTaskStatus.set('ready');
+    }
+    this.scenarioPageMap.set(new Map());
+  }
+
+  readyToTestCount = computed(() => {
+    return this.testCases().filter((tc) => {
+      const ts = (tc.taskStatus || '').toLowerCase();
+      return ts === 'waiting review' || ts === 'review';
+    }).length;
+  });
 
   // ===== Actions: Test Scenario =====
   goToAddScenario() {
@@ -315,6 +378,75 @@ export class Pmdt13Component implements OnInit {
     });
   }
 
+  quickCreateBugTask(testCase: PmTestCaseModel, event: MouseEvent) {
+    event.stopPropagation();
+    this.dialog
+      .confirm(
+        'สร้าง Bug Task',
+        `ต้องการสร้าง Bug Task สำหรับ Test Case "${testCase.testCaseCode}" ไปยังหน้ารายการงาน (Task Board) หรือไม่?`
+      )
+      .then((ok) => {
+        if (ok) {
+          this.dispatchQuickBugTask(testCase);
+        }
+      });
+  }
+
+  private dispatchQuickBugTask(testCase: PmTestCaseModel) {
+    if (testCase.taskId) {
+      this.service.getTaskById(testCase.taskId).subscribe({
+        next: (parentTask) => {
+          this.executeCreateBugTask(testCase, parentTask);
+        },
+        error: () => {
+          this.executeCreateBugTask(testCase, null);
+        },
+      });
+    } else {
+      this.executeCreateBugTask(testCase, null);
+    }
+  }
+
+  private executeCreateBugTask(testCase: PmTestCaseModel, parentTask: any) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+
+    let desc = `<b>[BUG จากผลการทดสอบ: ${testCase.testCaseCode || ''}]</b><br/><br/>`;
+    if (testCase.title) desc += `<b>หัวข้อ:</b> ${testCase.title}<br/>`;
+    if (testCase.testStep) desc += `<b>ขั้นตอนการทดสอบ:</b><br/>${testCase.testStep}<br/>`;
+    if (testCase.expectedResult) desc += `<b>ผลลัพธ์ที่คาดหวัง:</b><br/>${testCase.expectedResult}<br/>`;
+    if (testCase.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${testCase.actualResult}<br/>`;
+    if (testCase.tester) desc += `<b>ผู้ทดสอบ:</b> ${testCase.tester}<br/>`;
+
+    const taskPayload: any = {
+      taskCode: bugCode,
+      taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
+      description: desc,
+      priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
+      status: 'Waiting Fix',
+      startDate: `${todayStr}T09:00:00Z`,
+      endDate: `${todayStr}T18:00:00Z`,
+      estimateManday: 1,
+      workPackageId: parentTask?.workPackageId || null,
+      specificationId: parentTask?.specificationId || null,
+      assignedTo: parentTask?.assignedTo || null,
+      assigneeIds: parentTask?.assigneeIds || [],
+    };
+
+    if (taskPayload.workPackageId) {
+      this.service.createTask(taskPayload).subscribe({
+        next: () => {
+          this.dialog.success('สร้าง Bug สำเร็จ', `สร้าง Bug Task (${bugCode}) เข้าสู่ระบบ Task Board เรียบร้อยแล้ว`);
+        },
+        error: (err) => {
+          this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
+        },
+      });
+    } else {
+      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task หรือ Work Package จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
+    }
+  }
+
   // ===== Badges & Utilities =====
   getStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
@@ -394,6 +526,32 @@ export class Pmdt13Component implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+
+  getTaskStatusClass(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (['waiting review', 'review'].includes(s)) {
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse';
+    }
+    if (['waiting fix', 'blocked'].includes(s)) {
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700';
+    }
+    if (['in progress', 'doing'].includes(s)) {
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700';
+    }
+    if (['done', 'completed'].includes(s)) {
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700';
+    }
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+  }
+
+  getTaskStatusLabel(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (['waiting review', 'review'].includes(s)) return '⏳ พร้อมทดสอบ (Review)';
+    if (['waiting fix', 'blocked'].includes(s)) return '🚨 รอแก้ไข (Fix)';
+    if (['in progress', 'doing'].includes(s)) return '🛠️ กำลังพัฒนา';
+    if (['done', 'completed'].includes(s)) return '✅ Done';
+    return status || 'To Do';
   }
 }
 

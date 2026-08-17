@@ -99,7 +99,45 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             entity = testCaseRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
         }
+
+        // Auto-sync Task status based on Test Case result
+        syncLinkedTaskStatus(entity);
+
         return entity.getId();
+    }
+
+    private void syncLinkedTaskStatus(PmTestCase entity) {
+        if (entity.getTaskId() == null) return;
+        try {
+            taskRepository.findById(entity.getTaskId()).ifPresent(task -> {
+                if (task.getIsDelete() != null && task.getIsDelete()) return;
+
+                List<PmTestCase> allCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(task.getId());
+                if (allCases.isEmpty()) return;
+
+                boolean anyFail = allCases.stream()
+                        .anyMatch(tc -> "Fail".equalsIgnoreCase(tc.getTestStatus()) || "Failed".equalsIgnoreCase(tc.getTestStatus()));
+                boolean allPass = allCases.stream()
+                        .allMatch(tc -> "Pass".equalsIgnoreCase(tc.getTestStatus()) || "Passed".equalsIgnoreCase(tc.getTestStatus()));
+
+                if (anyFail) {
+                    // If any test case fails, push task to Waiting Fix
+                    task.setStatus("Waiting Fix");
+                    taskRepository.save(task);
+                    log.info("Auto-updated Task {} status to 'Waiting Fix' due to failed test case", task.getId());
+                } else if (allPass) {
+                    // If all test cases pass, complete the task
+                    task.setStatus("Done");
+                    if (task.getActualEnd() == null) {
+                        task.setActualEnd(Instant.now());
+                    }
+                    taskRepository.save(task);
+                    log.info("Auto-updated Task {} status to 'Done' because all test cases passed", task.getId());
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error auto-syncing task status from test case", e);
+        }
     }
 
     @Override
@@ -160,6 +198,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             taskRepository.findById(entity.getTaskId()).ifPresent(task -> {
                 res.setTaskCode(task.getTaskCode());
                 res.setTaskName(task.getTaskName());
+                res.setTaskStatus(task.getStatus());
             });
         }
         res.setCreatedDate(entity.getCreatedDate());

@@ -38,7 +38,12 @@ export class Pmdt13AService {
     return this.http.get<any[]>(`${this.apiBase}/api/pm/tasks/combobox`, { params });
   }
 
+  createTask(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/api/pm/tasks`, data);
+  }
+
   createBugFromTest(data: any): Observable<string> {
     return this.http.post<string>(`${this.apiBase}/api/pm/bugs/save`, data);
   }
 }
+
