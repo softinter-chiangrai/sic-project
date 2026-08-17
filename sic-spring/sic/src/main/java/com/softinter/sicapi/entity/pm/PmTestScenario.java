@@ -21,6 +21,9 @@ public class PmTestScenario extends BaseBusinessEntity {
     @Column(name = "test_plan_id")
     private UUID testPlanId;
 
+    @Column(name = "task_id")
+    private UUID taskId;
+
     @Column(name = "scenario_name", nullable = false, length = 255)
     private String scenarioName;
 
@@ -32,4 +35,9 @@ public class PmTestScenario extends BaseBusinessEntity {
 
     @Column(name = "prerequisite", columnDefinition = "TEXT")
     private String prerequisite;
+
+    // ===== Relationships =====
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @jakarta.persistence.JoinColumn(name = "task_id", insertable = false, updatable = false)
+    private PmTask task;
 }

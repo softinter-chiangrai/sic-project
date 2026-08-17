@@ -95,7 +95,7 @@
       <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
       สร้างเอกสารที่เกี่ยวข้อง
     </h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
       <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
       <button
         (click)="createDiagram()"
@@ -126,6 +126,13 @@
       >
         <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
         <span>Task</span>
+      </button>
+      <button
+        (click)="createTestScenario()"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
+      >
+        <i class="bi bi-journal-text text-xl text-[var(--crm-primary)]"></i>
+        <span>Test Scenario</span>
       </button>
       <button
         (click)="createTest()"

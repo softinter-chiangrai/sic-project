@@ -53,6 +53,9 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   taskOptions = signal<{ value: string; text: string }[]>([]);
   taskLoading = signal(false);
 
+  scenarioOptions = signal<{ value: string; text: string }[]>([]);
+  scenarioLoading = signal(false);
+
   // Multi-tester support
   businessId = signal<string | null>(null);
   testerValues = signal<string[]>([]);
@@ -97,8 +100,10 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     if (pId) {
       this.formData.form.patchValue({ projectId: pId });
       this.loadTasks(pId);
+      this.loadScenarios(pId);
     } else {
       this.loadTasks();
+      this.loadScenarios();
     }
 
     this.route.params.subscribe((params) => {
@@ -108,6 +113,35 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         this.isEdit.set(!this.isView() && !this.isExecution());
         this.loadTestCase(id);
       }
+    });
+  }
+
+  loadScenarios(projectId?: string): void {
+    this.scenarioLoading.set(true);
+    this.service.getTestScenarios(projectId).subscribe({
+      next: (scenarios) => {
+        const list = (scenarios || []).map((s: any) => ({
+          value: s.id,
+          text: s.scenarioName,
+        }));
+        this.scenarioOptions.set(list);
+        this.scenarioLoading.set(false);
+      },
+      error: () => {
+        this.scenarioLoading.set(false);
+      },
+    });
+  }
+
+  onScenarioChange(scenarioId: string | null): void {
+    if (!scenarioId) {
+      this.formData.form.patchValue({ scenarioId: null, scenarioName: null });
+      return;
+    }
+    const found = this.scenarioOptions().find((s) => s.value === scenarioId);
+    this.formData.form.patchValue({
+      scenarioId: scenarioId,
+      scenarioName: found ? found.text : null,
     });
   }
 

@@ -385,12 +385,32 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt09Resolver },
   },
 
-  // ===== Task Tracking, Bug & Test Management (pmdt10) =====
+  // ===== Test Scenario Management (pmdt10) =====
+  {
+    path: 'test-scenario',
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then(m => m.Pmdt10Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt10Resolver },
+  },
   {
     path: 'pmdt10',
     loadComponent: () => import('./dt/pmdt10/pmdt10.component').then(m => m.Pmdt10Component),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt10Resolver },
+  },
+  {
+    path: 'test-scenario/new',
+    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt10AResolver },
+  },
+  {
+    path: 'test-scenario/:id/edit',
+    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt10AResolver },
   },
   {
     path: 'pmdt10/pmdt10A',
@@ -405,34 +425,6 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt10AResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10B',
-    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then(m => m.Pmdt10BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10BResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10B/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then(m => m.Pmdt10BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10BResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10C',
-    loadComponent: () => import('./dt/pmdt10/pmdt10C/pmdt10C.component').then(m => m.Pmdt10CComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10CResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10C/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10C/pmdt10C.component').then(m => m.Pmdt10CComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10CResolver },
   },
 
   // ===== Design Review =====

@@ -379,7 +379,16 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/test-case'], {
+    this.navigation.navigate(['/feature/pm/test-case/new'], {
+      queryParams: { projectId: projId, requirementId: reqId },
+    });
+  }
+
+  createTestScenario() {
+    const reqId = this.requirementId();
+    const projId = this.projectId();
+    if (!projId) return;
+    this.navigation.navigate(['/feature/pm/test-scenario'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

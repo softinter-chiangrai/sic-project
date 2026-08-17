@@ -72,3 +72,5 @@ CREATE INDEX IF NOT EXISTS idx_audit_business ON su_audit_log (business_id);
 ALTER TABLE pm_test_case ADD COLUMN task_id UUID;
 ALTER TABLE pm_test_case ADD COLUMN IF NOT EXISTS scenario_name VARCHAR(255);
 ALTER TABLE pm_test_case ALTER COLUMN scenario_id DROP NOT NULL;
+
+ALTER TABLE pm_test_scenario ADD COLUMN IF NOT EXISTS task_id UUID;

@@ -53,12 +53,14 @@
             ></sic-input>
           </div>
           <div>
-            <sic-input
+            <sic-combobox
               label="Test Scenario"
-              formControlName="scenarioName"
+              formControlName="scenarioId"
+              [items]="scenarioOptions()"
               [disabled]="isView() || isExecution()"
-              placeholder="ระบุ Scenario"
-            ></sic-input>
+              placeholder="เลือก Test Scenario"
+              (selectionChanged)="onScenarioChange($event?.value || $event?.id || $event || null)"
+            ></sic-combobox>
           </div>
           <div>
             <sic-combobox

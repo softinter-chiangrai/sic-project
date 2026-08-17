@@ -189,3 +189,32 @@
     transform: scale(1);
   }
 }
+
+/* ====== TipTap Content Styling (Overrides Tailwind CSS Reset) ====== */
+::ng-deep .ProseMirror ul,
+::ng-deep .ate-editor ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+::ng-deep .ProseMirror ol,
+::ng-deep .ate-editor ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+::ng-deep .ProseMirror li,
+::ng-deep .ate-editor li {
+  margin-bottom: 0.25rem;
+  display: list-item !important;
+}
+
+::ng-deep .ProseMirror blockquote,
+::ng-deep .ate-editor blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: var(--text-muted);
+}

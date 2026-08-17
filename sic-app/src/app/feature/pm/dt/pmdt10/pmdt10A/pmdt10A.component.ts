@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Pmdt10Service } from '../pmdt10.service';
 import { Pmdt10AForm } from './pmdt10A.form';
-import { PmBugModel } from '../pmdt10.model';
+import { PmTestScenarioModel } from '../pmdt10.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -12,8 +12,9 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 
 @Component({
   selector: 'app-pmdt10a',
@@ -25,8 +26,9 @@ import { SicInputAreaComponent } from '../../../../../core/component/sic-input-a
     SicButtonComponent,
     SicInputComponent,
     SicComboboxComponent,
-    SicDatepickerComponent,
-    SicInputAreaComponent
+    SicCheckboxComponent,
+    SicInputAreaComponent,
+    SicTiptapEditorComponent
   ],
   templateUrl: './pmdt10A.component.html',
   styleUrls: ['./pmdt10A.component.css']
@@ -39,78 +41,83 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  formData!: SicFromData<PmBugModel>;
+  formData!: SicFromData<PmTestScenarioModel>;
   isEdit = signal(false);
   isLoading = signal(false);
   isSaving = signal(false);
-  bugId: string | null = null;
+  scenarioId: string | null = null;
+
+  taskOptions = signal<{ value: string; text: string }[]>([]);
+  taskLoading = signal(false);
 
   pageDirty = () => this.formData?.dirty ?? false;
 
-  severityOptions = [
-    { value: 'Critical', text: 'Critical' },
-    { value: 'High', text: 'High' },
-    { value: 'Medium', text: 'Medium' },
-    { value: 'Low', text: 'Low' }
-  ];
-
-  priorityOptions = [
-    { value: 'Urgent', text: 'Urgent' },
-    { value: 'High', text: 'High' },
-    { value: 'Medium', text: 'Medium' },
-    { value: 'Low', text: 'Low' }
-  ];
-
-  statusOptions = [
-    { value: 'Open', text: 'Open' },
-    { value: 'In Progress', text: 'In Progress' },
-    { value: 'Fixed', text: 'Fixed' },
-    { value: 'Closed', text: 'Closed' },
-    { value: 'Rejected', text: 'Rejected' }
-  ];
-
-  environmentOptions = [
-    { value: 'Dev', text: 'Development' },
-    { value: 'Staging', text: 'Staging' },
-    { value: 'Prod', text: 'Production' }
-  ];
-
-  issueTypeOptions = [
-    { value: 'Bug', text: 'Bug' },
-    { value: 'Issue', text: 'Issue' },
-    { value: 'Enhancement', text: 'Enhancement' }
-  ];
-
   ngOnInit(): void {
-    this.formData = new SicFromData<PmBugModel>(Pmdt10AForm.createForm(this.fb));
+    this.formData = new SicFromData<PmTestScenarioModel>(Pmdt10AForm.createForm(this.fb));
     const pId = this.customerState.getProjectId();
     if (pId) {
       this.formData.form.patchValue({ projectId: pId });
+      this.loadTasks(pId);
+    } else {
+      this.loadTasks();
     }
 
     const id = this.route.snapshot.params['id'];
     if (id) {
-      this.bugId = id;
+      this.scenarioId = id;
       this.isEdit.set(true);
-      this.loadBug(id);
-    } else {
-      // Auto-generate code draft
-      const randomCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
-      this.formData.form.patchValue({ bugCode: randomCode, foundDate: new Date().toISOString() });
+      this.loadScenario(id);
     }
   }
 
-  loadBug(id: string): void {
+  loadTasks(projectId?: string): void {
+    if (!projectId) return;
+    this.taskLoading.set(true);
+    this.service.getTasksByProject(projectId).subscribe({
+      next: (tasks) => {
+        const list = (tasks || []).map((t: any) => ({
+          value: t.value || t.id,
+          text: t.text || `${t.taskCode} - ${t.taskName}`,
+        }));
+        this.taskOptions.set(list);
+        this.taskLoading.set(false);
+      },
+      error: () => {
+        this.taskLoading.set(false);
+      }
+    });
+  }
+
+  onTaskChange(taskId: string | null): void {
+    if (!taskId) {
+      this.formData.form.patchValue({
+        taskId: null,
+        taskCode: null,
+        taskName: null,
+      });
+      return;
+    }
+    const selected = this.taskOptions().find((o) => o.value === taskId);
+    this.formData.form.patchValue({
+      taskId: taskId,
+      taskName: selected ? selected.text : null,
+    });
+  }
+
+  loadScenario(id: string): void {
     this.isLoading.set(true);
-    this.service.getBugById(id).subscribe({
+    this.service.getTestScenarioById(id).subscribe({
       next: (data) => {
-        this.formData.form.patchValue(data);
+        this.formData.form.patchValue({
+          ...data,
+          status: data.status || 'Active'
+        });
         this.formData.markAsPristine();
         this.isLoading.set(false);
       },
       error: () => {
         this.isLoading.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบข้อมูล Bug นี้');
+        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบข้อมูล Test Scenario นี้');
         this.onBack();
       }
     });
@@ -119,19 +126,23 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลที่จำเป็นให้ถูกต้อง');
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อ Test Scenario');
       return;
     }
 
     this.isSaving.set(true);
-    const data = { ...this.formData.value };
+    const formVal: any = this.formData.value;
+    const data = {
+      ...formVal,
+      status: formVal.status || 'Active'
+    };
     data.state = this.isEdit() ? 3 : 4;
 
-    this.service.saveBug(data).subscribe({
+    this.service.saveTestScenario(data).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.formData.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Bug / Issue เรียบร้อยแล้ว').then(() => {
+        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Test Scenario เรียบร้อยแล้ว').then(() => {
           this.onBack();
         });
       },

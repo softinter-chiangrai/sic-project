@@ -10,6 +10,9 @@ public class PmTestScenarioResponse {
     private UUID id;
     private UUID projectId;
     private UUID testPlanId;
+    private UUID taskId;
+    private String taskCode;
+    private String taskName;
     private String scenarioName;
     private String description;
     private String prerequisite;

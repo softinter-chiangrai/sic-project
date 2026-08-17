@@ -2,181 +2,70 @@
   <!-- Top Bar -->
   <div class="pmdt10-header">
     <div class="header-title">
-      <h2>🐞 Task Tracking & Quality Management</h2>
-      <p class="subtitle">จัดการ Bug/Issue, Test Cases และ Test Scenarios ของโครงการ</p>
+      <h2>📋 จัดการ Test Scenarios</h2>
+      <p class="subtitle">รายการกลุ่มสถานการณ์และหมวดหมู่การทดสอบของโครงการ</p>
     </div>
     <div class="header-actions">
-      @if (activeTab() === 'bugs') {
-        <button sic-button variant="primary" (click)="onCreateBug()">+ สร้าง Bug / Issue</button>
-      } @else if (activeTab() === 'test-cases') {
-        <button sic-button variant="primary" (click)="onCreateTestCase()">+ สร้าง Test Case</button>
-      } @else if (activeTab() === 'scenarios') {
-        <button sic-button variant="primary" (click)="onCreateScenario()">+ สร้าง Test Scenario</button>
-      }
+      <button sic-button variant="primary" (click)="onCreateScenario()">
+        <i class="bi bi-plus-lg"></i>
+        + เพิ่ม Test Scenario
+      </button>
     </div>
-  </div>
-
-  <!-- Tabs Nav -->
-  <div class="tabs-nav">
-    <button class="tab-btn" [class.active]="activeTab() === 'bugs'" (click)="setTab('bugs')">
-      🐞 Bug & Issue Tracking
-    </button>
-    <button class="tab-btn" [class.active]="activeTab() === 'test-cases'" (click)="setTab('test-cases')">
-      🧪 Test Cases
-    </button>
-    <button class="tab-btn" [class.active]="activeTab() === 'scenarios'" (click)="setTab('scenarios')">
-      📋 Test Scenarios
-    </button>
   </div>
 
   <!-- Filter & Search -->
   <div class="filter-bar">
     <div class="search-input">
-      <input type="text" [(ngModel)]="keyword" (keyup.enter)="onSearch()" placeholder="ค้นหารหัส, หัวข้อ, คำอธิบาย..." class="form-control" />
+      <input
+        type="text"
+        [(ngModel)]="keyword"
+        (input)="onSearch()"
+        (keyup.enter)="onSearch()"
+        placeholder="ค้นหาชื่อ Scenario, คำอธิบาย, Prerequisite..."
+        class="form-control"
+      />
       <button sic-button variant="outline" (click)="onSearch()">ค้นหา</button>
     </div>
   </div>
 
-  <!-- Content Areas -->
+  <!-- Table -->
   <div class="tab-content">
-    <!-- TAB 1: BUGS -->
-    @if (activeTab() === 'bugs') {
-      <div class="table-card">
-        <table class="sic-table">
-          <thead>
-            <tr>
-              <th>รหัส Bug</th>
-              <th>หัวข้อ Bug / Issue</th>
-              <th>ประเภท</th>
-              <th>ความรุนแรง (Severity)</th>
-              <th>สถานะ</th>
-              <th>ผู้รับผิดชอบ</th>
-              <th>พบเมื่อ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr><td colspan="8" class="text-center">กำลังโหลดข้อมูล...</td></tr>
-            } @else if (bugs().length === 0) {
-              <tr><td colspan="8" class="text-center">ไม่พบรายการ Bug/Issue</td></tr>
-            } @else {
-              @for (bug of bugs(); track bug.id) {
-                <tr>
-                  <td class="font-bold">{{ bug.bugCode }}</td>
-                  <td>
-                    <a (click)="onEditBug(bug.id!)" class="link-title">{{ bug.title }}</a>
-                    @if (bug.environment) {
-                      <span class="env-tag">[{{ bug.environment }}]</span>
-                    }
-                  </td>
-                  <td>{{ bug.issueType || 'Bug' }}</td>
-                  <td>
-                    <span class="badge" [ngClass]="getSeverityClass(bug.severity)">{{ bug.severity }}</span>
-                  </td>
-                  <td>
-                    <span class="status-badge" [ngClass]="getStatusClass(bug.status)">{{ bug.status }}</span>
-                  </td>
-                  <td>{{ bug.assignedTo || '-' }}</td>
-                  <td>{{ bug.foundDate | sicDate }}</td>
-                  <td class="actions">
-                    <button class="btn-icon" (click)="onEditBug(bug.id!)" title="แก้ไข">✏️</button>
-                    <button class="btn-icon text-danger" (click)="onDeleteBug(bug.id!)" title="ลบ">🗑️</button>
-                  </td>
-                </tr>
-              }
+    <div class="table-card">
+      <table class="sic-table">
+        <thead>
+          <tr>
+            <th>ชื่อ Test Scenario</th>
+            <th>คำอธิบาย</th>
+            <th>สิ่งที่ต้องเตรียมก่อนทดสอบ (Prerequisites)</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading()) {
+            <tr><td colspan="5" class="text-center">กำลังโหลดข้อมูล...</td></tr>
+          } @else if (filteredScenarios().length === 0) {
+            <tr><td colspan="5" class="text-center">ไม่พบรายการ Test Scenario</td></tr>
+          } @else {
+            @for (sc of filteredScenarios(); track sc.id) {
+              <tr>
+                <td class="font-bold">
+                  <a (click)="onEditScenario(sc.id!)" class="link-title">{{ sc.scenarioName }}</a>
+                </td>
+                <td>{{ sc.description || '-' }}</td>
+                <td>{{ sc.prerequisite || '-' }}</td>
+                <td>
+                  <span class="status-badge status-open">{{ sc.status || 'Active' }}</span>
+                </td>
+                <td class="actions">
+                  <button class="btn-icon" (click)="onEditScenario(sc.id!)" title="แก้ไข">✏️</button>
+                  <button class="btn-icon text-danger" (click)="onDeleteScenario(sc.id!)" title="ลบ">🗑️</button>
+                </td>
+              </tr>
             }
-          </tbody>
-        </table>
-      </div>
-    }
-
-    <!-- TAB 2: TEST CASES -->
-    @if (activeTab() === 'test-cases') {
-      <div class="table-card">
-        <table class="sic-table">
-          <thead>
-            <tr>
-              <th>รหัส Test Case</th>
-              <th>หัวข้อ Test Case</th>
-              <th>Scenario</th>
-              <th>ความสำคัญ</th>
-              <th>ผลการทดสอบ</th>
-              <th>ผู้ทดสอบ</th>
-              <th>วันที่ทดสอบ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr><td colspan="8" class="text-center">กำลังโหลดข้อมูล...</td></tr>
-            } @else if (testCases().length === 0) {
-              <tr><td colspan="8" class="text-center">ไม่พบรายการ Test Case</td></tr>
-            } @else {
-              @for (tc of testCases(); track tc.id) {
-                <tr>
-                  <td class="font-bold">{{ tc.testCaseCode }}</td>
-                  <td>
-                    <a (click)="onEditTestCase(tc.id!)" class="link-title">{{ tc.title || tc.testStep }}</a>
-                  </td>
-                  <td>{{ tc.scenarioName || '-' }}</td>
-                  <td>{{ tc.priority || 'Medium' }}</td>
-                  <td>
-                    <span class="status-badge" [ngClass]="getStatusClass(tc.testStatus)">{{ tc.testStatus }}</span>
-                  </td>
-                  <td>{{ tc.tester || '-' }}</td>
-                  <td>{{ tc.testDate | sicDate }}</td>
-                  <td class="actions">
-                    <button class="btn-icon" (click)="onEditTestCase(tc.id!)" title="แก้ไข">✏️</button>
-                    <button class="btn-icon text-danger" (click)="onDeleteTestCase(tc.id!)" title="ลบ">🗑️</button>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-
-    <!-- TAB 3: SCENARIOS -->
-    @if (activeTab() === 'scenarios') {
-      <div class="table-card">
-        <table class="sic-table">
-          <thead>
-            <tr>
-              <th>ชื่อ Test Scenario</th>
-              <th>คำอธิบาย</th>
-              <th>Prerequisites</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr><td colspan="5" class="text-center">กำลังโหลดข้อมูล...</td></tr>
-            } @else if (scenarios().length === 0) {
-              <tr><td colspan="5" class="text-center">ไม่พบรายการ Test Scenario</td></tr>
-            } @else {
-              @for (sc of scenarios(); track sc.id) {
-                <tr>
-                  <td class="font-bold">
-                    <a (click)="onEditScenario(sc.id!)" class="link-title">{{ sc.scenarioName }}</a>
-                  </td>
-                  <td>{{ sc.description || '-' }}</td>
-                  <td>{{ sc.prerequisite || '-' }}</td>
-                  <td>
-                    <span class="status-badge status-open">{{ sc.status || 'Active' }}</span>
-                  </td>
-                  <td class="actions">
-                    <button class="btn-icon" (click)="onEditScenario(sc.id!)" title="แก้ไข">✏️</button>
-                    <button class="btn-icon text-danger" (click)="onDeleteScenario(sc.id!)" title="ลบ">🗑️</button>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

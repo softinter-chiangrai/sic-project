@@ -1,58 +1,109 @@
-<div class="pmdt10a-container">
-  <div class="form-header">
-    <h2>{{ isEdit() ? '✏️ แก้ไข Bug / Issue' : '➕ บันทึก Bug / Issue ใหม่' }}</h2>
-    <div class="actions">
-      <button sic-button variant="outline" (click)="onBack()">ยกเลิก</button>
-      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
-        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
-      </button>
+<div class="pmdt10a-container max-w-4xl mx-auto py-4 space-y-6">
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
+    <div>
+      <h2 class="text-2xl font-semibold text-[var(--text-active)]">
+        {{ isEdit() ? '✏️ แก้ไข Test Scenario' : '➕ เพิ่ม Test Scenario ใหม่' }}
+      </h2>
+      <p class="text-sm text-[var(--text-muted)] mt-1">
+        กลุ่มสถานการณ์หรือหมวดหมู่การทดสอบของโครงการ
+      </p>
     </div>
   </div>
 
-  <form [formGroup]="formData.form" class="form-grid">
-    <div class="card">
-      <h3>ข้อมูลทั่วไป</h3>
-      <div class="row">
-        <sic-input formControlName="bugCode" label="รหัส Bug *" [required]="true"></sic-input>
-        <sic-combobox formControlName="issueType" label="ประเภท" [items]="issueTypeOptions"></sic-combobox>
-        <sic-combobox formControlName="environment" label="Environment" [items]="environmentOptions"></sic-combobox>
-      </div>
-
-      <div class="row full-width">
-        <sic-input formControlName="title" label="หัวข้อ Bug / Issue *" [required]="true"></sic-input>
-      </div>
-
-      <div class="row">
-        <sic-combobox formControlName="severity" label="ความรุนแรง (Severity) *" [items]="severityOptions" [required]="true"></sic-combobox>
-        <sic-combobox formControlName="priority" label="ความสำคัญ (Priority) *" [items]="priorityOptions" [required]="true"></sic-combobox>
-        <sic-combobox formControlName="status" label="สถานะ" [items]="statusOptions"></sic-combobox>
-      </div>
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
     </div>
+  } @else if (formData && formData.form) {
+    <form [formGroup]="formData.form" (ngSubmit)="onSubmit()" class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-6">
+      
+      <!-- General Info -->
+      <div class="space-y-4">
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+          <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+          ข้อมูล Test Scenario
+        </h3>
 
-    <div class="card">
-      <h3>รายละเอียด & ขั้นตอน</h3>
-      <sic-input-area formControlName="description" label="รายละเอียดของ Bug"></sic-input-area>
-      <sic-input-area formControlName="stepsToReproduce" label="ขั้นตอนการทำซ้ำ (Steps to Reproduce)"></sic-input-area>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <sic-input
+              formControlName="scenarioName"
+              label="ชื่อ Test Scenario *"
+              placeholder="เช่น การเข้าสู่ระบบ, การบันทึกข้อมูลหลัก, การพิมพ์รายงาน..."
+            ></sic-input>
+          </div>
+          <div>
+            <sic-combobox
+              label="ความสัมพันธ์กับ Task (Trace Link)"
+              formControlName="taskId"
+              [items]="taskOptions()"
+              placeholder="เลือก Task ที่เกี่ยวข้อง"
+              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
+            ></sic-combobox>
+          </div>
+        </div>
 
-    <div class="card">
-      <h3>ผู้รับผิดชอบ & วันที่</h3>
-      <div class="row">
-        <sic-input formControlName="foundBy" label="ผู้พบ Bug"></sic-input>
-        <sic-input formControlName="assignedTo" label="ผู้รับผิดชอบแก้ไข"></sic-input>
-      </div>
-      <div class="row">
-        <sic-datepicker formControlName="foundDate" label="วันที่พบ"></sic-datepicker>
-        <sic-datepicker formControlName="fixDueDate" label="กำหนดแก้ไขเสร็จ"></sic-datepicker>
-        <sic-datepicker formControlName="fixedDate" label="วันที่แก้ไขเสร็จจริง"></sic-datepicker>
-      </div>
-    </div>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-[var(--text-active)]">
+              คำอธิบาย / วัตถุประสงค์ของ Scenario
+            </span>
+            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+          </div>
+          <sic-tiptap-editor
+            formControlName="description"
+            placeholderInput="อธิบายขอบเขตและวัตถุประสงค์ในการทดสอบกลุ่มนี้..."
+            minHeightInput="130px"
+          ></sic-tiptap-editor>
+        </div>
 
-    <div class="card">
-      <h3>การเชื่อมโยง (Traceability)</h3>
-      <div class="row">
-        <sic-input formControlName="relatedSpec" label="Specification อ้างอิง"></sic-input>
+        <div>
+          <sic-input-area
+            formControlName="prerequisite"
+            label="สิ่งที่ต้องเตรียมก่อนทดสอบ (Prerequisites / Preconditions)"
+            [rows]="3"
+            placeholder="เช่น ต้องมีผู้ใช้งานในระบบ, ต้องสร้างข้อมูลการตั้งค่าเริ่มต้นเรียบร้อยแล้ว..."
+          ></sic-input-area>
+        </div>
+
+        <!-- สถานะด้านล่างสุดของฟอร์ม (Checkbox) -->
+        <div class="pt-2">
+          <sic-checkbox
+            formControlName="status"
+            label="เปิดใช้งาน (Active)"
+            checkedValue="Active"
+            uncheckedValue="Inactive"
+          ></sic-checkbox>
+        </div>
       </div>
-    </div>
-  </form>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+        <sic-button
+          variant="secondary"
+          [type]="'button'"
+          (click)="onBack()"
+          [disabled]="isSaving()"
+        >
+          <i class="bi bi-arrow-left"></i>
+          ย้อนกลับ
+        </sic-button>
+        <sic-button
+          variant="primary"
+          [type]="'submit'"
+          [disabled]="isSaving()"
+        >
+          @if (isSaving()) {
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+          } @else {
+            <i class="bi bi-floppy"></i>
+          }
+          {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+        </sic-button>
+      </div>
+
+    </form>
+  }
 </div>

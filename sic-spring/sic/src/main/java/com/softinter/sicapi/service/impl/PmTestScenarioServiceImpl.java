@@ -3,9 +3,12 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.request.PmTestScenarioRequest;
 import com.softinter.sicapi.dto.response.PmTestScenarioResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmTestScenario;
+import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.PmTestScenarioService;
+import com.softinter.sicapi.service.TraceLinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
 public class PmTestScenarioServiceImpl implements PmTestScenarioService {
 
     private final PmTestScenarioRepository scenarioRepository;
+    private final PmTaskRepository taskRepository;
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,6 +78,21 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             entity = scenarioRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"));
         }
+
+        // ===== สร้าง Trace Link กับ Task =====
+        if (entity.getProjectId() != null && entity.getTaskId() != null) {
+            try {
+                traceLinkService.createLink(
+                    entity.getProjectId(),
+                    "TASK", entity.getTaskId(),
+                    "TEST_SCENARIO", entity.getId(),
+                    TraceRelationship.VERIFIED_BY
+                );
+            } catch (Exception e) {
+                log.warn("Failed to create trace link for test scenario: {}", e.getMessage());
+            }
+        }
+
         return entity.getId();
     }
 
@@ -90,6 +110,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
     private void mapRequestToEntity(PmTestScenarioRequest req, PmTestScenario entity) {
         entity.setProjectId(req.getProjectId());
         entity.setTestPlanId(req.getTestPlanId());
+        entity.setTaskId(req.getTaskId());
         entity.setScenarioName(req.getScenarioName());
         entity.setDescription(req.getDescription());
         entity.setPrerequisite(req.getPrerequisite());
@@ -101,6 +122,13 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         res.setId(entity.getId());
         res.setProjectId(entity.getProjectId());
         res.setTestPlanId(entity.getTestPlanId());
+        res.setTaskId(entity.getTaskId());
+        if (entity.getTaskId() != null) {
+            taskRepository.findById(entity.getTaskId()).ifPresent(task -> {
+                res.setTaskCode(task.getTaskCode());
+                res.setTaskName(task.getTaskName());
+            });
+        }
         res.setScenarioName(entity.getScenarioName());
         res.setDescription(entity.getDescription());
         res.setPrerequisite(entity.getPrerequisite());
