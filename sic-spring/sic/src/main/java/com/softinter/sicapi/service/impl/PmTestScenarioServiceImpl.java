@@ -51,12 +51,12 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
     @Override
     @Transactional
     public UUID save(PmTestScenarioRequest request, UUID businessId, String userId) {
-        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()]
+                : EntityState.DETACHED;
         PmTestScenario entity;
 
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmTestScenario();
-            entity.setId(request.getId() != null ? request.getId() : UUID.randomUUID());
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
@@ -84,11 +84,10 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         if (entity.getProjectId() != null && entity.getTaskId() != null) {
             try {
                 traceLinkService.createLink(
-                    entity.getProjectId(),
-                    "TASK", entity.getTaskId(),
-                    "TEST_SCENARIO", entity.getId(),
-                    TraceRelationship.VERIFIED_BY
-                );
+                        entity.getProjectId(),
+                        "TASK", entity.getTaskId(),
+                        "TEST_SCENARIO", entity.getId(),
+                        TraceRelationship.VERIFIED_BY);
             } catch (Exception e) {
                 log.warn("Failed to create trace link for test scenario: {}", e.getMessage());
             }

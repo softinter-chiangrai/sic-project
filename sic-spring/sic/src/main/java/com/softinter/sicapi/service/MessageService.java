@@ -43,7 +43,6 @@ public class MessageService {
             // [ลบออก] entity.setUpdatedDate(...) -> ปล่อยให้ @LastModifiedDate จัดการอัตโนมัติ
         } else {
             entity = new SuMessage();
-            entity.setId(UUID.randomUUID());
             entity.setCreatedBy(request.getCreatedBy());
             // [ลบออก] entity.setCreatedDate(...) -> ปล่อยให้ @CreatedDate จัดการอัตโนมัติ
             entity.setIsDelete(false);

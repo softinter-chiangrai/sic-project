@@ -53,15 +53,13 @@
             ></sic-input>
           </div>
           <div>
-            <sic-combobox
-              label="Test Scenario *"
-              formControlName="scenarioId"
-              [items]="scenarioOptions()"
-              [disabled]="isView() || isExecution()"
-              placeholder="เลือก Test Scenario"
-              (selectionChanged)="onScenarioChange($event?.value || $event?.id || $event || null)"
-            ></sic-combobox>
-          </div>
+          <sic-input
+            label="หัวข้อ / ชื่อ Test Case *"
+            formControlName="title"
+            [disabled]="isView() || isExecution()"
+            placeholder=""
+          ></sic-input>
+        </div>
           <div>
             <sic-combobox
               label="ความสำคัญ (Priority)"
@@ -72,14 +70,7 @@
           </div>
         </div>
 
-        <div>
-          <sic-input
-            label="หัวข้อ / ชื่อ Test Case *"
-            formControlName="title"
-            [disabled]="isView() || isExecution()"
-            placeholder=""
-          ></sic-input>
-        </div>
+        
       </div>
 
       <!-- Section 2: การเชื่อมโยง (Traceability & Task) -->
@@ -99,22 +90,6 @@
               placeholder="เลือก Task ที่เกี่ยวข้อง"
               (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
             ></sic-combobox>
-          </div>
-          <div>
-            <sic-input
-              label="Specification อ้างอิง"
-              formControlName="relatedSpec"
-              [disabled]="isView() || isExecution()"
-              placeholder="เติมให้อัตโนมัติเมื่อเลือก Task"
-            ></sic-input>
-          </div>
-          <div>
-            <sic-input
-              label="Requirement อ้างอิง"
-              formControlName="relatedRequirement"
-              [disabled]="isView() || isExecution()"
-              placeholder="เติมให้อัตโนมัติเมื่อเลือก Task"
-            ></sic-input>
           </div>
         </div>
       </div>
@@ -199,6 +174,8 @@
               textField="text"
               [multiple]="true"
               [disabled]="isView()"
+              [ngModel]="testerValues()"
+              [ngModelOptions]="{standalone: true}"
               placeholder="เลือกผู้ทดสอบ"
               (selectionChanged)="onTesterChange($event)"
             ></sic-combobox>

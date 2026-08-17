@@ -175,11 +175,12 @@
                 <thead class="bg-[var(--bg)]/50 text-[var(--text-muted)] border-b border-[var(--border)] text-xs uppercase tracking-wider">
                   <tr>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[120px]">รหัส Test Case</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">หัวข้อ / รายละเอียด</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[220px]">ขั้นตอน & ผลที่คาดหวัง</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">หัวข้อ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[240px]">ขั้นตอน & ผลที่คาดหวัง</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[90px] hidden lg:table-cell">Priority</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[110px]">สถานะ</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">ผู้ทดสอบ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">วันที่ทดสอบ</th>
                     <th class="px-4 py-2.5 text-center font-semibold whitespace-nowrap min-w-[140px]">จัดการ</th>
                   </tr>
                 </thead>
@@ -196,25 +197,26 @@
                       <!-- หัวข้อ -->
                       <td class="px-4 py-3 align-top">
                         <div class="font-medium text-[var(--text-active)]">{{ testCase.title }}</div>
-                        @if (testCase.relatedSpec || testCase.relatedRequirement) {
-                          <div class="text-xs text-[var(--text-muted)] mt-1 flex flex-wrap gap-2">
-                            @if (testCase.relatedRequirement) { <span>Req: {{ testCase.relatedRequirement }}</span> }
-                            @if (testCase.relatedSpec) { <span>Spec: {{ testCase.relatedSpec }}</span> }
-                          </div>
-                        }
                       </td>
 
                       <!-- ขั้นตอน & ผลลัพธ์ -->
-                      <td class="px-4 py-3 align-top">
-                        <div class="text-xs text-[var(--text)]">
-                          <span class="font-medium text-[var(--text-muted)]">Step:</span> {{ testCase.testStep }}
-                        </div>
-                        <div class="text-xs text-[var(--text-muted)] mt-0.5">
-                          <span class="font-medium text-[var(--text-muted)]">Expected:</span> {{ testCase.expectedResult }}
-                        </div>
+                      <td class="px-4 py-3 align-top space-y-1.5">
+                        @if (testCase.testStep) {
+                          <div class="text-xs">
+                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">Step:</span>
+                            <div class="text-[var(--text)] prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.testStep"></div>
+                          </div>
+                        }
+                        @if (testCase.expectedResult) {
+                          <div class="text-xs">
+                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">Expected:</span>
+                            <div class="text-[var(--text-muted)] prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.expectedResult"></div>
+                          </div>
+                        }
                         @if (testCase.actualResult) {
-                          <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                            <span class="font-medium">Actual:</span> {{ testCase.actualResult }}
+                          <div class="text-xs">
+                            <span class="font-medium text-blue-600 dark:text-blue-400 block mb-0.5">Actual:</span>
+                            <div class="text-blue-600 dark:text-blue-400 prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.actualResult"></div>
                           </div>
                         }
                       </td>
@@ -239,9 +241,11 @@
                       <!-- ผู้ทดสอบ -->
                       <td class="px-4 py-3 align-top">
                         <span class="text-[var(--text-active)] text-xs">{{ testCase.tester || '-' }}</span>
-                        @if (testCase.testDate) {
-                          <div class="text-xs text-[var(--text-muted)]">{{ formatDate(testCase.testDate) }}</div>
-                        }
+                      </td>
+
+                      <!-- วันที่ทดสอบ -->
+                      <td class="px-4 py-3 align-top">
+                        <span class="text-xs text-[var(--text-muted)]">{{ testCase.testDate ? formatDate(testCase.testDate) : '-' }}</span>
                       </td>
 
                       <!-- จัดการ -->

@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { environment } from '../../../../../../environments/environment';
@@ -23,6 +23,7 @@ import { Pmdt13AService } from './pmdt13A.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
@@ -166,12 +167,15 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       const names = selected.map((item: any) => {
         if (typeof item === 'string') return item;
         return item.text || item.userName || item.name || item.value || '';
-      }).filter((n: string) => !!n).join(', ');
-      this.formData.form.patchValue({ tester: names || null });
+      }).filter((n: string) => !!n);
+      this.testerValues.set(names);
+      this.formData.form.patchValue({ tester: names.join(', ') || null });
     } else if (selected) {
       const name = selected.text || selected.userName || selected.name || selected.value || (typeof selected === 'string' ? selected : '');
+      this.testerValues.set(name ? [name] : []);
       this.formData.form.patchValue({ tester: name || null });
     } else {
+      this.testerValues.set([]);
       this.formData.form.patchValue({ tester: null });
     }
   }
@@ -251,6 +255,10 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.service.getTestCaseById(id).subscribe({
       next: (data) => {
+        if (data.projectId) {
+          this.loadTasks(data.projectId);
+          this.loadScenarios(data.projectId);
+        }
         this.formData.form.patchValue(data);
         if (data.scenarioName && !data.scenarioId) {
           this.formData.form.patchValue({ scenarioName: data.scenarioName });
