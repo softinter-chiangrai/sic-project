@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+// src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.component.ts
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Pmdt10Service } from '../pmdt10.service';
-import { Pmdt10AForm } from './pmdt10A.form';
-import { PmTestScenarioModel } from '../pmdt10.model';
+import { Pmdt13BService } from './pmdt13B.service';
+import { Pmdt13BForm } from './pmdt13B.form';
+import { PmTestScenarioModel } from './pmdt13B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -16,7 +17,7 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 
 @Component({
-  selector: 'app-pmdt10a',
+  selector: 'app-pmdt13b',
   standalone: true,
   imports: [
     CommonModule,
@@ -26,14 +27,15 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
     SicInputComponent,
     SicComboboxComponent,
     SicCheckboxComponent,
-    SicTiptapEditorComponent
+    SicTiptapEditorComponent,
   ],
-  templateUrl: './pmdt10A.component.html',
-  styleUrls: ['./pmdt10A.component.css']
+  templateUrl: './pmdt13B.component.html',
+  styleUrls: ['./pmdt13B.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
+export class Pmdt13BComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
-  private service = inject(Pmdt10Service);
+  private service = inject(Pmdt13BService);
   private customerState = inject(CustomerStateService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
@@ -57,7 +59,7 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit(): void {
-    this.formData = new SicFromData<PmTestScenarioModel>(Pmdt10AForm.createForm(this.fb));
+    this.formData = new SicFromData<PmTestScenarioModel>(Pmdt13BForm.createForm(this.fb));
     const pId = this.customerState.getProjectId();
     if (pId) {
       this.formData.form.patchValue({ projectId: pId });
@@ -66,12 +68,14 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
       this.loadTasks();
     }
 
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.scenarioId = id;
-      this.isEdit.set(true);
-      this.loadScenario(id);
-    }
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.scenarioId = id;
+        this.isEdit.set(true);
+        this.loadScenario(id);
+      }
+    });
   }
 
   loadTasks(projectId?: string): void {
@@ -88,7 +92,7 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
       },
       error: () => {
         this.taskLoading.set(false);
-      }
+      },
     });
   }
 
@@ -114,7 +118,7 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
       next: (data) => {
         this.formData.form.patchValue({
           ...data,
-          status: data.status || 'Active'
+          status: data.status || 'Active',
         });
         this.formData.markAsPristine();
         this.isLoading.set(false);
@@ -123,14 +127,14 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
         this.isLoading.set(false);
         this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบข้อมูล Test Scenario นี้');
         this.onBack();
-      }
+      },
     });
   }
 
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อ Test Scenario');
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัสและชื่อ Test Scenario');
       return;
     }
 
@@ -138,7 +142,7 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
     const formVal: any = this.formData.value;
     const data = {
       ...formVal,
-      status: formVal.status || 'Active'
+      status: formVal.status || 'Active',
     };
     data.state = this.isEdit() ? 3 : 4;
 
@@ -153,11 +157,13 @@ export class Pmdt10AComponent implements OnInit, CanComponentDeactivate {
       error: (err) => {
         this.isSaving.set(false);
         this.dialog.error('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก');
-      }
+      },
     });
   }
 
   onBack(): void {
-    this.router.navigate(['../..'], { relativeTo: this.route });
+    this.router.navigate(['/feature/pm/test-case']);
   }
 }
+
+export default Pmdt13BComponent;

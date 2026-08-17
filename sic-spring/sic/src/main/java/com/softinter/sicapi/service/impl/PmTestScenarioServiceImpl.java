@@ -56,6 +56,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
 
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmTestScenario();
+            entity.setId(request.getId() != null ? request.getId() : UUID.randomUUID());
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
@@ -111,9 +112,10 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         entity.setProjectId(req.getProjectId());
         entity.setTestPlanId(req.getTestPlanId());
         entity.setTaskId(req.getTaskId());
+        entity.setScenarioCode(req.getScenarioCode());
         entity.setScenarioName(req.getScenarioName());
+        entity.setPriority(req.getPriority() != null ? req.getPriority() : "Medium");
         entity.setDescription(req.getDescription());
-        entity.setPrerequisite(req.getPrerequisite());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "Active");
     }
 
@@ -129,9 +131,10 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
                 res.setTaskName(task.getTaskName());
             });
         }
+        res.setScenarioCode(entity.getScenarioCode());
         res.setScenarioName(entity.getScenarioName());
+        res.setPriority(entity.getPriority());
         res.setDescription(entity.getDescription());
-        res.setPrerequisite(entity.getPrerequisite());
         res.setStatus(entity.getStatus());
         res.setCreatedDate(entity.getCreatedDate());
         res.setUpdatedDate(entity.getUpdatedDate());

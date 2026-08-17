@@ -2,11 +2,16 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { PmTestCaseModel } from './pmdt13.model';
+import { PmTestCaseModel, PmTestScenarioModel } from './pmdt13.model';
 import { Pmdt13Service } from './pmdt13.service';
+
+export interface ScenarioGroup {
+  scenario: PmTestScenarioModel | null; // null for unassigned / general test cases
+  testCases: PmTestCaseModel[];
+}
 
 @Component({
   selector: 'app-pmdt13',
@@ -26,62 +31,107 @@ export class Pmdt13Component implements OnInit {
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected filterPriority = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('testCaseCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
 
   // ===== Data =====
+  protected scenarios = signal<PmTestScenarioModel[]>([]);
   protected testCases = signal<PmTestCaseModel[]>([]);
-  protected totalElements = signal(0);
 
-  // ===== Computed =====
-  protected filteredTestCases = computed(() => {
-    let result = this.testCases();
-
-    const status = this.filterStatus();
-    const priority = this.filterPriority();
-
-    if (status !== 'all') {
-      result = result.filter((t) => (t.testStatus || '').toLowerCase() === status.toLowerCase());
-    }
-
-    if (priority !== 'all') {
-      result = result.filter((t) => (t.priority || '').toLowerCase() === priority.toLowerCase());
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    return [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof PmTestCaseModel] ?? '';
-      const bVal = b[sortField as keyof PmTestCaseModel] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  });
-
-  protected totalItems = computed(() => this.totalElements());
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
-  });
-
-  protected Math = Math;
+  // Track expanded accordion IDs ('unassigned' for null scenario)
+  protected expandedScenarioIds = signal<Set<string>>(new Set());
 
   // ===== Options =====
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
   priorityOptions = ['High', 'Medium', 'Low'];
+
+  // ===== Computed Groups =====
+  protected scenarioGroups = computed(() => {
+    const rawScenarios = this.scenarios();
+    const rawTestCases = this.testCases();
+    const search = this.searchTerm().trim().toLowerCase();
+    const status = this.filterStatus();
+    const priority = this.filterPriority();
+
+    // 1. Filter test cases
+    const filteredCases = rawTestCases.filter((tc) => {
+      // Filter status
+      if (status !== 'all' && (tc.testStatus || '').toLowerCase() !== status.toLowerCase()) {
+        return false;
+      }
+      // Filter priority
+      if (priority !== 'all' && (tc.priority || '').toLowerCase() !== priority.toLowerCase()) {
+        return false;
+      }
+      // Search keyword
+      if (search) {
+        const matchCode = (tc.testCaseCode || '').toLowerCase().includes(search);
+        const matchTitle = (tc.title || '').toLowerCase().includes(search);
+        const matchTester = (tc.tester || '').toLowerCase().includes(search);
+        const matchStep = (tc.testStep || '').toLowerCase().includes(search);
+        const matchScenario = (tc.scenarioName || '').toLowerCase().includes(search);
+        if (!matchCode && !matchTitle && !matchTester && !matchStep && !matchScenario) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // 2. Map test cases to scenario groups
+    const map = new Map<string, PmTestCaseModel[]>();
+    const unassigned: PmTestCaseModel[] = [];
+
+    filteredCases.forEach((tc) => {
+      if (tc.scenarioId) {
+        if (!map.has(tc.scenarioId)) {
+          map.set(tc.scenarioId, []);
+        }
+        map.get(tc.scenarioId)!.push(tc);
+      } else {
+        unassigned.push(tc);
+      }
+    });
+
+    // 3. Build group list
+    const groups: ScenarioGroup[] = [];
+
+    // Filter scenarios matching search or containing filtered test cases
+    rawScenarios.forEach((sc) => {
+      const scId = sc.id!;
+      const casesForThisSc = map.get(scId) || [];
+      const matchScKeyword = search && (
+        (sc.scenarioCode || '').toLowerCase().includes(search) ||
+        (sc.scenarioName || '').toLowerCase().includes(search) ||
+        (sc.id || '').toLowerCase().includes(search) ||
+        (sc.description || '').toLowerCase().includes(search)
+      );
+
+      // Include scenario if it has matching test cases OR if scenario itself matches search (without status/priority filter active)
+      if (casesForThisSc.length > 0 || (matchScKeyword && status === 'all' && priority === 'all') || (!search && status === 'all' && priority === 'all')) {
+        groups.push({
+          scenario: sc,
+          testCases: casesForThisSc,
+        });
+      }
+    });
+
+    // Add unassigned group if there are test cases without scenario
+    if (unassigned.length > 0) {
+      groups.push({
+        scenario: null,
+        testCases: unassigned,
+      });
+    }
+
+    return groups;
+  });
+
+  protected totalTestCases = computed(() => {
+    return this.scenarioGroups().reduce((acc, g) => acc + g.testCases.length, 0);
+  });
+
+  protected totalScenarios = computed(() => {
+    return this.scenarios().length;
+  });
 
   // ===== Lifecycle =====
   ngOnInit() {
@@ -91,41 +141,81 @@ export class Pmdt13Component implements OnInit {
   loadData() {
     this.isLoading.set(true);
     const projectId = this.customerState.getProjectId();
-    const page = this.currentPage() - 1;
-    const size = this.pageSize();
-    const keyword = this.searchTerm().trim();
-    const sortDir = this.sortDir().toUpperCase();
 
-    this.service
-      .getTestCases(projectId, keyword, page, size, 'createdDate', sortDir)
+    forkJoin({
+      scenarios: this.service.getTestScenarios(projectId),
+      testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'createdDate', 'DESC'),
+    })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (res) => {
-          if (res && res.content) {
-            this.testCases.set(res.content);
-            this.totalElements.set(res.totalElements || res.content.length);
-          } else if (Array.isArray(res)) {
-            this.testCases.set(res);
-            this.totalElements.set(res.length);
-          } else {
-            this.testCases.set([]);
-            this.totalElements.set(0);
+        next: ({ scenarios, testCasesRes }) => {
+          this.scenarios.set(scenarios || []);
+
+          let tcs: PmTestCaseModel[] = [];
+          if (testCasesRes && testCasesRes.content) {
+            tcs = testCasesRes.content;
+          } else if (Array.isArray(testCasesRes)) {
+            tcs = testCasesRes;
           }
+          this.testCases.set(tcs);
+
+          // Expand all by default
+          const allIds = new Set<string>();
+          (scenarios || []).forEach((s) => {
+            if (s.id) allIds.add(s.id);
+          });
+          allIds.add('unassigned');
+          this.expandedScenarioIds.set(allIds);
         },
         error: (err) => {
-          console.error('Failed to load test cases:', err);
+          console.error('Failed to load scenarios/test cases:', err);
+          this.scenarios.set([]);
           this.testCases.set([]);
-          this.totalElements.set(0);
         },
       });
   }
 
-  // ===== Actions =====
+  // ===== Accordion Toggle =====
+  isExpanded(scenarioId?: string | null): boolean {
+    const key = scenarioId || 'unassigned';
+    return this.expandedScenarioIds().has(key);
+  }
+
+  toggleAccordion(scenarioId?: string | null, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const key = scenarioId || 'unassigned';
+    const current = new Set(this.expandedScenarioIds());
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.expandedScenarioIds.set(current);
+  }
+
+  expandAll() {
+    const all = new Set<string>();
+    this.scenarios().forEach((s) => {
+      if (s.id) all.add(s.id);
+    });
+    all.add('unassigned');
+    this.expandedScenarioIds.set(all);
+  }
+
+  collapseAll() {
+    this.expandedScenarioIds.set(new Set());
+  }
+
+  // ===== Filters =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadData();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
   }
 
   onFilterStatusChange(event: Event) {
@@ -138,29 +228,63 @@ export class Pmdt13Component implements OnInit {
     this.filterPriority.set(select.value);
   }
 
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
+  // ===== Actions: Test Scenario =====
+  goToAddScenario() {
+    this.router.navigate(['/feature/pm/pmdt13/pmdt13B']);
+  }
+
+  goToEditScenario(id: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/feature/pm/pmdt13/pmdt13B', id, 'edit']);
+  }
+
+  deleteScenario(id: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.dialog
+      .confirm(
+        'ยืนยันการลบ Test Scenario',
+        'ต้องการลบ Test Scenario นี้ใช่หรือไม่? (Test Cases ที่อยู่ใน Scenario จะยังคงอยู่แต่จะกลายเป็น Unassigned)'
+      )
+      .then((ok) => {
+        if (ok) {
+          this.service.deleteTestScenario(id).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Scenario ถูกลบเรียบร้อยแล้ว');
+              this.loadData();
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+            },
+          });
+        }
+      });
+  }
+
+  // ===== Actions: Test Case =====
+  goToAddTestCase(scenarioId?: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+
+    if (this.scenarios().length === 0) {
+      this.dialog
+        .confirm(
+          'ยังไม่มี Test Scenario',
+          'ต้องสร้าง Test Scenario ขึ้นมาก่อนจึงจะสามารถสร้าง Test Case ได้ ต้องการสร้าง Test Scenario ตอนนี้หรือไม่?'
+        )
+        .then((ok) => {
+          if (ok) {
+            this.goToAddScenario();
+          }
+        });
+      return;
     }
-  }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadData();
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadData();
-  }
-
-  goToAdd() {
-    this.router.navigate(['/feature/pm/test-case/new']);
+    if (scenarioId) {
+      this.router.navigate(['/feature/pm/test-case/new'], {
+        queryParams: { scenarioId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/test-case/new']);
+    }
   }
 
   goToEdit(id: string) {
@@ -191,21 +315,21 @@ export class Pmdt13Component implements OnInit {
     });
   }
 
-  // ===== Utility =====
+  // ===== Badges & Utilities =====
   getStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
     switch (s) {
       case 'pass':
       case 'passed':
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800';
       case 'fail':
       case 'failed':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-300 dark:border-red-800';
       case 'blocked':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-300 dark:border-amber-800';
       case 'pending':
       default:
-        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700';
     }
   }
 
@@ -236,7 +360,7 @@ export class Pmdt13Component implements OnInit {
       case 'failed':
         return 'bi-x-circle text-red-500';
       case 'blocked':
-        return 'bi-exclamation-triangle text-yellow-500';
+        return 'bi-exclamation-triangle text-amber-500';
       case 'pending':
       default:
         return 'bi-clock text-gray-400';
@@ -248,13 +372,13 @@ export class Pmdt13Component implements OnInit {
     switch (p) {
       case 'high':
       case 'critical':
-        return 'text-red-600 font-semibold';
+        return 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-800';
       case 'medium':
-        return 'text-amber-600 font-medium';
+        return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800';
       case 'low':
-        return 'text-emerald-600';
+        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800';
       default:
-        return 'text-gray-500';
+        return 'bg-gray-50 text-gray-700 border border-gray-200';
     }
   }
 
@@ -266,8 +390,6 @@ export class Pmdt13Component implements OnInit {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
       });
     } catch {
       return dateStr;

@@ -40,4 +40,16 @@ export class Pmdt13Service {
     if (projectId) params = params.set('projectId', projectId);
     return this.http.get<PmTestScenarioModel[]>(`${this.apiBase}/api/pm/test-scenarios`, { params });
   }
+
+  getTestScenarioById(id: string): Observable<PmTestScenarioModel> {
+    return this.http.get<PmTestScenarioModel>(`${this.apiBase}/api/pm/test-scenarios/${id}`);
+  }
+
+  saveTestScenario(data: Partial<PmTestScenarioModel>): Observable<string> {
+    return this.http.post<string>(`${this.apiBase}/api/pm/test-scenarios/save`, data);
+  }
+
+  deleteTestScenario(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBase}/api/pm/test-scenarios/${id}`);
+  }
 }

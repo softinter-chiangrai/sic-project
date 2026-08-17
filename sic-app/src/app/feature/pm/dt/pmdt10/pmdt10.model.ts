@@ -58,8 +58,8 @@ export interface PmTestScenarioModel extends SicBaseStateModel {
   taskCode?: string;
   taskName?: string;
   scenarioName: string;
+  priority?: string;
   description?: string;
-  prerequisite?: string;
   status?: string;
   createdDate?: string;
   updatedDate?: string;

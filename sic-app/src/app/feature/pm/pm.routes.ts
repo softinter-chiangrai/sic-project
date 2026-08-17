@@ -27,10 +27,9 @@ import { pmdt08AResolver } from './dt/pmdt08/pmdt08A/pmdt08A.resolver';
 import { pmdt09Resolver } from './dt/pmdt09/pmdt09.resolver';
 import { pmdt09AResolver } from './dt/pmdt09/pmdt09A/pmdt09A.resolver';
 import { pmdt10Resolver, pmdt10AResolver, pmdt10BResolver, pmdt10CResolver } from './dt/pmdt10/pmdt10.resolver';
-import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
-import { pmdt12Resolver } from './dt/pmdt12/pmdt12.resolver';
 import { pmdt13Resolver } from './dt/pmdt13/pmdt13.resolver';
 import { pmdt13AResolver } from './dt/pmdt13/pmdt13A/pmdt13A.resolver';
+import { pmdt13BResolver } from './dt/pmdt13/pmdt13B/pmdt13B.resolver';
 import { pmdt14Resolver } from './dt/pmdt14/pmdt14.resolver';
 import { pmdt15Resolver } from './dt/pmdt15/pmdt15.resolver';
 import { pmdt17Resolver } from './dt/pmdt17/pmdt17.resolver';
@@ -64,6 +63,7 @@ import { pmrt24Resolver } from './rt/pmrt24/pmrt24.resolver';
 import { pmrt25Resolver } from './rt/pmrt25/pmrt25.resolver';
 import { pmrt26Resolver } from './rt/pmrt26/pmrt26.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
+import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
 
 export const PM_ROUTES: Routes = [
   {
@@ -385,46 +385,46 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt09Resolver },
   },
 
-  // ===== Test Scenario Management (pmdt10) =====
+  // ===== Test Scenario Management (Redirected to PMDT13 / PMDT13B) =====
   {
     path: 'test-scenario',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then(m => m.Pmdt10Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then(m => m.Pmdt13Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt10Resolver },
+    resolve: { pageData: pmdt13Resolver },
   },
   {
     path: 'pmdt10',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then(m => m.Pmdt10Component),
+    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then(m => m.Pmdt13Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt10Resolver },
+    resolve: { pageData: pmdt13Resolver },
   },
   {
     path: 'test-scenario/new',
-    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10AResolver },
+    resolve: { pageData: pmdt13BResolver },
   },
   {
     path: 'test-scenario/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10AResolver },
+    resolve: { pageData: pmdt13BResolver },
   },
   {
     path: 'pmdt10/pmdt10A',
-    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10AResolver },
+    resolve: { pageData: pmdt13BResolver },
   },
   {
     path: 'pmdt10/pmdt10A/:id/edit',
-    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then(m => m.Pmdt10AComponent),
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt10AResolver },
+    resolve: { pageData: pmdt13BResolver },
   },
 
   // ===== Design Review =====
@@ -559,6 +559,20 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'pmdt13/pmdt13B',
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then((m) => m.Pmdt13BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt13BResolver },
+  },
+  {
+    path: 'pmdt13/pmdt13B/:id/edit',
+    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then((m) => m.Pmdt13BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt13BResolver },
   },
 
   // ===== Bug =====

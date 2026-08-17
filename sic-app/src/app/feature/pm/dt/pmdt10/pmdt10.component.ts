@@ -57,7 +57,7 @@ export class Pmdt10Component implements OnInit {
       (s) =>
         s.scenarioName?.toLowerCase().includes(kw) ||
         s.description?.toLowerCase().includes(kw) ||
-        s.prerequisite?.toLowerCase().includes(kw)
+        s.priority?.toLowerCase().includes(kw)
     );
     this.filteredScenarios.set(filtered);
   }

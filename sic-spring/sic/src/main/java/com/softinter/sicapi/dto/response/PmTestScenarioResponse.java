@@ -13,9 +13,10 @@ public class PmTestScenarioResponse {
     private UUID taskId;
     private String taskCode;
     private String taskName;
+    private String scenarioCode;
     private String scenarioName;
+    private String priority;
     private String description;
-    private String prerequisite;
     private String status;
     private Instant createdDate;
     private Instant updatedDate;

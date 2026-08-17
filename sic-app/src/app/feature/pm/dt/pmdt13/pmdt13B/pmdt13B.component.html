@@ -1,12 +1,14 @@
-<div class="pmdt10a-container max-w-4xl mx-auto py-4 space-y-6">
+<!-- src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.component.html -->
+<div class="pmdt13b-container max-w-4xl mx-auto py-4 space-y-6">
   <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
     <div>
-      <h2 class="text-2xl font-semibold text-[var(--text-active)]">
-        {{ isEdit() ? '✏️ แก้ไข Test Scenario' : '➕ เพิ่ม Test Scenario ใหม่' }}
+      <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-folder-plus text-[var(--crm-primary)]"></i>
+        {{ isEdit() ? 'แก้ไข Test Scenario' : 'เพิ่ม Test Scenario ใหม่' }}
       </h2>
       <p class="text-sm text-[var(--text-muted)] mt-1">
-        กลุ่มสถานการณ์หรือหมวดหมู่การทดสอบของโครงการ
+        กลุ่มสถานการณ์หรือหมวดหมู่การทดสอบสำหรับจัดการชุด Test Cases
       </p>
     </div>
   </div>
@@ -29,17 +31,16 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <sic-input
-              formControlName="id"
+              formControlName="scenarioCode"
               label="รหัส Test Scenario *"
-              placeholder="ระบุรหัส Test Scenario"
-              [disabled]="isEdit()"
+              placeholder="เช่น SC-001, SC-LOGIN"
             ></sic-input>
           </div>
           <div>
             <sic-input
               formControlName="scenarioName"
               label="ชื่อ Test Scenario *"
-              placeholder="เช่น การเข้าสู่ระบบ, การบันทึกข้อมูลหลัก, การพิมพ์รายงาน..."
+              placeholder="เช่น การเข้าสู่ระบบ, การพิมพ์รายงาน..."
             ></sic-input>
           </div>
           <div>

@@ -21,7 +21,7 @@
         [(ngModel)]="keyword"
         (input)="onSearch()"
         (keyup.enter)="onSearch()"
-        placeholder="ค้นหาชื่อ Scenario, คำอธิบาย, Prerequisite..."
+        placeholder="ค้นหาชื่อ Scenario, คำอธิบาย, ความสำคัญ..."
         class="form-control"
       />
       <button sic-button variant="outline" (click)="onSearch()">ค้นหา</button>
@@ -35,8 +35,8 @@
         <thead>
           <tr>
             <th>ชื่อ Test Scenario</th>
+            <th>ความสำคัญ (Priority)</th>
             <th>คำอธิบาย</th>
-            <th>สิ่งที่ต้องเตรียมก่อนทดสอบ (Prerequisites)</th>
             <th>สถานะ</th>
             <th>จัดการ</th>
           </tr>
@@ -52,8 +52,10 @@
                 <td class="font-bold">
                   <a (click)="onEditScenario(sc.id!)" class="link-title">{{ sc.scenarioName }}</a>
                 </td>
+                <td>
+                  <span class="status-badge">{{ sc.priority || 'Medium' }}</span>
+                </td>
                 <td>{{ sc.description || '-' }}</td>
-                <td>{{ sc.prerequisite || '-' }}</td>
                 <td>
                   <span class="status-badge status-open">{{ sc.status || 'Active' }}</span>
                 </td>

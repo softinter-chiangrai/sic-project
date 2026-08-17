@@ -114,6 +114,13 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         this.loadTestCase(id);
       }
     });
+
+    this.route.queryParams.subscribe((queryParams) => {
+      const scenarioId = queryParams['scenarioId'];
+      if (scenarioId && !this.testCaseId) {
+        this.formData.form.patchValue({ scenarioId });
+      }
+    });
   }
 
   loadScenarios(projectId?: string): void {
@@ -126,6 +133,15 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         }));
         this.scenarioOptions.set(list);
         this.scenarioLoading.set(false);
+
+        // Pre-fill scenarioName if scenarioId was passed via queryParams
+        const currentScenarioId = this.formData.form.get('scenarioId')?.value;
+        if (currentScenarioId) {
+          const found = list.find((s) => s.value === currentScenarioId);
+          if (found) {
+            this.formData.form.patchValue({ scenarioName: found.text });
+          }
+        }
       },
       error: () => {
         this.scenarioLoading.set(false);

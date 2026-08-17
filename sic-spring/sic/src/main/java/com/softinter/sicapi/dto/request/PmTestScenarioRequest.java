@@ -13,11 +13,13 @@ public class PmTestScenarioRequest {
     private UUID testPlanId;
     private UUID taskId;
 
+    private String scenarioCode;
+
     @NotBlank(message = "Scenario name is required")
     private String scenarioName;
 
+    private String priority;
     private String description;
-    private String prerequisite;
     private String status;
 
     private Integer state;

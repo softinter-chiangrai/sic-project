@@ -74,3 +74,5 @@ ALTER TABLE pm_test_case ADD COLUMN IF NOT EXISTS scenario_name VARCHAR(255);
 ALTER TABLE pm_test_case ALTER COLUMN scenario_id DROP NOT NULL;
 
 ALTER TABLE pm_test_scenario ADD COLUMN IF NOT EXISTS task_id UUID;
+ALTER TABLE pm_test_scenario ADD COLUMN IF NOT EXISTS priority VARCHAR(50);
+ALTER TABLE pm_test_scenario ADD COLUMN IF NOT EXISTS scenario_code VARCHAR(50);

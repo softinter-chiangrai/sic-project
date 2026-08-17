@@ -8,7 +8,7 @@ export class Pmdt13AForm {
     return fb.group<ToForm<PmTestCaseModel>>({
       id: fb.control(null),
       projectId: fb.control(null),
-      scenarioId: fb.control(null),
+      scenarioId: fb.control(null, [Validators.required]),
       scenarioName: fb.control(null),
       testCaseCode: fb.control(null, [Validators.required, Validators.maxLength(30)]),
       title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
