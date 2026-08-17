@@ -20,6 +20,10 @@ public class PmTestCase extends BaseBusinessEntity {
     @Column(name = "scenario_id")
     private UUID scenarioId;
 
+    @Column(name = "scenario_name", length = 255)
+    private String scenarioName;
+
+
     @Column(name = "task_id")
     private UUID taskId;
 

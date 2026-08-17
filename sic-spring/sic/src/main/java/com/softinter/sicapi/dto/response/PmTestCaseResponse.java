@@ -23,6 +23,9 @@ public class PmTestCaseResponse {
     private String relatedRequirement;
     private String relatedSpec;
     private String relatedTask;
+    private UUID taskId;
+    private String taskCode;
+    private String taskName;
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;

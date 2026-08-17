@@ -23,6 +23,8 @@ export class Pmdt13AForm {
       relatedSpec: fb.control(null),
       relatedTask: fb.control(null),
       taskId: fb.control(null),
+      taskCode: fb.control(null),
+      taskName: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
       createdDate: fb.control(null),

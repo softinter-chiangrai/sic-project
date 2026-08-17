@@ -1,14 +1,15 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
+import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
@@ -28,7 +29,7 @@ import { Pmdt13AService } from './pmdt13A.service';
     SicInputComponent,
     SicComboboxComponent,
     SicDatepickerComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt13A.component.html',
   styleUrls: ['./pmdt13A.component.css'],
@@ -49,7 +50,18 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
   testCaseId: string | null = null;
-  scenarioOptions = signal<{ value: string; text: string }[]>([]);
+  taskOptions = signal<{ value: string; text: string }[]>([]);
+  taskLoading = signal(false);
+
+  // Multi-tester support
+  businessId = signal<string | null>(null);
+  testerValues = signal<string[]>([]);
+  testerApiUrl = computed(() => {
+    const bId = this.businessId();
+    return bId
+      ? `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${bId}`
+      : `${environment.apiBaseUrl}/api/business/combobox-members`;
+  });
 
   pageDirty = () => this.formData?.dirty ?? false;
 
@@ -76,12 +88,17 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       this.isExecution.set(true);
     }
 
+    const bId = localStorage.getItem('businessId');
+    if (bId) {
+      this.businessId.set(bId);
+    }
+
     const pId = this.customerState.getProjectId();
     if (pId) {
       this.formData.form.patchValue({ projectId: pId });
-      this.loadScenarios(pId);
+      this.loadTasks(pId);
     } else {
-      this.loadScenarios();
+      this.loadTasks();
     }
 
     this.route.params.subscribe((params) => {
@@ -90,17 +107,93 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         this.testCaseId = id;
         this.isEdit.set(!this.isView() && !this.isExecution());
         this.loadTestCase(id);
-      } else {
-        const randomCode = 'TC-' + Math.floor(1000 + Math.random() * 9000);
-        this.formData.form.patchValue({ testCaseCode: randomCode });
       }
     });
   }
 
-  loadScenarios(projectId?: string): void {
-    this.service.getTestScenarios(projectId).subscribe((scenarios) => {
-      const list = (scenarios || []).map((s) => ({ value: s.id!, text: s.scenarioName }));
-      this.scenarioOptions.set(list);
+  onTesterChange(selected: any): void {
+    if (Array.isArray(selected)) {
+      const names = selected.map((item: any) => {
+        if (typeof item === 'string') return item;
+        return item.text || item.userName || item.name || item.value || '';
+      }).filter((n: string) => !!n).join(', ');
+      this.formData.form.patchValue({ tester: names || null });
+    } else if (selected) {
+      const name = selected.text || selected.userName || selected.name || selected.value || (typeof selected === 'string' ? selected : '');
+      this.formData.form.patchValue({ tester: name || null });
+    } else {
+      this.formData.form.patchValue({ tester: null });
+    }
+  }
+
+  loadTasks(projectId?: string): void {
+    this.taskLoading.set(true);
+    this.service.getTasksCombobox(projectId).subscribe({
+      next: (tasks) => {
+        const list = (tasks || []).map((t: any) => ({
+          value: t.value || t.id,
+          text: t.text || `${t.taskCode} - ${t.taskName}`,
+        }));
+        this.taskOptions.set(list);
+        this.taskLoading.set(false);
+      },
+      error: () => {
+        this.taskLoading.set(false);
+      },
+    });
+  }
+
+  onTaskChange(taskId: string | null): void {
+    if (!taskId) {
+      this.formData.form.patchValue({
+        taskId: null,
+        relatedTask: null,
+        taskCode: null,
+        taskName: null,
+      });
+      return;
+    }
+
+    const selectedTaskOption = this.taskOptions().find((o) => o.value === taskId);
+    const taskLabel = selectedTaskOption ? selectedTaskOption.text : '';
+
+    this.formData.form.patchValue({
+      taskId: taskId,
+      relatedTask: taskLabel,
+    });
+
+    // Auto-fetch Task details for Specification & Requirement link
+    this.service.getTaskById(taskId).subscribe({
+      next: (taskDetail) => {
+        if (taskDetail) {
+          const specId = taskDetail.specificationId;
+          const specCode = taskDetail.specificationCode;
+          const specTitle = taskDetail.specificationTitle;
+
+          if (specCode || specTitle) {
+            const specText = specCode && specTitle ? `${specCode} - ${specTitle}` : (specCode || specTitle);
+            this.formData.form.patchValue({ relatedSpec: specText });
+          }
+
+          if (specId) {
+            // Fetch spec detail to get Requirement information
+            this.service.getSpecificationById(specId).subscribe({
+              next: (specData) => {
+                if (specData) {
+                  const reqCode = specData.requirementCode;
+                  const reqTitle = specData.requirementTitle;
+                  if (reqCode || reqTitle) {
+                    const reqText = reqCode && reqTitle ? `${reqCode} - ${reqTitle}` : (reqCode || reqTitle);
+                    this.formData.form.patchValue({ relatedRequirement: reqText });
+                  }
+                }
+              },
+              error: (e) => console.error('Error loading spec for requirement auto-fill:', e),
+            });
+          }
+        }
+      },
+      error: (e) => console.error('Error loading task details:', e),
     });
   }
 
@@ -109,6 +202,15 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     this.service.getTestCaseById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
+        if (data.scenarioName && !data.scenarioId) {
+          this.formData.form.patchValue({ scenarioName: data.scenarioName });
+        }
+        if (data.tester) {
+          const names = data.tester.split(',').map((s) => s.trim()).filter((s) => !!s);
+          this.testerValues.set(names);
+        } else {
+          this.testerValues.set([]);
+        }
         this.formData.markAsPristine();
         this.isLoading.set(false);
       },

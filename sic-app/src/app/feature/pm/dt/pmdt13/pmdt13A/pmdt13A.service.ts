@@ -24,6 +24,20 @@ export class Pmdt13AService {
     return this.http.get<PmTestScenarioModel[]>(`${this.apiBase}/api/pm/test-scenarios`, { params });
   }
 
+  getTaskById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiBase}/api/pm/tasks/${id}`);
+  }
+
+  getSpecificationById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiBase}/api/pm/specifications/${id}`);
+  }
+
+  getTasksCombobox(projectId?: string | null): Observable<any[]> {
+    let params = new HttpParams();
+    if (projectId) params = params.set('projectId', projectId);
+    return this.http.get<any[]>(`${this.apiBase}/api/pm/tasks/combobox`, { params });
+  }
+
   createBugFromTest(data: any): Observable<string> {
     return this.http.post<string>(`${this.apiBase}/api/pm/bugs/save`, data);
   }

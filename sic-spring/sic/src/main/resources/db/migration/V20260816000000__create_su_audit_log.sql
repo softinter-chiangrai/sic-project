@@ -67,3 +67,8 @@ CREATE INDEX IF NOT EXISTS idx_audit_target ON su_audit_log (target_type, target
 CREATE INDEX IF NOT EXISTS idx_audit_user ON su_audit_log (user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON su_audit_log (created_date DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_business ON su_audit_log (business_id);
+
+
+ALTER TABLE pm_test_case ADD COLUMN task_id UUID;
+ALTER TABLE pm_test_case ADD COLUMN IF NOT EXISTS scenario_name VARCHAR(255);
+ALTER TABLE pm_test_case ALTER COLUMN scenario_id DROP NOT NULL;

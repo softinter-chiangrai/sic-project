@@ -5,6 +5,7 @@ import com.softinter.sicapi.dto.response.PmTestCaseResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.PmTestCase;
 
+import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.PmTestCaseService;
@@ -29,6 +30,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
 
     private final PmTestCaseRepository testCaseRepository;
     private final PmTestScenarioRepository scenarioRepository;
+    private final PmTaskRepository taskRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -114,6 +116,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     private void mapRequestToEntity(PmTestCaseRequest req, PmTestCase entity) {
         entity.setProjectId(req.getProjectId());
         entity.setScenarioId(req.getScenarioId());
+        entity.setScenarioName(req.getScenarioName());
         entity.setTaskId(req.getTaskId());
         entity.setTestCaseCode(req.getTestCaseCode());
         entity.setTitle(req.getTitle());
@@ -134,7 +137,8 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         res.setId(entity.getId());
         res.setProjectId(entity.getProjectId());
         res.setScenarioId(entity.getScenarioId());
-        if (entity.getScenarioId() != null) {
+        res.setScenarioName(entity.getScenarioName());
+        if (res.getScenarioName() == null && entity.getScenarioId() != null) {
             scenarioRepository.findById(entity.getScenarioId()).ifPresent(sc -> {
                 res.setScenarioName(sc.getScenarioName());
             });
@@ -151,6 +155,13 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         res.setRelatedRequirement(entity.getRelatedRequirement());
         res.setRelatedSpec(entity.getRelatedSpec());
         res.setRelatedTask(entity.getRelatedTask());
+        res.setTaskId(entity.getTaskId());
+        if (entity.getTaskId() != null) {
+            taskRepository.findById(entity.getTaskId()).ifPresent(task -> {
+                res.setTaskCode(task.getTaskCode());
+                res.setTaskName(task.getTaskName());
+            });
+        }
         res.setCreatedDate(entity.getCreatedDate());
         res.setUpdatedDate(entity.getUpdatedDate());
         res.setRowVersion(entity.getRowVersion());

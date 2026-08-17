@@ -325,7 +325,7 @@ export class Pmrt05Component implements OnInit {
   createSpec() {
     const projId = this.projectId();
     if (!projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08/new'], {
+    this.navigation.navigate(['/feature/pm/pmdt08'], {
       queryParams: { projectId: projId, requirementId: this.requirementId() },
     });
   }
@@ -352,7 +352,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+    this.navigation.navigate(['/feature/pm/pmdt07'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -361,7 +361,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/design-review/new'], {
+    this.navigation.navigate(['/feature/pm/design-review'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -370,7 +370,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/task-list/new'], {
+    this.navigation.navigate(['/feature/pm/task-list'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -379,7 +379,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/test-case/new'], {
+    this.navigation.navigate(['/feature/pm/test-case'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -388,7 +388,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/bug/new'], {
+    this.navigation.navigate(['/feature/pm/bug'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

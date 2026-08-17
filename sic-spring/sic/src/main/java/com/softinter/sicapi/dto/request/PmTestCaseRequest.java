@@ -13,6 +13,7 @@ public class PmTestCaseRequest {
     private UUID id;
     private UUID projectId;
     private UUID scenarioId;
+    private String scenarioName;
 
     @NotBlank(message = "Test case code is required")
     private String testCaseCode;
