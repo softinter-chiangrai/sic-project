@@ -1,123 +1,89 @@
-<div class="p-6 bg-slate-50 min-h-screen">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">
-        {{ id() ? 'แก้ไขใบแจ้งหนี้ (Invoice)' : 'สร้างใบแจ้งหนี้ใหม่ (New Invoice)' }}
-      </h1>
-      <p class="text-sm text-slate-500">จัดการข้อมูลใบแจ้งหนี้และเรียกเก็บเงินโครงการ</p>
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="p-3 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl text-emerald-600 dark:text-emerald-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          การจัดการใบแจ้งหนี้และการชำระเงิน (Invoice & Payment)
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          รายการใบแจ้งหนี้ วางบิลตามงวดงาน และติดตามสถานะการรับชำระเงิน
+        </p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <sic-button variant="secondary" (click)="onBack()">ยกเลิก</sic-button>
-      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">บันทึกข้อมูล</sic-button>
-    </div>
+    <button (click)="goToAdd()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
+      <span>+ สร้างใบแจ้งหนี้ใหม่</span>
+    </button>
   </div>
 
-  @if (dataResource.isLoading()) {
-    <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูล...</div>
-  } @else {
-    <form [formGroup]="formData.form" class="space-y-6">
-      <!-- Section 1: Core Details -->
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">ข้อมูลทั่วไป (General Information)</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            label="ลูกค้า (Customer)"
-            [required]="true"
-            [apiUrl]="apiCustomerCombobox"
-            valueField="id"
-            displayField="customerName"
-            formControlName="customerId"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="โครงการ (Project)"
-            [required]="true"
-            [apiUrl]="apiProjectCombobox"
-            valueField="id"
-            displayField="projectName"
-            formControlName="projectId"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="ประเภทบิล (Billing Type)"
-            [required]="true"
-            [items]="billingTypeOptions"
-            valueField="value"
-            displayField="label"
-            formControlName="billingType"
-          ></sic-combobox>
-
-          <sic-input
-            label="เลขที่ใบแจ้งหนี้ (Invoice No)"
-            placeholder="ระบบจะสร้างให้อัตโนมัติหากว่างไว้"
-            formControlName="invoiceNo"
-          ></sic-input>
-
-          <sic-datepicker
-            label="วันที่ออกบิล (Issue Date)"
-            [required]="true"
-            formControlName="issueDate"
-          ></sic-datepicker>
-
-          <sic-datepicker
-            label="วันครบกำหนดชำระ (Due Date)"
-            [required]="true"
-            formControlName="dueDate"
-          ></sic-datepicker>
-        </div>
+  <!-- Invoices List Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    @if (isLoading()) {
+      <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูลใบแจ้งหนี้...</div>
+    } @else if (invoices().length === 0) {
+      <div class="p-12 text-center space-y-3">
+        <div class="text-4xl">🧾</div>
+        <div class="text-slate-600 dark:text-slate-400 font-medium">ยังไม่มีรายการใบแจ้งหนี้</div>
+        <button (click)="goToAdd()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+          + คลิกที่นี่เพื่อสร้างใบแจ้งหนี้รายการแรก
+        </button>
       </div>
-
-      <!-- Section 2: Amounts -->
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">รายละเอียดจำนวนเงิน (Financial Amounts)</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <sic-input-number
-            label="ยอดก่อนภาษี (Subtotal Amount)"
-            [min]="0"
-            formControlName="subtotalAmount"
-          ></sic-input-number>
-
-          <sic-input-number
-            label="อัตราภาษี VAT (%)"
-            [min]="0"
-            formControlName="vatRate"
-          ></sic-input-number>
-
-          <sic-input-number
-            label="จำนวนภาษี VAT"
-            [readonly]="true"
-            formControlName="vatAmount"
-          ></sic-input-number>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-          <div>
-            <span class="text-sm font-medium text-slate-600">ยอดรวมทั้งสิ้น (Total Amount):</span>
-            <div class="text-2xl font-bold text-indigo-600">
-              {{ (formData.form.get('totalAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
-            </div>
-          </div>
-          <div>
-            <span class="text-sm font-medium text-slate-600">ชำระแล้วสะสม (Paid Amount):</span>
-            <div class="text-2xl font-bold text-emerald-600">
-              {{ (formData.form.get('paidAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
-            </div>
-          </div>
-        </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200 dark:border-slate-700">
+            <tr>
+              <th class="px-6 py-4">เลขที่ใบแจ้งหนี้ (Invoice No)</th>
+              <th class="px-6 py-4">ประเภทบิล (Type)</th>
+              <th class="px-6 py-4">วันครบกำหนด (Due Date)</th>
+              <th class="px-6 py-4 text-right">ยอดรวม (Total)</th>
+              <th class="px-6 py-4 text-right">ชำระแล้ว (Paid)</th>
+              <th class="px-6 py-4">สถานะ (Status)</th>
+              <th class="px-6 py-4 text-right">จัดการ (Actions)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+            @for (item of invoices(); track item.id) {
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="font-bold text-slate-900 dark:text-slate-100">{{ item.invoiceNo }}</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400">วันที่ออกบิล: {{ item.issueDate }}</div>
+                </td>
+                <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
+                  {{ item.billingType }}
+                </td>
+                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400">
+                  {{ item.dueDate || '-' }}
+                </td>
+                <td class="px-6 py-4 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">
+                  {{ (item.totalAmount || 0) | currency:'THB':'symbol':'1.2-2' }}
+                </td>
+                <td class="px-6 py-4 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                  {{ (item.paidAmount || 0) | currency:'THB':'symbol':'1.2-2' }}
+                </td>
+                <td class="px-6 py-4">
+                  <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getStatusClass(item.paymentStatus || 'UNPAID')">
+                    {{ getStatusText(item.paymentStatus || 'UNPAID') }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right space-x-2">
+                  <button (click)="goToEdit(item.id!)" class="text-emerald-600 hover:text-emerald-800 font-medium text-xs">
+                    แก้ไข/บันทึกรับเงิน
+                  </button>
+                  <button (click)="deleteInvoice(item.id!)" class="text-rose-600 hover:text-rose-800 font-medium text-xs">
+                    ลบ
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-
-      <!-- Section 3: Remark -->
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">หมายเหตุเพิ่มเติม (Remarks)</h2>
-        <sic-input-area
-          label="หมายเหตุ"
-          placeholder="กรอกหมายเหตุ หรือรายละเอียดเงื่อนไขการชำระเงิน"
-          formControlName="remark"
-        ></sic-input-area>
-      </div>
-    </form>
-  }
+    }
+  </div>
 </div>

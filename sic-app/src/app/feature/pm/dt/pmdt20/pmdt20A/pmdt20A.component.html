@@ -1,0 +1,177 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="p-3 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl text-emerald-600 dark:text-emerald-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          {{ isEdit() ? 'แก้ไขใบแจ้งหนี้ (Edit Invoice & Payment)' : 'สร้างใบแจ้งหนี้ใหม่ (New Invoice)' }}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          จัดการข้อมูลใบแจ้งหนี้ วางบิล และลงบันทึกการรับชำระเงินพร้อมแนบหลักฐาน
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <sic-button variant="outline" (click)="onBack()">ยกเลิก / กลับ</sic-button>
+      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">💾 บันทึกข้อมูล</sic-button>
+    </div>
+  </div>
+
+  <form [formGroup]="formData.form" class="space-y-6">
+    <!-- Section 1: Core Details -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
+        📌 ข้อมูลทั่วไปของใบแจ้งหนี้ (Invoice Information)
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <sic-combobox
+          label="ลูกค้า (Customer)"
+          [required]="true"
+          [apiUrl]="apiCustomerCombobox"
+          valueField="id"
+          displayField="customerName"
+          formControlName="customerId"
+        ></sic-combobox>
+
+        <sic-combobox
+          label="โครงการ (Project)"
+          [required]="true"
+          [apiUrl]="apiProjectCombobox"
+          valueField="id"
+          displayField="projectName"
+          formControlName="projectId"
+        ></sic-combobox>
+
+        <sic-combobox
+          label="ประเภทบิล (Billing Type)"
+          [required]="true"
+          [items]="billingTypeOptions"
+          valueField="value"
+          displayField="label"
+          formControlName="billingType"
+        ></sic-combobox>
+
+        <sic-input
+          label="เลขที่ใบแจ้งหนี้ (Invoice No)"
+          placeholder="เช่น INV-2026-001"
+          formControlName="invoiceNo"
+        ></sic-input>
+
+        <sic-datepicker
+          label="วันที่ออกบิล (Issue Date)"
+          [required]="true"
+          formControlName="issueDate"
+        ></sic-datepicker>
+
+        <sic-datepicker
+          label="วันครบกำหนดชำระ (Due Date)"
+          [required]="true"
+          formControlName="dueDate"
+        ></sic-datepicker>
+      </div>
+    </div>
+
+    <!-- Section 2: Amounts -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
+        💵 ยอดเงินและภาษี (Amounts & Tax)
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <sic-input-number
+          label="ยอดก่อนภาษี (Subtotal Amount)"
+          [min]="0"
+          formControlName="subtotalAmount"
+        ></sic-input-number>
+
+        <sic-input-number
+          label="อัตราภาษี VAT (%)"
+          [min]="0"
+          formControlName="vatRate"
+        ></sic-input-number>
+
+        <sic-input-number
+          label="จำนวนภาษี VAT (Auto)"
+          [readonly]="true"
+          formControlName="vatAmount"
+        ></sic-input-number>
+      </div>
+
+      <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div>
+          <span class="text-xs text-slate-500 dark:text-slate-400">ยอดรวมทั้งสิ้น (Total Amount):</span>
+          <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+            {{ (formData.form.get('totalAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-500 dark:text-slate-400">ยอดค้างชำระ (Balance Due):</span>
+          <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            {{ ((formData.form.get('totalAmount')?.value || 0) - (formData.form.get('paidAmount')?.value || 0)) | currency:'THB':'symbol':'1.2-2' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Payment Record Panel -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <div class="border-b border-slate-200 dark:border-slate-700 pb-3">
+        <h2 class="text-base font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+          <span>💳</span> บันทึกการรับชำระเงิน (Record Payment & Receipt)
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          บันทึกยอดเงินที่ได้รับจริง วันที่ชำระ และแนบสลิป/หลักฐานการโอนเงิน
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <sic-combobox
+          label="สถานะการชำระเงิน (Payment Status)"
+          [items]="paymentStatusOptions"
+          valueField="value"
+          displayField="label"
+          formControlName="paymentStatus"
+        ></sic-combobox>
+
+        <sic-input-number
+          label="ยอดเงินที่ชำระแล้ว (Paid Amount)"
+          [min]="0"
+          formControlName="paidAmount"
+        ></sic-input-number>
+
+        <sic-datepicker
+          label="วันที่ชำระเงิน (Payment Date)"
+          formControlName="paidDate"
+        ></sic-datepicker>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          แนบสลิปการโอน / ใบเสร็จรับเงิน (Payment Slip / Receipt Files)
+        </label>
+        <sic-upload
+          formControlName="receiptGroupId"
+          [maxFiles]="5">
+        </sic-upload>
+      </div>
+    </div>
+
+    <!-- Section 4: Remark -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
+        📝 หมายเหตุเพิ่มเติม (Remarks)
+      </h2>
+      <sic-input-area
+        label="หมายเหตุ"
+        placeholder="กรอกหมายเหตุ หรือเงื่อนไขการชำระเงินเพิ่มเติม..."
+        formControlName="remark"
+      ></sic-input-area>
+    </div>
+  </form>
+</div>

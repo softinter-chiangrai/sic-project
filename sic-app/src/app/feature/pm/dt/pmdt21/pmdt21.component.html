@@ -1,105 +1,87 @@
-<div class="p-6 bg-slate-50 min-h-screen">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">
-        {{ id() ? 'แก้ไขตั๋วแจ้งปัญหา MA (MA Support Ticket)' : 'สร้างตั๋วแจ้งปัญหา MA ใหม่ (New Ticket)' }}
-      </h1>
-      <p class="text-sm text-slate-500">รับแจ้งปัญหาหลังการส่งมอบและติดตามระยะเวลาการแก้ไข (SLA)</p>
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="p-3 bg-indigo-50 dark:bg-indigo-950/50 rounded-xl text-indigo-600 dark:text-indigo-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          การจัดการตั๋วบริการบำรุงรักษา (MA / Support Ticket)
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          รับแจ้งปัญหาหลังการส่งมอบ ติดตามสถานะการแก้ไข และควบคุมระยะเวลาตอบสนองตาม SLA
+        </p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <sic-button variant="secondary" (click)="onBack()">ยกเลิก</sic-button>
-      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">บันทึกข้อมูล</sic-button>
-    </div>
+    <button (click)="goToAdd()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
+      <span>+ แจ้งปัญหาใหม่ (New Ticket)</span>
+    </button>
   </div>
 
-  @if (dataResource.isLoading()) {
-    <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูล...</div>
-  } @else {
-    <form [formGroup]="formData.form" class="space-y-6">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">ข้อมูลผู้แจ้งและโครงการ</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            label="ลูกค้า (Customer)"
-            [required]="true"
-            [apiUrl]="apiCustomerCombobox"
-            valueField="id"
-            displayField="customerName"
-            formControlName="customerId"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="โครงการ (Project)"
-            [required]="true"
-            [apiUrl]="apiProjectCombobox"
-            valueField="id"
-            displayField="projectName"
-            formControlName="projectId"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="ประเภทปัญหา (Ticket Type)"
-            [required]="true"
-            [items]="ticketTypeOptions"
-            valueField="value"
-            displayField="label"
-            formControlName="ticketType"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="ระดับความรุนแรง (Severity / SLA)"
-            [required]="true"
-            [items]="severityOptions"
-            valueField="value"
-            displayField="label"
-            formControlName="severity"
-          ></sic-combobox>
-
-          <sic-combobox
-            label="สถานะ (Status)"
-            [required]="true"
-            [items]="statusOptions"
-            valueField="value"
-            displayField="label"
-            formControlName="status"
-          ></sic-combobox>
-
-          <sic-input
-            label="ผู้รับผิดชอบแก้ไข (Assigned To)"
-            placeholder="ชื่อผู้รับผิดชอบทีม Support/Dev"
-            formControlName="assignedTo"
-          ></sic-input>
-        </div>
+  <!-- Tickets List Table -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+    @if (isLoading()) {
+      <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูลตั๋วแจ้งปัญหา...</div>
+    } @else if (tickets().length === 0) {
+      <div class="p-12 text-center space-y-3">
+        <div class="text-4xl">🎫</div>
+        <div class="text-slate-600 dark:text-slate-400 font-medium">ยังไม่มีรายการตั๋วแจ้งปัญหา MA</div>
+        <button (click)="goToAdd()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+          + คลิกที่นี่เพื่อแจ้งตั๋วปัญหาแรก
+        </button>
       </div>
-
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">รายละเอียดปัญหา (Ticket Content)</h2>
-
-        <sic-input
-          label="หัวข้อปัญหา (Title)"
-          placeholder="ระบุหัวข้อปัญหาที่พบแบบกระชับ"
-          [required]="true"
-          formControlName="title"
-        ></sic-input>
-
-        <sic-input-area
-          label="รายละเอียดปัญหาโดยละเอียด (Description)"
-          placeholder="อธิบายอาการของปัญหา ขั้นตอนการเกิด และผลกระทบ"
-          [required]="true"
-          formControlName="description"
-        ></sic-input-area>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200 dark:border-slate-700">
+            <tr>
+              <th class="px-6 py-4">หัวข้อปัญหา (Title & Content)</th>
+              <th class="px-6 py-4">ประเภท (Type)</th>
+              <th class="px-6 py-4">ความรุนแรง (Severity)</th>
+              <th class="px-6 py-4">ผู้รับผิดชอบ (Assigned To)</th>
+              <th class="px-6 py-4">สถานะ (Status)</th>
+              <th class="px-6 py-4 text-right">จัดการ (Actions)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+            @for (item of tickets(); track item.id) {
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="font-bold text-slate-900 dark:text-slate-100">{{ item.title }}</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-md">{{ item.description }}</div>
+                </td>
+                <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
+                  {{ item.ticketType }}
+                </td>
+                <td class="px-6 py-4">
+                  <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getSeverityClass(item.severity)">
+                    {{ item.severity }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-xs text-slate-700 dark:text-slate-300">
+                  {{ item.assignedTo || 'ยังไม่กำหนด' }}
+                </td>
+                <td class="px-6 py-4">
+                  <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getStatusClass(item.status)">
+                    {{ getStatusText(item.status) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right space-x-2">
+                  <button (click)="goToEdit(item.id!)" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs">
+                    แก้ไข/อัปเดต
+                  </button>
+                  <button (click)="deleteTicket(item.id!)" class="text-rose-600 hover:text-rose-800 font-medium text-xs">
+                    ลบ
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">สรุปการแก้ไขปัญหา (Resolution Summary)</h2>
-        <sic-input-area
-          label="วิธีแก้ไขปัญหาและแนวทางป้องกัน"
-          placeholder="ระบุแนวทางการแก้ไขที่ดำเนินการเรียบร้อยแล้ว"
-          formControlName="resolutionSummary"
-        ></sic-input-area>
-      </div>
-    </form>
-  }
+    }
+  </div>
 </div>

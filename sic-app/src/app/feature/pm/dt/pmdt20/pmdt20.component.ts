@@ -1,133 +1,90 @@
-import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { httpResource } from '@angular/common/http';
-
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicInputNumberComponent } from '../../../../core/component/sic-input-number/sic-input-number.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../core/model/sic-base-model';
-
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { Pmdt20Service } from './pmdt20.service';
-import { Pmdt20Form } from './pmdt20.form';
 import { PmInvoiceModel } from './pmdt20.model';
-import { apiBaseUrl } from '../../../../core/config/api.config';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmdt20',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputNumberComponent,
-    SicInputAreaComponent,
-    SicDatepickerComponent,
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmdt20.component.html',
+  changeDetection: ChangeDetectionStrategy.Default,
 })
-export class Pmdt20Component implements OnInit, CanComponentDeactivate {
-  private service = inject(Pmdt20Service);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private fb = inject(FormBuilder);
-  private dialog = inject(DialogService);
+export class Pmdt20Component implements OnInit {
+  private readonly router = inject(Router);
+  private readonly service = inject(Pmdt20Service);
+  private readonly dialog = inject(DialogService);
+  private readonly customerState = inject(CustomerStateService);
 
-  formData!: SicFromData<PmInvoiceModel>;
-  id = signal<string | null>(null);
-  isSaving = signal(false);
+  invoices = signal<PmInvoiceModel[]>([]);
+  isLoading = signal(false);
+  totalElements = signal(0);
+  page = signal(0);
+  size = signal(10);
 
-  billingTypeOptions = [
-    { value: 'FIXED_PRICE', label: 'Fixed Price' },
-    { value: 'MILESTONE', label: 'Milestone Billing' },
-    { value: 'MONTHLY', label: 'Monthly Billing' },
-    { value: 'MA', label: 'MA Billing' },
-    { value: 'CHANGE_REQUEST', label: 'Change Request Billing' },
-  ];
+  ngOnInit(): void {
+    this.loadData();
+  }
 
-  apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
-  apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+  loadData(): void {
+    this.isLoading.set(true);
+    const projectId = this.customerState.getProjectId() || undefined;
+    this.service.getPaging({ projectId, page: this.page(), size: this.size() }).subscribe({
+      next: (res: any) => {
+        this.invoices.set(res.content || []);
+        this.totalElements.set(res.totalElements || 0);
+        this.isLoading.set(false);
+      },
+      error: (err: any) => {
+        this.isLoading.set(false);
+      },
+    });
+  }
 
-  dataResource = httpResource<PmInvoiceModel>(() =>
-    this.id() ? `${apiBaseUrl}/api/pm/invoices/${this.id()}` : undefined
-  );
+  goToAdd(): void {
+    this.router.navigate(['/feature/pm/invoice/new']);
+  }
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  goToEdit(id: string): void {
+    this.router.navigate(['/feature/pm/invoice', id, 'edit']);
+  }
 
-  constructor() {
-    effect(() => {
-      const data = this.dataResource.value();
-      if (data) {
-        this.formData.form.patchValue(data);
+  deleteInvoice(id: string): void {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบใบแจ้งหนี้นี้ใช่หรือไม่?').then((confirmed: boolean) => {
+      if (confirmed) {
+        this.service.delete(id).subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'ลบใบแจ้งหนี้เรียบร้อย');
+            this.loadData();
+          },
+          error: (err: any) => {
+            this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบใบแจ้งหนี้ได้');
+          },
+        });
       }
     });
   }
 
-  ngOnInit(): void {
-    this.formData = new SicFromData<PmInvoiceModel>(Pmdt20Form.createForm(this.fb));
-
-    const idParam = this.route.snapshot.params['id'];
-    if (idParam) {
-      this.id.set(idParam);
-    } else {
-      this.formData.form.patchValue({ state: SicEntityState.Added });
-    }
-
-    this.formData.form.get('subtotalAmount')?.valueChanges.subscribe((subtotal) => {
-      this.calculateTotal(subtotal || 0);
-    });
-
-    this.formData.form.get('vatRate')?.valueChanges.subscribe((vatRate) => {
-      const subtotal = this.formData.form.get('subtotalAmount')?.value || 0;
-      this.calculateTotal(subtotal, vatRate || 0);
-    });
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      UNPAID: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+      PARTIAL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+      PAID: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+      OVERDUE: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+    };
+    return map[status] || 'bg-slate-100 text-slate-700';
   }
 
-  calculateTotal(subtotal: number, vatRate = 7.0) {
-    const vat = (subtotal * vatRate) / 100;
-    const total = subtotal + vat;
-    this.formData.form.patchValue({ vatAmount: vat, totalAmount: total }, { emitEvent: false });
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/invoice']);
-  }
-
-  submit(): void {
-    if (this.formData.invalid) {
-      this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    this.isSaving.set(true);
-    const val = this.formData.value;
-    if (!val.state) {
-      val.state = this.id() ? SicEntityState.Modified : SicEntityState.Added;
-    }
-
-    this.service.save(val).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้เรียบร้อย');
-        this.formData.form.markAsPristine();
-        this.router.navigate(['/feature/pm/invoice']);
-      },
-      error: (err) => {
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'บันทึกข้อมูลไม่สำเร็จ');
-      },
-      complete: () => this.isSaving.set(false),
-    });
+  getStatusText(status: string): string {
+    const map: Record<string, string> = {
+      UNPAID: 'ยังไม่ชำระ',
+      PARTIAL: 'ชำระบางส่วน',
+      PAID: 'ชำระครบถ้วน',
+      OVERDUE: 'เกินกำหนดชำระ',
+    };
+    return map[status] || status;
   }
 }
-
-export default Pmdt20Component;
