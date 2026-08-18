@@ -256,8 +256,31 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
 
   checkTaskStatus(status?: string | null): void {
     this.linkedTaskStatus.set(status || null);
-    // Allow recording test results regardless of task status so testers can test all cases smoothly
-    this.isTaskReadyForTest.set(true);
+  }
+
+  checkActiveBug(tcCode?: string | null, projectId?: string | null, taskId?: string | null): void {
+    if (!tcCode || !projectId) {
+      this.isTaskReadyForTest.set(true);
+      return;
+    }
+    this.service.getTasksCombobox(projectId).subscribe({
+      next: (tasks: any[]) => {
+        const hasBug = (tasks || []).some((t: any) => {
+          if (t.isDelete) return false;
+          const status = (t.status || '').toLowerCase();
+          if (status === 'complete' || status === 'completed') return false;
+          const code = (t.taskCode || '').toUpperCase();
+          const name = (t.taskName || t.text || '').toUpperCase();
+          const desc = (t.description || '').toUpperCase();
+          return (
+            (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
+            (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+          );
+        });
+        this.isTaskReadyForTest.set(!hasBug);
+      },
+      error: () => this.isTaskReadyForTest.set(true),
+    });
   }
 
   loadTestCase(id: string): void {
@@ -267,6 +290,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         if (data.projectId) {
           this.loadTasks(data.projectId);
           this.loadScenarios(data.projectId);
+          this.checkActiveBug(data.testCaseCode, data.projectId, data.taskId);
         }
         if (data.taskId) {
           this.service.getTaskById(data.taskId).subscribe({
@@ -308,7 +332,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     if (this.isExecution() && !this.isTaskReadyForTest()) {
       this.dialog.warn(
         'ไม่สามารถบันทึกผลการทดสอบได้',
-        `Task ที่ผูกอยู่นี้ยังไม่อยู่ในสถานะ "Testing" ปัจจุบันสถานะคือ "${this.linkedTaskStatus() || 'ยังไม่พร้อม'}" รอให้ Task ย้ายมาสถานะ Testing ก่อนจึงจะสามารถทดสอบได้`
+        'Test Case นี้มีรายการ Bug ที่ยังแก้ไขไม่เสร็จสิ้น กรุณารอให้ทีมพัฒนาแก้ไขและปิด Bug ก่อนจึงจะสามารถทดสอบซ้ำ (Retest) ได้'
       );
       return;
     }

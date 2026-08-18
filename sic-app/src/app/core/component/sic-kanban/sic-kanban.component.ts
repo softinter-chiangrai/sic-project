@@ -87,9 +87,23 @@ export class SicKanbanComponent {
     return this._specifications();
   }
   @Input() readonly = false;
+  @Input() allowDragDrop = true;
+  @Input() allowActions = true;
   @Input() showToolbar = true;
   @Input() allowCreate = true;
   @Input() showColumnFooterCreate = true;
+
+  get canDrag(): boolean {
+    return !this.readonly && this.allowDragDrop;
+  }
+
+  get canAction(): boolean {
+    return !this.readonly && this.allowActions;
+  }
+
+  get canCreate(): boolean {
+    return !this.readonly && this.allowCreate;
+  }
 
   // ===== OUTPUTS FOR TASK =====
   @Output() taskStatusChange = new EventEmitter<KanbanStatusChangeEvent>();
@@ -405,7 +419,7 @@ export class SicKanbanComponent {
 
   // ===== DRAG & DROP HANDLERS =====
   onDropTask(event: CdkDragDrop<TaskResponse[]>, targetColumn: KanbanColumnConfig): void {
-    if (this.readonly) return;
+    if (!this.canDrag) return;
 
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
@@ -435,7 +449,7 @@ export class SicKanbanComponent {
   }
 
   onDropWorkPackage(event: CdkDragDrop<WorkPackageResponse[]>, targetColumn: KanbanColumnConfig): void {
-    if (this.readonly) return;
+    if (!this.canDrag) return;
 
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
@@ -465,7 +479,7 @@ export class SicKanbanComponent {
   }
 
   onDropMilestone(event: CdkDragDrop<MilestoneResponse[]>, targetColumn: KanbanColumnConfig): void {
-    if (this.readonly) return;
+    if (!this.canDrag) return;
 
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);

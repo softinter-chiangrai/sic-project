@@ -60,34 +60,21 @@
           ></sic-combobox>
         </div>
 
-        <!-- Assignee -->
+        <!-- Assignee (Multiple) -->
         <div>
           <sic-combobox
-            #assigneeCombobox
             label="ผู้รับมอบหมาย"
+            formControlName="assigneeIds"
             [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
             valueField="value"
             textField="text"
-            [excludeValues]="selectedAssigneeIds()"
-            (selectionChanged)="onAssigneeSelected($event, assigneeCombobox)"
+            placeholder="เลือกผู้รับมอบหมาย..."
+            [clearable]="true"
+            [multiple]="true"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกผู้รับมอบหมาย' }"
+            (selectionChanged)="onAssigneeSelectionChanged($event)"
           ></sic-combobox>
-
-          <!-- List of selected assignees -->
-          <div class="flex flex-wrap gap-2 mt-2">
-            @for (assignee of selectedAssignees(); track assignee.userId) {
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 font-medium">
-                {{ assignee.userName }}
-                <button type="button" class="hover:text-red-500 focus:outline-none flex items-center" (click)="removeAssignee(assignee.userId)">
-                  <i class="bi bi-x text-base font-bold leading-none"></i>
-                </button>
-              </span>
-            }
-          </div>
-
-          <input type="hidden" formControlName="assigneeId" />
-          @if (form.get('assigneeId')?.touched && form.get('assigneeId')?.errors?.['required']) {
-            <p class="text-red-500 text-xs mt-1">กรุณาเลือกผู้รับมอบหมาย</p>
-          }
         </div>
 
         <!-- Hidden projectId -->

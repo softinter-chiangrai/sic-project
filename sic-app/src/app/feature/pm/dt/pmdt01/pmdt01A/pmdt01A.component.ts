@@ -35,14 +35,12 @@ export class Pmdt01AComponent implements OnInit {
   private router = inject(Router);
   private businessService = inject(BusinessService);
 
-  @ViewChild('ownerCombobox') ownerCombobox!: SicComboboxComponent;
-
   projectId = '';
   phaseId: string | null = null;
   isEdit = false;
   data: Pmdt01AModel | null = null;
   userApiUrl = '';
-  selectedOwners: { id: string; name: string }[] = [];
+  selectedOwnerNames: Record<string, string> = {};
 
   form = this.fb.group({
     phaseName: ['', Validators.required],
@@ -51,12 +49,9 @@ export class Pmdt01AComponent implements OnInit {
     startTime: ['', Validators.required],
     endDate: ['', Validators.required],
     endTime: ['', Validators.required],
+    owner: [[] as string[]],
     color: [''],
   });
-
-  get excludeOwnerValues(): string[] {
-    return this.selectedOwners.map((o) => o.id);
-  }
 
   ngOnInit() {
     const businessId = this.businessService.getCurrentBusinessId();
@@ -97,14 +92,12 @@ export class Pmdt01AComponent implements OnInit {
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
 
+    let ownerValues: string[] = [];
     if (data.owner) {
-      this.selectedOwners = data.owner
+      ownerValues = data.owner
         .split(',')
         .map((s) => s.trim())
-        .filter(Boolean)
-        .map((val) => ({ id: val, name: val }));
-    } else {
-      this.selectedOwners = [];
+        .filter(Boolean);
     }
 
     this.form.patchValue({
@@ -114,25 +107,18 @@ export class Pmdt01AComponent implements OnInit {
       startTime: startTime,
       endDate: endDate,
       endTime: endTime,
+      owner: ownerValues,
       color: data.color || '',
     });
   }
 
-  onOwnerSelect(item: any) {
-    if (!item) return;
-    const userId = item.value;
-    const userName = item.text;
-    if (this.selectedOwners.some((o) => o.id === userId || o.name === userName)) {
-      this.dialog.warn('ซ้ำ', 'ผู้รับผิดชอบนี้ถูกเลือกแล้ว');
-      if (this.ownerCombobox) this.ownerCombobox.clearSelection();
-      return;
-    }
-    this.selectedOwners.push({ id: userId, name: userName });
-    if (this.ownerCombobox) this.ownerCombobox.clearSelection();
-  }
-
-  removeOwner(index: number) {
-    this.selectedOwners.splice(index, 1);
+  onOwnerSelectionChanged(items: any[]) {
+    if (!Array.isArray(items)) return;
+    items.forEach((item) => {
+      if (item && item.value && item.text) {
+        this.selectedOwnerNames[item.value] = item.text;
+      }
+    });
   }
 
   private buildISOString(date: any, time: string): string {
@@ -150,7 +136,15 @@ export class Pmdt01AComponent implements OnInit {
     }
 
     const raw = this.form.value;
-    const ownerString = this.selectedOwners.map((o) => o.name).join(', ');
+    let ownerString = '';
+    if (Array.isArray(raw.owner)) {
+      ownerString = raw.owner
+        .map((val) => this.selectedOwnerNames[val] || val)
+        .filter(Boolean)
+        .join(', ');
+    } else if (typeof raw.owner === 'string') {
+      ownerString = raw.owner;
+    }
 
     const phasePayload: Partial<Pmdt01AModel> = {
       projectId: this.projectId,

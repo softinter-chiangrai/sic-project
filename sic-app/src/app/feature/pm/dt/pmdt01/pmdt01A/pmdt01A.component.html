@@ -74,29 +74,19 @@
       </div>
     </div>
 
-    <!-- Owner -->
+    <!-- Owner (Multiple) -->
     <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">ผู้รับผิดชอบ (Owner)</label>
       <sic-combobox
-        #ownerCombobox
+        label="ผู้รับผิดชอบ (Owner)"
+        formControlName="owner"
         [apiUrl]="userApiUrl"
         valueField="value"
         textField="text"
         placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
         [clearable]="true"
-        [excludeValues]="excludeOwnerValues"
-        (selectionChanged)="onOwnerSelect($event)"
+        [multiple]="true"
+        (selectionChanged)="onOwnerSelectionChanged($event)"
       ></sic-combobox>
-
-      <!-- Chips list -->
-      <div class="mt-2 flex flex-wrap gap-2">
-        @for (owner of selectedOwners; track $index) {
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-            {{ owner.name }}
-            <button type="button" (click)="removeOwner($index)" class="hover:text-red-500 font-bold ml-1">&times;</button>
-          </span>
-        }
-      </div>
     </div>
 
     <!-- ✅ Color Picker -->

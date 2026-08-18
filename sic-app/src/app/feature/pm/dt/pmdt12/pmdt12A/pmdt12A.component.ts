@@ -12,6 +12,7 @@ import { SicDatepickerComponent } from '../../../../../core/component/sic-datepi
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicTimepickerComponent} from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 
 
 @Component({
@@ -24,6 +25,7 @@ import { SicColorpickerComponent } from '../../../../../core/component/sic-color
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicColorpickerComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt12A.component.html',
 })

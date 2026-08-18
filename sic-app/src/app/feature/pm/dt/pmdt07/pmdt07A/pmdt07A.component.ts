@@ -93,7 +93,8 @@ export class Pmdt07AComponent implements OnInit {
         title: [null, Validators.required],
         description: [null],
         changeReason: [null],
-        assigneeId: [null, Validators.required],
+        assigneeId: [null],
+        assigneeIds: [[], Validators.required],
         rowVersion: [null],
     });
 
@@ -105,24 +106,22 @@ export class Pmdt07AComponent implements OnInit {
 
     // ===== Methods =====
 
-    onAssigneeSelected(item: any, combobox: any) {
-        if (item && item.value) {
-            const exists = this.selectedAssignees().some(a => a.userId === item.value);
-            if (!exists) {
-                this.selectedAssignees.update(arr => [...arr, { userId: item.value, userName: item.text }]);
-                this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
-                this.form.get('assigneeId')?.markAsDirty();
-                this.form.get('assigneeId')?.markAsTouched();
-            }
-            combobox.writeValue(null);
+    onAssigneeSelectionChanged(items: any[]) {
+        if (!Array.isArray(items)) {
+            this.selectedAssignees.set([]);
+            this.form.get('assigneeId')?.setValue(null);
+            return;
         }
-    }
 
-    removeAssignee(userId: string) {
-        this.selectedAssignees.update(arr => arr.filter(a => a.userId !== userId));
-        this.form.get('assigneeId')?.setValue(this.selectedAssignees()[0]?.userId || null);
-        this.form.get('assigneeId')?.markAsDirty();
-        this.form.get('assigneeId')?.markAsTouched();
+        const assignees = items
+            .filter(item => item && item.value)
+            .map(item => ({
+                userId: item.value,
+                userName: item.text || item.value
+            }));
+
+        this.selectedAssignees.set(assignees);
+        this.form.get('assigneeId')?.setValue(assignees[0]?.userId || null);
     }
 
     targetDocumentApiUrl = computed(() => {
@@ -200,18 +199,20 @@ export class Pmdt07AComponent implements OnInit {
                     }
                     this.form.patchValue(data);
                     if (data.assignees && data.assignees.length > 0) {
-                        this.selectedAssignees.set(
-                            data.assignees.map((a) => ({
-                                userId: a.userId,
-                                userName: a.userName || a.userId,
-                            }))
-                        );
+                        const assignees = data.assignees.map((a) => ({
+                            userId: a.userId,
+                            userName: a.userName || a.userId,
+                        }));
+                        this.selectedAssignees.set(assignees);
+                        this.form.get('assigneeIds')?.setValue(assignees.map(a => a.userId));
                         this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
                     } else if (data.assigneeId) {
                         this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
+                        this.form.get('assigneeIds')?.setValue([data.assigneeId]);
                         this.form.get('assigneeId')?.setValue(data.assigneeId);
                     } else {
                         this.selectedAssignees.set([]);
+                        this.form.get('assigneeIds')?.setValue([]);
                         this.form.get('assigneeId')?.setValue(null);
                     }
                     if (data.projectId) {

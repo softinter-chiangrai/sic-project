@@ -123,7 +123,7 @@
       </div>
 
       <div class="kanban-toolbar-right">
-        @if (!readonly && allowCreate) {
+        @if (canCreate) {
           <button
             type="button"
             (click)="onAddItem()"
@@ -158,7 +158,7 @@
             <span class="kanban-column-count">{{ getColumnItemCount(column) }}</span>
           </div>
 
-          @if (!readonly && allowCreate) {
+          @if (canCreate) {
             <button
               type="button"
               class="kanban-column-add-btn"
@@ -185,7 +185,7 @@
                 class="kanban-card"
                 [class.kanban-card--bug]="isBugTask(task)"
                 cdkDrag
-                [cdkDragDisabled]="readonly"
+                [cdkDragDisabled]="!canDrag"
                 (click)="onCardClick(task)"
               >
                 <!-- Card Header: Code + Actions -->
@@ -200,7 +200,7 @@
                     }
                   </div>
                   
-                  @if (!readonly) {
+                  @if (canAction) {
                     <div class="kanban-card-actions">
                       <button
                         type="button"
@@ -304,14 +304,25 @@
                       <i class="bi bi-play-fill text-sm"></i> เริ่มทำงาน (Start)
                     </button>
                   } @else if (task.status === 'In Progress' || task.status === 'Doing') {
-                    <button
-                      type="button"
-                      (click)="onTaskQuickStatusChange(task, 'Waiting Review', $event)"
-                      class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 dark:text-amber-300 font-medium transition-colors cursor-pointer"
-                      title="ส่งงานให้ Tester ตรวจ"
-                    >
-                      <i class="bi bi-send-check text-xs"></i> ส่งตรวจ QA (Submit)
-                    </button>
+                    @if (isBugTask(task)) {
+                      <button
+                        type="button"
+                        (click)="onTaskQuickStatusChange(task, 'Complete', $event)"
+                        class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-medium transition-colors cursor-pointer"
+                        title="แก้ Bug เสร็จสิ้นและปิดงาน"
+                      >
+                        <i class="bi bi-check-circle-fill text-xs"></i> แก้ไขเสร็จสิ้น (Complete)
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        (click)="onTaskQuickStatusChange(task, 'Waiting Review', $event)"
+                        class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 dark:text-amber-300 font-medium transition-colors cursor-pointer"
+                        title="ส่งงานให้ Tester ตรวจ"
+                      >
+                        <i class="bi bi-send-check text-xs"></i> ส่งตรวจ QA (Submit)
+                      </button>
+                    }
                   } @else if (task.status === 'Waiting Fix' || task.status === 'Blocked') {
                     <button
                       type="button"
@@ -357,7 +368,7 @@
               <div
                 class="kanban-card kanban-card--wp"
                 cdkDrag
-                [cdkDragDisabled]="readonly"
+                [cdkDragDisabled]="!canDrag"
                 (click)="onWpCardClick(wp)"
               >
                 <!-- Card Header -->
@@ -366,7 +377,7 @@
                     <i class="bi bi-box"></i> Work Package
                   </span>
                   
-                  @if (!readonly) {
+                  @if (canAction) {
                     <div class="kanban-card-actions">
                       <button
                         type="button"
@@ -440,7 +451,7 @@
               <div
                 class="kanban-card kanban-card--milestone"
                 cdkDrag
-                [cdkDragDisabled]="readonly"
+                [cdkDragDisabled]="!canDrag"
                 (click)="onMilestoneCardClick(ms)"
               >
                 <!-- Card Header -->
@@ -449,7 +460,7 @@
                     <i class="bi bi-flag-fill"></i> Milestone
                   </span>
                   
-                  @if (!readonly) {
+                  @if (canAction) {
                     <div class="kanban-card-actions">
                       <button
                         type="button"
@@ -506,7 +517,7 @@
         }
 
         <!-- Column Footer (+ Add Item Button) -->
-        @if (!readonly && allowCreate && showColumnFooterCreate) {
+        @if (canCreate && showColumnFooterCreate) {
           <div class="kanban-column-footer">
             <button
               type="button"

@@ -33,15 +33,14 @@
       </div>
     </div>
 
-    <!-- Warning Banner when Task is NOT ready for testing in Execution Mode -->
+    <!-- Warning Banner when Test Case has an active unresolved bug in Execution Mode -->
     @if (isExecution() && !isTaskReadyForTest()) {
-      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-start gap-3">
-        <i class="bi bi-exclamation-triangle-fill text-xl mt-0.5"></i>
+      <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-start gap-3">
+        <i class="bi bi-bug-fill text-xl mt-0.5"></i>
         <div>
-          <h4 class="font-semibold text-sm">ยังไม่สามารถทดสอบได้</h4>
-          <p class="text-xs mt-0.5 text-amber-700/80 dark:text-amber-300/80">
-            Task ที่ผูกอยู่กับ Test Case นี้ ปัจจุบันมีสถานะเป็น <b>"{{ linkedTaskStatus() || 'ยังไม่พร้อม' }}"</b> 
-            ระบบจะเปิดให้บันทึกผลการทดสอบได้เมื่อสถานะของ Task เปลี่ยนเป็น <b>"Testing"</b> เท่านั้น
+          <h4 class="font-semibold text-sm">Test Case นี้มี Bug ที่กำลังรอการแก้ไข</h4>
+          <p class="text-xs mt-0.5 text-rose-700/80 dark:text-rose-300/80">
+            มีการเปิด Bug Task สำหรับเคสนี้แล้วและยังแก้ไขไม่เสร็จสิ้น จึงล็อคการทดสอบเคสนี้ไว้ชั่วคราว เมื่อทีมพัฒนาแก้ไข Bug เรียบร้อยแล้วจะสามารถกลับมาทดสอบซ้ำ (Retest) ได้
           </p>
         </div>
       </div>

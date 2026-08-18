@@ -298,14 +298,16 @@
                       <!-- จัดการ -->
                       <td class="px-4 py-3 align-top">
                         <div class="flex items-center justify-center gap-1 flex-wrap">
-                          <!-- Execute Test Highlighted Button (Always available for testing unless completed) -->
-                          <button
-                            (click)="goToExecute(testCase.id!)"
-                            class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                            title="บันทึกผลการทดสอบ"
-                          >
-                            <i class="bi bi-play-circle-fill"></i> ทดสอบ
-                          </button>
+                          <!-- Execute Test Highlighted Button (Available unless test case has an active unresolved Bug) -->
+                          @if (!hasActiveBug(testCase)) {
+                            <button
+                              (click)="goToExecute(testCase.id!)"
+                              class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                              title="บันทึกผลการทดสอบ"
+                            >
+                              <i class="bi bi-play-circle-fill"></i> ทดสอบ
+                            </button>
+                          }
                           <!-- Bug Button or Badge when test case is Fail -->
                           @if ((testCase.testStatus || '').toLowerCase() === 'fail' || (testCase.testStatus || '').toLowerCase() === 'failed') {
                             @if (hasActiveBug(testCase)) {

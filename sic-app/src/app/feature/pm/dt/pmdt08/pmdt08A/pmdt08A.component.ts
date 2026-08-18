@@ -331,6 +331,10 @@ export class Pmdt08AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.service.getSpecification(id).subscribe({
             next: (data) => {
                 this.form.patchValue(data);
+                if (data.owner && typeof data.owner === 'string') {
+                    const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
+                    this.form.patchValue({ owner: owners });
+                }
                 this.isLoading = false;
                 this.form.markAsPristine();
                 if (this.isViewOnly) this.form.disable();
