@@ -53,6 +53,12 @@ export class Pmdt18Component implements OnInit {
     this.router.navigate(['/feature/pm/delivery', id, 'edit']);
   }
 
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+    });
+  }
+
   onDelete(id: string): void {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบเอกสารส่งมอบนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {

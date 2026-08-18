@@ -1,34 +1,35 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<!-- src/app/feature/pm/rt/pmrt25/pmrt25.component.html -->
+<div class="space-y-5 p-0.5">
   <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="p-3 bg-amber-50 dark:bg-amber-950/50 rounded-xl text-amber-600 dark:text-amber-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
+      <button
+        (click)="goBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          ประวัติเวอร์ชันเอกสาร (Document Version History Timeline)
+        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
+          ประวัติและเวอร์ชันเอกสารโครงการ (Project Document Versions)
         </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          ติดตามประวัติการแก้ไข การอนุมัติเวอร์ชัน (Version Control) และสลับเวอร์ชันที่ใช้งาน
+        <p class="text-sm text-[var(--text-muted)]">
+          แสดงรายการเอกสารทั้งหมดในโครงการ รายละเอียดเวอร์ชันล่าสุด และประวัติการเปลี่ยนแปลง (Changelog)
         </p>
       </div>
     </div>
-    <button (click)="goToAdd()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
-      <span>+ บันทึกเวอร์ชันใหม่</span>
-    </button>
   </div>
 
   <!-- Filter Bar -->
-  <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-center">
+  <div class="bg-[var(--sidebar)] p-4 rounded-xl shadow-sm border border-[var(--border)] flex flex-col md:flex-row gap-4 items-center">
     <div class="flex items-center gap-2 w-full md:w-auto">
-      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">ประเภทเอกสาร:</label>
+      <label class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">ประเภทเอกสาร:</label>
       <select
         [value]="filterType()"
         (change)="onTypeChange($any($event.target).value)"
-        class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none">
+        class="text-sm bg-[var(--bg)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 cursor-pointer">
         @for (opt of docTypeOptions; track opt.value) {
           <option [value]="opt.value">{{ opt.label }}</option>
         }
@@ -36,79 +37,108 @@
     </div>
 
     <div class="flex items-center gap-2 flex-1 w-full">
-      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Document ID:</label>
-      <input
-        type="text"
-        [value]="filterDocId()"
-        (input)="onDocIdChange($any($event.target).value)"
-        placeholder="กรอก UUID หรือ รหัสเอกสาร เช่น REQ-001..."
-        class="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 outline-none" />
+      <label class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Document ID / รหัส:</label>
+      <div class="relative flex-1">
+        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+        <input
+          type="text"
+          [value]="filterDocId()"
+          (input)="onDocIdChange($any($event.target).value)"
+          placeholder="กรอก UUID หรือ รหัสเอกสาร เช่น REQ-001..."
+          class="w-full pl-9 pr-3 py-2 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 transition-all" />
+      </div>
     </div>
   </div>
 
-  <!-- Timeline View -->
-  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+  <!-- Version Data Grid Table -->
+  <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)]">
     @if (isLoading()) {
-      <div class="p-8 text-center text-slate-500">กำลังโหลดประวัติเวอร์ชัน...</div>
-    } @else if (!filterDocId()) {
-      <div class="p-12 text-center text-slate-500 space-y-2">
-        <div class="text-3xl">🔍</div>
-        <div>กรุณาระบุ Document ID เพื่อดูไทม์ไลน์เวอร์ชัน</div>
+      <div class="flex flex-col items-center justify-center py-12 gap-3">
+        <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+        <p class="text-sm text-[var(--text-muted)]">กำลังโหลดประวัติเวอร์ชัน...</p>
       </div>
-    } @else if (versions().length === 0) {
-      <div class="p-12 text-center space-y-3">
-        <div class="text-4xl">📜</div>
-        <div class="text-slate-600 dark:text-slate-400 font-medium">ยังไม่มีประวัติเวอร์ชันสำหรับเอกสารนี้</div>
-        <button (click)="goToAdd()" class="text-xs text-amber-600 dark:text-amber-400 hover:underline">
-          + บันทึกเวอร์ชันแรกสำหรับเอกสารนี้
-        </button>
+    } @else if (filteredVersions().length === 0) {
+      <div class="text-center py-12 text-[var(--text-muted)] space-y-3">
+        <i class="bi bi-journal-code text-5xl block mb-2 opacity-30 text-[var(--crm-primary)]"></i>
+        <div class="text-base font-medium text-[var(--text-active)]">ยังไม่มีประวัติเวอร์ชันสำหรับเงื่อนไขนี้</div>
+        <p class="text-xs">เมื่อมีการสร้างหรือแก้ไขเอกสารในโครงการ ระบบจะจัดเก็บประวัติเวอร์ชันที่นี่โดยอัตโนมัติ</p>
       </div>
     } @else {
-      <div class="relative border-l-2 border-slate-200 dark:border-slate-700 ml-4 pl-6 space-y-8 py-2">
-        @for (ver of versions(); track ver.id) {
-          <div class="relative group">
-            <!-- Timeline Dot -->
-            <div [class]="'absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white dark:border-slate-800 transition-all ' + (ver.isActive ? 'bg-amber-500 ring-4 ring-amber-100 dark:ring-amber-950 scale-110' : 'bg-slate-300 dark:bg-slate-600')"></div>
-
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-              <div class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                  <span class="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
-                    {{ ver.versionNo }}
+      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)]">
+        <table class="w-full text-sm">
+          <thead class="bg-[var(--bg)] border-b border-[var(--border)] text-[var(--text-muted)] uppercase text-[11px] font-semibold tracking-wider">
+            <tr>
+              <th class="px-4 py-3 text-left">เวอร์ชัน (Version)</th>
+              <th class="px-4 py-3 text-left">ประเภทเอกสาร (Type)</th>
+              <th class="px-4 py-3 text-left">รหัส / ชื่อเอกสาร (Code / Name)</th>
+              <th class="px-4 py-3 text-left">สรุปการเปลี่ยนแปลง (Change Summary)</th>
+              <th class="px-4 py-3 text-left">ผู้บันทึก (Author)</th>
+              <th class="px-4 py-3 text-left">วันที่บันทึก (Date)</th>
+              <th class="px-4 py-3 text-left">สถานะ (Status)</th>
+              <th class="px-4 py-3 text-right">จัดการ (Actions)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border)]">
+            @for (ver of filteredVersions(); track ver.id) {
+              <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+                <td class="px-4 py-3.5">
+                  <span class="font-mono font-bold text-[var(--text-active)]">{{ ver.versionNo }}</span>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                    {{ ver.documentType }}
                   </span>
+                </td>
+                <td class="px-4 py-3.5 font-medium text-[var(--text-active)]">
+                  {{ ver.documentCode || '-' }}
+                </td>
+                <td class="px-4 py-3.5 text-xs text-[var(--text)] max-w-xs truncate" [title]="ver.changeSummary || ''">
+                  {{ ver.changeSummary || '-' }}
+                </td>
+                <td class="px-4 py-3.5 text-xs text-[var(--text)]">
+                  <div class="flex items-center gap-1.5">
+                    <i class="bi bi-person text-[var(--crm-primary)]"></i>
+                    <span>{{ ver.createdBy || 'System' }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                  {{ ver.createdDate | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="px-4 py-3.5">
                   @if (ver.isActive) {
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
-                      ★ Active Version
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                      ★ Active
+                    </span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-full text-[11px] text-[var(--text-muted)] bg-gray-100 dark:bg-gray-800">
+                      History
                     </span>
                   }
-                </div>
-                <div class="text-xs text-slate-400">
-                  {{ ver.createdDate }} | โดย {{ ver.createdBy || 'System' }}
-                </div>
-              </div>
-
-              <div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                {{ ver.changeSummary || 'ไม่มีสรุปการเปลี่ยนแปลง' }}
-              </div>
-
-              <div class="flex items-center justify-between pt-3 border-t border-slate-200/60 dark:border-slate-800 text-xs">
-                <div class="text-slate-400">
-                  Document Code: <span class="font-mono text-slate-600 dark:text-slate-400">{{ ver.documentCode || '-' }}</span>
-                </div>
-                <div class="flex items-center gap-3">
-                  @if (!ver.isActive) {
-                    <button (click)="onActivate(ver.id)" class="text-amber-600 hover:text-amber-700 dark:text-amber-400 font-semibold">
-                      ⚡ ตั้งเป็น Active Version
+                </td>
+                <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2">
+                    @if (!ver.isActive) {
+                      <button
+                        (click)="onActivate(ver.id)"
+                        class="p-1.5 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 rounded-lg transition-all"
+                        title="ตั้งเป็น Active Version"
+                      >
+                        <i class="bi bi-check-circle text-base"></i>
+                      </button>
+                    }
+                    <button
+                      (click)="onDelete(ver.id)"
+                      class="p-1.5 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded-lg transition-all"
+                      title="ลบ"
+                    >
+                      <i class="bi bi-trash text-base"></i>
                     </button>
-                  }
-                  <button (click)="onDelete(ver.id)" class="text-rose-500 hover:text-rose-700 font-semibold">
-                    ลบ
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     }
   </div>

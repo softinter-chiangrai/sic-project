@@ -1,43 +1,48 @@
-<div class="p-6 max-w-5xl mx-auto space-y-6">
+<!-- src/app/feature/pm/dt/pmdt25/pmdt25.component.html -->
+<div class="space-y-5 p-0.5">
   <!-- Header Card -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="p-3 bg-amber-50 dark:bg-amber-950/50 rounded-xl text-amber-600 dark:text-amber-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
+      <button
+        (click)="onBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
           {{ isEdit() ? 'แก้ไขบันทึกเวอร์ชันเอกสาร (Edit Version Record)' : 'สร้างบันทึกเวอร์ชันเอกสารใหม่ (New Document Version)' }}
         </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
+        <p class="text-sm text-[var(--text-muted)]">
           สร้างหรือแก้ไขประวัติ Version Control ประจำเอกสารโครงการ
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-3">
-      <button sic-button variant="outline" (click)="onBack()">
-        ← ยกเลิก / กลับ
-      </button>
-      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
-        {{ isSaving() ? 'กำลังบันทึก...' : '💾 บันทึกเวอร์ชัน' }}
-      </button>
+    <div class="flex items-center gap-2">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ยกเลิก
+      </sic-button>
+      <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
+        <i class="bi bi-check-lg"></i> บันทึกเวอร์ชัน
+      </sic-button>
     </div>
   </div>
 
   <!-- Main Form -->
-  <form [formGroup]="formData.form" class="space-y-6">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
-      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
-        📌 รายละเอียดเวอร์ชันเอกสาร (Version Details)
+  <form [formGroup]="formData.form" class="space-y-5">
+    <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+        <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+        รายละเอียดเวอร์ชันเอกสาร (Version Details)
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
           formControlName="documentType"
           label="ประเภทเอกสาร (Document Type)"
-          [options]="docTypeOptions"
+          [items]="docTypeOptions"
           valueField="value"
           displayField="label">
         </sic-combobox>
@@ -63,9 +68,10 @@
     </div>
 
     <!-- File Attachment -->
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
-      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">
-        📎 แนบไฟล์ฉบับนี้ (Document Version File)
+    <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
+      <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+        <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+        แนบไฟล์ฉบับนี้ (Document Version File)
       </h3>
 
       <sic-upload

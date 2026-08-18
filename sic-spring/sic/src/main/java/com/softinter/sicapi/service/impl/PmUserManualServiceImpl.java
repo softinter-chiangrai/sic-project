@@ -9,7 +9,9 @@ import com.softinter.sicapi.entity.pm.PmUserManual;
 import com.softinter.sicapi.entity.pm.PmUserManualSection;
 import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualSectionRepository;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmUserManualService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
 
     private final PmUserManualRepository manualRepository;
     private final PmUserManualSectionRepository sectionRepository;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,6 +67,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmUserManual entity;
 
+        String diffSummary = "สร้างคู่มือการใช้งาน (Initial user manual)";
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmUserManual();
             entity.setBusinessId(businessId);
@@ -76,6 +81,15 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่อคู่มือ (Title)", entity.getManualTitle(), request.getManualTitle());
+            DocumentDiffHelper.checkChange(changes, "ประเภทคู่มือ (Type)", entity.getManualType(), request.getManualType());
+            DocumentDiffHelper.checkChange(changes, "เวอร์ชัน (Version)", entity.getVersion(), request.getVersion());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus());
+            diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคู่มือ " + (request.getManualTitle() != null ? request.getManualTitle() : entity.getManualTitle()));
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
@@ -87,6 +101,24 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
         }
+
+        // Snapshot data
+        String snapshotJson = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            snapshotJson = mapper.writeValueAsString(entity);
+        } catch (Exception ignored) {}
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "MANUAL",
+                entity.getId(),
+                entity.getProjectId(),
+                entity.getManualCode(),
+                entity.getVersion() != null ? entity.getVersion() : "v1.0",
+                diffSummary,
+                snapshotJson
+        );
 
         // Handle Sections
         if (request.getSections() != null) {

@@ -4,7 +4,10 @@ import com.softinter.sicapi.dto.request.DocumentVersionRequest;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.entity.pm.PmDocumentVersion;
 import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,15 +24,29 @@ import java.util.stream.Collectors;
 public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     private final PmDocumentVersionRepository versionRepository;
+    private final BusinessAccessService businessAccessService;
+    private final SuProfileRepository profileRepository;
 
     @Override
     @Transactional(readOnly = true)
     public List<DocumentVersionResponse> getVersions(String documentType, UUID documentId) {
         return versionRepository
-                .findByDocumentTypeAndDocumentIdAndIsActiveTrueOrderByCreatedDateDesc(documentType, documentId)
+                .findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(documentType, documentId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentVersionResponse> getVersionsByProject(UUID projectId, String documentType) {
+        List<PmDocumentVersion> list;
+        if (documentType != null && !documentType.isBlank() && !"ALL".equalsIgnoreCase(documentType)) {
+            list = versionRepository.findByProjectIdAndDocumentTypeAndIsDeleteFalseOrderByCreatedDateDesc(projectId, documentType);
+        } else {
+            list = versionRepository.findByProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(projectId);
+        }
+        return list.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -65,6 +82,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             version.setDocumentId(request.getDocumentId());
             version.setDocumentCode(request.getDocumentCode());
             version.setProjectId(request.getProjectId());
+            version.setBusinessId(businessAccessService.getBusinessId());
             version.setVersionNo(request.getVersionNo());
             version.setChangeSummary(request.getChangeSummary());
             version.setPreviousVersionId(request.getPreviousVersionId());
@@ -126,14 +144,37 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     @Transactional
     public void createVersion(String documentType, UUID documentId, String versionNo, String changeSummary) {
+        createVersion(documentType, documentId, null, null, versionNo, changeSummary);
+    }
+
+    @Override
+    @Transactional
+    public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary) {
+        createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, null);
+    }
+
+    @Override
+    @Transactional
+    public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData) {
+        UUID previousVersionId = versionRepository
+                .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId)
+                .map(PmDocumentVersion::getId)
+                .orElse(null);
+
         PmDocumentVersion version = new PmDocumentVersion();
         version.setDocumentType(documentType);
         version.setDocumentId(documentId);
+        version.setProjectId(projectId);
+        version.setBusinessId(businessAccessService.getBusinessId());
+        version.setDocumentCode(documentCode);
         version.setVersionNo(versionNo);
         version.setChangeSummary(changeSummary);
+        version.setPreviousVersionId(previousVersionId);
+        version.setSnapshotData(snapshotData);
         version.setIsActive(true);
         versionRepository.save(version);
-        log.info("Document version created: {} - {} - {}", documentType, documentId, versionNo);
+        log.info("Document version created: {} - {} - Project: {} - Version: {} - PrevVersion: {}", 
+                documentType, documentId, projectId, versionNo, previousVersionId);
     }
 
     @Override
@@ -180,7 +221,14 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         response.setFilePath(version.getFilePath());
         response.setIsActive(version.getIsActive());
         response.setRowVersion(version.getRowVersion());
-        response.setCreatedBy(version.getCreatedBy());
+
+        String createdByName = version.getCreatedBy();
+        if (createdByName != null && !createdByName.isBlank()) {
+            createdByName = profileRepository.findByUserId(version.getCreatedBy())
+                    .map(LocalizationHelper::getFullName)
+                    .orElse(version.getCreatedBy());
+        }
+        response.setCreatedBy(createdByName != null ? createdByName : "System");
         response.setCreatedDate(version.getCreatedDate());
         response.setUpdatedBy(version.getUpdatedBy());
         response.setUpdatedDate(version.getUpdatedDate());

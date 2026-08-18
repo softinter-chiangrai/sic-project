@@ -42,6 +42,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmChangeImpactRepository pmChangeImpactRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final ApprovalService approvalService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional
@@ -77,6 +78,24 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         cr = changeRequestRepository.save(cr);
 
+        // Snapshot data
+        String snapshotJson = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            snapshotJson = mapper.writeValueAsString(cr);
+        } catch (Exception ignored) {}
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "CHANGE_REQUEST",
+                cr.getId(),
+                cr.getProjectId(),
+                cr.getTitle(),
+                "v1.0",
+                "สร้างคำขอเปลี่ยนแปลง (Initial change request)",
+                snapshotJson
+        );
+
         // บันทึก Assignees
         if (request.getAssignees() != null) {
             for (var aReq : request.getAssignees()) {
@@ -103,6 +122,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             throw new IllegalStateException("Cannot update Change Request in status: " + cr.getStatus());
         }
 
+        // ✅ Auto Diff Detection
+        List<String> changes = new ArrayList<>();
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อคำขอ (Title)", cr.getTitle(), request.getTitle());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เหตุผล (Reason)", cr.getChangeReason(), request.getChangeReason());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
+        String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
+
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
@@ -110,6 +137,24 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setAssigneeId(request.getAssigneeId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());
+
+        // Snapshot data
+        String snapshotJson = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            snapshotJson = mapper.writeValueAsString(cr);
+        } catch (Exception ignored) {}
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "CHANGE_REQUEST",
+                cr.getId(),
+                cr.getProjectId(),
+                cr.getTitle(),
+                "v1.1",
+                diffSummary,
+                snapshotJson
+        );
 
         // อัปเดต Assignees (ลบเดิม สร้างใหม่)
         List<PmCrAssignee> existing = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());

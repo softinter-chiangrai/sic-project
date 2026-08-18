@@ -21,12 +21,14 @@ import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -166,6 +168,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         documentVersionService.createVersion(
                 diagramType,
                 saved.getId(),
+                saved.getProjectId(),
+                saved.getName(),
                 "v1.0",
                 "Initial version"
         );
@@ -226,6 +230,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
             String oldVersion = getCurrentVersion(tab);
 
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่อแท็บ (Name)", tab.getName(), request.getName());
+            DocumentDiffHelper.checkChange(changes, "Mermaid Script", tab.getMermaidScript(), request.getMermaidScript());
+            DocumentDiffHelper.checkChange(changes, "Graph Data", tab.getGraphData(), request.getGraphData());
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตไดอะแกรม " + (request.getName() != null ? request.getName() : tab.getName()));
+
             if (request.getName() != null) {
                 tab.setName(request.getName());
             }
@@ -234,14 +245,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
             if (request.getMermaidScript() != null) {
                 tab.setMermaidScript(request.getMermaidScript());
-                createVersion(tab, "Auto-save");
             }
             if (request.getMetadata() != null) {
                 tab.setMetadata(request.getMetadata());
             }
             if (request.getGraphData() != null) {
                 tab.setGraphData(request.getGraphData());
-                createVersion(tab, "Graph data updated");
             }
             if (request.getIsActive() != null) {
                 tab.setIsActive(request.getIsActive());
@@ -249,13 +258,23 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
             PmDiagramTab saved = tabRepository.save(tab);
 
+            // Snapshot data
+            String snapshotJson = null;
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                snapshotJson = mapper.writeValueAsString(saved);
+            } catch (Exception ignored) {}
+
             // ✅ Create document version
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             documentVersionService.createVersion(
                     saved.getDiagramType().toUpperCase(),
                     saved.getId(),
+                    saved.getProjectId(),
+                    saved.getName(),
                     newVersion,
-                    "Updated: " + saved.getName()
+                    diffSummary,
+                    snapshotJson
             );
 
             return toResponse(saved);

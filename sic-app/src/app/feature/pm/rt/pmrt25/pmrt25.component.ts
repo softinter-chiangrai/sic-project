@@ -5,6 +5,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Pmdt25Service } from '../../dt/pmdt25/pmdt25.service';
 import { DocumentVersionModel } from '../../dt/pmdt25/pmdt25.model';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmrt25',
@@ -18,14 +19,16 @@ export class Pmrt25Component implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly service = inject(Pmdt25Service);
   private readonly dialog = inject(DialogService);
+  private readonly customerState = inject(CustomerStateService);
 
   versions = signal<DocumentVersionModel[]>([]);
   isLoading = signal(false);
 
-  filterType = signal<string>('REQUIREMENT');
+  filterType = signal<string>('ALL');
   filterDocId = signal<string>('');
 
   docTypeOptions = [
+    { label: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
     { label: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
     { label: 'DFD Diagram', value: 'DFD' },
     { label: 'ER Diagram', value: 'ER' },
@@ -37,31 +40,54 @@ export class Pmrt25Component implements OnInit {
     { label: 'User Manual', value: 'MANUAL' },
   ];
 
-  ngOnInit(): void {
-    const qType = this.route.snapshot.queryParams['documentType'];
-    const qId = this.route.snapshot.queryParams['documentId'];
-    if (qType) this.filterType.set(qType);
-    if (qId) this.filterDocId.set(qId);
+  filteredVersions = signal<DocumentVersionModel[]>([]);
 
-    this.loadVersions();
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const qProjectId = params['projectId'];
+      if (qProjectId) {
+        this.customerState.setProject(qProjectId);
+      }
+      const qType = params['documentType'];
+      const qId = params['documentId'];
+      if (qType) this.filterType.set(qType);
+      if (qId) this.filterDocId.set(qId);
+
+      this.loadVersions();
+    });
   }
 
   loadVersions(): void {
-    if (!this.filterDocId()) {
-      this.versions.set([]);
-      return;
-    }
-
     this.isLoading.set(true);
-    this.service.getVersions(this.filterType(), this.filterDocId()).subscribe({
+    const projectId = this.customerState.getProjectId() || undefined;
+    const docType = this.filterType();
+    const docId = this.filterDocId() || undefined;
+
+    this.service.getVersions(docType, docId, projectId).subscribe({
       next: (list) => {
         this.versions.set(list || []);
+        this.applyFilter();
         this.isLoading.set(false);
       },
       error: () => {
         this.isLoading.set(false);
       },
     });
+  }
+
+  applyFilter(): void {
+    const term = (this.filterDocId() || '').trim().toLowerCase();
+    if (!term) {
+      this.filteredVersions.set(this.versions());
+      return;
+    }
+    const filtered = this.versions().filter((v) =>
+      (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
+      (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
+      (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
+      (v.documentId && v.documentId.toLowerCase().includes(term))
+    );
+    this.filteredVersions.set(filtered);
   }
 
   onTypeChange(type: string): void {
@@ -71,7 +97,7 @@ export class Pmrt25Component implements OnInit {
 
   onDocIdChange(docId: string): void {
     this.filterDocId.set(docId);
-    this.loadVersions();
+    this.applyFilter();
   }
 
   onActivate(id: string): void {
@@ -112,6 +138,12 @@ export class Pmrt25Component implements OnInit {
         documentType: this.filterType(),
         documentId: this.filterDocId(),
       },
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
     });
   }
 }

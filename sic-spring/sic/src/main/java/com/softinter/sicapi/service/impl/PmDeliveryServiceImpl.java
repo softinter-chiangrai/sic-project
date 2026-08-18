@@ -12,7 +12,9 @@ import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.entity.pm.PmSpecification;
 import com.softinter.sicapi.repository.pm.*;
 import com.softinter.sicapi.service.ApprovalService;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmDeliveryService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     private final PmTestCaseRepository testCaseRepository;
 
     private final ApprovalService approvalService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -82,6 +85,16 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             mapRequestToEntity(request, entity);
             entity = deliveryRepository.save(entity);
 
+            // ✅ Create initial document version
+            documentVersionService.createVersion(
+                    "DELIVERY",
+                    entity.getId(),
+                    entity.getProjectId(),
+                    entity.getDeliveryCode(),
+                    "v1.0",
+                    "สร้างเอกสารส่งมอบงวดงาน (Initial delivery)"
+            );
+
             // Save checklists
             if (request.getChecklists() != null) {
                 for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
@@ -97,10 +110,38 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         } else if (state == EntityState.MODIFIED) {
             entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่องวดงาน (Title)", entity.getDeliveryTitle(), request.getDeliveryTitle());
+            DocumentDiffHelper.checkChange(changes, "ประเภทการส่งมอบ (Type)", entity.getDeliveryType(), request.getDeliveryType());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus());
+            DocumentDiffHelper.checkChange(changes, "วันที่ส่งมอบ (Delivery Date)", entity.getDeliveryDate(), request.getDeliveryDate());
+            DocumentDiffHelper.checkChange(changes, "Release Note", entity.getReleaseNote(), request.getReleaseNote());
+            DocumentDiffHelper.checkChange(changes, "สรุปการส่งมอบ (Summary)", entity.getDeliverySummary(), request.getDeliverySummary());
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตเอกสารส่งมอบ " + (request.getDeliveryTitle() != null ? request.getDeliveryTitle() : entity.getDeliveryTitle()));
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = deliveryRepository.save(entity);
+
+            // Snapshot data
+            String snapshotJson = null;
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                snapshotJson = mapper.writeValueAsString(entity);
+            } catch (Exception ignored) {}
+
+            documentVersionService.createVersion(
+                    "DELIVERY",
+                    entity.getId(),
+                    entity.getProjectId(),
+                    entity.getDeliveryCode(),
+                    "v1.1",
+                    diffSummary,
+                    snapshotJson
+            );
 
             // Sync checklists
             if (request.getChecklists() != null) {

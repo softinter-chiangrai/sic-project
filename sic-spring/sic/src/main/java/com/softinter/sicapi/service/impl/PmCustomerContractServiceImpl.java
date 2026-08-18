@@ -21,17 +21,24 @@ import com.softinter.sicapi.entity.pm.PmCustomerContract;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmCustomerContractService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PmCustomerContractServiceImpl implements PmCustomerContractService {
 
     private final PmCustomerContractRepository contractRepository;
+    private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -74,10 +81,23 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 @Transactional(readOnly = true)
 public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
     PmCustomerContract contract;
-    if (request.getId() != null) {
+    boolean isNew = (request.getId() == null);
+    String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";
+
+    if (!isNew) {
         contract = contractRepository.findById(request.getId())
                 .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
         contract.setRowVersion(request.getRowVersion());
+
+        // ✅ Auto Diff Detection
+        List<String> changes = new ArrayList<>();
+        DocumentDiffHelper.checkChange(changes, "เลขที่สัญญา (Contract No)", contract.getContractNo(), request.getContractNo());
+        DocumentDiffHelper.checkChange(changes, "ประเภทสัญญา (Type)", contract.getContractType(), request.getContractType());
+        DocumentDiffHelper.checkChange(changes, "สถานะลงนาม (Sign Status)", contract.getSignStatus(), request.getSignStatus());
+        DocumentDiffHelper.checkChange(changes, "มูลค่าสัญญา (Value)", contract.getContractValue(), request.getContractValue());
+        DocumentDiffHelper.checkChange(changes, "เงื่อนไขการชำระเงิน (Payment Terms)", contract.getPaymentTerms(), request.getPaymentTerms());
+        DocumentDiffHelper.checkChange(changes, "ขอบเขตงาน (Scope)", contract.getScopeSummary(), request.getScopeSummary());
+        diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตสัญญา " + (request.getContractNo() != null ? request.getContractNo() : ""));
     } else {
         contract = new PmCustomerContract();
         contract.setBusinessId(businessId);
@@ -99,6 +119,24 @@ public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
     contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
     contract = contractRepository.save(contract);
+
+    // Snapshot data
+    String snapshotJson = null;
+    try {
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        snapshotJson = mapper.writeValueAsString(contract);
+    } catch (Exception ignored) {}
+
+    // ✅ Create document version
+    documentVersionService.createVersion(
+            "CONTRACT",
+            contract.getId(),
+            contract.getProjectId(),
+            contract.getContractNo(),
+            isNew ? "v1.0" : "v1.1",
+            diffSummary,
+            snapshotJson
+    );
     
     // ✅ เก็บ contractId ไว้ในตัวแปร final ก่อนใช้ใน Lambda
     final UUID contractId = contract.getId();

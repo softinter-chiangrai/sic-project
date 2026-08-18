@@ -11,7 +11,9 @@ import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmMaTicketService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -32,6 +36,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -58,6 +63,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     public UUID save(PmMaTicketRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmMaTicket entity;
+        String diffSummary = "สร้างตั๋วแจ้งปัญหา MA (Initial MA ticket)";
 
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmMaTicket();
@@ -76,6 +82,15 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "หัวข้อปัญหา (Title)", entity.getTitle(), request.getTitle());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus());
+            DocumentDiffHelper.checkChange(changes, "ระดับความรุนแรง (Severity)", entity.getSeverity(), request.getSeverity());
+            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", entity.getAssignedTo(), request.getAssignedTo());
+            diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตตั๋วปัญหา " + (request.getTitle() != null ? request.getTitle() : entity.getTitle()));
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
@@ -87,6 +102,24 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             entity = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
         }
+
+        // Snapshot data
+        String snapshotJson = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            snapshotJson = mapper.writeValueAsString(entity);
+        } catch (Exception ignored) {}
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "MA_TICKET",
+                entity.getId(),
+                entity.getProjectId(),
+                entity.getTicketNo(),
+                "v1.0",
+                diffSummary,
+                snapshotJson
+        );
 
         return entity.getId();
     }

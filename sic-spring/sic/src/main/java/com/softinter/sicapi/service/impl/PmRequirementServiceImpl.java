@@ -24,6 +24,7 @@ import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -86,15 +87,18 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setVersion("v1.0");
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
-            requirement = requirementRepository.save(requirement);
+            PmRequirement saved = requirementRepository.save(requirement);
 
-            // ✅ Create initial version
+            // ✅ Create initial document version
             documentVersionService.createVersion(
                     "REQUIREMENT",
-                    requirement.getId(),
-                    requirement.getVersion(),
-                    "Initial version"
+                    saved.getId(),
+                    saved.getProjectId(),
+                    saved.getRequirementCode(),
+                    saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                    "Initial requirement version"
             );
+            requirement = saved;
 
         } else if (state == EntityState.MODIFIED) {
             // ===== UPDATE EXISTING =====
@@ -117,37 +121,43 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             String oldVersion = requirement.getVersion();
             if (oldVersion == null) oldVersion = "v1.0";
 
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่อความต้องการ (Title)", requirement.getTitle(), request.getTitle());
+            DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", requirement.getDescription(), request.getDescription());
+            DocumentDiffHelper.checkChange(changes, "ประเภท (Type)", requirement.getRequirementType(), request.getRequirementType());
+            DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", requirement.getPriority(), request.getPriority());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", requirement.getStatus(), request.getStatus());
+            DocumentDiffHelper.checkChange(changes, "คุณค่าทางธุรกิจ (Business Value)", requirement.getBusinessValue(), request.getBusinessValue());
+            DocumentDiffHelper.checkChange(changes, "เกณฑ์การยอมรับ (Acceptance Criteria)", requirement.getAcceptanceCriteria(), request.getAcceptanceCriteria());
+
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, request.getTitle());
+
             requirement.setUpdatedBy(userId);
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
 
-            // ✅ Increment version if status changed to Approved
-            if ("Approved".equals(request.getStatus()) && !"Approved".equals(oldStatus)) {
-                String newVersion = documentVersionService.incrementVersion(oldVersion);
-                requirement.setVersion(newVersion);
-                requirement = requirementRepository.save(requirement);
+            String newVersion = documentVersionService.incrementVersion(oldVersion);
+            requirement.setVersion(newVersion);
+            requirement = requirementRepository.save(requirement);
 
-                documentVersionService.createVersion(
-                        "REQUIREMENT",
-                        requirement.getId(),
-                        newVersion,
-                        "Status changed to Approved"
-                );
-            } else {
-                // ✅ Save version on every update (optional - can be configured)
-                requirement = requirementRepository.save(requirement);
-                String newVersion = documentVersionService.incrementVersion(oldVersion);
-                requirement.setVersion(newVersion);
-                requirement = requirementRepository.save(requirement);
+            // Snapshot data
+            String snapshotJson = null;
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                snapshotJson = mapper.writeValueAsString(requirement);
+            } catch (Exception ignored) {}
 
-                documentVersionService.createVersion(
-                        "REQUIREMENT",
-                        requirement.getId(),
-                        newVersion,
-                        request.getTitle() + " (updated)"
-                );
-            }
+            documentVersionService.createVersion(
+                    "REQUIREMENT",
+                    requirement.getId(),
+                    requirement.getProjectId(),
+                    requirement.getRequirementCode(),
+                    newVersion,
+                    diffSummary,
+                    snapshotJson
+            );
 
         } else if (state == EntityState.DELETED) {
             // ===== SOFT DELETE =====

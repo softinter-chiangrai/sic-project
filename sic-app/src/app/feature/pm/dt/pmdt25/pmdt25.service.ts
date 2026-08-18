@@ -15,10 +15,17 @@ export class Pmdt25Service {
   apiGetLovStatus = environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS';
 
   // ===== CRUD =====
-  getVersions(documentType: string, documentId: string): Observable<DocumentVersionModel[]> {
-    const params = new HttpParams()
-      .set('documentType', documentType)
-      .set('documentId', documentId);
+  getVersions(documentType?: string, documentId?: string, projectId?: string): Observable<DocumentVersionModel[]> {
+    let params = new HttpParams();
+    if (documentType && documentType !== 'ALL') {
+      params = params.set('documentType', documentType);
+    }
+    if (documentId) {
+      params = params.set('documentId', documentId);
+    }
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
     return this.http.get<DocumentVersionModel[]>(this.apiUrl, { params });
   }
 

@@ -52,6 +52,12 @@ export class Pmdt20Component implements OnInit {
     this.router.navigate(['/feature/pm/invoice', id, 'edit']);
   }
 
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+    });
+  }
+
   deleteInvoice(id: string): void {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบใบแจ้งหนี้นี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {

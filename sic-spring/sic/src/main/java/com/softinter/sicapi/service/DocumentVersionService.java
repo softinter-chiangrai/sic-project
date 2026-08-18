@@ -11,6 +11,8 @@ public interface DocumentVersionService {
     // ===== Core CRUD =====
     List<DocumentVersionResponse> getVersions(String documentType, UUID documentId);
 
+    List<DocumentVersionResponse> getVersionsByProject(UUID projectId, String documentType);
+
     DocumentVersionResponse getVersion(UUID id);
 
     UUID saveVersion(DocumentVersionRequest request);
@@ -24,6 +26,10 @@ public interface DocumentVersionService {
 
     // ===== Helper Methods =====
     void createVersion(String documentType, UUID documentId, String versionNo, String changeSummary);
+
+    void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary);
+
+    void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData);
 
     String incrementVersion(String currentVersion);
 

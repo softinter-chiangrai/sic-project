@@ -19,10 +19,14 @@ import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.util.LocalizationHelper;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,17 +143,22 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 spec.setRequirement(requirement);
             }
 
-            spec = specificationRepository.save(spec);
+            PmSpecification saved = specificationRepository.save(spec);
 
-            // ✅ สร้าง Document Version ผ่าน DocumentVersionService
-            documentVersionService.createVersion(
-                    "SPECIFICATION",
-                    spec.getId(),
-                    spec.getVersion(),
-                    "สร้าง Specification ฉบับแรก");
+            // ✅ Create initial document version
+            if (saved.getProject() != null) {
+                documentVersionService.createVersion(
+                        "SPEC",
+                        saved.getId(),
+                        saved.getProject().getId(),
+                        saved.getSpecificationCode(),
+                        saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                        "Initial specification version"
+                );
+            }
 
             // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
-            UUID projectIdForTrace = spec.getProject() != null ? spec.getProject().getId() : request.getProjectId();
+            UUID projectIdForTrace = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
             if (request.getGeneratedFromRequirementId() != null) {
                 UUID reqId = request.getGeneratedFromRequirementId();
                 if (requirementRepository.existsById(reqId)) {
@@ -194,35 +203,45 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0";
             String oldStatus = spec.getStatus();
 
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่อหัวข้อ (Title)", spec.getTitle(), request.getTitle());
+            DocumentDiffHelper.checkChange(changes, "ประเภท (Type)", spec.getSpecificationType(), request.getSpecificationType());
+            DocumentDiffHelper.checkChange(changes, "คำอธิบาย (Description)", spec.getDescription(), request.getDescription());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", spec.getStatus(), request.getStatus());
+            DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", spec.getPriority(), request.getPriority());
+            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Owner)", spec.getOwner(), request.getOwner());
+            DocumentDiffHelper.checkChange(changes, "ประมาณการ Man-day (Estimated Manday)", spec.getEstimatedManday() != null ? spec.getEstimatedManday().toString() : null, request.getEstimatedManday() != null ? request.getEstimatedManday().toString() : null);
+
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, request.getTitle());
+
             spec.setUpdatedBy(userId);
             spec.setUpdatedDate(Instant.now());
 
             // Mapping ข้อมูล
             mapRequestToEntity(request, spec);
 
-            // ✅ Increment Version ถ้าสถานะเปลี่ยนเป็น Approved หรือ Released
-            if ("Approved".equals(request.getStatus()) || "Released".equals(request.getStatus())) {
-                String newVersion = incrementVersion(oldVersion);
-                spec.setVersion(newVersion);
-                spec = specificationRepository.save(spec);
+            UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
+            String newVersion = incrementVersion(oldVersion);
+            spec.setVersion(newVersion);
+            spec = specificationRepository.save(spec);
 
-                documentVersionService.createVersion(
-                        "SPECIFICATION",
-                        spec.getId(),
-                        newVersion,
-                        "เปลี่ยนสถานะเป็น " + request.getStatus());
-            } else {
-                // ✅ ทุกการอัปเดตจะเพิ่มเวอร์ชัน
-                String newVersion = incrementVersion(oldVersion);
-                spec.setVersion(newVersion);
-                spec = specificationRepository.save(spec);
+            // Snapshot data
+            String snapshotJson = null;
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                snapshotJson = mapper.writeValueAsString(spec);
+            } catch (Exception ignored) {}
 
-                documentVersionService.createVersion(
-                        "SPECIFICATION",
-                        spec.getId(),
-                        newVersion,
-                        request.getTitle() + " (อัปเดต)");
-            }
+            documentVersionService.createVersion(
+                    "SPEC",
+                    spec.getId(),
+                    projId,
+                    spec.getSpecificationCode(),
+                    newVersion,
+                    diffSummary,
+                    snapshotJson
+            );
 
             return spec.getId();
         }

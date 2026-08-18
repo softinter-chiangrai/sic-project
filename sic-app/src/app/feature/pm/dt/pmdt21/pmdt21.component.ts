@@ -52,6 +52,12 @@ export class Pmdt21Component implements OnInit {
     this.router.navigate(['/feature/pm/ma-ticket', id, 'edit']);
   }
 
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+    });
+  }
+
   deleteTicket(id: string): void {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบตั๋ว MA นี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {

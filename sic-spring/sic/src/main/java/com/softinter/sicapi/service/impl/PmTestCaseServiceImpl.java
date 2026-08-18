@@ -8,7 +8,9 @@ import com.softinter.sicapi.entity.pm.PmTestCase;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
+import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmTestCaseService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,30 +33,36 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     private final PmTestCaseRepository testCaseRepository;
     private final PmTestScenarioRepository scenarioRepository;
     private final PmTaskRepository taskRepository;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
     public Page<PmTestCaseResponse> findAll(UUID businessId, UUID projectId, String keyword, Pageable pageable) {
+        return findAll(businessId, projectId, null, null, keyword, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PmTestCaseResponse> findAll(UUID businessId, UUID projectId, UUID scenarioId, String status, String keyword, Pageable pageable) {
         Specification<PmTestCase> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
-            predicates.add(cb.isFalse(root.get("isDelete")));
+            predicates.add(cb.equal(root.get("isDelete"), false));
 
             if (projectId != null) {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
-
+            if (scenarioId != null) {
+                predicates.add(cb.equal(root.get("scenarioId"), scenarioId));
+            }
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("testCaseCode")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("testStep")), pattern),
-                        cb.like(cb.lower(root.get("expectedResult")), pattern),
-                        cb.like(cb.lower(root.get("tester")), pattern)
-                ));
+                Predicate codePred = cb.like(cb.lower(root.get("testCaseCode")), pattern);
+                Predicate titlePred = cb.like(cb.lower(root.get("title")), pattern);
+                predicates.add(cb.or(codePred, titlePred));
             }
-
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -74,6 +82,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     public UUID save(PmTestCaseRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmTestCase entity;
+        String diffSummary = "สร้าง Test Case (Initial test case)";
 
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmTestCase();
@@ -88,6 +97,14 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "ชื่อ Test Case (Title)", entity.getTitle(), request.getTitle());
+            DocumentDiffHelper.checkChange(changes, "ผลการทดสอบ (Status)", entity.getTestStatus(), request.getTestStatus());
+            DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", entity.getPriority(), request.getPriority());
+            diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Test Case " + (request.getTitle() != null ? request.getTitle() : entity.getTitle()));
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
@@ -99,6 +116,24 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             entity = testCaseRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
         }
+
+        // Snapshot data
+        String snapshotJson = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            snapshotJson = mapper.writeValueAsString(entity);
+        } catch (Exception ignored) {}
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "TEST_CASE",
+                entity.getId(),
+                entity.getProjectId(),
+                entity.getTestCaseCode(),
+                "v1.0",
+                diffSummary,
+                snapshotJson
+        );
 
         // Auto-sync Task status based on Test Case result
         syncLinkedTaskStatus(entity);

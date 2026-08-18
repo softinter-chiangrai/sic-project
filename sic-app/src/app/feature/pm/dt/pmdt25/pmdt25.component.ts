@@ -10,6 +10,7 @@ import { SicInputComponent } from '../../../../core/component/sic-input/sic-inpu
 import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../core/model/sic-base-model';
 
@@ -38,6 +39,7 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   private readonly router = inject(Router);
   private readonly service = inject(Pmdt25Service);
   private readonly dialog = inject(DialogService);
+  private readonly customerState = inject(CustomerStateService);
   private readonly fb = inject(FormBuilder);
 
   formData!: SicFromData<DocumentVersionModel>;
@@ -62,6 +64,11 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   ngOnInit(): void {
     const rawForm = Pmdt25Form.createForm(this.fb);
     this.formData = new SicFromData<DocumentVersionModel>(rawForm);
+
+    const projId = this.customerState.getProjectId();
+    if (projId) {
+      (this.formData.form.controls as any)['projectId']?.setValue(projId);
+    }
 
     const qType = this.route.snapshot.queryParams['documentType'];
     const qId = this.route.snapshot.queryParams['documentId'];
@@ -108,7 +115,9 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
       next: () => {
         this.dialog.success('สำเร็จ', 'บันทึกเวอร์ชันเอกสารเรียบร้อยแล้ว');
         this.formData.markAsPristine();
-        this.router.navigate(['/feature/pm/version']);
+        this.router.navigate(['/feature/pm/version'], {
+          queryParams: { projectId: this.customerState.getProjectId() || undefined }
+        });
       },
       error: (err) => {
         this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกไม่สำเร็จ');
@@ -118,7 +127,9 @@ export class Pmdt25Component implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/version']);
+    this.router.navigate(['/feature/pm/version'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+    });
   }
 }
 

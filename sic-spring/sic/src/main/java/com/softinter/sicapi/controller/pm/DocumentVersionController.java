@@ -25,11 +25,17 @@ public class DocumentVersionController {
     private final DocumentVersionService versionService;
 
     @GetMapping
-    @Operation(summary = "Get all versions of a document")
+    @Operation(summary = "Get all versions of a document or project")
     public ResponseEntity<List<DocumentVersionResponse>> getVersions(
-            @RequestParam String documentType,
-            @RequestParam UUID documentId) {
-        return ResponseEntity.ok(versionService.getVersions(documentType, documentId));
+            @RequestParam(required = false) String documentType,
+            @RequestParam(required = false) UUID documentId,
+            @RequestParam(required = false) UUID projectId) {
+        if (documentId != null && documentType != null) {
+            return ResponseEntity.ok(versionService.getVersions(documentType, documentId));
+        } else if (projectId != null) {
+            return ResponseEntity.ok(versionService.getVersionsByProject(projectId, documentType));
+        }
+        return ResponseEntity.ok(List.of());
     }
 
     @GetMapping("/{id}")
