@@ -37,6 +37,7 @@ export class Pmdt13Component implements OnInit {
   // ===== Data =====
   protected scenarios = signal<PmTestScenarioModel[]>([]);
   protected testCases = signal<PmTestCaseModel[]>([]);
+  protected projectTasks = signal<any[]>([]);
 
   // Track expanded accordion IDs ('unassigned' for null scenario)
   protected expandedScenarioIds = signal<Set<string>>(new Set());
@@ -69,9 +70,9 @@ export class Pmdt13Component implements OnInit {
         return false;
       }
       // Filter taskStatus
-      if (taskStatus === 'ready') {
+      if (taskStatus === 'ready' || taskStatus === 'testing') {
         const ts = (tc.taskStatus || '').toLowerCase();
-        if (ts !== 'waiting review' && ts !== 'review') return false;
+        if (ts !== 'testing') return false;
       } else if (taskStatus !== 'all') {
         if ((tc.taskStatus || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
       }
@@ -155,14 +156,21 @@ export class Pmdt13Component implements OnInit {
     this.isLoading.set(true);
     const projectId = this.customerState.getProjectId();
 
-    forkJoin({
+    const requests: any = {
       scenarios: this.service.getTestScenarios(projectId),
       testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'testCaseCode', 'ASC'),
-    })
+    };
+
+    if (projectId) {
+      requests.tasks = this.service.getTasksByProjectId(projectId);
+    }
+
+    forkJoin(requests)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: ({ scenarios, testCasesRes }) => {
+        next: ({ scenarios, testCasesRes, tasks }: any) => {
           this.scenarios.set(scenarios || []);
+          this.projectTasks.set(tasks || []);
 
           let tcs: PmTestCaseModel[] = [];
           if (testCasesRes && testCasesRes.content) {
@@ -174,7 +182,7 @@ export class Pmdt13Component implements OnInit {
 
           // Expand all by default
           const allIds = new Set<string>();
-          (scenarios || []).forEach((s) => {
+          (scenarios || []).forEach((s: any) => {
             if (s.id) allIds.add(s.id);
           });
           allIds.add('unassigned');
@@ -184,8 +192,33 @@ export class Pmdt13Component implements OnInit {
           console.error('Failed to load scenarios/test cases:', err);
           this.scenarios.set([]);
           this.testCases.set([]);
+          this.projectTasks.set([]);
         },
       });
+  }
+
+  hasActiveBug(testCase: PmTestCaseModel): boolean {
+    const tcCode = (testCase.testCaseCode || '').trim();
+    if (!tcCode) return false;
+
+    // Check if task status is currently bugfix
+    const ts = (testCase.taskStatus || '').toLowerCase();
+    if (ts === 'bugfix') return true;
+
+    // Check against existing project tasks
+    const tasks = this.projectTasks();
+    return tasks.some((t: any) => {
+      if (t.isDelete) return false;
+      const status = (t.status || '').toLowerCase();
+      if (status === 'complete' || status === 'completed') return false; // Bug was resolved
+      const code = (t.taskCode || '').toUpperCase();
+      const name = (t.taskName || '').toUpperCase();
+      const desc = (t.description || '').toUpperCase();
+      return (
+        (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
+        (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+      );
+    });
   }
 
   // ===== Accordion Toggle =====
@@ -287,7 +320,7 @@ export class Pmdt13Component implements OnInit {
   readyToTestCount = computed(() => {
     return this.testCases().filter((tc) => {
       const ts = (tc.taskStatus || '').toLowerCase();
-      return ts === 'waiting review' || ts === 'review';
+      return ts === 'testing';
     }).length;
   });
 
@@ -380,31 +413,62 @@ export class Pmdt13Component implements OnInit {
 
   quickCreateBugTask(testCase: PmTestCaseModel, event: MouseEvent) {
     event.stopPropagation();
-    this.dialog
-      .confirm(
-        'สร้าง Bug Task',
-        `ต้องการสร้าง Bug Task สำหรับ Test Case "${testCase.testCaseCode}" ไปยังหน้ารายการงาน (Task Board) หรือไม่?`
-      )
-      .then((ok) => {
-        if (ok) {
-          this.dispatchQuickBugTask(testCase);
-        }
-      });
-  }
 
-  private dispatchQuickBugTask(testCase: PmTestCaseModel) {
-    if (testCase.taskId) {
-      this.service.getTaskById(testCase.taskId).subscribe({
-        next: (parentTask) => {
-          this.executeCreateBugTask(testCase, parentTask);
-        },
-        error: () => {
-          this.executeCreateBugTask(testCase, null);
-        },
-      });
-    } else {
-      this.executeCreateBugTask(testCase, null);
+    if (!testCase.taskId) {
+      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
+      return;
     }
+
+    // Check if parent task exists and check if a bug task already exists for this test case
+    this.service.getTaskById(testCase.taskId).subscribe({
+      next: (parentTask) => {
+        if (!parentTask || !parentTask.workPackageId) {
+          this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'ไม่พบ Work Package ของ Task ที่ผูกไว้');
+          return;
+        }
+
+        // Fetch tasks in the same work package to verify if bug already exists
+        this.service.getTasksByWorkPackageId(parentTask.workPackageId).subscribe({
+          next: (existingTasks) => {
+            const tcCode = (testCase.testCaseCode || '').trim();
+            const alreadyExists = (existingTasks || []).some((t: any) => {
+              const code = (t.taskCode || '').toUpperCase();
+              const name = (t.taskName || '').toUpperCase();
+              const desc = (t.description || '').toUpperCase();
+              return (
+                (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
+                (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+              );
+            });
+
+            if (alreadyExists) {
+              this.dialog.info(
+                'สร้าง Bug Task แล้ว',
+                `Test Case "${testCase.testCaseCode}" ได้มีการสร้าง Bug Task เข้าสู่ระบบเรียบร้อยแล้ว`
+              );
+              return;
+            }
+
+            this.dialog
+              .confirm(
+                'สร้าง Bug Task',
+                `ต้องการสร้าง Bug Task สำหรับ Test Case "${testCase.testCaseCode}" ไปยังหน้ารายการงาน (Task Board) หรือไม่?`
+              )
+              .then((ok) => {
+                if (ok) {
+                  this.executeCreateBugTask(testCase, parentTask);
+                }
+              });
+          },
+          error: () => {
+            this.executeCreateBugTask(testCase, parentTask);
+          },
+        });
+      },
+      error: () => {
+        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูล Task ที่ผูกไว้ได้');
+      },
+    });
   }
 
   private executeCreateBugTask(testCase: PmTestCaseModel, parentTask: any) {
@@ -418,12 +482,13 @@ export class Pmdt13Component implements OnInit {
     if (testCase.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${testCase.actualResult}<br/>`;
     if (testCase.tester) desc += `<b>ผู้ทดสอบ:</b> ${testCase.tester}<br/>`;
 
+    // 1. Create Bug Task with status 'To Do'
     const taskPayload: any = {
       taskCode: bugCode,
       taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
       description: desc,
       priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
-      status: 'Waiting Fix',
+      status: 'To Do', // Bug starts in 'To Do' column for Dev to pick up
       startDate: `${todayStr}T09:00:00Z`,
       endDate: `${todayStr}T18:00:00Z`,
       estimateManday: 1,
@@ -433,10 +498,23 @@ export class Pmdt13Component implements OnInit {
       assigneeIds: parentTask?.assigneeIds || [],
     };
 
+    // 2. If parentTask exists, move parent task to 'bugfix' column
+    if (parentTask && parentTask.id && parentTask.status !== 'bugfix') {
+      const updatedParent = {
+        ...parentTask,
+        status: 'bugfix',
+      };
+      this.service.updateTask(parentTask.id, updatedParent).subscribe({
+        next: () => console.log('Parent task moved to bugfix status'),
+        error: (err) => console.error('Failed to update parent task status to bugfix', err),
+      });
+    }
+
     if (taskPayload.workPackageId) {
       this.service.createTask(taskPayload).subscribe({
         next: () => {
-          this.dialog.success('สร้าง Bug สำเร็จ', `สร้าง Bug Task (${bugCode}) เข้าสู่ระบบ Task Board เรียบร้อยแล้ว`);
+          this.dialog.success('สร้าง Bug สำเร็จ', `สร้าง Bug Task (${bugCode}) ในคอลัมน์ To Do และย้าย Task หลักไปที่คอลัมน์ Bugfix เรียบร้อยแล้ว`);
+          this.loadData();
         },
         error: (err) => {
           this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
@@ -530,27 +608,32 @@ export class Pmdt13Component implements OnInit {
 
   getTaskStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (['waiting review', 'review'].includes(s)) {
+    if (s === 'testing') {
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse';
     }
-    if (['waiting fix', 'blocked'].includes(s)) {
+    if (s === 'bugfix') {
       return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700';
     }
-    if (['in progress', 'doing'].includes(s)) {
+    if (s === 'in progress') {
       return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700';
     }
-    if (['done', 'completed'].includes(s)) {
+    if (s === 'complete') {
       return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700';
+    }
+    if (s === 'on hold') {
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-700';
     }
     return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
   }
 
   getTaskStatusLabel(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (['waiting review', 'review'].includes(s)) return '⏳ พร้อมทดสอบ (Review)';
-    if (['waiting fix', 'blocked'].includes(s)) return '🚨 รอแก้ไข (Fix)';
-    if (['in progress', 'doing'].includes(s)) return '🛠️ กำลังพัฒนา';
-    if (['done', 'completed'].includes(s)) return '✅ Done';
+    if (s === 'testing') return '🧪 Testing';
+    if (s === 'bugfix') return '🚨 Bugfix';
+    if (s === 'in progress') return '🛠️ In Progress';
+    if (s === 'complete') return '✅ Complete';
+    if (s === 'on hold') return '⏸️ On Hold';
+    if (s === 'to do') return '📝 To Do';
     return status || 'To Do';
   }
 }

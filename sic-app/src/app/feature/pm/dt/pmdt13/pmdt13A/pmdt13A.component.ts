@@ -256,14 +256,8 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
 
   checkTaskStatus(status?: string | null): void {
     this.linkedTaskStatus.set(status || null);
-    if (!status) {
-      this.isTaskReadyForTest.set(true);
-      return;
-    }
-    const s = status.toLowerCase();
-    // Only 'waiting review' or 'review' is ready for test execution
-    const isReady = s === 'waiting review' || s === 'review';
-    this.isTaskReadyForTest.set(isReady);
+    // Allow recording test results regardless of task status so testers can test all cases smoothly
+    this.isTaskReadyForTest.set(true);
   }
 
   loadTestCase(id: string): void {
@@ -314,7 +308,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     if (this.isExecution() && !this.isTaskReadyForTest()) {
       this.dialog.warn(
         'ไม่สามารถบันทึกผลการทดสอบได้',
-        `Task ที่ผูกอยู่นี้ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Waiting Review)" ปัจจุบันสถานะคือ "${this.linkedTaskStatus() || 'ยังไม่พร้อม'}" รอให้ Dev ส่งงานก่อนจึงจะสามารถทดสอบได้`
+        `Task ที่ผูกอยู่นี้ยังไม่อยู่ในสถานะ "Testing" ปัจจุบันสถานะคือ "${this.linkedTaskStatus() || 'ยังไม่พร้อม'}" รอให้ Task ย้ายมาสถานะ Testing ก่อนจึงจะสามารถทดสอบได้`
       );
       return;
     }
@@ -330,6 +324,12 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       next: () => {
         this.isSaving.set(false);
         this.formData.markAsPristine();
+
+        // Check if all test cases of this task now PASS, if so, move parent task to 'complete'
+        if (data.taskId && (data.testStatus || '').toLowerCase() === 'pass') {
+          this.checkAndAutoCompleteTask(data.taskId, data.projectId);
+        }
+
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Test Case เรียบร้อยแล้ว').then(() => {
           this.onBack();
         });
@@ -337,6 +337,40 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       error: (err) => {
         this.isSaving.set(false);
         this.dialog.error('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+      },
+    });
+  }
+
+  private checkAndAutoCompleteTask(taskId: string, projectId?: string) {
+    this.service.getTestCases(projectId).subscribe({
+      next: (res) => {
+        const list: any[] = res?.content || res?.data || (Array.isArray(res) ? res : []);
+        const siblingTestCases = list.filter((tc: any) => tc.taskId === taskId && !tc.isDelete);
+        
+        // If there are test cases and ALL of them are 'Pass'
+        if (siblingTestCases.length > 0) {
+          const allPassed = siblingTestCases.every((tc: any) => {
+            const s = (tc.testStatus || '').toLowerCase();
+            return s === 'pass' || s === 'passed';
+          });
+
+          if (allPassed) {
+            this.service.getTaskById(taskId).subscribe({
+              next: (parentTask) => {
+                if (parentTask && parentTask.id && parentTask.status !== 'complete') {
+                  const updatedParent = {
+                    ...parentTask,
+                    status: 'complete',
+                  };
+                  this.service.updateTask(parentTask.id, updatedParent).subscribe({
+                    next: () => console.log(`Parent task ${parentTask.taskCode} auto-moved to complete because all test cases passed.`),
+                    error: (err) => console.error('Failed to auto-complete parent task:', err),
+                  });
+                }
+              },
+            });
+          }
+        }
       },
     });
   }
@@ -371,12 +405,13 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     if (data.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${data.actualResult}<br/>`;
     if (data.tester) desc += `<b>ผู้ทดสอบ:</b> ${data.tester}<br/>`;
 
+    // 1. Create Bug Task with status 'To Do'
     const taskPayload: any = {
       taskCode: bugCode,
       taskName: `[BUG] ${data.title || data.testCaseCode}`,
       description: desc,
       priority: data.priority === 'High' ? 'Critical' : (data.priority || 'High'),
-      status: 'Waiting Fix', // Put into Waiting Fix column in Kanban
+      status: 'To Do', // Bug starts in 'To Do' column for Dev to pick up
       startDate: `${todayStr}T09:00:00Z`,
       endDate: `${todayStr}T18:00:00Z`,
       estimateManday: 1,
@@ -386,6 +421,18 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
       assigneeIds: parentTask?.assigneeIds || [],
     };
 
+    // 2. If parentTask exists, move parent task to 'bugfix' column
+    if (parentTask && parentTask.id && parentTask.status !== 'bugfix') {
+      const updatedParent = {
+        ...parentTask,
+        status: 'bugfix',
+      };
+      this.service.updateTask(parentTask.id, updatedParent).subscribe({
+        next: () => console.log('Parent task moved to bugfix status'),
+        error: (err) => console.error('Failed to update parent task status to bugfix', err),
+      });
+    }
+
     if (taskPayload.workPackageId) {
       this.service.createTask(taskPayload).subscribe({
         next: () => {
@@ -393,12 +440,10 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (err) => {
           console.error('Error creating bug task:', err);
-          // If task creation fails, still save test case
           this.saveExecution(data);
         },
       });
     } else {
-      // If no work package linked, proceed to save test case
       this.saveExecution(data);
     }
   }

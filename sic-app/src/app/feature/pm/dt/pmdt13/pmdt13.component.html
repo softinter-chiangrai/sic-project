@@ -71,30 +71,31 @@
       }
     </select>
 
-    <!-- Filter: Task Status (Waiting Review / Dev Status) -->
+    <!-- Filter: Task Status -->
     <select
       (change)="onFilterTaskStatusChange($event)"
       [value]="filterTaskStatus()"
       class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
     >
       <option value="all">🎯 ทุกสถานะ Task</option>
-      <option value="ready">⏳ พร้อมทดสอบ (Waiting Review)</option>
+      <option value="Testing">🧪 พร้อมทดสอบ (Testing)</option>
       <option value="In Progress">🛠️ กำลังพัฒนา (In Progress)</option>
-      <option value="Waiting Fix">🚨 รอแก้ไข (Waiting Fix)</option>
-      <option value="Done">✅ สำเร็จแล้ว (Done)</option>
-      <option value="Todo">📝 ยังไม่เริ่ม (To Do)</option>
+      <option value="bugfix">🚨 Bugfix</option>
+      <option value="complete">✅ Complete</option>
+      <option value="To Do">📝 To Do</option>
+      <option value="on hold">⏸️ On Hold</option>
     </select>
 
-    <!-- Quick Filter Button: Ready to test -->
+    <!-- Quick Filter Button: Testing -->
     <button
       type="button"
       (click)="setQuickFilterReady()"
       class="px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-      [class]="filterTaskStatus() === 'ready' ? 'bg-amber-500 text-white font-semibold shadow-amber-500/20' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'"
-      title="กรองเฉพาะเคสที่ Dev ส่งงานมาให้ตรวจแล้ว"
+      [class]="filterTaskStatus() === 'ready' || filterTaskStatus() === 'Testing' ? 'bg-amber-500 text-white font-semibold shadow-amber-500/20' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'"
+      title="กรองเฉพาะเคสที่ Task อยู่ในสถานะ Testing"
     >
       <i class="bi bi-hourglass-split"></i>
-      <span>พร้อมทดสอบ ({{ readyToTestCount() }})</span>
+      <span>Testing ({{ readyToTestCount() }})</span>
     </button>
   </div>
 
@@ -213,7 +214,7 @@
                 </thead>
                 <tbody class="divide-y divide-[var(--border)]">
                   @for (testCase of getPagedTestCases(group.testCases, group.scenario?.id); track testCase.id) {
-                    <tr class="hover:bg-[var(--sidebar-hover)] transition-colors" [class.bg-amber-50/40]="(testCase.taskStatus || '').toLowerCase() === 'waiting review' || (testCase.taskStatus || '').toLowerCase() === 'review'">
+                    <tr class="hover:bg-[var(--sidebar-hover)] transition-colors" [class.bg-amber-50/40]="(testCase.taskStatus || '').toLowerCase() === 'testing'">
                       <!-- รหัส -->
                       <td class="px-4 py-3 align-top">
                         <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
@@ -297,15 +298,32 @@
                       <!-- จัดการ -->
                       <td class="px-4 py-3 align-top">
                         <div class="flex items-center justify-center gap-1 flex-wrap">
-                          <!-- Execute Test Highlighted Button (When Task is Waiting Review) -->
-                          @if ((testCase.taskStatus || '').toLowerCase() === 'waiting review' || (testCase.taskStatus || '').toLowerCase() === 'review') {
-                            <button
-                              (click)="goToExecute(testCase.id!)"
-                              class="px-2 py-1 rounded-md text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                              title="บันทึกผลการทดสอบทันที"
-                            >
-                              <i class="bi bi-play-circle-fill"></i> ทดสอบ
-                            </button>
+                          <!-- Execute Test Highlighted Button (Always available for testing unless completed) -->
+                          <button
+                            (click)="goToExecute(testCase.id!)"
+                            class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                            title="บันทึกผลการทดสอบ"
+                          >
+                            <i class="bi bi-play-circle-fill"></i> ทดสอบ
+                          </button>
+                          <!-- Bug Button or Badge when test case is Fail -->
+                          @if ((testCase.testStatus || '').toLowerCase() === 'fail' || (testCase.testStatus || '').toLowerCase() === 'failed') {
+                            @if (hasActiveBug(testCase)) {
+                              <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.7rem] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700"
+                                title="สร้าง Bug Task แล้ว - กำลังรอการแก้ไข"
+                              >
+                                <i class="bi bi-bug-fill text-xs"></i> มี Bug เปิดอยู่
+                              </span>
+                            } @else {
+                              <button
+                                (click)="quickCreateBugTask(testCase, $event)"
+                                class="px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer shadow-xs"
+                                title="สร้าง Bug Task ไปยัง To Do"
+                              >
+                                <i class="bi bi-bug-fill text-xs"></i> สร้าง Bug
+                              </button>
+                            }
                           }
                           <!-- View -->
                           <button

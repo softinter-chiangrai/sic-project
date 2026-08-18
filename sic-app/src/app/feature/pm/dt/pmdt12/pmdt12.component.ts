@@ -400,11 +400,50 @@ export class Pmdt12Component implements OnInit {
         const idx = all.findIndex((t) => t.id === updated.id);
         if (idx >= 0) all[idx] = updated;
         this.allTasks.set(all);
+
+        // If a Bug Task is moved to complete, check if all bugs of the work package/parent task are resolved
+        const isComplete = ['complete', 'done', 'completed'].includes((event.newStatus || '').toLowerCase());
+        const isBug = (event.task.taskCode || '').toUpperCase().startsWith('BUG') || (event.task.taskName || '').toUpperCase().startsWith('[BUG]');
+
+        if (isComplete && isBug && event.task.workPackageId) {
+          this.checkAndAutoMoveParentTaskToTesting(event.task.workPackageId, event.task.id);
+        }
       },
       error: (err) => {
         this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
         this.loadProjectData(this.projectId()!);
       },
+    });
+  }
+
+  private checkAndAutoMoveParentTaskToTesting(wpId: string, completedBugId: string): void {
+    const tasks = this.allTasks().filter((t) => t.workPackageId === wpId);
+    const bugfixTasks = tasks.filter((t) => (t.status || '').toLowerCase() === 'bugfix');
+
+    bugfixTasks.forEach((parentTask) => {
+      const hasUnresolvedBugs = tasks.some((t) => {
+        if (t.id === completedBugId) return false;
+        const isTaskBug = (t.taskCode || '').toUpperCase().startsWith('BUG') || (t.taskName || '').toUpperCase().startsWith('[BUG]');
+        const isTaskDone = ['complete', 'done', 'completed'].includes((t.status || '').toLowerCase());
+        return isTaskBug && !isTaskDone;
+      });
+
+      if (!hasUnresolvedBugs) {
+        const updatedParentPayload: any = {
+          ...parentTask,
+          status: 'Testing',
+        };
+        this.service.updateTask(parentTask.id, updatedParentPayload).subscribe({
+          next: (updatedParent) => {
+            const all = [...this.allTasks()];
+            const idx = all.findIndex((t) => t.id === updatedParent.id);
+            if (idx >= 0) all[idx] = updatedParent;
+            this.allTasks.set(all);
+            console.log(`Parent task ${parentTask.taskCode} auto-moved back to Testing because all bugs are resolved.`);
+          },
+          error: (err) => console.error('Failed to auto-move parent task to Testing:', err),
+        });
+      }
     });
   }
 

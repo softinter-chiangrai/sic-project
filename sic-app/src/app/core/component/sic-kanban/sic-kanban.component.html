@@ -183,13 +183,22 @@
             @for (task of colTasks; track task.id) {
               <div
                 class="kanban-card"
+                [class.kanban-card--bug]="isBugTask(task)"
                 cdkDrag
                 [cdkDragDisabled]="readonly"
                 (click)="onCardClick(task)"
               >
                 <!-- Card Header: Code + Actions -->
                 <div class="kanban-card-header">
-                  <span class="kanban-card-code">{{ task.taskCode || 'TASK' }}</span>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    @if (isBugTask(task)) {
+                      <span class="kanban-card-code kanban-card-code--bug" title="Bug Task">
+                        <i class="bi bi-bug-fill text-rose-500 mr-0.5"></i>{{ task.taskCode || 'BUG' }}
+                      </span>
+                    } @else {
+                      <span class="kanban-card-code">{{ task.taskCode || 'TASK' }}</span>
+                    }
+                  </div>
                   
                   @if (!readonly) {
                     <div class="kanban-card-actions">
@@ -214,7 +223,9 @@
                 </div>
 
                 <!-- Card Title -->
-                <h4 class="kanban-card-title">{{ task.taskName }}</h4>
+                <h4 class="kanban-card-title" [class.text-rose-600]="isBugTask(task)" [class.dark:text-rose-400]="isBugTask(task)">
+                  {{ task.taskName }}
+                </h4>
 
                 <!-- Work Package / Phase Badge -->
                 <div class="kanban-card-wp" [title]="task.workPackageName || ''">

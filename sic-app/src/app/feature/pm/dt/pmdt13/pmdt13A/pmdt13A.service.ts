@@ -14,6 +14,12 @@ export class Pmdt13AService {
     return this.http.get<PmTestCaseModel>(`${this.apiBase}/api/pm/test-cases/${id}`);
   }
 
+  getTestCases(projectId?: string | null): Observable<any> {
+    let params = new HttpParams().set('page', '0').set('size', '1000');
+    if (projectId) params = params.set('projectId', projectId);
+    return this.http.get(`${this.apiBase}/api/pm/test-cases/paging`, { params });
+  }
+
   saveTestCase(data: Partial<PmTestCaseModel>): Observable<string> {
     return this.http.post<string>(`${this.apiBase}/api/pm/test-cases/save`, data);
   }
@@ -40,6 +46,10 @@ export class Pmdt13AService {
 
   createTask(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/api/pm/tasks`, data);
+  }
+
+  updateTask(taskId: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiBase}/api/pm/tasks/${taskId}`, data);
   }
 
   createBugFromTest(data: any): Observable<string> {

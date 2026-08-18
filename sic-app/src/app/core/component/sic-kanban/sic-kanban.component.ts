@@ -131,7 +131,7 @@ export class SicKanbanComponent {
     {
       id: 'TODO',
       name: 'TO DO',
-      statuses: ['Todo', 'Not Started', 'TODO', 'Draft'],
+      statuses: ['Todo', 'To Do', 'Not Started', 'TODO', 'Draft'],
       color: '#64748b',
       textColor: '#cbd5e1',
       bgLight: 'rgba(100, 116, 139, 0.15)',
@@ -158,7 +158,7 @@ export class SicKanbanComponent {
     {
       id: 'BUG_FIXING',
       name: 'BUG FIXING',
-      statuses: ['Bug Fixing', 'Bug', 'Fixing', 'Waiting Fix', 'BUG_FIXING', 'BUG FIXING', 'Blocked'],
+      statuses: ['bugfix', 'Bugfix', 'Bug Fixing', 'Bug', 'Fixing', 'Waiting Fix', 'BUG_FIXING', 'BUG FIXING', 'Blocked'],
       color: '#ef4444',
       textColor: '#fca5a5',
       bgLight: 'rgba(239, 68, 68, 0.15)',
@@ -167,7 +167,7 @@ export class SicKanbanComponent {
     {
       id: 'ON_HOLD',
       name: 'ON HOLD',
-      statuses: ['On Hold', 'Delayed', 'ON_HOLD', 'Hold'],
+      statuses: ['On Hold', 'on hold', 'Delayed', 'ON_HOLD', 'Hold'],
       color: '#f97316',
       textColor: '#fdba74',
       bgLight: 'rgba(249, 115, 22, 0.15)',
@@ -176,7 +176,7 @@ export class SicKanbanComponent {
     {
       id: 'COMPLETE',
       name: 'COMPLETE',
-      statuses: ['Done', 'Completed', 'COMPLETE', 'Closed'],
+      statuses: ['complete', 'Complete', 'Done', 'Completed', 'COMPLETE', 'Closed'],
       color: '#10b981',
       textColor: '#6ee7b7',
       bgLight: 'rgba(16, 185, 129, 0.15)',
@@ -597,17 +597,23 @@ export class SicKanbanComponent {
   }
 
   isOverdue(dateStr?: string, status?: string): boolean {
-    if (!dateStr || !status) return false;
-    if (['done', 'completed', 'complete', 'closed'].includes(status.toLowerCase())) {
-      return false;
-    }
+    if (!dateStr) return false;
+    const s = (status || '').toLowerCase();
+    if (s === 'done' || s === 'completed' || s === 'closed' || s === 'complete') return false;
     try {
-      const target = new Date(dateStr);
+      const d = new Date(dateStr);
       const now = new Date();
-      return target < now;
+      now.setHours(0, 0, 0, 0);
+      return d < now;
     } catch {
       return false;
     }
+  }
+
+  isBugTask(task: TaskResponse): boolean {
+    const code = (task.taskCode || '').toUpperCase();
+    const name = (task.taskName || '').toUpperCase();
+    return code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]') || name.includes('BUG');
   }
 
   getPriorityClass(priority?: string): string {

@@ -39,8 +39,20 @@ export class Pmdt13Service {
     return this.http.get<any>(`${this.apiBase}/api/pm/tasks/${id}`);
   }
 
+  getTasksByProjectId(projectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiBase}/api/pm/projects/${projectId}/tasks`);
+  }
+
+  getTasksByWorkPackageId(wpId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiBase}/api/pm/tasks/work-package/${wpId}`);
+  }
+
   createTask(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/api/pm/tasks`, data);
+  }
+
+  updateTask(taskId: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiBase}/api/pm/tasks/${taskId}`, data);
   }
 
   getTestScenarios(projectId?: string | null): Observable<PmTestScenarioModel[]> {

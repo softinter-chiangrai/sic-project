@@ -52,6 +52,7 @@ export class Pmdt02CComponent implements OnInit {
   specOptions = signal<{ value: string; text: string }[]>([]);
   linkedTestCases = signal<any[]>([]);
   testCasesLoading = signal(false);
+  expandedSteps = signal<Set<string>>(new Set());
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
   assigneeNames: Record<string, string> = {};
@@ -184,6 +185,21 @@ export class Pmdt02CComponent implements OnInit {
     if (s === 'fail' || s === 'failed') return '❌ ไม่ผ่าน (Fail)';
     if (s === 'blocked') return '🚧 ติดปัญหา (Blocked)';
     return '⏳ รอทดสอบ (Pending)';
+  }
+
+  isStepExpanded(tcId: string): boolean {
+    return this.expandedSteps().has(tcId);
+  }
+
+  toggleStepExpansion(tcId: string, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    const current = new Set(this.expandedSteps());
+    if (current.has(tcId)) {
+      current.delete(tcId);
+    } else {
+      current.add(tcId);
+    }
+    this.expandedSteps.set(current);
   }
 
   patchForm(data: TaskResponse) {

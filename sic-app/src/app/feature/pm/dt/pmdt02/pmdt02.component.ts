@@ -657,23 +657,67 @@ export class Pmdt02Component implements OnInit {
 
     this.taskService.updateTask(event.taskId, payload).subscribe({
       next: () => {
-        // Re-load phase to refresh task status, completed count, and progress bar
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.phaseService.getPhaseById(currentPhaseId).subscribe({
-            next: (data) => this.phase.set(data),
-            error: (err) => console.error('Failed to reload phase after task status update', err),
-          });
+        // If a Bug Task is moved to complete/done, check if all bugs in the work package/parent task are resolved
+        const isComplete = ['complete', 'done', 'completed'].includes((event.newStatus || '').toLowerCase());
+        const isBug = (event.task.taskCode || '').toUpperCase().startsWith('BUG') || (event.task.taskName || '').toUpperCase().startsWith('[BUG]');
+
+        if (isComplete && isBug && event.task.workPackageId) {
+          this.checkAndAutoMoveParentTaskToTesting(event.task);
         }
+
+        // Re-load phase to refresh task status, completed count, and progress bar
+        this.reloadCurrentPhase();
       },
       error: (err) => {
         this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.phaseService.getPhaseById(currentPhaseId).subscribe({
-            next: (data) => this.phase.set(data),
+        this.reloadCurrentPhase();
+      },
+    });
+  }
+
+  private reloadCurrentPhase(): void {
+    const currentPhaseId = this.currentPhaseId();
+    if (currentPhaseId) {
+      this.phaseService.getPhaseById(currentPhaseId).subscribe({
+        next: (data) => this.phase.set(data),
+        error: (err) => console.error('Failed to reload phase after task status update', err),
+      });
+    }
+  }
+
+  private checkAndAutoMoveParentTaskToTesting(completedBugTask: TaskResponse): void {
+    if (!completedBugTask.workPackageId) return;
+
+    this.taskService.getTasksByWorkPackageId(completedBugTask.workPackageId).subscribe({
+      next: (allWpTasks) => {
+        const tasks = allWpTasks || [];
+        // Find tasks that are currently in 'bugfix'
+        const bugfixTasks = tasks.filter((t) => (t.status || '').toLowerCase() === 'bugfix');
+
+        bugfixTasks.forEach((parentTask) => {
+          // Check if there are any remaining unresolved bugs in this work package (excluding completed ones)
+          const hasUnresolvedBugs = tasks.some((t) => {
+            if (t.id === completedBugTask.id) return false; // This one was just completed
+            const isTaskBug = (t.taskCode || '').toUpperCase().startsWith('BUG') || (t.taskName || '').toUpperCase().startsWith('[BUG]');
+            const isTaskDone = ['complete', 'done', 'completed'].includes((t.status || '').toLowerCase());
+            return isTaskBug && !isTaskDone;
           });
-        }
+
+          // If all bugs are now resolved, auto-move the parent task back to 'Testing'
+          if (!hasUnresolvedBugs) {
+            const updatedParent = {
+              ...parentTask,
+              status: 'Testing',
+            };
+            this.taskService.updateTask(parentTask.id, updatedParent).subscribe({
+              next: () => {
+                console.log(`Parent task ${parentTask.taskCode} auto-moved back to Testing because all bugs are resolved.`);
+                this.reloadCurrentPhase();
+              },
+              error: (err) => console.error('Failed to auto-move parent task to Testing:', err),
+            });
+          }
+        });
       },
     });
   }
