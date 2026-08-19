@@ -179,23 +179,16 @@
                   {{ project.priority }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1">
-                  <button
-                    (click)="goToView(project.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดู Dashboard"
-                  >
-                    <i class="bi bi-file-earmark-text"></i>
-                  </button>
-                  <button
-                    (click)="goToEdit(project.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                </div>
+              <td class="px-4 py-3 text-center">
+                <sic-table-actions
+                  [showView]="true"
+                  [showEdit]="true"
+                  [showPrint]="false"
+                  [showDelete]="false"
+                  viewTitle="ดู Dashboard"
+                  (onView)="goToView(project.id)"
+                  (onEdit)="goToEdit(project.id)">
+                </sic-table-actions>
               </td>
             </tr>
           } @empty {

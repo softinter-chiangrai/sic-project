@@ -1,191 +1,93 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { Pmdt15AService } from './pmdt15A/pmdt15A.service';
+import { PmUserManualModel } from './pmdt15A/pmdt15A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-// ===== Model =====
-export interface TaskScheduleModel {
-  id: string;
-  taskCode: string;
-  taskName: string;
-  projectName: string;
-  assignedTo: string;
-  startDate: string;
-  endDate: string;
-  actualStart?: string;
-  actualEnd?: string;
-  status: string;
-  dependency?: string;
-  dependencyName?: string;
-  comment?: string;
-}
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt15Service {
-  private mockTask: TaskScheduleModel = {
-    id: '2',
-    taskCode: 'TASK-002',
-    taskName: 'พัฒนา Customer API',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมชาย ใจดี',
-    startDate: '2024-01-22',
-    endDate: '2024-01-28',
-    actualStart: '2024-01-22',
-    actualEnd: '',
-    status: 'In Progress',
-    dependency: 'TASK-001',
-    dependencyName: 'ออกแบบ Table Customer',
-    comment: '',
-  };
-
-  updateSchedule(data: TaskScheduleModel): Observable<string> {
-    console.log('📝 Updating task schedule:', data);
-    return of('อัปเดตกำหนดการสำเร็จ').pipe(delay(500));
-  }
-
-  getTask(id: string): Observable<TaskScheduleModel> {
-    const found = { ...this.mockTask, id: id };
-    return of(found).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt15',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-  ],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   templateUrl: './pmdt15.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
+  styleUrls: ['./pmdt15.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
-export class Pmdt15Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt15Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+export class Pmdt15Component implements OnInit {
+  private readonly router = inject(Router);
+  private readonly service = inject(Pmdt15AService);
+  private readonly dialog = inject(DialogService);
 
-  form!: FormGroup;
-  taskId: string | null = null;
-  isLoading = false;
-  taskCode = '';
-  taskName = '';
-
-  // ===== Options =====
-  statusOptions = ['Todo', 'In Progress', 'Waiting Review', 'Waiting Fix', 'Done', 'Delayed', 'Blocked', 'Cancelled'];
-
-  pageDirty = () => this.form?.dirty ?? false;
+  manuals = signal<PmUserManualModel[]>([]);
+  isLoading = signal(false);
+  totalElements = signal(0);
+  page = signal(0);
+  size = signal(10);
 
   ngOnInit(): void {
-    this.initForm();
+    this.loadData();
+  }
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.taskId = id;
-        this.loadTask(id);
-      } else {
-        this.router.navigate(['/feature/pm/gantt']);
+  loadData(): void {
+    this.isLoading.set(true);
+    this.service.getPaging({ page: this.page(), size: this.size() }).subscribe({
+      next: (res) => {
+        this.manuals.set(res.content || []);
+        this.totalElements.set(res.totalElements || 0);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  goToAdd(): void {
+    this.router.navigate(['/feature/pm/manual/new']);
+  }
+
+  goToEdit(id: string): void {
+    this.router.navigate(['/feature/pm/manual', id, 'edit']);
+  }
+
+  onDelete(id: string): void {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบระบุคู่มือนี้ใช่หรือไม่?').then((confirmed: boolean) => {
+      if (confirmed) {
+        this.service.delete(id).subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'ลบคู่มือเรียบร้อยแล้ว');
+            this.loadData();
+          },
+          error: (err) => {
+            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+          },
+        });
       }
     });
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      id: [null],
-      taskCode: [null],
-      taskName: [null],
-      projectName: [null],
-      assignedTo: [null],
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      actualStart: [null],
-      actualEnd: [null],
-      status: ['Todo', [Validators.required]],
-      dependency: [null],
-      dependencyName: [null],
-      comment: [null, [Validators.maxLength(500)]],
-    });
-  }
-
-  loadTask(id: string) {
-    this.isLoading = true;
-    this.service.getTask(id).subscribe({
-      next: (data) => {
-        this.taskCode = data.taskCode;
-        this.taskName = data.taskName;
-        this.form.patchValue(data);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลงานรหัสนี้');
-        this.router.navigate(['/feature/pm/gantt']);
-      },
-    });
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/gantt']);
-  }
-
-  submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const data = this.form.value;
-    data.id = this.taskId;
-    this.service.updateSchedule(data).subscribe({
-      next: () => {
-        this.dialog.success('อัปเดตสำเร็จ', 'กำหนดการงานถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/gantt']);
-        });
-      },
-      error: (error) => {
-        this.dialog.error('อัปเดตไม่สำเร็จ', error);
-      },
-    });
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      DRAFT: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+      REVIEW: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+      APPROVED: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
+      PUBLISHED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+    };
+    return map[status] || 'bg-slate-100 text-slate-600';
   }
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Todo: 'รอเริ่ม',
-      'In Progress': 'กำลังทำ',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Done: 'เสร็จ',
-      Delayed: 'ล่าช้า',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
+      DRAFT: 'ฉบับร่าง (Draft)',
+      REVIEW: 'รอตรวจสอบ (Review)',
+      APPROVED: 'อนุมัติแล้ว (Approved)',
+      PUBLISHED: 'เผยแพร่แล้ว (Published)',
     };
     return map[status] || status;
   }
-
-  onDependencyChange(event: any) {
-    // TODO: เมื่อเปลี่ยน dependency ให้โหลดชื่อ dependency
-  }
 }
 
-export default Pmdt15Component;
+export default Pmrt19Component;

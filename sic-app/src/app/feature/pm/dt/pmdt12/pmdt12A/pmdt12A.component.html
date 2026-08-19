@@ -1,223 +1,238 @@
-<!-- src/app/feature/pm/dt/pmdt12/pmdt12A/pmdt12A.component.html -->
-@if (isOpen) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
-    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-8 transform transition-all">
+<!-- src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.html -->
+<!-- ===== LOADING ===== -->
+@if (isLoading()) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
 
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]/50">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center font-bold text-lg">
-            <i class="bi bi-check2-square"></i>
+<!-- ===== FORM ===== -->
+@if (!isLoading() && formData && formData.form) {
+  <form [formGroup]="formData.form" (ngSubmit)="onSubmit()" class="space-y-6 max-w-4xl mx-auto py-2">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
+      <div>
+        <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          @if (isExecution()) {
+            🧪 บันทึกผลการทดสอบ (Test Execution)
+          } @else if (isView()) {
+            👁️ รายละเอียด Test Case
+          } @else if (isEdit()) {
+            ✏️ แก้ไข Test Case
+          } @else {
+            ➕ เพิ่ม Test Case ใหม่
+          }
+        </h2>
+        <p class="text-sm text-[var(--text-muted)] mt-1">
+          {{ formData.form.get('testCaseCode')?.value || 'สร้าง Test Case ใหม่' }}
+          @if (formData.form.get('title')?.value) {
+            : {{ formData.form.get('title')?.value }}
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Warning Banner when Test Case has an active unresolved bug in Execution Mode -->
+    @if (isExecution() && !isTaskReadyForTest()) {
+      <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-start gap-3">
+        <i class="bi bi-bug-fill text-xl mt-0.5"></i>
+        <div>
+          <h4 class="font-semibold text-sm">Test Case นี้มี Bug ที่กำลังรอการแก้ไข</h4>
+          <p class="text-xs mt-0.5 text-rose-700/80 dark:text-rose-300/80">
+            มีการเปิด Bug Task สำหรับเคสนี้แล้วและยังแก้ไขไม่เสร็จสิ้น จึงล็อคการทดสอบเคสนี้ไว้ชั่วคราว เมื่อทีมพัฒนาแก้ไข Bug เรียบร้อยแล้วจะสามารถกลับมาทดสอบซ้ำ (Retest) ได้
+          </p>
+        </div>
+      </div>
+    }
+
+    <!-- Unified Single Card Form Container -->
+    <div class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-8">
+      
+      <!-- Section 1: ข้อมูลทั่วไป -->
+      <div class="space-y-4">
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+          <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+          ข้อมูลทั่วไป
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <sic-input
+              label="รหัส Test Case *"
+              formControlName="testCaseCode"
+              placeholder="TESTCASE-001"
+              [disabled]="isView() || isExecution()"
+            ></sic-input>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-[var(--text-active)]">
-              {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
-            </h3>
-            <p class="text-xs text-[var(--text-muted)]">กำหนดรายละเอียดงานและผูกโยงเข้ากับ Specification</p>
+          <sic-input
+            label="หัวข้อ / ชื่อ Test Case *"
+            formControlName="title"
+            [disabled]="isView() || isExecution()"
+            placeholder=""
+          ></sic-input>
+        </div>
+          <div>
+            <sic-combobox
+              label="ความสำคัญ (Priority)"
+              formControlName="priority"
+              [items]="priorityOptions"
+              [disabled]="isView() || isExecution()"
+            ></sic-combobox>
           </div>
         </div>
-        <button
-          type="button"
-          (click)="closeModal()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-x-lg text-lg"></i>
-        </button>
       </div>
 
-      <!-- Modal Body (Form) -->
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+      <!-- Section 2: การเชื่อมโยง (Traceability & Task) -->
+      <div class="space-y-4">
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+          <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+          การเชื่อมโยงงาน (Traceability & Task)
+        </h3>
 
-        <!-- Specification (Required Link) -->
-        <div class="p-3.5 rounded-xl border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
-          <label class="block text-xs font-semibold text-[var(--crm-primary)] uppercase tracking-wider mb-1">
-            <i class="bi bi-file-earmark-code mr-1"></i> ผูกโยงกับ Specification (Requirement Traceability) <span class="text-red-500">*</span>
-          </label>
-          <sic-combobox
-            formControlName="specificationId"
-            [options]="specOptions"
-            placeholder="เลือก Specification ที่เกี่ยวข้อง..."
-            [clearable]="false"
-          ></sic-combobox>
-          @if (form.get('specificationId')?.touched && form.get('specificationId')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือก Specification</p>
-          }
-        </div>
-
-        <!-- Work Package Selector -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text)] mb-1">
-            Work Package (Phase) <span class="text-red-500">*</span>
-          </label>
-          <sic-combobox
-            formControlName="workPackageId"
-            [options]="wpOptions"
-            placeholder="เลือก Work Package..."
-            [clearable]="false"
-          ></sic-combobox>
-          @if (form.get('workPackageId')?.touched && form.get('workPackageId')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือก Work Package</p>
-          }
-        </div>
-
-        <!-- Task Code & Task Name -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              รหัส Task <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              formControlName="taskCode"
-              placeholder="เช่น TK-001"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
-            />
-            @if (form.get('taskCode')?.touched && form.get('taskCode')?.invalid) {
-              <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Task</p>
-            }
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              ชื่อ Task <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              formControlName="taskName"
-              placeholder="ระบุชื่องานที่ต้องทำ..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
-            />
-            @if (form.get('taskName')?.touched && form.get('taskName')?.invalid) {
-              <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Task</p>
-            }
+            <sic-combobox
+              label="งานที่เกี่ยวข้อง (Task)"
+              formControlName="taskId"
+              [items]="taskOptions()"
+              [disabled]="isView() || isExecution()"
+              placeholder="เลือก Task ที่เกี่ยวข้อง"
+              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
+            ></sic-combobox>
           </div>
         </div>
+      </div>
 
-        <!-- Description -->
+      <!-- Section 3: ขั้นตอนและผลที่คาดหวัง -->
+      <div class="space-y-5">
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+          <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
+          ขั้นตอน & ผลลัพธ์
+        </h3>
+
+        <!-- ขั้นตอนการทดสอบ -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text)] mb-1">คำอธิบายรายละเอียดงาน</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-[var(--text-active)]">
+              ขั้นตอนการทดสอบ (Test Steps) <span class="text-red-500">*</span>
+            </span>
+            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+          </div>
           <sic-tiptap-editor
-            formControlName="description"
-            placeholderInput="ระบุรายละเอียด แนวทางการทำงาน หรือสิ่งที่ต้องส่งมอบ..."
+            formControlName="testStep"
+            placeholderInput="1. เปิดหน้าจอเพิ่มลูกค้า&#10;2. กรอกข้อมูลครบถ้วน&#10;3. กดปุ่มบันทึก"
             minHeightInput="120px"
+            [disabledInput]="isView() || isExecution()"
           ></sic-tiptap-editor>
         </div>
 
-        <!-- Assignees -->
+        <!-- ผลลัพธ์ที่คาดหวัง -->
         <div>
-          <sic-combobox
-            label="ผู้รับผิดชอบร่วม"
-            formControlName="assigneeIds"
-            [apiUrl]="assignedToApiUrl"
-            valueField="value"
-            textField="text"
-            placeholder="พิมพ์หรือเลือกสมาชิกทีม..."
-            [clearable]="true"
-            [multiple]="true"
-            (selectionChanged)="onAssigneeSelectionChanged($event)"
-          ></sic-combobox>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-[var(--text-active)]">
+              ผลลัพธ์ที่คาดหวัง (Expected Result) <span class="text-red-500">*</span>
+            </span>
+            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+          </div>
+          <sic-tiptap-editor
+            formControlName="expectedResult"
+            placeholderInput="กรอกผลลัพธ์ที่คาดหวัง"
+            minHeightInput="100px"
+            [disabledInput]="isView() || isExecution()"
+          ></sic-tiptap-editor>
         </div>
 
-        <!-- Start Date + Time -->
-        <div class="grid grid-cols-2 gap-4">
+        <!-- ผลลัพธ์ที่ได้จริง (แสดงเฉพาะตอน Test Execution หรือ View ที่มีผลแล้ว) -->
+        @if (isExecution() || isView()) {
           <div>
-            <sic-datepicker
-              label="วันที่เริ่ม"
-              formControlName="startDate"
-              [required]="true"
-              placeholder="เลือกวันที่เริ่ม"
-            ></sic-datepicker>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-sm font-medium text-[var(--text-active)]">
+                ผลลัพธ์ที่ได้จริง (Actual Result)
+              </span>
+              <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+            </div>
+            <sic-tiptap-editor
+              formControlName="actualResult"
+              placeholderInput="กรอกผลลัพธ์ที่พบจากการทดสอบจริง"
+              minHeightInput="100px"
+              [disabledInput]="isView() || (isExecution() && !isTaskReadyForTest())"
+            ></sic-tiptap-editor>
           </div>
-          <div>
-            <sic-timepicker
-              label="เวลาเริ่ม"
-              formControlName="startTime"
-              placeholder="เลือกเวลา"
-            ></sic-timepicker>
+        }
+      </div>
+
+      <!-- Section 4: สถานะและผู้ทดสอบ (แสดงเฉพาะตอน Test Execution หรือ View) -->
+      @if (isExecution() || isView()) {
+        <div class="space-y-4">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+            <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+            ผลการทดสอบ & ผู้ทดสอบ
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <sic-combobox
+                label="สถานะการทดสอบ *"
+                formControlName="testStatus"
+                [items]="statusOptions"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+              ></sic-combobox>
+            </div>
+            <div>
+              <sic-combobox
+                label="ผู้ทดสอบ (Tester)"
+                [apiUrl]="testerApiUrl()"
+                valueField="text"
+                textField="text"
+                [multiple]="true"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+                [ngModel]="testerValues()"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="เลือกผู้ทดสอบ"
+                (selectionChanged)="onTesterChange($event)"
+              ></sic-combobox>
+              <input type="hidden" formControlName="tester" />
+            </div>
+            <div>
+              <sic-datepicker
+                label="วันที่ทดสอบ"
+                formControlName="testDate"
+                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+              ></sic-datepicker>
+            </div>
           </div>
         </div>
+      }
 
-        <!-- End Date + Time -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <sic-datepicker
-              label="วันที่สิ้นสุด (กำหนดส่ง)"
-              formControlName="endDate"
-              [required]="true"
-              placeholder="เลือกวันที่สิ้นสุด"
-            ></sic-datepicker>
-          </div>
-          <div>
-            <sic-timepicker
-              label="เวลาสิ้นสุด"
-              formControlName="endTime"
-              placeholder="เลือกเวลา"
-            ></sic-timepicker>
-          </div>
-        </div>
-
-        <!-- Estimate Manday & Priority -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              Manday ประมาณการ <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="0.5"
-              step="0.5"
-              formControlName="estimateManday"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">ความสำคัญ</label>
-            <select
-              formControlName="priority"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 text-sm outline-none transition-all"
-            >
-              <option value="Low">Low (ต่ำ)</option>
-              <option value="Medium">Medium (ปานกลาง)</option>
-              <option value="High">High (สูง)</option>
-              <option value="Critical">Critical (วิกฤต)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Color Picker -->
-        <div>
-          <sic-colorpicker
-            label="สีแท็กของ Task"
-            formControlName="color"
-            placeholder="#3B82F6"
-          ></sic-colorpicker>
-        </div>
-
-        <!-- Modal Footer Actions -->
-        <div class="flex items-center justify-end gap-3 pt-5 border-t border-[var(--border)]">
-          <button
-            type="button"
-            (click)="closeModal()"
-            [disabled]="isSaving"
-            class="px-5 py-2.5 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+      <!-- FOOTER ACTIONS (ปุ่มย้อนกลับ / บันทึก ด้านล่าง) -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+        <sic-button
+          variant="secondary"
+          [type]="'button'"
+          (click)="onBack()"
+          [disabled]="isSaving()"
+        >
+          <i class="bi bi-arrow-left"></i>
+          ย้อนกลับ
+        </sic-button>
+        @if (!isView()) {
+          <sic-button
+            variant="primary"
+            [type]="'submit'"
+            [disabled]="isSaving() || (isExecution() && !isTaskReadyForTest())"
           >
-            ยกเลิก
-          </button>
-          <button
-            type="submit"
-            [disabled]="form.invalid || isSaving"
-            class="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-[var(--crm-primary)]/25"
-          >
-            @if (isSaving) {
+            @if (isSaving()) {
               <i class="bi bi-arrow-repeat animate-spin"></i>
-              <span>กำลังบันทึก...</span>
             } @else {
-              <i class="bi bi-check-lg"></i>
-              <span>{{ isEdit ? 'บันทึกการแก้ไข' : 'สร้าง Task' }}</span>
+              <i class="bi bi-floppy"></i>
             }
-          </button>
-        </div>
+            {{ isSaving() ? 'กำลังบันทึก...' : (isExecution() ? 'บันทึกผลการทดสอบ' : 'บันทึก Test Case') }}
+          </sic-button>
+        }
+      </div>
 
-      </form>
     </div>
-  </div>
+  </form>
 }

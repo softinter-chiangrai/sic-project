@@ -4,44 +4,53 @@ import { Routes } from '@angular/router';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
 import { projectGuard } from '../../core/guard/project.guard';
-import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { requirementGuard } from '../../core/guard/requirement.guard';
-import { pmdt08CreateResolver, pmdt08EditResolver, pmdt08Resolver } from './dt/pmdt08/pmdt08.resolver';
 import { editGuard } from '../../core/guard/edit.guard';
+
+// PMDT Resolvers
 import { pmdt01Resolver } from './dt/pmdt01/pmdt01.resolver';
+import { pmdt01ACreateResolver, pmdt01AEditResolver } from './dt/pmdt01/pmdt01A/pmdt01A.resolver';
 import { pmdt02Resolver } from './dt/pmdt02/pmdt02.resolver';
 import { pmdt02AResolver } from './dt/pmdt02/pmdt02A/pmdt02A.resolver';
 import { pmdt02BResolver } from './dt/pmdt02/pmdt02B/pmdt02B.resolver';
 import { pmdt02CResolver } from './dt/pmdt02/pmdt02C/pmdt02C.resolver';
-import { pmdt01ACreateResolver, pmdt01AEditResolver } from './dt/pmdt01/pmdt01A/pmdt01A.resolver';
 import { pmdt03Resolver } from './dt/pmdt03/pmdt03.resolver';
 import { pmdt03AResolver } from './dt/pmdt03/pmdt03A/pmdt03A.resolver';
 import { pmdt04Resolver } from './dt/pmdt04/pmdt04.resolver';
 import { pmdt04AResolver } from './dt/pmdt04/pmdt04A/pmdt04A.resolver';
+import { pmdt04BResolver } from './dt/pmdt04/pmdt04B/pmdt04B.resolver';
 import { pmdt05Resolver } from './dt/pmdt05/pmdt05.resolver';
 import { pmdt06Resolver } from './dt/pmdt06/pmdt06.resolver';
 import { pmdt06AResolver } from './dt/pmdt06/pmdt06A/pmdt06A.resolver';
-import { pmdt07Resolver } from './dt/pmdt07/pmdt07.resolver';
+import { pmdt07Resolver, pmdt07CreateResolver, pmdt07EditResolver } from './dt/pmdt07/pmdt07.resolver';
 import { pmdt07AResolver } from './dt/pmdt07/pmdt07A/pmdt07A.resolver';
-import { pmdt08AResolver } from './dt/pmdt08/pmdt08A/pmdt08A.resolver';
+import { pmdt08Resolver } from './dt/pmdt08/pmdt08.resolver';
 import { pmdt09Resolver } from './dt/pmdt09/pmdt09.resolver';
 import { pmdt09AResolver } from './dt/pmdt09/pmdt09A/pmdt09A.resolver';
-import { pmdt10Resolver, pmdt10AResolver, pmdt10BResolver, pmdt10CResolver } from './dt/pmdt10/pmdt10.resolver';
-import { pmdt13Resolver } from './dt/pmdt13/pmdt13.resolver';
+import { pmdt10Resolver } from './dt/pmdt10/pmdt10.resolver';
+import { pmdt10AResolver } from './dt/pmdt10/pmdt10A/pmdt10A.resolver';
+import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
+import { pmdt12Resolver } from './dt/pmdt12/pmdt12.resolver';
+import { pmdt12AResolver } from './dt/pmdt12/pmdt12A/pmdt12A.resolver';
+import { pmdt12BResolver } from './dt/pmdt12/pmdt12B/pmdt12B.resolver';
 import { pmdt13AResolver } from './dt/pmdt13/pmdt13A/pmdt13A.resolver';
-import { pmdt13BResolver } from './dt/pmdt13/pmdt13B/pmdt13B.resolver';
 import { pmdt14Resolver } from './dt/pmdt14/pmdt14.resolver';
+import { pmdt14AResolver } from './dt/pmdt14/pmdt14A/pmdt14A.resolver';
 import { pmdt15Resolver } from './dt/pmdt15/pmdt15.resolver';
+import { pmdt15AResolver } from './dt/pmdt15/pmdt15A/pmdt15A.resolver';
+import { pmdt16Resolver } from './dt/pmdt16/pmdt16.resolver';
+import { pmdt16AResolver } from './dt/pmdt16/pmdt16A/pmdt16A.resolver';
 import { pmdt17Resolver } from './dt/pmdt17/pmdt17.resolver';
+import { pmdt17AResolver } from './dt/pmdt17/pmdt17A/pmdt17A.resolver';
 import { pmdt18Resolver } from './dt/pmdt18/pmdt18.resolver';
+import { pmdt18AResolver } from './dt/pmdt18/pmdt18A/pmdt18A.resolver';
 import { pmdt19Resolver } from './dt/pmdt19/pmdt19.resolver';
+import { pmdt19AResolver } from './dt/pmdt19/pmdt19A/pmdt19A.resolver';
 import { pmdt20Resolver } from './dt/pmdt20/pmdt20.resolver';
-import { pmdt20AResolver } from './dt/pmdt20A/pmdt20A.resolver';
-import { pmdt21Resolver } from './dt/pmdt21/pmdt21.resolver';
-import { pmdt22Resolver } from './dt/pmdt22/pmdt22.resolver';
-import { pmdt25Resolver } from './dt/pmdt25/pmdt25.resolver';
 
+// PMRT Resolvers
 import { pmrt01Resolver } from './rt/pmrt01/pmrt01.resolver';
+import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { pmrt02Resolver } from './rt/pmrt02/pmrt02.resolver';
 import { pmrt02AResolver } from './rt/pmrt02/pmrt02A/pmrt02A.resolver';
 import { pmrt03Resolver } from './rt/pmrt03/pmrt03.resolver';
@@ -49,21 +58,8 @@ import { pmrt04Resolver } from './rt/pmrt04/pmrt04.resolver';
 import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
 import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
-import { pmrt11Resolver } from './rt/pmrt11/pmrt11.resolver';
-import { pmrt12Resolver } from './rt/pmrt12/pmrt12.resolver';
-import { pmrt13Resolver } from './rt/pmrt13/pmrt13.resolver';
-import { pmrt17Resolver } from './rt/pmrt17/pmrt17.resolver';
-import { pmrt18Resolver } from './rt/pmrt18/pmrt18.resolver';
-import { pmrt19Resolver } from './rt/pmrt19/pmrt19.resolver';
-import { pmrt20Resolver } from './rt/pmrt20/pmrt20.resolver';
-import { pmrt20AResolver } from './rt/pmrt20A/pmrt20A.resolver';
-import { pmrt21Resolver } from './rt/pmrt21/pmrt21.resolver';
-import { pmrt22Resolver } from './rt/pmrt22/pmrt22.resolver';
-import { pmrt24Resolver } from './rt/pmrt24/pmrt24.resolver';
-import { pmrt25Resolver } from './rt/pmrt25/pmrt25.resolver';
-import { pmrt26Resolver } from './rt/pmrt26/pmrt26.resolver';
+import { pmrt06Resolver } from './rt/pmrt06/pmrt06.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
-import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
 
 export const PM_ROUTES: Routes = [
   {
@@ -71,7 +67,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then(m => m.Pmrt03Component),
     resolve: { form: pmrt03Resolver },
   },
-  // ===== Customer =====
+  // ===== Customer (PMRT01) =====
   {
     path: 'pmrt01',
     loadComponent: () => import('./rt/pmrt01/pmrt01.component').then((m) => m.Pmrt01Component),
@@ -92,7 +88,7 @@ export const PM_ROUTES: Routes = [
     canDeactivate: [CanDeactivateGuard],
   },
 
-  // ===== Project =====
+  // ===== Project (PMRT02) =====
   {
     path: 'pmrt02',
     loadComponent: () => import('./rt/pmrt02/pmrt02.component').then((m) => m.Pmrt02Component),
@@ -114,7 +110,7 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt02AResolver },
   },
 
-  // ===== Project Dashboard =====
+  // ===== Project Dashboard (PMRT03) =====
   {
     path: 'pmrt03',
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
@@ -122,7 +118,7 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt03Resolver },
   },
 
-  // ===== Contract =====
+  // ===== Contract (PMRT04) =====
   {
     path: 'pmrt04',
     loadComponent: () => import('./rt/pmrt04/pmrt04.component').then((m) => m.Pmrt04Component),
@@ -151,18 +147,41 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt04BResolver },
   },
 
-  // ============================================================
-  // ===== PHASE & MILESTONE MANAGEMENT =====
-  // ============================================================
+  // ===== Requirement Matrix (PMRT05) =====
+  {
+    path: 'pmrt05',
+    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+    resolve: { pageData: pmrt05Resolver },
+  },
 
-  // ---- Phase List ----
+  // ===== Executive Dashboard (PMRT06) =====
+  {
+    path: 'pmrt06',
+    loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
+    canActivate: [customerGuard],
+    resolve: { pageData: pmrt06Resolver },
+  },
+  {
+    path: 'dashboard',
+    redirectTo: 'pmrt06',
+    pathMatch: 'full',
+  },
+
+  // ============================================================
+  // ===== PMDT01: PHASE MANAGEMENT =====
+  // ============================================================
   {
     path: 'phase',
     loadComponent: () => import('./dt/pmdt01/pmdt01.component').then((m) => m.Pmdt01Component),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt01Resolver },
   },
-  // ---- Phase Form (Create) ----
+  {
+    path: 'pmdt01',
+    redirectTo: 'phase',
+    pathMatch: 'full',
+  },
   {
     path: 'phase/new',
     loadComponent: () =>
@@ -171,7 +190,6 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt01ACreateResolver },
     canDeactivate: [CanDeactivateGuard],
   },
-  // ---- Phase Form (Edit) ----
   {
     path: 'phase/:id/edit',
     loadComponent: () =>
@@ -180,15 +198,21 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt01AEditResolver },
     canDeactivate: [CanDeactivateGuard],
   },
-  // ---- Phase Detail ----
+
+  // ============================================================
+  // ===== PMDT02: WBS & PHASE DETAIL =====
+  // ============================================================
   {
     path: 'phase/:id',
     loadComponent: () => import('./dt/pmdt02/pmdt02.component').then((m) => m.Pmdt02Component),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt02Resolver },
   },
-
-  // ---- Milestone Form ----
+  {
+    path: 'pmdt02/:id',
+    redirectTo: 'phase/:id',
+    pathMatch: 'full',
+  },
   {
     path: 'milestone/new',
     loadComponent: () =>
@@ -203,8 +227,6 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt02AResolver },
   },
-
-  // ---- WorkPackage Form ----
   {
     path: 'work-package/new',
     loadComponent: () =>
@@ -219,8 +241,6 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt02BResolver },
   },
-
-  // ---- Task Form ----
   {
     path: 'task/new',
     loadComponent: () =>
@@ -236,21 +256,36 @@ export const PM_ROUTES: Routes = [
     resolve: { pageData: pmdt02CResolver },
   },
 
-  // ===== Approval =====
+  // ============================================================
+  // ===== PMDT03: APPROVAL CENTER =====
+  // ============================================================
   {
-    path: 'pmdt03',
+    path: 'approval',
     loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
     canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt03Resolver },
   },
   {
-    path: 'pmdt03/:id',
-    loadComponent: () => import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
+    path: 'pmdt03',
+    redirectTo: 'approval',
+    pathMatch: 'full',
+  },
+  {
+    path: 'approval/:id',
+    loadComponent: () =>
+      import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
     canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt03AResolver },
   },
+  {
+    path: 'pmdt03/:id',
+    redirectTo: 'approval/:id',
+    pathMatch: 'full',
+  },
 
-  // ===== Requirement =====
+  // ============================================================
+  // ===== PMDT04: REQUIREMENT MANAGEMENT =====
+  // ============================================================
   {
     path: 'requirement',
     loadComponent: () => import('./dt/pmdt04/pmdt04.component').then((m) => m.Pmdt04Component),
@@ -258,238 +293,201 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmdt04Resolver },
   },
   {
+    path: 'pmdt04',
+    redirectTo: 'requirement',
+    pathMatch: 'full',
+  },
+  {
     path: 'requirement/new',
     loadComponent: () =>
-      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { form: pmdt05Resolver },
+    resolve: { form: pmdt04AResolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'requirement/:id/edit',
     loadComponent: () =>
-      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
+      import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
     data: { targetType: 'REQUIREMENT' },
-    resolve: { form: pmdt05Resolver },
+    resolve: { form: pmdt04AResolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'requirement/:id/view',
     loadComponent: () =>
-      import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-    resolve: { form: pmdt05Resolver },
-  },
-  {
-    path: 'requirement/:id/approval',
-    loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
     resolve: { form: pmdt04AResolver },
   },
-
-  // ===== Requirement Dashboard (pmrt05) =====
   {
-    path: 'pmrt05',
-    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
+    path: 'requirement/:id/approval',
+    loadComponent: () =>
+      import('./dt/pmdt04/pmdt04B/pmdt04B.component').then((m) => m.Pmdt04BComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
-    resolve: { pageData: pmrt05Resolver },
+    resolve: { form: pmdt04BResolver },
   },
 
-  // ===== Diagram =====
+  // ============================================================
+  // ===== PMDT05: DIAGRAM MANAGEMENT =====
+  // ============================================================
   {
     path: 'diagram',
-    loadComponent: () => import('./dt/pmdt06/pmdt06.component').then((m) => m.Pmdt06Component),
+    loadComponent: () => import('./dt/pmdt05/pmdt05.component').then((m) => m.Pmdt05Component),
     canActivate: [customerGuard, projectGuard, requirementGuard],
-    resolve: { form: pmdt06Resolver },
+    resolve: { form: pmdt05Resolver },
+  },
+  {
+    path: 'pmdt05',
+    redirectTo: 'diagram',
+    pathMatch: 'full',
   },
 
-  // ===== Change Request =====
+  // ============================================================
+  // ===== PMDT06: CHANGE REQUEST =====
+  // ============================================================
   {
-    path: 'pmdt07',
-    loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
+    path: 'change-request',
+    loadComponent: () => import('./dt/pmdt06/pmdt06.component').then(m => m.Pmdt06Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt06Resolver },
+  },
+  {
+    path: 'pmdt06',
+    redirectTo: 'change-request',
+    pathMatch: 'full',
+  },
+  {
+    path: 'change-request/new',
+    loadComponent: () => import('./dt/pmdt06/pmdt06A/pmdt06A.component').then(m => m.Pmdt06AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt06AResolver },
+  },
+  {
+    path: 'change-request/:id/edit',
+    loadComponent: () => import('./dt/pmdt06/pmdt06A/pmdt06A.component').then(m => m.Pmdt06AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt06AResolver },
+  },
+  {
+    path: 'change-request/:id/view',
+    loadComponent: () => import('./dt/pmdt06/pmdt06A/pmdt06A.component').then(m => m.Pmdt06AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmdt06AResolver },
+  },
+
+  // ============================================================
+  // ===== PMDT07: SPECIFICATION MANAGEMENT =====
+  // ============================================================
+  {
+    path: 'specification',
+    loadComponent: () => import('./dt/pmdt07/pmdt07.component').then(m => m.Pmdt07Component),
+    canActivate: [customerGuard, projectGuard, requirementGuard],
     resolve: { form: pmdt07Resolver },
   },
   {
-    path: 'pmdt07/new',
-    loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { form: pmdt07AResolver },
+    path: 'pmdt07',
+    redirectTo: 'specification',
+    pathMatch: 'full',
   },
   {
-    path: 'pmdt07/:id/edit',
+    path: 'specification/new',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { form: pmdt07AResolver },
+    resolve: { form: pmdt07CreateResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
   {
-    path: 'pmdt07/:id/view',
+    path: 'specification/:id/edit',
     loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { form: pmdt07AResolver },
+    resolve: { form: pmdt07EditResolver },
+    canDeactivate: [CanDeactivateGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
+  },
+  {
+    path: 'specification/:id/view',
+    loadComponent: () => import('./dt/pmdt07/pmdt07A/pmdt07A.component').then(m => m.Pmdt07AComponent),
+    resolve: { form: pmdt07EditResolver },
+    canActivate: [customerGuard, projectGuard, requirementGuard],
   },
 
-  // ===== Specification Management =====
+  // ============================================================
+  // ===== PMDT08: DISCUSSION =====
+  // ============================================================
   {
-    path: 'pmdt08',
-    loadComponent: () => import('./dt/pmdt08/pmdt08.component').then(m => m.Pmdt08Component),
-    canActivate: [customerGuard, projectGuard, requirementGuard],
+    path: 'discussion',
+    loadComponent: () => import('./dt/pmdt08/pmdt08.component').then((m) => m.Pmdt08Component),
+    canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt08Resolver },
   },
   {
-    path: 'pmdt08/new',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canDeactivate: [CanDeactivateGuard],
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'pmdt08/:id/edit',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canDeactivate: [CanDeactivateGuard],
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'pmdt08/:id/view',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'pmdt08A/new',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canDeactivate: [CanDeactivateGuard],
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'pmdt08A/:id/edit',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canDeactivate: [CanDeactivateGuard],
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'pmdt08A/:id/view',
-    loadComponent: () => import('./dt/pmdt08/pmdt08A/pmdt08A.component').then(m => m.Pmdt08AComponent),
-    resolve: { form: pmdt08AResolver },
-    canActivate: [customerGuard, projectGuard, requirementGuard],
-  },
-  {
-    path: 'discussion',
-    loadComponent: () => import('./dt/pmdt09/pmdt09.component').then(m => m.Pmdt09Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { form: pmdt09Resolver },
+    path: 'pmdt08',
+    redirectTo: 'discussion',
+    pathMatch: 'full',
   },
 
-  // ===== Test Scenario Management (Redirected to PMDT13 / PMDT13B) =====
-  {
-    path: 'test-scenario',
-    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then(m => m.Pmdt13Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13Resolver },
-  },
-  {
-    path: 'pmdt10',
-    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then(m => m.Pmdt13Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13Resolver },
-  },
-  {
-    path: 'test-scenario/new',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
-  },
-  {
-    path: 'test-scenario/:id/edit',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10A',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
-  },
-  {
-    path: 'pmdt10/pmdt10A/:id/edit',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then(m => m.Pmdt13BComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
-  },
-
-  // ===== Design Review =====
+  // ============================================================
+  // ===== PMDT09: DESIGN REVIEW =====
+  // ============================================================
   {
     path: 'design-review',
-    loadComponent: () => import('./rt/pmrt11/pmrt11.component').then((m) => m.Pmrt11Component),
+    loadComponent: () => import('./dt/pmdt09/pmdt09.component').then((m) => m.Pmdt09Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt11Resolver },
+    resolve: { pageData: pmdt09Resolver },
+  },
+  {
+    path: 'pmdt09',
+    redirectTo: 'design-review',
+    pathMatch: 'full',
   },
   {
     path: 'design-review/new',
-    loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
+    loadComponent: () => import('./dt/pmdt09/pmdt09A/pmdt09A.component').then((m) => m.Pmdt09AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
-    resolve: { pageData: pmdt11Resolver },
+    resolve: { pageData: pmdt09AResolver },
   },
   {
     path: 'design-review/:id/edit',
-    loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
+    loadComponent: () => import('./dt/pmdt09/pmdt09A/pmdt09A.component').then((m) => m.Pmdt09AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
-    resolve: { pageData: pmdt11Resolver },
+    resolve: { pageData: pmdt09AResolver },
   },
 
-  // ===== Task (PMDT12) =====
+  // ============================================================
+  // ===== PMDT10: TASK OVERVIEW & MY TASKS =====
+  // ============================================================
   {
-    path: 'task-list',
-    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
+    path: 'task-overview',
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt10Resolver },
   },
   {
-    path: 'pmdt12',
-    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'task-list/new',
-    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'task-list/:id/edit',
-    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
-    canActivate: [customerGuard, projectGuard],
+    path: 'pmdt10',
+    redirectTo: 'task-overview',
+    pathMatch: 'full',
   },
   {
     path: 'my-tasks',
-    loadComponent: () => import('./rt/pmrt13/pmrt13.component').then((m) => m.Pmrt13Component),
+    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then((m) => m.Pmdt10AComponent),
     canActivate: [customerGuard],
-    resolve: { pageData: pmrt13Resolver },
+    resolve: { pageData: pmdt10AResolver },
   },
   {
-    path: 'my-tasks/:id/update',
-    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
-    canActivate: [customerGuard],
-    resolve: { pageData: pmdt13Resolver },
+    path: 'task-board',
+    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then((m) => m.Pmdt10BComponent),
+    canActivate: [customerGuard, projectGuard],
   },
-
-  // ===== Discussion =====
   {
-    path: 'discussion',
-    loadComponent: () => import('./dt/pmdt14/pmdt14.component').then((m) => m.Pmdt14Component),
-    canActivate: [customerGuard],
-    resolve: { pageData: pmdt14Resolver },
+    path: 'task-list',
+    redirectTo: 'task-board',
+    pathMatch: 'full',
   },
 
-  // ===== Gantt =====
+  // ============================================================
+  // ===== PMDT11: GANTT SCHEDULE UPDATE =====
+  // ============================================================
   {
     path: 'gantt',
     loadComponent: () =>
@@ -506,253 +504,327 @@ export const PM_ROUTES: Routes = [
   },
   {
     path: 'gantt/:id/update',
+    loadComponent: () => import('./dt/pmdt11/pmdt11.component').then((m) => m.Pmdt11Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt11Resolver },
+  },
+  {
+    path: 'pmdt11',
+    redirectTo: 'gantt',
+    pathMatch: 'full',
+  },
+
+  // ============================================================
+  // ===== PMDT12: TEST MANAGEMENT =====
+  // ============================================================
+  {
+    path: 'test-management',
+    loadComponent: () => import('./dt/pmdt12/pmdt12.component').then((m) => m.Pmdt12Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12Resolver },
+  },
+  {
+    path: 'test-scenario',
+    redirectTo: 'test-management',
+    pathMatch: 'full',
+  },
+  {
+    path: 'test-case',
+    redirectTo: 'test-management',
+    pathMatch: 'full',
+  },
+  {
+    path: 'pmdt12',
+    redirectTo: 'test-management',
+    pathMatch: 'full',
+  },
+  {
+    path: 'test-case/new',
+    loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12AResolver },
+  },
+  {
+    path: 'test-case/:id/edit',
+    loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12AResolver },
+  },
+  {
+    path: 'test-case/:id/view',
+    loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12AResolver },
+  },
+  {
+    path: 'test-execution/:id',
+    loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12AResolver },
+  },
+  {
+    path: 'test-scenario/new',
+    loadComponent: () => import('./dt/pmdt12/pmdt12B/pmdt12B.component').then((m) => m.Pmdt12BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt12BResolver },
+  },
+  {
+    path: 'test-scenario/:id/edit',
+    loadComponent: () => import('./dt/pmdt12/pmdt12B/pmdt12B.component').then((m) => m.Pmdt12BComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt12BResolver },
+  },
+
+  // ============================================================
+  // ===== PMDT13: BUG TRACKING =====
+  // ============================================================
+  {
+    path: 'bug/new',
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'bug/:id/edit',
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'bug/:id/view',
+    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt13AResolver },
+  },
+  {
+    path: 'pmdt13',
+    redirectTo: 'bug/new',
+    pathMatch: 'full',
+  },
+
+  // ============================================================
+  // ===== PMDT14: DELIVERY MANAGEMENT =====
+  // ============================================================
+  {
+    path: 'delivery',
+    loadComponent: () => import('./dt/pmdt14/pmdt14.component').then((m) => m.Pmdt14Component),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt14Resolver },
+  },
+  {
+    path: 'pmdt14',
+    redirectTo: 'delivery',
+    pathMatch: 'full',
+  },
+  {
+    path: 'delivery/new',
+    loadComponent: () => import('./dt/pmdt14/pmdt14A/pmdt14A.component').then((m) => m.Pmdt14AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt14AResolver },
+  },
+  {
+    path: 'delivery/:id/edit',
+    loadComponent: () => import('./dt/pmdt14/pmdt14A/pmdt14A.component').then((m) => m.Pmdt14AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt14AResolver },
+  },
+  {
+    path: 'delivery/:id/view',
+    loadComponent: () => import('./dt/pmdt14/pmdt14A/pmdt14A.component').then((m) => m.Pmdt14AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt14AResolver },
+  },
+
+  // ============================================================
+  // ===== PMDT15: USER MANUAL =====
+  // ============================================================
+  {
+    path: 'manual',
     loadComponent: () => import('./dt/pmdt15/pmdt15.component').then((m) => m.Pmdt15Component),
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt15Resolver },
   },
-
-  // ===== Test Case =====
   {
-    path: 'test-case',
-    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13Resolver },
+    path: 'pmdt15',
+    redirectTo: 'manual',
+    pathMatch: 'full',
   },
   {
-    path: 'pmdt13',
-    loadComponent: () => import('./dt/pmdt13/pmdt13.component').then((m) => m.Pmdt13Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13Resolver },
-  },
-  {
-    path: 'test-case/new',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'test-case/:id/edit',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'test-case/:id/view',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'test-execution/:id',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'pmdt13/pmdt13A',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'pmdt13/pmdt13A/:id',
-    loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt13AResolver },
-  },
-  {
-    path: 'pmdt13/pmdt13B',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then((m) => m.Pmdt13BComponent),
+    path: 'manual/new',
+    loadComponent: () => import('./dt/pmdt15/pmdt15A/pmdt15A.component').then((m) => m.Pmdt15AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
+    resolve: { pageData: pmdt15AResolver },
   },
   {
-    path: 'pmdt13/pmdt13B/:id/edit',
-    loadComponent: () => import('./dt/pmdt13/pmdt13B/pmdt13B.component').then((m) => m.Pmdt13BComponent),
+    path: 'manual/:id/edit',
+    loadComponent: () => import('./dt/pmdt15/pmdt15A/pmdt15A.component').then((m) => m.Pmdt15AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt13BResolver },
+    resolve: { pageData: pmdt15AResolver },
   },
 
-  // ===== Bug =====
-  {
-    path: 'bug',
-    loadComponent: () => import('./rt/pmrt17/pmrt17.component').then((m) => m.Pmrt17Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt17Resolver },
-  },
-  {
-    path: 'bug/new',
-    loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt17Resolver },
-  },
-  {
-    path: 'bug/:id/edit',
-    loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt17Resolver },
-  },
-  {
-    path: 'bug/:id/view',
-    loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt17Resolver },
-  },
-
-  // ===== Delivery =====
-  {
-    path: 'delivery',
-    loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
-    canActivate: [customerGuard, projectGuard],
-  },
-  {
-    path: 'delivery/new',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-  },
-  {
-    path: 'delivery/:id/edit',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    canActivate: [customerGuard, projectGuard],
-    canDeactivate: [CanDeactivateGuard],
-  },
-  {
-    path: 'delivery/:id/view',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    canActivate: [customerGuard, projectGuard],
-  },
-
-  // ===== Invoice & Payment =====
+  // ============================================================
+  // ===== PMDT16: INVOICE & PAYMENT =====
+  // ============================================================
   {
     path: 'invoice',
-    loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
+    loadComponent: () => import('./dt/pmdt16/pmdt16.component').then((m) => m.Pmdt16Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt16Resolver },
+  },
+  {
+    path: 'pmdt16',
+    redirectTo: 'invoice',
+    pathMatch: 'full',
   },
   {
     path: 'invoice/new',
-    loadComponent: () => import('./dt/pmdt20/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
+    loadComponent: () => import('./dt/pmdt16/pmdt16A/pmdt16A.component').then((m) => m.Pmdt16AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt16AResolver },
   },
   {
     path: 'invoice/:id/edit',
-    loadComponent: () => import('./dt/pmdt20/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
+    loadComponent: () => import('./dt/pmdt16/pmdt16A/pmdt16A.component').then((m) => m.Pmdt16AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt16AResolver },
   },
   {
     path: 'invoice/:id/view',
-    loadComponent: () => import('./dt/pmdt20/pmdt20A/pmdt20A.component').then((m) => m.Pmdt20AComponent),
+    loadComponent: () => import('./dt/pmdt16/pmdt16A/pmdt16A.component').then((m) => m.Pmdt16AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt16AResolver },
   },
 
-  // ===== MA Ticket =====
+  // ============================================================
+  // ===== PMDT17: MA TICKET =====
+  // ============================================================
   {
     path: 'ma-ticket',
-    loadComponent: () => import('./dt/pmdt21/pmdt21.component').then((m) => m.Pmdt21Component),
+    loadComponent: () => import('./dt/pmdt17/pmdt17.component').then((m) => m.Pmdt17Component),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt17Resolver },
+  },
+  {
+    path: 'pmdt17',
+    redirectTo: 'ma-ticket',
+    pathMatch: 'full',
   },
   {
     path: 'ma-ticket/new',
-    loadComponent: () => import('./dt/pmdt21/pmdt21A/pmdt21A.component').then((m) => m.Pmdt21AComponent),
+    loadComponent: () => import('./dt/pmdt17/pmdt17A/pmdt17A.component').then((m) => m.Pmdt17AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt17AResolver },
   },
   {
     path: 'ma-ticket/:id/edit',
-    loadComponent: () => import('./dt/pmdt21/pmdt21A/pmdt21A.component').then((m) => m.Pmdt21AComponent),
+    loadComponent: () => import('./dt/pmdt17/pmdt17A/pmdt17A.component').then((m) => m.Pmdt17AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt17AResolver },
   },
   {
     path: 'ma-ticket/:id/view',
-    loadComponent: () => import('./dt/pmdt21/pmdt21A/pmdt21A.component').then((m) => m.Pmdt21AComponent),
+    loadComponent: () => import('./dt/pmdt17/pmdt17A/pmdt17A.component').then((m) => m.Pmdt17AComponent),
     canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt17AResolver },
   },
 
-  // ===== Renewal =====
+  // ============================================================
+  // ===== PMDT18: RENEWAL MANAGEMENT =====
+  // ============================================================
   {
     path: 'renewal',
-    loadComponent: () => import('./rt/pmrt22/pmrt22.component').then((m) => m.Pmrt22Component),
+    loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt22Resolver },
+    resolve: { pageData: pmdt18Resolver },
+  },
+  {
+    path: 'pmdt18',
+    redirectTo: 'renewal',
+    pathMatch: 'full',
+  },
+  {
+    path: 'renewal/new',
+    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
+    canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
+    resolve: { pageData: pmdt18AResolver },
   },
   {
     path: 'renewal/:id',
-    loadComponent: () => import('./dt/pmdt22/pmdt22.component').then((m) => m.Pmdt22Component),
+    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt22Resolver },
+    resolve: { pageData: pmdt18AResolver },
   },
   {
     path: 'renewal/:id/view',
-    loadComponent: () => import('./dt/pmdt22/pmdt22.component').then((m) => m.Pmdt22Component),
+    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt22Resolver },
+    resolve: { pageData: pmdt18AResolver },
   },
 
-  // ===== Approval Center =====
-  {
-    path: 'approval',
-    loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-    resolve: { form: pmdt03Resolver },
-  },
-  {
-    path: 'approval/:id',
-    loadComponent: () =>
-      import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
-    resolve: { form: pmdt03AResolver },
-  },
-
-  // ===== Dashboard =====
-  {
-    path: 'dashboard',
-    loadComponent: () => import('./rt/pmrt24/pmrt24.component').then((m) => m.Pmrt24Component),
-    canActivate: [customerGuard],
-    resolve: { pageData: pmrt24Resolver },
-  },
-
-  // ===== Document Version Control =====
+  // ============================================================
+  // ===== PMDT19: DOCUMENT VERSION HISTORY =====
+  // ============================================================
   {
     path: 'version',
-    loadComponent: () => import('./rt/pmrt25/pmrt25.component').then((m) => m.Pmrt25Component),
+    loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt25Resolver },
+    resolve: { pageData: pmdt19Resolver },
+  },
+  {
+    path: 'pmdt19',
+    redirectTo: 'version',
+    pathMatch: 'full',
   },
   {
     path: 'version/new',
-    loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
+    loadComponent: () => import('./dt/pmdt19/pmdt19A/pmdt19A.component').then((m) => m.Pmdt19AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt25Resolver },
+    resolve: { pageData: pmdt19AResolver },
   },
   {
     path: 'version/:id/edit',
-    loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
+    loadComponent: () => import('./dt/pmdt19/pmdt19A/pmdt19A.component').then((m) => m.Pmdt19AComponent),
     canActivate: [customerGuard, projectGuard],
     canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt25Resolver },
+    resolve: { pageData: pmdt19AResolver },
   },
   {
     path: 'version/:id/view',
-    loadComponent: () => import('./dt/pmdt25/pmdt25.component').then((m) => m.Pmdt25Component),
+    loadComponent: () => import('./dt/pmdt19/pmdt19A/pmdt19A.component').then((m) => m.Pmdt19AComponent),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt25Resolver },
+    resolve: { pageData: pmdt19AResolver },
   },
   {
     path: 'version/history/:code',
-    loadComponent: () => import('./rt/pmrt25/pmrt25.component').then((m) => m.Pmrt25Component),
+    loadComponent: () => import('./dt/pmdt19/pmdt19.component').then((m) => m.Pmdt19Component),
     canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmrt25Resolver },
+    resolve: { pageData: pmdt19Resolver },
   },
 
-  // ===== Audit Log =====
+  // ============================================================
+  // ===== PMDT20: AUDIT LOG =====
+  // ============================================================
   {
     path: 'audit',
-    loadComponent: () => import('./rt/pmrt26/pmrt26.component').then((m) => m.Pmrt26Component),
+    loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
     canActivate: [customerGuard],
-    resolve: { pageData: pmrt26Resolver },
+    resolve: { pageData: pmdt20Resolver },
+  },
+  {
+    path: 'pmdt20',
+    redirectTo: 'audit',
+    pathMatch: 'full',
   },
 ];

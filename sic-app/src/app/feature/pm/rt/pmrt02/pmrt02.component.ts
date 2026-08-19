@@ -16,10 +16,12 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 import { Pmrt02Service } from './pmrt02.service';
 import { PmCustomerProject } from './pmrt02.model';
 
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+
 @Component({
   selector: 'app-pmrt02',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   templateUrl: './pmrt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

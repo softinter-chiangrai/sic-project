@@ -1,38 +1,20 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08.form.ts
-
+// src/app/feature/pm/dt/pmdt09/pmdt09.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PmSpecificationModel } from './pmdt08.model';
+import { ToForm } from '../../../../core/types/form.type';
+import { Pmdt09Model } from './pmdt09.model';
 
-export class Pmdt08Form {
-    static createForm(fb: FormBuilder): FormGroup {
-        return fb.group({
-            id: [null],
-            specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
-            specificationType: [null],
-            title: [null, [Validators.required, Validators.maxLength(255)]],
-            module: [null, [Validators.maxLength(100)]],
-            version: [{ value: '1.0', disabled: true }],
-            status: ['Draft'],
-            priority: ['Medium'],
-            owner: [null, [Validators.maxLength(100)]],
-            estimatedManday: [null, [Validators.min(0)]],
-            objective: [null],
-            scope: [null],
-            description: [null],
-            remark: [null],
-            uploadGroupId: [null],
-            isAiGenerated: [null],
-            aiGeneratedAt: [null],
-            generatedFromRequirementId: [null],
-            generatedFromDiagramId: [null],
-            state: [null],
-            rowVersion: [null],
-            requirements: [[]],
-            screens: [[]],
-            fields: [[]],
-            validations: [[]],
-            businessRules: [[]],
-            apis: [[]],
-        });
-    }
+export class Pmdt09Form {
+  static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt09Model>> {
+    return fb.group<ToForm<Pmdt09Model>>({
+      id: fb.control(null),
+      projectId: fb.control(null, [Validators.required]),
+      topic: fb.control(null, [Validators.required]),
+      content: fb.control(null),
+      category: fb.control('General'),
+      author: fb.control(null),
+      createdDate: fb.control(null),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
+    });
+  }
 }

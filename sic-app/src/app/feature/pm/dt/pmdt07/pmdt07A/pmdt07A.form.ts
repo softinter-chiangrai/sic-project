@@ -1,22 +1,34 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.form.ts
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Pmdt07AModel } from './pmdt07A.model';
-import { ToForm } from '../../../../../core/types/form.type';
 
-export class Pmdt07AForm {
-  static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt07AModel>> {
-    return fb.group<ToForm<Pmdt07AModel>>({
-      id: fb.control(null),
-      projectId: fb.control(null, [Validators.required]),
-      crCode: fb.control(null, [Validators.required]),
-      title: fb.control(null, [Validators.required]),
-      description: fb.control(null),
-      impactScore: fb.control(null),
-      costImpact: fb.control(null),
-      scheduleImpactDays: fb.control(null),
-      status: fb.control('DRAFT'),
-      state: fb.control(null),
-      rowVersion: fb.control(null),
+export class Pmdt08AForm {
+  static createForm(fb: FormBuilder): FormGroup {
+    return fb.group({
+      id: [null],
+      specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
+      specificationType: [null, [Validators.required]],
+      title: [null, [Validators.required, Validators.maxLength(255)]],
+      module: [null, [Validators.maxLength(100)]],
+      version: [{ value: 'v1.0', disabled: true }],
+      status: ['Draft'],
+      priority: ['Medium'],
+      owner: [null, [Validators.maxLength(100)]],
+      estimatedManday: [null, [Validators.min(0)]],
+      description: [null, [Validators.required]],
+      uploadGroupId: [null],
+      isAiGenerated: [false],
+      aiGeneratedAt: [null],
+      requirementId: [null],
+      generatedFromRequirementId: [null],
+      generatedFromDiagramId: [null],
+      projectId: [null],
+      projectName: [null],
+      createdBy: [null],
+      createdDate: [null],
+      createdAt: [null],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
     });
   }
 }

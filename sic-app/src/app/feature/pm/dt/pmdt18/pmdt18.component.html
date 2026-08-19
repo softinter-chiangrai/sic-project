@@ -1,111 +1,68 @@
-<!-- src/app/feature/pm/dt/pmdt18/pmdt18.component.html -->
-<div class="space-y-5 p-0.5">
-  <!-- Page Header -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <button
-        (click)="goBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-box-seam text-[var(--crm-primary)]"></i>
-          เอกสารการส่งมอบ (Delivery Documents)
-        </h1>
-        <p class="text-sm text-[var(--text-muted)]">
-          รายการเอกสารส่งมอบโครงการ ตรวจสอบ Gate Checklist และสถานะอนุมัติรับมอบ
-        </p>
-      </div>
+<div class="p-6 bg-slate-50 min-h-screen">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">ข้อเสนอต่อสัญญา MA (MA Renewal Proposals)</h1>
+      <p class="text-sm text-slate-500">ติดตามและจัดการข้อเสนอการต่อสัญญาบริการบำรุงรักษา MA</p>
     </div>
-    <div class="flex items-center gap-2">
-      <button
-        (click)="goToAdd()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-      >
-        <i class="bi bi-plus-lg"></i>
-        สร้างเอกสารส่งมอบ
-      </button>
-    </div>
+    <button (click)="goToAdd()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition">
+      + สร้างข้อเสนอต่อสัญญาใหม่
+    </button>
   </div>
 
-  <!-- Loading State -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูลเอกสารส่งมอบ...</p>
+  @if (renewalsResource.isLoading()) {
+    <div class="p-8 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
+      กำลังโหลดข้อมูล...
     </div>
-  }
-
-  <!-- Delivery List Table -->
-  @if (!isLoading()) {
-    @if (deliveries().length === 0) {
-      <div class="text-center py-12 text-[var(--text-muted)] bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-8">
-        <i class="bi bi-box-seam text-5xl block mb-3 opacity-30 text-[var(--crm-primary)]"></i>
-        <p class="font-medium text-base text-[var(--text-active)]">ยังไม่มีรายการเอกสารส่งมอบ</p>
-        <p class="text-sm mt-1">คลิก "+ สร้างเอกสารส่งมอบ" เพื่อเริ่มต้นสร้างเอกสารส่งมอบงวดงาน</p>
-        <button
-          (click)="goToAdd()"
-          class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-        >
-          <i class="bi bi-plus-lg"></i> สร้างเอกสารส่งมอบรายการแรก
-        </button>
-      </div>
-    } @else {
-      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <table class="w-full text-sm">
-          <thead class="bg-[var(--bg)] border-b border-[var(--border)] text-[var(--text-muted)] uppercase text-[11px] font-semibold tracking-wider">
-            <tr>
-              <th class="px-4 py-3 text-left">รหัส / หัวข้อ (Code & Title)</th>
-              <th class="px-4 py-3 text-left">ประเภท (Type)</th>
-              <th class="px-4 py-3 text-left">เวอร์ชัน (Version)</th>
-              <th class="px-4 py-3 text-left">วันที่ส่งมอบ (Date)</th>
-              <th class="px-4 py-3 text-left">สถานะ (Status)</th>
-              <th class="px-4 py-3 text-right">จัดการ (Actions)</th>
+  } @else if (renewalsResource.value(); as res) {
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <table class="w-full text-left border-collapse text-sm text-slate-700">
+        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs">
+          <tr>
+            <th class="p-4">เลขที่ข้อเสนอ</th>
+            <th class="p-4">อ้างอิงสัญญาเดิม</th>
+            <th class="p-4">ลูกค้า / โครงการ</th>
+            <th class="p-4">ระยะเวลาสัญญาใหม่</th>
+            <th class="p-4 text-right">มูลค่าเสนอ</th>
+            <th class="p-4 text-center">สถานะ</th>
+            <th class="p-4 text-center">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          @for (item of res.content; track item.id) {
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-4 font-semibold text-indigo-600">{{ item.renewalNo }}</td>
+              <td class="p-4 font-medium text-slate-700">{{ item.contractNo || 'N/A' }}</td>
+              <td class="p-4">
+                <div class="font-medium text-slate-800">{{ item.customerName || 'N/A' }}</div>
+                <div class="text-xs text-slate-400">{{ item.projectName || 'N/A' }}</div>
+              </td>
+              <td class="p-4 text-xs font-medium text-slate-600">
+                {{ item.newStartDate }} ถึง {{ item.newEndDate }}
+              </td>
+              <td class="p-4 text-right font-bold text-indigo-600">{{ item.proposedAmount | currency:'THB':'symbol':'1.2-2' }}</td>
+              <td class="p-4 text-center">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ getStatusClass(item.status) }}">
+                  {{ item.status }}
+                </span>
+              </td>
+              <td class="p-4 text-center">
+                <sic-table-actions
+                  [showView]="false"
+                  [showEdit]="true"
+                  [showPrint]="false"
+                  [showDelete]="true"
+                  (onEdit)="goToEdit(item.id)"
+                  (onDelete)="deleteRenewal(item.id)">
+                </sic-table-actions>
+              </td>
             </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--border)]">
-            @for (item of deliveries(); track item.id) {
-              <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-                <td class="px-4 py-3.5">
-                  <div class="font-semibold text-[var(--text-active)]">{{ item.deliveryCode }}</div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ item.deliveryTitle }}</div>
-                </td>
-                <td class="px-4 py-3.5 font-mono text-xs text-[var(--text)]">
-                  {{ item.deliveryType }}
-                </td>
-                <td class="px-4 py-3.5 font-mono text-xs text-[var(--text)]">
-                  v{{ item.deliveryVersion }}
-                </td>
-                <td class="px-4 py-3.5 text-xs text-[var(--text-muted)]">
-                  {{ item.deliveryDate || '-' }}
-                </td>
-                <td class="px-4 py-3.5">
-                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(item.status)">
-                    {{ getStatusText(item.status) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3.5 text-right space-x-2">
-                  <button
-                    (click)="goToEdit(item.id)"
-                    class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--bg)]"
-                  >
-                    <i class="bi bi-pencil"></i> แก้ไข
-                  </button>
-                  <button
-                    (click)="onDelete(item.id)"
-                    class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors px-2 py-1 rounded hover:bg-[var(--bg)]"
-                  >
-                    <i class="bi bi-trash"></i> ลบ
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+          } @empty {
+            <tr>
+              <td colspan="7" class="p-8 text-center text-slate-400">ยังไม่มีรายการเสนอต่อสัญญา MA</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>

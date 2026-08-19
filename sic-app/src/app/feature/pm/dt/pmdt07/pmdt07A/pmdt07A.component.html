@@ -1,287 +1,355 @@
-<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
-<div class="space-y-5 p-0.5">
-  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Target Type Selection -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
-          <select
-            formControlName="targetType"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
-          >
-            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
-            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
-            <option value="TASK">งาน (Task)</option>
-          </select>
-        </div>
-
-        <!-- Target Document Combobox -->
-        <div>
-          <sic-combobox
-            label="เอกสารที่ขอเปลี่ยนแปลง"
-            formControlName="targetId"
-            [apiUrl]="targetDocumentApiUrl()"
-            [params]="{ projectId: projectId }"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
-          ></sic-combobox>
-        </div>
-
-        <!-- Title -->
-        <div class="md:col-span-2">
-          <sic-input
-            label="หัวข้อคำขอเปลี่ยนแปลง"
-            formControlName="title"
-            [required]="true"
-            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
-          ></sic-input>
-        </div>
-
-        <!-- Description -->
-        <div class="md:col-span-2">
-          <sic-input-area
-            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
-            formControlName="description"
-            [rows]="3"
-            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
-          ></sic-input-area>
-        </div>
-
-        <!-- Change Reason -->
-        <div>
-          <sic-combobox
-            label="สาเหตุการเปลี่ยนแปลง"
-            formControlName="changeReason"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
-            valueField="value"
-            textField="text"
-          ></sic-combobox>
-        </div>
-
-        <!-- Assignee (Multiple) -->
-        <div>
-          <sic-combobox
-            label="ผู้รับมอบหมาย"
-            formControlName="assigneeIds"
-            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
-            valueField="value"
-            textField="text"
-            placeholder="เลือกผู้รับมอบหมาย..."
-            [clearable]="true"
-            [multiple]="true"
-            [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกผู้รับมอบหมาย' }"
-            (selectionChanged)="onAssigneeSelectionChanged($event)"
-          ></sic-combobox>
-        </div>
-
-        <!-- Hidden projectId -->
-        <input type="hidden" formControlName="projectId" />
-      </div>
-
-      <!-- Approval Flow Selection -->
-      <div class="border-t border-[var(--border)] pt-4 mt-2">
-        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            label="เลือกกระบวนการอนุมัติ"
-            [apiUrl]="documenttypeapiUrl"
-            valueField="id"
-            textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
-            [clearable]="true"
-            (selectionChanged)="selectedFlowId = $event?.id"
-          ></sic-combobox>
-        </div>
-
-        @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
-          </p>
-        }
-      </div>
-
-      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit || isView) {
-        <div class="border-t border-[var(--border)] pt-4 mt-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              ผลกระทบที่คาดการณ์ (Impact Analysis)
-              @if (isLoadingImpact()) {
-                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
-                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
-                </span>
-              }
-            </h4>
-            @if (!isView) {
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  (click)="refreshImpact()"
-                  [disabled]="isLoadingImpact()"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-                >
-                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                  วิเคราะห์ใหม่
-                </button>
-              </div>
-            }
-          </div>
-
-          @if (showImpactSection() && impactData(); as impact) {
-            <div class="mt-3 space-y-3">
-              <!-- สรุปผลกระทบ -->
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedRequirementIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedSpecIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-amber-500">
-                    {{ impact.impactedDiagramIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTaskIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Task</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedTestCaseIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-[var(--text-active)]">
-                    {{ impact.impactedBugIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
-                </div>
-              </div>
-
-              <!-- รายละเอียดเพิ่มเติม -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
-                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
-                    {{ getImpactStatusText(impact.analysisStatus) }}
-                  </span>
-                  @if (impact.analyzedAt) {
-                    <span class="text-[var(--text-muted)] ml-2 text-xs">
-                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
-                    </span>
-                  }
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
-                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
-                  @if (impact.timelineImpact) {
-                    <span class="text-[var(--text-muted)] ml-4">
-                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
-                    </span>
-                  }
-                </div>
-                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
-                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
-                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
-                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
-                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
-                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
-                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
-                    </div>
-                  </div>
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.html -->
+<div class="space-y-4 p-0.5">
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <button
+                (click)="onBack()"
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                title="กลับ">
+                <i class="bi bi-arrow-left text-xl"></i>
+            </button>
+            <div>
+                <h1 class="text-xl font-bold text-[var(--text-active)]">
+                    {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
+                </h1>
+                @if (isEdit || isViewOnly) {
+                    <p class="text-xs text-[var(--text-muted)]">
+                        รหัส: {{ form.getRawValue().specificationCode || '-' }} · เวอร์ชัน: {{ form.getRawValue().version ? (form.getRawValue().version.startsWith('v') || form.getRawValue().version.startsWith('V') ? form.getRawValue().version : 'v' + form.getRawValue().version) : 'v1.0' }}
+                    </p>
                 }
-              </div>
-
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
-                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    @for (id of impact.impactedRequirementIds; track id) {
-                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedSpecIds; track id) {
-                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
-                    }
-                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
-                      @for (diag of impact.impactedDiagrams; track diag.id) {
-                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedDiagramIds; track id) {
-                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
-                      }
-                    }
-                    @for (id of impact.impactedTaskIds; track id) {
-                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedTestCaseIds; track id) {
-                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
-                    }
-                    @for (id of impact.impactedBugIds; track id) {
-                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
-                    }
-                  </div>
-                </div>
-              }
             </div>
-          } @else if (!isLoadingImpact()) {
-            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
-              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
-              @if (!isView) {
-                <button
-                  type="button"
-                  (click)="refreshImpact()"
-                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
-                >
-                  คลิกเพื่อวิเคราะห์อัตโนมัติ
-                </button>
-              }
-            </div>
-          }
         </div>
-      }
 
-      <!-- Actions -->
-      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-        @if (isView) {
-          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
-        } @else {
-          <sic-button type="submit" variant="primary" [disabled]="isSaving">
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Auto-save status -->
+            <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+                {{ getAutoSaveText() }}
+            </span>
+
+            <!-- View Mode Toggle -->
+            <div class="view-mode-toggle">
+                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+                    <i class="bi bi-layout-split"></i>
+                </button>
+                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+
+            <!-- AI Assistant Button -->
+            @if (!isViewOnly) {
+                <button
+                    type="button"
+                    (click)="openAiAssist()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5"
+                    title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+                    <i class="bi bi-stars"></i>
+                    สร้างเนื้อหาด้วย AI
+                </button>
             }
-            {{
-              isSaving
-                ? 'กำลังบันทึก...'
-                : selectedFlowId
-                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                  : (isEdit ? 'บันทึก' : 'สร้าง')
-            }}
-          </sic-button>
-          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
-        }
-      </div>
-    </form>
+
+            <!-- Export & Print Buttons -->
+            <div class="flex gap-1">
+                <button
+                    (click)="printSpecification()"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50 transition-all"
+                    title="พิมพ์เอกสาร">
+                    <i class="bi bi-printer"></i>
+                    พิมพ์
+                </button>
+                <button
+                    (click)="exportSpecification('pdf')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก PDF">
+                    <i class="bi bi-filetype-pdf"></i>
+                    PDF
+                </button>
+                <button
+                    (click)="exportSpecification('docx')"
+                    [disabled]="isSaving || form.invalid"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
+                    title="ส่งออก Word">
+                    <i class="bi bi-file-word"></i>
+                    DOCX
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    @if (isLoading) {
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
+
+    <!-- MAIN LAYOUT -->
+    @if (!isLoading) {
+        <div class="pmdt08-layout"
+             [class.pmdt08-layout--split]="viewMode === 'split'"
+             [class.pmdt08-layout--edit-only]="viewMode === 'edit'"
+             [class.pmdt08-layout--preview-only]="viewMode === 'preview'">
+
+            <!-- EDIT PANEL -->
+            @if (viewMode !== 'preview') {
+                <div class="pmdt08-panel pmdt08-panel--edit">
+                    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <sic-input
+                                label="รหัส Specification"
+                                formControlName="specificationCode"
+                                [required]="true"
+                                placeholder="SPEC-001">
+                            </sic-input>
+                            <sic-combobox
+                                label="ประเภท Specification"
+                                formControlName="specificationType"
+                                [options]="specificationTypeOptions"
+                                valueField="value"
+                                textField="text"
+                                placeholder="เลือกประเภท Specification"
+                                [clearable]="true"
+                                [required]="true">
+                            </sic-combobox>
+                            <sic-input
+                                label="ชื่อเรื่อง"
+                                formControlName="title"
+                                [required]="true"
+                                placeholder="Customer Management">
+                            </sic-input>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <sic-combobox
+                                label="ลำดับความสำคัญ"
+                                formControlName="priority"
+                                [apiUrl]="service.apiGetLovPriority"
+                                valueField="value"
+                                textField="text"
+                                [required]="true">
+                            </sic-combobox>
+                            <sic-combobox
+                                label="ผู้รับผิดชอบ"
+                                formControlName="owner"
+                                [apiUrl]="userApiUrl"
+                                valueField="value"
+                                textField="text"
+                                placeholder="เลือกผู้รับผิดชอบ"
+                                [clearable]="true"
+                                [multiple]="true">
+                            </sic-combobox>
+                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
+                        </div>
+
+
+
+                        <!-- Tiptap Editor -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-[var(--text-active)]">
+                                    รายละเอียด <span class="text-red-500">*</span>
+                                </span>
+                                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+                            </div>
+                            <sic-tiptap-editor
+                                formControlName="description"
+                                placeholderInput="กรอกรายละเอียด Specification..."
+                                minHeightInput="200px">
+                            </sic-tiptap-editor>
+                            @if (form.get('description')?.touched && form.get('description')?.invalid) {
+                                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+                            }
+                        </div>
+
+                        <!-- Attachments -->
+                        <div class="space-y-1">
+                            <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+                            <sic-upload
+                                formControlName="uploadGroupId"
+                                [multiple]="true"
+                                category="all"
+                                [visibility]="1"
+                                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Specification">
+                            </sic-upload>
+                        </div>
+
+                        <!-- Active -->
+                        <div>
+                            <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+                        </div>
+
+                        <!-- Approval Flow -->
+                        <div class="border-t border-[var(--border)] pt-4 mt-2">
+                            <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+                                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                                การอนุมัติ
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <sic-combobox
+                                    label="กระบวนการอนุมัติ"
+                                    [apiUrl]="service.apiGetApprovals"
+                                    valueField="id"
+                                    textField="flowName"
+                                    placeholder="เลือกกระบวนการอนุมัติ"
+                                    [clearable]="true"
+                                    (selectionChanged)="selectedFlowId = $event?.id">
+                                </sic-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields -->
+                        <input type="hidden" formControlName="id" />
+                        <input type="hidden" formControlName="state" />
+                        <input type="hidden" formControlName="rowVersion" />
+                        <input type="hidden" formControlName="projectId" />
+                        <input type="hidden" formControlName="projectName" />
+                        <input type="hidden" formControlName="createdBy" />
+
+                        <!-- Buttons -->
+                        <div class="flex gap-3 pt-3 border-t border-[var(--border)] mt-4">
+                            <sic-button type="button" variant="secondary" (click)="onBack()">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </sic-button>
+                            @if (!isViewOnly) {
+                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                    @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                                </sic-button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            }
+
+            <!-- PREVIEW PANEL -->
+            @if (viewMode !== 'edit') {
+                <div class="pmdt08-panel pmdt08-panel--preview">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                            <i class="bi bi-eye text-[var(--crm-primary)]"></i>
+                            ตัวอย่างเอกสาร
+                        </h3>
+                        <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+                    </div>
+                    <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ============================================================ -->
+    <!-- AI ASSISTANT MODAL (IN-FORM) -->
+    <!-- ============================================================ -->
+    @if (showAiAssistModal) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+            <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all">
+                
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                            <i class="bi bi-stars text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+                                สร้างและเสริมเนื้อหาด้วย AI
+                            </h2>
+                            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยร่างชื่อ, ฟิลด์, กฎการตรวจสอบ และเนื้อหา Specification ลงฟอร์มนี้</p>
+                        </div>
+                    </div>
+                    <button
+                        (click)="closeAiAssist()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors">
+                        <i class="bi bi-x-lg text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-4">
+                    <!-- Requirement Selection (Optional) -->
+                    <div>
+                        <sic-combobox
+                            label="อ้างอิงจาก Requirement (ถ้ามี)"
+                            [apiUrl]="service.apiGetComboboxRequirement"
+                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                            [(ngModel)]="aiAssistRequirementId"
+                            [clearable]="true">
+                        </sic-combobox>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                            💡 หากเลือก Requirement ระบบจะนำเนื้อหา Requirement มาวิเคราะห์ร่วมด้วย
+                        </p>
+                    </div>
+
+                    <!-- Diagram Selection (Optional) -->
+                    <div>
+                        <sic-combobox
+                            label="อ้างอิงจาก Diagram (ถ้ามี)"
+                            [apiUrl]="service.apiGetComboboxDiagram"
+                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                            valueField="id"
+                            textField="name"
+                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                            [(ngModel)]="aiAssistDiagramId"
+                            [clearable]="true">
+                        </sic-combobox>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
+                            💡 หากเลือก Diagram ระบบจะนำโครงสร้างแผนภาพและ Data Model มาวิเคราะห์สร้างเนื้อหา Specification
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                            คำสั่ง หรือ ประเด็นความต้องการเพิ่มเติม (Prompt)
+                        </label>
+                        <textarea
+                            [(ngModel)]="aiAssistPrompt"
+                            rows="4"
+                            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'ขอให้เพิ่มข้อกำหนดเกี่ยวกับความปลอดภัย การจำกัดสิทธิ์ Admin และ API สำหรับ Export รายงานเป็น Excel'..."
+                            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+                        </textarea>
+                    </div>
+
+                    @if (isGeneratingAiAssist) {
+                        <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
+                            <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และเรียบเรียงเนื้อหา Specification...</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+                    <button
+                        (click)="closeAiAssist()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+                        ยกเลิก
+                    </button>
+
+                    <button
+                        (click)="generateWithAi()"
+                        [disabled]="isGeneratingAiAssist"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all">
+                        @if (isGeneratingAiAssist) {
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>กำลังประมวลผล...</span>
+                        } @else {
+                            <i class="bi bi-stars"></i>
+                            <span>สร้างเนื้อหาลงฟอร์ม</span>
+                        }
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>

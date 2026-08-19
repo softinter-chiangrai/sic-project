@@ -1,724 +1,248 @@
-// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
+// src/app/feature/pm/dt/pmdt07/pmdt07.component.ts
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  OnDestroy,
-  signal,
-  ViewChild,
-  ChangeDetectionStrategy
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, take, takeUntil, interval } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
-import type { DiagramModel } from './diagram.model';
-import { DiagramService } from './diagram.service';
-import { DrawioConnectorService } from './drawio-connector.service';
-import { pmdt06AComponent } from './pmdt06A/pmdt06A.component';
-import { SqlExportDialogComponent } from './sql-export-dialog.component';
-import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
+import { NavigationService } from '../../../../core/services/navigation.service';
+
+import { ChangeRequestService } from './change-request.service';
+
+import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
+
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
-  imports: [CommonModule, FormsModule, pmdt06AComponent],
-  templateUrl: './pmdt06.component.html',
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./pmdt06.component.css'],
+  templateUrl: './pmdt06.component.html',
 })
-export class Pmdt06Component implements AfterViewInit, OnDestroy {
-  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
-
-  private destroy$ = new Subject<void>();
-  private drawioService = inject(DrawioConnectorService);
-  private diagramService = inject(DiagramService);
+export class Pmdt06Component implements OnInit {
+  private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private http = inject(HttpClient);
-  private dialogService = inject(DialogService);
-  private isCreateDialogOpened = false;
+  private dialog = inject(DialogService);
+  private navigation = inject(NavigationService);
+  private crService = inject(ChangeRequestService);
+  private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
-  // ===== State =====
-  isLoading = false;
-  currentTabId: string | null = null;
-  projectId: string | null = null;
-  drawioReady = false;
-  projectName = '';
-  chatOpen = signal(false);
-  unreadCount = 0;
-  currentDiagram: DiagramModel | null = null;
+  // ใช้ Math ใน template
+  readonly Math = Math;
 
-  // ===== Tabs =====
-  tabs = signal<DiagramModel[]>([]);
-  isLoadingTabs = false;
+  // State
+  isLoading = signal(false);
+  changeRequests = signal<ChangeRequestItem[]>([]);
 
-  private isLoadingDiagram = false;
-  private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
+  totalItems = signal(0);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  searchTerm = signal('');
+  filterStatus = signal('all');
+  projectId = signal<string | null>(null);
 
-  // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบ)
-  private requirementId: string | null = null;
-  private requirementTitle: string = '';
+  // Computed
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  hasPrevious = computed(() => this.currentPage() > 1);
+  hasNext = computed(() => this.currentPage() < this.totalPages());
 
-  // ===== Auto‑Save =====
-  private lastSavedXml: string | null = null;
-  autoSaveStatus = '';
-  private saving = false;
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
 
-  // ===== Lifecycle =====
-  ngAfterViewInit(): void {
-    this.drawioService.init(this.iframe.nativeElement);
-
-    let isFirstReady = true;
-
-    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
-      this.drawioReady = ready;
-      console.log('[Draw.io] Ready status:', ready);
-      if (ready && this.currentTabId && isFirstReady) {
-        isFirstReady = false;
-        this.loadExistingDiagram();
-      }
-    });
-
-    setTimeout(() => {
-      if (!this.drawioReady) {
-        console.warn('[Draw.io] Fallback: force ready after 7s');
-        this.drawioReady = true;
-        if (this.currentTabId) {
-          this.loadExistingDiagram();
-        }
-      }
-    }, 7000);
-
-    // รับ query params
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const newTabId = params['tabId'] || params['diagramId'] || null;
-      const newProjectId = params['projectId'] || null;
-      const shouldOpenCreate = params['openCreate'] === 'true';
-      const reqId = params['requirementId'] || null;
-      const reqTitle = params['requirementTitle'] || '';
-
-      // เก็บ requirementId/Title ไว้ในตัวแปร component
-      if (reqId) {
-        this.requirementId = reqId;
-        this.requirementTitle = reqTitle;
-      }
-
-      if (!newProjectId) {
-        this.router.navigate(['/projects']);
-        return;
-      }
-
-      // ถ้า projectId เปลี่ยน ให้โหลดใหม่
-      if (newProjectId !== this.projectId) {
-        this.projectId = newProjectId;
-        this.currentTabId = null;
-        this.currentDiagram = null;
-        this.loadProjectName();
-        this.loadTabs();
-        // ถ้ามี openCreate และ requirementId ให้เก็บไว้เปิดทีหลัง
-        if (shouldOpenCreate && reqId) {
-          this.pendingCreate = { requirementId: reqId, requirementTitle: reqTitle };
-          // ลบเฉพาะ openCreate ออกจาก URL (เก็บ requirementId ไว้)
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { openCreate: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-        return;
-      }
-
-      // ถ้ามี tabId ให้โหลด diagram
-      if (newTabId) {
-        if (newTabId !== this.currentTabId) {
-          this.currentTabId = newTabId;
-          this.currentDiagram = null;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
-          }
-        }
-        // ถ้ามี openCreate และ requirementId แต่มี tabId อยู่แล้ว
-        if (shouldOpenCreate && reqId) {
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { openCreate: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-      } else {
-        // ถ้าไม่มี tabId ให้โหลด tabs
-        this.loadTabs();
-        // ถ้ามี openCreate และ requirementId และยังไม่มี tabs ให้เปิด dialog
-        if (shouldOpenCreate && reqId && !this.isCreateDialogOpened) {
-          if (this.tabs().length === 0) {
-            this.isCreateDialogOpened = true;
-            this.openCreateDialogWithRequirement(reqId, reqTitle);
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: { openCreate: null },
-              queryParamsHandling: 'merge',
-              replaceUrl: true,
-            });
-          } else {
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: { openCreate: null },
-              queryParamsHandling: 'merge',
-              replaceUrl: true,
-            });
-          }
-        }
-      }
-    });
-
-    // ===== Auto‑Save: Poll XML ทุก 10 วินาที =====
-    interval(30000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        if (
-          this.drawioReady &&
-          this.currentTabId &&
-          !this.isLoading &&
-          !this.isLoadingDiagram
-        ) {
-          // ขอ XML จาก Draw.io เพื่อตรวจสอบการเปลี่ยนแปลง
-          this.drawioService.requestXml();
-        }
-      });
-
-    // ===== Auto‑Save: เมื่อได้รับ XML จาก Draw.io =====
-    this.drawioService.xml$
-      .pipe(
-        debounceTime(300), // หน่วงเล็กน้อยเพื่อป้องกันการยิงซ้ำ
-        takeUntil(this.destroy$)
-      )
-      .subscribe((xml: string) => {
-        if (!this.currentTabId) return;
-        if (!xml || xml.trim().length === 0) return;
-
-        const normalized = this.ensureValidDrawioXml(xml);
-
-        // ไม่มีการเปลี่ยนแปลง
-        if (normalized === this.lastSavedXml) {
-          return;
-        }
-
-        this.lastSavedXml = normalized;
-        console.log('[AutoSave] Diagram changed, saving...');
-
-        this.autoSaveDiagram(normalized);
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  // ===== Tabs Management =====
-  loadTabs(): void {
-    if (!this.projectId) return;
-    this.isLoadingTabs = true;
-
-    this.diagramService.getTabs(this.projectId).subscribe({
-      next: (tabs) => {
-        this.tabs.set(tabs);
-        this.isLoadingTabs = false;
-
-        if (!this.currentTabId && tabs.length > 0) {
-          this.currentTabId = tabs[0].id;
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { tabId: this.currentTabId, projectId: this.projectId },
-            queryParamsHandling: 'merge',
-          });
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
-          }
-        }
-
-        if (tabs.length === 0) {
-          if (this.pendingCreate) {
-            this.openCreateDialogWithRequirement(
-              this.pendingCreate.requirementId,
-              this.pendingCreate.requirementTitle
-            );
-            this.pendingCreate = null;
-          } else {
-            this.createDefaultTab();
-          }
-        } else {
-          if (this.pendingCreate) {
-            console.log('[Diagram] Tabs already exist, skip create dialog');
-            this.pendingCreate = null;
-          }
-        }
-      },
-      error: () => {
-        this.isLoadingTabs = false;
-        this.tabs.set([]);
-      },
+  ngOnInit() {
+    this.route.queryParams.subscribe((queryParams) => {
+      this.projectId.set(queryParams['projectId'] || null);
+      this.loadChangeRequests();
     });
   }
 
-  createDefaultTab(): void {
-    if (!this.projectId) return;
-    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
-    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
+  loadChangeRequests() {
+    this.isLoading.set(true);
+    let params = new HttpParams()
+      .set('page', (this.currentPage() - 1).toString())
+      .set('size', this.pageSize().toString())
+      .set('keyword', this.searchTerm() || '')
+      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus());
 
-    this.dialogService.open({
-      type: 'confirm',
-      component: NewDiagramDialogComponent,
-      componentInputs: {
-        projectId: this.projectId,
-        editData: null,
-        selectedRequirementId: reqId,
-        requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
-            },
-            error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        },
-      },
-    });
-  }
-
-  createNewTab(): void {
-    if (!this.projectId) return;
-    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
-    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
-
-    this.dialogService.open({
-      type: 'confirm',
-      component: NewDiagramDialogComponent,
-      componentInputs: {
-        projectId: this.projectId,
-        editData: null,
-        selectedRequirementId: reqId,
-        requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
-            },
-            error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        },
-      },
-    });
-  }
-
-  private openCreateDialogWithRequirement(requirementId: string, requirementTitle: string): void {
-    if (!this.projectId || !requirementId) return;
-
-    const promise = this.dialogService.open({
-      type: 'confirm',
-      component: NewDiagramDialogComponent,
-      componentInputs: {
-        projectId: this.projectId,
-        editData: null,
-        selectedRequirementId: requirementId,
-        requirementTitle: requirementTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
-            next: (newTab) => {
-              this.tabs.update((t) => [...t, newTab]);
-              this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
-            },
-            error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        },
-      },
-    });
-
-    promise.finally(() => {
-      this.pendingCreate = null;
-    });
-  }
-
-  editTab(tabId: string): void {
-    const tab = this.tabs().find((t) => t.id === tabId);
-    if (!tab) return;
-    const editData: DiagramEditData = {
-      id: tab.id,
-      name: tab.name,
-      type: tab.diagramType,
-      rowVersion: tab.rowVersion || 0,
-    };
-    this.dialogService.open({
-      type: 'confirm',
-      component: NewDiagramDialogComponent,
-      componentInputs: {
-        projectId: this.projectId,
-        editData: editData,
-        selectedRequirementId: '',
-        requirementTitle: '',
-        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string) => {
-          if (!data) return;
-          const updatedTab = {
-            ...tab,
-            name: name,
-            diagramType: type,
-            state: 3,
-            rowVersion: data.rowVersion || 0,
-          };
-          this.diagramService.updateTab(updatedTab as any).subscribe({
-            next: (res) => {
-              this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-              if (this.currentTabId === tabId) this.currentDiagram = res;
-              this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
-            },
-            error: (err) => {
-              this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        },
-      },
-    });
-  }
-
-  switchTab(tabId: string): void {
-    if (this.currentTabId === tabId) return;
-    this.currentTabId = tabId;
-    this.currentDiagram = null;
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tabId: tabId, projectId: this.projectId },
-      queryParamsHandling: 'merge',
-    });
-    if (this.drawioReady) {
-      this.loadExistingDiagram();
-    }
-  }
-
-  deleteTab(tabId: string, event: Event): void {
-    event.stopPropagation();
-    const tab = this.tabs().find((t) => t.id === tabId);
-    if (!tab) return;
-    this.dialogService
-      .confirm('Delete Tab', `Delete diagram "${tab.name}"? This cannot be undone.`)
-      .then((confirmed) => {
-        if (!confirmed) return;
-        this.diagramService.deleteTab(tabId).subscribe({
-          next: () => {
-            this.tabs.update((t) => t.filter((item) => item.id !== tabId));
-            if (this.currentTabId === tabId) {
-              const remaining = this.tabs();
-              if (remaining.length > 0) {
-                this.switchTab(remaining[0].id);
-              } else {
-                this.currentTabId = null;
-                this.drawioService.loadXml('');
-              }
-            }
-            this.dialogService.success('Deleted', `Tab "${tab.name}" deleted.`);
-          },
-          error: (err) => {
-            console.error('Failed to delete tab:', err);
-            this.dialogService.error('Failed', err.error?.message || 'Could not delete tab.');
-          },
-        });
-      });
-  }
-
-  // ===== Helpers =====
-  getTabIcon(type: string): string {
-    const map: Record<string, string> = {
-      DFD: 'bi-diagram-3',
-      ER: 'bi-table',
-      Flowchart: 'bi-diagram-2',
-      Sequence: 'bi-arrow-left-right',
-      Class: 'bi-boxes',
-      State: 'bi-arrow-repeat',
-      Gantt: 'bi-bar-chart',
-      Mindmap: 'bi-diagram-2',
-      Journey: 'bi-map',
-      Pie: 'bi-pie-chart',
-      C4: 'bi-box',
-      'Use Case': 'bi-people',
-    };
-    return map[type] || 'bi-file-earmark';
-  }
-
-  loadProjectName(): void {
-    if (!this.projectId) return;
-    this.diagramService.getProjectName(this.projectId).subscribe({
-      next: (name) => (this.projectName = name),
-      error: () => (this.projectName = 'Unknown Project'),
-    });
-  }
-
-  @HostListener('window:message', ['$event'])
-  onMessage(event: MessageEvent) {
-    this.drawioService.handleMessage(event);
-  }
-
-  // ===== Chat =====
-  toggleChat(): void {
-    this.chatOpen.update((v) => !v);
-    if (this.chatOpen()) this.unreadCount = 0;
-  }
-
-  // ===== Diagram CRUD =====
-  private ensureValidDrawioXml(xml: string): string {
-    if (!xml || xml.trim().length === 0) {
-      return this.drawioService.getEmptyDiagramXml();
-    }
-    const trimmed = xml.trim();
-    if (!trimmed.includes('<mxfile') && !trimmed.includes('<mxGraphModel')) {
-      return this.drawioService.getEmptyDiagramXml();
-    }
-    if (trimmed.includes('<mxGraphModel') && !trimmed.includes('<root>')) {
-      const empty = this.drawioService.getEmptyDiagramXml();
-      const diagramMatch = trimmed.match(/<diagram[^>]*>([\s\S]*?)<\/diagram>/);
-      if (diagramMatch) {
-        return empty.replace(
-          /(<diagram[^>]*>)([\s\S]*?)(<\/diagram>)/,
-          `$1${diagramMatch[1]}$3`
-        );
-      }
-      return empty;
-    }
-    return trimmed;
-  }
-
-  loadExistingDiagram(): void {
-    if (!this.currentTabId) {
-      console.warn('[Diagram] No tabId to load');
-      return;
-    }
-    if (this.isLoadingDiagram) {
-      console.warn('[Diagram] Already loading, skip');
-      return;
-    }
-    this.isLoadingDiagram = true;
-    this.isLoading = true;
-    console.log('[Diagram] Loading diagram:', this.currentTabId);
-
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
-      next: (diagram) => {
-        console.log('[Diagram] Loaded diagram data:', diagram);
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          console.warn('[Diagram] Project mismatch');
-          this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
-          this.drawioService.loadXml('');
-          return;
-        }
-        this.currentDiagram = diagram;
-        let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
-        xml = this.ensureValidDrawioXml(xml);
-        console.log('[Diagram] XML length after validation:', xml.length);
-        // ตั้งค่า lastSavedXml เป็น XML ที่โหลดมา เพื่อป้องกัน auto‑save ซ้ำ
-        this.lastSavedXml = xml;
-        setTimeout(() => {
-          this.drawioService.loadXml(xml, true);
-        }, 300);
-        this.isLoading = false;
-        this.isLoadingDiagram = false;
-      },
-      error: (err) => {
-        console.error('[Diagram] Failed to load diagram:', err);
-        this.isLoading = false;
-        this.isLoadingDiagram = false;
-        setTimeout(() => {
-          this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
-        }, 300);
-        this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-      },
-    });
-  }
-
-  // ===== Save (Manual) =====
-  saveDiagram(): void {
-    if (!this.currentTabId) {
-      this.dialogService.warn('No Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
-      return;
-    }
-    // ขอ XML ล่าสุดจาก Draw.io
-    this.drawioService.requestXml();
-    // รอ XML แล้วบันทึกทันที (ใช้ take(1) เพื่อรับครั้งเดียว)
-    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe((xml: string) => {
-      if (!xml || xml.trim().length === 0) {
-        this.dialogService.warn('Empty Diagram', 'ไม่พบข้อมูล Diagram');
-        return;
-      }
-      const normalized = this.ensureValidDrawioXml(xml);
-      // บันทึกทันทีโดยไม่รอ auto-save
-      this.autoSaveDiagram(normalized, true); // ส่ง flag manual=true
-    });
-  }
-
-  // ===== Auto‑Save (Internal) =====
-  private autoSaveDiagram(xml: string, manual: boolean = false): void {
-    if (this.saving) {
-      if (manual) {
-        this.dialogService.warn('กำลังบันทึก', 'ระบบกำลังบันทึกอยู่ กรุณารอสักครู่');
-      }
-      return;
+    if (this.projectId()) {
+      params = params.set('projectId', this.projectId()!);
     }
 
-    if (!this.currentTabId) {
-      return;
-    }
-
-    const diagram = this.tabs().find(t => t.id === this.currentTabId);
-    if (!diagram) {
-      console.warn('[AutoSave] No diagram found for current tab');
-      return;
-    }
-
-    // ตรวจสอบว่ามี requirementId หรือไม่ (ถ้าไม่มี ให้ใช้จาก currentDiagram หรือจาก query param)
-    let requirementId = diagram['requirementId'] || this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
-    if (!requirementId) {
-      // ถ้าไม่มี requirementId ให้ดึงจาก currentDiagram ที่โหลดไว้
-      if (this.currentDiagram && this.currentDiagram['requirementId']) {
-        requirementId = this.currentDiagram['requirementId'];
-      }
-    }
-
-    // ถ้ายังไม่มี requirementId ให้แจ้งเตือนและไม่บันทึก
-    if (!requirementId) {
-      console.warn('[AutoSave] No requirementId found for this diagram, cannot save.');
-      if (manual) {
-        this.dialogService.warn('Missing Requirement', 'ไม่พบ Requirement ID ที่เชื่อมโยง กรุณาสร้าง Diagram ใหม่ผ่าน Requirement');
-      }
-      return;
-    }
-
-    this.saving = true;
-
-    const updatedTab = {
-      ...diagram,
-      graphData: { xml },
-      requirementId: requirementId, // ส่ง requirementId ไปด้วย
-      state: 3,
-      rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null
-    };
-
-    this.diagramService.updateTab(updatedTab as any).subscribe({
-      next: (res) => {
-        this.currentDiagram = res;
-        this.tabs.update(items =>
-          items.map(i => i.id === res.id ? res : i)
-        );
-        this.lastSavedXml = res.graphData?.xml ?? xml;
-        const now = new Date().toLocaleTimeString();
-        this.autoSaveStatus = manual ? `✅ Saved manually at ${now}` : `✅ Auto-saved at ${now}`;
-        this.saving = false;
-        if (manual) {
-          this.dialogService.success('บันทึกสำเร็จ', 'Diagram ถูกบันทึกเรียบร้อย');
-        }
-      },
-      error: (err) => {
-        this.saving = false;
-        const msg = err.error?.message || 'เกิดข้อผิดพลาด';
-        this.autoSaveStatus = `❌ Save failed`;
-        if (manual) {
-          this.dialogService.error('บันทึกไม่สำเร็จ', msg);
-        } else {
-          console.error('[AutoSave] Failed:', err);
-        }
-        // ดึงข้อมูล Diagram ล่าสุดเพื่ออัปเดต rowVersion สำหรับการบันทึกครั้งถัดไป
-        if (this.currentTabId) {
-          this.diagramService.getDiagram(this.currentTabId).subscribe({
-            next: (latest) => {
-              this.currentDiagram = latest;
-              this.tabs.update(items =>
-                items.map(i => i.id === latest.id ? latest : i)
-              );
-            }
-          });
-        }
-      }
-    });
-  }
-
-  // ===== Generate SQL =====
-  generateSql(): void {
-    if (!this.currentTabId) {
-      this.dialogService.warn('No Diagram', 'Please open a diagram first.');
-      return;
-    }
-    this.isLoading = true;
-    this.drawioService.requestXml();
-    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
-      next: (xml) => {
-        this.isLoading = false;
-        if (!xml || xml.trim().length === 0) {
-          this.dialogService.warn('Empty Diagram', 'Please draw an ER diagram first.');
-          return;
-        }
-        this.dialogService.open({
-          type: 'confirm',
-          component: SqlExportDialogComponent,
-          componentInputs: { xml },
-        });
-      },
-      error: () => {
-        this.isLoading = false;
-        this.dialogService.error('Error', 'Failed to get diagram XML.');
-      },
-    });
-  }
-
-  // ===== Trace Links (keep for compatibility) =====
-  createDfdTab(name: string, relatedRequirementIds: string[]): void {
-    // ไม่ใช้แล้ว
-  }
-
-  createTraceLink(
-    sourceType: string,
-    sourceId: string,
-    targetType: string,
-    targetId: string,
-    relationshipType: string
-  ): void {
-    if (!this.projectId) {
-      console.warn('No projectId, cannot create trace link');
-      return;
-    }
     this.http
-      .post('/api/trace/links', {
-        projectId: this.projectId,
-        sourceType,
-        sourceId,
-        targetType,
-        targetId,
-        relationshipType,
-      })
+      .get<any>(this.baseUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: () => {
-          console.log(
-            `✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`
-          );
+        next: (res) => {
+          this.changeRequests.set(res.data || []);
+          this.totalItems.set(res.pageable?.totalElements || 0);
         },
-        error: (err) => {
-          console.error('Failed to create trace link:', err);
-        },
+        error: () =>
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
       });
+  }
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+    this.loadChangeRequests();
+  }
+
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadChangeRequests();
+  }
+
+  goToAdd() {
+    if (this.projectId()) {
+      this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+        queryParams: { projectId: this.projectId() },
+      });
+    } else {
+      this.navigation.navigate(['/feature/pm/pmdt07/new']);
+    }
+  }
+
+  goToEdit(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
+  }
+
+  goToView(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'view']);
+  }
+
+  goToImpact(id: string) {
+    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
+      queryParams: { showImpact: true } // optional
+    });
+  }
+
+  // ✅ ไปที่หน้า Approval Center
+  goToApproval(crId: string) {
+    this.router.navigate(['/feature/pm/approval', crId]);
+  }
+
+  deleteChangeRequest(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.http.delete(`${this.baseUrl}/${id}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
+            this.loadChangeRequests();
+          },
+          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
+        });
+      }
+    });
+  }
+
+  // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
+
+  submitRequest(id: string) {
+    this.crService.submitForApproval(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
+    });
+  }
+
+  implementRequest(id: string) {
+    this.crService.implement(id).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
+    });
+  }
+
+  completeAssigneeTask(id: string, userId: string, targetId: string) {
+    this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
+      next: () => {
+        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
+        this.loadChangeRequests();
+      },
+      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
+    });
+  }
+
+  // ===== Helper =====
+
+  getStatusClass(status: string): string {
+    if (!status) return 'bg-gray-100 text-gray-600';
+    const map: Record<string, string> = {
+      Draft: 'bg-gray-100 text-gray-600',
+      DRAFT: 'bg-gray-100 text-gray-600',
+      Submitted: 'bg-blue-100 text-blue-700',
+      SUBMITTED: 'bg-blue-100 text-blue-700',
+      'In Review': 'bg-blue-100 text-blue-700',
+      IN_REVIEW: 'bg-blue-100 text-blue-700',
+      Pending: 'bg-yellow-100 text-yellow-700',
+      PENDING: 'bg-yellow-100 text-yellow-700',
+      Approved: 'bg-emerald-100 text-emerald-700',
+      APPROVED: 'bg-emerald-100 text-emerald-700',
+      Rejected: 'bg-red-100 text-red-700',
+      REJECTED: 'bg-red-100 text-red-700',
+      Implemented: 'bg-purple-100 text-purple-700',
+      IMPLEMENTED: 'bg-purple-100 text-purple-700',
+      'Need Revision': 'bg-orange-100 text-orange-700',
+      NEED_REVISION: 'bg-orange-100 text-orange-700',
+      Cancelled: 'bg-gray-300 text-gray-700',
+      CANCELLED: 'bg-gray-300 text-gray-700',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string): string {
+    if (!status) return 'ร่าง';
+    const map: Record<string, string> = {
+      Draft: 'ร่าง',
+      DRAFT: 'ร่าง',
+      Submitted: 'รออนุมัติ',
+      SUBMITTED: 'รออนุมัติ',
+      'In Review': 'อยู่ระหว่างตรวจสอบ',
+      IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
+      Pending: 'รอดำเนินการ',
+      PENDING: 'รอดำเนินการ',
+      Approved: 'อนุมัติ',
+      APPROVED: 'อนุมัติ',
+      Rejected: 'ปฏิเสธ',
+      REJECTED: 'ปฏิเสธ',
+      Implemented: 'ดำเนินการแล้ว',
+      IMPLEMENTED: 'ดำเนินการแล้ว',
+      'Need Revision': 'ต้องแก้ไข',
+      NEED_REVISION: 'ต้องแก้ไข',
+      Cancelled: 'ยกเลิก',
+      CANCELLED: 'ยกเลิก',
+    };
+    return map[status] || status;
   }
 }

@@ -1,0 +1,78 @@
+<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
+
+<div class="h-full flex flex-col bg-[var(--bg)]">
+  <div
+    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
+  >
+    <h3 class="text-sm font-medium">AI Assistant</h3>
+    <button
+      (click)="clearChat()"
+      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
+    >
+      Clear
+    </button>
+  </div>
+  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
+    @for (message of messages(); track message.id) {
+      <div class="flex" [class.justify-end]="message.role === 'user'">
+        <div
+          class="max-w-[80%] px-4 py-2 rounded-xl relative"
+          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
+          [class.text-white]="message.role === 'user'"
+          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
+        >
+          <div
+            [class.text-sm]="message.role === 'user'"
+            [class.prose]="message.role === 'assistant'"
+          >
+            <markdown
+              [data]="message.content"
+              [class.text-white]="message.role === 'user'"
+            ></markdown>
+          </div>
+          <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
+            <span>{{ message.createdAt | date: 'shortTime' }}</span>
+            <!-- ✅ ปุ่ม Copy Mermaid ที่เปลี่ยนข้อความตามสถานะ -->
+            @if (message.role === 'assistant' && getMermaidCode(message.content)) {
+              @if (copiedStatus()[message.id]) {
+                <span class="text-green-500 text-xs font-medium">Copied!</span>
+              } @else {
+                <button
+                  (click)="copyMermaidCode(message.content, message.id)"
+                  class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
+                  title="คัดลอก Mermaid Code"
+                >
+                  <i class="bi bi-clipboard"></i> Copy Mermaid
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+    @if (isLoading()) {
+      <div class="flex justify-start">
+        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
+          <span class="animate-pulse">AI is thinking...</span>
+        </div>
+      </div>
+    }
+  </div>
+  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
+    <div class="flex gap-2">
+      <input
+        [(ngModel)]="userInput"
+        (keydown.enter)="sendMessage()"
+        placeholder="Ask AI to create or modify diagrams..."
+        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
+      />
+      <button
+        (click)="sendMessage()"
+        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
+        [disabled]="isLoading() || !userInput.trim()"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>

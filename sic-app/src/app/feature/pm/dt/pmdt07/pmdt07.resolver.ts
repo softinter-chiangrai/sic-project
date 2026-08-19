@@ -1,35 +1,67 @@
 // src/app/feature/pm/dt/pmdt07/pmdt07.resolver.ts
+
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt07Service } from './pmdt07.service';
-import { Pmdt07Form } from './pmdt07.form';
-import { Pmdt07Model, Pmdt07PageData } from './pmdt07.model';
+import { ResolveFn, Router } from '@angular/router';
+import { catchError, EMPTY, map, of, tap } from 'rxjs';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { Pmdt07Form } from './pmdt07.form';
+import { Pmdt07Service } from './pmdt07.service';
+import { PmSpecificationModel } from './pmdt07.model';
 
-export const pmdt07Resolver: ResolveFn<Pmdt07PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmdt07Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+export const pmdt07Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> | null> = (route) => {
+    const service = inject(Pmdt07Service);
+    const customerState = inject(CustomerStateService);
+    const projectId = route.queryParams['projectId'] || customerState.getProjectId();
+    const requirementId = route.queryParams['requirementId'] || customerState.getRequirementId();
 
-  const form = Pmdt07Form.createForm(fb);
+    return service.getList({ projectId, requirementId, page: 0, size: 10 }).pipe(
+        catchError((err) => {
+            console.error('pmdt07Resolver error:', err);
+            return of(null);
+        })
+    );
+};
 
-  if (!id) {
-    return { changeRequestData: new SicFromData<Pmdt07Model>(form) };
-  }
+export const pmdt07CreateResolver: ResolveFn<Pmdt07Form> = (route) => {
+    const fb = inject(FormBuilder);
+    const form = Pmdt07Form.createForm(fb);
 
-  try {
-    const data = await lastValueFrom(service.getChangeRequestById(id));
-    if (data) {
-      form.patchValue(data);
-      return { changeRequestData: new SicFromData<Pmdt07Model>(form, data) };
+    const requirementId = route.queryParams['requirementId'];
+    const diagramId = route.queryParams['diagramId'];
+
+    if (requirementId) {
+        form.patchValue({ generatedFromRequirementId: requirementId });
     }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  }
+    if (diagramId) {
+        form.patchValue({ generatedFromDiagramId: diagramId });
+    }
+
+    return {
+        specification: new SicFromData<PmSpecificationModel>(form)
+    };
+};
+
+export const pmdt07EditResolver: ResolveFn<Pmdt07Form> = (route) => {
+    const fb = inject(FormBuilder);
+    const service = inject(Pmdt07Service);
+    const router = inject(Router);
+    const id = route.params['id'];
+    const form = Pmdt07Form.createForm(fb);
+
+    return service.getSpecification(id).pipe(
+        tap((data) => {
+            form.patchValue(data);
+            form.updateValueAndValidity();
+        }),
+        map(() => ({
+            specification: new SicFromData<PmSpecificationModel>(form)
+        })),
+        catchError(() => {
+            router.navigate(['/feature/pm/pmdt07']);
+            return EMPTY;
+        })
+    );
 };

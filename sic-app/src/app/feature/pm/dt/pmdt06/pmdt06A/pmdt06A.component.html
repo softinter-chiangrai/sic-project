@@ -1,78 +1,287 @@
-<!-- src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.component.html -->
-
-<div class="h-full flex flex-col bg-[var(--bg)]">
-  <div
-    class="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0"
-  >
-    <h3 class="text-sm font-medium">AI Assistant</h3>
-    <button
-      (click)="clearChat()"
-      class="text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors"
-    >
-      Clear
-    </button>
-  </div>
-  <div #chatContainer class="flex-1 overflow-y-auto p-3 space-y-3">
-    @for (message of messages(); track message.id) {
-      <div class="flex" [class.justify-end]="message.role === 'user'">
-        <div
-          class="max-w-[80%] px-4 py-2 rounded-xl relative"
-          [class.bg-[var(--crm-primary)]]="message.role === 'user'"
-          [class.text-white]="message.role === 'user'"
-          [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
-        >
-          <div
-            [class.text-sm]="message.role === 'user'"
-            [class.prose]="message.role === 'assistant'"
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html -->
+<div class="space-y-5 p-0.5">
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Target Type Selection -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภทเอกสารที่ขอแก้ไข <span class="text-red-500">*</span></label>
+          <select
+            formControlName="targetType"
+            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all cursor-pointer"
           >
-            <markdown
-              [data]="message.content"
-              [class.text-white]="message.role === 'user'"
-            ></markdown>
-          </div>
-          <div class="text-xs mt-1 opacity-60 flex justify-between items-center">
-            <span>{{ message.createdAt | date: 'shortTime' }}</span>
-            <!-- ✅ ปุ่ม Copy Mermaid ที่เปลี่ยนข้อความตามสถานะ -->
-            @if (message.role === 'assistant' && getMermaidCode(message.content)) {
-              @if (copiedStatus()[message.id]) {
-                <span class="text-green-500 text-xs font-medium">Copied!</span>
-              } @else {
-                <button
-                  (click)="copyMermaidCode(message.content, message.id)"
-                  class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 text-xs"
-                  title="คัดลอก Mermaid Code"
-                >
-                  <i class="bi bi-clipboard"></i> Copy Mermaid
-                </button>
+            <option value="REQUIREMENT">ความต้องการระบบ (Requirement)</option>
+            <option value="SPECIFICATION">ข้อกำหนดระบบ (Specification)</option>
+            <option value="TASK">งาน (Task)</option>
+          </select>
+        </div>
+
+        <!-- Target Document Combobox -->
+        <div>
+          <sic-combobox
+            label="เอกสารที่ขอเปลี่ยนแปลง"
+            formControlName="targetId"
+            [apiUrl]="targetDocumentApiUrl()"
+            [params]="{ projectId: projectId }"
+            valueField="value"
+            textField="text"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
+          ></sic-combobox>
+        </div>
+
+        <!-- Title -->
+        <div class="md:col-span-2">
+          <sic-input
+            label="หัวข้อคำขอเปลี่ยนแปลง"
+            formControlName="title"
+            [required]="true"
+            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
+          ></sic-input>
+        </div>
+
+        <!-- Description -->
+        <div class="md:col-span-2">
+          <sic-input-area
+            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
+            formControlName="description"
+            [rows]="3"
+            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
+          ></sic-input-area>
+        </div>
+
+        <!-- Change Reason -->
+        <div>
+          <sic-combobox
+            label="สาเหตุการเปลี่ยนแปลง"
+            formControlName="changeReason"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
+            valueField="value"
+            textField="text"
+          ></sic-combobox>
+        </div>
+
+        <!-- Assignee (Multiple) -->
+        <div>
+          <sic-combobox
+            label="ผู้รับมอบหมาย"
+            formControlName="assigneeIds"
+            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
+            valueField="value"
+            textField="text"
+            placeholder="เลือกผู้รับมอบหมาย..."
+            [clearable]="true"
+            [multiple]="true"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกผู้รับมอบหมาย' }"
+            (selectionChanged)="onAssigneeSelectionChanged($event)"
+          ></sic-combobox>
+        </div>
+
+        <!-- Hidden projectId -->
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <!-- Approval Flow Selection -->
+      <div class="border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          กระบวนการอนุมัติ
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="เลือกกระบวนการอนุมัติ"
+            [apiUrl]="documenttypeapiUrl"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId = $event?.id"
+          ></sic-combobox>
+        </div>
+
+        @if (!selectedFlowId && flows.length > 0) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
+          </p>
+        }
+      </div>
+
+      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
+      @if (isEdit || isView) {
+        <div class="border-t border-[var(--border)] pt-4 mt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+              ผลกระทบที่คาดการณ์ (Impact Analysis)
+              @if (isLoadingImpact()) {
+                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
+                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
+                </span>
               }
+            </h4>
+            @if (!isView) {
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  [disabled]="isLoadingImpact()"
+                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+                >
+                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                  วิเคราะห์ใหม่
+                </button>
+              </div>
             }
           </div>
+
+          @if (showImpactSection() && impactData(); as impact) {
+            <div class="mt-3 space-y-3">
+              <!-- สรุปผลกระทบ -->
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedRequirementIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedSpecIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-amber-500">
+                    {{ impact.impactedDiagramIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTaskIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Task</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedTestCaseIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-[var(--text-active)]">
+                    {{ impact.impactedBugIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
+                </div>
+              </div>
+
+              <!-- รายละเอียดเพิ่มเติม -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
+                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
+                    {{ getImpactStatusText(impact.analysisStatus) }}
+                  </span>
+                  @if (impact.analyzedAt) {
+                    <span class="text-[var(--text-muted)] ml-2 text-xs">
+                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                  }
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
+                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
+                  @if (impact.timelineImpact) {
+                    <span class="text-[var(--text-muted)] ml-4">
+                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
+                    </span>
+                  }
+                </div>
+                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
+                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
+                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
+                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
+                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
+                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
+                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
+                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
+                  <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    @for (id of impact.impactedRequirementIds; track id) {
+                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedSpecIds; track id) {
+                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+                    }
+                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
+                      @for (diag of impact.impactedDiagrams; track diag.id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedDiagramIds; track id) {
+                        <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                      }
+                    }
+                    @for (id of impact.impactedTaskIds; track id) {
+                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedTestCaseIds; track id) {
+                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+                    }
+                    @for (id of impact.impactedBugIds; track id) {
+                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (!isLoadingImpact()) {
+            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
+              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
+              @if (!isView) {
+                <button
+                  type="button"
+                  (click)="refreshImpact()"
+                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                >
+                  คลิกเพื่อวิเคราะห์อัตโนมัติ
+                </button>
+              }
+            </div>
+          }
         </div>
+      }
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+        @if (isView) {
+          <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
+        } @else {
+          <sic-button type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin me-1"></i>
+            }
+            {{
+              isSaving
+                ? 'กำลังบันทึก...'
+                : selectedFlowId
+                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                  : (isEdit ? 'บันทึก' : 'สร้าง')
+            }}
+          </sic-button>
+          <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+        }
       </div>
-    }
-    @if (isLoading()) {
-      <div class="flex justify-start">
-        <div class="bg-[var(--sidebar)] px-4 py-2 rounded-xl text-sm">
-          <span class="animate-pulse">AI is thinking...</span>
-        </div>
-      </div>
-    }
-  </div>
-  <div class="p-3 border-t border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
-    <div class="flex gap-2">
-      <input
-        [(ngModel)]="userInput"
-        (keydown.enter)="sendMessage()"
-        placeholder="Ask AI to create or modify diagrams..."
-        class="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm outline-none focus:border-[var(--crm-primary)] transition-colors"
-      />
-      <button
-        (click)="sendMessage()"
-        class="px-4 py-2 rounded-lg bg-[var(--crm-primary)] text-white text-sm font-medium disabled:opacity-50"
-        [disabled]="isLoading() || !userInput.trim()"
-      >
-        Send
-      </button>
-    </div>
-  </div>
+    </form>
 </div>

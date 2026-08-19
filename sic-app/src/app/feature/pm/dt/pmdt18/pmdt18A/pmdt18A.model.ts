@@ -1,48 +1,24 @@
-import { SicEntityState } from '../../../../../core/model/sic-base-model';
+import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
+import { SicFromData } from '../../../../core/model/sic-from-data';
 
-export interface PmDeliveryModel {
-  id?: string;
-  projectId: string;
-  deliveryCode: string;
-  deliveryTitle: string;
-  deliveryType: 'FINAL' | 'PARTIAL' | 'MILESTONE';
-  deliveryVersion: string;
-  deliveryDate: string;
-  status: 'DRAFT' | 'PREPARING' | 'READY' | 'DELIVERED' | 'CONFIRMED';
-  releaseNote?: string;
-  deliverySummary?: string;
-  attachmentGroupId?: string;
-  checklists?: PmDeliveryChecklistModel[];
-  isActive?: boolean;
-  state?: SicEntityState | null;
-  rowVersion?: number | null;
+export interface PmMaRenewalFormData {
+  renewal: SicFromData<PmMaRenewalModel>;
 }
 
-export interface PmDeliveryChecklistModel {
-  id?: string;
-  deliveryId?: string;
-  itemName: string;
-  isChecked: boolean;
-  checkedBy?: string;
-  checkedDate?: string;
+export interface PmMaRenewalModel extends SicBaseStateModel {
+  id: string;
+  renewalNo: string;
+  contractId: string;
+  contractNo?: string;
+  customerId: string;
+  customerName?: string;
+  projectId: string;
+  projectName?: string;
+  currentEndDate: string;
+  newStartDate: string;
+  newEndDate: string;
+  proposedAmount: number;
+  status: string;
+  newContractId?: string;
   remark?: string;
-  sortOrder?: number;
-  state?: SicEntityState | null;
-  rowVersion?: number | null;
-}
-
-export interface PmDeliveryGateCheckItem {
-  category: string;
-  name: string;
-  passed: boolean;
-  detail: string;
-}
-
-export interface PmDeliveryGateCheckResponse {
-  projectId: string;
-  deliveryId?: string;
-  isPassed: boolean;
-  totalChecks: number;
-  passedChecks: number;
-  checkItems: PmDeliveryGateCheckItem[];
 }

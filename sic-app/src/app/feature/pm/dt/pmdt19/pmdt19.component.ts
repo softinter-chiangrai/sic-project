@@ -1,207 +1,152 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { Pmdt19AService } from './pmdt19A/pmdt19A.service';
+import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../core/model/sic-base-model';
-
-import { Pmdt19Form } from './pmdt19.form';
-import { Pmdt19Service } from './pmdt19.service';
-import { PmUserManualModel, PmUserManualSectionModel } from './pmdt19.model';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicUploadComponent,
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmdt19.component.html',
+  styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
-export class Pmdt19Component implements OnInit, CanComponentDeactivate {
-  private readonly route = inject(ActivatedRoute);
+export class Pmdt19Component implements OnInit {
   private readonly router = inject(Router);
-  private readonly service = inject(Pmdt19Service);
+  private readonly route = inject(ActivatedRoute);
+  private readonly service = inject(Pmdt19AService);
   private readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+  private readonly customerState = inject(CustomerStateService);
 
-  formData!: SicFromData<PmUserManualModel>;
-  id = signal<string | null>(null);
-  isEdit = signal(false);
-  isSaving = signal(false);
+  versions = signal<DocumentVersionModel[]>([]);
+  isLoading = signal(false);
 
-  sections = signal<PmUserManualSectionModel[]>([]);
-  activeSectionIndex = signal<number>(0);
+  filterType = signal<string>('ALL');
+  filterDocId = signal<string>('');
 
-  typeOptions = [
-    { label: 'User Manual (คู่มือสำหรับผู้ใช้งานทั่วไป)', value: 'USER' },
-    { label: 'Admin Manual (คู่มือสำหรับผู้ดูแลระบบ)', value: 'ADMIN' },
-    { label: 'Installation Manual (คู่มือการติดตั้งระบบ)', value: 'INSTALLATION' },
-    { label: 'Operation Manual (คู่มือการปฏิบัติงาน)', value: 'OPERATION' },
-    { label: 'Troubleshooting Guide (คู่มือการแก้ปัญหา)', value: 'TROUBLESHOOT' },
+  docTypeOptions = [
+    { label: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
+    { label: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
+    { label: 'DFD Diagram', value: 'DFD' },
+    { label: 'ER Diagram', value: 'ER' },
+    { label: 'Specification', value: 'SPEC' },
+    { label: 'Test Case', value: 'TEST_CASE' },
+    { label: 'Delivery Document', value: 'DELIVERY' },
+    { label: 'Contract', value: 'CONTRACT' },
+    { label: 'Change Request', value: 'CHANGE_REQUEST' },
+    { label: 'User Manual', value: 'MANUAL' },
   ];
 
-  statusOptions = [
-    { label: 'Draft (ฉบับร่าง)', value: 'DRAFT' },
-    { label: 'Review (อยู่ระหว่างการตรวจสอบ)', value: 'REVIEW' },
-    { label: 'Approved (อนุมัติแล้ว)', value: 'APPROVED' },
-    { label: 'Published (เผยแพร่แล้ว)', value: 'PUBLISHED' },
-  ];
-
-  pageDirty = () => this.formData?.dirty ?? false;
+  filteredVersions = signal<DocumentVersionModel[]>([]);
 
   ngOnInit(): void {
-    const rawForm = Pmdt19Form.createForm(this.fb);
-    this.formData = new SicFromData<PmUserManualModel>(rawForm);
+    this.route.queryParams.subscribe((params) => {
+      const qProjectId = params['projectId'];
+      if (qProjectId) {
+        this.customerState.setProject(qProjectId);
+      }
+      const qType = params['documentType'];
+      const qId = params['documentId'];
+      if (qType) this.filterType.set(qType);
+      if (qId) this.filterDocId.set(qId);
 
-    const queryProj = this.route.snapshot.queryParams['projectId'];
-    if (queryProj) {
-      this.formData.form.controls['projectId'].setValue(queryProj);
-    }
-
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.isEdit.set(true);
-      this.id.set(paramId);
-      this.loadData(paramId);
-    } else {
-      this.initDefaultSections();
-    }
+      this.loadVersions();
+    });
   }
 
-  loadData(id: string): void {
-    this.service.getById(id).subscribe({
-      next: (data) => {
-        this.formData.form.patchValue(data);
-        if (data.sections && data.sections.length > 0) {
-          this.sections.set(data.sections);
-        } else {
-          this.initDefaultSections();
-        }
-        this.formData.markAsPristine();
+  loadVersions(): void {
+    this.isLoading.set(true);
+    const projectId = this.customerState.getProjectId() || undefined;
+    const docType = this.filterType();
+    const docId = this.filterDocId() || undefined;
+
+    this.service.getVersions(docType, docId, projectId).subscribe({
+      next: (list) => {
+        this.versions.set(list || []);
+        this.applyFilter();
+        this.isLoading.set(false);
       },
-      error: (err) => {
-        this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');
+      error: () => {
+        this.isLoading.set(false);
       },
     });
   }
 
-  initDefaultSections(): void {
-    const defaults: PmUserManualSectionModel[] = [
-      { sectionCode: 'SEC-1', sectionTitle: '1. บทนำและวัตถุประสงค์ (Overview)', content: 'รายละเอียดวัตถุประสงค์ของระบบ...', sortOrder: 1 },
-      { sectionCode: 'SEC-2', sectionTitle: '2. การเข้าใช้งานระบบและสิทธิ์ (Login & Access)', content: 'ขั้นตอนการ เข้าสู่ระบบ และสิทธิ์ผู้ใช้งาน...', sortOrder: 2 },
-      { sectionCode: 'SEC-3', sectionTitle: '3. ขั้นตอนการใช้งานฟีเจอร์หลัก (Core Workflows)', content: 'คำอธิบายขั้นตอนการทำงานทีละขั้นตอนพร้อมภาพประกอบ...', sortOrder: 3 },
-      { sectionCode: 'SEC-4', sectionTitle: '4. คำถามที่พบบ่อยและการแก้ปัญหาเบื้องต้น (FAQ & Troubleshooting)', content: 'รายการปัญหาที่อาจพบและวิธีแก้ไข...', sortOrder: 4 },
-    ];
-    this.sections.set(defaults);
-  }
-
-  addSection(): void {
-    const current = [...this.sections()];
-    const newSec: PmUserManualSectionModel = {
-      sectionCode: `SEC-${current.length + 1}`,
-      sectionTitle: `${current.length + 1}. หัวข้อใหม่`,
-      content: '',
-      sortOrder: current.length + 1,
-      state: SicEntityState.Added,
-    };
-    current.push(newSec);
-    this.sections.set(current);
-    this.activeSectionIndex.set(current.length - 1);
-    this.formData.markAsDirty();
-  }
-
-  removeSection(index: number): void {
-    const current = [...this.sections()];
-    const item = current[index];
-    if (item.id) {
-      item.state = SicEntityState.Deleted;
-    } else {
-      current.splice(index, 1);
-    }
-    this.sections.set(current);
-    if (this.activeSectionIndex() >= current.length) {
-      this.activeSectionIndex.set(Math.max(0, current.length - 1));
-    }
-    this.formData.markAsDirty();
-  }
-
-  selectSection(index: number): void {
-    this.activeSectionIndex.set(index);
-  }
-
-  updateActiveSectionContent(content: string): void {
-    const current = [...this.sections()];
-    const idx = this.activeSectionIndex();
-    if (current[idx]) {
-      current[idx].content = content;
-      if (current[idx].id) {
-        current[idx].state = SicEntityState.Modified;
-      }
-      this.sections.set(current);
-      this.formData.markAsDirty();
-    }
-  }
-
-  updateActiveSectionTitle(title: string): void {
-    const current = [...this.sections()];
-    const idx = this.activeSectionIndex();
-    if (current[idx]) {
-      current[idx].sectionTitle = title;
-      if (current[idx].id) {
-        current[idx].state = SicEntityState.Modified;
-      }
-      this.sections.set(current);
-      this.formData.markAsDirty();
-    }
-  }
-
-  onSubmit(): void {
-    if (this.formData.invalid) {
-      this.formData.markAllAsTouched();
-      this.dialog.warn('คำเตือน', 'กรุณากรอกข้อมูลคู่มือที่จำเป็นให้ครบถ้วน');
+  applyFilter(): void {
+    const term = (this.filterDocId() || '').trim().toLowerCase();
+    if (!term) {
+      this.filteredVersions.set(this.versions());
       return;
     }
+    const filtered = this.versions().filter((v) =>
+      (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
+      (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
+      (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
+      (v.documentId && v.documentId.toLowerCase().includes(term))
+    );
+    this.filteredVersions.set(filtered);
+  }
 
-    const payload = {
-      ...this.formData.value,
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
-      sections: this.sections(),
-    };
+  onTypeChange(type: string): void {
+    this.filterType.set(type);
+    this.loadVersions();
+  }
 
-    this.isSaving.set(true);
-    this.service.save(payload).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
-        this.formData.markAsPristine();
-        this.router.navigate(['/feature/pm/manual']);
-      },
-      error: (err) => {
-        this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกคู่มือไม่สำเร็จ');
-      },
-      complete: () => this.isSaving.set(false),
+  onDocIdChange(docId: string): void {
+    this.filterDocId.set(docId);
+    this.applyFilter();
+  }
+
+  onActivate(id: string): void {
+    this.dialog.confirm('ยืนยัน', 'คุณต้องการตั้งเวอร์ชันนี้เป็น Active Version ใช่หรือไม่?').then((confirmed: boolean) => {
+      if (confirmed) {
+        this.service.activateVersion(id).subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'เปิดใช้งานเวอร์ชันเรียบร้อยแล้ว');
+            this.loadVersions();
+          },
+          error: (err) => {
+            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถเปิดใช้งานได้');
+          },
+        });
+      }
     });
   }
 
-  onBack(): void {
-    this.router.navigate(['/feature/pm/manual']);
+  onDelete(id: string): void {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบบันทึกเวอร์ชันนี้ใช่หรือไม่?').then((confirmed: boolean) => {
+      if (confirmed) {
+        this.service.deleteVersion(id).subscribe({
+          next: () => {
+            this.dialog.success('สำเร็จ', 'ลบบันทึกเรียบร้อย');
+            this.loadVersions();
+          },
+          error: (err) => {
+            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+          },
+        });
+      }
+    });
+  }
+
+  goToAdd(): void {
+    this.router.navigate(['/feature/pm/version/new'], {
+      queryParams: {
+        documentType: this.filterType(),
+        documentId: this.filterDocId(),
+      },
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+    });
   }
 }
 
-export default Pmdt19Component;
+export default Pmrt25Component;

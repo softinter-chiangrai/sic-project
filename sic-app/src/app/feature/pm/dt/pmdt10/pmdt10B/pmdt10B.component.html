@@ -1,0 +1,289 @@
+<!-- src/app/feature/pm/dt/pmdt12/pmdt12.component.html -->
+<div class="space-y-5 w-full">
+
+  <!-- ===== 1. HEADER & KPI CARDS ===== -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-6 shadow-sm">
+    <div class="space-y-1">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--crm-primary)] to-blue-400 text-white flex items-center justify-center text-xl shadow-md shadow-[var(--crm-primary)]/20">
+          <i class="bi bi-kanban"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-[var(--text-active)] tracking-tight">Task Board</h1>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              <i class="bi bi-shield-lock-fill text-[0.7rem]"></i> System-Driven (Auto Sync)
+            </span>
+          </div>
+          <p class="text-xs text-[var(--text-muted)]">ติดตามสถานะจริงของงานอัตโนมัติตามผลการทดสอบ & Traceability</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+        <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+        <div>
+          <div class="text-xs text-[var(--text-muted)]">ทั้งหมด</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().total }} งาน</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+        <div>
+          <div class="text-xs text-[var(--text-muted)]">กำลังทำ</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().inProgress }} งาน</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+        <div>
+          <div class="text-xs text-[var(--text-muted)]">สำเร็จ</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().done }} งาน ({{ metrics().progress }}%)</div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button
+        type="button"
+        (click)="openCreateTask()"
+        class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all flex items-center gap-2 shadow-lg shadow-[var(--crm-primary)]/20"
+      >
+        <i class="bi bi-plus-lg"></i>
+        <span>สร้าง Task</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== 2. TOOLBAR FILTERS & VIEW SWITCHER ===== -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-3">
+
+    <!-- Filters Left -->
+    <div class="flex items-center gap-2.5 flex-wrap flex-1">
+      <!-- Search -->
+      <div class="relative min-w-[220px] flex-1 md:flex-initial">
+        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="ค้นหาชื่อ Task, รหัสงาน..."
+          class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"
+        />
+      </div>
+
+      <!-- Specification Filter Combobox -->
+      @if (specOptions().length > 0) {
+        <div class="min-w-[180px]">
+          <sic-combobox
+            [options]="specOptions()"
+            [ngModel]="selectedSpecId()"
+            (ngModelChange)="selectedSpecId.set($event)"
+            placeholder="📜 ทุก Specification"
+            [clearable]="true"
+          ></sic-combobox>
+        </div>
+      }
+
+      <!-- Work Package Filter -->
+      @if (wpOptions().length > 0) {
+        <div class="min-w-[180px]">
+          <sic-combobox
+            [options]="wpOptions()"
+            [ngModel]="selectedWpId()"
+            (ngModelChange)="selectedWpId.set($event)"
+            placeholder="📦 ทุก Work Package"
+            [clearable]="true"
+          ></sic-combobox>
+        </div>
+      }
+
+      <!-- Priority Filter -->
+      <div class="min-w-[150px]">
+        <sic-combobox
+          [options]="priorityOptions"
+          [ngModel]="selectedPriority()"
+          (ngModelChange)="selectedPriority.set($event)"
+          placeholder="🚩 ทุกความสำคัญ"
+          [clearable]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Assignee Filter -->
+      @if (assigneeOptions().length > 0) {
+        <div class="min-w-[160px]">
+          <sic-combobox
+            [options]="assigneeOptions()"
+            [ngModel]="selectedAssignee()"
+            (ngModelChange)="selectedAssignee.set($event)"
+            placeholder="👤 ทุกผู้รับผิดชอบ"
+            [clearable]="true"
+          ></sic-combobox>
+        </div>
+      }
+
+      @if (selectedSpecId() || selectedWpId() || selectedPriority() || selectedAssignee() || searchQuery()) {
+        <button
+          type="button"
+          (click)="clearFilters()"
+          class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all flex items-center gap-1"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i> ล้างตัวกรอง
+        </button>
+      }
+    </div>
+
+    <!-- View Mode Switcher Right -->
+    <div class="flex items-center gap-1 bg-[var(--bg)] p-1 rounded-lg border border-[var(--border)] self-end lg:self-auto">
+      <button
+        type="button"
+        (click)="viewType.set('kanban')"
+        class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5"
+        [class]="viewType() === 'kanban' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+      >
+        <i class="bi bi-kanban"></i> Kanban
+      </button>
+      <button
+        type="button"
+        (click)="viewType.set('list')"
+        class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5"
+        [class]="viewType() === 'list' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+      >
+        <i class="bi bi-list-task"></i> ตาราง
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ===== 3. MAIN CONTENT AREA ===== -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-20 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-xs text-[var(--text-muted)]">กำลังโหลดข้อมูล Task...</p>
+    </div>
+  } @else {
+
+    <!-- === 3.1 KANBAN BOARD VIEW (USING SIC-KANBAN ClickUp Style) === -->
+    @if (viewType() === 'kanban') {
+      <div class="mt-1">
+        <sic-kanban
+          [tasks]="filteredTasks()"
+          [specifications]="specifications()"
+          [showToolbar]="false"
+          [allowCreate]="true"
+          [allowDragDrop]="true"
+          [allowActions]="true"
+          [showColumnFooterCreate]="false"
+          (taskStatusChange)="onKanbanTaskStatusChange($event)"
+          (taskClick)="onKanbanTaskClick($event)"
+          (taskEdit)="onKanbanTaskClick($event)"
+          (taskDelete)="onKanbanTaskDelete($event)"
+          (taskCreate)="onKanbanTaskCreate($event)"
+        ></sic-kanban>
+      </div>
+    }
+
+    <!-- === 4.2 TABLE LIST VIEW === -->
+    @if (viewType() === 'list') {
+      <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-[var(--bg)]/70 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
+              <tr>
+                <th class="px-5 py-3.5">รหัส Task</th>
+                <th class="px-5 py-3.5">ชื่อ Task</th>
+                <th class="px-5 py-3.5">Specification (Trace)</th>
+                <th class="px-5 py-3.5">Work Package</th>
+                <th class="px-5 py-3.5">ผู้รับผิดชอบ</th>
+                <th class="px-5 py-3.5">สถานะ</th>
+                <th class="px-5 py-3.5">ความสำคัญ</th>
+                <th class="px-5 py-3.5">กำหนดส่ง</th>
+                <th class="px-5 py-3.5 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              @for (task of filteredTasks(); track task.id) {
+                <tr
+                  (click)="openEditTask(task)"
+                  class="hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer"
+                >
+                  <td class="px-5 py-3.5 font-mono text-xs font-bold text-[var(--crm-primary)]">
+                    {{ task.taskCode }}
+                  </td>
+                  <td class="px-5 py-3.5 font-semibold text-[var(--text-active)]">
+                    {{ task.taskName }}
+                  </td>
+                  <td class="px-5 py-3.5 text-xs text-[var(--text)]">
+                    @if (task.specificationCode) {
+                      <span class="px-2 py-0.5 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
+                        [{{ task.specificationCode }}] {{ task.specificationTitle }}
+                      </span>
+                    } @else {
+                      <span class="text-[var(--text-muted)]">-</span>
+                    }
+                  </td>
+                  <td class="px-5 py-3.5 text-xs text-[var(--text-muted)]">
+                    {{ task.workPackageName || '-' }}
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2">
+                      <sic-avatar [name]="task.assignedTo || 'Unassigned'" size="sm"></sic-avatar>
+                      <span class="text-xs text-[var(--text)]">{{ task.assignedTo || '-' }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ getStatusClass(task.status) }}">
+                      {{ task.status || 'Todo' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span class="px-2 py-0.5 rounded-md text-xs font-semibold {{ getPriorityClass(task.priority) }}">
+                      {{ task.priority || 'Medium' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-xs font-mono" [class.text-[var(--crm-danger)]]="isOverdue(task.endDate, task.status)" [class.text-[var(--text-muted)]]="!isOverdue(task.endDate, task.status)">
+                    {{ formatDate(task.endDate) }}
+                  </td>
+                  <td class="px-5 py-3.5 text-right">
+                    <button
+                      type="button"
+                      (click)="deleteTask(task, $event)"
+                      class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
+                      title="ลบ Task"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+
+              @if (filteredTasks().length === 0) {
+                <tr>
+                  <td colspan="9" class="px-5 py-12 text-center text-xs text-[var(--text-muted)]">
+                    <i class="bi bi-inbox text-3xl block mb-2 opacity-50"></i>
+                    ไม่พบรายการ Task ตามเงื่อนไขที่เลือก
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  }
+
+  <!-- ===== 5. TASK CREATE / EDIT MODAL (PMDT12A) ===== -->
+  <app-pmdt12a
+    #taskModal
+    [isOpen]="isModalOpen()"
+    [isEdit]="isModalEdit()"
+    [taskId]="selectedTaskId()"
+    [initialSpecId]="selectedSpecId()"
+    [specifications]="specifications()"
+    [workPackages]="workPackages()"
+    (close)="isModalOpen.set(false)"
+    (saved)="onTaskSaved($event)"
+  ></app-pmdt12a>
+
+</div>

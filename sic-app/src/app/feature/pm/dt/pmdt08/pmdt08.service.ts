@@ -1,61 +1,32 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08.service.ts
-
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+// src/app/feature/pm/dt/pmdt09/pmdt09.service.ts
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Pmdt09Model } from './pmdt09.model';
 import { environment } from '../../../../../environments/environment';
-import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { PmSpecificationModel } from './pmdt08.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt08Service {
-    private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
+export class Pmdt09Service {
+  private http = inject(HttpClient);
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/discussions`;
 
-    // Combobox endpoints
-    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
-    apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
-    apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
-    apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
-    apiGetComboboxDiagram = `${environment.apiBaseUrl}/api/diagram/tabs`;
-    apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
+  getDiscussions(projectId: string): Observable<Pmdt09Model[]> {
+    return this.http.get<Pmdt09Model[]>(`${this.baseUrl}?projectId=${projectId}`);
+  }
 
-    // CRUD
-    getSpecification(id: string): Observable<PmSpecificationModel> {
-        return this.http.get<PmSpecificationModel>(`${this.baseUrl}/${id}`);
-    }
+  getDiscussionById(id: string): Observable<Pmdt09Model> {
+    return this.http.get<Pmdt09Model>(`${this.baseUrl}/${id}`);
+  }
 
-    save(data: PmSpecificationModel): Observable<any> {
-        return this.http.post(this.baseUrl, data);
-    }
+  createDiscussion(data: Partial<Pmdt09Model>): Observable<Pmdt09Model> {
+    return this.http.post<Pmdt09Model>(this.baseUrl, data);
+  }
 
-    autoSave(data: PmSpecificationModel): Observable<any> {
-        return this.http.post(this.baseUrl, data);
-    }
+  updateDiscussion(id: string, data: Partial<Pmdt09Model>): Observable<Pmdt09Model> {
+    return this.http.put<Pmdt09Model>(`${this.baseUrl}/${id}`, data);
+  }
 
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
-    }
-
-    // AI Generator
-    generateDraft(request: {
-        projectId?: string;
-        requirementId?: string;
-        diagramId?: string;
-        specificationType?: string;
-        prompt?: string;
-    }): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/generate/draft`, request);
-    }
-
-    // ✅ ใช้ PaginationResponse จาก core/model
-    getList(params: any): Observable<PaginationResponse<PmSpecificationModel>> {
-        let httpParams = new HttpParams();
-        Object.keys(params).forEach(key => {
-            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-                httpParams = httpParams.set(key, String(params[key]));
-            }
-        });
-        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
-    }
+  deleteDiscussion(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

@@ -5,53 +5,18 @@ import { SicFromData } from '../../../../core/model/sic-from-data';
 export interface Pmdt05Model extends SicBaseStateModel {
   id: string;
   projectId: string;
-  exportFormat?: string;
-  includeDiagrams?: boolean;
+  diagramName: string;
+  diagramType?: string;
+  contentData?: string;
+  version?: string;
 }
 
 export interface Pmdt05PageData {
-  exportData: SicFromData<Pmdt05Model>;
+  diagramData: SicFromData<Pmdt05Model>;
 }
 
-export interface RequirementModel {
+export interface DiagramPage {
   id: string;
-  requirementCode: string;
-  title: string;
-  description: string;
-  requirementType: string;
-  source: string;
-  priority: string;
-  businessValue: string;
-  acceptanceCriteria: string;
-  projectId: string;
-  projectName?: string;
-  createdBy: string;
-  baConfirmStatus: string;
-  customerConfirmStatus: string;
-  version: string;
-  status: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  uploadGroupId?: string;
-  uploadGroupData?: any[];
+  name: string;
+  xml: string;
 }
-
-export interface RequirementPreviewData {
-  requirementCode: string;
-  title: string;
-  description: string;
-  acceptanceCriteria: string;
-  priority: string;
-  requirementType: string;
-  source: string;
-  businessValue: string;
-  createdBy: string;
-  version: string;
-  status: string;
-  projectName?: string;
-  createdAt?: string;
-}
-

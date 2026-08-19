@@ -1,276 +1,564 @@
+// src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { Pmdt08Service } from './pmdt08.service';
-import { PmSpecificationModel } from './pmdt08.model';
-import { PaginationResponse } from '../../../../core/model/pagination.model';
-
-import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { Post, Reply } from './discussion.model';
+import { DiscussionService } from './discussion.service';
+import { Pmdt08AComponent } from './pmdt08A/pmdt08A.component';
+import { environment } from '../../../../../environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { AttachmentFile } from './pmdt08.model';
 
 @Component({
-    selector: 'app-pmdt08',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent],
-    templateUrl: './pmdt08.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'app-pmdt08',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SicButtonComponent,
+    SicInputAreaComponent,
+    SicDatePipe,
+    Pmdt08AComponent,
+    SicInputUploadComponent,
+  ],
+  templateUrl: './pmdt08.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./pmdt08.component.css'],
 })
 export class Pmdt08Component implements OnInit {
-    private route = inject(ActivatedRoute);
-    public service = inject(Pmdt08Service);
-    private router = inject(Router);
-    private dialog = inject(DialogService);
-    private navigation = inject(NavigationService);
-    public customerState = inject(CustomerStateService);
-    private http = inject(HttpClient);
+  private fb = inject(FormBuilder);
+  private service = inject(DiscussionService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(DialogService);
+  private authService = inject(AuthService);
+  private sidebarService = inject(SicSidebarService);
+  private http = inject(HttpClient);
 
-    isLoading = signal(false);
-    specs = signal<PmSpecificationModel[]>([]);
-    totalItems = signal(0);
-    currentPage = signal(1);
-    pageSize = signal(10);
-    searchTerm = signal('');
-    filterStatus = signal('all');
+  readonly apiBaseUrl = environment.apiBaseUrl;
 
-    totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-    hasPrevious = computed(() => this.currentPage() > 1);
-    hasNext = computed(() => this.currentPage() < this.totalPages());
+  posts = signal<Post[]>([]);
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+  projectId = signal<string | null>(null);
+  expandedPostId = signal<string | null>(null);
 
-    pageNumbers = computed(() => {
-        const total = this.totalPages();
-        const current = this.currentPage();
-        const range = 5;
-        let start = Math.max(1, current - Math.floor(range / 2));
-        let end = Math.min(total, start + range - 1);
-        if (end - start < range - 1) {
-            start = Math.max(1, end - range + 1);
+  editingCommentId = signal<string | null>(null);
+  replyingPostId = signal<string | null>(null);
+  replyToUser = signal<string | null>(null);
+
+  isModalOpen = signal(false);
+  postToEdit = signal<Post | null>(null);
+
+  currentUserId = signal<string | null>(null);
+  currentUserName = signal<string>('ผู้ใช้งาน');
+  currentUserAvatar = signal<string | null>(null);
+
+  currentPage = signal(0);
+  pageSize = signal(10);
+  totalElements = signal(0);
+  totalPages = signal(0);
+
+  // ฟอร์มสำหรับแสดงความคิดเห็น (comment) – ใช้เมื่อกด "แสดงความคิดเห็น"
+  commentForm!: FormGroup;
+  // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
+  replyForm!: FormGroup;
+  editForm!: FormGroup;
+
+  // Cache for attachments (key = groupId)
+  private attachmentCache = new Map<string, AttachmentFile[]>();
+
+  ngOnInit(): void {
+    this.currentUserId.set(this.authService.getUserId());
+    this.sidebarService.getProfile().subscribe({
+      next: (profile) => {
+        if (profile) {
+          const name = profile.name || profile.id || 'ผู้ใช้';
+          this.currentUserName.set(name);
+          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
+            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
+          }
         }
-        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+      },
+      error: () => {},
     });
 
-    Math = Math;
+    this.route.queryParams.subscribe((params) => {
+      const pid = params['projectId'];
+      if (pid) {
+        this.projectId.set(pid);
+        this.loadPosts();
+      } else {
+        this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
+        this.router.navigate(['/feature/pm/pmrt02']);
+      }
+    });
 
-    ngOnInit(): void {
-        const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
-        if (resolved && resolved.data) {
-            this.specs.set(resolved.data || []);
-            this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
-        } else {
-            this.loadData();
-        }
+    // ฟอร์มสำหรับแสดงความคิดเห็น (comment)
+    this.commentForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
+
+    // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
+    this.replyForm = this.fb.group({
+      content: ['', Validators.required],
+      attachmentGroupId: [null],
+    });
+
+    this.editForm = this.fb.group({
+      content: ['', Validators.required],
+    });
+  }
+
+  loadPosts(): void {
+    const projectId = this.projectId();
+    if (!projectId) return;
+    this.isLoading.set(true);
+    this.service
+      .getPosts(projectId, this.currentPage(), this.pageSize())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.posts.set(response.data || []);
+          this.totalElements.set(response.pageable?.totalElements || 0);
+          this.totalPages.set(response.pageable?.totalPages || 0);
+          // Preload attachments
+          this.posts().forEach(post => {
+            if (post.attachmentGroupId) {
+              this.loadAttachments(post.attachmentGroupId);
+            }
+          });
+        },
+        error: (err) => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== Load attachments with Authorization header =====
+  loadAttachments(groupId: string): void {
+    if (this.attachmentCache.has(groupId)) return;
+
+    const token = this.authService.getAccessToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
     }
 
-    loadData(): void {
-        this.isLoading.set(true);
-        const requirementId = this.route.snapshot.queryParams['requirementId'] || this.customerState.getRequirementId();
-        const projectId = this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
-        const params = {
-            projectId: projectId || undefined,
-            requirementId: requirementId || undefined,
-            keyword: this.searchTerm() || undefined,
-            status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-            page: this.currentPage() - 1,
-            size: this.pageSize(),
-            sortBy: 'createdDate',
-            sortDir: 'desc',
-        };
-
-        this.service.getList(params)
-            .pipe(finalize(() => this.isLoading.set(false)))
+    this.http
+      .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
+      .subscribe({
+        next: (files) => {
+          this.attachmentCache.set(groupId, files);
+        },
+        error: (err) => {
+          console.error('Failed to load attachments:', err);
+          // fallback without token
+          this.http
+            .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
             .subscribe({
-                next: (res: PaginationResponse<PmSpecificationModel>) => {
-                    this.specs.set(res.data || []);
-                    this.totalItems.set(res.pageable?.totalElements || 0);
-                },
-                error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
-                    this.specs.set([]);
-                    this.totalItems.set(0);
-                },
+              next: (files) => this.attachmentCache.set(groupId, files),
+              error: () => this.attachmentCache.set(groupId, []),
             });
+        },
+      });
+  }
+
+  // ===== Get attachments from cache =====
+  getAttachments(groupId: string): AttachmentFile[] {
+    return this.attachmentCache.get(groupId) || [];
+  }
+
+  // ===== File type helpers =====
+  isImage(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('image/') ?? false;
+  }
+
+  isVideo(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('video/') ?? false;
+  }
+
+  isAudio(file: AttachmentFile): boolean {
+    return file.contentType?.startsWith('audio/') ?? false;
+  }
+
+  isPdf(file: AttachmentFile): boolean {
+    return file.contentType === 'application/pdf' || file.fileName?.endsWith('.pdf');
+  }
+
+  isWord(file: AttachmentFile): boolean {
+    return file.contentType?.includes('word') || file.fileName?.match(/\.(doc|docx)$/i) !== null;
+  }
+
+  isExcel(file: AttachmentFile): boolean {
+    return file.contentType?.includes('excel') || file.fileName?.match(/\.(xls|xlsx)$/i) !== null;
+  }
+
+  isPowerPoint(file: AttachmentFile): boolean {
+    return file.contentType?.includes('powerpoint') || file.fileName?.match(/\.(ppt|pptx)$/i) !== null;
+  }
+
+  isOtherDocument(file: AttachmentFile): boolean {
+    return !this.isImage(file) && !this.isVideo(file) && !this.isAudio(file) &&
+           !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+
+  previewFile(file: AttachmentFile): void {
+    if (this.isImage(file) || this.isVideo(file)) {
+      window.open(file.accessUrl, '_blank');
     }
+  }
 
-    onSearch(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        this.searchTerm.set(input.value);
-        this.currentPage.set(1);
-        this.loadData();
-    }
+  downloadFile(url: string, fileName?: string): void {
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'download';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 
-    clearSearch(): void {
-        this.searchTerm.set('');
-        this.currentPage.set(1);
-        this.loadData();
-    }
-
-    onFilterChange(event: Event): void {
-        const select = event.target as HTMLSelectElement;
-        this.filterStatus.set(select.value);
-        this.currentPage.set(1);
-        this.loadData();
-    }
-
-    onPageChange(page: number): void {
-        if (page < 1 || page > this.totalPages()) return;
-        this.currentPage.set(page);
-        this.loadData();
-    }
-
-    goToAdd(): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams });
-    }
-
-    goToEdit(id: string): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit'], { queryParams });
-    }
-
-    goToView(id: string): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view'], { queryParams });
-    }
-
-    printDocument(spec: PmSpecificationModel): void {
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        if (!printWindow) {
-            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
-            return;
-        }
-
-        const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Specification - ${spec.specificationCode || ''}</title>
-        <style>
-          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
-          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
-          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
-          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
-          .content { font-size: 14px; margin-top: 16px; }
-          @media print {
-            body { padding: 0; }
+  // ===== Load Replies =====
+  loadReplies(postId: string): void {
+    this.service.getReplies(postId).subscribe({
+      next: (replies) => {
+        // โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
+        replies.forEach(reply => {
+          if (reply.attachmentGroupId) {
+            this.loadAttachments(reply.attachmentGroupId);
           }
-        </style>
-      </head>
-      <body>
-        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
-        <table class="info-table">
-          <tr>
-            <td class="label">รหัสเอกสาร</td>
-            <td>${spec.specificationCode || '-'}</td>
-            <td class="label">เวอร์ชัน</td>
-            <td>${spec.version || '1.0'}</td>
-          </tr>
-          <tr>
-            <td class="label">ชื่อโครงการ</td>
-            <td>${spec.projectName || '-'}</td>
-            <td class="label">ประเภท</td>
-            <td>${spec.specificationType || spec.specType || '-'}</td>
-          </tr>
-          <tr>
-            <td class="label">ความสำคัญ (Priority)</td>
-            <td>${spec.priority || '-'}</td>
-            <td class="label">สถานะ</td>
-            <td>${this.getStatusText(spec.status || 'Draft')}</td>
-          </tr>
-          <tr>
-            <td class="label">ผู้สร้าง</td>
-            <td>${spec.createdBy || '-'}</td>
-            <td class="label">Manday (วัน)</td>
-            <td>${spec.estimatedManday || 0}</td>
-          </tr>
-        </table>
-        <div class="content">
-          <h3>รายละเอียด / ข้อกำหนด</h3>
-          <div>${spec.description || '-'}</div>
-        </div>
-      </body>
-      </html>
-    `;
+        });
+        this.posts.update((posts) =>
+          posts.map((p) => (p.id === postId ? { ...p, replies: replies || [], replyCount: (replies || []).length } : p))
+        );
+      },
+      error: () => {},
+    });
+  }
 
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-            printWindow.print();
-        }, 300);
+  // ===== Toggle Expand =====
+  toggleExpand(postId: string): void {
+    if (this.expandedPostId() === postId) {
+      this.expandedPostId.set(null);
+    } else {
+      this.expandedPostId.set(postId);
+      this.loadReplies(postId);
+    }
+  }
+
+  // ===== Dialog Actions =====
+  openCreateModal(): void {
+    this.postToEdit.set(null);
+    this.isModalOpen.set(true);
+  }
+
+  openEditModal(post: Post): void {
+    this.postToEdit.set(post);
+    this.isModalOpen.set(true);
+  }
+
+  closeModal(): void {
+    this.isModalOpen.set(false);
+    this.postToEdit.set(null);
+  }
+
+  onPostSaved(savedPost: Post): void {
+    this.closeModal();
+    this.currentPage.set(0);
+    this.loadPosts();
+  }
+
+  // ===== ฟังก์ชันสำหรับแสดงความคิดเห็น (comment) – ใช้ expandedPostId =====
+  submitComment(): void {
+    this.commentForm.updateValueAndValidity();
+    this.commentForm.markAllAsTouched();
+
+    if (this.commentForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการแสดงความคิดเห็น');
+      return;
     }
 
-    deleteSpec(id: string): void {
-        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
-            .then((ok) => {
-                if (ok) {
-                    this.service.delete(id).subscribe({
-                        next: () => {
-                            this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
-                            this.loadData();
-                        },
-                        error: (err) => {
-                            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-                        },
-                    });
+    const postId = this.expandedPostId();
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการแสดงความคิดเห็น');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const formValue = this.commentForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content?.trim() || '',
+      attachmentGroupId: attachmentGroupId,
+    };
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('แสดงความคิดเห็นสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.commentForm.reset({ content: '', attachmentGroupId: null });
+          if (newReply?.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
+          }
+          this.loadReplies(postId);
+        },
+        error: (err) => {
+          this.dialog.error('แสดงความคิดเห็นไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== ฟังก์ชันสำหรับตอบกลับ (reply) – ใช้ replyingPostId =====
+  submitReply(): void {
+    this.replyForm.updateValueAndValidity();
+    this.replyForm.markAllAsTouched();
+
+    if (this.replyForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      return;
+    }
+
+    const postId = this.replyingPostId();
+    if (!postId) {
+      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการตอบกลับ');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const formValue = this.replyForm.value;
+    let attachmentGroupId: string | undefined = undefined;
+
+    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
+      const first = formValue.attachmentGroupId[0];
+      attachmentGroupId = first?.uploadGroupId || first?.id || null;
+    } else if (typeof formValue.attachmentGroupId === 'string') {
+      attachmentGroupId = formValue.attachmentGroupId;
+    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
+      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
+    }
+
+    const request = {
+      postId: postId,
+      content: formValue.content?.trim() || '',
+      attachmentGroupId: attachmentGroupId,
+    };
+
+    this.service
+      .createReply(request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (newReply) => {
+          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.replyingPostId.set(null);
+          this.replyToUser.set(null);
+          this.replyForm.reset({ content: '', attachmentGroupId: null });
+          if (newReply?.attachmentGroupId) {
+            this.loadAttachments(newReply.attachmentGroupId);
+          }
+          this.loadReplies(postId);
+        },
+        error: (err) => {
+          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
+
+  // ===== ฟังก์ชันสำหรับเริ่มตอบกลับ (reply) =====
+  startReply(postId: string, replyToUser?: string): void {
+    this.replyingPostId.set(postId);
+    this.replyToUser.set(replyToUser || null);
+    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
+    // ถ้ายังไม่ได้ขยายโพสต์ ให้ขยายอัตโนมัติ
+    if (this.expandedPostId() !== postId) {
+      this.expandedPostId.set(postId);
+      const post = this.posts().find((p) => p.id === postId);
+      if (post && !post.replies) {
+        this.loadReplies(postId);
+      }
+    }
+  }
+
+  cancelReply(): void {
+    this.replyingPostId.set(null);
+    this.replyToUser.set(null);
+    this.replyForm.reset();
+  }
+
+  // ===== Edit Reply =====
+  startEditReply(postId: string, replyId: string): void {
+    const post = this.posts().find((p) => p.id === postId);
+    if (!post) return;
+    const reply = post.replies?.find((r) => r.id === replyId);
+    if (!reply) return;
+    this.editingCommentId.set(replyId);
+    this.editForm.patchValue({ content: reply.content });
+    (this.editForm as any).__postId = postId;
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId.set(null);
+    this.editForm.reset();
+    (this.editForm as any).__postId = null;
+  }
+
+  submitEdit(): void {
+    if (this.editForm.invalid) {
+      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
+      return;
+    }
+    const commentId = this.editingCommentId();
+    if (!commentId) return;
+    const content = this.editForm.value.content;
+
+    this.isSubmitting.set(true);
+    this.service
+      .updateComment(commentId, { content })
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
+          this.editingCommentId.set(null);
+          const postId = (this.editForm as any).__postId;
+          this.editForm.reset();
+          (this.editForm as any).__postId = null;
+          if (postId) {
+            this.posts.update((posts) =>
+              posts.map((p) => {
+                if (p.id === postId) {
+                  const updatedReplies = p.replies?.map((r) =>
+                    r.id === commentId ? { ...r, content } : r
+                  );
+                  return { ...p, replies: updatedReplies };
                 }
-            });
-    }
+                return p;
+              })
+            );
+          } else {
+            this.posts.update((posts) =>
+              posts.map((p) => (p.id === commentId ? { ...p, content } : p))
+            );
+          }
+        },
+        error: (err) => {
+          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        },
+      });
+  }
 
-    getStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-            Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-            Released: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-        };
-        return map[status] || 'bg-gray-100 text-gray-600';
-    }
-
-    getStatusText(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'ร่าง',
-            Review: 'ตรวจสอบ',
-            Approved: 'อนุมัติ',
-            Released: 'เผยแพร่',
-        };
-        return map[status] || status;
-    }
-
-    formatDate(dateStr: string): string {
-        if (!dateStr) return '-';
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('th-TH', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-            });
-        } catch {
-            return dateStr;
+  // ===== Delete =====
+  deletePost(postId: string): void {
+    this.dialog
+      .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteComment(postId).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
+              this.posts.update((posts) => posts.filter((p) => p.id !== postId));
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
         }
+      });
+  }
+
+  deleteReply(postId: string, replyId: string): void {
+    this.dialog
+      .confirm('ยืนยันการลบ', 'คุณต้องการลบข้อความนี้ใช่หรือไม่?')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.service.deleteComment(replyId).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'ข้อความถูกลบแล้ว');
+              this.posts.update((posts) =>
+                posts.map((p) => {
+                  if (p.id === postId) {
+                    const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
+                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
+                  }
+                  return p;
+                })
+              );
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        }
+      });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/feature/pm/pmrt02']);
+  }
+
+  loadMore(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.set(this.currentPage() + 1);
+      this.loadPosts();
     }
+  }
+
+  isAuthor(createdBy: string): boolean {
+    const currentId = this.currentUserId();
+    if (currentId && createdBy === currentId) {
+      return true;
+    }
+    return createdBy === this.currentUserName();
+  }
+
+  getAvatarUrl(url?: string): string | null {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${this.apiBaseUrl}${url}`;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 }

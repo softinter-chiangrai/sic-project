@@ -264,8 +264,74 @@
                         <span class="sic-gridpanel__display">{{ formatCellValue(row, column) }}</span>
                       }
                     }
+                    @case ('actions') {
+                      <div class="sic-gridpanel__action-group">
+                        @for (action of resolveColumnActions(column); track action.name || action.type || $index) {
+                          @if (isActionVisible(action, row, column)) {
+                            <button
+                              type="button"
+                              class="sic-gridpanel__action-btn"
+                              [class.sic-gridpanel__action-btn--view]="action.type === 'view'"
+                              [class.sic-gridpanel__action-btn--edit]="action.type === 'edit'"
+                              [class.sic-gridpanel__action-btn--print]="action.type === 'print'"
+                              [class.sic-gridpanel__action-btn--delete]="action.type === 'delete'"
+                              [class.sic-gridpanel__action-btn--danger]="action.variant === 'danger'"
+                              [class.sic-gridpanel__action-btn--primary]="action.variant === 'primary'"
+                              [class.sic-gridpanel__action-btn--success]="action.variant === 'success'"
+                              [class.sic-gridpanel__action-btn--warning]="action.variant === 'warning'"
+                              [disabled]="isActionDisabled(action, row, column)"
+                              [tooltip]="getActionTooltip(action)"
+                              tooltipPosition="top"
+                              [attr.aria-label]="getActionTooltip(action)"
+                              (click)="triggerRowAction(action, row, column)">
+                              @switch (action.type) {
+                                @case ('view') {
+                                  <svg class="sic-gridpanel__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                  </svg>
+                                }
+                                @case ('edit') {
+                                  <svg class="sic-gridpanel__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                  </svg>
+                                }
+                                @case ('print') {
+                                  <svg class="sic-gridpanel__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                  </svg>
+                                }
+                                @case ('delete') {
+                                  <svg class="sic-gridpanel__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                  </svg>
+                                }
+                                @default {
+                                  @if (action.icon) {
+                                    <i [class]="action.icon"></i>
+                                  } @else if (action.label) {
+                                    <span>{{ action.label }}</span>
+                                  } @else {
+                                    <span>{{ action.name }}</span>
+                                  }
+                                }
+                              }
+                              @if (action.label && action.type !== 'view' && action.type !== 'edit' && action.type !== 'print' && action.type !== 'delete') {
+                                <span class="sic-gridpanel__action-label">{{ action.label }}</span>
+                              }
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
                     @case ('button') {
-                      <button type="button" class="sic-gridpanel__button" (click)="rowAction.emit({ action: column.name, row: row, column: column })">
+                      <button type="button" class="sic-gridpanel__button" (click)="triggerRowAction(column.name, row, column)">
                         {{ column.buttonText || column.label }}
                       </button>
                     }

@@ -1,15 +1,34 @@
-// src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.model.ts
+// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.model.ts
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export interface Pmdt06AModel extends SicBaseStateModel {
+export interface Pmdt07AModel extends SicBaseStateModel {
   id: string;
   projectId: string;
-  diagramName: string;
-  diagramType?: string;
-  contentData?: string;
+  crCode: string;
+  title: string;
+  description?: string;
+  impactScore?: number;
+  costImpact?: number;
+  scheduleImpactDays?: number;
+  status?: string;
 }
 
-export interface Pmdt06APageData {
-  diagramData: SicFromData<Pmdt06AModel>;
+export interface Pmdt07APageData {
+  changeRequestData: SicFromData<Pmdt07AModel>;
+}
+
+export interface ChangeRequestFormModel {
+  id?: string;
+  projectId?: string;
+  targetType: string;
+  targetId: string;
+  title: string;
+  description?: string;
+  changeReason?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
+  status?: string;
+  rowVersion?: number;
 }

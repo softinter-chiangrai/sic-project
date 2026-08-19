@@ -63,7 +63,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         } else {
             page = deliveryRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
         }
-        return page.map(this::toResponse);
+        return page.map(d -> toResponseWithReadiness(d, businessId));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     public PmDeliveryResponse findById(UUID id, UUID businessId) {
         PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
-        PmDeliveryResponse response = toResponse(delivery);
+        PmDeliveryResponse response = toResponseWithReadiness(delivery, businessId);
         
         List<PmDeliveryChecklistResponse> checklists = checklistRepository
                 .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId())
@@ -88,6 +88,30 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         response.setItems(items);
 
         return response;
+    }
+
+    private PmDeliveryResponse toResponseWithReadiness(PmDelivery delivery, UUID businessId) {
+        PmDeliveryResponse res = toResponse(delivery);
+        try {
+            List<PmDeliveryChecklist> chks = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId());
+            int total = chks.size();
+            int passed = (int) chks.stream().filter(c -> Boolean.TRUE.equals(c.getIsChecked())).count();
+            res.setTotalChecklistCount(total);
+            res.setCheckedChecklistCount(passed);
+            res.setIsChecklistPassed(total > 0 && total == passed);
+
+            if (delivery.getProjectId() != null) {
+                PmDeliveryGateCheckResponse gate = gateCheck(delivery.getId(), delivery.getProjectId(), businessId);
+                res.setIsGatePassed(gate.isPassed());
+                res.setPassedGateChecks(gate.getPassedChecks());
+                res.setTotalGateChecks(gate.getTotalChecks());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to calculate gate check readiness for delivery {}: {}", delivery.getId(), e.getMessage());
+            res.setIsGatePassed(false);
+            res.setIsChecklistPassed(false);
+        }
+        return res;
     }
 
     @Override
@@ -306,8 +330,12 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .build());
 
         // 4. Check Test Cases
-        long totalTests = testCaseRepository.countByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
-        long passedTests = testCaseRepository.countByBusinessIdAndProjectIdAndTestStatusIgnoreCaseAndIsDeleteFalse(businessId, projectId, "PASS");
+        long totalTests = 0;
+        long passedTests = 0;
+        if (projectId != null) {
+            totalTests = testCaseRepository.countByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+            passedTests = testCaseRepository.countByBusinessIdAndProjectIdAndTestStatusIgnoreCaseAndIsDeleteFalse(businessId, projectId, "PASS");
+        }
         boolean testPassed = totalTests > 0 && totalTests == passedTests;
         if (testPassed) passedCount++;
         items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()

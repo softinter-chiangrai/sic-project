@@ -1,259 +1,69 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { httpResource } from '@angular/common/http';
+import { apiBaseUrl } from '../../../../core/config/api.config';
+import { Pmdt17AService } from './pmdt17A/pmdt17A.service';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
+import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
-// ===== Model =====
-export interface BugModel {
-  id: string;
-  bugCode: string;
-  title: string;
-  description: string;
-  severity: string;
-  priority: string;
-  foundBy: string;
-  assignedTo: string;
-  relatedTestCase: string;
-  relatedTestCaseName?: string;
-  relatedTask: string;
-  relatedTaskName?: string;
-  relatedSpec: string;
-  relatedSpecName?: string;
-  foundDate: string;
-  fixDueDate: string;
-  fixedDate?: string;
-  status: string;
-  projectId: string;
-  projectName?: string;
-  isActive: boolean;
-  state?: number;
-  rowVersion?: number;
-}
-
-// ===== Form =====
-class Pmdt17Form {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      bugCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required, Validators.maxLength(2000)]],
-      severity: ['Medium', [Validators.required]],
-      priority: ['High', [Validators.required]],
-      foundBy: [null, [Validators.maxLength(100)]],
-      assignedTo: [null, [Validators.maxLength(100)]],
-      relatedTestCase: [null],
-      relatedTestCaseName: [null],
-      relatedTask: [null],
-      relatedTaskName: [null],
-      relatedSpec: [null],
-      relatedSpecName: [null],
-      foundDate: [null, [Validators.required]],
-      fixDueDate: [null, [Validators.required]],
-      fixedDate: [null],
-      status: ['Open', [Validators.required]],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt17Service {
-  private mockBugs: BugModel[] = [
-    {
-      id: '1',
-      bugCode: 'BUG-001',
-      title: 'Tax ID ซ้ำแล้วไม่แจ้ง Error',
-      description: 'กรณีกรอก Tax ID ซ้ำ ระบบไม่แจ้ง Error แต่บันทึกข้อมูลสำเร็จ',
-      severity: 'High',
-      priority: 'Urgent',
-      foundBy: 'สมศักดิ์ รุ่งเรือง',
-      assignedTo: 'สมชาย ใจดี',
-      relatedTestCase: 'TC-CUS-002',
-      relatedTestCaseName: 'กรอก Tax ID ซ้ำ',
-      relatedTask: 'TASK-002',
-      relatedTaskName: 'พัฒนา Customer API',
-      relatedSpec: 'SPEC-001',
-      relatedSpecName: 'Customer Management',
-      foundDate: '2024-02-20 10:30:00',
-      fixDueDate: '2024-02-23',
-      fixedDate: '',
-      status: 'Fixing',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    },
-  ];
-
-  apiGetComboboxProject = '/api/bug/combobox-project';
-  apiGetComboboxTestCase = '/api/bug/combobox-testcase';
-  apiGetComboboxTask = '/api/bug/combobox-task';
-  apiGetComboboxSpec = '/api/bug/combobox-spec';
-  apiGetLovSeverity = '/api/bug/lov-severity';
-  apiGetLovPriority = '/api/bug/lov-priority';
-  apiGetLovStatus = '/api/bug/lov-status';
-
-  save(data: BugModel): Observable<string> {
-    console.log('📝 Saving bug:', data);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
-  }
-
-  getBug(id: string): Observable<BugModel> {
-    const found = this.mockBugs.find((b) => b.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const empty: BugModel = {
-      id: '',
-      bugCode: '',
-      title: '',
-      description: '',
-      severity: 'Medium',
-      priority: 'High',
-      foundBy: '',
-      assignedTo: '',
-      relatedTestCase: '',
-      relatedTestCaseName: '',
-      relatedTask: '',
-      relatedTaskName: '',
-      relatedSpec: '',
-      relatedSpecName: '',
-      foundDate: '',
-      fixDueDate: '',
-      fixedDate: '',
-      status: 'Open',
-      projectId: '',
-      projectName: '',
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(empty).pipe(delay(300));
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt17',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-  ],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent],
   templateUrl: './pmdt17.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
+  styleUrls: ['./pmdt17.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmdt17Component implements OnInit, CanComponentDeactivate {
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt17Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
+export class Pmdt17Component implements OnInit {
+  private router = inject(Router);
+  private service = inject(Pmdt17AService);
 
-  form!: FormGroup;
-  isEdit = false;
-  bugId: string | null = null;
-  isLoading = false;
+  currentPage = signal(0);
+  pageSize = signal(10);
 
-  // ===== Options =====
-  severityOptions = ['Low', 'Medium', 'High', 'Critical'];
-  priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
-  statusOptions = ['Open', 'Fixing', 'Fixed', 'Retest', 'Closed', 'Reopen'];
+  ticketsResource = httpResource<any>(
+    () => `${apiBaseUrl}/api/pm/ma-tickets/paging?page=${this.currentPage()}&size=${this.pageSize()}`
+  );
 
-  pageDirty = () => this.form?.dirty ?? false;
+  ngOnInit() {}
 
-  ngOnInit(): void {
-    this.initForm();
-
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.bugId = id;
-        this.loadBug(id);
-      }
-    });
+  goToAdd() {
+    this.router.navigate(['/feature/pm/ma-ticket/new']);
   }
 
-  initForm(): void {
-    this.form = Pmdt17Form.createForm(this.fb);
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/ma-ticket', id, 'edit']);
   }
 
-  loadBug(id: string) {
-    this.isLoading = true;
-    this.service.getBug(id).subscribe({
-      next: (data) => {
-        this.form.patchValue(data);
-        this.isLoading = false;
-        console.log('✅ โหลดข้อมูล Bug สำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Bug รหัสนี้');
-        this.router.navigate(['/feature/pm/bug']);
-      },
-    });
-  }
-
-  onBack(): void {
-    this.router.navigate(['/feature/pm/bug']);
-  }
-
-  submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
+  deleteTicket(id: string) {
+    if (confirm('คุณต้องการลบตั๋ว MA นี้ใช่หรือไม่?')) {
+      this.service.delete(id).subscribe({
+        next: () => this.ticketsResource.reload(),
+      });
     }
-
-    const data = this.form.value;
-    this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Bug ถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/bug']);
-        });
-      },
-      error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
-      },
-    });
   }
 
-  getStatusText(status: string): string {
+  getSeverityClass(severity: string): string {
     const map: Record<string, string> = {
-      Open: 'เปิด',
-      Fixing: 'กำลังแก้ไข',
-      Fixed: 'แก้ไขแล้ว',
-      Retest: 'รอทดสอบซ้ำ',
-      Closed: 'ปิด',
-      Reopen: 'เปิดใหม่',
+      CRITICAL: 'bg-red-100 text-red-700 border border-red-300 font-bold',
+      HIGH: 'bg-orange-100 text-orange-700',
+      MEDIUM: 'bg-yellow-100 text-yellow-700',
+      LOW: 'bg-slate-100 text-slate-700',
     };
-    return map[status] || status;
+    return map[severity] || 'bg-slate-100 text-slate-700';
+  }
+
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      OPEN: 'bg-blue-100 text-blue-700',
+      IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
+      WAITING_CUSTOMER: 'bg-yellow-100 text-yellow-700',
+      RESOLVED: 'bg-emerald-100 text-emerald-700',
+      CLOSED: 'bg-slate-200 text-slate-700',
+    };
+    return map[status] || 'bg-slate-100 text-slate-700';
   }
 }
 
-export default Pmdt17Component;
+export default Pmrt21Component;

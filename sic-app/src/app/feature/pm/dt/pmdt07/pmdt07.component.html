@@ -1,211 +1,184 @@
-<!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
+<!-- src/app/feature/pm/dt/pmdt08/pmdt08.component.html -->
 <div class="space-y-5 p-0.5">
-
-  <!-- HEADER -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
-        Change Request
-      </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
-      </span>
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
+                รายการ Specification
+            </h1>
+            <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+                {{ totalItems() }} รายการ
+            </span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button
+                (click)="goToAdd()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+            >
+                <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+            </button>
+        </div>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      เพิ่ม Change Request
-    </button>
-  </div>
 
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-3 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
-      <input
-        type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-        placeholder="ค้นหารหัส, ชื่อ, โครงการ..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+    <!-- FILTERS -->
+    <div class="flex flex-wrap gap-3 items-center">
+        <div class="relative flex-1 min-w-[200px]">
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+            <input
+                type="text"
+                class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+                placeholder="ค้นหารหัส, ชื่อ, โมดูล..."
+                [value]="searchTerm()"
+                (input)="onSearch($event)"
+            />
+            @if (searchTerm()) {
+                <button
+                    (click)="clearSearch()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+                >
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            }
+        </div>
+
+        <select
+            (change)="onFilterChange($event)"
+            [value]="filterStatus()"
+            class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
         >
-          <i class="bi bi-x-lg text-xs"></i>
-        </button>
-      }
+            <option value="all">📊 ทุกสถานะ</option>
+            @for (status of ['Draft','Review','Approved','Released']; track status) {
+                <option [value]="status">{{ getStatusText(status) }}</option>
+            }
+        </select>
     </div>
 
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      <option value="Draft">ร่าง</option>
-      <option value="Submitted">รออนุมัติ</option>
-      <option value="Approved">อนุมัติ</option>
-      <option value="Rejected">ปฏิเสธ</option>
-      <option value="Implemented">ดำเนินการแล้ว</option>
-    </select>
-  </div>
+    <!-- LOADING -->
+    @if (isLoading()) {
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
 
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+    <!-- TABLE -->
+    @if (!isLoading()) {
+        <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+            <table class="w-full text-sm">
+                <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">ชื่อเรื่อง</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">ประเภท</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">Manday</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[160px]">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border)]">
+                    @for (spec of specs(); track spec.id) {
+                        <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                                    {{ spec.specificationCode }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div>
+                                    <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
 
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              รหัส
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ชื่อคำขอ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
-              โครงการ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ผู้เกี่ยวข้อง / ผู้แก้ไข
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              สถานะ
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (cr of changeRequests(); track cr.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  CR-{{ cr.id.substring(0, 8).toUpperCase() }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="font-medium text-[var(--text-active)]">{{ cr.title }}</div>
-                <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ cr.description }}</div>
-              </td>
-              <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
-              <td class="px-4 py-3">
-                <div class="space-y-1">
-                  @for (assignee of cr.assignees; track assignee.id) {
-                    <div class="flex items-center gap-1.5 text-xs">
-                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="assignee.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                      <span class="font-medium">{{ assignee.userName }}</span>
-                      <span class="text-[10px] text-[var(--text-muted)]">({{ assignee.targetType }})</span>
-                      @if (assignee.status !== 'COMPLETED' && cr.status === 'APPROVED') {
-                        <button
-                          (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
-                          class="px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-[10px] hover:bg-[var(--crm-primary)]/20 transition-all ml-1"
-                        >
-                          แก้ไขเสร็จแล้ว
-                        </button>
-                      }
-                    </div>
-                  } @empty {
-                    <span class="text-xs text-[var(--text-muted)]">-</span>
-                  }
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(cr.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(cr.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1 flex-wrap">
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400">
+                                    {{ spec.specificationType || spec.specType || '-' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
+                                {{ spec.version ? (spec.version.startsWith('v') || spec.version.startsWith('V') ? spec.version : 'v' + spec.version) : 'v1.0' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span [class]="getStatusClass(spec.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                                    {{ getStatusText(spec.status || 'Draft') }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-[var(--text-active)] font-mono">
+                                {{ spec.estimatedManday || 0 }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <sic-table-actions
+                                    (onView)="goToView(spec.id!)"
+                                    (onPrint)="printDocument(spec)"
+                                    (onEdit)="goToEdit(spec.id!)"
+                                    (onDelete)="deleteSpec(spec.id!)"
+                                ></sic-table-actions>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="7" class="px-4 py-12 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                                    <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Specification</p>
+                                    <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Specification ใหม่</p>
+                                    <button
+                                        (click)="goToAdd()"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                                    >
+                                        <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 
-                  <sic-table-actions
-                    [showPrint]="false"
-                    (onView)="goToView(cr.id)"
-                    (onEdit)="goToEdit(cr.id)"
-                    (onDelete)="deleteChangeRequest(cr.id)"
-                  ></sic-table-actions>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Change Request ใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่ม Change Request
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+    <!-- PAGINATION -->
+    @if (totalItems() > 0) {
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div class="text-sm text-[var(--text-muted)]">
+                แสดง
+                <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+                -
+                <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+                จาก
+                <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+                รายการ
+            </div>
 
-  <!-- PAGINATION -->
-  @if (totalItems() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง
-        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
-        -
-        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
-        จาก
-        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
-        รายการ
-      </div>
+            <div class="flex gap-1">
+                <button
+                    (click)="onPageChange(currentPage() - 1)"
+                    [disabled]="!hasPrevious()"
+                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <i class="bi bi-chevron-left"></i>
+                </button>
 
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrevious()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
+                @for (page of pageNumbers(); track page) {
+                    <button
+                        (click)="onPageChange(page)"
+                        [class]="page === currentPage()
+                            ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+                            : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+                    >
+                        {{ page }}
+                    </button>
+                }
 
-        @for (page of pageNumbers(); track page) {
-          <button
-            (click)="onPageChange(page)"
-            [class]="page === currentPage() 
-              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' 
-              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
-
+                <button
+                    (click)="onPageChange(currentPage() + 1)"
+                    [disabled]="!hasNext()"
+                    class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    }
 </div>

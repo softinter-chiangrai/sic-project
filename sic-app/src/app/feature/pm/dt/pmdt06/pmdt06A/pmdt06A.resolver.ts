@@ -17,14 +17,14 @@ export const pmdt06AResolver: ResolveFn<Pmdt06APageData> = async (route) => {
   const form = Pmdt06AForm.createForm(fb);
 
   if (!id) {
-    return { diagramData: new SicFromData<Pmdt06AModel>(form) };
+    return { changeRequestData: new SicFromData<Pmdt06AModel>(form) };
   }
 
   try {
-    const data = await lastValueFrom(service.getDiagramById(id));
+    const data = await lastValueFrom(service.getChangeRequestById(id));
     if (data) {
       form.patchValue(data);
-      return { diagramData: new SicFromData<Pmdt06AModel>(form, data) };
+      return { changeRequestData: new SicFromData<Pmdt06AModel>(form, data) };
     }
     router.navigate(['/not-found']);
     return EMPTY as any;

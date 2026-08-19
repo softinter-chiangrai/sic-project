@@ -1,0 +1,68 @@
+<div class="p-6 bg-slate-50 min-h-screen">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">รายการใบแจ้งหนี้ (Invoice List)</h1>
+      <p class="text-sm text-slate-500">ติดตามและจัดการรายการใบแจ้งหนี้ทั้งหมด</p>
+    </div>
+    <button (click)="goToAdd()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition">
+      + สร้างใบแจ้งหนี้ใหม่
+    </button>
+  </div>
+
+  @if (invoicesResource.isLoading()) {
+    <div class="p-8 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
+      กำลังโหลดข้อมูล...
+    </div>
+  } @else if (invoicesResource.value(); as res) {
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <table class="w-full text-left border-collapse text-sm text-slate-700">
+        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs">
+          <tr>
+            <th class="p-4">เลขที่ใบแจ้งหนี้</th>
+            <th class="p-4">ลูกค้า / โครงการ</th>
+            <th class="p-4">ประเภทบิล</th>
+            <th class="p-4">วันครบกำหนด</th>
+            <th class="p-4 text-right">ยอดรวม</th>
+            <th class="p-4 text-right">ชำระแล้ว</th>
+            <th class="p-4 text-center">สถานะ</th>
+            <th class="p-4 text-center">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          @for (item of res.content; track item.id) {
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-4 font-semibold text-indigo-600">{{ item.invoiceNo }}</td>
+              <td class="p-4">
+                <div class="font-medium text-slate-800">{{ item.customerName || 'N/A' }}</div>
+                <div class="text-xs text-slate-400">{{ item.projectName || 'N/A' }}</div>
+              </td>
+              <td class="p-4">{{ item.billingType }}</td>
+              <td class="p-4">{{ item.dueDate }}</td>
+              <td class="p-4 text-right font-semibold">{{ item.totalAmount | currency:'THB':'symbol':'1.2-2' }}</td>
+              <td class="p-4 text-right text-emerald-600 font-medium">{{ item.paidAmount | currency:'THB':'symbol':'1.2-2' }}</td>
+              <td class="p-4 text-center">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ getStatusClass(item.paymentStatus) }}">
+                  {{ item.paymentStatus }}
+                </span>
+              </td>
+              <td class="p-4 text-center">
+                <sic-table-actions
+                  [showView]="false"
+                  [showEdit]="true"
+                  [showPrint]="false"
+                  [showDelete]="true"
+                  (onEdit)="goToEdit(item.id)"
+                  (onDelete)="deleteInvoice(item.id)">
+                </sic-table-actions>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="p-8 text-center text-slate-400">ยังไม่มีรายการใบแจ้งหนี้</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

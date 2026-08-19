@@ -1,236 +1,213 @@
-<!-- src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.html -->
 <!-- ===== LOADING ===== -->
-@if (isLoading()) {
+@if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Bug...</p>
   </div>
 }
 
 <!-- ===== FORM ===== -->
-@if (!isLoading() && formData && formData.form) {
-  <form [formGroup]="formData.form" (ngSubmit)="onSubmit()" class="space-y-6 max-w-4xl mx-auto py-2">
-    <!-- HEADER -->
-    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
-      <div>
-        <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-          @if (isExecution()) {
-            🧪 บันทึกผลการทดสอบ (Test Execution)
-          } @else if (isView()) {
-            👁️ รายละเอียด Test Case
-          } @else if (isEdit()) {
-            ✏️ แก้ไข Test Case
-          } @else {
-            ➕ เพิ่ม Test Case ใหม่
-          }
-        </h2>
-        <p class="text-sm text-[var(--text-muted)] mt-1">
-          {{ formData.form.get('testCaseCode')?.value || 'สร้าง Test Case ใหม่' }}
-          @if (formData.form.get('title')?.value) {
-            : {{ formData.form.get('title')?.value }}
-          }
-        </p>
-      </div>
-    </div>
+@if (!isLoading && form) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
 
-    <!-- Warning Banner when Test Case has an active unresolved bug in Execution Mode -->
-    @if (isExecution() && !isTaskReadyForTest()) {
-      <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-start gap-3">
-        <i class="bi bi-bug-fill text-xl mt-0.5"></i>
-        <div>
-          <h4 class="font-semibold text-sm">Test Case นี้มี Bug ที่กำลังรอการแก้ไข</h4>
-          <p class="text-xs mt-0.5 text-rose-700/80 dark:text-rose-300/80">
-            มีการเปิด Bug Task สำหรับเคสนี้แล้วและยังแก้ไขไม่เสร็จสิ้น จึงล็อคการทดสอบเคสนี้ไว้ชั่วคราว เมื่อทีมพัฒนาแก้ไข Bug เรียบร้อยแล้วจะสามารถกลับมาทดสอบซ้ำ (Retest) ได้
-          </p>
+      <!-- HEADER -->
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Bug' : 'แจ้ง Bug ใหม่' }}
+        </h2>
+      </div>
+
+      <!-- Bug Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Bug"
+          formControlName="bugCode"
+          [required]="true"
+          placeholder="BUG-001"
+        ></sic-input>
+        @if (form.get('bugCode')?.touched && form.get('bugCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Bug</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อเรื่อง"
+          formControlName="title"
+          [required]="true"
+          placeholder="ระบบไม่แจ้ง Error เมื่อ Tax ID ซ้ำ"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อเรื่อง</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="รายละเอียด"
+          formControlName="description"
+          [required]="true"
+          [rows]="3"
+          placeholder="อธิบายปัญหาโดยละเอียด พร้อมขั้นตอนการเกิด"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+        }
+      </div>
+
+      <!-- Project -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="โครงการ"
+          formControlName="projectId"
+          [apiUrl]="service.apiGetComboboxProject"
+          [required]="true"
+        ></sic-combobox>
+        @if (form.get('projectId')?.touched && form.get('projectId')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกโครงการ</p>
+        }
+      </div>
+
+      <!-- Related Test Case, Task, Spec -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="Test Case ที่เกี่ยวข้อง"
+            formControlName="relatedTestCase"
+            [apiUrl]="service.apiGetComboboxTestCase"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="Task ที่เกี่ยวข้อง"
+            formControlName="relatedTask"
+            [apiUrl]="service.apiGetComboboxTask"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
+          ></sic-combobox>
+        </div>
+        <div class="flex-1">
+          <sic-combobox
+            label="Spec ที่เกี่ยวข้อง"
+            formControlName="relatedSpec"
+            [apiUrl]="service.apiGetComboboxSpec"
+            [params]="{ projectId: $safeNavigationMigration(form.get('projectId')?.value) }"
+          ></sic-combobox>
         </div>
       </div>
-    }
 
-    <!-- Unified Single Card Form Container -->
-    <div class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-8">
-      
-      <!-- Section 1: ข้อมูลทั่วไป -->
-      <div class="space-y-4">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-          <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-          ข้อมูลทั่วไป
-        </h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <sic-input
-              label="รหัส Test Case *"
-              formControlName="testCaseCode"
-              placeholder="TESTCASE-001"
-              [disabled]="isView() || isExecution()"
-            ></sic-input>
-          </div>
-          <div>
+      <!-- Found By & Assigned To -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
           <sic-input
-            label="หัวข้อ / ชื่อ Test Case *"
-            formControlName="title"
-            [disabled]="isView() || isExecution()"
-            placeholder=""
+            label="ผู้พบ"
+            formControlName="foundBy"
+            placeholder="สมชาย ใจดี"
           ></sic-input>
         </div>
-          <div>
-            <sic-combobox
-              label="ความสำคัญ (Priority)"
-              formControlName="priority"
-              [items]="priorityOptions"
-              [disabled]="isView() || isExecution()"
-            ></sic-combobox>
-          </div>
+        <div class="flex-1">
+          <sic-input
+            label="ผู้รับผิดชอบแก้ไข"
+            formControlName="assignedTo"
+            placeholder="สมหญิง รักเรียน"
+          ></sic-input>
         </div>
       </div>
 
-      <!-- Section 2: การเชื่อมโยง (Traceability & Task) -->
-      <div class="space-y-4">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-          <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-          การเชื่อมโยงงาน (Traceability & Task)
-        </h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <sic-combobox
-              label="งานที่เกี่ยวข้อง (Task)"
-              formControlName="taskId"
-              [items]="taskOptions()"
-              [disabled]="isView() || isExecution()"
-              placeholder="เลือก Task ที่เกี่ยวข้อง"
-              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
-            ></sic-combobox>
-          </div>
+      <!-- Found Date, Fix Due Date, Fixed Date -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-input
+            label="วันที่พบ"
+            type="text"
+            formControlName="foundDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY HH:MM"
+          ></sic-input>
+          @if (form.get('foundDate')?.touched && form.get('foundDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่พบ</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="กำหนดแก้ไข"
+            type="text"
+            formControlName="fixDueDate"
+            [required]="true"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
+          @if (form.get('fixDueDate')?.touched && form.get('fixDueDate')?.invalid) {
+            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุกำหนดแก้ไข</p>
+          }
+        </div>
+        <div class="flex-1">
+          <sic-input
+            label="วันที่แก้ไขจริง"
+            type="text"
+            formControlName="fixedDate"
+            placeholder="DD/MM/YYYY"
+          ></sic-input>
         </div>
       </div>
 
-      <!-- Section 3: ขั้นตอนและผลที่คาดหวัง -->
-      <div class="space-y-5">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-          <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
-          ขั้นตอน & ผลลัพธ์
-        </h3>
-
-        <!-- ขั้นตอนการทดสอบ -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-medium text-[var(--text-active)]">
-              ขั้นตอนการทดสอบ (Test Steps) <span class="text-red-500">*</span>
-            </span>
-            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-          </div>
-          <sic-tiptap-editor
-            formControlName="testStep"
-            placeholderInput="1. เปิดหน้าจอเพิ่มลูกค้า&#10;2. กรอกข้อมูลครบถ้วน&#10;3. กดปุ่มบันทึก"
-            minHeightInput="120px"
-            [disabledInput]="isView() || isExecution()"
-          ></sic-tiptap-editor>
+      <!-- Severity, Priority, Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
+        <div class="flex-1">
+          <sic-combobox
+            label="ระดับความรุนแรง"
+            formControlName="severity"
+            [apiUrl]="service.apiGetLovSeverity"
+            [required]="true"
+          ></sic-combobox>
         </div>
-
-        <!-- ผลลัพธ์ที่คาดหวัง -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-medium text-[var(--text-active)]">
-              ผลลัพธ์ที่คาดหวัง (Expected Result) <span class="text-red-500">*</span>
-            </span>
-            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-          </div>
-          <sic-tiptap-editor
-            formControlName="expectedResult"
-            placeholderInput="กรอกผลลัพธ์ที่คาดหวัง"
-            minHeightInput="100px"
-            [disabledInput]="isView() || isExecution()"
-          ></sic-tiptap-editor>
+        <div class="flex-1">
+          <sic-combobox
+            label="ลำดับความสำคัญ"
+            formControlName="priority"
+            [apiUrl]="service.apiGetLovPriority"
+            [required]="true"
+          ></sic-combobox>
         </div>
-
-        <!-- ผลลัพธ์ที่ได้จริง (แสดงเฉพาะตอน Test Execution หรือ View ที่มีผลแล้ว) -->
-        @if (isExecution() || isView()) {
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm font-medium text-[var(--text-active)]">
-                ผลลัพธ์ที่ได้จริง (Actual Result)
-              </span>
-              <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-            </div>
-            <sic-tiptap-editor
-              formControlName="actualResult"
-              placeholderInput="กรอกผลลัพธ์ที่พบจากการทดสอบจริง"
-              minHeightInput="100px"
-              [disabledInput]="isView() || (isExecution() && !isTaskReadyForTest())"
-            ></sic-tiptap-editor>
-          </div>
-        }
       </div>
 
-      <!-- Section 4: สถานะและผู้ทดสอบ (แสดงเฉพาะตอน Test Execution หรือ View) -->
-      @if (isExecution() || isView()) {
-        <div class="space-y-4">
-          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-            <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-            ผลการทดสอบ & ผู้ทดสอบ
-          </h3>
+      <!-- Active Status -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+          />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน Bug</span>
+        </label>
+      </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <sic-combobox
-                label="สถานะการทดสอบ *"
-                formControlName="testStatus"
-                [items]="statusOptions"
-                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
-              ></sic-combobox>
-            </div>
-            <div>
-              <sic-combobox
-                label="ผู้ทดสอบ (Tester)"
-                [apiUrl]="testerApiUrl()"
-                valueField="text"
-                textField="text"
-                [multiple]="true"
-                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
-                [ngModel]="testerValues()"
-                [ngModelOptions]="{standalone: true}"
-                placeholder="เลือกผู้ทดสอบ"
-                (selectionChanged)="onTesterChange($event)"
-              ></sic-combobox>
-              <input type="hidden" formControlName="tester" />
-            </div>
-            <div>
-              <sic-datepicker
-                label="วันที่ทดสอบ"
-                formControlName="testDate"
-                [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
-              ></sic-datepicker>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- FOOTER ACTIONS (ปุ่มย้อนกลับ / บันทึก ด้านล่าง) -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
-        <sic-button
-          variant="secondary"
-          [type]="'button'"
-          (click)="onBack()"
-          [disabled]="isSaving()"
-        >
-          <i class="bi bi-arrow-left"></i>
-          ย้อนกลับ
-        </sic-button>
-        @if (!isView()) {
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
           <sic-button
-            variant="primary"
-            [type]="'submit'"
-            [disabled]="isSaving() || (isExecution() && !isTaskReadyForTest())"
+            [fullWidth]="true"
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
           >
-            @if (isSaving()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-floppy"></i>
-            }
-            {{ isSaving() ? 'กำลังบันทึก...' : (isExecution() ? 'บันทึกผลการทดสอบ' : 'บันทึก Test Case') }}
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
           </sic-button>
-        }
+        </div>
+        <div class="flex-1">
+          <sic-button
+            [fullWidth]="true"
+            [type]="'submit'"
+            variant="primary"
+          >
+            <i class="bi bi-floppy"></i>
+            {{ isEdit ? 'บันทึก' : 'แจ้ง Bug' }}
+          </sic-button>
+        </div>
       </div>
 
     </div>

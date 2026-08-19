@@ -1,32 +1,61 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07.service.ts
-import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+// src/app/feature/pm/dt/pmdt08/pmdt08.service.ts
+
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Pmdt07Model } from './pmdt07.model';
 import { environment } from '../../../../../environments/environment';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { PmSpecificationModel } from './pmdt08.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt07Service {
-  private http = inject(HttpClient);
-  private baseUrl = `${environment.apiBaseUrl}/api/pm/change-requests`;
+export class Pmdt08Service {
+    private http = inject(HttpClient);
+    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
 
-  getChangeRequests(projectId: string): Observable<Pmdt07Model[]> {
-    return this.http.get<Pmdt07Model[]>(`${this.baseUrl}?projectId=${projectId}`);
-  }
+    // Combobox endpoints
+    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
+    apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
+    apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;
+    apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/requirement/combobox`;
+    apiGetComboboxDiagram = `${environment.apiBaseUrl}/api/diagram/tabs`;
+    apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/SPECIFICATION`;
 
-  getChangeRequestById(id: string): Observable<Pmdt07Model> {
-    return this.http.get<Pmdt07Model>(`${this.baseUrl}/${id}`);
-  }
+    // CRUD
+    getSpecification(id: string): Observable<PmSpecificationModel> {
+        return this.http.get<PmSpecificationModel>(`${this.baseUrl}/${id}`);
+    }
 
-  createChangeRequest(data: Partial<Pmdt07Model>): Observable<Pmdt07Model> {
-    return this.http.post<Pmdt07Model>(this.baseUrl, data);
-  }
+    save(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
+    }
 
-  updateChangeRequest(id: string, data: Partial<Pmdt07Model>): Observable<Pmdt07Model> {
-    return this.http.put<Pmdt07Model>(`${this.baseUrl}/${id}`, data);
-  }
+    autoSave(data: PmSpecificationModel): Observable<any> {
+        return this.http.post(this.baseUrl, data);
+    }
 
-  deleteChangeRequest(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
-  }
+    delete(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
+
+    // AI Generator
+    generateDraft(request: {
+        projectId?: string;
+        requirementId?: string;
+        diagramId?: string;
+        specificationType?: string;
+        prompt?: string;
+    }): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/generate/draft`, request);
+    }
+
+    // ✅ ใช้ PaginationResponse จาก core/model
+    getList(params: any): Observable<PaginationResponse<PmSpecificationModel>> {
+        let httpParams = new HttpParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                httpParams = httpParams.set(key, String(params[key]));
+            }
+        });
+        return this.http.get<PaginationResponse<PmSpecificationModel>>(this.baseUrl, { params: httpParams });
+    }
 }

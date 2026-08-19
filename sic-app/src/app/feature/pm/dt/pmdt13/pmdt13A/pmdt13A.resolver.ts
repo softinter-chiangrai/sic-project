@@ -1,4 +1,3 @@
-// src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.resolver.ts
 import { inject } from '@angular/core';
 import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';

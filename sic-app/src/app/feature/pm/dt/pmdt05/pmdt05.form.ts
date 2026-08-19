@@ -9,8 +9,10 @@ export class Pmdt05Form {
     return fb.group<ToForm<Pmdt05Model>>({
       id: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
-      exportFormat: fb.control('PDF'),
-      includeDiagrams: fb.control(true),
+      diagramName: fb.control(null, [Validators.required]),
+      diagramType: fb.control('ARCHITECTURE'),
+      contentData: fb.control(null),
+      version: fb.control('1.0'),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

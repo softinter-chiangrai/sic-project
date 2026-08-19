@@ -1,499 +1,646 @@
-// src/app/feature/pm/dt/pmdt12/pmdt12.component.ts
+// src/app/feature/pm/dt/pmdt13/pmdt13.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-
-import {
-  SicKanbanComponent,
-  KanbanStatusChangeEvent,
-  KanbanColumnConfig,
-} from '../../../../core/component/sic-kanban/sic-kanban.component';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { finalize, forkJoin } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { BusinessService } from '../../../../core/services/business.service';
-
+import { PmTestCaseModel, PmTestScenarioModel } from './pmdt12.model';
 import { Pmdt12Service } from './pmdt12.service';
-import { Pmdt12AComponent } from './pmdt12A/pmdt12A.component';
-import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt12.model';
-import { SicAvatarComponent } from '../../../../core/component/sic-avatar/sic-avatar.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
+export interface ScenarioGroup {
+  scenario: PmTestScenarioModel | null; // null for unassigned / general test cases
+  testCases: PmTestCaseModel[];
+}
 
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    DragDropModule,
-    SicAvatarComponent,
-    SicComboboxComponent,
-    SicKanbanComponent,
-    Pmdt12AComponent,
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt12Component implements OnInit {
+  private router = inject(Router);
   private service = inject(Pmdt12Service);
   private customerState = inject(CustomerStateService);
-  private businessService = inject(BusinessService);
   private dialog = inject(DialogService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
 
-  @ViewChild('taskModal') taskModal?: Pmdt12AComponent;
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected filterPriority = signal('all');
+  protected filterTaskStatus = signal('all');
+  protected isLoading = signal(false);
 
-  // View state
-  viewType = signal<'kanban' | 'list'>('kanban');
-  isLoading = signal(false);
+  // ===== Data =====
+  protected scenarios = signal<PmTestScenarioModel[]>([]);
+  protected testCases = signal<PmTestCaseModel[]>([]);
+  protected projectTasks = signal<any[]>([]);
 
-  // Data signals
-  projectId = signal<string | null>(null);
-  allTasks = signal<TaskResponse[]>([]);
-  specifications = signal<SpecificationSummary[]>([]);
-  workPackages = signal<WorkPackageOption[]>([]);
-  businessMembers = signal<{ value: string; text: string }[]>([]);
+  // Track expanded accordion IDs ('unassigned' for null scenario)
+  protected expandedScenarioIds = signal<Set<string>>(new Set());
 
-  // Filter signals
-  selectedSpecId = signal<string | null>(null);
-  selectedWpId = signal<string | null>(null);
-  selectedPriority = signal<string | null>(null);
-  selectedAssignee = signal<string | null>(null);
-  searchQuery = signal<string>('');
+  // Pagination for each scenario test case table (scenarioId -> pageNumber 1-based)
+  protected scenarioPageMap = signal<Map<string, number>>(new Map());
+  protected readonly pageSize = 10;
 
-  // Modal signals
-  isModalOpen = signal(false);
-  isModalEdit = signal(false);
-  selectedTaskId = signal<string | null>(null);
+  // ===== Options =====
+  statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
+  priorityOptions = ['High', 'Medium', 'Low'];
 
-  // Columns definition
-  readonly columns: KanbanColumnConfig[] = [
-    {
-      id: 'col-todo',
-      name: 'To Do',
-      statuses: ['Todo'],
-      color: '#64748B',
-      textColor: 'text-slate-700 dark:text-slate-300',
-      bgLight: 'bg-slate-50 dark:bg-slate-900/40',
-      dotColor: 'bg-slate-400',
-    },
-    {
-      id: 'col-inprogress',
-      name: 'In Progress',
-      statuses: ['In Progress', 'Doing'],
-      color: '#3B82F6',
-      textColor: 'text-blue-700 dark:text-blue-300',
-      bgLight: 'bg-blue-50/50 dark:bg-blue-900/20',
-      dotColor: 'bg-blue-500',
-    },
-    {
-      id: 'col-review',
-      name: 'Waiting Review',
-      statuses: ['Waiting Review', 'Review'],
-      color: '#F59E0B',
-      textColor: 'text-amber-700 dark:text-amber-300',
-      bgLight: 'bg-amber-50/50 dark:bg-amber-900/20',
-      dotColor: 'bg-amber-500',
-    },
-    {
-      id: 'col-fix',
-      name: 'Waiting Fix',
-      statuses: ['Waiting Fix', 'Blocked', 'Delayed'],
-      color: '#EF4444',
-      textColor: 'text-rose-700 dark:text-rose-300',
-      bgLight: 'bg-rose-50/50 dark:bg-rose-900/20',
-      dotColor: 'bg-rose-500',
-    },
-    {
-      id: 'col-done',
-      name: 'Done',
-      statuses: ['Done', 'Completed'],
-      color: '#10B981',
-      textColor: 'text-emerald-700 dark:text-emerald-300',
-      bgLight: 'bg-emerald-50/50 dark:bg-emerald-900/20',
-      dotColor: 'bg-emerald-500',
-    },
-  ];
+  // ===== Computed Groups =====
+  protected scenarioGroups = computed(() => {
+    const rawScenarios = this.scenarios();
+    const rawTestCases = this.testCases();
+    const search = this.searchTerm().trim().toLowerCase();
+    const status = this.filterStatus();
+    const priority = this.filterPriority();
+    const taskStatus = this.filterTaskStatus();
 
-  // Options
-  readonly priorityOptions = [
-    { value: 'Critical', text: '🔥 วิกฤต (Critical)' },
-    { value: 'High', text: '🔴 สูง (High)' },
-    { value: 'Medium', text: '🟡 ปานกลาง (Medium)' },
-    { value: 'Low', text: '🟢 ต่ำ (Low)' },
-  ];
-
-  // Computed Specifications Options
-  specOptions = computed(() => {
-    return this.specifications().map((s) => ({
-      value: s.id,
-      text: `[${s.code}] ${s.title}`,
-    }));
-  });
-
-  // Computed Work Packages Options
-  wpOptions = computed(() => {
-    return this.workPackages().map((wp) => ({
-      value: wp.id,
-      text: `${wp.packageName} (${wp.phaseName})`,
-    }));
-  });
-
-  // Computed Assignee Options
-  assigneeOptions = computed(() => {
-    const members = this.businessMembers();
-    if (members.length > 0) {
-      return members;
-    }
-    const tasks = this.allTasks();
-    const map = new Map<string, string>();
-    for (const t of tasks) {
-      if (t.assigneeIds && t.assigneeNames) {
-        for (const uid of t.assigneeIds) {
-          if (t.assigneeNames[uid]) {
-            map.set(uid, t.assigneeNames[uid]);
-          }
+    // 1. Filter test cases
+    const filteredCases = rawTestCases.filter((tc) => {
+      // Filter status
+      if (status !== 'all' && (tc.testStatus || '').toLowerCase() !== status.toLowerCase()) {
+        return false;
+      }
+      // Filter priority
+      if (priority !== 'all' && (tc.priority || '').toLowerCase() !== priority.toLowerCase()) {
+        return false;
+      }
+      // Filter taskStatus
+      if (taskStatus === 'ready' || taskStatus === 'testing') {
+        const ts = (tc.taskStatus || '').toLowerCase();
+        if (ts !== 'testing') return false;
+      } else if (taskStatus !== 'all') {
+        if ((tc.taskStatus || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
+      }
+      // Search keyword
+      if (search) {
+        const matchCode = (tc.testCaseCode || '').toLowerCase().includes(search);
+        const matchTitle = (tc.title || '').toLowerCase().includes(search);
+        const matchTester = (tc.tester || '').toLowerCase().includes(search);
+        const matchStep = (tc.testStep || '').toLowerCase().includes(search);
+        const matchScenario = (tc.scenarioName || '').toLowerCase().includes(search);
+        if (!matchCode && !matchTitle && !matchTester && !matchStep && !matchScenario) {
+          return false;
         }
-      } else if (t.assignedTo && t.assignedTo.trim().length > 0) {
-        map.set(t.assignedTo, t.assignedTo);
-      }
-    }
-    return Array.from(map.entries()).map(([value, text]) => ({ value, text }));
-  });
-
-  // Filtered Tasks
-  filteredTasks = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const specId = this.selectedSpecId();
-    const wpId = this.selectedWpId();
-    const prio = this.selectedPriority();
-    const ass = this.selectedAssignee();
-
-    return this.allTasks().filter((t) => {
-      // Filter by Spec
-      if (specId && t.specificationId !== specId) return false;
-      // Filter by WP
-      if (wpId && t.workPackageId !== wpId) return false;
-      // Filter by Priority
-      if (prio && (t.priority || '').toLowerCase() !== prio.toLowerCase()) return false;
-      // Filter by Assignee
-      if (ass) {
-        const inIds = t.assigneeIds && t.assigneeIds.includes(ass);
-        const inName = t.assignedTo && t.assignedTo.toLowerCase() === ass.toLowerCase();
-        const inAssigneeNames =
-          t.assigneeNames &&
-          (t.assigneeNames[ass] !== undefined ||
-            Object.values(t.assigneeNames).some((name) => name.toLowerCase() === ass.toLowerCase()));
-        if (!inIds && !inName && !inAssigneeNames) return false;
-      }
-      // Search
-      if (query) {
-        const matchCode = (t.taskCode || '').toLowerCase().includes(query);
-        const matchName = (t.taskName || '').toLowerCase().includes(query);
-        const matchDesc = (t.description || '').toLowerCase().includes(query);
-        const matchSpec = (t.specificationCode || '').toLowerCase().includes(query);
-        if (!matchCode && !matchName && !matchDesc && !matchSpec) return false;
       }
       return true;
     });
-  });
 
-  // Tasks by Column
-  tasksByColumn = computed(() => {
-    const result: Record<string, TaskResponse[]> = {};
-    for (const col of this.columns) {
-      result[col.id] = [];
-    }
-    for (const task of this.filteredTasks()) {
-      const status = task.status || 'Todo';
-      const col = this.columns.find((c) =>
-        c.statuses.some((s) => s.toLowerCase() === status.toLowerCase())
-      ) || this.columns[0];
-      result[col.id].push(task);
-    }
-    return result;
-  });
+    // 2. Map test cases to scenario groups
+    const map = new Map<string, PmTestCaseModel[]>();
+    const unassigned: PmTestCaseModel[] = [];
 
-  // Metrics
-  metrics = computed(() => {
-    const tasks = this.filteredTasks();
-    const total = tasks.length;
-    const done = tasks.filter((t) => ['done', 'completed'].includes((t.status || '').toLowerCase())).length;
-    const inProgress = tasks.filter((t) => ['in progress', 'doing', 'waiting review'].includes((t.status || '').toLowerCase())).length;
-    const todo = tasks.filter((t) => ['todo'].includes((t.status || '').toLowerCase())).length;
-    const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { total, done, inProgress, todo, progress };
-  });
-
-  get currentSpec() {
-    const id = this.selectedSpecId();
-    if (!id) return null;
-    return this.specifications().find((s) => s.id === id) || null;
-  }
-
-  ngOnInit(): void {
-    const businessId = this.businessService.getCurrentBusinessId();
-    if (businessId) {
-      this.service.getMembers(businessId).subscribe({
-        next: (members) => this.businessMembers.set(members),
-        error: (err) => console.error('Load members error:', err),
-      });
-    }
-
-    this.route.queryParams.subscribe((params) => {
-      const pId = params['projectId'] || this.customerState.getProjectId();
-      const specId = params['specificationId'] || null;
-
-      if (pId) {
-        this.projectId.set(pId);
-        if (specId) this.selectedSpecId.set(specId);
-        this.loadProjectData(pId);
-      } else {
-        const stored = this.customerState.getProjectId();
-        if (stored) {
-          this.projectId.set(stored);
-          this.loadProjectData(stored);
+    filteredCases.forEach((tc) => {
+      if (tc.scenarioId) {
+        if (!map.has(tc.scenarioId)) {
+          map.set(tc.scenarioId, []);
         }
+        map.get(tc.scenarioId)!.push(tc);
+      } else {
+        unassigned.push(tc);
       }
     });
-  }
 
-  loadProjectData(pId: string): void {
-    this.isLoading.set(true);
+    // 3. Build group list
+    const groups: ScenarioGroup[] = [];
 
-    // 1. Load Specs
-    this.service.getSpecificationsByProject(pId).subscribe({
-      next: (specs) => this.specifications.set(specs),
-      error: (err) => console.error('Load specs error:', err),
-    });
+    // Filter scenarios matching search or containing filtered test cases
+    rawScenarios.forEach((sc) => {
+      const scId = sc.id!;
+      const casesForThisSc = map.get(scId) || [];
+      const matchScKeyword = search && (
+        (sc.scenarioCode || '').toLowerCase().includes(search) ||
+        (sc.scenarioName || '').toLowerCase().includes(search) ||
+        (sc.id || '').toLowerCase().includes(search) ||
+        (sc.description || '').toLowerCase().includes(search)
+      );
 
-    // 2. Load Phases -> Work Packages
-    this.service.getPhasesByProject(pId).subscribe({
-      next: (phases) => {
-        const wps: WorkPackageOption[] = [];
-        if (phases && Array.isArray(phases)) {
-          for (const ph of phases) {
-            if (ph.milestones) {
-              for (const ms of ph.milestones) {
-                if (ms.workPackages) {
-                  for (const wp of ms.workPackages) {
-                    wps.push({
-                      id: wp.id,
-                      packageName: wp.packageName,
-                      phaseId: ph.id,
-                      phaseName: ph.phaseName,
-                      milestoneId: ms.id,
-                      milestoneName: ms.milestoneName,
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
-        this.workPackages.set(wps);
-      },
-      error: (err) => console.error('Load phases error:', err),
-    });
-
-    // 3. Load Tasks
-    this.service.getTasksByProjectId(pId).subscribe({
-      next: (tasks) => {
-        this.allTasks.set(tasks || []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Load tasks error:', err);
-        this.allTasks.set([]);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
-  // Filter actions
-  selectSpecification(specId: string | null): void {
-    this.selectedSpecId.set(specId);
-  }
-
-  getTaskCountBySpec(specId: string): number {
-    return this.allTasks().filter((t) => t.specificationId === specId).length;
-  }
-
-  clearFilters(): void {
-    this.selectedSpecId.set(null);
-    this.selectedWpId.set(null);
-    this.selectedPriority.set(null);
-    this.selectedAssignee.set(null);
-    this.searchQuery.set('');
-  }
-
-  // Modal Actions
-  openCreateTask(preselectedSpecId?: string | null): void {
-    this.isModalEdit.set(false);
-    this.selectedTaskId.set(null);
-    this.isModalOpen.set(true);
-    setTimeout(() => {
-      this.taskModal?.initForCreate(preselectedSpecId || this.selectedSpecId());
-    });
-  }
-
-  openEditTask(task: TaskResponse): void {
-    this.isModalEdit.set(true);
-    this.selectedTaskId.set(task.id);
-    this.isModalOpen.set(true);
-    setTimeout(() => {
-      this.taskModal?.loadTaskData(task);
-    });
-  }
-
-  onTaskSaved(saved: TaskResponse): void {
-    const list = [...this.allTasks()];
-    const idx = list.findIndex((t) => t.id === saved.id);
-    if (idx >= 0) {
-      list[idx] = saved;
-    } else {
-      list.unshift(saved);
-    }
-    this.allTasks.set(list);
-  }
-
-  deleteTask(task: TaskResponse, event?: Event): void {
-    if (event) event.stopPropagation();
-    this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบ Task "${task.taskName}" (${task.taskCode}) ใช่หรือไม่?`)
-      .then((confirmed) => {
-        if (!confirmed) return;
-        this.service.deleteTask(task.id).subscribe({
-          next: () => {
-            this.dialog.success('สำเร็จ', 'ลบ Task เรียบร้อย');
-            this.allTasks.set(this.allTasks().filter((t) => t.id !== task.id));
-          },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+      // Include scenario if it has matching test cases OR if scenario itself matches search (without status/priority filter active)
+      if (casesForThisSc.length > 0 || (matchScKeyword && status === 'all' && priority === 'all') || (!search && status === 'all' && priority === 'all')) {
+        groups.push({
+          scenario: sc,
+          testCases: casesForThisSc,
         });
+      }
+    });
+
+    // Add unassigned group if there are test cases without scenario
+    if (unassigned.length > 0) {
+      groups.push({
+        scenario: null,
+        testCases: unassigned,
       });
+    }
+
+    return groups;
+  });
+
+  protected totalTestCases = computed(() => {
+    return this.scenarioGroups().reduce((acc, g) => acc + g.testCases.length, 0);
+  });
+
+  protected totalScenarios = computed(() => {
+    return this.scenarios().length;
+  });
+
+  // ===== Lifecycle =====
+  ngOnInit() {
+    this.loadData();
   }
 
-  // ===== SIC-KANBAN INTEGRATED ACTIONS =====
-  onKanbanTaskStatusChange(event: KanbanStatusChangeEvent): void {
-    const payload: any = {
-      workPackageId: event.task.workPackageId,
-      specificationId: event.task.specificationId,
-      taskCode: event.task.taskCode,
-      taskName: event.task.taskName,
-      description: event.task.description,
-      assignedTo: event.task.assignedTo,
-      startDate: event.task.startDate,
-      endDate: event.task.endDate,
-      estimateManday: event.task.estimateManday || 1,
-      priority: event.task.priority || 'Medium',
-      status: event.newStatus,
-      assigneeIds: event.task.assigneeIds || [],
+  loadData() {
+    this.isLoading.set(true);
+    const projectId = this.customerState.getProjectId();
+
+    const requests: any = {
+      scenarios: this.service.getTestScenarios(projectId),
+      testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'testCaseCode', 'ASC'),
     };
 
-    this.service.updateTask(event.taskId, payload).subscribe({
-      next: (updated) => {
-        const all = [...this.allTasks()];
-        const idx = all.findIndex((t) => t.id === updated.id);
-        if (idx >= 0) all[idx] = updated;
-        this.allTasks.set(all);
+    if (projectId) {
+      requests.tasks = this.service.getTasksByProjectId(projectId);
+    }
 
-        // If a Bug Task is moved to complete, check if all bugs of the work package/parent task are resolved
-        const isComplete = ['complete', 'done', 'completed'].includes((event.newStatus || '').toLowerCase());
-        const isBug = (event.task.taskCode || '').toUpperCase().startsWith('BUG') || (event.task.taskName || '').toUpperCase().startsWith('[BUG]');
+    forkJoin(requests)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: ({ scenarios, testCasesRes, tasks }: any) => {
+          this.scenarios.set(scenarios || []);
+          this.projectTasks.set(tasks || []);
 
-        if (isComplete && isBug && event.task.workPackageId) {
-          this.checkAndAutoMoveParentTaskToTesting(event.task.workPackageId, event.task.id);
-        }
-      },
-      error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
-        this.loadProjectData(this.projectId()!);
-      },
+          let tcs: PmTestCaseModel[] = [];
+          if (testCasesRes && testCasesRes.content) {
+            tcs = testCasesRes.content;
+          } else if (Array.isArray(testCasesRes)) {
+            tcs = testCasesRes;
+          }
+          this.testCases.set(tcs);
+
+          // Expand all by default
+          const allIds = new Set<string>();
+          (scenarios || []).forEach((s: any) => {
+            if (s.id) allIds.add(s.id);
+          });
+          allIds.add('unassigned');
+          this.expandedScenarioIds.set(allIds);
+        },
+        error: (err) => {
+          console.error('Failed to load scenarios/test cases:', err);
+          this.scenarios.set([]);
+          this.testCases.set([]);
+          this.projectTasks.set([]);
+        },
+      });
+  }
+
+  hasActiveBug(testCase: PmTestCaseModel): boolean {
+    const tcCode = (testCase.testCaseCode || '').trim();
+    if (!tcCode) return false;
+
+    // Check if task status is currently bugfix
+    const ts = (testCase.taskStatus || '').toLowerCase();
+    if (ts === 'bugfix') return true;
+
+    // Check against existing project tasks
+    const tasks = this.projectTasks();
+    return tasks.some((t: any) => {
+      if (t.isDelete) return false;
+      const status = (t.status || '').toLowerCase();
+      if (status === 'complete' || status === 'completed') return false; // Bug was resolved
+      const code = (t.taskCode || '').toUpperCase();
+      const name = (t.taskName || '').toUpperCase();
+      const desc = (t.description || '').toUpperCase();
+      return (
+        (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
+        (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+      );
     });
   }
 
-  private checkAndAutoMoveParentTaskToTesting(wpId: string, completedBugId: string): void {
-    const tasks = this.allTasks().filter((t) => t.workPackageId === wpId);
-    const bugfixTasks = tasks.filter((t) => (t.status || '').toLowerCase() === 'bugfix');
+  // ===== Accordion Toggle =====
+  isExpanded(scenarioId?: string | null): boolean {
+    const key = scenarioId || 'unassigned';
+    return this.expandedScenarioIds().has(key);
+  }
 
-    bugfixTasks.forEach((parentTask) => {
-      const hasUnresolvedBugs = tasks.some((t) => {
-        if (t.id === completedBugId) return false;
-        const isTaskBug = (t.taskCode || '').toUpperCase().startsWith('BUG') || (t.taskName || '').toUpperCase().startsWith('[BUG]');
-        const isTaskDone = ['complete', 'done', 'completed'].includes((t.status || '').toLowerCase());
-        return isTaskBug && !isTaskDone;
+  toggleAccordion(scenarioId?: string | null, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const key = scenarioId || 'unassigned';
+    const current = new Set(this.expandedScenarioIds());
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.expandedScenarioIds.set(current);
+  }
+
+  expandAll() {
+    const all = new Set<string>();
+    this.scenarios().forEach((s) => {
+      if (s.id) all.add(s.id);
+    });
+    all.add('unassigned');
+    this.expandedScenarioIds.set(all);
+  }
+
+  collapseAll() {
+    this.expandedScenarioIds.set(new Set());
+  }
+
+  // ===== Scenario Pagination Helpers =====
+  getScenarioPage(scenarioId?: string | null): number {
+    const key = scenarioId || 'unassigned';
+    return this.scenarioPageMap().get(key) || 1;
+  }
+
+  getScenarioTotalPages(totalItems: number): number {
+    return Math.max(1, Math.ceil(totalItems / this.pageSize));
+  }
+
+  setScenarioPage(scenarioId: string | null | undefined, page: number, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    const key = scenarioId || 'unassigned';
+    const current = new Map(this.scenarioPageMap());
+    current.set(key, page);
+    this.scenarioPageMap.set(current);
+  }
+
+  getPagedTestCases(testCases: PmTestCaseModel[], scenarioId?: string | null): PmTestCaseModel[] {
+    const page = this.getScenarioPage(scenarioId);
+    const startIndex = (page - 1) * this.pageSize;
+    return testCases.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  // ===== Filters =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.scenarioPageMap.set(new Map());
+  }
+
+  onFilterStatusChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  onFilterPriorityChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterPriority.set(select.value);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  onFilterTaskStatusChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterTaskStatus.set(select.value);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  setQuickFilterReady() {
+    if (this.filterTaskStatus() === 'ready') {
+      this.filterTaskStatus.set('all');
+    } else {
+      this.filterTaskStatus.set('ready');
+    }
+    this.scenarioPageMap.set(new Map());
+  }
+
+  readyToTestCount = computed(() => {
+    // นับเฉพาะ Task ของโครงการที่อยู่ในสถานะ Testing และไม่ใช่ Bug
+    return this.projectTasks().filter((t: any) => {
+      if (t.isDelete) return false;
+      const status = (t.status || '').toLowerCase();
+      const code = (t.taskCode || '').toUpperCase();
+      const name = (t.taskName || '').toUpperCase();
+      const isBug = code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]');
+      return (status === 'testing' || status === 'ready') && !isBug;
+    }).length;
+  });
+
+  // ===== Actions: Test Scenario =====
+  goToAddScenario() {
+    this.router.navigate(['/feature/pm/pmdt13/pmdt13B']);
+  }
+
+  goToEditScenario(id: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/feature/pm/pmdt13/pmdt13B', id, 'edit']);
+  }
+
+  deleteScenario(id: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.dialog
+      .confirm(
+        'ยืนยันการลบ Test Scenario',
+        'ต้องการลบ Test Scenario นี้ใช่หรือไม่? (Test Cases ที่อยู่ใน Scenario จะยังคงอยู่แต่จะกลายเป็น Unassigned)'
+      )
+      .then((ok) => {
+        if (ok) {
+          this.service.deleteTestScenario(id).subscribe({
+            next: () => {
+              this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Scenario ถูกลบเรียบร้อยแล้ว');
+              this.loadData();
+            },
+            error: (err) => {
+              this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+            },
+          });
+        }
       });
+  }
 
-      if (!hasUnresolvedBugs) {
-        const updatedParentPayload: any = {
-          ...parentTask,
-          status: 'Testing',
-        };
-        this.service.updateTask(parentTask.id, updatedParentPayload).subscribe({
-          next: (updatedParent) => {
-            const all = [...this.allTasks()];
-            const idx = all.findIndex((t) => t.id === updatedParent.id);
-            if (idx >= 0) all[idx] = updatedParent;
-            this.allTasks.set(all);
-            console.log(`Parent task ${parentTask.taskCode} auto-moved back to Testing because all bugs are resolved.`);
+  // ===== Actions: Test Case =====
+  goToAddTestCase(scenarioId?: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+
+    if (this.scenarios().length === 0) {
+      this.dialog
+        .confirm(
+          'ยังไม่มี Test Scenario',
+          'ต้องสร้าง Test Scenario ขึ้นมาก่อนจึงจะสามารถสร้าง Test Case ได้ ต้องการสร้าง Test Scenario ตอนนี้หรือไม่?'
+        )
+        .then((ok) => {
+          if (ok) {
+            this.goToAddScenario();
+          }
+        });
+      return;
+    }
+
+    if (scenarioId) {
+      this.router.navigate(['/feature/pm/test-case/new'], {
+        queryParams: { scenarioId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/test-case/new']);
+    }
+  }
+
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/test-case', id, 'edit']);
+  }
+
+  goToExecute(id: string) {
+    this.router.navigate(['/feature/pm/test-execution', id]);
+  }
+
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/test-case', id, 'view']);
+  }
+
+  deleteTestCase(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Test Case นี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.service.deleteTestCase(id).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Case ถูกลบเรียบร้อย');
+            this.loadData();
           },
-          error: (err) => console.error('Failed to auto-move parent task to Testing:', err),
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+          },
         });
       }
     });
   }
 
-  onKanbanTaskClick(task: TaskResponse): void {
-    this.openEditTask(task);
+  quickCreateBugTask(testCase: PmTestCaseModel, event: MouseEvent) {
+    event.stopPropagation();
+
+    if (!testCase.taskId) {
+      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
+      return;
+    }
+
+    // Check if parent task exists and check if a bug task already exists for this test case
+    this.service.getTaskById(testCase.taskId).subscribe({
+      next: (parentTask) => {
+        if (!parentTask || !parentTask.workPackageId) {
+          this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'ไม่พบ Work Package ของ Task ที่ผูกไว้');
+          return;
+        }
+
+        // Fetch tasks in the same work package to verify if bug already exists
+        this.service.getTasksByWorkPackageId(parentTask.workPackageId).subscribe({
+          next: (existingTasks) => {
+            const tcCode = (testCase.testCaseCode || '').trim();
+            const alreadyExists = (existingTasks || []).some((t: any) => {
+              const code = (t.taskCode || '').toUpperCase();
+              const name = (t.taskName || '').toUpperCase();
+              const desc = (t.description || '').toUpperCase();
+              return (
+                (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
+                (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+              );
+            });
+
+            if (alreadyExists) {
+              this.dialog.info(
+                'สร้าง Bug Task แล้ว',
+                `Test Case "${testCase.testCaseCode}" ได้มีการสร้าง Bug Task เข้าสู่ระบบเรียบร้อยแล้ว`
+              );
+              return;
+            }
+
+            this.dialog
+              .confirm(
+                'สร้าง Bug Task',
+                `ต้องการสร้าง Bug Task สำหรับ Test Case "${testCase.testCaseCode}" ไปยังหน้ารายการงาน (Task Board) หรือไม่?`
+              )
+              .then((ok) => {
+                if (ok) {
+                  this.executeCreateBugTask(testCase, parentTask);
+                }
+              });
+          },
+          error: () => {
+            this.executeCreateBugTask(testCase, parentTask);
+          },
+        });
+      },
+      error: () => {
+        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูล Task ที่ผูกไว้ได้');
+      },
+    });
   }
 
-  onKanbanTaskDelete(task: TaskResponse): void {
-    this.deleteTask(task);
+  private executeCreateBugTask(testCase: PmTestCaseModel, parentTask: any) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+
+    let desc = `<b>[BUG จากผลการทดสอบ: ${testCase.testCaseCode || ''}]</b><br/><br/>`;
+    if (testCase.title) desc += `<b>หัวข้อ:</b> ${testCase.title}<br/>`;
+    if (testCase.testStep) desc += `<b>ขั้นตอนการทดสอบ:</b><br/>${testCase.testStep}<br/>`;
+    if (testCase.expectedResult) desc += `<b>ผลลัพธ์ที่คาดหวัง:</b><br/>${testCase.expectedResult}<br/>`;
+    if (testCase.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${testCase.actualResult}<br/>`;
+    if (testCase.tester) desc += `<b>ผู้ทดสอบ:</b> ${testCase.tester}<br/>`;
+
+    // 1. Create Bug Task with status 'To Do'
+    const taskPayload: any = {
+      taskCode: bugCode,
+      taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
+      description: desc,
+      priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
+      status: 'To Do', // Bug starts in 'To Do' column for Dev to pick up
+      startDate: `${todayStr}T09:00:00Z`,
+      endDate: `${todayStr}T18:00:00Z`,
+      estimateManday: 1,
+      workPackageId: parentTask?.workPackageId || null,
+      specificationId: parentTask?.specificationId || null,
+      assignedTo: parentTask?.assignedTo || null,
+      assigneeIds: parentTask?.assigneeIds || [],
+    };
+
+    // 2. If parentTask exists, move parent task to 'bugfix' column
+    if (parentTask && parentTask.id && parentTask.status !== 'bugfix') {
+      const updatedParent = {
+        ...parentTask,
+        status: 'bugfix',
+      };
+      this.service.updateTask(parentTask.id, updatedParent).subscribe({
+        next: () => console.log('Parent task moved to bugfix status'),
+        error: (err) => console.error('Failed to update parent task status to bugfix', err),
+      });
+    }
+
+    if (taskPayload.workPackageId) {
+      this.service.createTask(taskPayload).subscribe({
+        next: () => {
+          this.dialog.success('สร้าง Bug สำเร็จ', `สร้าง Bug Task (${bugCode}) ในคอลัมน์ To Do และย้าย Task หลักไปที่คอลัมน์ Bugfix เรียบร้อยแล้ว`);
+          this.loadData();
+        },
+        error: (err) => {
+          this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
+        },
+      });
+    } else {
+      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task หรือ Work Package จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
+    }
   }
 
-  onKanbanTaskCreate(event: { status: string; workPackageId?: string }): void {
-    this.openCreateTask(this.selectedSpecId());
-  }
-
-  // Helpers
-  getPriorityClass(priority?: string): string {
-    const p = (priority || '').toLowerCase();
-    if (p === 'critical') return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-    if (p === 'high') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
-    if (p === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-  }
-
+  // ===== Badges & Utilities =====
   getStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (['done', 'completed'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-    if (['in progress', 'doing'].includes(s)) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
-    if (['waiting review', 'review'].includes(s)) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
-    if (['waiting fix', 'blocked', 'delayed'].includes(s)) return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
-    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800';
+      case 'fail':
+      case 'failed':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-300 dark:border-red-800';
+      case 'blocked':
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-300 dark:border-amber-800';
+      case 'pending':
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700';
+    }
+  }
+
+  getStatusText(status?: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'ผ่าน';
+      case 'fail':
+      case 'failed':
+        return 'ไม่ผ่าน';
+      case 'blocked':
+        return 'ติดปัญหา';
+      case 'pending':
+      default:
+        return 'รอทดสอบ';
+    }
+  }
+
+  getStatusIcon(status?: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pass':
+      case 'passed':
+        return 'bi-check2-circle text-emerald-500';
+      case 'fail':
+      case 'failed':
+        return 'bi-x-circle text-red-500';
+      case 'blocked':
+        return 'bi-exclamation-triangle text-amber-500';
+      case 'pending':
+      default:
+        return 'bi-clock text-gray-400';
+    }
+  }
+
+  getPriorityClass(priority?: string): string {
+    const p = (priority || '').toLowerCase();
+    switch (p) {
+      case 'high':
+      case 'critical':
+        return 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-800';
+      case 'medium':
+        return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800';
+      case 'low':
+        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800';
+      default:
+        return 'bg-gray-50 text-gray-700 border border-gray-200';
+    }
   }
 
   formatDate(dateStr?: string): string {
     if (!dateStr) return '-';
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
     } catch {
-      return dateStr.split('T')[0];
+      return dateStr;
     }
   }
 
-  isOverdue(endDateStr?: string, status?: string): boolean {
-    if (!endDateStr || ['done', 'completed'].includes((status || '').toLowerCase())) return false;
-    try {
-      const end = new Date(endDateStr);
-      return end.getTime() < Date.now();
-    } catch {
-      return false;
+  getTaskStatusClass(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'testing') {
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse';
     }
+    if (s === 'bugfix') {
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700';
+    }
+    if (s === 'in progress') {
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700';
+    }
+    if (s === 'complete') {
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700';
+    }
+    if (s === 'on hold') {
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-700';
+    }
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+  }
+
+  getTaskStatusLabel(status?: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'testing') return '🧪 Testing';
+    if (s === 'bugfix') return '🚨 Bugfix';
+    if (s === 'in progress') return '🛠️ In Progress';
+    if (s === 'complete') return '✅ Complete';
+    if (s === 'on hold') return '⏸️ On Hold';
+    if (s === 'to do') return '📝 To Do';
+    return status || 'To Do';
   }
 }
+
+export default Pmdt13Component;

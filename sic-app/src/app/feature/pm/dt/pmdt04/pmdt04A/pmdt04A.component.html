@@ -1,163 +1,228 @@
-<!-- src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html -->
+<!-- src/app/feature/pm/dt/pmdt05/pmdt05.component.html -->
 
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-  </div>
-}
-
-@if (!isLoading) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูล Requirement' : 'เพิ่มข้อมูล Requirement' }}
-        </h2>
-      </div>
-
-      <!-- Project Name (read-only) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="โครงการ"
-          formControlName="projectName"
-          [disabled]="true"
-        ></sic-input>
-        <input type="hidden" formControlName="projectId" />
-      </div>
-
-      <!-- Requirement Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="รหัส Requirement"
-          formControlName="requirementCode"
-          [required]="true"
-          placeholder="REQ-001"
-        ></sic-input>
-        @if (form.get('requirementCode')?.touched && form.get('requirementCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Requirement</p>
+<div class="space-y-4 p-0.5">
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="onBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <h1 class="text-xl font-bold text-[var(--text-active)]">
+          {{ isViewOnly ? 'ดูข้อมูล Requirement' : (isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่') }}
+        </h1>
+        @if (isEdit || isViewOnly) {
+          <p class="text-xs text-[var(--text-muted)]">
+            รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
+          </p>
         }
       </div>
-
-      <!-- Title -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อ Requirement"
-          formControlName="title"
-          [required]="true"
-          placeholder="ระบบ Login"
-        ></sic-input>
-        @if (form.get('title')?.touched && form.get('title')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Requirement</p>
-        }
-      </div>
-
-      <!-- Description -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="รายละเอียด"
-          formControlName="description"
-          [required]="true"
-          [rows]="3"
-          placeholder="อธิบายความต้องการโดยละเอียด"
-        ></sic-input-area>
-        @if (form.get('description')?.touched && form.get('description')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
-        }
-      </div>
-
-      <!-- Priority -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ลำดับความสำคัญ"
-          formControlName="priority"
-          [apiUrl]="priorityApiUrl"
-          [required]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- Business Value -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="คุณค่าทางธุรกิจ"
-          formControlName="businessValue"
-          [apiUrl]="businessValueApiUrl"
-          valueField="value"
-          textField="text"
-          placeholder="เลือกคุณค่าทางธุรกิจ"
-          [clearable]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- Acceptance Criteria -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="เงื่อนไขการยอมรับ"
-          formControlName="acceptanceCriteria"
-          [rows]="2"
-          placeholder="ระบุเงื่อนไขที่ต้องผ่าน"
-        ></sic-input-area>
-      </div>
-
-      <!-- Created By -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox
-          label="ผู้สร้าง"
-          formControlName="createdBy"
-          [apiUrl]="userApiUrl"
-          valueField="value"
-          textField="text"
-          placeholder="เลือกผู้สร้าง"
-          [clearable]="true"
-        ></sic-combobox>
-      </div>
-
-      <!-- ✅ ไม่มีฟิลด์ Status ให้เลือกเองแล้ว -->
-
-      <!-- Active -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input type="checkbox" formControlName="isActive" class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded" />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
-        </label>
-      </div>
-
-      <!-- Approval Flow Selection -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
-        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
-        </div>
-        <sic-combobox
-          label="เลือกกระบวนการอนุมัติ"
-          [apiUrl]="documenttypeapiUrl"
-          valueField="id"
-          textField="flowName"
-          placeholder="เลือกกระบวนการอนุมัติ"
-          [clearable]="true"
-          formControlName="approvalFlowId"
-          (selectionChanged)="selectedFlowId = $event?.id"
-        ></sic-combobox>
-        @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ</p>
-        }
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
-            <i class="bi bi-arrow-left"></i> ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
-            @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-          </sic-button>
-        </div>
-      </div>
-
     </div>
-  </form>
-}
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Auto-save status -->
+      <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+        {{ getAutoSaveText() }}
+      </span>
+
+      <!-- View Mode Toggle -->
+      <div class="view-mode-toggle">
+        <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+          <i class="bi bi-layout-split"></i>
+        </button>
+        <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+
+      <!-- Export Buttons -->
+      <div class="flex gap-1">
+        <button
+          (click)="exportRequirement('pdf')"
+          [disabled]="isSaving || form.invalid"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
+          title="ส่งออก PDF"
+        >
+          <i class="bi bi-filetype-pdf"></i>
+          PDF
+        </button>
+        <button
+          (click)="exportRequirement('docx')"
+          [disabled]="isSaving || form.invalid"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
+          title="ส่งออก Word"
+        >
+          <i class="bi bi-file-word"></i>
+          DOCX
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
+  }
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  @if (!isLoading) {
+    <div class="pmdt05-layout" [class.pmdt05-layout--split]="viewMode === 'split'" [class.pmdt05-layout--edit-only]="viewMode === 'edit'" [class.pmdt05-layout--preview-only]="viewMode === 'preview'">
+      <!-- ===== EDIT PANEL ===== -->
+      @if (viewMode !== 'preview') {
+        <div class="pmdt05-panel pmdt05-panel--edit">
+          <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <sic-input
+                label="รหัส Requirement"
+                formControlName="requirementCode"
+                [required]="true"
+                placeholder="REQ-001"
+              ></sic-input>
+              <sic-input
+                label="ชื่อ Requirement"
+                formControlName="title"
+                [required]="true"
+                placeholder="ระบบ Login"
+              ></sic-input>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <sic-combobox
+                label="ประเภท Requirement"
+                formControlName="requirementType"
+                [apiUrl]="service.apiGetLovRequirementType"
+                [required]="true"
+              ></sic-combobox>
+              <sic-combobox
+                label="ลำดับความสำคัญ"
+                formControlName="priority"
+                [apiUrl]="service.apiGetLovPriority"
+                [required]="true"
+              ></sic-combobox>
+            </div>
+
+            <!-- Description (ใช้ sic-tiptap-editor) -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-medium text-[var(--text-active)]">
+                  รายละเอียด <span class="text-red-500">*</span>
+                </span>
+                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+              </div>
+              <sic-tiptap-editor
+                formControlName="description"
+                placeholderInput="กรอกรายละเอียด Requirement..."
+                minHeightInput="150px"
+              ></sic-tiptap-editor>
+              @if (form.get('description')?.touched && form.get('description')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+              }
+            </div>
+
+            <!-- เอกสารแนบ -->
+            <div class="space-y-1">
+              <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+              <sic-upload
+                formControlName="uploadGroupData"
+                [uploadGroupId]="$safeNavigationMigration(form.get('uploadGroupId')?.value)"
+                [multiple]="true"
+                category="all"
+                [visibility]="1"
+                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Requirement"
+              ></sic-upload>
+            </div>
+
+            <!-- Active -->
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  formControlName="isActive"
+                  class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
+                />
+                <span class="text-[var(--text-active)]">เปิดใช้งาน Requirement</span>
+              </label>
+            </div>
+
+            <!-- Approval Flow -->
+            <div class="border-t border-[var(--border)] pt-4 mt-2">
+              <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                การอนุมัติ
+              </div>
+              <div class="grid grid-cols-1 gap-4">
+                <sic-combobox
+                  label="กระบวนการอนุมัติ"
+                  [apiUrl]="service.apiGetApprovals"
+                  valueField="id"
+                  textField="flowName"
+                  placeholder="เลือกกระบวนการอนุมัติ"
+                  [clearable]="true"
+                  (selectionChanged)="selectedFlowId = $event?.id"
+                ></sic-combobox>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+              <sic-button
+                [fullWidth]="isViewOnly"
+                type="button"
+                variant="secondary"
+                (click)="onBack()"
+              >
+                <i class="bi bi-arrow-left"></i>
+                ย้อนกลับ
+              </sic-button>
+              @if (!isViewOnly) {
+                <sic-button
+                  [fullWidth]="true"
+                  type="submit"
+                  variant="primary"
+                  [disabled]="isSaving || form.invalid || !selectedFlowId"
+                >
+                  @if (isSaving) {
+                    <i class="bi bi-arrow-repeat animate-spin"></i>
+                  } @else {
+                    <i class="bi bi-floppy"></i>
+                  }
+                  {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                </sic-button>
+              }
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" formControlName="id" />
+            <input type="hidden" formControlName="state" />
+            <input type="hidden" formControlName="rowVersion" />
+          </form>
+        </div>
+      }
+
+      <!-- ===== PREVIEW PANEL ===== -->
+      @if (viewMode !== 'edit') {
+        <div class="pmdt05-panel pmdt05-panel--preview">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-eye text-[var(--crm-primary)]"></i>
+              ตัวอย่างเอกสาร
+            </h3>
+            <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+          </div>
+          <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,33 +1,34 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
+
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import {
-    FormBuilder,
-    FormGroup,
-    FormsModule,
-    ReactiveFormsModule,
-    Validators,
-} from '@angular/forms';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { BusinessService } from '../../../../../core/services/business.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { Pmdt08Service } from '../pmdt08.service';
+import { PmSpecificationModel } from '../pmdt08.model';
+import { Pmdt08AForm } from './pmdt08A.form';
+import { Pmdt08PreviewComponent } from '../pmdt08-preview/Pmdt08PreviewComponent';
+import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
-import { BusinessService } from '../../../../../core/services/business.service';
-import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
-
-import { ChangeRequestFormModel } from './pmdt07A.model';
-
+import { HttpClient } from '@angular/common/http';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -38,341 +39,656 @@ import { ChangeRequestFormModel } from './pmdt07A.model';
         ReactiveFormsModule,
         RouterModule,
         SicButtonComponent,
-        SicInputComponent,
-        SicInputAreaComponent,
         SicComboboxComponent,
+        SicInputComponent,
         SicNumberComponent,
-        SicCardComponent,
+        SicTiptapEditorComponent,
+        SicUploadComponent,
+        SicCheckboxComponent,
+        SicApprovalComponent,
+        SicDatePipe,
+        Pmdt08PreviewComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt07A.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    styles: [`
+        .pmdt08-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+        .pmdt08-panel {
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: var(--sidebar);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+        .pmdt08-panel--preview {
+            background: var(--bg);
+        }
+        @media (max-width: 1024px) {
+            .pmdt08-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        .auto-save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: var(--sidebar-hover);
+        }
+        .auto-save-indicator.saving { color: var(--crm-primary); }
+        .auto-save-indicator.saved { color: var(--crm-success); }
+        .view-mode-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
+        }
+        .view-mode-toggle button {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .view-mode-toggle button.active {
+            background: var(--crm-primary);
+            color: white;
+        }
+        .view-mode-toggle button:hover:not(.active) {
+            background: var(--sidebar-hover);
+        }
+    `]
 })
-export class Pmdt07AComponent implements OnInit {
-    private fb = inject(FormBuilder);
-    private http = inject(HttpClient);
+export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
+    // Dependencies
     private route = inject(ActivatedRoute);
     private router = inject(Router);
+    public service = inject(Pmdt07Service);
+    public exportService = inject(SpecificationExportService);
     private dialog = inject(DialogService);
+    private fb = inject(FormBuilder);
+    private cdr = inject(ChangeDetectorRef);
     private navigation = inject(NavigationService);
-    private customerState = inject(CustomerStateService);
+    public customerState = inject(CustomerStateService);
+    private auth = inject(AuthService);
     private approvalService = inject(ApprovalService);
+    private http = inject(HttpClient);
     private businessService = inject(BusinessService);
-    private impactService = inject(ImpactAnalysisService);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
-    get businessId() {
-        return this.businessService.getCurrentBusinessId();
-    }
+    apiBaseUrl = environment.apiBaseUrl;
+    userApiUrl = '';
+    businessId: string | null = null;
 
-    environment = environment;
-    readonly Math = Math;
-
+    // Form
+    form!: FormGroup;
     isEdit = false;
-    isView = false;
-    changeRequestId: string | null = null;
+    isViewOnly = false;
+    specId: string | null = null;
     isLoading = false;
     isSaving = false;
-    projectId: string | null = null;
+    isAutoSaving = false;
+    lastAutoSaveTime: Date | null = null;
 
-    // ===== Approval Flow =====
+    // View Mode
+    viewMode: 'edit' | 'split' | 'preview' = 'split';
+
+    // Approval Flow
     flows: ApprovalFlow[] = [];
     selectedFlowId: string | null = null;
     isLoadingFlows = false;
 
-    // ===== Impact Analysis =====
-    impactData = signal<ImpactAnalysis | null>(null);
-    isLoadingImpact = signal(false);
-    showImpactSection = signal(false);
+    // AI Assistant State
+    showAiAssistModal = false;
+    isGeneratingAiAssist = false;
+    aiAssistRequirementId = '';
+    aiAssistDiagramId = '';
+    aiAssistPrompt = '';
 
-    // ===== Form =====
-    form: FormGroup = this.fb.group({
-        id: [null],
-        projectId: [null],
-        targetType: ['REQUIREMENT', Validators.required],
-        targetId: [null, Validators.required],
-        title: [null, Validators.required],
-        description: [null],
-        changeReason: [null],
-        assigneeId: [null],
-        assigneeIds: [[], Validators.required],
-        rowVersion: [null],
-    });
+    // Auto-save
+    private autoSaveSubscription: Subscription | null = null;
+    private formChangeSubscription: Subscription | null = null;
+    private autoSaveEnabled = true;
+    private autoSaveInterval = 30000;
 
-    selectedTargetType = signal('REQUIREMENT');
-    selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
-    selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
+    pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 
-    documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
+    ngOnInit(): void {
+        this.initForm();
+        this.loadFlows();
 
-    // ===== Methods =====
-
-    onAssigneeSelectionChanged(items: any[]) {
-        if (!Array.isArray(items)) {
-            this.selectedAssignees.set([]);
-            this.form.get('assigneeId')?.setValue(null);
-            return;
+        this.businessId = this.businessService.getCurrentBusinessId();
+        if (this.businessId) {
+            this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${this.businessId}`;
+        } else {
+            const stored = localStorage.getItem('businessId');
+            if (stored) {
+                this.businessId = stored;
+                this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${stored}`;
+            } else {
+                this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members`;
+            }
         }
 
-        const assignees = items
-            .filter(item => item && item.value)
-            .map(item => ({
-                userId: item.value,
-                userName: item.text || item.value
-            }));
+        const isViewRoute = this.router.url.includes('/view');
+        if (isViewRoute) this.isViewOnly = true;
 
-        this.selectedAssignees.set(assignees);
-        this.form.get('assigneeId')?.setValue(assignees[0]?.userId || null);
-    }
+        // Check if navigated with AI Draft State
+        const aiDraft = history.state?.aiDraft;
 
-    targetDocumentApiUrl = computed(() => {
-        const type = this.selectedTargetType();
-        if (type === 'REQUIREMENT') {
-            return environment.apiBaseUrl + '/api/pm/requirement/combobox';
-        } else if (type === 'SPECIFICATION') {
-            return environment.apiBaseUrl + '/api/pm/specification/combobox';
-        } else if (type === 'TASK') {
-            return environment.apiBaseUrl + '/api/pm/tasks/combobox';
-        }
-        return '';
-    });
-
-    ngOnInit() {
-        const currentUrl = this.router.url;
-        if (currentUrl.endsWith('/view') || currentUrl.includes('/view?')) {
-            this.isView = true;
-        }
-
-        this.route.params.subscribe((params) => {
+        this.route.params.subscribe(params => {
             const id = params['id'];
             if (id) {
-                this.isEdit = !this.isView;
-                this.changeRequestId = id;
-                this.loadChangeRequest(id);
-                // โหลด Impact Analysis เฉพาะตอนแก้ไข/ดูรายละเอียด
-                this.loadImpactAnalysis(id);
+                this.isEdit = !this.isViewOnly;
+                this.specId = id;
+                this.loadSpecification(id);
+            } else {
+                // New spec
+                this.route.queryParams.subscribe(qParams => {
+                    const pId = qParams['projectId'] || this.customerState.getProjectId();
+                    if (pId) {
+                        this.form.patchValue({ projectId: pId });
+                        this.fetchProjectName(pId);
+                    }
+                    const reqId = qParams['requirementId'];
+                    if (reqId) {
+                        this.form.patchValue({ 
+                            requirementId: reqId,
+                            generatedFromRequirementId: reqId 
+                        });
+                    }
+                    const diagId = qParams['diagramId'];
+                    if (diagId) {
+                        this.form.patchValue({ generatedFromDiagramId: diagId });
+                    }
+                });
+                const userName = this.getUserNameFromToken();
+                if (userName) this.form.patchValue({ createdBy: userName });
+                this.form.patchValue({ createdDate: new Date().toISOString() });
+
+                // Pre-fill from AI Draft if available
+                if (aiDraft) {
+                    this.form.patchValue({
+                        title: aiDraft.title || this.form.value.title,
+                        specificationType: aiDraft.specificationType || this.form.value.specificationType,
+                        priority: aiDraft.priority || this.form.value.priority,
+                        estimatedManday: aiDraft.estimatedManday || this.form.value.estimatedManday,
+                        description: aiDraft.description || this.form.value.description,
+                        projectId: aiDraft.projectId || this.form.value.projectId,
+                        requirementId: aiDraft.requirementId || this.form.value.requirementId,
+                        generatedFromRequirementId: aiDraft.requirementId || this.form.value.generatedFromRequirementId,
+                        generatedFromDiagramId: aiDraft.diagramId || this.form.value.generatedFromDiagramId,
+                    });
+                    if (aiDraft.projectId) this.fetchProjectName(aiDraft.projectId);
+                    this.form.markAsDirty();
+                    this.cdr.markForCheck();
+                }
             }
         });
 
-        this.route.queryParams.subscribe((qParams) => {
-            if (qParams['projectId']) {
-                this.projectId = qParams['projectId'];
-                this.form.patchValue({ projectId: this.projectId });
+        this.setupAutoSave();
+    }
+
+    // ===== AI Assistant In-Form =====
+    openAiAssist(): void {
+        const formVal = this.form.value;
+        this.aiAssistRequirementId = formVal.requirementId || formVal.generatedFromRequirementId || '';
+        this.aiAssistDiagramId = formVal.generatedFromDiagramId || '';
+        this.aiAssistPrompt = '';
+        this.showAiAssistModal = true;
+        this.cdr.markForCheck();
+    }
+
+    closeAiAssist(): void {
+        this.showAiAssistModal = false;
+        this.cdr.markForCheck();
+    }
+
+    generateWithAi(): void {
+        const formVal = this.form.value;
+        const projectId = formVal.projectId || this.customerState.getProjectId();
+        const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
+        const diagramId = this.aiAssistDiagramId || formVal.generatedFromDiagramId;
+        const specType = formVal.specificationType || 'UI Specification';
+
+        this.isGeneratingAiAssist = true;
+        this.cdr.markForCheck();
+
+        this.service.generateDraft({
+            projectId: projectId || undefined,
+            requirementId: requirementId || undefined,
+            diagramId: diagramId || undefined,
+            specificationType: specType,
+            prompt: this.aiAssistPrompt || undefined,
+        }).pipe(finalize(() => {
+            this.isGeneratingAiAssist = false;
+            this.cdr.markForCheck();
+        })).subscribe({
+            next: (draft) => {
+                this.form.patchValue({
+                    title: draft.title || this.form.value.title,
+                    priority: draft.priority || this.form.value.priority,
+                    estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
+                    description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
+                });
+                if (requirementId) {
+                    this.form.patchValue({
+                        requirementId: requirementId,
+                        generatedFromRequirementId: requirementId
+                    });
+                }
+                if (diagramId) {
+                    this.form.patchValue({
+                        generatedFromDiagramId: diagramId
+                    });
+                }
+                if (draft.specificationType) {
+                    this.form.patchValue({ specificationType: draft.specificationType });
+                }
+                this.form.markAsDirty();
+                this.closeAiAssist();
+                this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลและรายละเอียด Specification ลงในฟอร์มเรียบร้อยแล้ว');
+            },
+            error: (err) => {
+                this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
             }
         });
+    }
 
-        this.form.get('targetType')?.valueChanges.subscribe((val) => {
-            this.selectedTargetType.set(val);
-            this.form.get('targetId')?.setValue(null);
+    ngOnDestroy(): void {
+        this.autoSaveSubscription?.unsubscribe();
+        this.formChangeSubscription?.unsubscribe();
+    }
+
+    specificationTypeOptions = [
+        { value: 'UI Specification', text: 'UI Specification' },
+        { value: 'API Specification', text: 'API Specification' },
+        { value: 'Business Rule Specification', text: 'Business Rule Specification' },
+        { value: 'Report Specification', text: 'Report Specification' },
+        { value: 'Data Specification', text: 'Data Specification' },
+        { value: 'Integration Specification', text: 'Integration Specification' },
+        { value: 'Permission Specification', text: 'Permission Specification' },
+    ];
+
+    initForm(): void {
+        this.form = Pmdt08AForm.createForm(this.fb);
+    }
+
+    loadSpecification(id: string) {
+        this.isLoading = true;
+        this.service.getSpecification(id).subscribe({
+            next: (data) => {
+                this.form.patchValue(data);
+                if (data.owner && typeof data.owner === 'string') {
+                    const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
+                    this.form.patchValue({ owner: owners });
+                }
+                this.isLoading = false;
+                this.form.markAsPristine();
+                if (this.isViewOnly) this.form.disable();
+
+                if (!data.projectName && data.projectId) {
+                    this.fetchProjectName(data.projectId);
+                }
+                if (!data.createdBy) {
+                    const userName = this.getUserNameFromToken();
+                    if (userName) this.form.patchValue({ createdBy: userName });
+                }
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isLoading = false;
+                this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
+                this.navigation.navigate(['/feature/pm/pmdt08']);
+            }
         });
+    }
 
-        this.loadFlows();
+    private fetchProjectName(projectId: string): void {
+        this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
+            next: (res) => {
+                const list = Array.isArray(res) ? res : (res.data || []);
+                const project = list.find((p: any) => String(p.value || p.id) === String(projectId));
+                if (project) {
+                    const name = project.projectName || project.name || project.text;
+                    if (name) {
+                        this.form.patchValue({ projectName: name });
+                        this.cdr.markForCheck();
+                    }
+                }
+            },
+            error: () => {}
+        });
+    }
+
+    private getUserNameFromToken(): string | null {
+        const token = this.auth.getAccessToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.name || payload.preferred_username || payload.displayName || null;
+        } catch { return null; }
     }
 
     loadFlows() {
         this.isLoadingFlows = true;
-        this.approvalService
-            .getFlowsByDocumentType('CHANGE_REQUEST')
-            .pipe(finalize(() => (this.isLoadingFlows = false)))
-            .subscribe({
-                next: (flows) => {
-                    this.flows = flows;
-                    if (flows.length === 1) {
-                        this.selectedFlowId = flows[0].id;
-                    }
-                },
-                error: () => {
-                    console.warn('ไม่สามารถโหลด Approval Flow สำหรับ Change Request');
-                },
-            });
+        this.approvalService.getFlowsByDocumentType('SPECIFICATION').subscribe({
+            next: (flows) => {
+                this.flows = flows;
+                this.isLoadingFlows = false;
+                if (flows.length === 1) this.selectedFlowId = flows[0].id;
+            },
+            error: () => { this.isLoadingFlows = false; }
+        });
     }
 
-    loadChangeRequest(id: string) {
-        this.isLoading = true;
-        this.http
-            .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
-
-            .pipe(finalize(() => (this.isLoading = false)))
-            .subscribe({
-                next: (data) => {
-                    if (data.targetType) {
-                        this.selectedTargetType.set(data.targetType);
+    // ===== Auto-save =====
+    private setupAutoSave(): void {
+        if (!this.autoSaveEnabled) return;
+        this.autoSaveSubscription = interval(this.autoSaveInterval)
+            .pipe(
+                takeWhile(() => this.autoSaveEnabled),
+                tap(() => {
+                    if (this.form.dirty && this.form.valid) {
+                        this.performAutoSave();
                     }
-                    this.form.patchValue(data);
-                    if (data.assignees && data.assignees.length > 0) {
-                        const assignees = data.assignees.map((a) => ({
-                            userId: a.userId,
-                            userName: a.userName || a.userId,
-                        }));
-                        this.selectedAssignees.set(assignees);
-                        this.form.get('assigneeIds')?.setValue(assignees.map(a => a.userId));
-                        this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
-                    } else if (data.assigneeId) {
-                        this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
-                        this.form.get('assigneeIds')?.setValue([data.assigneeId]);
-                        this.form.get('assigneeId')?.setValue(data.assigneeId);
-                    } else {
-                        this.selectedAssignees.set([]);
-                        this.form.get('assigneeIds')?.setValue([]);
-                        this.form.get('assigneeId')?.setValue(null);
-                    }
-                    if (data.projectId) {
-                        this.projectId = data.projectId;
-                    }
-                    if (this.isView) {
-                        this.form.disable();
-                    }
-                    this.isLoading = false;
-                },
-                error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Change Request นี้');
-                    this.navigation.navigate(['/feature/pm/pmdt07']);
-                },
-            });
+                })
+            )
+            .subscribe();
     }
 
-    // ===== Impact Analysis Methods =====
-    loadImpactAnalysis(id: string) {
-        this.isLoadingImpact.set(true);
-        this.impactService.getByChangeRequest(id)
-            .pipe(finalize(() => this.isLoadingImpact.set(false)))
-            .subscribe({
-                next: (data) => {
-                    if (data && data.id) {
-                        this.impactData.set(data);
-                        this.showImpactSection.set(true);
-                    } else {
-                        // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                        this.autoDetectImpact();
-                    }
-                },
-                error: () => {
-                    // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                    this.autoDetectImpact();
+    private extractUploadGroupId(rawGroupId: any): string | null {
+        if (!rawGroupId) return null;
+        if (typeof rawGroupId === 'string') return rawGroupId.trim() || null;
+        if (Array.isArray(rawGroupId) && rawGroupId.length > 0) {
+            const firstFile = rawGroupId[0];
+            if (typeof firstFile === 'string') return firstFile;
+            return firstFile?.uploadGroupId || firstFile?.id || firstFile?.uploadId || null;
+        }
+        if (typeof rawGroupId === 'object') {
+            return rawGroupId.uploadGroupId || rawGroupId.id || rawGroupId.uploadId || null;
+        }
+        return null;
+    }
+
+    private prepareSubmitData(): PmSpecificationModel {
+        const rawData = { ...this.form.getRawValue() };
+        const uploadGroupId = this.extractUploadGroupId(rawData.uploadGroupId);
+        rawData.uploadGroupId = uploadGroupId || null;
+
+        if (Array.isArray(rawData.owner)) {
+            rawData.owner = rawData.owner.filter((o: any) => o !== null && o !== undefined && String(o).trim() !== '').join(', ');
+        }
+
+        if (rawData.estimatedManday !== null && rawData.estimatedManday !== undefined && (rawData.estimatedManday as any) !== '') {
+            const num = Number(rawData.estimatedManday);
+            rawData.estimatedManday = isNaN(num) ? undefined : num;
+        } else {
+            rawData.estimatedManday = undefined;
+        }
+
+        return rawData;
+    }
+
+    private performAutoSave(): void {
+        if (this.isSaving || this.isAutoSaving) return;
+        const data = this.prepareSubmitData();
+        if (!data.title && !data.description) return;
+
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
+        } else {
+            data.state = 4; // ADDED
+            data.rowVersion = 0;
+        }
+
+        this.isAutoSaving = true;
+        this.lastAutoSaveTime = new Date();
+
+        this.service.autoSave(data).subscribe({
+            next: (response: any) => {
+                this.isAutoSaving = false;
+                const savedId = typeof response === 'string' ? response : (response?.id || data.id || this.specId);
+                if (savedId) {
+                    this.specId = savedId;
+                    this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
                 }
-            });
-    }
-
-    autoDetectImpact() {
-        const id = this.changeRequestId;
-        if (!id) return;
-
-        this.isLoadingImpact.set(true);
-        this.impactService.autoDetect(id)
-            .pipe(finalize(() => this.isLoadingImpact.set(false)))
-            .subscribe({
-                next: (data) => {
-                    this.impactData.set(data);
-                    this.showImpactSection.set(true);
-                    if (data && data.id) {
-                        this.dialog.success('วิเคราะห์ผลกระทบ', 'ระบบวิเคราะห์ผลกระทบอัตโนมัติเรียบร้อย');
-                    }
-                },
-                error: (err) => {
-                    console.error('Auto detect impact failed:', err);
-                    this.showImpactSection.set(false);
+                if (typeof response === 'object' && response !== null) {
+                    this.form.patchValue(response);
                 }
-            });
+                this.form.markAsPristine({ onlySelf: true });
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.isAutoSaving = false;
+                this.cdr.markForCheck();
+            }
+        });
     }
 
-    refreshImpact() {
-        this.autoDetectImpact();
+    getAutoSaveStatus(): string {
+        if (this.isAutoSaving) return 'saving';
+        if (this.lastAutoSaveTime) {
+            const diff = Date.now() - this.lastAutoSaveTime.getTime();
+            if (diff < 5000) return 'saved';
+        }
+        if (this.form.dirty) return 'dirty';
+        return 'idle';
     }
 
-    // ===== CRUD =====
-    save() {
+    getAutoSaveText(): string {
+        const status = this.getAutoSaveStatus();
+        switch (status) {
+            case 'saving': return '💾 กำลังบันทึกอัตโนมัติ...';
+            case 'saved': return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
+            case 'dirty': return '⏳ ยังไม่ได้บันทึก';
+            default: return '💾 บันทึกอัตโนมัติ';
+        }
+    }
+
+    private formatTimeDiff(date: Date | null): string {
+        if (!date) return '';
+        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
+        return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
+    }
+
+    // ===== View Mode =====
+    setViewMode(mode: 'edit' | 'split' | 'preview'): void {
+        this.viewMode = mode;
+        this.cdr.markForCheck();
+    }
+
+    // ===== Preview Data =====
+    getPreviewData(): PmSpecificationModel {
+        return this.prepareSubmitData();
+    }
+
+    // ===== Print =====
+    printSpecification(): void {
+        const spec = this.getPreviewData();
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+            return;
+        }
+
+        const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Specification - ${spec.specificationCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสเอกสาร</td>
+            <td>${spec.specificationCode || '-'}</td>
+            <td class="label">เวอร์ชัน</td>
+            <td>${spec.version || '1.0'}</td>
+          </tr>
+          <tr>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${spec.projectName || '-'}</td>
+            <td class="label">ประเภท</td>
+            <td>${spec.specificationType || spec.specType || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${spec.priority || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${spec.status || 'Draft'}</td>
+          </tr>
+          <tr>
+            <td class="label">ผู้สร้าง / Owner</td>
+            <td>${spec.owner || spec.createdBy || '-'}</td>
+            <td class="label">Manday (วัน)</td>
+            <td>${spec.estimatedManday || 0}</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>รายละเอียด / ข้อกำหนด</h3>
+          <div>${spec.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 300);
+    }
+
+    // ===== Export =====
+    async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
+        try {
+            const data = this.prepareSubmitData();
+            const blob = await this.exportService.exportSpecification(data, format);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Specification_${data.specificationCode || 'Export'}_${new Date().getTime()}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการส่งออกไฟล์');
+        }
+    }
+
+    // ===== Submit =====
+    submit() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
             return;
         }
 
-        this.isSaving = true;
-        const data = { ...this.form.value };
-
-        if (!data.projectId && this.projectId) {
-            data.projectId = this.projectId;
+        if (!this.selectedFlowId) {
+            this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
+            return;
         }
 
-        data.assignees = this.selectedAssignees().map(a => ({
-            userId: a.userId,
-            targetType: data.targetType,
-            targetId: data.targetId
-        }));
-
-        if (this.isEdit && this.changeRequestId) {
-            data.state = 3;
+        this.isSaving = true;
+        const data = this.prepareSubmitData();
+        if (this.specId || data.id) {
+            data.id = (data.id || this.specId) ?? undefined;
+            data.state = 3; // MODIFIED
+            this.isEdit = true;
         } else {
-            data.state = 4;
+            data.state = 4; // ADDED
             data.rowVersion = 0;
         }
 
-        const saveRequest = this.isEdit && this.changeRequestId
-            ? this.http.put(`${this.baseUrl}/${this.changeRequestId}`, data)
-            : this.http.post(this.baseUrl, data);
-
-        saveRequest.subscribe({
-            next: (res: any) => {
-                const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
-
-                if (this.selectedFlowId && id) {
-                    this.approvalService
-                        .submitForApproval({
-                            documentType: 'CHANGE_REQUEST',
-                            documentId: id,
-                            documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
-                            documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
-                            flowId: this.selectedFlowId,
-                            comment: 'ส่งขออนุมัติ Change Request',
-                        })
-                        .pipe(finalize(() => (this.isSaving = false)))
-                        .subscribe({
-                            next: () => {
-                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย');
-                                this.navigateBack();
-                            },
-                            error: (err) => {
-                                this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-                            },
-                        });
-                } else {
-                    this.isSaving = false;
-                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
-                    this.navigateBack();
+        this.service.save(data).subscribe({
+            next: (response: any) => {
+                this.form.markAsPristine();
+                let savedId = typeof response === 'string' ? response : (response?.id || data.id || this.specId);
+                if (savedId) {
+                    this.specId = savedId;
+                    this.isEdit = true;
+                    this.form.patchValue({ id: savedId });
+                    if (typeof response === 'object' && response !== null) {
+                        this.form.patchValue(response);
+                    }
                 }
+
+                this.approvalService.submitForApproval({
+                    documentType: 'SPECIFICATION',
+                    documentId: savedId!,
+                    documentCode: data.specificationCode,
+                    documentTitle: data.title,
+                    version: data.version,
+                    flowId: this.selectedFlowId!,
+                    comment: 'ส่งขออนุมัติ Specification'
+                }).subscribe({
+                    next: () => {
+                        this.isSaving = false;
+                        this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                            this.navigateBack(data.projectId);
+                        });
+                    },
+                    error: (err) => {
+                        this.isSaving = false;
+                        this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                    }
+                });
             },
-            error: (err) => {
+            error: (error) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
+                const errorMsg = error.error?.message || error.error?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                this.dialog.error('บันทึกไม่สำเร็จ', errorMsg);
+            }
         });
     }
 
-    private navigateBack() {
-        if (this.projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt07'], {
-                queryParams: { projectId: this.projectId }
-            });
+    private navigateBack(projectId?: string): void {
+        if (projectId) {
+            this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
         } else {
-            this.navigation.navigate(['/feature/pm/pmdt07']);
+            this.navigation.navigate(['/feature/pm/pmdt08']);
         }
     }
 
-    cancel() {
-        this.navigateBack();
-    }
-
-    // ===== Helper =====
-    getImpactLabel(count: number | undefined, label: string): string {
-        if (!count || count === 0) return `${label}: -`;
-        return `${label}: ${count} รายการ`;
-    }
-
-    getImpactStatusClass(status?: string): string {
-        if (status === 'AUTO') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    }
-
-    getImpactStatusText(status?: string): string {
-        return status === 'AUTO' ? 'วิเคราะห์อัตโนมัติ' : 'วิเคราะห์ด้วยตนเอง';
+    onBack(): void {
+        const projectId = this.form.get('projectId')?.value;
+        if (this.form.dirty) {
+            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
+                .then(ok => ok && this.navigateBack(projectId));
+        } else {
+            this.navigateBack(projectId);
+        }
     }
 }

@@ -60,10 +60,17 @@ export interface SicGridOption {
   value: unknown;
 }
 
+export type SicGridActionType = 'view' | 'edit' | 'print' | 'delete' | 'custom' | string;
+
 export interface SicGridColumnAction {
-  name: string;
-  label: string;
-  variant?: 'default' | 'danger' | 'ghost';
+  type?: SicGridActionType;
+  name?: string;
+  label?: string;
+  tooltip?: string;
+  icon?: string;
+  variant?: 'default' | 'primary' | 'danger' | 'ghost' | 'success' | 'warning' | 'info';
+  disabled?: boolean | ((row: Record<string, unknown>, column?: SicGridColumnConfig) => boolean);
+  visible?: boolean | ((row: Record<string, unknown>, column?: SicGridColumnConfig) => boolean);
 }
 
 export interface SicGridColumnConfig {
@@ -670,8 +677,60 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
     this.rowAction.emit({ action: deleted ? 'soft-delete' : 'restore', row, rows: [row], column });
   }
 
-  triggerRowAction(action: SicGridColumnAction, row: any, column: SicGridColumnConfig): void {
-    this.rowAction.emit({ action: action.name, row, rows: [row], column });
+  resolveColumnActions(column: SicGridColumnConfig): SicGridColumnAction[] {
+    if (column.actions && column.actions.length > 0) {
+      return column.actions;
+    }
+
+    // Default actions if type === 'actions' and no custom actions specified
+    if (column.type === 'actions') {
+      return [
+        { type: 'view', tooltip: 'ดูข้อมูล', variant: 'ghost' },
+        { type: 'edit', tooltip: 'แก้ไข', variant: 'ghost' },
+        { type: 'delete', tooltip: 'ลบ', variant: 'danger' },
+      ];
+    }
+
+    return [];
+  }
+
+  isActionVisible(action: SicGridColumnAction, row: any, column: SicGridColumnConfig): boolean {
+    if (typeof action.visible === 'function') {
+      return action.visible(row, column);
+    }
+    return action.visible !== false;
+  }
+
+  isActionDisabled(action: SicGridColumnAction, row: any, column: SicGridColumnConfig): boolean {
+    if (this.isRowDisabled(row)) {
+      return true;
+    }
+    if (typeof action.disabled === 'function') {
+      return action.disabled(row, column);
+    }
+    return action.disabled === true;
+  }
+
+  getActionName(action: SicGridColumnAction): string {
+    return action.name || action.type || 'action';
+  }
+
+  getActionTooltip(action: SicGridColumnAction): string {
+    if (action.tooltip) {
+      return action.tooltip;
+    }
+    switch (action.type) {
+      case 'view': return 'ดูข้อมูล';
+      case 'edit': return 'แก้ไข';
+      case 'print': return 'พิมพ์';
+      case 'delete': return 'ลบ';
+      default: return action.label || '';
+    }
+  }
+
+  triggerRowAction(action: SicGridColumnAction | string, row: any, column: SicGridColumnConfig): void {
+    const actionName = typeof action === 'string' ? action : this.getActionName(action);
+    this.rowAction.emit({ action: actionName, row, rows: [row], column });
   }
 
   handleValueChange(row: any, column: SicGridColumnConfig, rawValue: unknown): void {

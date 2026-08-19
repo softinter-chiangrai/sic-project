@@ -1,34 +1,39 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.model.ts
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.model.ts
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export interface Pmdt07AModel extends SicBaseStateModel {
-  id: string;
-  projectId: string;
-  crCode: string;
-  title: string;
-  description?: string;
-  impactScore?: number;
-  costImpact?: number;
-  scheduleImpactDays?: number;
-  status?: string;
-}
-
-export interface Pmdt07APageData {
-  changeRequestData: SicFromData<Pmdt07AModel>;
-}
-
-export interface ChangeRequestFormModel {
+export interface Pmdt08AModel extends SicBaseStateModel {
   id?: string;
-  projectId?: string;
-  targetType: string;
-  targetId: string;
+  specificationCode: string;
+  specificationType?: string;
+  specType?: string;
   title: string;
-  description?: string;
-  changeReason?: string;
-  assigneeId?: string;
-  assigneeName?: string;
-  assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
+  module?: string;
+  version?: string;
   status?: string;
-  rowVersion?: number;
+  priority?: string;
+  owner?: string;
+  estimatedManday?: number;
+  description?: string;
+  uploadGroupId?: string;
+  uploadGroupData?: any[];
+  isActive?: boolean;
+  isAiGenerated?: boolean;
+  aiGeneratedAt?: string;
+  generatedFromRequirementId?: string;
+  generatedFromDiagramId?: string;
+  projectId?: string;
+  projectName?: string;
+  requirementId?: string;
+  requirementCode?: string;
+  requirementTitle?: string;
+  createdBy?: string;
+  createdAt?: string;
+  createdDate?: string;
+  updatedAt?: string;
+  updatedDate?: string;
+}
+
+export interface Pmdt08APageData {
+  specData: SicFromData<Pmdt08AModel>;
 }

@@ -1,0 +1,163 @@
+<!-- src/app/feature/pm/dt/pmdt04/pmdt04A/pmdt04A.component.html -->
+
+@if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-16 gap-4">
+    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+  </div>
+}
+
+@if (!isLoading) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid grid-cols-6 gap-4">
+      <div class="col-span-6 text-center">
+        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
+          {{ isEdit ? 'แก้ไขข้อมูล Requirement' : 'เพิ่มข้อมูล Requirement' }}
+        </h2>
+      </div>
+
+      <!-- Project Name (read-only) -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="โครงการ"
+          formControlName="projectName"
+          [disabled]="true"
+        ></sic-input>
+        <input type="hidden" formControlName="projectId" />
+      </div>
+
+      <!-- Requirement Code -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="รหัส Requirement"
+          formControlName="requirementCode"
+          [required]="true"
+          placeholder="REQ-001"
+        ></sic-input>
+        @if (form.get('requirementCode')?.touched && form.get('requirementCode')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Requirement</p>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input
+          label="ชื่อ Requirement"
+          formControlName="title"
+          [required]="true"
+          placeholder="ระบบ Login"
+        ></sic-input>
+        @if (form.get('title')?.touched && form.get('title')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Requirement</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="รายละเอียด"
+          formControlName="description"
+          [required]="true"
+          [rows]="3"
+          placeholder="อธิบายความต้องการโดยละเอียด"
+        ></sic-input-area>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+        }
+      </div>
+
+      <!-- Priority -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ลำดับความสำคัญ"
+          formControlName="priority"
+          [apiUrl]="priorityApiUrl"
+          [required]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Business Value -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="คุณค่าทางธุรกิจ"
+          formControlName="businessValue"
+          [apiUrl]="businessValueApiUrl"
+          valueField="value"
+          textField="text"
+          placeholder="เลือกคุณค่าทางธุรกิจ"
+          [clearable]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- Acceptance Criteria -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-input-area
+          label="เงื่อนไขการยอมรับ"
+          formControlName="acceptanceCriteria"
+          [rows]="2"
+          placeholder="ระบุเงื่อนไขที่ต้องผ่าน"
+        ></sic-input-area>
+      </div>
+
+      <!-- Created By -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <sic-combobox
+          label="ผู้สร้าง"
+          formControlName="createdBy"
+          [apiUrl]="userApiUrl"
+          valueField="value"
+          textField="text"
+          placeholder="เลือกผู้สร้าง"
+          [clearable]="true"
+        ></sic-combobox>
+      </div>
+
+      <!-- ✅ ไม่มีฟิลด์ Status ให้เลือกเองแล้ว -->
+
+      <!-- Active -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
+        <label class="flex items-center gap-2 cursor-pointer text-sm">
+          <input type="checkbox" formControlName="isActive" class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded" />
+          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+        </label>
+      </div>
+
+      <!-- Approval Flow Selection -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
+        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          กระบวนการอนุมัติ
+        </div>
+        <sic-combobox
+          label="เลือกกระบวนการอนุมัติ"
+          [apiUrl]="documenttypeapiUrl"
+          valueField="id"
+          textField="flowName"
+          placeholder="เลือกกระบวนการอนุมัติ"
+          [clearable]="true"
+          formControlName="approvalFlowId"
+          (selectionChanged)="selectedFlowId = $event?.id"
+        ></sic-combobox>
+        @if (!selectedFlowId && flows.length > 0) {
+          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ</p>
+        }
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          </sic-button>
+        </div>
+        <div class="flex-1">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
+            @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          </sic-button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+}

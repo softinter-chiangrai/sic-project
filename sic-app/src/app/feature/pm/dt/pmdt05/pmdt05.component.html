@@ -1,228 +1,208 @@
-<!-- src/app/feature/pm/dt/pmdt05/pmdt05.component.html -->
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+</style>
 
-<div class="space-y-4 p-0.5">
-  <!-- ===== HEADER ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
+  <!-- ===== Toolbar ===== -->
+  <div
+    class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
+  >
     <div class="flex items-center gap-3">
-      <button
-        (click)="onBack()"
-        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
-      >
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <h1 class="text-xl font-bold text-[var(--text-active)]">
-          {{ isViewOnly ? 'ดูข้อมูล Requirement' : (isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่') }}
-        </h1>
-        @if (isEdit || isViewOnly) {
-          <p class="text-xs text-[var(--text-muted)]">
-            รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
-          </p>
-        }
-      </div>
+      @if (projectName) {
+        <span
+          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
+        >
+          {{ projectName }}
+        </span>
+      }
     </div>
 
-    <div class="flex items-center gap-2 flex-wrap">
-      <!-- Auto-save status -->
-      <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
-        {{ getAutoSaveText() }}
-      </span>
+    <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
+      <button
+        (click)="generateSql()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)]"
+        title="Generate SQL from ER Diagram"
+      >
+        <i class="bi bi-database-fill text-lg"></i>
+        <span>Generate SQL</span>
+      </button>
 
-      <!-- View Mode Toggle -->
-      <div class="view-mode-toggle">
-        <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
-          <i class="bi bi-layout-split"></i>
-        </button>
-        <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
-          <i class="bi bi-eye"></i>
-        </button>
-      </div>
+      <button
+        (click)="toggleChat()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
+        title="AI Chat History"
+      >
+        <i class="bi bi-chat-dots-fill text-lg"></i>
+        <span>Chat</span>
+        @if (unreadCount > 0) {
+          <span
+            class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
+          >
+            {{ unreadCount }}
+          </span>
+        }
+      </button>
 
-      <!-- Export Buttons -->
-      <div class="flex gap-1">
-        <button
-          (click)="exportRequirement('pdf')"
-          [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
-          title="ส่งออก PDF"
-        >
-          <i class="bi bi-filetype-pdf"></i>
-          PDF
-        </button>
-        <button
-          (click)="exportRequirement('docx')"
-          [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
-          title="ส่งออก Word"
-        >
-          <i class="bi bi-file-word"></i>
-          DOCX
-        </button>
-      </div>
+      <!-- ✅ ปุ่ม Save กลับมาแล้ว -->
+      <button
+        (click)="saveDiagram()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
+        title="Save diagram now"
+      >
+        <i class="bi bi-check-circle-fill text-lg"></i>
+        <span>Save</span>
+      </button>
+
+      <button
+        (click)="loadExistingDiagram()"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
+        title="Reload from server"
+      >
+        <i class="bi bi-arrow-repeat text-lg"></i>
+        <span>Reload</span>
+      </button>
     </div>
   </div>
 
-  <!-- ===== LOADING ===== -->
-  @if (isLoading) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+  <!-- ===== Tab Bar ===== -->
+  <div
+    class="flex items-center gap-1 px-4 py-1.5 bg-[var(--sidebar)] border-b border-[var(--border)] overflow-x-auto flex-shrink-0 min-h-[44px]"
+  >
+    @if (isLoadingTabs) {
+      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
+        <div
+          class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+        ></div>
+        Loading tabs...
+      </div>
+    }
 
-  <!-- ===== MAIN LAYOUT ===== -->
-  @if (!isLoading) {
-    <div class="pmdt05-layout" [class.pmdt05-layout--split]="viewMode === 'split'" [class.pmdt05-layout--edit-only]="viewMode === 'edit'" [class.pmdt05-layout--preview-only]="viewMode === 'preview'">
-      <!-- ===== EDIT PANEL ===== -->
-      @if (viewMode !== 'preview') {
-        <div class="pmdt05-panel pmdt05-panel--edit">
-          <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-input
-                label="รหัส Requirement"
-                formControlName="requirementCode"
-                [required]="true"
-                placeholder="REQ-001"
-              ></sic-input>
-              <sic-input
-                label="ชื่อ Requirement"
-                formControlName="title"
-                [required]="true"
-                placeholder="ระบบ Login"
-              ></sic-input>
-            </div>
+    @for (tab of tabs(); track tab.id) {
+      <button
+        (click)="switchTab(tab.id)"
+        (dblclick)="editTab(tab.id)"
+        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer"
+        [class.border-[var(--crm-success)]]="currentTabId === tab.id"
+        [class.text-[var(--text-active)]]="currentTabId === tab.id"
+        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+      >
+        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <sic-combobox
-                label="ประเภท Requirement"
-                formControlName="requirementType"
-                [apiUrl]="service.apiGetLovRequirementType"
-                [required]="true"
-              ></sic-combobox>
-              <sic-combobox
-                label="ลำดับความสำคัญ"
-                formControlName="priority"
-                [apiUrl]="service.apiGetLovPriority"
-                [required]="true"
-              ></sic-combobox>
-            </div>
+        <span class="text-sm">
+          {{ tab.name }}
+        </span>
 
-            <!-- Description (ใช้ sic-tiptap-editor) -->
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-medium text-[var(--text-active)]">
-                  รายละเอียด <span class="text-red-500">*</span>
-                </span>
-                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
-              </div>
-              <sic-tiptap-editor
-                formControlName="description"
-                placeholderInput="กรอกรายละเอียด Requirement..."
-                minHeightInput="150px"
-              ></sic-tiptap-editor>
-              @if (form.get('description')?.touched && form.get('description')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
-              }
-            </div>
+        <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
+          {{ tab.diagramType }}
+        </span>
 
-            <!-- เอกสารแนบ -->
-            <div class="space-y-1">
-              <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
-              <sic-upload
-                formControlName="uploadGroupData"
-                [uploadGroupId]="$safeNavigationMigration(form.get('uploadGroupId')?.value)"
-                [multiple]="true"
-                category="all"
-                [visibility]="1"
-                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Requirement"
-              ></sic-upload>
-            </div>
+        <button
+          (click)="deleteTab(tab.id, $event)"
+          class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+          [class.opacity-100]="currentTabId === tab.id"
+          title="ลบ"
+        >
+          <i class="bi bi-x text-sm"></i>
+        </button>
+      </button>
+    }
 
-            <!-- Active -->
-            <div>
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  formControlName="isActive"
-                  class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-                />
-                <span class="text-[var(--text-active)]">เปิดใช้งาน Requirement</span>
-              </label>
-            </div>
+    <button
+      (click)="createNewTab()"
+      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] transition-all whitespace-nowrap"
+    >
+      <i class="bi bi-plus-lg"></i>
+      New Diagram
+    </button>
+  </div>
 
-            <!-- Approval Flow -->
-            <div class="border-t border-[var(--border)] pt-4 mt-2">
-              <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                การอนุมัติ
-              </div>
-              <div class="grid grid-cols-1 gap-4">
-                <sic-combobox
-                  label="กระบวนการอนุมัติ"
-                  [apiUrl]="service.apiGetApprovals"
-                  valueField="id"
-                  textField="flowName"
-                  placeholder="เลือกกระบวนการอนุมัติ"
-                  [clearable]="true"
-                  (selectionChanged)="selectedFlowId = $event?.id"
-                ></sic-combobox>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
-              <sic-button
-                [fullWidth]="isViewOnly"
-                type="button"
-                variant="secondary"
-                (click)="onBack()"
-              >
-                <i class="bi bi-arrow-left"></i>
-                ย้อนกลับ
-              </sic-button>
-              @if (!isViewOnly) {
-                <sic-button
-                  [fullWidth]="true"
-                  type="submit"
-                  variant="primary"
-                  [disabled]="isSaving || form.invalid || !selectedFlowId"
-                >
-                  @if (isSaving) {
-                    <i class="bi bi-arrow-repeat animate-spin"></i>
-                  } @else {
-                    <i class="bi bi-floppy"></i>
-                  }
-                  {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-                </sic-button>
-              }
-            </div>
-
-            <!-- Hidden fields -->
-            <input type="hidden" formControlName="id" />
-            <input type="hidden" formControlName="state" />
-            <input type="hidden" formControlName="rowVersion" />
-          </form>
-        </div>
-      }
-
-      <!-- ===== PREVIEW PANEL ===== -->
-      @if (viewMode !== 'edit') {
-        <div class="pmdt05-panel pmdt05-panel--preview">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-eye text-[var(--crm-primary)]"></i>
-              ตัวอย่างเอกสาร
-            </h3>
-            <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
-          </div>
-          <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
-        </div>
+  <!-- ===== Status Bar ===== -->
+  <div
+    class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5"
+  >
+    <div class="flex items-center gap-2 max-md:flex-wrap">
+      <span
+        class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0"
+        [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
+      ></span>
+      <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
+      @if (currentTabId) {
+        <span class="text-[var(--text-muted)] mx-2">|</span>
+        <span class="font-mono text-[0.6rem] text-[var(--text-muted)]"
+          >ID: {{ currentTabId.slice(0, 8) }}</span
+        >
       }
     </div>
+    <div class="flex items-center gap-3">
+      <span>{{ tabs().length }} diagram(s)</span>
+      <!-- ✅ แสดงสถานะ auto‑save / manual save -->
+      <span class="text-xs text-[var(--text-muted)]">{{ autoSaveStatus }}</span>
+    </div>
+  </div>
+
+  <!-- ===== Draw.io Editor ===== -->
+  <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
+    @if (isLoading) {
+      <div
+        class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
+      >
+        <div
+          class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
+        ></div>
+        <span>Loading diagram…</span>
+      </div>
+    }
+    <iframe
+      #drawioIframe
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
+      class="block w-full h-full border-none bg-white"
+      frameborder="0"
+      allowfullscreen
+    ></iframe>
+  </div>
+
+  <!-- ===== Chat Sidebar ===== -->
+  <div
+    class="fixed top-0 w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full chat-sidebar"
+    [class.open]="chatOpen()"
+  >
+    <div
+      class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]"
+    >
+      <span class="flex items-center gap-2">
+        <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
+        AI Assistant
+      </span>
+      <button
+        (click)="toggleChat()"
+        class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]"
+        title="Close chat"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+      <app-pmdt05a
+        [diagramId]="currentTabId"
+        class="flex-1 flex flex-col h-full overflow-hidden"
+      ></app-pmdt05a>
+    </div>
+  </div>
+
+  <!-- ===== Overlay ===== -->
+  @if (chatOpen()) {
+    <div
+      class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
+      (click)="toggleChat()"
+    ></div>
   }
 </div>

@@ -28,6 +28,12 @@ public class PmDeliveryResponse {
     private Instant customerSignedDate;
     private UUID attachmentGroupId;
     private Boolean isLocked;
+    private Boolean isGatePassed;
+    private Integer passedGateChecks;
+    private Integer totalGateChecks;
+    private Boolean isChecklistPassed;
+    private Integer checkedChecklistCount;
+    private Integer totalChecklistCount;
     private List<PmDeliveryChecklistResponse> checklists;
     private List<PmDeliveryItemResponse> items;
     private String createdBy;

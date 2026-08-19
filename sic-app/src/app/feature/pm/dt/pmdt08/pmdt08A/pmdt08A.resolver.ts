@@ -1,36 +1,35 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.resolver.ts
+// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.resolver.ts
 import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt08Service } from '../pmdt08.service';
-import { Pmdt08AForm } from './pmdt08A.form';
-import { Pmdt08AModel, Pmdt08APageData } from './pmdt08A.model';
+import { Pmdt09AService } from './pmdt09A.service';
+import { Pmdt09AForm } from './pmdt09A.form';
+import { Pmdt09AModel, Pmdt09APageData } from './pmdt09A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export const pmdt08AResolver: ResolveFn<Pmdt08APageData> = async (route) => {
+export const pmdt09AResolver: ResolveFn<Pmdt09APageData> = async (route) => {
   const fb = inject(FormBuilder);
-  const service = inject(Pmdt08Service);
+  const service = inject(Pmdt09AService);
   const router = inject(Router);
   const id = route.paramMap.get('id');
 
-  const form = Pmdt08AForm.createForm(fb);
+  const form = Pmdt09AForm.createForm(fb);
 
   if (!id) {
-    return { taskData: new SicFromData<Pmdt08AModel>(form) };
+    return { discussionData: new SicFromData<Pmdt09AModel>(form) };
   }
 
   try {
-    const data = await lastValueFrom(service.getSpecification(id));
+    const data = await lastValueFrom(service.getDiscussionById(id));
     if (data) {
       form.patchValue(data);
-      return { taskData: new SicFromData<Pmdt08AModel>(form, data as unknown as Pmdt08AModel) };
+      return { discussionData: new SicFromData<Pmdt09AModel>(form, data) };
     }
-    router.navigate(['/feature/pm/pmdt08']);
+    router.navigate(['/not-found']);
     return EMPTY as any;
   } catch {
-    router.navigate(['/feature/pm/pmdt08']);
+    router.navigate(['/not-found']);
     return EMPTY as any;
   }
 };
-

@@ -1,564 +1,367 @@
-// src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { AuthService } from '../../../../core/auth/auth.service';
-import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { Post, Reply } from './discussion.model';
-import { DiscussionService } from './discussion.service';
-import { Pmdt09AComponent } from './pmdt09A/pmdt09A.component';
-import { environment } from '../../../../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
-import { AttachmentFile } from './pmdt09.model';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+
+// ===== Interfaces =====
+interface ReviewComment {
+  id: string;
+  author: string;
+  text: string;
+  type: 'Suggestion' | 'Correction' | 'Risk' | 'Question' | 'Approval Note';
+  createdAt: string;
+}
+
+interface DesignReview {
+  id: string;
+  reviewCode: string;
+  title: string;
+  description: string;
+  reviewableType: string;
+  reviewableId: string;
+  reviewableName: string;
+  projectId: string;
+  projectName: string;
+  reviewer: string;
+  assignedTo: string;
+  severity: 'Low' | 'Medium' | 'High';
+  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  dueDate: string;
+  comments: ReviewComment[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+// ===== Mock Data =====
+const MOCK_REVIEWS: DesignReview[] = [
+  {
+    id: '1',
+    reviewCode: 'DR-001',
+    title: 'Review ER Diagram - Customer Table',
+    description: 'ตรวจสอบ ER Diagram ของตาราง Customer',
+    reviewableType: 'ER Diagram',
+    reviewableId: 'er-1',
+    reviewableName: 'ER Diagram v1.0',
+    projectId: '1',
+    projectName: 'ระบบ CRM',
+    reviewer: 'วิชัย พัฒนาชัย',
+    assignedTo: 'สมหญิง รักเรียน',
+    severity: 'Medium',
+    status: 'In Progress',
+    dueDate: '2024-02-28',
+    comments: [
+      {
+        id: 'c1',
+        author: 'วิชัย พัฒนาชัย',
+        text: 'ควรเพิ่มฟิลด์ created_at และ updated_at ในทุกตาราง',
+        type: 'Correction',
+        createdAt: '2024-02-20 09:00:00',
+      },
+      {
+        id: 'c2',
+        author: 'สมหญิง รักเรียน',
+        text: 'แก้ไขเพิ่ม created_at, updated_at เรียบร้อยแล้ว',
+        type: 'Approval Note',
+        createdAt: '2024-02-21 14:00:00',
+      },
+    ],
+    isActive: true,
+    createdAt: '2024-02-20 08:00:00',
+  },
+  {
+    id: '2',
+    reviewCode: 'DR-002',
+    title: 'Review Specification - Customer Management',
+    description: 'ตรวจสอบ Specification ของโมดูลจัดการลูกค้า',
+    reviewableType: 'Specification',
+    reviewableId: 'spec-1',
+    reviewableName: 'SPEC-001',
+    projectId: '1',
+    projectName: 'ระบบ CRM',
+    reviewer: 'สมศักดิ์ รุ่งเรือง',
+    assignedTo: 'สมชาย ใจดี',
+    severity: 'High',
+    status: 'Open',
+    dueDate: '2024-03-05',
+    comments: [
+      {
+        id: 'c3',
+        author: 'สมศักดิ์ รุ่งเรือง',
+        text: 'ควรเพิ่ม Validation Rule สำหรับ Tax ID',
+        type: 'Suggestion',
+        createdAt: '2024-02-22 10:00:00',
+      },
+    ],
+    isActive: true,
+    createdAt: '2024-02-22 09:00:00',
+  },
+  {
+    id: '3',
+    reviewCode: 'DR-003',
+    title: 'Review DFD - ระบบ HR',
+    description: 'ตรวจสอบ Data Flow Diagram ของระบบ HR',
+    reviewableType: 'DFD',
+    reviewableId: 'dfd-1',
+    reviewableName: 'DFD Level 0',
+    projectId: '2',
+    projectName: 'ระบบ HR',
+    reviewer: 'วิชัย พัฒนาชัย',
+    assignedTo: 'มานี มีทรัพย์',
+    severity: 'Low',
+    status: 'Resolved',
+    dueDate: '2024-02-15',
+    comments: [
+      {
+        id: 'c4',
+        author: 'วิชัย พัฒนาชัย',
+        text: 'Data Flow ระหว่าง Process 1 และ Process 2 ขาดการเชื่อมต่อ',
+        type: 'Correction',
+        createdAt: '2024-02-10 13:00:00',
+      },
+      {
+        id: 'c5',
+        author: 'มานี มีทรัพย์',
+        text: 'แก้ไขการเชื่อมต่อ Data Flow เรียบร้อย',
+        type: 'Approval Note',
+        createdAt: '2024-02-12 16:00:00',
+      },
+      {
+        id: 'c6',
+        author: 'วิชัย พัฒนาชัย',
+        text: 'ผ่านการตรวจสอบ',
+        type: 'Approval Note',
+        createdAt: '2024-02-14 09:00:00',
+      },
+    ],
+    isActive: true,
+    createdAt: '2024-02-10 12:00:00',
+  },
+];
 
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    SicButtonComponent,
-    SicInputAreaComponent,
-    SicDatePipe,
-    Pmdt09AComponent,
-    SicInputUploadComponent,
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pmdt09.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt09.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt09Component implements OnInit {
-  private fb = inject(FormBuilder);
-  private service = inject(DiscussionService);
-  private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private dialog = inject(DialogService);
-  private authService = inject(AuthService);
-  private sidebarService = inject(SicSidebarService);
-  private http = inject(HttpClient);
 
-  readonly apiBaseUrl = environment.apiBaseUrl;
+  // ===== State =====
+  protected searchTerm = signal('');
+  protected filterStatus = signal('all');
+  protected filterType = signal('all');
+  protected filterSeverity = signal('all');
+  protected currentPage = signal(1);
+  protected pageSize = signal(10);
+  protected sortBy = signal('reviewCode');
+  protected sortDir = signal<'asc' | 'desc'>('asc');
+  protected isLoading = signal(false);
+  protected expandedReview = signal<string | null>(null);
 
-  posts = signal<Post[]>([]);
-  isLoading = signal(false);
-  isSubmitting = signal(false);
-  projectId = signal<string | null>(null);
-  expandedPostId = signal<string | null>(null);
+  // ===== Data =====
+  protected reviews = signal<DesignReview[]>(MOCK_REVIEWS);
 
-  editingCommentId = signal<string | null>(null);
-  replyingPostId = signal<string | null>(null);
-  replyToUser = signal<string | null>(null);
+  // ===== Computed =====
+  protected filteredReviews = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const status = this.filterStatus();
+    const type = this.filterType();
+    const severity = this.filterSeverity();
 
-  isModalOpen = signal(false);
-  postToEdit = signal<Post | null>(null);
+    let result = this.reviews();
 
-  currentUserId = signal<string | null>(null);
-  currentUserName = signal<string>('ผู้ใช้งาน');
-  currentUserAvatar = signal<string | null>(null);
-
-  currentPage = signal(0);
-  pageSize = signal(10);
-  totalElements = signal(0);
-  totalPages = signal(0);
-
-  // ฟอร์มสำหรับแสดงความคิดเห็น (comment) – ใช้เมื่อกด "แสดงความคิดเห็น"
-  commentForm!: FormGroup;
-  // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
-  replyForm!: FormGroup;
-  editForm!: FormGroup;
-
-  // Cache for attachments (key = groupId)
-  private attachmentCache = new Map<string, AttachmentFile[]>();
-
-  ngOnInit(): void {
-    this.currentUserId.set(this.authService.getUserId());
-    this.sidebarService.getProfile().subscribe({
-      next: (profile) => {
-        if (profile) {
-          const name = profile.name || profile.id || 'ผู้ใช้';
-          this.currentUserName.set(name);
-          if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
-            this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
-          }
-        }
-      },
-      error: () => {},
-    });
-
-    this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'];
-      if (pid) {
-        this.projectId.set(pid);
-        this.loadPosts();
-      } else {
-        this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
-        this.router.navigate(['/feature/pm/pmrt02']);
-      }
-    });
-
-    // ฟอร์มสำหรับแสดงความคิดเห็น (comment)
-    this.commentForm = this.fb.group({
-      content: ['', Validators.required],
-      attachmentGroupId: [null],
-    });
-
-    // ฟอร์มสำหรับตอบกลับ (reply) – ใช้เมื่อกด "ตอบกลับ" ข้างใต้ comment
-    this.replyForm = this.fb.group({
-      content: ['', Validators.required],
-      attachmentGroupId: [null],
-    });
-
-    this.editForm = this.fb.group({
-      content: ['', Validators.required],
-    });
-  }
-
-  loadPosts(): void {
-    const projectId = this.projectId();
-    if (!projectId) return;
-    this.isLoading.set(true);
-    this.service
-      .getPosts(projectId, this.currentPage(), this.pageSize())
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (response) => {
-          this.posts.set(response.data || []);
-          this.totalElements.set(response.pageable?.totalElements || 0);
-          this.totalPages.set(response.pageable?.totalPages || 0);
-          // Preload attachments
-          this.posts().forEach(post => {
-            if (post.attachmentGroupId) {
-              this.loadAttachments(post.attachmentGroupId);
-            }
-          });
-        },
-        error: (err) => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  // ===== Load attachments with Authorization header =====
-  loadAttachments(groupId: string): void {
-    if (this.attachmentCache.has(groupId)) return;
-
-    const token = this.authService.getAccessToken();
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
+    if (term) {
+      result = result.filter(
+        (r) =>
+          r.reviewCode.toLowerCase().includes(term) ||
+          r.title.toLowerCase().includes(term) ||
+          r.projectName.toLowerCase().includes(term) ||
+          r.reviewer.toLowerCase().includes(term)
+      );
     }
 
-    this.http
-      .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
-      .subscribe({
-        next: (files) => {
-          this.attachmentCache.set(groupId, files);
-        },
-        error: (err) => {
-          console.error('Failed to load attachments:', err);
-          // fallback without token
-          this.http
-            .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
-            .subscribe({
-              next: (files) => this.attachmentCache.set(groupId, files),
-              error: () => this.attachmentCache.set(groupId, []),
-            });
-        },
-      });
-  }
-
-  // ===== Get attachments from cache =====
-  getAttachments(groupId: string): AttachmentFile[] {
-    return this.attachmentCache.get(groupId) || [];
-  }
-
-  // ===== File type helpers =====
-  isImage(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('image/') ?? false;
-  }
-
-  isVideo(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('video/') ?? false;
-  }
-
-  isAudio(file: AttachmentFile): boolean {
-    return file.contentType?.startsWith('audio/') ?? false;
-  }
-
-  isPdf(file: AttachmentFile): boolean {
-    return file.contentType === 'application/pdf' || file.fileName?.endsWith('.pdf');
-  }
-
-  isWord(file: AttachmentFile): boolean {
-    return file.contentType?.includes('word') || file.fileName?.match(/\.(doc|docx)$/i) !== null;
-  }
-
-  isExcel(file: AttachmentFile): boolean {
-    return file.contentType?.includes('excel') || file.fileName?.match(/\.(xls|xlsx)$/i) !== null;
-  }
-
-  isPowerPoint(file: AttachmentFile): boolean {
-    return file.contentType?.includes('powerpoint') || file.fileName?.match(/\.(ppt|pptx)$/i) !== null;
-  }
-
-  isOtherDocument(file: AttachmentFile): boolean {
-    return !this.isImage(file) && !this.isVideo(file) && !this.isAudio(file) &&
-           !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
-  }
-
-  formatFileSize(bytes: number): string {
-    if (!bytes) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-  }
-
-  previewFile(file: AttachmentFile): void {
-    if (this.isImage(file) || this.isVideo(file)) {
-      window.open(file.accessUrl, '_blank');
+    if (status !== 'all') {
+      result = result.filter((r) => r.status === status);
     }
-  }
 
-  downloadFile(url: string, fileName?: string): void {
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName || 'download';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
+    if (type !== 'all') {
+      result = result.filter((r) => r.reviewableType === type);
+    }
 
-  // ===== Load Replies =====
-  loadReplies(postId: string): void {
-    this.service.getReplies(postId).subscribe({
-      next: (replies) => {
-        // โหลดไฟล์แนบของ reply ทุกอันที่มี attachmentGroupId
-        replies.forEach(reply => {
-          if (reply.attachmentGroupId) {
-            this.loadAttachments(reply.attachmentGroupId);
-          }
-        });
-        this.posts.update((posts) =>
-          posts.map((p) => (p.id === postId ? { ...p, replies: replies || [], replyCount: (replies || []).length } : p))
-        );
-      },
-      error: () => {},
+    if (severity !== 'all') {
+      result = result.filter((r) => r.severity === severity);
+    }
+
+    const sortField = this.sortBy();
+    const direction = this.sortDir();
+    result = [...result].sort((a, b) => {
+      const aVal = a[sortField as keyof DesignReview] ?? '';
+      const bVal = b[sortField as keyof DesignReview] ?? '';
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
     });
+
+    return result;
+  });
+
+  protected paginatedReviews = computed(() => {
+    const all = this.filteredReviews();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return all.slice(start, start + this.pageSize());
+  });
+
+  protected totalItems = computed(() => this.filteredReviews().length);
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected hasPrevious = computed(() => this.currentPage() > 1);
+  protected hasNext = computed(() => this.currentPage() < this.totalPages());
+
+  protected pageNumbers = computed(() => {
+    const total = this.totalPages();
+    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
+      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
+      if (page < 1) return i + 1;
+      if (page > total) return total - Math.min(total, 5) + i + 1;
+      return page;
+    });
+  });
+
+  protected Math = Math;
+
+  // ===== Options =====
+  statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
+  typeOptions = ['Requirement', 'DFD', 'ER Diagram', 'Specification', 'Test Case', 'User Manual'];
+  severityOptions = ['Low', 'Medium', 'High'];
+
+  // ===== Lifecycle =====
+  ngOnInit() {
+    // TODO: เรียก API จริง
   }
 
-  // ===== Toggle Expand =====
-  toggleExpand(postId: string): void {
-    if (this.expandedPostId() === postId) {
-      this.expandedPostId.set(null);
+  // ===== Actions =====
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+  }
+
+  onFilterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterStatus.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onTypeChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterType.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onSeverityChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.filterSeverity.set(select.value);
+    this.currentPage.set(1);
+  }
+
+  onSortChange(field: string) {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
     } else {
-      this.expandedPostId.set(postId);
-      this.loadReplies(postId);
+      this.sortBy.set(field);
+      this.sortDir.set('asc');
     }
   }
 
-  // ===== Dialog Actions =====
-  openCreateModal(): void {
-    this.postToEdit.set(null);
-    this.isModalOpen.set(true);
+  onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
   }
 
-  openEditModal(post: Post): void {
-    this.postToEdit.set(post);
-    this.isModalOpen.set(true);
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
   }
 
-  closeModal(): void {
-    this.isModalOpen.set(false);
-    this.postToEdit.set(null);
+  toggleExpand(id: string) {
+    this.expandedReview.set(this.expandedReview() === id ? null : id);
   }
 
-  onPostSaved(savedPost: Post): void {
-    this.closeModal();
-    this.currentPage.set(0);
-    this.loadPosts();
+  goToAdd() {
+    this.router.navigate(['/feature/pm/design-review/new']);
   }
 
-  // ===== ฟังก์ชันสำหรับแสดงความคิดเห็น (comment) – ใช้ expandedPostId =====
-  submitComment(): void {
-    this.commentForm.updateValueAndValidity();
-    this.commentForm.markAllAsTouched();
+  goToEdit(id: string) {
+    this.router.navigate(['/feature/pm/design-review', id, 'edit']);
+  }
 
-    if (this.commentForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการแสดงความคิดเห็น');
-      return;
-    }
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/design-review', id, 'view']);
+  }
 
-    const postId = this.expandedPostId();
-    if (!postId) {
-      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการแสดงความคิดเห็น');
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    const formValue = this.commentForm.value;
-    let attachmentGroupId: string | undefined = undefined;
-
-    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
-      const first = formValue.attachmentGroupId[0];
-      attachmentGroupId = first?.uploadGroupId || first?.id || null;
-    } else if (typeof formValue.attachmentGroupId === 'string') {
-      attachmentGroupId = formValue.attachmentGroupId;
-    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
-      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
-    }
-
-    const request = {
-      postId: postId,
-      content: formValue.content?.trim() || '',
-      attachmentGroupId: attachmentGroupId,
+  // ===== Utility =====
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Open: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Resolved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Closed: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     };
-
-    this.service
-      .createReply(request)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (newReply) => {
-          this.dialog.success('แสดงความคิดเห็นสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
-          this.commentForm.reset({ content: '', attachmentGroupId: null });
-          if (newReply?.attachmentGroupId) {
-            this.loadAttachments(newReply.attachmentGroupId);
-          }
-          this.loadReplies(postId);
-        },
-        error: (err) => {
-          this.dialog.error('แสดงความคิดเห็นไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
+    return map[status] || map['Open'];
   }
 
-  // ===== ฟังก์ชันสำหรับตอบกลับ (reply) – ใช้ replyingPostId =====
-  submitReply(): void {
-    this.replyForm.updateValueAndValidity();
-    this.replyForm.markAllAsTouched();
-
-    if (this.replyForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
-      return;
-    }
-
-    const postId = this.replyingPostId();
-    if (!postId) {
-      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการตอบกลับ');
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    const formValue = this.replyForm.value;
-    let attachmentGroupId: string | undefined = undefined;
-
-    if (Array.isArray(formValue.attachmentGroupId) && formValue.attachmentGroupId.length > 0) {
-      const first = formValue.attachmentGroupId[0];
-      attachmentGroupId = first?.uploadGroupId || first?.id || null;
-    } else if (typeof formValue.attachmentGroupId === 'string') {
-      attachmentGroupId = formValue.attachmentGroupId;
-    } else if (formValue.attachmentGroupId && typeof formValue.attachmentGroupId === 'object') {
-      attachmentGroupId = formValue.attachmentGroupId.uploadGroupId || formValue.attachmentGroupId.id || null;
-    }
-
-    const request = {
-      postId: postId,
-      content: formValue.content?.trim() || '',
-      attachmentGroupId: attachmentGroupId,
+  getSeverityClass(severity: string): string {
+    const map: Record<string, string> = {
+      Low: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
-
-    this.service
-      .createReply(request)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (newReply) => {
-          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
-          this.replyingPostId.set(null);
-          this.replyToUser.set(null);
-          this.replyForm.reset({ content: '', attachmentGroupId: null });
-          if (newReply?.attachmentGroupId) {
-            this.loadAttachments(newReply.attachmentGroupId);
-          }
-          this.loadReplies(postId);
-        },
-        error: (err) => {
-          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
+    return map[severity] || map['Low'];
   }
 
-  // ===== ฟังก์ชันสำหรับเริ่มตอบกลับ (reply) =====
-  startReply(postId: string, replyToUser?: string): void {
-    this.replyingPostId.set(postId);
-    this.replyToUser.set(replyToUser || null);
-    this.replyForm.reset({ content: replyToUser ? `@${replyToUser} ` : '', attachmentGroupId: null });
-    // ถ้ายังไม่ได้ขยายโพสต์ ให้ขยายอัตโนมัติ
-    if (this.expandedPostId() !== postId) {
-      this.expandedPostId.set(postId);
-      const post = this.posts().find((p) => p.id === postId);
-      if (post && !post.replies) {
-        this.loadReplies(postId);
-      }
-    }
-  }
-
-  cancelReply(): void {
-    this.replyingPostId.set(null);
-    this.replyToUser.set(null);
-    this.replyForm.reset();
-  }
-
-  // ===== Edit Reply =====
-  startEditReply(postId: string, replyId: string): void {
-    const post = this.posts().find((p) => p.id === postId);
-    if (!post) return;
-    const reply = post.replies?.find((r) => r.id === replyId);
-    if (!reply) return;
-    this.editingCommentId.set(replyId);
-    this.editForm.patchValue({ content: reply.content });
-    (this.editForm as any).__postId = postId;
-  }
-
-  cancelEdit(): void {
-    this.editingCommentId.set(null);
-    this.editForm.reset();
-    (this.editForm as any).__postId = null;
-  }
-
-  submitEdit(): void {
-    if (this.editForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
-      return;
-    }
-    const commentId = this.editingCommentId();
-    if (!commentId) return;
-    const content = this.editForm.value.content;
-
-    this.isSubmitting.set(true);
-    this.service
-      .updateComment(commentId, { content })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: () => {
-          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
-          this.editingCommentId.set(null);
-          const postId = (this.editForm as any).__postId;
-          this.editForm.reset();
-          (this.editForm as any).__postId = null;
-          if (postId) {
-            this.posts.update((posts) =>
-              posts.map((p) => {
-                if (p.id === postId) {
-                  const updatedReplies = p.replies?.map((r) =>
-                    r.id === commentId ? { ...r, content } : r
-                  );
-                  return { ...p, replies: updatedReplies };
-                }
-                return p;
-              })
-            );
-          } else {
-            this.posts.update((posts) =>
-              posts.map((p) => (p.id === commentId ? { ...p, content } : p))
-            );
-          }
-        },
-        error: (err) => {
-          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-        },
-      });
-  }
-
-  // ===== Delete =====
-  deletePost(postId: string): void {
-    this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
-      .then((confirmed) => {
-        if (confirmed) {
-          this.service.deleteComment(postId).subscribe({
-            next: () => {
-              this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
-              this.posts.update((posts) => posts.filter((p) => p.id !== postId));
-            },
-            error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        }
-      });
-  }
-
-  deleteReply(postId: string, replyId: string): void {
-    this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบข้อความนี้ใช่หรือไม่?')
-      .then((confirmed) => {
-        if (confirmed) {
-          this.service.deleteComment(replyId).subscribe({
-            next: () => {
-              this.dialog.success('ลบสำเร็จ', 'ข้อความถูกลบแล้ว');
-              this.posts.update((posts) =>
-                posts.map((p) => {
-                  if (p.id === postId) {
-                    const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
-                    return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
-                  }
-                  return p;
-                })
-              );
-            },
-            error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
-            },
-          });
-        }
-      });
-  }
-
-  goBack(): void {
-    this.router.navigate(['/feature/pm/pmrt02']);
-  }
-
-  loadMore(): void {
-    if (this.currentPage() < this.totalPages() - 1) {
-      this.currentPage.set(this.currentPage() + 1);
-      this.loadPosts();
-    }
-  }
-
-  isAuthor(createdBy: string): boolean {
-    const currentId = this.currentUserId();
-    if (currentId && createdBy === currentId) {
-      return true;
-    }
-    return createdBy === this.currentUserName();
-  }
-
-  getAvatarUrl(url?: string): string | null {
-    if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return `${this.apiBaseUrl}${url}`;
+  getCommentTypeClass(type: string): string {
+    const map: Record<string, string> = {
+      Suggestion: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      Correction: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Risk: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      Question: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'Approval Note': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    };
+    return map[type] || map['Suggestion'];
   }
 
   formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('th-TH', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  formatDateTime(dateStr: string): string {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  isOverdue(dueDate: string): boolean {
+    return new Date(dueDate) < new Date();
   }
 }
+
+export default Pmrt11Component;

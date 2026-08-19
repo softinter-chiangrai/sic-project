@@ -1,248 +1,276 @@
-// src/app/feature/pm/dt/pmdt07/pmdt07.component.ts
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-
-import { ChangeRequestService } from './change-request.service';
-
-import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { Pmdt07Service } from './pmdt07.service';
+import { PmSpecificationModel } from './pmdt07.model';
+import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
-  selector: 'app-pmdt07',
-  standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './pmdt07.component.html',
+    selector: 'app-pmdt07',
+    standalone: true,
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent],
+    templateUrl: './pmdt07.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt07Component implements OnInit {
-  private http = inject(HttpClient);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private dialog = inject(DialogService);
-  private navigation = inject(NavigationService);
-  private crService = inject(ChangeRequestService);
-  private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
+    private route = inject(ActivatedRoute);
+    public service = inject(Pmdt07Service);
+    private router = inject(Router);
+    private dialog = inject(DialogService);
+    private navigation = inject(NavigationService);
+    public customerState = inject(CustomerStateService);
+    private http = inject(HttpClient);
 
-  // ใช้ Math ใน template
-  readonly Math = Math;
+    isLoading = signal(false);
+    specs = signal<PmSpecificationModel[]>([]);
+    totalItems = signal(0);
+    currentPage = signal(1);
+    pageSize = signal(10);
+    searchTerm = signal('');
+    filterStatus = signal('all');
 
-  // State
-  isLoading = signal(false);
-  changeRequests = signal<ChangeRequestItem[]>([]);
+    totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+    hasPrevious = computed(() => this.currentPage() > 1);
+    hasNext = computed(() => this.currentPage() < this.totalPages());
 
-  totalItems = signal(0);
-  currentPage = signal(1);
-  pageSize = signal(10);
-  searchTerm = signal('');
-  filterStatus = signal('all');
-  projectId = signal<string | null>(null);
-
-  // Computed
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  hasPrevious = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  ngOnInit() {
-    this.route.queryParams.subscribe((queryParams) => {
-      this.projectId.set(queryParams['projectId'] || null);
-      this.loadChangeRequests();
+    pageNumbers = computed(() => {
+        const total = this.totalPages();
+        const current = this.currentPage();
+        const range = 5;
+        let start = Math.max(1, current - Math.floor(range / 2));
+        let end = Math.min(total, start + range - 1);
+        if (end - start < range - 1) {
+            start = Math.max(1, end - range + 1);
+        }
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     });
-  }
 
-  loadChangeRequests() {
-    this.isLoading.set(true);
-    let params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString())
-      .set('keyword', this.searchTerm() || '')
-      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus());
+    Math = Math;
 
-    if (this.projectId()) {
-      params = params.set('projectId', this.projectId()!);
+    ngOnInit(): void {
+        const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+        if (resolved && resolved.data) {
+            this.specs.set(resolved.data || []);
+            this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+        } else {
+            this.loadData();
+        }
     }
 
-    this.http
-      .get<any>(this.baseUrl, { params })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (res) => {
-          this.changeRequests.set(res.data || []);
-          this.totalItems.set(res.pageable?.totalElements || 0);
-        },
-        error: () =>
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
-      });
-  }
+    loadData(): void {
+        this.isLoading.set(true);
+        const requirementId = this.route.snapshot.queryParams['requirementId'] || this.customerState.getRequirementId();
+        const projectId = this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
+        const params = {
+            projectId: projectId || undefined,
+            requirementId: requirementId || undefined,
+            keyword: this.searchTerm() || undefined,
+            status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
+            page: this.currentPage() - 1,
+            size: this.pageSize(),
+            sortBy: 'createdDate',
+            sortDir: 'desc',
+        };
 
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-    this.loadChangeRequests();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadChangeRequests();
-  }
-
-  goToAdd() {
-    if (this.projectId()) {
-      this.navigation.navigate(['/feature/pm/pmdt07/new'], {
-        queryParams: { projectId: this.projectId() },
-      });
-    } else {
-      this.navigation.navigate(['/feature/pm/pmdt07/new']);
+        this.service.getList(params)
+            .pipe(finalize(() => this.isLoading.set(false)))
+            .subscribe({
+                next: (res: PaginationResponse<PmSpecificationModel>) => {
+                    this.specs.set(res.data || []);
+                    this.totalItems.set(res.pageable?.totalElements || 0);
+                },
+                error: () => {
+                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
+                    this.specs.set([]);
+                    this.totalItems.set(0);
+                },
+            });
     }
-  }
 
-  goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
-  }
+    onSearch(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        this.searchTerm.set(input.value);
+        this.currentPage.set(1);
+        this.loadData();
+    }
 
-  goToView(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'view']);
-  }
+    clearSearch(): void {
+        this.searchTerm.set('');
+        this.currentPage.set(1);
+        this.loadData();
+    }
 
-  goToImpact(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
-      queryParams: { showImpact: true } // optional
-    });
-  }
+    onFilterChange(event: Event): void {
+        const select = event.target as HTMLSelectElement;
+        this.filterStatus.set(select.value);
+        this.currentPage.set(1);
+        this.loadData();
+    }
 
-  // ✅ ไปที่หน้า Approval Center
-  goToApproval(crId: string) {
-    this.router.navigate(['/feature/pm/approval', crId]);
-  }
+    onPageChange(page: number): void {
+        if (page < 1 || page > this.totalPages()) return;
+        this.currentPage.set(page);
+        this.loadData();
+    }
 
-  deleteChangeRequest(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
-      if (ok) {
-        this.http.delete(`${this.baseUrl}/${id}`).subscribe({
-          next: () => {
-            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
-            this.loadChangeRequests();
-          },
-          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
-        });
-      }
-    });
-  }
+    goToAdd(): void {
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
 
-  // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
+        this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams });
+    }
 
-  submitRequest(id: string) {
-    this.crService.submitForApproval(id).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
-    });
-  }
+    goToEdit(id: string): void {
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
 
-  implementRequest(id: string) {
-    this.crService.implement(id).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
-    });
-  }
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit'], { queryParams });
+    }
 
-  completeAssigneeTask(id: string, userId: string, targetId: string) {
-    this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
-      next: () => {
-        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
-        this.loadChangeRequests();
-      },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
-    });
-  }
+    goToView(id: string): void {
+        const projectId = this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const queryParams: any = {};
+        if (projectId) queryParams.projectId = projectId;
+        if (requirementId) queryParams.requirementId = requirementId;
 
-  // ===== Helper =====
+        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view'], { queryParams });
+    }
 
-  getStatusClass(status: string): string {
-    if (!status) return 'bg-gray-100 text-gray-600';
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600',
-      DRAFT: 'bg-gray-100 text-gray-600',
-      Submitted: 'bg-blue-100 text-blue-700',
-      SUBMITTED: 'bg-blue-100 text-blue-700',
-      'In Review': 'bg-blue-100 text-blue-700',
-      IN_REVIEW: 'bg-blue-100 text-blue-700',
-      Pending: 'bg-yellow-100 text-yellow-700',
-      PENDING: 'bg-yellow-100 text-yellow-700',
-      Approved: 'bg-emerald-100 text-emerald-700',
-      APPROVED: 'bg-emerald-100 text-emerald-700',
-      Rejected: 'bg-red-100 text-red-700',
-      REJECTED: 'bg-red-100 text-red-700',
-      Implemented: 'bg-purple-100 text-purple-700',
-      IMPLEMENTED: 'bg-purple-100 text-purple-700',
-      'Need Revision': 'bg-orange-100 text-orange-700',
-      NEED_REVISION: 'bg-orange-100 text-orange-700',
-      Cancelled: 'bg-gray-300 text-gray-700',
-      CANCELLED: 'bg-gray-300 text-gray-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
-  }
+    printDocument(spec: PmSpecificationModel): void {
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+            return;
+        }
 
-  getStatusText(status: string): string {
-    if (!status) return 'ร่าง';
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      DRAFT: 'ร่าง',
-      Submitted: 'รออนุมัติ',
-      SUBMITTED: 'รออนุมัติ',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
-      Pending: 'รอดำเนินการ',
-      PENDING: 'รอดำเนินการ',
-      Approved: 'อนุมัติ',
-      APPROVED: 'อนุมัติ',
-      Rejected: 'ปฏิเสธ',
-      REJECTED: 'ปฏิเสธ',
-      Implemented: 'ดำเนินการแล้ว',
-      IMPLEMENTED: 'ดำเนินการแล้ว',
-      'Need Revision': 'ต้องแก้ไข',
-      NEED_REVISION: 'ต้องแก้ไข',
-      Cancelled: 'ยกเลิก',
-      CANCELLED: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
+        const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Specification - ${spec.specificationCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสเอกสาร</td>
+            <td>${spec.specificationCode || '-'}</td>
+            <td class="label">เวอร์ชัน</td>
+            <td>${spec.version || '1.0'}</td>
+          </tr>
+          <tr>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${spec.projectName || '-'}</td>
+            <td class="label">ประเภท</td>
+            <td>${spec.specificationType || spec.specType || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${spec.priority || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${this.getStatusText(spec.status || 'Draft')}</td>
+          </tr>
+          <tr>
+            <td class="label">ผู้สร้าง</td>
+            <td>${spec.createdBy || '-'}</td>
+            <td class="label">Manday (วัน)</td>
+            <td>${spec.estimatedManday || 0}</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>รายละเอียด / ข้อกำหนด</h3>
+          <div>${spec.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 300);
+    }
+
+    deleteSpec(id: string): void {
+        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
+            .then((ok) => {
+                if (ok) {
+                    this.service.delete(id).subscribe({
+                        next: () => {
+                            this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
+                            this.loadData();
+                        },
+                        error: (err) => {
+                            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                        },
+                    });
+                }
+            });
+    }
+
+    getStatusClass(status: string): string {
+        const map: Record<string, string> = {
+            Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+            Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            Released: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        };
+        return map[status] || 'bg-gray-100 text-gray-600';
+    }
+
+    getStatusText(status: string): string {
+        const map: Record<string, string> = {
+            Draft: 'ร่าง',
+            Review: 'ตรวจสอบ',
+            Approved: 'อนุมัติ',
+            Released: 'เผยแพร่',
+        };
+        return map[status] || status;
+    }
+
+    formatDate(dateStr: string): string {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch {
+            return dateStr;
+        }
+    }
 }

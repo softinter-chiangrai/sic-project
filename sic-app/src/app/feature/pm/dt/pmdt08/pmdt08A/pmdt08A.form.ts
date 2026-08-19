@@ -1,34 +1,19 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.form.ts
+// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Pmdt09AModel } from './pmdt09A.model';
+import { ToForm } from '../../../../../core/types/form.type';
 
-export class Pmdt08AForm {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      specificationCode: [null, [Validators.required, Validators.maxLength(50)]],
-      specificationType: [null, [Validators.required]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      module: [null, [Validators.maxLength(100)]],
-      version: [{ value: 'v1.0', disabled: true }],
-      status: ['Draft'],
-      priority: ['Medium'],
-      owner: [null, [Validators.maxLength(100)]],
-      estimatedManday: [null, [Validators.min(0)]],
-      description: [null, [Validators.required]],
-      uploadGroupId: [null],
-      isAiGenerated: [false],
-      aiGeneratedAt: [null],
-      requirementId: [null],
-      generatedFromRequirementId: [null],
-      generatedFromDiagramId: [null],
-      projectId: [null],
-      projectName: [null],
-      createdBy: [null],
-      createdDate: [null],
-      createdAt: [null],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
+export class Pmdt09AForm {
+  static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt09AModel>> {
+    return fb.group<ToForm<Pmdt09AModel>>({
+      id: fb.control(null),
+      projectId: fb.control(null, [Validators.required]),
+      topic: fb.control(null, [Validators.required]),
+      content: fb.control(null),
+      category: fb.control('General'),
+      author: fb.control(null),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
     });
   }
 }

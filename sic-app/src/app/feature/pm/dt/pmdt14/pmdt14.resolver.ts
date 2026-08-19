@@ -3,6 +3,5 @@ import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 
 export const pmdt14Resolver: ResolveFn<any> = (route) => {
-  const id = route.params['id'];
-  return of({ id: id || null, loaded: true });
+  return of({ loaded: true });
 };

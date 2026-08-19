@@ -1,24 +1,24 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.service.ts
+// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.service.ts
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Pmdt08AModel } from './pmdt08A.model';
+import { Pmdt09AModel } from './pmdt09A.model';
 import { environment } from '../../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt08AService {
+export class Pmdt09AService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/discussions`;
 
-  getTaskById(id: string): Observable<Pmdt08AModel> {
-    return this.http.get<Pmdt08AModel>(`${this.baseUrl}/${id}`);
+  getDiscussionById(id: string): Observable<Pmdt09AModel> {
+    return this.http.get<Pmdt09AModel>(`${this.baseUrl}/${id}`);
   }
 
-  createTask(data: Partial<Pmdt08AModel>): Observable<Pmdt08AModel> {
-    return this.http.post<Pmdt08AModel>(this.baseUrl, data);
+  createDiscussion(data: Partial<Pmdt09AModel>): Observable<Pmdt09AModel> {
+    return this.http.post<Pmdt09AModel>(this.baseUrl, data);
   }
 
-  updateTask(id: string, data: Partial<Pmdt08AModel>): Observable<Pmdt08AModel> {
-    return this.http.put<Pmdt08AModel>(`${this.baseUrl}/${id}`, data);
+  updateDiscussion(id: string, data: Partial<Pmdt09AModel>): Observable<Pmdt09AModel> {
+    return this.http.put<Pmdt09AModel>(`${this.baseUrl}/${id}`, data);
   }
 }

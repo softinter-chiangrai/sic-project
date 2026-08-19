@@ -1,756 +1,723 @@
-// src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
-
+// src/app/feature/pm/dt/pmdt06/pmdt06.component.ts
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
+  HostListener,
   inject,
-  Injectable,
-  OnInit,
   OnDestroy,
   signal,
-  ChangeDetectorRef,
+  ViewChild,
   ChangeDetectionStrategy
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-  FormsModule,
-} from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of, Subscription, interval, takeWhile } from 'rxjs';
-import { delay, finalize, tap } from 'rxjs/operators';
-import { environment } from '../../../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../../../core/auth/auth.service';
-
-// Components
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
-import { SicCheckboxComponent } from '../../../../core/component/sic-checkbox/sic-checkbox.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-
-// ✅ เปลี่ยนเป็น sic-tiptap-editor
-import { SicTiptapEditorComponent } from '../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
-
-// Services
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, take, takeUntil, interval } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalService } from '../pmdt03/approval.service';
-import type { ApprovalFlow } from '../pmdt03/approval.model';
-import { RequirementExportService } from './requirement-export.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import type { DiagramModel } from './diagram.model';
+import { DiagramService } from './diagram.service';
+import { Pmdt05AComponent } from './pmdt05A/pmdt05A.component';
+import { SqlExportDialogComponent } from './sql-export-dialog.component';
+import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
 
-// Preview Component
-import { SicRequirementPreviewComponent } from './pmdt05-preview/pmdt05-preview.component';
-
-import { RequirementModel } from './pmdt05.model';
-
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt05Service {
-  private http = inject(HttpClient);
-
-  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
-  apiGetLovRequirementType = `${environment.apiBaseUrl}/api/pm/requirement/lov-type`;
-  apiGetLovPriority = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
-  apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
-  apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/REQUIREMENT`;
-
-  save(req: RequirementModel): Observable<any> {
-    console.log('📝 Saving requirement:', req);
-    const data = { ...req };
-    delete data.projectName;
-    return this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, data);
-  }
-
-  getRequirement(id: string): Observable<RequirementModel> {
-    return this.http.get<RequirementModel>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`);
-  }
-
-  autoSave(req: RequirementModel): Observable<any> {
-    console.log('💾 Auto-saving requirement:', req);
-    const data = { ...req };
-    delete data.projectName;
-    return this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, data);
-  }
-}
-
-// ===== Component =====
 @Component({
   selector: 'app-pmdt05',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    RouterModule,
-    SicButtonComponent,
-    SicComboboxComponent,
-    SicInputComponent,
-    SicInputAreaComponent,
-    SicRequirementPreviewComponent,
-    SicCardComponent,
-    SicCheckboxComponent,
-    SicTiptapEditorComponent,      
-    SicUploadComponent,
-    SicDatePipe,
-  ],
+  imports: [CommonModule, FormsModule, Pmdt05AComponent],
   templateUrl: './pmdt05.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [
-    `
-      .pmdt05-layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        height: calc(100vh - 200px);
-        min-height: 600px;
-      }
-
-      .pmdt05-layout--split {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .pmdt05-layout--preview-only {
-        grid-template-columns: 1fr;
-      }
-
-      .pmdt05-layout--edit-only {
-        grid-template-columns: 1fr;
-      }
-
-      .pmdt05-panel {
-        overflow-y: auto;
-        padding: 0.5rem;
-        background: var(--sidebar);
-        border-radius: 0.75rem;
-        border: 1px solid var(--border);
-      }
-
-      .pmdt05-panel--preview {
-        background: var(--bg);
-      }
-
-      @media (max-width: 768px) {
-        .pmdt05-layout {
-          grid-template-columns: 1fr;
-          height: auto;
-        }
-      }
-
-      .auto-save-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        background: var(--sidebar-hover);
-      }
-
-      .auto-save-indicator.saving {
-        color: var(--crm-primary);
-      }
-
-      .auto-save-indicator.saved {
-        color: var(--crm-success);
-      }
-
-      .view-mode-toggle {
-        display: flex;
-        gap: 0.25rem;
-        background: var(--bg);
-        border-radius: 0.5rem;
-        padding: 0.25rem;
-        border: 1px solid var(--border);
-      }
-
-      .view-mode-toggle button {
-        padding: 0.25rem 0.75rem;
-        border: none;
-        border-radius: 0.375rem;
-        background: transparent;
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-
-      .view-mode-toggle button.active {
-        background: var(--crm-primary);
-        color: white;
-      }
-
-      .view-mode-toggle button:hover:not(.active) {
-        background: var(--sidebar-hover);
-      }
-    `,
-  ],
+  styleUrls: ['./pmdt05.component.css'],
 })
-export class Pmdt05Component implements OnInit, OnDestroy, CanComponentDeactivate {
-  // ===== Dependencies =====
-  readonly route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  readonly service = inject(Pmdt05Service);
-  readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
-  private readonly approvalService = inject(ApprovalService);
-  private readonly exportService = inject(RequirementExportService);
-  private readonly navigation = inject(NavigationService);
-  private readonly cdr = inject(ChangeDetectorRef);
-  private readonly customerState = inject(CustomerStateService);
-  private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
+export class Pmdt05Component implements AfterViewInit, OnDestroy {
+  @ViewChild('drawioIframe') iframe!: ElementRef<HTMLIFrameElement>;
 
-  // ===== Form =====
-  form!: FormGroup;
-  isEdit = false;
-  isViewOnly = false;
-  reqId: string | null = null;
+  private destroy$ = new Subject<void>();
+  private drawioService = inject(DrawioConnectorService);
+  private diagramService = inject(DiagramService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
+  private isCreateDialogOpened = false;
+
+  // ===== State =====
   isLoading = false;
-  isSaving = false;
-  isAutoSaving = false;
-  lastAutoSaveTime: Date | null = null;
+  currentTabId: string | null = null;
+  projectId: string | null = null;
+  drawioReady = false;
+  projectName = '';
+  chatOpen = signal(false);
+  unreadCount = 0;
+  currentDiagram: DiagramModel | null = null;
 
-  // ===== Approval Flow =====
-  flows: ApprovalFlow[] = [];
-  selectedFlowId: string | null = null;
-  isLoadingFlows = false;
+  // ===== Tabs =====
+  tabs = signal<DiagramModel[]>([]);
+  isLoadingTabs = false;
 
-  // ===== View Mode =====
-  viewMode: 'edit' | 'split' | 'preview' = 'split';
+  private isLoadingDiagram = false;
+  private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
 
-  // ❌ ลบ descriptionContent และ acceptanceCriteriaContent signals แล้ว
-  // ใช้ form control โดยตรง
+  // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบ)
+  private requirementId: string | null = null;
+  private requirementTitle: string = '';
 
-  // ===== Auto-save =====
-  private autoSaveSubscription: Subscription | null = null;
-  private formChangeSubscription: Subscription | null = null;
-  private autoSaveEnabled = true;
-  private autoSaveInterval = 30000; // 30 seconds
-
-  // ===== Source Options =====
-  sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
-
-  // ===== CanDeactivate =====
-  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
+  // ===== Auto‑Save =====
+  private lastSavedXml: string | null = null;
+  autoSaveStatus = '';
+  private saving = false;
 
   // ===== Lifecycle =====
-  ngOnInit(): void {
-    this.initForm();
-    this.loadFlows();
+  ngAfterViewInit(): void {
+    this.drawioService.init(this.iframe.nativeElement);
 
-    // Check if current route is view mode
-    const isViewRoute = this.router.url.includes('/view');
-    if (isViewRoute) {
-      this.isViewOnly = true;
-    }
+    let isFirstReady = true;
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = !this.isViewOnly;
-        this.reqId = id;
-        this.loadRequirement(id);
-      } else {
-        // New requirement - set default project from query params or customer state
-        this.route.queryParams.subscribe((qParams) => {
-          const pId = qParams['projectId'] || this.customerState.getProjectId();
-          console.log('🔍 [ngOnInit] pId found:', pId, 'Type:', typeof pId);
-          console.log('🔍 [ngOnInit] customerState projectId:', this.customerState.getProjectId(), 'Type:', typeof this.customerState.getProjectId());
-          console.log('🔍 [ngOnInit] customerState projectName:', this.customerState.getProjectName());
-          
-          if (pId) {
-            this.form.patchValue({ projectId: pId });
-            const pName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(pId)) 
-              ? this.customerState.getProjectName() 
-              : null;
-            if (pName) {
-              console.log('🔍 [ngOnInit] Matching project name found in state:', pName);
-              this.form.patchValue({ projectName: pName });
-            } else {
-              console.log('🔍 [ngOnInit] No matching project name in state, fetching from API...');
-              this.fetchProjectName(pId);
-            }
+    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+      this.drawioReady = ready;
+      console.log('[Draw.io] Ready status:', ready);
+      if (ready && this.currentTabId && isFirstReady) {
+        isFirstReady = false;
+        this.loadExistingDiagram();
+      }
+    });
+
+    setTimeout(() => {
+      if (!this.drawioReady) {
+        console.warn('[Draw.io] Fallback: force ready after 7s');
+        this.drawioReady = true;
+        if (this.currentTabId) {
+          this.loadExistingDiagram();
+        }
+      }
+    }, 7000);
+
+    // รับ query params
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const newTabId = params['tabId'] || params['diagramId'] || null;
+      const newProjectId = params['projectId'] || null;
+      const shouldOpenCreate = params['openCreate'] === 'true';
+      const reqId = params['requirementId'] || null;
+      const reqTitle = params['requirementTitle'] || '';
+
+      // เก็บ requirementId/Title ไว้ในตัวแปร component
+      if (reqId) {
+        this.requirementId = reqId;
+        this.requirementTitle = reqTitle;
+      }
+
+      if (!newProjectId) {
+        this.router.navigate(['/projects']);
+        return;
+      }
+
+      // ถ้า projectId เปลี่ยน ให้โหลดใหม่
+      if (newProjectId !== this.projectId) {
+        this.projectId = newProjectId;
+        this.currentTabId = null;
+        this.currentDiagram = null;
+        this.loadProjectName();
+        this.loadTabs();
+        // ถ้ามี openCreate และ requirementId ให้เก็บไว้เปิดทีหลัง
+        if (shouldOpenCreate && reqId) {
+          this.pendingCreate = { requirementId: reqId, requirementTitle: reqTitle };
+          // ลบเฉพาะ openCreate ออกจาก URL (เก็บ requirementId ไว้)
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { openCreate: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
+        return;
+      }
+
+      // ถ้ามี tabId ให้โหลด diagram
+      if (newTabId) {
+        if (newTabId !== this.currentTabId) {
+          this.currentTabId = newTabId;
+          this.currentDiagram = null;
+          if (this.drawioReady) {
+            this.loadExistingDiagram();
           }
-        });
-
-        // Set default createdBy for new requirement
-        const userName = this.getUserNameFromToken();
-        if (userName) {
-          this.form.patchValue({ createdBy: userName });
+        }
+        // ถ้ามี openCreate และ requirementId แต่มี tabId อยู่แล้ว
+        if (shouldOpenCreate && reqId) {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { openCreate: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
+      } else {
+        // ถ้าไม่มี tabId ให้โหลด tabs
+        this.loadTabs();
+        // ถ้ามี openCreate และ requirementId และยังไม่มี tabs ให้เปิด dialog
+        if (shouldOpenCreate && reqId && !this.isCreateDialogOpened) {
+          if (this.tabs().length === 0) {
+            this.isCreateDialogOpened = true;
+            this.openCreateDialogWithRequirement(reqId, reqTitle);
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { openCreate: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true,
+            });
+          } else {
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { openCreate: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true,
+            });
+          }
         }
       }
     });
 
-    // ❌ ไม่ต้อง sync signals แล้ว เพราะใช้ form control โดยตรง
+    // ===== Auto‑Save: Poll XML ทุก 10 วินาที =====
+    interval(30000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (
+          this.drawioReady &&
+          this.currentTabId &&
+          !this.isLoading &&
+          !this.isLoadingDiagram
+        ) {
+          // ขอ XML จาก Draw.io เพื่อตรวจสอบการเปลี่ยนแปลง
+          this.drawioService.requestXml();
+        }
+      });
 
-    // Setup auto-save
-    this.setupAutoSave();
+    // ===== Auto‑Save: เมื่อได้รับ XML จาก Draw.io =====
+    this.drawioService.xml$
+      .pipe(
+        debounceTime(300), // หน่วงเล็กน้อยเพื่อป้องกันการยิงซ้ำ
+        takeUntil(this.destroy$)
+      )
+      .subscribe((xml: string) => {
+        if (!this.currentTabId) return;
+        if (!xml || xml.trim().length === 0) return;
 
-    // Watch for form changes to mark dirty
-    this.formChangeSubscription = this.form.valueChanges.subscribe(() => {
-      // Trigger dirty state
-    });
+        const normalized = this.ensureValidDrawioXml(xml);
+
+        // ไม่มีการเปลี่ยนแปลง
+        if (normalized === this.lastSavedXml) {
+          return;
+        }
+
+        this.lastSavedXml = normalized;
+        console.log('[AutoSave] Diagram changed, saving...');
+
+        this.autoSaveDiagram(normalized);
+      });
   }
 
   ngOnDestroy(): void {
-    this.autoSaveSubscription?.unsubscribe();
-    this.formChangeSubscription?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // ===== Form Initialization =====
-  initForm(): void {
-    this.form = this.fb.group({
-      id: [null],
-      requirementCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required]],
-      requirementType: [null, [Validators.required]],
-      source: [null, [Validators.maxLength(100)]],
-      priority: ['Must', [Validators.required]],
-      businessValue: [null, [Validators.maxLength(255)]],
-      acceptanceCriteria: [null],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      createdBy: [null, [Validators.maxLength(100)]],
-      baConfirmStatus: ['Pending'],
-      customerConfirmStatus: ['Pending'],
-      version: ['v1.0'],
-      status: ['Draft'],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-      uploadGroupId: [null],
-      uploadGroupData: [[]],
-    });
-  }
+  // ===== Tabs Management =====
+  loadTabs(): void {
+    if (!this.projectId) return;
+    this.isLoadingTabs = true;
 
-  // ===== Data Loading =====
-  loadRequirement(id: string) {
-    this.isLoading = true;
-    this.service.getRequirement(id).subscribe({
-      next: (data) => {
-        this.form.patchValue(data);
-        this.isLoading = false;
-        this.form.markAsPristine();
+    this.diagramService.getTabs(this.projectId).subscribe({
+      next: (tabs) => {
+        this.tabs.set(tabs);
+        this.isLoadingTabs = false;
 
-        if (this.isViewOnly) {
-          this.form.disable();
+        if (!this.currentTabId && tabs.length > 0) {
+          this.currentTabId = tabs[0].id;
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { tabId: this.currentTabId, projectId: this.projectId },
+            queryParamsHandling: 'merge',
+          });
+          if (this.drawioReady) {
+            this.loadExistingDiagram();
+          }
         }
 
-        // If loaded data doesn't have projectName but has projectId, try to fetch it
-        if (!data.projectName && data.projectId) {
-          const cachedName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(data.projectId)) 
-            ? this.customerState.getProjectName() 
-            : null;
-          if (cachedName) {
-            this.form.patchValue({ projectName: cachedName });
+        if (tabs.length === 0) {
+          if (this.pendingCreate) {
+            this.openCreateDialogWithRequirement(
+              this.pendingCreate.requirementId,
+              this.pendingCreate.requirementTitle
+            );
+            this.pendingCreate = null;
           } else {
-            this.fetchProjectName(data.projectId);
-          }
-        }
-
-        // If loaded data doesn't have createdBy, set it from token
-        if (!data.createdBy) {
-          const userName = this.getUserNameFromToken();
-          if (userName) {
-            this.form.patchValue({ createdBy: userName });
-          }
-        }
-
-        console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Requirement รหัสนี้');
-        this.navigation.navigate(['/feature/pm/requirement']);
-      },
-    });
-  }
-
-  private fetchProjectName(projectId: string): void {
-    console.log('🔍 [fetchProjectName] Fetching projects list from:', this.service.apiGetComboboxProject);
-    this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
-      next: (res) => {
-        console.log('🔍 [fetchProjectName] API Response:', res);
-        const list = Array.isArray(res) ? res : (res.data || []);
-        const project = list.find((p: any) => String(p.value || p.id || '') === String(projectId));
-        if (project) {
-          const name = project.projectName || project.name || project.text || project.projectNameTh || project.projectNameEn;
-          console.log('🔍 [fetchProjectName] Matched project:', project, 'Resolved Name:', name);
-          if (name) {
-            this.form.patchValue({ projectName: name });
-            this.cdr.markForCheck();
+            this.createDefaultTab();
           }
         } else {
-          console.warn('🔍 [fetchProjectName] No project matched ID:', projectId, 'in list:', list);
-        }
-      },
-      error: (err) => console.warn('❌ [fetchProjectName] Could not fetch project name:', err),
-    });
-  }
-
-  private getUserNameFromToken(): string | null {
-    const token = this.auth.getAccessToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.name || payload.preferred_username || payload.displayName || payload.sub || null;
-    } catch {
-      return null;
-    }
-  }
-
-  loadFlows() {
-    this.isLoadingFlows = true;
-    this.approvalService.getFlowsByDocumentType('REQUIREMENT').subscribe({
-      next: (flows) => {
-        this.flows = flows;
-        this.isLoadingFlows = false;
-        if (flows.length === 1) {
-          this.selectedFlowId = flows[0].id;
+          if (this.pendingCreate) {
+            console.log('[Diagram] Tabs already exist, skip create dialog');
+            this.pendingCreate = null;
+          }
         }
       },
       error: () => {
-        this.isLoadingFlows = false;
-        console.warn('ไม่สามารถโหลด Approval Flow ได้');
+        this.isLoadingTabs = false;
+        this.tabs.set([]);
       },
     });
   }
 
-  // ❌ ไม่ต้องมี onDescriptionChange และ onAcceptanceCriteriaChange
+  createDefaultTab(): void {
+    if (!this.projectId) return;
+    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
-  // ===== Auto-save =====
-  private setupAutoSave(): void {
-    if (!this.autoSaveEnabled) return;
-
-    this.autoSaveSubscription = interval(this.autoSaveInterval)
-      .pipe(
-        takeWhile(() => this.autoSaveEnabled),
-        tap(() => {
-          if (this.form.dirty && this.form.valid) {
-            this.performAutoSave();
-          }
-        })
-      )
-      .subscribe();
-  }
-
-  private performAutoSave(): void {
-    if (this.isSaving || this.isAutoSaving) return;
-
-    const data = this.form.value as RequirementModel;
-    if (!data.title && !data.description) return; // Skip empty
-
-    this.isAutoSaving = true;
-    this.lastAutoSaveTime = new Date();
-
-    this.service.autoSave(data).subscribe({
-      next: (response: any) => {
-        this.isAutoSaving = false;
-
-        // Patch the entire returned response to update uploadGroupId and other fields
-        if (response) {
-          this.form.patchValue(response);
-          const savedId = response.id;
-          if (savedId) {
-            this.reqId = savedId;
-            this.isEdit = true;
-          }
-        }
-
-        this.form.markAsPristine({ onlySelf: true });
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.isAutoSaving = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  manualAutoSave(): void {
-    this.performAutoSave();
-  }
-
-  getAutoSaveStatus(): string {
-    if (this.isAutoSaving) return 'saving';
-    if (this.lastAutoSaveTime) {
-      const diff = Date.now() - this.lastAutoSaveTime.getTime();
-      if (diff < 5000) return 'saved';
-    }
-    if (this.form.dirty) return 'dirty';
-    return 'idle';
-  }
-
-  getAutoSaveText(): string {
-    const status = this.getAutoSaveStatus();
-    switch (status) {
-      case 'saving':
-        return '💾 กำลังบันทึกอัตโนมัติ...';
-      case 'saved':
-        return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
-      case 'dirty':
-        return '⏳ ยังไม่ได้บันทึก';
-      default:
-        return '💾 บันทึกอัตโนมัติ';
-    }
-  }
-
-  private formatTimeDiff(date: Date | null): string {
-    if (!date) return '';
-    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
-    return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
-  }
-
-  // ===== View Mode =====
-  setViewMode(mode: 'edit' | 'split' | 'preview'): void {
-    this.viewMode = mode;
-    this.cdr.markForCheck();
-  }
-
-  // ===== Preview Data =====
-  getPreviewData(): any {
-    const value = this.form.value;
-    return {
-      requirementCode: value.requirementCode || '...',
-      title: value.title || '...',
-      description: value.description || '<em>กรุณากรอกรายละเอียด</em>',
-      acceptanceCriteria: value.acceptanceCriteria || '',
-      priority: value.priority || 'Must',
-      requirementType: value.requirementType || '',
-      source: value.source || '',
-      businessValue: value.businessValue || '',
-      createdBy: value.createdBy || 'ผู้ใช้งาน',
-      version: value.version || 'v1.0',
-      status: value.status || 'Draft',
-      projectName: value.projectName || 'กำลังโหลด...',
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
-  }
-
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'draft',
-      'In Review': 'in-review',
-      Approved: 'approved',
-      Changed: 'changed',
-      Cancelled: 'cancelled',
-    };
-    return map[status] || 'draft';
-  }
-
-  // ===== Export =====
-  async exportRequirement(format: 'pdf' | 'docx' | 'html'): Promise<void> {
-    if (this.form.invalid) {
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่งออก');
-      return;
-    }
-
-    const data = this.form.value;
-    this.isSaving = true;
-
-    try {
-      // First, ensure the requirement is saved
-      if (this.form.dirty) {
-        await new Promise<void>((resolve, reject) => {
-          this.service.save(data).subscribe({
-            next: () => {
-              this.form.markAsPristine();
-              resolve();
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        selectedRequirementId: reqId,
+        requirementTitle: reqTitle,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
             },
-            error: (err) => reject(err),
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
           });
-        });
-      }
+        },
+      },
+    });
+  }
 
-      // Get the latest data with ID
-      const exportData = {
-        ...data,
-        id: data.id || this.reqId,
-      };
+  createNewTab(): void {
+    if (!this.projectId) return;
+    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
-      const blob = await this.exportService.exportRequirement(exportData, format);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${data.requirementCode || 'requirement'}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        selectedRequirementId: reqId,
+        requirementTitle: reqTitle,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
+      },
+    });
+  }
 
-      this.dialog.success('ส่งออกสำเร็จ', `ไฟล์ ${format.toUpperCase()} ถูกสร้างเรียบร้อย`);
-    } catch (error: any) {
-      this.dialog.error('ส่งออกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
-    } finally {
-      this.isSaving = false;
+  private openCreateDialogWithRequirement(requirementId: string, requirementTitle: string): void {
+    if (!this.projectId || !requirementId) return;
+
+    const promise = this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: null,
+        selectedRequirementId: requirementId,
+        requirementTitle: requirementTitle,
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+            next: (newTab) => {
+              this.tabs.update((t) => [...t, newTab]);
+              this.switchTab(newTab.id);
+              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
+      },
+    });
+
+    promise.finally(() => {
+      this.pendingCreate = null;
+    });
+  }
+
+  editTab(tabId: string): void {
+    const tab = this.tabs().find((t) => t.id === tabId);
+    if (!tab) return;
+    const editData: DiagramEditData = {
+      id: tab.id,
+      name: tab.name,
+      type: tab.diagramType,
+      rowVersion: tab.rowVersion || 0,
+    };
+    this.dialogService.open({
+      type: 'confirm',
+      component: NewDiagramDialogComponent,
+      componentInputs: {
+        projectId: this.projectId,
+        editData: editData,
+        selectedRequirementId: '',
+        requirementTitle: '',
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string) => {
+          if (!data) return;
+          const updatedTab = {
+            ...tab,
+            name: name,
+            diagramType: type,
+            state: 3,
+            rowVersion: data.rowVersion || 0,
+          };
+          this.diagramService.updateTab(updatedTab as any).subscribe({
+            next: (res) => {
+              this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+              if (this.currentTabId === tabId) this.currentDiagram = res;
+              this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+            },
+            error: (err) => {
+              this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            },
+          });
+        },
+      },
+    });
+  }
+
+  switchTab(tabId: string): void {
+    if (this.currentTabId === tabId) return;
+    this.currentTabId = tabId;
+    this.currentDiagram = null;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tabId: tabId, projectId: this.projectId },
+      queryParamsHandling: 'merge',
+    });
+    if (this.drawioReady) {
+      this.loadExistingDiagram();
     }
   }
 
-  // ===== Submit =====
-  submitForApproval() {
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือก Approval Flow', 'ต้องเลือกกระบวนการอนุมัติก่อนส่ง');
+  deleteTab(tabId: string, event: Event): void {
+    event.stopPropagation();
+    const tab = this.tabs().find((t) => t.id === tabId);
+    if (!tab) return;
+    this.dialogService
+      .confirm('Delete Tab', `Delete diagram "${tab.name}"? This cannot be undone.`)
+      .then((confirmed) => {
+        if (!confirmed) return;
+        this.diagramService.deleteTab(tabId).subscribe({
+          next: () => {
+            this.tabs.update((t) => t.filter((item) => item.id !== tabId));
+            if (this.currentTabId === tabId) {
+              const remaining = this.tabs();
+              if (remaining.length > 0) {
+                this.switchTab(remaining[0].id);
+              } else {
+                this.currentTabId = null;
+                this.drawioService.loadXml('');
+              }
+            }
+            this.dialogService.success('Deleted', `Tab "${tab.name}" deleted.`);
+          },
+          error: (err) => {
+            console.error('Failed to delete tab:', err);
+            this.dialogService.error('Failed', err.error?.message || 'Could not delete tab.');
+          },
+        });
+      });
+  }
+
+  // ===== Helpers =====
+  getTabIcon(type: string): string {
+    const map: Record<string, string> = {
+      DFD: 'bi-diagram-3',
+      ER: 'bi-table',
+      Flowchart: 'bi-diagram-2',
+      Sequence: 'bi-arrow-left-right',
+      Class: 'bi-boxes',
+      State: 'bi-arrow-repeat',
+      Gantt: 'bi-bar-chart',
+      Mindmap: 'bi-diagram-2',
+      Journey: 'bi-map',
+      Pie: 'bi-pie-chart',
+      C4: 'bi-box',
+      'Use Case': 'bi-people',
+    };
+    return map[type] || 'bi-file-earmark';
+  }
+
+  loadProjectName(): void {
+    if (!this.projectId) return;
+    this.diagramService.getProjectName(this.projectId).subscribe({
+      next: (name) => (this.projectName = name),
+      error: () => (this.projectName = 'Unknown Project'),
+    });
+  }
+
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent) {
+    this.drawioService.handleMessage(event);
+  }
+
+  // ===== Chat =====
+  toggleChat(): void {
+    this.chatOpen.update((v) => !v);
+    if (this.chatOpen()) this.unreadCount = 0;
+  }
+
+  // ===== Diagram CRUD =====
+  private ensureValidDrawioXml(xml: string): string {
+    if (!xml || xml.trim().length === 0) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    const trimmed = xml.trim();
+    if (!trimmed.includes('<mxfile') && !trimmed.includes('<mxGraphModel')) {
+      return this.drawioService.getEmptyDiagramXml();
+    }
+    if (trimmed.includes('<mxGraphModel') && !trimmed.includes('<root>')) {
+      const empty = this.drawioService.getEmptyDiagramXml();
+      const diagramMatch = trimmed.match(/<diagram[^>]*>([\s\S]*?)<\/diagram>/);
+      if (diagramMatch) {
+        return empty.replace(
+          /(<diagram[^>]*>)([\s\S]*?)(<\/diagram>)/,
+          `$1${diagramMatch[1]}$3`
+        );
+      }
+      return empty;
+    }
+    return trimmed;
+  }
+
+  loadExistingDiagram(): void {
+    if (!this.currentTabId) {
+      console.warn('[Diagram] No tabId to load');
+      return;
+    }
+    if (this.isLoadingDiagram) {
+      console.warn('[Diagram] Already loading, skip');
+      return;
+    }
+    this.isLoadingDiagram = true;
+    this.isLoading = true;
+    console.log('[Diagram] Loading diagram:', this.currentTabId);
+
+    this.diagramService.getDiagram(this.currentTabId).subscribe({
+      next: (diagram) => {
+        console.log('[Diagram] Loaded diagram data:', diagram);
+        if (this.projectId && diagram.projectId !== this.projectId) {
+          console.warn('[Diagram] Project mismatch');
+          this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
+          this.isLoading = false;
+          this.isLoadingDiagram = false;
+          this.drawioService.loadXml('');
+          return;
+        }
+        this.currentDiagram = diagram;
+        let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+        xml = this.ensureValidDrawioXml(xml);
+        console.log('[Diagram] XML length after validation:', xml.length);
+        // ตั้งค่า lastSavedXml เป็น XML ที่โหลดมา เพื่อป้องกัน auto‑save ซ้ำ
+        this.lastSavedXml = xml;
+        setTimeout(() => {
+          this.drawioService.loadXml(xml, true);
+        }, 300);
+        this.isLoading = false;
+        this.isLoadingDiagram = false;
+      },
+      error: (err) => {
+        console.error('[Diagram] Failed to load diagram:', err);
+        this.isLoading = false;
+        this.isLoadingDiagram = false;
+        setTimeout(() => {
+          this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
+        }, 300);
+        this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+      },
+    });
+  }
+
+  // ===== Save (Manual) =====
+  saveDiagram(): void {
+    if (!this.currentTabId) {
+      this.dialogService.warn('No Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
+      return;
+    }
+    // ขอ XML ล่าสุดจาก Draw.io
+    this.drawioService.requestXml();
+    // รอ XML แล้วบันทึกทันที (ใช้ take(1) เพื่อรับครั้งเดียว)
+    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe((xml: string) => {
+      if (!xml || xml.trim().length === 0) {
+        this.dialogService.warn('Empty Diagram', 'ไม่พบข้อมูล Diagram');
+        return;
+      }
+      const normalized = this.ensureValidDrawioXml(xml);
+      // บันทึกทันทีโดยไม่รอ auto-save
+      this.autoSaveDiagram(normalized, true); // ส่ง flag manual=true
+    });
+  }
+
+  // ===== Auto‑Save (Internal) =====
+  private autoSaveDiagram(xml: string, manual: boolean = false): void {
+    if (this.saving) {
+      if (manual) {
+        this.dialogService.warn('กำลังบันทึก', 'ระบบกำลังบันทึกอยู่ กรุณารอสักครู่');
+      }
       return;
     }
 
-    const data = this.form.value as RequirementModel;
-    if (!data.id) {
-      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
+    if (!this.currentTabId) {
       return;
     }
 
-    this.approvalService
-      .submitForApproval({
-        documentType: 'REQUIREMENT',
-        documentId: data.id,
-        documentCode: data.requirementCode,
-        documentTitle: data.title,
-        version: data.version,
-        flowId: this.selectedFlowId,
-        comment: 'ส่งขออนุมัติ Requirement',
+    const diagram = this.tabs().find(t => t.id === this.currentTabId);
+    if (!diagram) {
+      console.warn('[AutoSave] No diagram found for current tab');
+      return;
+    }
+
+    // ตรวจสอบว่ามี requirementId หรือไม่ (ถ้าไม่มี ให้ใช้จาก currentDiagram หรือจาก query param)
+    let requirementId = diagram['requirementId'] || this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    if (!requirementId) {
+      // ถ้าไม่มี requirementId ให้ดึงจาก currentDiagram ที่โหลดไว้
+      if (this.currentDiagram && this.currentDiagram['requirementId']) {
+        requirementId = this.currentDiagram['requirementId'];
+      }
+    }
+
+    // ถ้ายังไม่มี requirementId ให้แจ้งเตือนและไม่บันทึก
+    if (!requirementId) {
+      console.warn('[AutoSave] No requirementId found for this diagram, cannot save.');
+      if (manual) {
+        this.dialogService.warn('Missing Requirement', 'ไม่พบ Requirement ID ที่เชื่อมโยง กรุณาสร้าง Diagram ใหม่ผ่าน Requirement');
+      }
+      return;
+    }
+
+    this.saving = true;
+
+    const updatedTab = {
+      ...diagram,
+      graphData: { xml },
+      requirementId: requirementId, // ส่ง requirementId ไปด้วย
+      state: 3,
+      rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null
+    };
+
+    this.diagramService.updateTab(updatedTab as any).subscribe({
+      next: (res) => {
+        this.currentDiagram = res;
+        this.tabs.update(items =>
+          items.map(i => i.id === res.id ? res : i)
+        );
+        this.lastSavedXml = res.graphData?.xml ?? xml;
+        const now = new Date().toLocaleTimeString();
+        this.autoSaveStatus = manual ? `✅ Saved manually at ${now}` : `✅ Auto-saved at ${now}`;
+        this.saving = false;
+        if (manual) {
+          this.dialogService.success('บันทึกสำเร็จ', 'Diagram ถูกบันทึกเรียบร้อย');
+        }
+      },
+      error: (err) => {
+        this.saving = false;
+        const msg = err.error?.message || 'เกิดข้อผิดพลาด';
+        this.autoSaveStatus = `❌ Save failed`;
+        if (manual) {
+          this.dialogService.error('บันทึกไม่สำเร็จ', msg);
+        } else {
+          console.error('[AutoSave] Failed:', err);
+        }
+        // ดึงข้อมูล Diagram ล่าสุดเพื่ออัปเดต rowVersion สำหรับการบันทึกครั้งถัดไป
+        if (this.currentTabId) {
+          this.diagramService.getDiagram(this.currentTabId).subscribe({
+            next: (latest) => {
+              this.currentDiagram = latest;
+              this.tabs.update(items =>
+                items.map(i => i.id === latest.id ? latest : i)
+              );
+            }
+          });
+        }
+      }
+    });
+  }
+
+  // ===== Generate SQL =====
+  generateSql(): void {
+    if (!this.currentTabId) {
+      this.dialogService.warn('No Diagram', 'Please open a diagram first.');
+      return;
+    }
+    this.isLoading = true;
+    this.drawioService.requestXml();
+    this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
+      next: (xml) => {
+        this.isLoading = false;
+        if (!xml || xml.trim().length === 0) {
+          this.dialogService.warn('Empty Diagram', 'Please draw an ER diagram first.');
+          return;
+        }
+        this.dialogService.open({
+          type: 'confirm',
+          component: SqlExportDialogComponent,
+          componentInputs: { xml },
+        });
+      },
+      error: () => {
+        this.isLoading = false;
+        this.dialogService.error('Error', 'Failed to get diagram XML.');
+      },
+    });
+  }
+
+  // ===== Trace Links (keep for compatibility) =====
+  createDfdTab(name: string, relatedRequirementIds: string[]): void {
+    // ไม่ใช้แล้ว
+  }
+
+  createTraceLink(
+    sourceType: string,
+    sourceId: string,
+    targetType: string,
+    targetId: string,
+    relationshipType: string
+  ): void {
+    if (!this.projectId) {
+      console.warn('No projectId, cannot create trace link');
+      return;
+    }
+    this.http
+      .post('/api/trace/links', {
+        projectId: this.projectId,
+        sourceType,
+        sourceId,
+        targetType,
+        targetId,
+        relationshipType,
       })
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
-          this.form.patchValue({ status: 'In Review' });
+          console.log(
+            `✅ Trace link created: ${sourceType}(${sourceId}) → ${targetType}(${targetId})`
+          );
         },
         error: (err) => {
-          this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          console.error('Failed to create trace link:', err);
         },
       });
   }
-
-  // ===== CRUD Actions =====
-  onBack(): void {
-    const projectId = this.form.get('projectId')?.value;
-    if (this.form.dirty) {
-      this.dialog
-        .confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
-        .then((confirmed) => {
-          if (confirmed) {
-            this.navigateBack(projectId);
-          }
-        });
-    } else {
-      this.navigateBack(projectId);
-    }
-  }
-
-  private navigateBack(projectId?: string): void {
-    if (projectId) {
-      this.navigation.navigate(['/feature/pm/requirement'], {
-        queryParams: { projectId },
-      });
-    } else {
-      this.navigation.navigate(['/feature/pm/requirement']);
-    }
-  }
-
-  submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
-    }
-
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
-      return;
-    }
-
-    this.isSaving = true;
-    const data = this.form.value as RequirementModel;
-
-    // Set state
-    data.state = this.isEdit ? 3 : 4; // Modified or Added
-    if (!this.isEdit) {
-      data.rowVersion = 0;
-    }
-
-    this.service.save(data).subscribe({
-      next: (response: any) => {
-        this.form.markAsPristine();
-        
-        // Resolve the saved requirement ID and patch the entire response (including uploadGroupId)
-        let savedId = data.id || this.reqId;
-        if (response && response.id) {
-          savedId = response.id;
-          this.form.patchValue(response);
-          this.reqId = savedId;
-          this.isEdit = true;
-        }
-
-        // Submit for approval automatically
-        this.approvalService
-          .submitForApproval({
-            documentType: 'REQUIREMENT',
-            documentId: savedId!,
-            documentCode: data.requirementCode,
-            documentTitle: data.title,
-            version: data.version,
-            flowId: this.selectedFlowId!,
-            comment: 'ส่งขออนุมัติ Requirement อัตโนมัติขณะบันทึก',
-          })
-          .subscribe({
-            next: () => {
-              this.isSaving = false;
-              this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว').then(() => {
-                this.navigateBack(data.projectId);
-              });
-            },
-            error: (err) => {
-              this.isSaving = false;
-              this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
-            },
-          });
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
-      },
-    });
-  }
-
-  // ===== Helper =====
-  get isMobile(): boolean {
-    return window.innerWidth < 768;
-  }
-
-  get editPanelClass(): string {
-    if (this.viewMode === 'edit') return 'pmdt05-panel pmdt05-panel--edit';
-    if (this.viewMode === 'preview') return 'pmdt05-panel pmdt05-panel--preview';
-    return 'pmdt05-panel pmdt05-panel--edit';
-  }
-
-  get previewPanelClass(): string {
-    if (this.viewMode === 'preview') return 'pmdt05-panel pmdt05-panel--preview';
-    return 'pmdt05-panel pmdt05-panel--preview';
-  }
 }
-
-export default Pmdt05Component;

@@ -1,24 +1,23 @@
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, effect, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { httpResource } from '@angular/common/http';
 
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
-import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { CustomerStateService } from '../../../../../core/services/customer-state.service';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../../core/model/sic-base-model';
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../core/model/sic-base-model';
 
-import { Pmdt18AForm } from './pmdt18A.form';
 import { Pmdt18AService } from './pmdt18A.service';
-import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse } from './pmdt18A.model';
+import { Pmdt18AForm } from './pmdt18A.form';
+import { PmMaRenewalModel } from './pmdt18A.model';
+import { apiBaseUrl } from '../../../../core/config/api.config';
 
 @Component({
   selector: 'app-pmdt18a',
@@ -26,216 +25,95 @@ import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse 
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     RouterModule,
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
-    SicUploadComponent,
-    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt18A.component.html',
-  changeDetection: ChangeDetectionStrategy.Default,
+  styleUrls: ['./pmdt18A.component.css'],
 })
 export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly service = inject(Pmdt18AService);
-  private readonly dialog = inject(DialogService);
-  private readonly fb = inject(FormBuilder);
-  private readonly customerState = inject(CustomerStateService);
+  private service = inject(Pmdt18AService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private dialog = inject(DialogService);
 
-  formData!: SicFromData<PmDeliveryModel>;
+  formData!: SicFromData<PmMaRenewalModel>;
   id = signal<string | null>(null);
-  isEdit = signal(false);
   isSaving = signal(false);
 
-  gateCheckData = signal<PmDeliveryGateCheckResponse | null>(null);
-  isLoadingGateCheck = signal(false);
-
-  checklists = signal<PmDeliveryChecklistModel[]>([]);
-
-  // Delivery options
-  typeOptions = [
-    { label: 'Final Delivery (ส่งมอบงวดสุดท้าย)', value: 'FINAL' },
-    { label: 'Partial Delivery (ส่งมอบบางส่วน)', value: 'PARTIAL' },
-    { label: 'Milestone Delivery (ส่งมอบตามงวดงาน)', value: 'MILESTONE' },
-  ];
-
   statusOptions = [
-    { label: 'Draft (ฉบับร่าง)', value: 'DRAFT' },
-    { label: 'Preparing (กำลังเตรียมเอกสาร)', value: 'PREPARING' },
-    { label: 'Ready (พร้อมส่งมอบ)', value: 'READY' },
-    { label: 'Delivered (ส่งมอบแล้ว)', value: 'DELIVERED' },
-    { label: 'Confirmed (ลูกค้ายืนยันรับมอบ)', value: 'CONFIRMED' },
+    { value: 'DRAFT', label: 'Draft (ร่างข้อเสนอ)' },
+    { value: 'PROPOSED', label: 'Proposed (เสนอราคาแล้ว)' },
+    { value: 'CONFIRMED', label: 'Confirmed (ตกลงต่อสัญญาแล้ว)' },
+    { value: 'REJECTED', label: 'Rejected (ปฏิเสธการต่อสัญญา)' },
+    { value: 'EXPIRED', label: 'Expired (หมดอายุสัญญาแล้ว)' },
   ];
+
+  apiContractCombobox = `${apiBaseUrl}/api/pm/customer-contracts/combobox`;
+  apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
+  apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+
+  dataResource = httpResource<PmMaRenewalModel>(() =>
+  this.id() ? `${apiBaseUrl}/api/pm/ma-renewals/${this.id()}` : undefined
+  );
+
 
   pageDirty = () => this.formData?.dirty ?? false;
 
-  ngOnInit(): void {
-    const rawForm = Pmdt18AForm.createForm(this.fb);
-    this.formData = new SicFromData<PmDeliveryModel>(rawForm);
-
-    const projId = this.customerState.getProjectId();
-    if (projId) {
-      this.formData.form.controls['projectId']?.setValue(projId);
-    }
-
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.isEdit.set(true);
-      this.id.set(paramId);
-      this.loadData(paramId);
-    } else {
-      this.initDefaultChecklist();
-      if (projId) {
-        this.runGateCheck(projId);
-      }
-    }
-  }
-
-  loadData(id: string): void {
-    this.service.getById(id).subscribe({
-      next: (data) => {
+  constructor() {
+    effect(() => {
+      const data = this.dataResource.value();
+      if (data) {
         this.formData.form.patchValue(data);
-        if (data.checklists) {
-          this.checklists.set(data.checklists);
-        }
-        this.formData.markAsPristine();
-        if (data.projectId) {
-          this.runGateCheck(data.projectId, id);
-        }
-      },
-      error: (err) => {
-        this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');
-      },
-    });
-  }
-
-  runGateCheck(projectId?: string, deliveryId?: string): void {
-    const projId = projectId || this.formData?.form?.controls['projectId']?.value || this.customerState.getProjectId();
-    if (!projId) {
-      this.dialog.warn('ไม่พบโครงการ', 'กรุณาเลือกโครงการที่ต้องการตรวจสอบเงื่อนไขส่งมอบก่อน');
-      return;
-    }
-
-    const delId = deliveryId || this.id() || undefined;
-    this.isLoadingGateCheck.set(true);
-    this.service.getGateCheck(projId, delId).subscribe({
-      next: (res) => {
-        this.gateCheckData.set(res);
-        this.isLoadingGateCheck.set(false);
-      },
-      error: (err) => {
-        this.isLoadingGateCheck.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถตรวจสอบเงื่อนไข Gate ได้');
-      },
-    });
-  }
-
-  initDefaultChecklist(): void {
-    const defaults: PmDeliveryChecklistModel[] = [
-      { itemName: 'Source Code Package & Git Repository Handover', isChecked: false, sortOrder: 1 },
-      { itemName: 'Database Migration Script & DDL/DML Package', isChecked: false, sortOrder: 2 },
-      { itemName: 'User Manual & Admin Manual (PDF Attached below)', isChecked: false, sortOrder: 3 },
-      { itemName: 'Installation Guide & Deployment Architecture Documentation', isChecked: false, sortOrder: 4 },
-      { itemName: 'UAT Sign-Off Certificate & Test Execution Summary Report', isChecked: false, sortOrder: 5 },
-      { itemName: 'System Credential Sheet & Security Handover Form', isChecked: false, sortOrder: 6 },
-    ];
-    this.checklists.set(defaults);
-  }
-
-  toggleChecklist(index: number): void {
-    const list = [...this.checklists()];
-    const item = list[index];
-    if (item) {
-      item.isChecked = !item.isChecked;
-      if (item.state !== SicEntityState.Added) {
-        item.state = SicEntityState.Modified;
       }
-      this.checklists.set(list);
-      this.formData.markAsDirty();
-    }
-  }
-
-  addChecklistItem(): void {
-    const list = [...this.checklists()];
-    list.push({
-      itemName: 'เอกสาร/รายการส่งมอบเพิ่มเติม',
-      isChecked: false,
-      sortOrder: list.length + 1,
-      state: SicEntityState.Added,
-    });
-    this.checklists.set(list);
-    this.formData.markAsDirty();
-  }
-
-  removeChecklistItem(index: number): void {
-    const list = [...this.checklists()];
-    const item = list[index];
-    if (item) {
-      if (item.id) {
-        item.state = SicEntityState.Deleted;
-      } else {
-        list.splice(index, 1);
-      }
-      this.checklists.set(list);
-      this.formData.markAsDirty();
-    }
-  }
-
-  onSubmit(): void {
-    this.formData.form.markAllAsTouched();
-    if (this.formData.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูล', 'โปรดตรวจสอบความถูกต้องของฟอร์มส่งมอบ');
-      return;
-    }
-
-    this.isSaving.set(true);
-    const payload: Partial<PmDeliveryModel> = {
-      ...this.formData.form.getRawValue(),
-      checklists: this.checklists(),
-    };
-
-    this.service.save(payload).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.formData.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารการส่งมอบเรียบร้อย');
-        this.router.navigate(['/feature/pm/delivery']);
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกเอกสารได้');
-      },
     });
   }
 
-  navigateToGateModule(category: string): void {
-    switch (category?.toUpperCase()) {
-      case 'REQUIREMENT':
-        this.router.navigate(['/feature/pm/requirement']);
-        break;
-      case 'SPECIFICATION':
-        this.router.navigate(['/feature/pm/pmdt08']);
-        break;
-      case 'BUG':
-        this.router.navigate(['/feature/pm/bug']);
-        break;
-      case 'TEST':
-        this.router.navigate(['/feature/pm/test-case']);
-        break;
-      case 'MANUAL':
-        this.router.navigate(['/feature/pm/version']);
-        break;
-      default:
-        break;
+  ngOnInit(): void {
+    this.formData = new SicFromData<PmMaRenewalModel>(Pmdt22Form.createForm(this.fb));
+
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam) {
+      this.id.set(idParam);
+    } else {
+      this.formData.form.patchValue({ state: SicEntityState.Added });
     }
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/delivery']);
+    this.router.navigate(['/feature/pm/renewal']);
+  }
+
+  submit(): void {
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
+      this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    this.isSaving.set(true);
+    const val = this.formData.value;
+    if (!val.state) {
+      val.state = this.id() ? SicEntityState.Modified : SicEntityState.Added;
+    }
+
+    this.service.save(val).subscribe({
+      next: () => {
+        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลข้อเสนอต่อสัญญา MA เรียบร้อย');
+        this.formData.form.markAsPristine();
+        this.router.navigate(['/feature/pm/renewal']);
+      },
+      error: (err) => {
+        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'บันทึกข้อมูลไม่สำเร็จ');
+      },
+      complete: () => this.isSaving.set(false),
+    });
   }
 }
+
+export default Pmdt22Component;

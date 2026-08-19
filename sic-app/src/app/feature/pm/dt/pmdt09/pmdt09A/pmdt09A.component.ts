@@ -1,133 +1,246 @@
-// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.component.ts
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Post } from '../discussion.model';
-import { DiscussionService } from '../discussion.service';
-import { finalize, Subscription } from 'rxjs';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { DialogService } from '../../../../../core/services/dialog.service';
-import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 
+import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
+import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../core/services/dialog.service';
 
+// ===== Model =====
+export interface ReviewCommentModel {
+  id: string;
+  author: string;
+  text: string;
+  type: string;
+  createdAt: string;
+}
+
+export interface DesignReviewModel {
+  id: string;
+  reviewCode: string;
+  title: string;
+  description: string;
+  reviewableType: string;
+  reviewableId: string;
+  reviewableName?: string;
+  projectId: string;
+  projectName?: string;
+  reviewer: string;
+  assignedTo: string;
+  severity: string;
+  status: string;
+  dueDate: string;
+  comments: ReviewCommentModel[];
+  isActive: boolean;
+  state?: number;
+  rowVersion?: number;
+}
+
+// ===== Form =====
+class Pmdt11Form {
+  static createForm(fb: FormBuilder): FormGroup {
+    return fb.group({
+      id: [null],
+      reviewCode: [null, [Validators.required, Validators.maxLength(30)]],
+      title: [null, [Validators.required, Validators.maxLength(255)]],
+      description: [null, [Validators.required, Validators.maxLength(2000)]],
+      reviewableType: [null, [Validators.required]],
+      reviewableId: [null, [Validators.required]],
+      reviewableName: [null],
+      projectId: [null, [Validators.required]],
+      projectName: [null],
+      reviewer: [null, [Validators.maxLength(100)]],
+      assignedTo: [null, [Validators.maxLength(100)]],
+      severity: ['Medium', [Validators.required]],
+      status: ['Open', [Validators.required]],
+      dueDate: [null, [Validators.required]],
+      comments: [[]],
+      isActive: [true],
+      state: [null],
+      rowVersion: [null],
+    });
+  }
+}
+
+// ===== Service =====
+@Injectable({ providedIn: 'root' })
+export class Pmdt09AService {
+  private mockReviews: DesignReviewModel[] = [
+    {
+      id: '1',
+      reviewCode: 'DR-001',
+      title: 'Review ER Diagram - Customer Table',
+      description: 'ตรวจสอบ ER Diagram ของตาราง Customer',
+      reviewableType: 'ER Diagram',
+      reviewableId: 'er-1',
+      reviewableName: 'ER Diagram v1.0',
+      projectId: '1',
+      projectName: 'ระบบ CRM',
+      reviewer: 'วิชัย พัฒนาชัย',
+      assignedTo: 'สมหญิง รักเรียน',
+      severity: 'Medium',
+      status: 'In Progress',
+      dueDate: '2024-02-28',
+      comments: [
+        {
+          id: 'c1',
+          author: 'วิชัย พัฒนาชัย',
+          text: 'ควรเพิ่มฟิลด์ created_at และ updated_at ในทุกตาราง',
+          type: 'Correction',
+          createdAt: '2024-02-20 09:00:00',
+        },
+      ],
+      isActive: true,
+      state: 1,
+      rowVersion: 0,
+    },
+  ];
+
+  apiGetComboboxProject = '/api/design-review/combobox-project';
+  apiGetComboboxReviewable = '/api/design-review/combobox-reviewable';
+  apiGetLovReviewableType = '/api/design-review/lov-type';
+  apiGetLovSeverity = '/api/design-review/lov-severity';
+  apiGetLovStatus = '/api/design-review/lov-status';
+
+  save(data: DesignReviewModel): Observable<string> {
+    console.log('📝 Saving design review:', data);
+    return of('บันทึกสำเร็จ').pipe(delay(500));
+  }
+
+  getDesignReview(id: string): Observable<DesignReviewModel> {
+    const found = this.mockReviews.find((r) => r.id === id);
+    if (found) {
+      return of(found).pipe(delay(300));
+    }
+    const empty: DesignReviewModel = {
+      id: '',
+      reviewCode: '',
+      title: '',
+      description: '',
+      reviewableType: '',
+      reviewableId: '',
+      reviewableName: '',
+      projectId: '',
+      projectName: '',
+      reviewer: '',
+      assignedTo: '',
+      severity: 'Medium',
+      status: 'Open',
+      dueDate: '',
+      comments: [],
+      isActive: true,
+      state: 1,
+      rowVersion: 0,
+    };
+    return of(empty).pipe(delay(300));
+  }
+}
+
+// ===== Component =====
 @Component({
   selector: 'app-pmdt09a',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterModule,
     SicButtonComponent,
+    SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
-    SicInputUploadComponent,
   ],
   templateUrl: './pmdt09A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrl: './pmdt09A.component.css',
+  styles: [],
 })
-export class Pmdt09AComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private service = inject(DiscussionService);
-  private dialog = inject(DialogService);
+export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
+  readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
+  readonly service = inject(Pmdt09AService);
+  readonly dialog = inject(DialogService);
+  private readonly fb = inject(FormBuilder);
 
-  // ✅ Input properties - ต้องเป็น public (หรือไม่ใส่ modifier)
-  @Input() projectId!: string;
-  @Input() postToEdit: Post | null = null;   // ✅ ไม่ต้องมี private
-  @Input() currentUserAvatar: string | null = null;
-  @Input() currentUserName: string = 'ผู้ใช้งาน';
+  form!: FormGroup;
+  isEdit = false;
+  reviewId: string | null = null;
+  isLoading = false;
 
-  @Output() saved = new EventEmitter<Post>();
-  @Output() closed = new EventEmitter<void>();
+  // ===== Options =====
+  severityOptions = ['Low', 'Medium', 'High'];
+  statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
+  commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
 
-  postForm!: FormGroup;
-  isSubmitting = false;
-
-  get isEdit(): boolean {
-    return !!this.postToEdit;
-  }
+  pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
-    this.postForm = this.fb.group({
-      subject: [this.postToEdit?.subject || '', Validators.required],
-      content: [this.postToEdit?.content || '', Validators.required],
-      attachmentGroupId: [this.postToEdit?.attachmentGroupId || null],
+    this.initForm();
+
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.reviewId = id;
+        this.loadDesignReview(id);
+      }
+    });
+
+    // เมื่อเปลี่ยน reviewableType ให้โหลดรายการที่เกี่ยวข้อง
+    this.form.get('reviewableType')?.valueChanges.subscribe((type) => {
+      this.form.patchValue({ reviewableId: null });
     });
   }
 
-  closeModal(): void {
-    this.closed.emit();
+  initForm(): void {
+    this.form = Pmdt11Form.createForm(this.fb);
   }
 
-  submitPost(): void {
-    if (this.postForm.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูลให้ครบถ้วน', 'กรุณาระบุหัวข้อและเนื้อหาข้อความ');
+  loadDesignReview(id: string) {
+    this.isLoading = true;
+    this.service.getDesignReview(id).subscribe({
+      next: (data) => {
+        this.form.patchValue(data);
+        this.isLoading = false;
+        console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
+        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Design Review รหัสนี้');
+        this.router.navigate(['/feature/pm/design-review']);
+      },
+    });
+  }
+
+  onBack(): void {
+    this.router.navigate(['/feature/pm/design-review']);
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
       return;
     }
 
-    this.isSubmitting = true;
-    const formValue = this.postForm.value;
-
-    // ✅ อ่าน attachmentGroupId จาก control โดยตรง
-    let attachmentGroupId: string | undefined = undefined;
-    const rawGroupId = formValue.attachmentGroupId;
-
-    if (Array.isArray(rawGroupId) && rawGroupId.length > 0) {
-      const firstFile = rawGroupId[0];
-      attachmentGroupId = firstFile?.uploadGroupId || firstFile?.id || null;
-    } else if (typeof rawGroupId === 'string' && rawGroupId.trim()) {
-      attachmentGroupId = rawGroupId;
-    } else if (rawGroupId && typeof rawGroupId === 'object' && rawGroupId.uploadGroupId) {
-      attachmentGroupId = rawGroupId.uploadGroupId;
-    }
-
-    if (!attachmentGroupId && this.postForm.get('attachmentGroupId')?.value) {
-      const val = this.postForm.get('attachmentGroupId')?.value;
-      if (typeof val === 'string') attachmentGroupId = val;
-    }
-
-    if (this.isEdit && this.postToEdit) {
-      // แก้ไขโพสต์
-      this.service
-        .updateComment(this.postToEdit.id, { content: formValue.content })
-        .pipe(finalize(() => (this.isSubmitting = false)))
-        .subscribe({
-          next: () => {
-            const result: Post = {
-              ...this.postToEdit!,
-              subject: formValue.subject,
-              content: formValue.content,
-              attachmentGroupId: attachmentGroupId || this.postToEdit!.attachmentGroupId,
-            };
-            this.dialog.success('สำเร็จ', 'อัปเดตโพสต์เรียบร้อยแล้ว');
-            this.saved.emit(result);
-          },
-          error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถบันทึกข้อมูลได้');
-          },
+    const data = this.form.value;
+    this.service.save(data).subscribe({
+      next: () => {
+        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
+          this.form.markAsPristine();
+          this.router.navigate(['/feature/pm/design-review']);
         });
-    } else {
-      // สร้างโพสต์ใหม่
-      const request = {
-        targetId: this.projectId,
-        subject: formValue.subject,
-        content: formValue.content,
-        attachmentGroupId: attachmentGroupId,
-      };
-
-      this.service
-        .createPost(request)
-        .pipe(finalize(() => (this.isSubmitting = false)))
-        .subscribe({
-          next: (newPost) => {
-            this.dialog.success('สำเร็จ', 'สร้างโพสต์ใหม่เรียบร้อยแล้ว');
-            this.saved.emit(newPost);
-          },
-          error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถสร้างโพสต์ได้');
-          },
-        });
-    }
+      },
+      error: (error) => {
+        this.dialog.error('บันทึกไม่สำเร็จ', error);
+      },
+    });
   }
 }
+
+export default Pmdt11Component;

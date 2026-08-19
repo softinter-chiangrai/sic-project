@@ -1,208 +1,211 @@
-<style>
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-</style>
+<!-- src/app/feature/pm/dt/pmdt07/pmdt07.component.html -->
+<div class="space-y-5 p-0.5">
 
-<div class="flex flex-col h-screen w-full bg-[var(--bg,#f0f2f5)] overflow-hidden relative">
-  <!-- ===== Toolbar ===== -->
-  <div
-    class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
-  >
+  <!-- HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      @if (projectName) {
-        <span
-          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
-        >
-          {{ projectName }}
-        </span>
-      }
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-arrow-left-right text-[var(--crm-primary)]"></i>
+        Change Request
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
     </div>
-
-    <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
-      <button
-        (click)="generateSql()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)]"
-        title="Generate SQL from ER Diagram"
-      >
-        <i class="bi bi-database-fill text-lg"></i>
-        <span>Generate SQL</span>
-      </button>
-
-      <button
-        (click)="toggleChat()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
-        title="AI Chat History"
-      >
-        <i class="bi bi-chat-dots-fill text-lg"></i>
-        <span>Chat</span>
-        @if (unreadCount > 0) {
-          <span
-            class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
-          >
-            {{ unreadCount }}
-          </span>
-        }
-      </button>
-
-      <!-- ✅ ปุ่ม Save กลับมาแล้ว -->
-      <button
-        (click)="saveDiagram()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
-        title="Save diagram now"
-      >
-        <i class="bi bi-check-circle-fill text-lg"></i>
-        <span>Save</span>
-      </button>
-
-      <button
-        (click)="loadExistingDiagram()"
-        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
-        title="Reload from server"
-      >
-        <i class="bi bi-arrow-repeat text-lg"></i>
-        <span>Reload</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== Tab Bar ===== -->
-  <div
-    class="flex items-center gap-1 px-4 py-1.5 bg-[var(--sidebar)] border-b border-[var(--border)] overflow-x-auto flex-shrink-0 min-h-[44px]"
-  >
-    @if (isLoadingTabs) {
-      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
-        <div
-          class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-        ></div>
-        Loading tabs...
-      </div>
-    }
-
-    @for (tab of tabs(); track tab.id) {
-      <button
-        (click)="switchTab(tab.id)"
-        (dblclick)="editTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer"
-        [class.border-[var(--crm-success)]]="currentTabId === tab.id"
-        [class.text-[var(--text-active)]]="currentTabId === tab.id"
-        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
-        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
-        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
-      >
-        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
-
-        <span class="text-sm">
-          {{ tab.name }}
-        </span>
-
-        <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
-          {{ tab.diagramType }}
-        </span>
-
-        <button
-          (click)="deleteTab(tab.id, $event)"
-          class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          title="ลบ"
-        >
-          <i class="bi bi-x text-sm"></i>
-        </button>
-      </button>
-    }
-
     <button
-      (click)="createNewTab()"
-      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] transition-all whitespace-nowrap"
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
       <i class="bi bi-plus-lg"></i>
-      New Diagram
+      เพิ่ม Change Request
     </button>
   </div>
 
-  <!-- ===== Status Bar ===== -->
-  <div
-    class="flex items-center justify-between px-6 py-1 bg-[var(--bg,#f8f9fa)] border-b border-[var(--border,#d0d7de)] text-xs text-[var(--text-muted,#6c757d)] flex-shrink-0 min-h-[34px] gap-3 max-md:px-4 max-md:text-[11px] max-md:flex-wrap max-md:gap-1.5"
-  >
-    <div class="flex items-center gap-2 max-md:flex-wrap">
-      <span
-        class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0"
-        [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
-      ></span>
-      <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
-      @if (currentTabId) {
-        <span class="text-[var(--text-muted)] mx-2">|</span>
-        <span class="font-mono text-[0.6rem] text-[var(--text-muted)]"
-          >ID: {{ currentTabId.slice(0, 8) }}</span
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัส, ชื่อ, โครงการ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
       }
     </div>
-    <div class="flex items-center gap-3">
-      <span>{{ tabs().length }} diagram(s)</span>
-      <!-- ✅ แสดงสถานะ auto‑save / manual save -->
-      <span class="text-xs text-[var(--text-muted)]">{{ autoSaveStatus }}</span>
-    </div>
-  </div>
 
-  <!-- ===== Draw.io Editor ===== -->
-  <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
-    @if (isLoading) {
-      <div
-        class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
-      >
-        <div
-          class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
-        ></div>
-        <span>Loading diagram…</span>
-      </div>
-    }
-    <iframe
-      #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
-      class="block w-full h-full border-none bg-white"
-      frameborder="0"
-      allowfullscreen
-    ></iframe>
-  </div>
-
-  <!-- ===== Chat Sidebar ===== -->
-  <div
-    class="fixed top-0 w-[420px] h-screen bg-[var(--sidebar,#ffffff)] border-l border-[var(--border,#d0d7de)] shadow-[-4px_0_24px_rgba(0,0,0,0.12)] transition-[right] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-[1050] flex flex-col overflow-hidden max-md:w-full chat-sidebar"
-    [class.open]="chatOpen()"
-  >
-    <div
-      class="flex justify-between items-center px-5 py-4 border-b border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f8f9fa)] flex-shrink-0 font-semibold text-base text-[var(--text-active,#1e293b)]"
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
     >
-      <span class="flex items-center gap-2">
-        <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
-        AI Assistant
-      </span>
-      <button
-        (click)="toggleChat()"
-        class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]"
-        title="Close chat"
-      >
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-      <app-pmdt06A
-        [diagramId]="currentTabId"
-        class="flex-1 flex flex-col h-full overflow-hidden"
-      ></app-pmdt06A>
-    </div>
+      <option value="all">📊 ทุกสถานะ</option>
+      <option value="Draft">ร่าง</option>
+      <option value="Submitted">รออนุมัติ</option>
+      <option value="Approved">อนุมัติ</option>
+      <option value="Rejected">ปฏิเสธ</option>
+      <option value="Implemented">ดำเนินการแล้ว</option>
+    </select>
   </div>
 
-  <!-- ===== Overlay ===== -->
-  @if (chatOpen()) {
-    <div
-      class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[1040] animate-[fadeIn_0.2s_ease]"
-      (click)="toggleChat()"
-    ></div>
+  <!-- LOADING -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
   }
+
+  <!-- TABLE -->
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              รหัส
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+              ชื่อคำขอ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
+              โครงการ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
+              ผู้เกี่ยวข้อง / ผู้แก้ไข
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (cr of changeRequests(); track cr.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  CR-{{ cr.id.substring(0, 8).toUpperCase() }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[var(--text-active)]">{{ cr.title }}</div>
+                <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ cr.description }}</div>
+              </td>
+              <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
+              <td class="px-4 py-3">
+                <div class="space-y-1">
+                  @for (assignee of cr.assignees; track assignee.id) {
+                    <div class="flex items-center gap-1.5 text-xs">
+                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="assignee.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                      <span class="font-medium">{{ assignee.userName }}</span>
+                      <span class="text-[10px] text-[var(--text-muted)]">({{ assignee.targetType }})</span>
+                      @if (assignee.status !== 'COMPLETED' && cr.status === 'APPROVED') {
+                        <button
+                          (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
+                          class="px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-[10px] hover:bg-[var(--crm-primary)]/20 transition-all ml-1"
+                        >
+                          แก้ไขเสร็จแล้ว
+                        </button>
+                      }
+                    </div>
+                  } @empty {
+                    <span class="text-xs text-[var(--text-muted)]">-</span>
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span [class]="getStatusClass(cr.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getStatusText(cr.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1 flex-wrap">
+
+                  <sic-table-actions
+                    [showPrint]="false"
+                    (onView)="goToView(cr.id)"
+                    (onEdit)="goToEdit(cr.id)"
+                    (onDelete)="deleteChangeRequest(cr.id)"
+                  ></sic-table-actions>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>
+                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Change Request ใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    เพิ่ม Change Request
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- PAGINATION -->
+  @if (totalItems() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง
+        <strong class="text-[var(--text-active)]">{{ (currentPage() - 1) * pageSize() + 1 }}</strong>
+        -
+        <strong class="text-[var(--text-active)]">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+        จาก
+        <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong>
+        รายการ
+      </div>
+
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrevious()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="onPageChange(page)"
+            [class]="page === currentPage() 
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' 
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
 </div>
