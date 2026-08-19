@@ -9,6 +9,7 @@ import { SicInputAreaComponent } from '../../../../../core/component/sic-input-a
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
@@ -33,6 +34,7 @@ import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse 
     SicInputAreaComponent,
     SicDatepickerComponent,
     SicUploadComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt18A.component.html',
   changeDetection: ChangeDetectionStrategy.Default,
@@ -113,17 +115,22 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   }
 
   runGateCheck(projectId?: string, deliveryId?: string): void {
-    const projId = projectId || this.formData.form.controls['projectId']?.value;
-    if (!projId) return;
+    const projId = projectId || this.formData?.form?.controls['projectId']?.value || this.customerState.getProjectId();
+    if (!projId) {
+      this.dialog.warn('ไม่พบโครงการ', 'กรุณาเลือกโครงการที่ต้องการตรวจสอบเงื่อนไขส่งมอบก่อน');
+      return;
+    }
 
+    const delId = deliveryId || this.id() || undefined;
     this.isLoadingGateCheck.set(true);
-    this.service.getGateCheck(projId, deliveryId).subscribe({
+    this.service.getGateCheck(projId, delId).subscribe({
       next: (res) => {
         this.gateCheckData.set(res);
         this.isLoadingGateCheck.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.isLoadingGateCheck.set(false);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถตรวจสอบเงื่อนไข Gate ได้');
       },
     });
   }
@@ -204,6 +211,28 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกเอกสารได้');
       },
     });
+  }
+
+  navigateToGateModule(category: string): void {
+    switch (category?.toUpperCase()) {
+      case 'REQUIREMENT':
+        this.router.navigate(['/feature/pm/requirement']);
+        break;
+      case 'SPECIFICATION':
+        this.router.navigate(['/feature/pm/pmdt08']);
+        break;
+      case 'BUG':
+        this.router.navigate(['/feature/pm/bug']);
+        break;
+      case 'TEST':
+        this.router.navigate(['/feature/pm/test-case']);
+        break;
+      case 'MANUAL':
+        this.router.navigate(['/feature/pm/version']);
+        break;
+      default:
+        break;
+    }
   }
 
   onBack(): void {

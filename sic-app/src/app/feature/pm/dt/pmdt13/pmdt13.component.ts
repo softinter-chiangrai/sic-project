@@ -318,9 +318,14 @@ export class Pmdt13Component implements OnInit {
   }
 
   readyToTestCount = computed(() => {
-    return this.testCases().filter((tc) => {
-      const ts = (tc.taskStatus || '').toLowerCase();
-      return ts === 'testing';
+    // นับเฉพาะ Task ของโครงการที่อยู่ในสถานะ Testing และไม่ใช่ Bug
+    return this.projectTasks().filter((t: any) => {
+      if (t.isDelete) return false;
+      const status = (t.status || '').toLowerCase();
+      const code = (t.taskCode || '').toUpperCase();
+      const name = (t.taskName || '').toUpperCase();
+      const isBug = code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]');
+      return (status === 'testing' || status === 'ready') && !isBug;
     }).length;
   });
 

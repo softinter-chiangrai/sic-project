@@ -24,7 +24,11 @@ public interface PmTestCaseRepository extends JpaRepository<PmTestCase, UUID>, J
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
 
+    long countByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+
     long countByProjectIdAndTestStatusAndIsDeleteFalse(UUID projectId, String testStatus);
+
+    long countByBusinessIdAndProjectIdAndTestStatusIgnoreCaseAndIsDeleteFalse(UUID businessId, UUID projectId, String testStatus);
 
     List<PmTestCase> findByTaskIdAndIsDeleteFalse(UUID taskId);
 }

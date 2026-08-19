@@ -29,6 +29,7 @@ import java.util.UUID;
 public class PmDeliveryController {
 
     private final PmDeliveryService deliveryService;
+    private final com.softinter.sicapi.service.PmDeliveryExportService exportService;
     private final CurrentUserService currentUserService;
 
     @GetMapping("/paging")
@@ -77,5 +78,34 @@ public class PmDeliveryController {
             @RequestParam UUID projectId) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         return ResponseEntity.ok(deliveryService.gateCheck(deliveryId, projectId, businessId));
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export official Delivery Handover Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = exportService.exportDeliveryHandoverPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"delivery-handover-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
+
+    @PostMapping("/{id}/sign-off")
+    @Operation(summary = "Sign-off delivery document by client")
+    public ResponseEntity<PmDeliveryResponse> signOff(
+            @PathVariable UUID id,
+            @RequestParam String signedBy) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        String userId = currentUserService.getUserId();
+        return ResponseEntity.ok(deliveryService.signOff(id, signedBy, businessId, userId));
+    }
+
+    @PostMapping("/{id}/create-invoice")
+    @Operation(summary = "Generate Invoice from accepted Delivery document")
+    public ResponseEntity<UUID> createInvoice(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        String userId = currentUserService.getUserId();
+        return ResponseEntity.ok(deliveryService.createInvoiceFromDelivery(id, businessId, userId));
     }
 }

@@ -14,4 +14,9 @@ public interface PmDeliveryService {
     UUID save(PmDeliveryRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
     PmDeliveryGateCheckResponse gateCheck(UUID deliveryId, UUID projectId, UUID businessId);
+    
+    // Phase 4: Sign-off & Invoicing
+    PmDeliveryResponse signOff(UUID deliveryId, String signedBy, UUID businessId, String userId);
+    UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId);
 }
+

@@ -53,13 +53,27 @@
     @if (gateCheckData(); as gate) {
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         @for (item of gate.checkItems; track item.name) {
-          <div [class]="'p-3.5 rounded-xl border transition-all ' + (item.passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300')">
-            <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider mb-1">
-              <span>{{ item.category }}</span>
-              <span>{{ item.passed ? '✓ PASSED' : '✕ FAILED' }}</span>
+          <div
+            (click)="navigateToGateModule(item.category)"
+            [class]="'p-3.5 rounded-xl border transition-all cursor-pointer hover:shadow-md hover:scale-[1.02] flex flex-col justify-between ' + (item.passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500/60' : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:border-rose-500/60')"
+            title="คลิกเพื่อไปที่หน้านี้เพื่อจัดการ/แก้ไข"
+          >
+            <div>
+              <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider mb-1">
+                <span>{{ item.category }}</span>
+                <span>{{ item.passed ? '✓ PASSED' : '✕ FAILED' }}</span>
+              </div>
+              <div class="font-semibold text-sm truncate text-[var(--text-active)]" [title]="item.name">{{ item.name }}</div>
+              <div class="text-xs mt-1 text-[var(--text-muted)] leading-relaxed">{{ item.detail }}</div>
             </div>
-            <div class="font-semibold text-sm truncate text-[var(--text-active)]" [title]="item.name">{{ item.name }}</div>
-            <div class="text-xs mt-1 text-[var(--text-muted)] leading-relaxed">{{ item.detail }}</div>
+
+            <div class="mt-2.5 pt-2 border-t border-dashed border-current/20 flex items-center justify-between text-[11px] font-medium opacity-80 hover:opacity-100">
+              <span class="inline-flex items-center gap-1">
+                <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                {{ item.passed ? 'ดูข้อมูล' : 'ไปจัดการข้อที่ค้าง' }}
+              </span>
+              <i class="bi bi-chevron-right text-xs"></i>
+            </div>
           </div>
         }
       </div>
@@ -111,38 +125,58 @@
           displayField="label">
         </sic-combobox>
 
-        <sic-combobox
-          formControlName="status"
-          label="สถานะ (Status)"
-          [items]="statusOptions"
-          valueField="value"
-          displayField="label">
-        </sic-combobox>
-
-        <sic-input
-          formControlName="deliveryVersion"
-          label="เวอร์ชัน (Delivery Version)"
-          placeholder="1.0">
-        </sic-input>
-
         <sic-datepicker
           formControlName="deliveryDate"
           label="วันที่ส่งมอบ (Delivery Date)">
         </sic-datepicker>
+
+        <!-- Auto Version Badge -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-[var(--text-muted)]">เวอร์ชัน (Version)</label>
+          <div class="h-10 px-3.5 flex items-center gap-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-sm font-medium text-[var(--text-active)]">
+            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+              v{{ formData.form.controls['deliveryVersion']?.value || '1.0' }}
+            </span>
+            <span class="text-xs text-[var(--text-muted)]">(ระบบคุมเวอร์ชันอัตโนมัติ)</span>
+          </div>
+        </div>
+
+        <!-- Auto Status Badge -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-[var(--text-muted)]">สถานะเอกสาร (Status)</label>
+          <div class="h-10 px-3.5 flex items-center gap-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-sm font-medium text-[var(--text-active)]">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>{{ formData.form.controls['status']?.value || 'DRAFT' }}</span>
+            <span class="text-xs text-[var(--text-muted)]">(จัดการตาม Workflow อัตโนมัติ)</span>
+          </div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <sic-input-area
-          formControlName="releaseNote"
-          label="รายการการแก้ไขและฟีเจอร์หลัก (Release Notes)"
-          placeholder="ระบุสิ่งที่พัฒนา เพิ่มเติม หรือแก้ไขในเวอร์ชันนี้...">
-        </sic-input-area>
+      <!-- Rich Text Editors using Tiptap -->
+      <div class="space-y-4 pt-2">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+            รายการการแก้ไขและฟีเจอร์หลัก (Release Notes)
+          </label>
+          <sic-tiptap-editor
+            formControlName="releaseNote"
+            placeholderInput="ระบุฟีเจอร์ที่พัฒนา, Bug ที่แก้ไข, การเปลี่ยนแปลงสำคัญในเวอร์ชันนี้..."
+            minHeightInput="160px">
+          </sic-tiptap-editor>
+        </div>
 
-        <sic-input-area
-          formControlName="deliverySummary"
-          label="สรุปภาพรวมการส่งมอบ (Delivery Summary)"
-          placeholder="สรุปผลงาน ขอบเขตงาน และรายละเอียดเพิ่มเติม...">
-        </sic-input-area>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-card-checklist text-[var(--crm-primary)]"></i>
+            สรุปภาพรวมการส่งมอบ (Delivery Summary)
+          </label>
+          <sic-tiptap-editor
+            formControlName="deliverySummary"
+            placeholderInput="ระบุสรุปผลการส่งมอบ ขอบเขตงาน และรายละเอียดประกอบการตรวจรับงาน..."
+            minHeightInput="160px">
+          </sic-tiptap-editor>
+        </div>
       </div>
     </div>
 

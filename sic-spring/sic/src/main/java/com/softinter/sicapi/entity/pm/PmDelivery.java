@@ -62,4 +62,7 @@ public class PmDelivery extends BaseBusinessEntity {
 
     @Column(name = "attachment_group_id")
     private UUID attachmentGroupId;
+
+    @Column(name = "is_locked")
+    private Boolean isLocked = false;
 }

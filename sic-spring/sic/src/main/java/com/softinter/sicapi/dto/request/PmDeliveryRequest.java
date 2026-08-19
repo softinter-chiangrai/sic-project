@@ -35,7 +35,9 @@ public class PmDeliveryRequest {
     private String customerSignedBy;
     private Instant customerSignedDate;
     private UUID attachmentGroupId;
+    private Boolean isLocked;
     private List<PmDeliveryChecklistRequest> checklists;
+    private List<PmDeliveryItemRequest> items;
     private Integer state;
     private Integer rowVersion;
 }

@@ -1,19 +1,22 @@
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
+import com.softinter.sicapi.dto.request.PmDeliveryItemRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
+import com.softinter.sicapi.dto.request.PmInvoiceRequest;
 import com.softinter.sicapi.dto.response.PmDeliveryChecklistResponse;
 import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
+import com.softinter.sicapi.dto.response.PmDeliveryItemResponse;
 import com.softinter.sicapi.dto.response.PmDeliveryResponse;
+import com.softinter.sicapi.entity.enums.BillingType;
 import com.softinter.sicapi.entity.enums.EntityState;
-import com.softinter.sicapi.entity.pm.PmDelivery;
-import com.softinter.sicapi.entity.pm.PmDeliveryChecklist;
-import com.softinter.sicapi.entity.pm.PmRequirement;
-import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.entity.enums.PaymentStatus;
+import com.softinter.sicapi.entity.pm.*;
 import com.softinter.sicapi.repository.pm.*;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmDeliveryService;
+import com.softinter.sicapi.service.PmInvoiceService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,13 +40,19 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
 
     private final PmDeliveryRepository deliveryRepository;
     private final PmDeliveryChecklistRepository checklistRepository;
+    private final PmDeliveryItemRepository deliveryItemRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmSpecificationRepository specificationRepository;
     private final PmBugRepository bugRepository;
     private final PmTestCaseRepository testCaseRepository;
+    private final PmUserManualRepository userManualRepository;
+    private final PmChangeRequestRepository changeRequestRepository;
+    private final PmCustomerProjectRepository projectRepository;
+    private final PmCustomerContractRepository contractRepository;
 
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
+    private final PmInvoiceService invoiceService;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,12 +72,21 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
         PmDeliveryResponse response = toResponse(delivery);
+        
         List<PmDeliveryChecklistResponse> checklists = checklistRepository
                 .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId())
                 .stream()
                 .map(this::toChecklistResponse)
                 .collect(Collectors.toList());
         response.setChecklists(checklists);
+
+        List<PmDeliveryItemResponse> items = deliveryItemRepository
+                .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId())
+                .stream()
+                .map(this::toItemResponse)
+                .collect(Collectors.toList());
+        response.setItems(items);
+
         return response;
     }
 
@@ -82,10 +102,11 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
             entity.setIsDelete(false);
+            entity.setIsLocked(false);
             mapRequestToEntity(request, entity);
             entity = deliveryRepository.save(entity);
 
-            // ✅ Create initial document version
+            // Create initial document version
             documentVersionService.createVersion(
                     "DELIVERY",
                     entity.getId(),
@@ -96,22 +117,27 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             );
 
             // Save checklists
-            if (request.getChecklists() != null) {
-                for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
-                    PmDeliveryChecklist checklist = new PmDeliveryChecklist();
-                    checklist.setCreatedBy(userId);
-                    checklist.setCreatedDate(Instant.now());
-                    checklist.setIsDelete(false);
-                    checklist.setDeliveryId(entity.getId());
-                    mapChecklistRequestToEntity(chkReq, checklist);
-                    checklistRepository.save(checklist);
-                }
-            }
+            saveChecklists(entity.getId(), request.getChecklists(), userId);
+            
+            // Save linked items
+            saveDeliveryItems(entity.getId(), request.getItems(), userId);
+
         } else if (state == EntityState.MODIFIED) {
             entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
 
-            // ✅ Auto Diff Detection
+            // Phase 2: Lock validation
+            if (Boolean.TRUE.equals(entity.getIsLocked()) && !Boolean.TRUE.equals(request.getIsLocked())) {
+                // If attempting to edit a locked delivery without unlocking authorization
+                log.warn("Attempt to modify locked delivery document: {}", entity.getDeliveryCode());
+            }
+
+            // Check if status moves to DELIVERED, ACCEPTED, or CONFIRMED -> Auto Lock & Snapshot
+            boolean shouldLock = "DELIVERED".equalsIgnoreCase(request.getStatus()) 
+                    || "CONFIRMED".equalsIgnoreCase(request.getStatus())
+                    || "ACCEPTED".equalsIgnoreCase(request.getStatus())
+                    || Boolean.TRUE.equals(request.getIsLocked());
+
             List<String> changes = new ArrayList<>();
             DocumentDiffHelper.checkChange(changes, "ชื่องวดงาน (Title)", entity.getDeliveryTitle(), request.getDeliveryTitle());
             DocumentDiffHelper.checkChange(changes, "ประเภทการส่งมอบ (Type)", entity.getDeliveryType(), request.getDeliveryType());
@@ -122,61 +148,100 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตเอกสารส่งมอบ " + (request.getDeliveryTitle() != null ? request.getDeliveryTitle() : entity.getDeliveryTitle()));
 
             mapRequestToEntity(request, entity);
+            if (shouldLock) {
+                entity.setIsLocked(true);
+            }
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = deliveryRepository.save(entity);
 
-            // Snapshot data
+            // Snapshot data for versioning
             String snapshotJson = null;
             try {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 snapshotJson = mapper.writeValueAsString(entity);
             } catch (Exception ignored) {}
 
+            String nextVersion = "v" + (entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "1.0");
             documentVersionService.createVersion(
                     "DELIVERY",
                     entity.getId(),
                     entity.getProjectId(),
                     entity.getDeliveryCode(),
-                    "v1.1",
-                    diffSummary,
+                    nextVersion,
+                    diffSummary + (shouldLock ? " [LOCKED/FROZEN]" : ""),
                     snapshotJson
             );
 
-            // Sync checklists
-            if (request.getChecklists() != null) {
-                for (PmDeliveryChecklistRequest chkReq : request.getChecklists()) {
-                    EntityState chkState = chkReq.getState() != null ? EntityState.values()[chkReq.getState()] : EntityState.DETACHED;
-                    if (chkState == EntityState.ADDED) {
-                        PmDeliveryChecklist checklist = new PmDeliveryChecklist();
-                        checklist.setCreatedBy(userId);
-                        checklist.setCreatedDate(Instant.now());
-                        checklist.setIsDelete(false);
-                        checklist.setDeliveryId(entity.getId());
-                        mapChecklistRequestToEntity(chkReq, checklist);
-                        checklistRepository.save(checklist);
-                    } else if (chkState == EntityState.MODIFIED) {
-                        checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
-                            mapChecklistRequestToEntity(chkReq, chk);
-                            chk.setUpdatedBy(userId);
-                            chk.setUpdatedDate(Instant.now());
-                            checklistRepository.save(chk);
-                        });
-                    } else if (chkState == EntityState.DELETED) {
-                        checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
-                            chk.setIsDelete(true);
-                            chk.setDeleteBy(userId);
-                            chk.setDeleteDate(Instant.now());
-                            checklistRepository.save(chk);
-                        });
-                    }
-                }
-            }
+            // Sync checklists & items
+            saveChecklists(entity.getId(), request.getChecklists(), userId);
+            saveDeliveryItems(entity.getId(), request.getItems(), userId);
+
         } else {
             throw new IllegalArgumentException("Unsupported state: " + state);
         }
 
         return entity.getId();
+    }
+
+    private void saveChecklists(UUID deliveryId, List<PmDeliveryChecklistRequest> checklists, String userId) {
+        if (checklists == null) return;
+        for (PmDeliveryChecklistRequest chkReq : checklists) {
+            EntityState chkState = chkReq.getState() != null ? EntityState.values()[chkReq.getState()] : EntityState.DETACHED;
+            if (chkState == EntityState.ADDED || chkReq.getId() == null) {
+                PmDeliveryChecklist checklist = new PmDeliveryChecklist();
+                checklist.setCreatedBy(userId);
+                checklist.setCreatedDate(Instant.now());
+                checklist.setIsDelete(false);
+                checklist.setDeliveryId(deliveryId);
+                mapChecklistRequestToEntity(chkReq, checklist);
+                checklistRepository.save(checklist);
+            } else if (chkState == EntityState.MODIFIED) {
+                checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
+                    mapChecklistRequestToEntity(chkReq, chk);
+                    chk.setUpdatedBy(userId);
+                    chk.setUpdatedDate(Instant.now());
+                    checklistRepository.save(chk);
+                });
+            } else if (chkState == EntityState.DELETED) {
+                checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
+                    chk.setIsDelete(true);
+                    chk.setDeleteBy(userId);
+                    chk.setDeleteDate(Instant.now());
+                    checklistRepository.save(chk);
+                });
+            }
+        }
+    }
+
+    private void saveDeliveryItems(UUID deliveryId, List<PmDeliveryItemRequest> items, String userId) {
+        if (items == null) return;
+        for (PmDeliveryItemRequest itemReq : items) {
+            EntityState itemState = itemReq.getState() != null ? EntityState.values()[itemReq.getState()] : EntityState.DETACHED;
+            if (itemState == EntityState.ADDED || itemReq.getId() == null) {
+                PmDeliveryItem item = new PmDeliveryItem();
+                item.setCreatedBy(userId);
+                item.setCreatedDate(Instant.now());
+                item.setIsDelete(false);
+                item.setDeliveryId(deliveryId);
+                mapItemRequestToEntity(itemReq, item);
+                deliveryItemRepository.save(item);
+            } else if (itemState == EntityState.MODIFIED) {
+                deliveryItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                    mapItemRequestToEntity(itemReq, item);
+                    item.setUpdatedBy(userId);
+                    item.setUpdatedDate(Instant.now());
+                    deliveryItemRepository.save(item);
+                });
+            } else if (itemState == EntityState.DELETED) {
+                deliveryItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                    item.setIsDelete(true);
+                    item.setDeleteBy(userId);
+                    item.setDeleteDate(Instant.now());
+                    deliveryItemRepository.save(item);
+                });
+            }
+        }
     }
 
     @Override
@@ -196,7 +261,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         List<PmDeliveryGateCheckResponse.GateCheckItem> items = new ArrayList<>();
         int passedCount = 0;
 
-        // 1. Check Requirements Confirmation / Approval
+        // 1. Check Requirements Confirmation
         List<PmRequirement> requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
         long totalReqs = requirements.size();
         long confirmedReqs = requirements.stream()
@@ -212,7 +277,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .detail(String.format("อนุมัติแล้ว %d จาก %d รายการ", confirmedReqs, totalReqs))
                 .build());
 
-        // 2. Check Specifications Confirmation / Approval
+        // 2. Check Specifications Approval
         List<PmSpecification> specifications = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
         long totalSpecs = specifications.size();
         long confirmedSpecs = specifications.stream()
@@ -241,8 +306,8 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .build());
 
         // 4. Check Test Cases
-        long totalTests = testCaseRepository.countByProjectIdAndIsDeleteFalse(projectId);
-        long passedTests = testCaseRepository.countByProjectIdAndTestStatusAndIsDeleteFalse(projectId, "PASS");
+        long totalTests = testCaseRepository.countByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        long passedTests = testCaseRepository.countByBusinessIdAndProjectIdAndTestStatusIgnoreCaseAndIsDeleteFalse(businessId, projectId, "PASS");
         boolean testPassed = totalTests > 0 && totalTests == passedTests;
         if (testPassed) passedCount++;
         items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
@@ -253,7 +318,19 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .detail(String.format("ผ่านการทดสอบ %d จาก %d รายการ", passedTests, totalTests))
                 .build());
 
-        // 5. Checklist items (if deliveryId provided)
+        // 5. Check User Manuals
+        List<PmUserManual> manuals = userManualRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        boolean manualPassed = !manuals.isEmpty() && manuals.stream().anyMatch(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()) || "APPROVED".equalsIgnoreCase(m.getStatus()));
+        if (manualPassed) passedCount++;
+        items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
+                .category("MANUAL")
+                .name("User Manual Preparation Gate")
+                .passed(manualPassed)
+                .status(manualPassed ? "OK" : "WARNING")
+                .detail(manualPassed ? String.format("มีคู่มือพร้อมส่งมอบ %d เล่ม", manuals.size()) : "ยังไม่มีคู่มือที่พร้อมส่งมอบ")
+                .build());
+
+        // 6. Check Linked Delivery Items & Checklists
         if (deliveryId != null) {
             List<PmDeliveryChecklist> checklists = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
             long checkedCount = checklists.stream().filter(PmDeliveryChecklist::getIsChecked).count();
@@ -261,7 +338,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             if (chkPassed) passedCount++;
             items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
                     .category("CHECKLIST")
-                    .name("Delivery Checklist Items")
+                    .name("Delivery Checklist Verification")
                     .passed(chkPassed)
                     .status(chkPassed ? "OK" : "WARNING")
                     .detail(String.format("ตรวจสอบแล้ว %d จาก %d รายการ", checkedCount, checklists.size()))
@@ -277,6 +354,77 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .passedChecks(passedCount)
                 .checkItems(items)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public PmDeliveryResponse signOff(UUID deliveryId, String signedBy, UUID businessId, String userId) {
+        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(deliveryId, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+
+        delivery.setCustomerSignedBy(signedBy);
+        delivery.setCustomerSignedDate(Instant.now());
+        delivery.setStatus("ACCEPTED");
+        delivery.setIsLocked(true);
+        delivery.setUpdatedBy(userId);
+        delivery.setUpdatedDate(Instant.now());
+        delivery = deliveryRepository.save(delivery);
+
+        // Snapshot sign-off
+        documentVersionService.createVersion(
+                "DELIVERY",
+                delivery.getId(),
+                delivery.getProjectId(),
+                delivery.getDeliveryCode(),
+                "v" + delivery.getDeliveryVersion() + "-ACCEPTED",
+                "ลูกค้าลงนามตรวจรับงานเรียบร้อยโดย " + signedBy
+        );
+
+        return toResponse(delivery);
+    }
+
+    @Override
+    @Transactional
+    public UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId) {
+        PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(deliveryId, businessId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+
+        // Fetch customer from project
+        UUID customerId = null;
+        if (delivery.getProjectId() != null) {
+            var projectOpt = projectRepository.findById(delivery.getProjectId());
+            if (projectOpt.isPresent()) {
+                customerId = projectOpt.get().getCustomerId();
+            }
+        }
+
+        // Look for contract amount or default
+        BigDecimal subtotal = BigDecimal.ZERO;
+        if (delivery.getContractId() != null) {
+            var contractOpt = contractRepository.findById(delivery.getContractId());
+            if (contractOpt.isPresent() && contractOpt.get().getContractValue() != null) {
+                subtotal = contractOpt.get().getContractValue();
+            }
+        }
+
+        PmInvoiceRequest invReq = new PmInvoiceRequest();
+        invReq.setInvoiceNo("INV-DEL-" + delivery.getDeliveryCode());
+        invReq.setCustomerId(customerId);
+        invReq.setProjectId(delivery.getProjectId());
+        invReq.setContractId(delivery.getContractId());
+        invReq.setDeliveryId(delivery.getId());
+        invReq.setMilestoneId(delivery.getMilestoneId());
+        invReq.setBillingType(BillingType.MILESTONE);
+        invReq.setIssueDate(LocalDate.now());
+        invReq.setDueDate(LocalDate.now().plusDays(30));
+        invReq.setSubtotalAmount(subtotal);
+        invReq.setPaymentStatus(PaymentStatus.UNPAID);
+        invReq.setRemark("Generated from Delivery Acceptance: " + delivery.getDeliveryTitle() + " (" + delivery.getDeliveryCode() + ")");
+        invReq.setState(EntityState.ADDED.ordinal());
+
+        UUID invoiceId = invoiceService.save(invReq, businessId, userId);
+        log.info("Successfully generated Invoice {} from Delivery {}", invoiceId, deliveryId);
+        return invoiceId;
     }
 
     private void mapRequestToEntity(PmDeliveryRequest req, PmDelivery entity) {
@@ -296,6 +444,9 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setCustomerSignedBy(req.getCustomerSignedBy());
         entity.setCustomerSignedDate(req.getCustomerSignedDate());
         entity.setAttachmentGroupId(req.getAttachmentGroupId());
+        if (req.getIsLocked() != null) {
+            entity.setIsLocked(req.getIsLocked());
+        }
     }
 
     private void mapChecklistRequestToEntity(PmDeliveryChecklistRequest req, PmDeliveryChecklist entity) {
@@ -304,6 +455,16 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setIsChecked(req.getIsChecked() != null ? req.getIsChecked() : false);
         entity.setCheckedBy(req.getCheckedBy());
         entity.setCheckedDate(req.getCheckedDate());
+        entity.setRemark(req.getRemark());
+        entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
+    }
+
+    private void mapItemRequestToEntity(PmDeliveryItemRequest req, PmDeliveryItem entity) {
+        entity.setItemType(req.getItemType());
+        entity.setItemId(req.getItemId());
+        entity.setItemCode(req.getItemCode());
+        entity.setItemTitle(req.getItemTitle());
+        entity.setItemStatus(req.getItemStatus());
         entity.setRemark(req.getRemark());
         entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
     }
@@ -328,6 +489,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         res.setCustomerSignedBy(entity.getCustomerSignedBy());
         res.setCustomerSignedDate(entity.getCustomerSignedDate());
         res.setAttachmentGroupId(entity.getAttachmentGroupId());
+        res.setIsLocked(entity.getIsLocked());
         res.setCreatedBy(entity.getCreatedBy());
         res.setCreatedDate(entity.getCreatedDate());
         res.setUpdatedBy(entity.getUpdatedBy());
@@ -348,6 +510,20 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         res.setRemark(entity.getRemark());
         res.setSortOrder(entity.getSortOrder());
         res.setRowVersion(entity.getRowVersion());
+        return res;
+    }
+
+    private PmDeliveryItemResponse toItemResponse(PmDeliveryItem entity) {
+        PmDeliveryItemResponse res = new PmDeliveryItemResponse();
+        res.setId(entity.getId());
+        res.setDeliveryId(entity.getDeliveryId());
+        res.setItemType(entity.getItemType());
+        res.setItemId(entity.getItemId());
+        res.setItemCode(entity.getItemCode());
+        res.setItemTitle(entity.getItemTitle());
+        res.setItemStatus(entity.getItemStatus());
+        res.setRemark(entity.getRemark());
+        res.setSortOrder(entity.getSortOrder());
         return res;
     }
 }

@@ -27,7 +27,9 @@ public class PmDeliveryResponse {
     private String customerSignedBy;
     private Instant customerSignedDate;
     private UUID attachmentGroupId;
+    private Boolean isLocked;
     private List<PmDeliveryChecklistResponse> checklists;
+    private List<PmDeliveryItemResponse> items;
     private String createdBy;
     private Instant createdDate;
     private String updatedBy;
