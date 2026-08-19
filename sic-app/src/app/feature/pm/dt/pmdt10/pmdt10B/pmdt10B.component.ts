@@ -9,16 +9,16 @@ import {
   SicKanbanComponent,
   KanbanStatusChangeEvent,
   KanbanColumnConfig,
-} from '../../../../core/component/sic-kanban/sic-kanban.component';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { BusinessService } from '../../../../core/services/business.service';
+} from '../../../../../core/component/sic-kanban/sic-kanban.component';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 
 import { Pmdt10BService } from './pmdt10B.service';
-import { Pmdt12AComponent } from './pmdt12A/pmdt12A.component';
+import { Pmdt10CComponent } from '../pmdt10C/pmdt10C.component';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10B.model';
-import { SicAvatarComponent } from '../../../../core/component/sic-avatar/sic-avatar.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicAvatarComponent } from '../../../../../core/component/sic-avatar/sic-avatar.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmdt10b',
@@ -31,7 +31,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicAvatarComponent,
     SicComboboxComponent,
     SicKanbanComponent,
-    Pmdt12AComponent,
+    Pmdt10CComponent,
   ],
   templateUrl: './pmdt10B.component.html',
   styleUrls: ['./pmdt10B.component.css'],
@@ -45,7 +45,7 @@ export class Pmdt10BComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  @ViewChild('taskModal') taskModal?: Pmdt12AComponent;
+  @ViewChild('taskModal') taskModal?: Pmdt10CComponent;
 
   // View state
   viewType = signal<'kanban' | 'list'>('kanban');

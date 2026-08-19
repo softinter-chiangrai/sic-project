@@ -2,7 +2,7 @@
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export interface Pmdt07AModel extends SicBaseStateModel {
+export interface Pmdt06AModel extends SicBaseStateModel {
   id: string;
   projectId: string;
   crCode: string;
@@ -14,8 +14,8 @@ export interface Pmdt07AModel extends SicBaseStateModel {
   status?: string;
 }
 
-export interface Pmdt07APageData {
-  changeRequestData: SicFromData<Pmdt07AModel>;
+export interface Pmdt06APageData {
+  changeRequestData: SicFromData<Pmdt06AModel>;
 }
 
 export interface ChangeRequestFormModel {

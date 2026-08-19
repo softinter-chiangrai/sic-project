@@ -273,8 +273,8 @@
 
   }
 
-  <!-- ===== 5. TASK CREATE / EDIT MODAL (PMDT12A) ===== -->
-  <app-pmdt12a
+  <!-- ===== 5. TASK CREATE / EDIT MODAL (PMDT10C) ===== -->
+  <app-pmdt10c
     #taskModal
     [isOpen]="isModalOpen()"
     [isEdit]="isModalEdit()"
@@ -284,6 +284,6 @@
     [workPackages]="workPackages()"
     (close)="isModalOpen.set(false)"
     (saved)="onTaskSaved($event)"
-  ></app-pmdt12a>
+  ></app-pmdt10c>
 
 </div>

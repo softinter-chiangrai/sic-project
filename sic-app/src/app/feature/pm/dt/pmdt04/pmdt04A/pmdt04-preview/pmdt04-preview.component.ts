@@ -1,8 +1,8 @@
 import { Component, inject, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
-import { RequirementPreviewData } from '../pmdt05.model';
+import { SicDatePipe } from '../../../../../../core/pipes/sic-date.pipe';
+import { RequirementPreviewData } from '../pmdt04A.model';
 
 @Component({
   selector: 'sic-requirement-preview',

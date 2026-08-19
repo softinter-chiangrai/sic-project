@@ -325,4 +325,4 @@ export class Pmdt20Component implements OnInit {
   }
 }
 
-export default Pmrt26Component;
+export default Pmdt20Component;

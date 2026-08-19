@@ -2,28 +2,28 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Pmdt07Model } from './pmdt07.model';
+import { Pmdt06Model } from './pmdt06.model';
 import { environment } from '../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt07Service {
+export class Pmdt06Service {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiBaseUrl}/api/pm/change-requests`;
 
-  getChangeRequests(projectId: string): Observable<Pmdt07Model[]> {
-    return this.http.get<Pmdt07Model[]>(`${this.baseUrl}?projectId=${projectId}`);
+  getChangeRequests(projectId: string): Observable<Pmdt06Model[]> {
+    return this.http.get<Pmdt06Model[]>(`${this.baseUrl}?projectId=${projectId}`);
   }
 
-  getChangeRequestById(id: string): Observable<Pmdt07Model> {
-    return this.http.get<Pmdt07Model>(`${this.baseUrl}/${id}`);
+  getChangeRequestById(id: string): Observable<Pmdt06Model> {
+    return this.http.get<Pmdt06Model>(`${this.baseUrl}/${id}`);
   }
 
-  createChangeRequest(data: Partial<Pmdt07Model>): Observable<Pmdt07Model> {
-    return this.http.post<Pmdt07Model>(this.baseUrl, data);
+  createChangeRequest(data: Partial<Pmdt06Model>): Observable<Pmdt06Model> {
+    return this.http.post<Pmdt06Model>(this.baseUrl, data);
   }
 
-  updateChangeRequest(id: string, data: Partial<Pmdt07Model>): Observable<Pmdt07Model> {
-    return this.http.put<Pmdt07Model>(`${this.baseUrl}/${id}`, data);
+  updateChangeRequest(id: string, data: Partial<Pmdt06Model>): Observable<Pmdt06Model> {
+    return this.http.put<Pmdt06Model>(`${this.baseUrl}/${id}`, data);
   }
 
   deleteChangeRequest(id: string): Observable<void> {

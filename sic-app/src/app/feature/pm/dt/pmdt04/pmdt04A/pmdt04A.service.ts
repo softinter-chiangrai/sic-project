@@ -2,8 +2,8 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Pmdt05Model } from './pmdt05.model';
-import { environment } from '../../../../../environments/environment';
+import { Pmdt04AModel } from './pmdt04A.model';
+import { environment } from '../../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt05Service {

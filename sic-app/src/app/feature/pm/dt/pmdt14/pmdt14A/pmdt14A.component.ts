@@ -77,7 +77,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.isView() ? false : (this.formData?.dirty ?? false);
 
   ngOnInit(): void {
-    const rawForm = Pmdt18AForm.createForm(this.fb);
+    const rawForm = Pmdt14AForm.createForm(this.fb);
     this.formData = new SicFromData<PmDeliveryModel>(rawForm);
 
     const isViewRoute = this.router.url.includes('/view');

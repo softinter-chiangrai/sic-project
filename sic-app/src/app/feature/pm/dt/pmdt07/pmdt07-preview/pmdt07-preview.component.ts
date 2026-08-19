@@ -2,10 +2,10 @@
 
 import { Component, Input, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
-import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
-import { PmSpecificationModel } from '../pmdt08.model';
+import { PmSpecificationModel } from '../pmdt07.model';
 import { environment } from '../../../../../../environments/environment';
 import { BusinessService } from '../../../../../core/services/business.service';
 
@@ -189,7 +189,7 @@ import { BusinessService } from '../../../../../core/services/business.service';
     .text-muted { color: var(--text-muted); }
   `]
 })
-export class Pmdt08PreviewComponent implements OnChanges {
+export class Pmdt07PreviewComponent implements OnChanges {
     @Input() data!: PmSpecificationModel;
     private sanitizer = inject(DomSanitizer);
     private http = inject(HttpClient);

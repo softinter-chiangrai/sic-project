@@ -90,4 +90,4 @@ export class Pmdt15Component implements OnInit {
   }
 }
 
-export default Pmrt19Component;
+export default Pmdt15Component;

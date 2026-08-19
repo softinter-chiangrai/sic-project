@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
-import { PmInvoiceModel } from './pmdt20A.model';
+import { PmInvoiceModel } from './pmdt16A.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt20AService {
+export class Pmdt16AService {
   private http = inject(HttpClient);
 
   getById(id: string): Observable<PmInvoiceModel> {

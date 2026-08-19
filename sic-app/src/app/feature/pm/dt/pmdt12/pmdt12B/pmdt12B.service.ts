@@ -1,12 +1,12 @@
-// src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.service.ts
+// src/app/feature/pm/dt/pmdt12/pmdt12B/pmdt12B.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
-import { PmTestScenarioModel, PmTaskItemModel } from './pmdt13B.model';
+import { PmTestScenarioModel, PmTaskItemModel } from './pmdt12B.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt13BService {
+export class Pmdt12BService {
   private http = inject(HttpClient);
   private apiBase = environment.apiBaseUrl;
 

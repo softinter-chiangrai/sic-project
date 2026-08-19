@@ -421,7 +421,7 @@ export class Pmdt08Component implements OnInit {
   startEditReply(postId: string, replyId: string): void {
     const post = this.posts().find((p) => p.id === postId);
     if (!post) return;
-    const reply = post.replies?.find((r) => r.id === replyId);
+    const reply = post.replies?.find((r: Reply) => r.id === replyId);
     if (!reply) return;
     this.editingCommentId.set(replyId);
     this.editForm.patchValue({ content: reply.content });
@@ -458,7 +458,7 @@ export class Pmdt08Component implements OnInit {
             this.posts.update((posts) =>
               posts.map((p) => {
                 if (p.id === postId) {
-                  const updatedReplies = p.replies?.map((r) =>
+                  const updatedReplies = p.replies?.map((r: Reply) =>
                     r.id === commentId ? { ...r, content } : r
                   );
                   return { ...p, replies: updatedReplies };
@@ -508,7 +508,7 @@ export class Pmdt08Component implements OnInit {
               this.posts.update((posts) =>
                 posts.map((p) => {
                   if (p.id === postId) {
-                    const updatedReplies = p.replies?.filter((r) => r.id !== replyId) || [];
+                    const updatedReplies = p.replies?.filter((r: Reply) => r.id !== replyId) || [];
                     return { ...p, replies: updatedReplies, replyCount: Math.max(0, p.replyCount - 1) };
                   }
                   return p;

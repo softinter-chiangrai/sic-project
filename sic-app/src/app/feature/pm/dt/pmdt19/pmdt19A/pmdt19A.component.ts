@@ -3,16 +3,16 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../core/model/sic-base-model';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
 import { Pmdt19AForm } from './pmdt19A.form';
 import { Pmdt19AService } from './pmdt19A.service';
@@ -63,7 +63,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit(): void {
-    const rawForm = Pmdt25Form.createForm(this.fb);
+    const rawForm = Pmdt19AForm.createForm(this.fb);
     this.formData = new SicFromData<DocumentVersionModel>(rawForm);
 
     const projId = this.customerState.getProjectId();
@@ -134,4 +134,4 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt25Component;
+export default Pmdt19AComponent;

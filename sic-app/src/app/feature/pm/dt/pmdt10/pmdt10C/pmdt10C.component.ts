@@ -2,9 +2,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Pmdt12Service } from '../pmdt12.service';
-import { Pmdt12Form } from '../pmdt12.form';
-import type { TaskModel, TaskRequest, TaskResponse, SpecificationSummary, WorkPackageOption } from '../pmdt12.model';
+import { Pmdt10BService } from '../pmdt10B/pmdt10B.service';
+import { Pmdt10BForm } from '../pmdt10B/pmdt10B.form';
+import type { TaskModel, TaskRequest, TaskResponse, SpecificationSummary, WorkPackageOption } from '../pmdt10B/pmdt10B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -14,9 +14,8 @@ import { SicTimepickerComponent} from '../../../../../core/component/sic-timepic
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 
-
 @Component({
-  selector: 'app-pmdt12a',
+  selector: 'app-pmdt10c',
   standalone: true,
   imports: [
     CommonModule,
@@ -27,11 +26,12 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
     SicColorpickerComponent,
     SicTiptapEditorComponent,
   ],
-  templateUrl: './pmdt12A.component.html',
+  templateUrl: './pmdt10C.component.html',
+  styleUrls: ['./pmdt10C.component.css'],
 })
-export class Pmdt12AComponent implements OnInit {
+export class Pmdt10CComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private service = inject(Pmdt12Service);
+  private service = inject(Pmdt10BService);
   private dialog = inject(DialogService);
   private businessService = inject(BusinessService);
 
@@ -47,7 +47,7 @@ export class Pmdt12AComponent implements OnInit {
 
   assignedToApiUrl = '';
   isSaving = false;
-  formData: SicFromData<TaskModel> = new SicFromData<TaskModel>(Pmdt12Form.createForm(this.fb));
+  formData: SicFromData<TaskModel> = new SicFromData<TaskModel>(Pmdt10BForm.createForm(this.fb));
 
   get form() {
     return this.formData.formGroup;

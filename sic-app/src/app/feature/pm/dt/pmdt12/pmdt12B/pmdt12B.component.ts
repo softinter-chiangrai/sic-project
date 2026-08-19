@@ -3,8 +3,8 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Pmdt13BService } from './pmdt13B.service';
-import { Pmdt13BForm } from './pmdt13B.form';
+import { Pmdt12BService } from './pmdt12B.service';
+import { Pmdt12BForm } from './pmdt12B.form';
 import { PmTestScenarioModel } from './pmdt12B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
@@ -59,7 +59,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit(): void {
-    this.formData = new SicFromData<PmTestScenarioModel>(Pmdt13BForm.createForm(this.fb));
+    this.formData = new SicFromData<PmTestScenarioModel>(Pmdt12BForm.createForm(this.fb));
     const pId = this.customerState.getProjectId();
     if (pId) {
       this.formData.form.patchValue({ projectId: pId });
@@ -166,4 +166,4 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt13BComponent;
+export default Pmdt12BComponent;

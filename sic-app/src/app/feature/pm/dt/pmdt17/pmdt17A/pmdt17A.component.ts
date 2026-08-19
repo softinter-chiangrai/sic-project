@@ -74,7 +74,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit() {
-    const rawForm = Pmdt21AForm.createForm(this.fb);
+    const rawForm = Pmdt17AForm.createForm(this.fb);
     this.formData = new SicFromData<PmMaTicketModel>(rawForm);
 
     const projId = this.customerState.getProjectId();

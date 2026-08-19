@@ -7,7 +7,7 @@ import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-import { DiagramPage } from './pmdt06.model';
+import { DiagramPage } from './pmdt05.model';
 
 
 @Component({

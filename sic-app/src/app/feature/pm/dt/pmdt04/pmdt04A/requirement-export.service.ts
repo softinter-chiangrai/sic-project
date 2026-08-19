@@ -3,8 +3,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, lastValueFrom } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { RequirementModel } from './pmdt05.model';
+import { environment } from '../../../../../../environments/environment';
+import { RequirementModel } from './pmdt04A.model';
 
 @Injectable({
   providedIn: 'root',

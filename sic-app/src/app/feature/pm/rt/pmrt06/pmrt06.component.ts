@@ -237,4 +237,4 @@ export class Pmrt06Component implements OnInit {
   }
 }
 
-export default Pmrt24Component;
+export default Pmrt06Component;

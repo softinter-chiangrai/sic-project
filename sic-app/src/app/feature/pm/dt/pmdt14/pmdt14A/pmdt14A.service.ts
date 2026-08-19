@@ -2,14 +2,21 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
-import { PmDeliveryModel, PmDeliveryGateCheckResponse } from './pmdt18A.model';
+import { PmDeliveryModel, PmDeliveryGateCheckResponse } from './pmdt14A.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt18AService {
+export class Pmdt14AService {
   private http = inject(HttpClient);
 
   getById(id: string): Observable<PmDeliveryModel> {
     return this.http.get<PmDeliveryModel>(`${apiBaseUrl}/api/pm/delivery/${id}`);
+  }
+
+  getPaging(params: { page?: number; size?: number; [key: string]: any }): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
+    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    return this.http.get<any>(`${apiBaseUrl}/api/pm/delivery/paging`, { params: httpParams });
   }
 
   save(data: Partial<PmDeliveryModel>): Observable<string> {

@@ -96,4 +96,4 @@ export class Pmdt14Component implements OnInit {
   }
 }
 
-export default Pmrt18Component;
+export default Pmdt14Component;

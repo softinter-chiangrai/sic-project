@@ -1,9 +1,9 @@
 // src/app/feature/pm/dt/pmdt12/pmdt12.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { TaskModel } from './pmdt12.model';
-import { ToForm } from '../../../../core/types/form.type';
+import { TaskModel } from './pmdt10B.model';
+import { ToForm } from '../../../../../core/types/form.type';
 
-export class Pmdt12Form {
+export class Pmdt10BForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<TaskModel>> {
     return fb.group<ToForm<TaskModel>>({
       id: fb.control(null),

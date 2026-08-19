@@ -4,20 +4,21 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicDatepickerComponent } from '../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../core/model/sic-base-model';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
+import { PmMaRenewalModel } from './pmdt18A.model';
 import { Pmdt18AService } from './pmdt18A.service';
 import { Pmdt18AForm } from './pmdt18A.form';
-import { PmMaRenewalModel } from './pmdt18A.model';
-import { apiBaseUrl } from '../../../../core/config/api.config';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+
 
 @Component({
   selector: 'app-pmdt18a',
@@ -75,7 +76,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   }
 
   ngOnInit(): void {
-    this.formData = new SicFromData<PmMaRenewalModel>(Pmdt22Form.createForm(this.fb));
+    this.formData = new SicFromData<PmMaRenewalModel>(Pmdt18AForm.createForm(this.fb));
 
     const idParam = this.route.snapshot.params['id'];
     if (idParam) {
@@ -116,4 +117,4 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt22Component;
+export default Pmdt18AComponent;

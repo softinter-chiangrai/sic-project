@@ -1,5 +1,5 @@
-import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export interface PmMaRenewalFormData {
   renewal: SicFromData<PmMaRenewalModel>;

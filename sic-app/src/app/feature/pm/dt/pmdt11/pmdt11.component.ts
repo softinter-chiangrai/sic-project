@@ -188,4 +188,4 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt15Component;
+export default Pmdt11Component;

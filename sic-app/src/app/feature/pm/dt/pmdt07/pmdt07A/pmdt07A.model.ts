@@ -2,7 +2,7 @@
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export interface Pmdt08AModel extends SicBaseStateModel {
+export interface Pmdt07AModel extends SicBaseStateModel {
   id?: string;
   specificationCode: string;
   specificationType?: string;
@@ -34,6 +34,6 @@ export interface Pmdt08AModel extends SicBaseStateModel {
   updatedDate?: string;
 }
 
-export interface Pmdt08APageData {
-  specData: SicFromData<Pmdt08AModel>;
+export interface Pmdt07APageData {
+  specData: SicFromData<Pmdt07AModel>;
 }

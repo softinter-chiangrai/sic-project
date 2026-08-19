@@ -74,7 +74,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit() {
-    const rawForm = Pmdt20AForm.createForm(this.fb);
+    const rawForm = Pmdt16AForm.createForm(this.fb);
     this.formData = new SicFromData<PmInvoiceModel>(rawForm);
 
     const projId = this.customerState.getProjectId();

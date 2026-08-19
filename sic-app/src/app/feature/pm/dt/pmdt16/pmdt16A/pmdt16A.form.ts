@@ -1,8 +1,8 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToForm } from '../../../../../core/types/form.type';
-import { PmInvoiceModel } from './pmdt20A.model';
+import { PmInvoiceModel } from './pmdt16A.model';
 
-export class Pmdt20AForm {
+export class Pmdt16AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmInvoiceModel>> {
     return fb.group<ToForm<PmInvoiceModel>>({
       id: fb.control(null),

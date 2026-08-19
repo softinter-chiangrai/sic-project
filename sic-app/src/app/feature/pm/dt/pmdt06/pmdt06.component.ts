@@ -10,7 +10,7 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { ChangeRequestService } from './change-request.service';
 
-import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt07.model';
+import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 

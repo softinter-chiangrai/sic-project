@@ -1,7 +1,7 @@
-// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.form.ts
+// src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-export class Pmdt08AForm {
+export class Pmdt07AForm {
   static createForm(fb: FormBuilder): FormGroup {
     return fb.group({
       id: [null],

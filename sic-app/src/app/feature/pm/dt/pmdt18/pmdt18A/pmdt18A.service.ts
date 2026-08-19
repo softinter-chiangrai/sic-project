@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { apiBaseUrl } from '../../../../core/config/api.config';
-import { PmMaRenewalModel } from './pmdt22.model';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { PmMaRenewalModel } from './pmdt18A.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt22Service {
+export class Pmdt18AService {
   private http = inject(HttpClient);
 
   getById(id: string): Observable<PmMaRenewalModel> {

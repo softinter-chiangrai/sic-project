@@ -3,15 +3,15 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
-import { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { SicFromData } from '../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../core/model/sic-base-model';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
 import { Pmdt15AForm } from './pmdt15A.form';
 import { Pmdt15AService } from './pmdt15A.service';
@@ -68,7 +68,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.formData?.dirty ?? false;
 
   ngOnInit(): void {
-    const rawForm = Pmdt19Form.createForm(this.fb);
+    const rawForm = Pmdt15AForm.createForm(this.fb);
     this.formData = new SicFromData<PmUserManualModel>(rawForm);
 
     const queryProj = this.route.snapshot.queryParams['projectId'];
@@ -205,4 +205,4 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt19Component;
+export default Pmdt15AComponent;

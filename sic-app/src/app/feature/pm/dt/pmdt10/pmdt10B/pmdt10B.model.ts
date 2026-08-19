@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt12/pmdt12.model.ts
-import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
+import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 
 export interface TaskRequest {
   workPackageId: string;

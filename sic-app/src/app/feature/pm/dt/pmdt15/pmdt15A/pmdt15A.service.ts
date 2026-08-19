@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { apiBaseUrl } from '../../../../core/config/api.config';
-import { PmUserManualModel } from './pmdt19.model';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { PmUserManualModel } from './pmdt15A.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt19Service {
+export class Pmdt15AService {
   private http = inject(HttpClient);
 
   getPaging(params: { projectId?: string; page: number; size: number; sortBy?: string; sortDirection?: string }): Observable<any> {

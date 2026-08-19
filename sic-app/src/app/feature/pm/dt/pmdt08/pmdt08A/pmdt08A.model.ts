@@ -1,8 +1,8 @@
-// src/app/feature/pm/dt/pmdt09/pmdt09A/pmdt09A.model.ts
+// src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.model.ts
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
-export interface Pmdt09AModel extends SicBaseStateModel {
+export interface Pmdt08AModel extends SicBaseStateModel {
   id: string;
   projectId: string;
   topic: string;
@@ -11,6 +11,6 @@ export interface Pmdt09AModel extends SicBaseStateModel {
   author?: string;
 }
 
-export interface Pmdt09APageData {
-  discussionData: SicFromData<Pmdt09AModel>;
+export interface Pmdt08APageData {
+  discussionData: SicFromData<Pmdt08AModel>;
 }

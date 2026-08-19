@@ -87,9 +87,9 @@
                     [showEdit]="true"
                     [showPrint]="false"
                     [showDelete]="true"
-                    (onView)="goToView(item.id)"
-                    (onEdit)="goToEdit(item.id)"
-                    (onDelete)="onDelete(item.id)">
+                    (onView)="goToView(item.id!)"
+                    (onEdit)="goToEdit(item.id!)"
+                    (onDelete)="onDelete(item.id!)">
                   </sic-table-actions>
                 </td>
               </tr>

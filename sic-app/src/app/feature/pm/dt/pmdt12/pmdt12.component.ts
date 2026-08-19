@@ -643,4 +643,4 @@ export class Pmdt12Component implements OnInit {
   }
 }
 
-export default Pmdt13Component;
+export default Pmdt12Component;

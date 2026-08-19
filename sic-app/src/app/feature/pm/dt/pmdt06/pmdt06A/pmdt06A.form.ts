@@ -1,11 +1,11 @@
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Pmdt07AModel } from './pmdt07A.model';
+import { Pmdt06AModel } from './pmdt06A.model';
 import { ToForm } from '../../../../../core/types/form.type';
 
-export class Pmdt07AForm {
-  static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt07AModel>> {
-    return fb.group<ToForm<Pmdt07AModel>>({
+export class Pmdt06AForm {
+  static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt06AModel>> {
+    return fb.group<ToForm<Pmdt06AModel>>({
       id: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
       crCode: fb.control(null, [Validators.required]),

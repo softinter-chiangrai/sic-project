@@ -85,7 +85,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   ngOnInit(): void {
-    this.formData = new SicFromData<PmTestCaseModel>(Pmdt13AForm.createForm(this.fb));
+    this.formData = new SicFromData<PmTestCaseModel>(Pmdt12AForm.createForm(this.fb));
 
     const currentUrl = this.router.url;
     if (currentUrl.includes('/view')) {
@@ -306,7 +306,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
           this.formData.form.patchValue({ scenarioName: data.scenarioName });
         }
         if (data.tester) {
-          const names = data.tester.split(',').map((s) => s.trim()).filter((s) => !!s);
+          const names = data.tester.split(',').map((s: string) => s.trim()).filter((s: string) => !!s);
           this.testerValues.set(names);
         } else {
           this.testerValues.set([]);
@@ -477,4 +477,4 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt13AComponent;
+export default Pmdt12AComponent;

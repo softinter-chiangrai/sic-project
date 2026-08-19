@@ -149,4 +149,4 @@ export class Pmdt19Component implements OnInit {
   }
 }
 
-export default Pmrt25Component;
+export default Pmdt19Component;

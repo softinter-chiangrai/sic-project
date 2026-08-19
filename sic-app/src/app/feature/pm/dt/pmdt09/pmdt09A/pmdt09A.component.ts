@@ -5,12 +5,15 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
+import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { Pmdt11Component } from '../../pmdt11/pmdt11.component';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+
+
 
 // ===== Model =====
 export interface ReviewCommentModel {
@@ -71,7 +74,7 @@ class Pmdt11Form {
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt09AService {
-  private mockReviews: DesignReviewModel[] = [
+  public static mockReviews: DesignReviewModel[] = [
     {
       id: '1',
       reviewCode: 'DR-001',
@@ -79,29 +82,21 @@ export class Pmdt09AService {
       description: 'ตรวจสอบ ER Diagram ของตาราง Customer',
       reviewableType: 'ER Diagram',
       reviewableId: 'er-1',
-      reviewableName: 'ER Diagram v1.0',
-      projectId: '1',
-      projectName: 'ระบบ CRM',
-      reviewer: 'วิชัย พัฒนาชัย',
+      reviewableName: 'Customer ER Diagram',
+      projectId: 'proj-1',
+      projectName: 'CRM System',
+      reviewer: 'สมชาย ผู้ตรวจสอบ',
       assignedTo: 'สมหญิง รักเรียน',
       severity: 'Medium',
-      status: 'In Progress',
-      dueDate: '2024-02-28',
-      comments: [
-        {
-          id: 'c1',
-          author: 'วิชัย พัฒนาชัย',
-          text: 'ควรเพิ่มฟิลด์ created_at และ updated_at ในทุกตาราง',
-          type: 'Correction',
-          createdAt: '2024-02-20 09:00:00',
-        },
-      ],
+      status: 'Open',
+      dueDate: '2026-04-15',
+      comments: [],
       isActive: true,
       state: 1,
       rowVersion: 0,
-    },
+    }
   ];
-
+  
   apiGetComboboxProject = '/api/design-review/combobox-project';
   apiGetComboboxReviewable = '/api/design-review/combobox-reviewable';
   apiGetLovReviewableType = '/api/design-review/lov-type';
@@ -114,7 +109,7 @@ export class Pmdt09AService {
   }
 
   getDesignReview(id: string): Observable<DesignReviewModel> {
-    const found = this.mockReviews.find((r) => r.id === id);
+    const found = Pmdt09AService.mockReviews.find((r: DesignReviewModel) => r.id === id);
     if (found) {
       return of(found).pipe(delay(300));
     }

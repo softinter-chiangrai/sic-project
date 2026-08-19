@@ -1,8 +1,8 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToForm } from '../../../../core/types/form.type';
-import { PmUserManualModel } from './pmdt19.model';
+import { ToForm } from '../../../../../core/types/form.type';
+import { PmUserManualModel } from './pmdt15A.model';
 
-export class Pmdt19Form {
+export class Pmdt15AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmUserManualModel>> {
     return fb.group<ToForm<PmUserManualModel>>({
       id: fb.control(null),

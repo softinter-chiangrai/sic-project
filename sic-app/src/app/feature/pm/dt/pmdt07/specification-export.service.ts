@@ -4,7 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { PmSpecificationModel } from './pmdt08.model';
+import { PmSpecificationModel } from './pmdt07.model';
 
 @Injectable({
   providedIn: 'root',

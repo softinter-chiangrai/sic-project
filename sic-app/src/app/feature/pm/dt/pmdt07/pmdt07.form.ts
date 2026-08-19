@@ -1,9 +1,9 @@
 // src/app/feature/pm/dt/pmdt08/pmdt08.form.ts
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PmSpecificationModel } from './pmdt08.model';
+import { PmSpecificationModel } from './pmdt07.model';
 
-export class Pmdt08Form {
+export class Pmdt07Form {
     static createForm(fb: FormBuilder): FormGroup {
         return fb.group({
             id: [null],

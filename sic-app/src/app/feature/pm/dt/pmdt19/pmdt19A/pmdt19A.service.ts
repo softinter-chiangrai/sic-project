@@ -2,11 +2,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import { DocumentVersionModel } from './pmdt25.model';
+import { environment } from '../../../../../../environments/environment';
+import { DocumentVersionModel } from './pmdt19A.model';
+
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt25Service {
+export class Pmdt19AService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiBaseUrl + '/api/pm/document-versions';
 

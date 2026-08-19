@@ -1,8 +1,8 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DocumentVersionModel } from './pmdt25.model';
-import { ToForm } from '../../../../core/types/form.type';
+import { DocumentVersionModel } from './pmdt19A.model';
+import { ToForm } from '../../../../../core/types/form.type';
 
-export class Pmdt25Form {
+export class Pmdt19AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<DocumentVersionModel>> {
     return fb.group<ToForm<DocumentVersionModel>>({
       id: fb.control(null),

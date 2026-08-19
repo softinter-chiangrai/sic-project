@@ -2,11 +2,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
-import type { TaskRequest, TaskResponse, SpecificationSummary } from './pmdt12.model';
+import { environment } from '../../../../../../environments/environment';
+import type { TaskRequest, TaskResponse, SpecificationSummary } from './pmdt10B.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt12Service {
+export class Pmdt10BService {
   private http = inject(HttpClient);
   private taskUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
   private projectUrl = `${environment.apiBaseUrl}/api/pm/projects`;

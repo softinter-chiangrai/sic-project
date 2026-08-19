@@ -1,8 +1,8 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToForm } from '../../../../../core/types/form.type';
-import { PmMaTicketModel } from './pmdt21A.model';
+import { PmMaTicketModel } from './pmdt17A.model';
 
-export class Pmdt21AForm {
+export class Pmdt17AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmMaTicketModel>> {
     return fb.group<ToForm<PmMaTicketModel>>({
       id: fb.control(null),

@@ -19,6 +19,7 @@ import { debounceTime } from 'rxjs/operators';
 import { DialogService } from '../../../../core/services/dialog.service';
 import type { DiagramModel } from './diagram.model';
 import { DiagramService } from './diagram.service';
+import { DrawioConnectorService } from './drawio-connector.service';
 import { Pmdt05AComponent } from './pmdt05A/pmdt05A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
 import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
@@ -75,7 +76,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
     let isFirstReady = true;
 
-    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready) => {
+    this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready: any) => {
       this.drawioReady = ready;
       console.log('[Draw.io] Ready status:', ready);
       if (ready && this.currentTabId && isFirstReady) {
@@ -665,7 +666,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     this.isLoading = true;
     this.drawioService.requestXml();
     this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe({
-      next: (xml) => {
+      next: (xml: any) => {
         this.isLoading = false;
         if (!xml || xml.trim().length === 0) {
           this.dialogService.warn('Empty Diagram', 'Please draw an ER diagram first.');

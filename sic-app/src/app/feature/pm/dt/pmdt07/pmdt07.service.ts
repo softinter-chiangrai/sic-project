@@ -5,10 +5,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { PmSpecificationModel } from './pmdt08.model';
+import { PmSpecificationModel } from './pmdt07.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt08Service {
+export class Pmdt07Service {
     private http = inject(HttpClient);
     private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
 

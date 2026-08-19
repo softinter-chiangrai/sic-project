@@ -3,10 +3,10 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
-import { PmTestCaseModel, PmTestScenarioModel } from './pmdt13A.model';
+import { PmTestCaseModel, PmTestScenarioModel } from './pmdt12A.model';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt13AService {
+export class Pmdt12AService {
   private http = inject(HttpClient);
   private apiBase = environment.apiBaseUrl;
 

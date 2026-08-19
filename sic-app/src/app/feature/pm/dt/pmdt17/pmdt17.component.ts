@@ -66,4 +66,4 @@ export class Pmdt17Component implements OnInit {
   }
 }
 
-export default Pmrt21Component;
+export default Pmdt17Component;

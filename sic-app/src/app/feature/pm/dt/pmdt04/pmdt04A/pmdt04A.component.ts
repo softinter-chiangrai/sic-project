@@ -21,34 +21,34 @@ import {
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of, Subscription, interval, takeWhile } from 'rxjs';
 import { delay, finalize, tap } from 'rxjs/operators';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 // Components
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
-import { SicCheckboxComponent } from '../../../../core/component/sic-checkbox/sic-checkbox.component';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 
 // ✅ เปลี่ยนเป็น sic-tiptap-editor
-import { SicTiptapEditorComponent } from '../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 // Services
-import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalService } from '../pmdt03/approval.service';
-import type { ApprovalFlow } from '../pmdt03/approval.model';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { RequirementExportService } from './requirement-export.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { NavigationService } from '../../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 
 // Preview Component
-import { SicRequirementPreviewComponent } from './pmdt05-preview/pmdt05-preview.component';
+import { SicRequirementPreviewComponent } from './pmdt04-preview/pmdt04-preview.component';
 
 import { RequirementModel } from './pmdt04A.model';
 
@@ -664,4 +664,4 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 }
 
-export default Pmdt05Component;
+export default Pmdt04AComponent;

@@ -20,10 +20,11 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { Pmdt08Service } from '../pmdt08.service';
-import { PmSpecificationModel } from '../pmdt08.model';
-import { Pmdt08AForm } from './pmdt08A.form';
-import { Pmdt08PreviewComponent } from '../pmdt08-preview/Pmdt08PreviewComponent';
+
+import { Pmdt07Service } from '../pmdt07.service';
+import { PmSpecificationModel } from '../pmdt07.model';
+import { Pmdt07AForm } from './pmdt07A.form';
+import { Pmdt07PreviewComponent } from '../pmdt07-preview/pmdt07-preview.component';
 import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
@@ -47,7 +48,7 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
         SicCheckboxComponent,
         SicApprovalComponent,
         SicDatePipe,
-        Pmdt08PreviewComponent
+        Pmdt07PreviewComponent
     ],
     templateUrl: './pmdt07A.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -325,7 +326,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     ];
 
     initForm(): void {
-        this.form = Pmdt08AForm.createForm(this.fb);
+        this.form = Pmdt07AForm.createForm(this.fb);
     }
 
     loadSpecification(id: string) {
