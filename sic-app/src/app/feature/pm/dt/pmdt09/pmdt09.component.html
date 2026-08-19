@@ -157,7 +157,7 @@
           @for (review of paginatedReviews(); track review.id) {
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
               <td class="px-4 py-3 text-center">
-                @if (review.comments.length > 0) {
+                @if (review.comments && review.comments.length > 0) {
                   <button
                     (click)="toggleExpand(review.id)"
                     class="w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--sidebar-hover)] transition-colors"
@@ -173,7 +173,21 @@
               </td>
               <td class="px-4 py-3">
                 <div>
-                  <div class="font-medium text-[var(--text-active)]">{{ review.title }}</div>
+                  <div class="font-medium text-[var(--text-active)] flex items-center gap-1.5 flex-wrap">
+                    {{ review.title }}
+                    @if (review.figmaUrl) {
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20" title="มี Figma Interactive Prototype">
+                        <svg class="w-3 h-3 inline" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
+                          <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
+                          <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
+                          <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
+                          <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
+                        </svg>
+                        Live
+                      </span>
+                    }
+                  </div>
                   <div class="text-xs text-[var(--text-muted)] truncate max-w-[200px]">{{ review.description }}</div>
                 </div>
               </td>
@@ -216,7 +230,7 @@
                 </div>
               </td>
             </tr>
-            @if (expandedReview() === review.id && review.comments.length > 0) {
+            @if (expandedReview() === review.id && review.comments && review.comments.length > 0) {
               <tr class="bg-[var(--bg)]/50">
                 <td colspan="8" class="px-4 py-3">
                   <div class="pl-8">
@@ -234,12 +248,12 @@
                           <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                               <span class="text-sm font-medium text-[var(--text-active)]">{{ comment.author }}</span>
-                              <span [class]="getCommentTypeClass(comment.type) + ' inline-block px-2 py-0.5 rounded text-xs font-medium'">
-                                {{ comment.type }}
+                              <span [class]="getCommentTypeClass(comment.commentType) + ' inline-block px-2 py-0.5 rounded text-xs font-medium'">
+                                {{ comment.commentType }}
                               </span>
                               <span class="text-xs text-[var(--text-muted)]">{{ formatDateTime(comment.createdAt) }}</span>
                             </div>
-                            <p class="text-sm text-[var(--text)] mt-0.5">{{ comment.text }}</p>
+                            <p class="text-sm text-[var(--text)] mt-0.5">{{ comment.commentText }}</p>
                           </div>
                         </div>
                       }

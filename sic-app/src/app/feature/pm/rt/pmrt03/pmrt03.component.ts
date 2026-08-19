@@ -197,6 +197,11 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/discussion'], { queryParams: { projectId: id } });
   }
 
+  goToDesignReviews() {
+    const id = this.projectId();
+    this.navigation.navigate(['/feature/pm/design-review'], { queryParams: { projectId: id } });
+  }
+
   goToDeliveries() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/delivery'], { queryParams: { projectId: id } });

@@ -6,7 +6,7 @@ import { Pmdt04AModel } from './pmdt04A.model';
 import { environment } from '../../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
-export class Pmdt05Service {
+export class Pmdt04AService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiBaseUrl}/api/pm/requirements/export`;
 

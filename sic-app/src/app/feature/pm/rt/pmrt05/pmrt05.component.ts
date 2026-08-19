@@ -361,7 +361,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/design-review'], {
+    this.navigation.navigate(['/feature/pm/design-review/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

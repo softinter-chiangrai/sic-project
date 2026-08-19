@@ -1,24 +1,46 @@
-<div class="p-6 bg-slate-50 min-h-screen">
+<div class="space-y-5 p-0.5">
   <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">
-        {{ id() ? 'แก้ไขข้อเสนอต่อสัญญา MA (Renewal Proposal)' : 'สร้างข้อเสนอต่อสัญญา MA ใหม่ (New Renewal)' }}
-      </h1>
-      <p class="text-sm text-slate-500">บริหารการต่อสัญญา MA ล่วงหน้าและเสนอราคาการดูแลระบบ</p>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="onBack()"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+        title="กลับ"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
+          {{ id() ? 'แก้ไขข้อเสนอต่อสัญญา MA (Renewal Proposal)' : 'สร้างข้อเสนอต่อสัญญา MA ใหม่ (New Renewal)' }}
+        </h1>
+        <p class="text-sm text-[var(--text-muted)]">
+          บริหารการต่อสัญญา MA ล่วงหน้าและเสนอราคาการดูแลระบบ
+        </p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <sic-button variant="secondary" (click)="onBack()">ยกเลิก</sic-button>
-      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">บันทึกข้อมูล</sic-button>
+    <div class="flex items-center gap-2">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ยกเลิก
+      </sic-button>
+      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
+        <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+      </sic-button>
     </div>
   </div>
 
   @if (dataResource.isLoading()) {
-    <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูล...</div>
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    </div>
   } @else {
-    <form [formGroup]="formData.form" class="space-y-6">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">ข้อมูลสัญญาและโครงการที่ต่ออายุ</h2>
+    <form [formGroup]="formData.form" class="space-y-5">
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+          <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+          ข้อมูลสัญญาและโครงการที่ต่ออายุ
+        </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
@@ -65,8 +87,11 @@
         </div>
       </div>
 
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">ระยะเวลาสัญญาและมูลค่าข้อเสนอ</h2>
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+          <i class="bi bi-calendar-range text-[var(--crm-primary)]"></i>
+          ระยะเวลาสัญญาและมูลค่าข้อเสนอ
+        </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <sic-datepicker
@@ -97,7 +122,7 @@
           ></sic-input>
         </div>
 
-        <div class="pt-4 border-t border-slate-100">
+        <div class="pt-4 border-t border-[var(--border)]">
           <sic-input-area
             label="หมายเหตุเพิ่มเติม / เงื่อนไขพิเศษ"
             placeholder="รายละเอียดหรือเงื่อนไขการเสนอต่อสัญญา MA"

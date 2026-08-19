@@ -1,141 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-
-// ===== Interfaces =====
-interface ReviewComment {
-  id: string;
-  author: string;
-  text: string;
-  type: 'Suggestion' | 'Correction' | 'Risk' | 'Question' | 'Approval Note';
-  createdAt: string;
-}
-
-interface DesignReview {
-  id: string;
-  reviewCode: string;
-  title: string;
-  description: string;
-  reviewableType: string;
-  reviewableId: string;
-  reviewableName: string;
-  projectId: string;
-  projectName: string;
-  reviewer: string;
-  assignedTo: string;
-  severity: 'Low' | 'Medium' | 'High';
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
-  dueDate: string;
-  comments: ReviewComment[];
-  isActive: boolean;
-  createdAt: string;
-}
-
-// ===== Mock Data =====
-const MOCK_REVIEWS: DesignReview[] = [
-  {
-    id: '1',
-    reviewCode: 'DR-001',
-    title: 'Review ER Diagram - Customer Table',
-    description: 'ตรวจสอบ ER Diagram ของตาราง Customer',
-    reviewableType: 'ER Diagram',
-    reviewableId: 'er-1',
-    reviewableName: 'ER Diagram v1.0',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    reviewer: 'วิชัย พัฒนาชัย',
-    assignedTo: 'สมหญิง รักเรียน',
-    severity: 'Medium',
-    status: 'In Progress',
-    dueDate: '2024-02-28',
-    comments: [
-      {
-        id: 'c1',
-        author: 'วิชัย พัฒนาชัย',
-        text: 'ควรเพิ่มฟิลด์ created_at และ updated_at ในทุกตาราง',
-        type: 'Correction',
-        createdAt: '2024-02-20 09:00:00',
-      },
-      {
-        id: 'c2',
-        author: 'สมหญิง รักเรียน',
-        text: 'แก้ไขเพิ่ม created_at, updated_at เรียบร้อยแล้ว',
-        type: 'Approval Note',
-        createdAt: '2024-02-21 14:00:00',
-      },
-    ],
-    isActive: true,
-    createdAt: '2024-02-20 08:00:00',
-  },
-  {
-    id: '2',
-    reviewCode: 'DR-002',
-    title: 'Review Specification - Customer Management',
-    description: 'ตรวจสอบ Specification ของโมดูลจัดการลูกค้า',
-    reviewableType: 'Specification',
-    reviewableId: 'spec-1',
-    reviewableName: 'SPEC-001',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    reviewer: 'สมศักดิ์ รุ่งเรือง',
-    assignedTo: 'สมชาย ใจดี',
-    severity: 'High',
-    status: 'Open',
-    dueDate: '2024-03-05',
-    comments: [
-      {
-        id: 'c3',
-        author: 'สมศักดิ์ รุ่งเรือง',
-        text: 'ควรเพิ่ม Validation Rule สำหรับ Tax ID',
-        type: 'Suggestion',
-        createdAt: '2024-02-22 10:00:00',
-      },
-    ],
-    isActive: true,
-    createdAt: '2024-02-22 09:00:00',
-  },
-  {
-    id: '3',
-    reviewCode: 'DR-003',
-    title: 'Review DFD - ระบบ HR',
-    description: 'ตรวจสอบ Data Flow Diagram ของระบบ HR',
-    reviewableType: 'DFD',
-    reviewableId: 'dfd-1',
-    reviewableName: 'DFD Level 0',
-    projectId: '2',
-    projectName: 'ระบบ HR',
-    reviewer: 'วิชัย พัฒนาชัย',
-    assignedTo: 'มานี มีทรัพย์',
-    severity: 'Low',
-    status: 'Resolved',
-    dueDate: '2024-02-15',
-    comments: [
-      {
-        id: 'c4',
-        author: 'วิชัย พัฒนาชัย',
-        text: 'Data Flow ระหว่าง Process 1 และ Process 2 ขาดการเชื่อมต่อ',
-        type: 'Correction',
-        createdAt: '2024-02-10 13:00:00',
-      },
-      {
-        id: 'c5',
-        author: 'มานี มีทรัพย์',
-        text: 'แก้ไขการเชื่อมต่อ Data Flow เรียบร้อย',
-        type: 'Approval Note',
-        createdAt: '2024-02-12 16:00:00',
-      },
-      {
-        id: 'c6',
-        author: 'วิชัย พัฒนาชัย',
-        text: 'ผ่านการตรวจสอบ',
-        type: 'Approval Note',
-        createdAt: '2024-02-14 09:00:00',
-      },
-    ],
-    isActive: true,
-    createdAt: '2024-02-10 12:00:00',
-  },
-];
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { DesignReview, Pmdt09Service } from './pmdt09.service';
 
 @Component({
   selector: 'app-pmdt09',
@@ -147,8 +13,11 @@ const MOCK_REVIEWS: DesignReview[] = [
 })
 export class Pmdt09Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private service = inject(Pmdt09Service);
 
   // ===== State =====
+  protected projectId = signal<string | null>(null);
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
   protected filterType = signal('all');
@@ -161,30 +30,15 @@ export class Pmdt09Component implements OnInit {
   protected expandedReview = signal<string | null>(null);
 
   // ===== Data =====
-  protected reviews = signal<DesignReview[]>(MOCK_REVIEWS);
+  protected reviews = signal<DesignReview[]>([]);
+  protected totalElements = signal(0);
 
   // ===== Computed =====
   protected filteredReviews = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
     const type = this.filterType();
     const severity = this.filterSeverity();
 
     let result = this.reviews();
-
-    if (term) {
-      result = result.filter(
-        (r) =>
-          r.reviewCode.toLowerCase().includes(term) ||
-          r.title.toLowerCase().includes(term) ||
-          r.projectName.toLowerCase().includes(term) ||
-          r.reviewer.toLowerCase().includes(term)
-      );
-    }
-
-    if (status !== 'all') {
-      result = result.filter((r) => r.status === status);
-    }
 
     if (type !== 'all') {
       result = result.filter((r) => r.reviewableType === type);
@@ -194,27 +48,13 @@ export class Pmdt09Component implements OnInit {
       result = result.filter((r) => r.severity === severity);
     }
 
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof DesignReview] ?? '';
-      const bVal = b[sortField as keyof DesignReview] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
     return result;
   });
 
-  protected paginatedReviews = computed(() => {
-    const all = this.filteredReviews();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
+  protected paginatedReviews = computed(() => this.filteredReviews());
 
-  protected totalItems = computed(() => this.filteredReviews().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected totalItems = computed(() => this.totalElements());
+  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
@@ -232,12 +72,38 @@ export class Pmdt09Component implements OnInit {
 
   // ===== Options =====
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
-  typeOptions = ['Requirement', 'DFD', 'ER Diagram', 'Specification', 'Test Case', 'User Manual'];
+  typeOptions = ['Requirement', 'DFD', 'ER Diagram', 'Specification', 'UI Prototype', 'Test Case', 'User Manual'];
   severityOptions = ['Low', 'Medium', 'High'];
 
   // ===== Lifecycle =====
   ngOnInit() {
-    // TODO: เรียก API จริง
+    this.route.queryParams.subscribe((params) => {
+      if (params['projectId']) {
+        this.projectId.set(params['projectId']);
+      }
+      this.loadData();
+    });
+  }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.service.getDesignReviews({
+      projectId: this.projectId() || undefined,
+      status: this.filterStatus(),
+      keyword: this.searchTerm() || undefined,
+      page: this.currentPage(),
+      size: this.pageSize(),
+    }).subscribe({
+      next: (res) => {
+        this.reviews.set(res.data || []);
+        this.totalElements.set(res.total || 0);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading design reviews:', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   // ===== Actions =====
@@ -245,24 +111,24 @@ export class Pmdt09Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadData();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadData();
   }
 
   onTypeChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterType.set(select.value);
-    this.currentPage.set(1);
   }
 
   onSeverityChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterSeverity.set(select.value);
-    this.currentPage.set(1);
   }
 
   onSortChange(field: string) {
@@ -277,11 +143,13 @@ export class Pmdt09Component implements OnInit {
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.loadData();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.loadData();
   }
 
   toggleExpand(id: string) {
@@ -325,7 +193,7 @@ export class Pmdt09Component implements OnInit {
       Suggestion: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
       Correction: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       Risk: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Question: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      Question: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
       'Approval Note': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     };
     return map[type] || map['Suggestion'];

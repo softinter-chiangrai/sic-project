@@ -1,102 +1,195 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="space-y-5 p-0.5">
   <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="p-3 bg-indigo-50 dark:bg-indigo-950/50 rounded-xl text-indigo-600 dark:text-indigo-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-        </svg>
-      </div>
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          เอกสารการส่งมอบ (Delivery Documents Management)
-        </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          รายการเอกสารส่งมอบโครงการ ตรวจสอบ Gate Checklist และสถานะอนุมัติรับมอบ
-        </p>
-      </div>
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-box-seam text-[var(--crm-primary)]"></i>
+        เอกสารการส่งมอบ (Delivery Documents)
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalElements() }} รายการ
+      </span>
     </div>
-    <button (click)="goToAdd()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
-      <span>+ สร้างเอกสารส่งมอบ</span>
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i>
+      สร้างเอกสารส่งมอบ
     </button>
   </div>
 
+  <!-- Filters & Search -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหารหัสเอกสาร, หัวข้อการส่งมอบ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะ</option>
+      <option value="DRAFT">ร่าง (Draft)</option>
+      <option value="PREPARING">กำลังเตรียมงาน</option>
+      <option value="READY">พร้อมส่งมอบ</option>
+      <option value="DELIVERED">ส่งมอบแล้ว</option>
+      <option value="CONFIRMED">ลูกค้ายืนยันรับมอบแล้ว</option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูลเอกสารส่งมอบ...</p>
+    </div>
+  }
+
   <!-- Delivery List Table -->
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    @if (isLoading()) {
-      <div class="p-8 text-center text-slate-500">กำลังโหลดข้อมูลเอกสารส่งมอบ...</div>
-    } @else if (deliveries().length === 0) {
-      <div class="p-12 text-center space-y-3">
-        <div class="text-4xl">📦</div>
-        <div class="text-slate-600 dark:text-slate-400 font-medium">ยังไม่มีรายการเอกสารส่งมอบ</div>
-        <button (click)="goToAdd()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
-          + คลิกที่นี่เพื่อเพิ่มเอกสารส่งมอบรายการแรก
+  @if (!isLoading()) {
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px]">
+              รหัส / หัวข้อ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+              ประเภท
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[90px]">
+              เวอร์ชัน
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
+              วันที่ส่งมอบ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+              จัดการ
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (item of filteredDeliveries(); track item.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <div class="font-semibold text-[var(--text-active)]">{{ item.deliveryCode }}</div>
+                <div class="text-xs text-[var(--text-muted)]">{{ item.deliveryTitle }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-mono font-medium bg-[var(--bg)] text-[var(--text)] border border-[var(--border)]">
+                  {{ item.deliveryType }}
+                </span>
+              </td>
+              <td class="px-4 py-3 font-mono text-xs text-[var(--text-muted)]">
+                v{{ item.deliveryVersion }}
+              </td>
+              <td class="px-4 py-3 text-xs text-[var(--text)]">
+                {{ item.deliveryDate || '-' }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-col items-start gap-1">
+                  <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(item.status)">
+                    {{ getStatusText(item.status) }}
+                  </span>
+                  @if (item.isGatePassed && item.isChecklistPassed) {
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <i class="bi bi-check-circle-fill text-emerald-500"></i> ผ่านเกณฑ์สมบูรณ์
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" title="Delivery Gate Check หรือ Checklist ยังไม่ผ่านครบทั้งหมด">
+                      <i class="bi bi-exclamation-triangle-fill text-amber-500"></i> ยังไม่เสร็จสมบูรณ์
+                      @if (item.totalGateChecks) {
+                        <span class="text-[10px] opacity-80">({{ item.passedGateChecks ?? 0 }}/{{ item.totalGateChecks }} Gate)</span>
+                      }
+                    </span>
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <sic-table-actions
+                  [showView]="true"
+                  [showEdit]="true"
+                  [showPrint]="false"
+                  [showDelete]="true"
+                  (onView)="goToView(item.id!)"
+                  (onEdit)="goToEdit(item.id!)"
+                  (onDelete)="onDelete(item.id!)">
+                </sic-table-actions>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-box-seam text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีรายการเอกสารส่งมอบ</p>
+                  <p class="text-sm text-[var(--text-muted)]">คลิกปุ่มสร้างเพื่อเพิ่มเอกสารส่งมอบรายการแรก</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i> สร้างเอกสารส่งมอบ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Pagination -->
+  @if (totalElements() > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="text-sm text-[var(--text-muted)]">
+        แสดง <strong class="text-[var(--text-active)]">{{ page() * size() + 1 }}</strong>
+        - <strong class="text-[var(--text-active)]">{{ Math.min((page() + 1) * size(), totalElements()) }}</strong>
+        จาก <strong class="text-[var(--text-active)]">{{ totalElements() }}</strong> รายการ
+      </div>
+      <div class="flex gap-1">
+        <button
+          (click)="onPageChange(page() - 1)"
+          [disabled]="page() === 0"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (p of pageNumbers(); track p) {
+          <button
+            (click)="onPageChange(p)"
+            [class]="p === page() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+          >
+            {{ p + 1 }}
+          </button>
+        }
+        <button
+          (click)="onPageChange(page() + 1)"
+          [disabled]="(page() + 1) * size() >= totalElements()"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <i class="bi bi-chevron-right"></i>
         </button>
       </div>
-    } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200 dark:border-slate-700">
-            <tr>
-              <th class="px-6 py-4">รหัส / หัวข้อ (Code & Title)</th>
-              <th class="px-6 py-4">ประเภท (Type)</th>
-              <th class="px-6 py-4">เวอร์ชัน (Version)</th>
-              <th class="px-6 py-4">วันที่ส่งมอบ (Date)</th>
-              <th class="px-6 py-4">สถานะ (Status)</th>
-              <th class="px-6 py-4 text-right">จัดการ (Actions)</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-            @for (item of deliveries(); track item.id) {
-              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
-                <td class="px-6 py-4">
-                  <div class="font-bold text-slate-900 dark:text-slate-100">{{ item.deliveryCode }}</div>
-                  <div class="text-xs text-slate-500 dark:text-slate-400">{{ item.deliveryTitle }}</div>
-                </td>
-                <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
-                  {{ item.deliveryType }}
-                </td>
-                <td class="px-6 py-4 font-mono text-xs">
-                  v{{ item.deliveryVersion }}
-                </td>
-                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400">
-                  {{ item.deliveryDate || '-' }}
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex flex-col items-start gap-1.5">
-                    <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getStatusClass(item.status)">
-                      {{ getStatusText(item.status) }}
-                    </span>
-                    @if (item.isGatePassed && item.isChecklistPassed) {
-                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                        <i class="bi bi-check-circle-fill text-emerald-500"></i> ผ่านเกณฑ์สมบูรณ์
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800" title="Delivery Gate Check หรือ Checklist ยังไม่ผ่านครบทั้งหมด">
-                        <i class="bi bi-exclamation-triangle-fill text-amber-500"></i> ยังไม่เสร็จสมบูรณ์
-                        @if (item.totalGateChecks) {
-                          <span class="text-[10px] opacity-80">({{ item.passedGateChecks ?? 0 }}/{{ item.totalGateChecks }} Gate)</span>
-                        }
-                      </span>
-                    }
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <sic-table-actions
-                    [showView]="true"
-                    [showEdit]="true"
-                    [showPrint]="false"
-                    [showDelete]="true"
-                    (onView)="goToView(item.id!)"
-                    (onEdit)="goToEdit(item.id!)"
-                    (onDelete)="onDelete(item.id!)">
-                  </sic-table-actions>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
+    </div>
+  }
 </div>

@@ -1,19 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { Pmdt11Component } from '../../pmdt11/pmdt11.component';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-
-
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { environment } from '../../../../../../environments/environment';
 
 // ===== Model =====
 export interface ReviewCommentModel {
@@ -29,40 +31,44 @@ export interface DesignReviewModel {
   reviewCode: string;
   title: string;
   description: string;
+  projectId: string;
+  projectName?: string;
   reviewableType: string;
   reviewableId: string;
   reviewableName?: string;
-  projectId: string;
-  projectName?: string;
-  reviewer: string;
-  assignedTo: string;
+  reviewer?: string;
+  assignedTo?: string;
   severity: string;
   status: string;
   dueDate: string;
-  comments: ReviewCommentModel[];
+  figmaUrl?: string;
+  embedMode?: 'design' | 'prototype';
   isActive: boolean;
+  comments?: ReviewCommentModel[];
   state?: number;
   rowVersion?: number;
 }
 
 // ===== Form =====
-class Pmdt11Form {
+class Pmdt09AForm {
   static createForm(fb: FormBuilder): FormGroup {
     return fb.group({
       id: [null],
       reviewCode: [null, [Validators.required, Validators.maxLength(30)]],
       title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required, Validators.maxLength(2000)]],
+      description: [null, [Validators.required]],
       reviewableType: [null, [Validators.required]],
       reviewableId: [null, [Validators.required]],
       reviewableName: [null],
       projectId: [null, [Validators.required]],
       projectName: [null],
-      reviewer: [null, [Validators.maxLength(100)]],
-      assignedTo: [null, [Validators.maxLength(100)]],
+      reviewer: [null],
+      assignedTo: [null],
       severity: ['Medium', [Validators.required]],
       status: ['Open', [Validators.required]],
       dueDate: [null, [Validators.required]],
+      figmaUrl: ['https://www.figma.com/proto/sample-ui-flow-demo'],
+      embedMode: ['prototype'],
       comments: [[]],
       isActive: [true],
       state: [null],
@@ -74,66 +80,42 @@ class Pmdt11Form {
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt09AService {
-  public static mockReviews: DesignReviewModel[] = [
-    {
-      id: '1',
-      reviewCode: 'DR-001',
-      title: 'Review ER Diagram - Customer Table',
-      description: 'ตรวจสอบ ER Diagram ของตาราง Customer',
-      reviewableType: 'ER Diagram',
-      reviewableId: 'er-1',
-      reviewableName: 'Customer ER Diagram',
-      projectId: 'proj-1',
-      projectName: 'CRM System',
-      reviewer: 'สมชาย ผู้ตรวจสอบ',
-      assignedTo: 'สมหญิง รักเรียน',
-      severity: 'Medium',
-      status: 'Open',
-      dueDate: '2026-04-15',
-      comments: [],
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    }
-  ];
-  
-  apiGetComboboxProject = '/api/design-review/combobox-project';
-  apiGetComboboxReviewable = '/api/design-review/combobox-reviewable';
-  apiGetLovReviewableType = '/api/design-review/lov-type';
-  apiGetLovSeverity = '/api/design-review/lov-severity';
-  apiGetLovStatus = '/api/design-review/lov-status';
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/api/pm/design-reviews`;
 
-  save(data: DesignReviewModel): Observable<string> {
-    console.log('📝 Saving design review:', data);
-    return of('บันทึกสำเร็จ').pipe(delay(500));
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/projects/combobox`;
+  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/specifications/combobox`;
+  apiGetUsers = `${environment.apiBaseUrl}/api/users/available`;
+
+  readonly reviewableTypeOptions = [
+    { value: 'SPECIFICATION', label: 'Specification' },
+    { value: 'REQUIREMENT', label: 'Requirement' },
+    { value: 'UI_SCREEN', label: 'UI Screen / Figma Mockup' },
+    { value: 'DFD', label: 'Data Flow Diagram (DFD)' },
+    { value: 'ER_DIAGRAM', label: 'ER Diagram' },
+  ];
+
+  readonly severityOptions = [
+    { value: 'Low', label: 'Low (ต่ำ)' },
+    { value: 'Medium', label: 'Medium (ปานกลาง)' },
+    { value: 'High', label: 'High (สูง)' },
+    { value: 'Critical', label: 'Critical (วิกฤต)' },
+  ];
+
+  readonly statusOptions = [
+    { value: 'Open', label: 'Open (เปิดอยู่)' },
+    { value: 'In Progress', label: 'In Progress (กำลังตรวจสอบ)' },
+    { value: 'Resolved', label: 'Resolved (แก้ไขเรียบร้อย)' },
+    { value: 'Closed', label: 'Closed (ปิดงาน)' },
+  ];
+
+  save(data: any): Observable<any> {
+    console.log('📝 Saving design review to DB:', data);
+    return this.http.post<string>(this.baseUrl, data);
   }
 
   getDesignReview(id: string): Observable<DesignReviewModel> {
-    const found = Pmdt09AService.mockReviews.find((r: DesignReviewModel) => r.id === id);
-    if (found) {
-      return of(found).pipe(delay(300));
-    }
-    const empty: DesignReviewModel = {
-      id: '',
-      reviewCode: '',
-      title: '',
-      description: '',
-      reviewableType: '',
-      reviewableId: '',
-      reviewableName: '',
-      projectId: '',
-      projectName: '',
-      reviewer: '',
-      assignedTo: '',
-      severity: 'Medium',
-      status: 'Open',
-      dueDate: '',
-      comments: [],
-      isActive: true,
-      state: 1,
-      rowVersion: 0,
-    };
-    return of(empty).pipe(delay(300));
+    return this.http.get<DesignReviewModel>(`${this.baseUrl}/${id}`);
   }
 }
 
@@ -147,34 +129,60 @@ export class Pmdt09AService {
     RouterModule,
     SicButtonComponent,
     SicComboboxComponent,
+    SicDatepickerComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt09A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [],
 })
-export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
+export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly service = inject(Pmdt09AService);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly sanitizer = inject(DomSanitizer);
+
+  @ViewChild('figmaIframe') figmaIframe?: ElementRef<HTMLIFrameElement>;
 
   form!: FormGroup;
   isEdit = false;
   reviewId: string | null = null;
   isLoading = false;
 
+  // ===== Figma & Embed API State =====
+  activeEmbedUrl: SafeResourceUrl | null = null;
+  rawEmbedUrl = '';
+  isFigmaLoading = false;
+  lastEventReceived: string | null = null;
+  eventsLog: string[] = [];
+  isFullscreen = false;
+
   // ===== Options =====
   severityOptions = ['Low', 'Medium', 'High'];
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
   commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
 
+  private messageEventListener = (event: MessageEvent) => {
+    if (event.origin && event.origin.includes('figma.com')) {
+      console.log('⚡ Figma Event Received:', event.data);
+      const logText = `[${new Date().toLocaleTimeString()}] ${typeof event.data === 'string' ? event.data : JSON.stringify(event.data)}`;
+      this.lastEventReceived = logText;
+      this.eventsLog.unshift(logText);
+      if (this.eventsLog.length > 5) this.eventsLog.pop();
+    }
+  };
+
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
     this.initForm();
+
+    // Listen to Figma Embed postMessage events
+    window.addEventListener('message', this.messageEventListener);
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -182,25 +190,58 @@ export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
         this.isEdit = true;
         this.reviewId = id;
         this.loadDesignReview(id);
+      } else {
+        this.updateEmbedUrl();
       }
     });
 
-    // เมื่อเปลี่ยน reviewableType ให้โหลดรายการที่เกี่ยวข้อง
-    this.form.get('reviewableType')?.valueChanges.subscribe((type) => {
+    // รับค่า queryParams (เช่น projectId, requirementId) เมื่อกดสร้างมาจากหน้ารายละเอียด Requirement (PMRT05)
+    this.route.queryParams.subscribe((queryParams) => {
+      if (!this.isEdit) {
+        if (queryParams['projectId']) {
+          this.form.patchValue({ projectId: queryParams['projectId'] });
+        }
+        if (queryParams['requirementId']) {
+          this.form.patchValue({
+            reviewableType: 'Requirement',
+            reviewableId: queryParams['requirementId'],
+          });
+        }
+      }
+    });
+
+    this.form.get('reviewableType')?.valueChanges.subscribe(() => {
       this.form.patchValue({ reviewableId: null });
+    });
+
+    this.form.get('figmaUrl')?.valueChanges.subscribe(() => {
+      this.updateEmbedUrl();
+    });
+
+    this.form.get('embedMode')?.valueChanges.subscribe(() => {
+      this.updateEmbedUrl();
     });
   }
 
+  ngOnDestroy(): void {
+    window.removeEventListener('message', this.messageEventListener);
+  }
+
   initForm(): void {
-    this.form = Pmdt11Form.createForm(this.fb);
+    this.form = Pmdt09AForm.createForm(this.fb);
   }
 
   loadDesignReview(id: string) {
     this.isLoading = true;
     this.service.getDesignReview(id).subscribe({
       next: (data) => {
-        this.form.patchValue(data);
+        const formData: any = { ...data };
+        if (typeof formData.assignedTo === 'string' && formData.assignedTo.trim()) {
+          formData.assignedTo = formData.assignedTo.split(',').map((s: string) => s.trim());
+        }
+        this.form.patchValue(formData);
         this.isLoading = false;
+        this.updateEmbedUrl();
         console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
       },
       error: (error) => {
@@ -210,6 +251,77 @@ export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
         this.router.navigate(['/feature/pm/design-review']);
       },
     });
+  }
+
+  // ===== Figma URL Formatter & Sanitizer =====
+  updateEmbedUrl(): void {
+    const rawUrl = this.form.get('figmaUrl')?.value;
+    if (!rawUrl || !rawUrl.trim()) {
+      this.activeEmbedUrl = null;
+      this.rawEmbedUrl = '';
+      return;
+    }
+
+    this.isFigmaLoading = true;
+    let target = rawUrl.trim();
+
+    // หากยังไม่ได้แปลงเป็น Figma Embed URL
+    const clientId = environment.figma?.clientId ? `&client-id=${environment.figma.clientId}` : '';
+    if (!target.includes('figma.com/embed')) {
+      const encoded = encodeURIComponent(target);
+      target = `https://www.figma.com/embed?embed_host=softflow${clientId}&url=${encoded}`;
+    } else if (environment.figma?.clientId && !target.includes('client-id=')) {
+      target += `&client-id=${environment.figma.clientId}`;
+    }
+
+    this.rawEmbedUrl = target;
+    this.activeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(target);
+
+    setTimeout(() => {
+      this.isFigmaLoading = false;
+    }, 1200);
+  }
+
+  setEmbedMode(mode: 'design' | 'prototype'): void {
+    this.form.patchValue({ embedMode: mode });
+  }
+
+  // ===== Figma Embed API Controls (postMessage) =====
+  sendFigmaCommand(commandType: string): void {
+    if (!this.figmaIframe?.nativeElement?.contentWindow) {
+      console.warn('Figma Iframe not ready');
+      return;
+    }
+    const message = { type: commandType };
+    this.figmaIframe.nativeElement.contentWindow.postMessage(message, 'https://www.figma.com');
+    console.log(`🚀 Sent Figma Embed Command: [${commandType}]`);
+  }
+
+  prototypeNext(): void {
+    this.sendFigmaCommand('next');
+  }
+
+  prototypePrev(): void {
+    this.sendFigmaCommand('prev');
+  }
+
+  prototypeRestart(): void {
+    this.sendFigmaCommand('restart');
+  }
+
+  prototypeToggleHints(): void {
+    this.sendFigmaCommand('toggleHints');
+  }
+
+  toggleFullscreen(): void {
+    this.isFullscreen = !this.isFullscreen;
+  }
+
+  openExternalFigma(): void {
+    const url = this.form.get('figmaUrl')?.value;
+    if (url) {
+      window.open(url, '_blank');
+    }
   }
 
   onBack(): void {
@@ -223,7 +335,11 @@ export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    const data = this.form.value;
+    const data = { ...this.form.value };
+    if (Array.isArray(data.assignedTo)) {
+      data.assignedTo = data.assignedTo.join(', ');
+    }
+
     this.service.save(data).subscribe({
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
@@ -238,4 +354,4 @@ export class Pmdt09AComponent implements OnInit, CanComponentDeactivate {
   }
 }
 
-export default Pmdt11Component;
+export default Pmdt09AComponent;

@@ -1,51 +1,120 @@
-<div class="p-6 bg-slate-50 min-h-screen">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">ข้อเสนอต่อสัญญา MA (MA Renewal Proposals)</h1>
-      <p class="text-sm text-slate-500">ติดตามและจัดการข้อเสนอการต่อสัญญาบริการบำรุงรักษา MA</p>
+<div class="space-y-5 p-0.5">
+  <!-- Page Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
+        ข้อเสนอต่อสัญญา MA (MA Renewal Proposals)
+      </h1>
+      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+        {{ totalItems() }} รายการ
+      </span>
     </div>
-    <button (click)="goToAdd()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition">
-      + สร้างข้อเสนอต่อสัญญาใหม่
+    <button
+      (click)="goToAdd()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+    >
+      <i class="bi bi-plus-lg"></i>
+      สร้างข้อเสนอต่อสัญญาใหม่
     </button>
   </div>
 
+  <!-- Filters & Search -->
+  <div class="flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <input
+        type="text"
+        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        placeholder="ค้นหาเลขที่ข้อเสนอ, เลขที่สัญญาเดิม, โครงการ..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      }
+    </div>
+    <select
+      (change)="onFilterChange($event)"
+      [value]="filterStatus()"
+      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
+    >
+      <option value="all">📊 ทุกสถานะข้อเสนอ</option>
+      <option value="DRAFT">ร่างข้อเสนอ (Draft)</option>
+      <option value="PROPOSED">เสนอราคาแล้ว (Proposed)</option>
+      <option value="CONFIRMED">ตกลงต่อสัญญาแล้ว (Confirmed)</option>
+      <option value="REJECTED">ปฏิเสธการต่อสัญญา (Rejected)</option>
+      <option value="EXPIRED">หมดอายุ (Expired)</option>
+    </select>
+  </div>
+
+  <!-- Loading State -->
   @if (renewalsResource.isLoading()) {
-    <div class="p-8 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
-      กำลังโหลดข้อมูล...
+    <div class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูลข้อเสนอต่อสัญญา...</p>
     </div>
   } @else if (renewalsResource.value(); as res) {
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <table class="w-full text-left border-collapse text-sm text-slate-700">
-        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs">
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
-            <th class="p-4">เลขที่ข้อเสนอ</th>
-            <th class="p-4">อ้างอิงสัญญาเดิม</th>
-            <th class="p-4">ลูกค้า / โครงการ</th>
-            <th class="p-4">ระยะเวลาสัญญาใหม่</th>
-            <th class="p-4 text-right">มูลค่าเสนอ</th>
-            <th class="p-4 text-center">สถานะ</th>
-            <th class="p-4 text-center">จัดการ</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px]">
+              เลขที่ข้อเสนอ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[130px]">
+              อ้างอิงสัญญาเดิม
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
+              ลูกค้า / โครงการ
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[150px]">
+              ระยะเวลาสัญญาใหม่
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+              มูลค่าเสนอ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
+              สถานะ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+              จัดการ
+            </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-200">
-          @for (item of res.content; track item.id) {
-            <tr class="hover:bg-slate-50 transition">
-              <td class="p-4 font-semibold text-indigo-600">{{ item.renewalNo }}</td>
-              <td class="p-4 font-medium text-slate-700">{{ item.contractNo || 'N/A' }}</td>
-              <td class="p-4">
-                <div class="font-medium text-slate-800">{{ item.customerName || 'N/A' }}</div>
-                <div class="text-xs text-slate-400">{{ item.projectName || 'N/A' }}</div>
-              </td>
-              <td class="p-4 text-xs font-medium text-slate-600">
-                {{ item.newStartDate }} ถึง {{ item.newEndDate }}
-              </td>
-              <td class="p-4 text-right font-bold text-indigo-600">{{ item.proposedAmount | currency:'THB':'symbol':'1.2-2' }}</td>
-              <td class="p-4 text-center">
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ getStatusClass(item.status) }}">
-                  {{ item.status }}
+        <tbody class="divide-y divide-[var(--border)]">
+          @for (item of filteredRenewals(); track item.id) {
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              <td class="px-4 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                  {{ item.renewalNo }}
                 </span>
               </td>
-              <td class="p-4 text-center">
+              <td class="px-4 py-3 text-xs font-medium text-[var(--text)]">
+                {{ item.contractNo || 'N/A' }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[var(--text-active)]">{{ item.customerName || 'N/A' }}</div>
+                <div class="text-xs text-[var(--text-muted)]">{{ item.projectName || 'N/A' }}</div>
+              </td>
+              <td class="px-4 py-3 text-xs text-[var(--text)]">
+                {{ item.newStartDate || '-' }} ถึง {{ item.newEndDate || '-' }}
+              </td>
+              <td class="px-4 py-3 text-right font-bold text-[var(--crm-primary)]">
+                {{ item.proposedAmount | currency:'THB':'symbol':'1.2-2' }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(item.status)">
+                  {{ getStatusText(item.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
                 <sic-table-actions
                   [showView]="false"
                   [showEdit]="true"
@@ -58,11 +127,58 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="p-8 text-center text-slate-400">ยังไม่มีรายการเสนอต่อสัญญา MA</td>
+              <td colspan="7" class="px-4 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="bi bi-arrow-repeat text-5xl text-[var(--text-muted)] opacity-30"></i>
+                  <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีรายการเสนอต่อสัญญา MA</p>
+                  <p class="text-sm text-[var(--text-muted)]">คลิกปุ่มสร้างเพื่อเริ่มสร้างข้อเสนอต่อสัญญาใหม่</p>
+                  <button
+                    (click)="goToAdd()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+                  >
+                    <i class="bi bi-plus-lg"></i> สร้างข้อเสนอต่อสัญญาใหม่
+                  </button>
+                </div>
+              </td>
             </tr>
           }
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination -->
+    @if (totalItems() > 0) {
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div class="text-sm text-[var(--text-muted)]">
+          แสดง <strong class="text-[var(--text-active)]">{{ currentPage() * pageSize() + 1 }}</strong>
+          - <strong class="text-[var(--text-active)]">{{ Math.min((currentPage() + 1) * pageSize(), totalItems()) }}</strong>
+          จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
+        </div>
+        <div class="flex gap-1">
+          <button
+            (click)="onPageChange(currentPage() - 1)"
+            [disabled]="currentPage() === 0"
+            class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          @for (p of pageNumbers(); track p) {
+            <button
+              (click)="onPageChange(p)"
+              [class]="p === currentPage() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+            >
+              {{ p + 1 }}
+            </button>
+          }
+          <button
+            (click)="onPageChange(currentPage() + 1)"
+            [disabled]="(currentPage() + 1) * pageSize() >= totalItems()"
+            class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    }
   }
 </div>
