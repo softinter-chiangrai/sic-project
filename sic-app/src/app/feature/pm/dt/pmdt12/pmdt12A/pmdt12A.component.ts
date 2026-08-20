@@ -59,6 +59,12 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   scenarioOptions = signal<{ value: string; text: string }[]>([]);
   scenarioLoading = signal(false);
 
+  // AI Assistant State
+  showAiAssistModal = signal(false);
+  isGeneratingAiAssist = signal(false);
+  aiAssistTaskId = signal<string | null>(null);
+  aiAssistPrompt = signal<string>('');
+
   // Multi-tester support
   businessId = signal<string | null>(null);
   testerValues = signal<string[]>([]);
@@ -161,6 +167,71 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.formData.form.patchValue({
       scenarioId: scenarioId,
       scenarioName: found ? found.text : null,
+    });
+  }
+
+  // ===== AI Assistant In-Form =====
+  openAiAssist(): void {
+    const currentTaskId = this.formData.form.get('taskId')?.value;
+    this.aiAssistTaskId.set(currentTaskId || null);
+    this.aiAssistPrompt.set('');
+    this.showAiAssistModal.set(true);
+  }
+
+  closeAiAssist(): void {
+    this.showAiAssistModal.set(false);
+  }
+
+  generateWithAi(): void {
+    const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
+    const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
+    const scenarioId = this.formData.form.get('scenarioId')?.value;
+    const currentTitle = this.formData.form.get('title')?.value;
+
+    this.isGeneratingAiAssist.set(true);
+
+    this.service.generateDraft({
+      projectId: pId || undefined,
+      taskId: selectedTaskId || undefined,
+      scenarioId: scenarioId || undefined,
+      title: currentTitle || undefined,
+      prompt: this.aiAssistPrompt() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAiAssist.set(false);
+        if (draft) {
+          if (draft.title && (!this.formData.form.get('title')?.value || this.formData.form.get('title')?.value === '')) {
+            this.formData.form.patchValue({ title: draft.title });
+          } else if (draft.title) {
+            this.formData.form.patchValue({ title: draft.title });
+          }
+
+          if (draft.priority) {
+            this.formData.form.patchValue({ priority: draft.priority });
+          }
+
+          if (draft.testStep) {
+            this.formData.form.patchValue({ testStep: draft.testStep });
+          }
+
+          if (draft.expectedResult) {
+            this.formData.form.patchValue({ expectedResult: draft.expectedResult });
+          }
+
+          // If a task was selected in AI modal that wasn't previously linked, link it
+          if (selectedTaskId && selectedTaskId !== this.formData.form.get('taskId')?.value) {
+            this.onTaskChange(selectedTaskId);
+          }
+
+          this.formData.markAsDirty();
+          this.closeAiAssist();
+          this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลขั้นตอนการทดสอบและผลที่คาดหวังลงในแบบฟอร์มเรียบร้อยแล้ว');
+        }
+      },
+      error: (err) => {
+        this.isGeneratingAiAssist.set(false);
+        this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+      }
     });
   }
 

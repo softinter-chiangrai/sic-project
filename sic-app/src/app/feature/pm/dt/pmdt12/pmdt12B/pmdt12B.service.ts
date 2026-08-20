@@ -31,4 +31,14 @@ export class Pmdt12BService {
   getTasksByProject(projectId: string): Observable<PmTaskItemModel[]> {
     return this.http.get<PmTaskItemModel[]>(`${this.apiBase}/api/pm/tasks/combobox?projectId=${projectId}`);
   }
+
+  generateDraft(request: {
+    projectId?: string;
+    taskId?: string;
+    requirementId?: string;
+    scenarioName?: string;
+    prompt?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/api/pm/test-scenarios/generate/draft`, request);
+  }
 }

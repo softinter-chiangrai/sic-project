@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class PmTestScenarioController {
 
     private final PmTestScenarioService scenarioService;
+    private final com.softinter.sicapi.service.impl.TestScenarioGeneratorService generatorService;
     private final CurrentUserService currentUserService;
 
     @GetMapping
@@ -55,6 +56,13 @@ public class PmTestScenarioController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(scenarioService.save(request, businessId, userId));
+    }
+
+    @PostMapping("/generate/draft")
+    public ResponseEntity<com.softinter.sicapi.dto.response.TestScenarioDraftResponse> generateDraft(
+            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest request) {
+        com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest();
+        return ResponseEntity.ok(generatorService.generateDraft(req));
     }
 
     @DeleteMapping("/{id}")

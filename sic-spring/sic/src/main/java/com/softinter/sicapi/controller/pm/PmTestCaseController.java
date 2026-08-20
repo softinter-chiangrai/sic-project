@@ -27,6 +27,7 @@ import java.util.UUID;
 public class PmTestCaseController {
 
     private final PmTestCaseService testCaseService;
+    private final com.softinter.sicapi.service.impl.TestCaseGeneratorService generatorService;
     private final CurrentUserService currentUserService;
 
     @GetMapping("/paging")
@@ -55,6 +56,13 @@ public class PmTestCaseController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(testCaseService.save(request, businessId, userId));
+    }
+
+    @PostMapping("/generate/draft")
+    public ResponseEntity<com.softinter.sicapi.dto.response.TestCaseDraftResponse> generateDraft(
+            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest request) {
+        com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest();
+        return ResponseEntity.ok(generatorService.generateDraft(req));
     }
 
     @DeleteMapping("/{id}")

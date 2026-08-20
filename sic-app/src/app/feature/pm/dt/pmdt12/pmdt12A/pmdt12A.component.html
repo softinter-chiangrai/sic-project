@@ -31,6 +31,20 @@
           }
         </p>
       </div>
+
+      <!-- AI Assistant Header Button -->
+      @if (!isView() && !isExecution()) {
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="openAiAssist()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+            title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+            <i class="bi bi-stars text-sm"></i>
+            <span>สร้างเนื้อหาด้วย AI</span>
+          </button>
+        </div>
+      }
     </div>
 
     <!-- Warning Banner when Test Case has an active unresolved bug in Execution Mode -->
@@ -235,4 +249,101 @@
 
     </div>
   </form>
+}
+
+<!-- ============================================================ -->
+<!-- AI ASSISTANT MODAL (IN-FORM) -->
+<!-- ============================================================ -->
+@if (showAiAssistModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+            <i class="bi bi-stars text-lg"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+              สร้าง Test Case ด้วย AI
+            </h2>
+            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยวิเคราะห์และร่างขั้นตอนการทดสอบ (Test Steps) และผลลัพธ์ที่คาดหวัง</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeAiAssist()"
+          [disabled]="isGeneratingAiAssist()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          <i class="bi bi-x-lg text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4">
+        <!-- Task Selection (Optional) -->
+        <div>
+          <sic-combobox
+            label="อ้างอิงจาก Task ที่เกี่ยวข้อง (ถ้ามี)"
+            [items]="taskOptions()"
+            placeholder="-- ไม่ระบุ (สร้างจากข้อความคำสั่งอิสระ) --"
+            [ngModel]="aiAssistTaskId()"
+            (selectionChanged)="aiAssistTaskId.set($event?.value || $event?.id || $event || null)"
+            [clearable]="true">
+          </sic-combobox>
+          <p class="text-[11px] text-[var(--text-muted)] mt-1">
+            💡 หากเลือก Task ระบบจะดึงเนื้อหา Task และ Specification ที่ผูกอยู่มาร่วมวิเคราะห์สร้างเคสทดสอบ
+          </p>
+        </div>
+
+        <!-- Prompt -->
+        <div>
+          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+            คำสั่ง หรือ เงื่อนไขการทดสอบที่ต้องการเน้น (Prompt)
+          </label>
+          <textarea
+            [ngModel]="aiAssistPrompt()"
+            (ngModelChange)="aiAssistPrompt.set($event)"
+            rows="4"
+            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้นทดสอบ เช่น 'ทดสอบกรณีใส่รหัสผ่านไม่ตรงกัน', 'ทดสอบการกดปุ่มโดยไม่กรอกอีเมล', 'ทดสอบ Performance เมื่อโหลดข้อมูลจำนวนมาก'..."
+            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+          </textarea>
+        </div>
+
+        @if (isGeneratingAiAssist()) {
+          <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
+            <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และร่างขั้นตอนการทดสอบ (Test Steps & Expected Results)...</p>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+        <button
+          type="button"
+          (click)="closeAiAssist()"
+          [disabled]="isGeneratingAiAssist()"
+          class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+          ยกเลิก
+        </button>
+
+        <button
+          type="button"
+          (click)="generateWithAi()"
+          [disabled]="isGeneratingAiAssist()"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+          @if (isGeneratingAiAssist()) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>กำลังประมวลผล...</span>
+          } @else {
+            <i class="bi bi-stars"></i>
+            <span>สร้างเนื้อหาลงฟอร์ม</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
 }

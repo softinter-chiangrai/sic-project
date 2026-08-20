@@ -331,12 +331,12 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Actions: Test Scenario =====
   goToAddScenario() {
-    this.router.navigate(['/feature/pm/pmdt13/pmdt13B']);
+    this.router.navigate(['/feature/pm/test-scenario/new']);
   }
 
   goToEditScenario(id: string, event?: MouseEvent) {
     if (event) event.stopPropagation();
-    this.router.navigate(['/feature/pm/pmdt13/pmdt13B', id, 'edit']);
+    this.router.navigate(['/feature/pm/test-scenario', id, 'edit']);
   }
 
   deleteScenario(id: string, event?: MouseEvent) {

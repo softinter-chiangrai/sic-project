@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.component.ts
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Pmdt12BService } from './pmdt12B.service';
 import { Pmdt12BForm } from './pmdt12B.form';
@@ -21,6 +21,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
@@ -55,6 +56,12 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     { value: 'Medium', text: 'Medium' },
     { value: 'Low', text: 'Low' },
   ];
+
+  // AI Assistant State
+  showAiAssistModal = signal(false);
+  isGeneratingAiAssist = signal(false);
+  aiAssistTaskId = signal<string | null>(null);
+  aiAssistPrompt = signal<string>('');
 
   pageDirty = () => this.formData?.dirty ?? false;
 
@@ -109,6 +116,70 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.formData.form.patchValue({
       taskId: taskId,
       taskName: selected ? selected.text : null,
+    });
+  }
+
+  onAiPromptChange(value: string): void {
+    this.aiAssistPrompt.set(value || '');
+  }
+
+  // ===== AI Assistant In-Form =====
+  openAiAssist(): void {
+    const currentTaskId = this.formData.form.get('taskId')?.value;
+    this.aiAssistTaskId.set(currentTaskId || null);
+    this.aiAssistPrompt.set('');
+    this.showAiAssistModal.set(true);
+  }
+
+  closeAiAssist(): void {
+    this.showAiAssistModal.set(false);
+  }
+
+  generateWithAi(): void {
+    const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
+    const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
+    const currentName = this.formData.form.get('scenarioName')?.value;
+
+    this.isGeneratingAiAssist.set(true);
+
+    this.service.generateDraft({
+      projectId: pId || undefined,
+      taskId: selectedTaskId || undefined,
+      scenarioName: currentName || undefined,
+      prompt: this.aiAssistPrompt() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAiAssist.set(false);
+        if (draft) {
+          if (draft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
+            this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
+          }
+
+          if (draft.scenarioName) {
+            this.formData.form.patchValue({ scenarioName: draft.scenarioName });
+          }
+
+          if (draft.priority) {
+            this.formData.form.patchValue({ priority: draft.priority });
+          }
+
+          if (draft.description) {
+            this.formData.form.patchValue({ description: draft.description });
+          }
+
+          if (selectedTaskId && selectedTaskId !== this.formData.form.get('taskId')?.value) {
+            this.onTaskChange(selectedTaskId);
+          }
+
+          this.formData.markAsDirty();
+          this.closeAiAssist();
+          this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูล Test Scenario ลงในแบบฟอร์มเรียบร้อยแล้ว');
+        }
+      },
+      error: (err) => {
+        this.isGeneratingAiAssist.set(false);
+        this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+      }
     });
   }
 

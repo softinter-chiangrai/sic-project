@@ -72,4 +72,15 @@ export class Pmdt12Service {
   deleteTestScenario(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiBase}/api/pm/test-scenarios/${id}`);
   }
+
+  generateDraft(request: {
+    projectId?: string;
+    taskId?: string;
+    requirementId?: string;
+    scenarioId?: string;
+    title?: string;
+    prompt?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/api/pm/test-cases/generate/draft`, request);
+  }
 }

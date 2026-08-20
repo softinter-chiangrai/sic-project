@@ -55,5 +55,16 @@ export class Pmdt12AService {
   createBugFromTest(data: any): Observable<string> {
     return this.http.post<string>(`${this.apiBase}/api/pm/bugs/save`, data);
   }
+
+  generateDraft(request: {
+    projectId?: string;
+    taskId?: string;
+    requirementId?: string;
+    scenarioId?: string;
+    title?: string;
+    prompt?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/api/pm/test-cases/generate/draft`, request);
+  }
 }
 
