@@ -12,6 +12,7 @@ import com.softinter.sicapi.service.PmAiProviderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +29,7 @@ public class TestScenarioGeneratorService {
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
+    @Transactional(readOnly = true)
     public TestScenarioDraftResponse generateDraft(GenerateTestScenarioDraftRequest request) {
         PmTask task = null;
         PmSpecification spec = null;

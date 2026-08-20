@@ -200,9 +200,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAiAssist.set(false);
         if (draft) {
-          if (draft.title && (!this.formData.form.get('title')?.value || this.formData.form.get('title')?.value === '')) {
-            this.formData.form.patchValue({ title: draft.title });
-          } else if (draft.title) {
+          const currentTitleValue = this.formData.form.get('title')?.value;
+          if (draft.title && (!currentTitleValue || currentTitleValue.trim() === '')) {
             this.formData.form.patchValue({ title: draft.title });
           }
 
@@ -257,10 +256,16 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.taskLoading.set(true);
     this.service.getTasksCombobox(projectId).subscribe({
       next: (tasks) => {
-        const list = (tasks || []).map((t: any) => ({
-          value: t.value || t.id,
-          text: t.text || `${t.taskCode} - ${t.taskName}`,
-        }));
+        const list = (tasks || [])
+          .filter((t: any) => {
+            const text = (t.text || t.taskName || '').trim().toUpperCase();
+            const code = (t.taskCode || t.code || '').trim().toUpperCase();
+            return !text.startsWith('BUG-') && !text.startsWith('[BUG]') && !code.startsWith('BUG-') && !code.startsWith('BG-');
+          })
+          .map((t: any) => ({
+            value: t.value || t.id,
+            text: t.text || `${t.taskCode} - ${t.taskName}`,
+          }));
         this.taskOptions.set(list);
         this.taskLoading.set(false);
       },

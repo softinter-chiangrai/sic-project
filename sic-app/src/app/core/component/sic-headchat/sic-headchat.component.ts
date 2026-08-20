@@ -132,6 +132,10 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     this.loadGroups();
     this.subscribeToServiceState();
     this.subscribeToEvents();
+
+    this.chatSvc.togglePanel$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.togglePanel();
+    });
   }
 
   ngOnDestroy(): void {

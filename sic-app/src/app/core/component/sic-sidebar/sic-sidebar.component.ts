@@ -150,6 +150,10 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleChat(): void {
+    this.chatSvc.togglePanel$.next();
+  }
+
   toggleNotificationPanel(): void {
     this.showNotificationPanel.update(v => !v);
   }

@@ -138,6 +138,7 @@ export class ChatService {
   readonly groupCallLogUpdated$ = new Subject<ChatGroupMessage>();
   readonly groupCreated$ = new Subject<ChatGroup>();
   readonly groupUpdated$ = new Subject<ChatGroup>();
+  readonly togglePanel$ = new Subject<void>();
 
   // ─────────────────────────────────────────────────────────────────────────
   // STOMP connection management
@@ -224,7 +225,14 @@ export class ChatService {
 
   getMembers(): Promise<ChatMember[]> {
     return firstValueFrom(
-      this.http.get<ChatMember[]>(`${environment.apiBaseUrl}/api/su/chat/members`),
+      this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/chat/members`),
+    ).then(list =>
+      (list || []).map(item => ({
+        userId: item.userId || item.id,
+        displayName: item.displayName || item.userName || item.name || item.userId,
+        isOnline: Boolean(item.isOnline),
+        uploadGroupData: item.uploadGroupData || [],
+      }))
     );
   }
 

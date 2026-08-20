@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SicToastService } from '../component/sic-toast/sic-toast.service';
 
 export interface AppNotification {
   id: string;
@@ -21,6 +22,7 @@ export interface AppNotification {
 export class NotificationService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly http = inject(HttpClient);
+  private readonly toastService = inject(SicToastService);
 
   readonly notifications$ = new BehaviorSubject<AppNotification[]>([]);
   readonly unreadCount$ = new BehaviorSubject<number>(0);
@@ -87,5 +89,13 @@ export class NotificationService {
     this.notifications$.next([notification, ...current]);
     this.unreadCount$.next(this.unreadCount$.getValue() + 1);
     this.newNotificationReceived$.next(notification);
+
+    // Show toast
+    const toastText = notification.title
+      ? `${notification.title}: ${notification.message || ''}`
+      : notification.message;
+    if (toastText) {
+      this.toastService.show(toastText, 'info', 4000);
+    }
   }
 }

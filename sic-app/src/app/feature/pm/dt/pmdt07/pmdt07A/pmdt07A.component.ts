@@ -280,8 +280,11 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             this.cdr.markForCheck();
         })).subscribe({
             next: (draft) => {
+                const currentTitle = this.form.value.title;
+                const titleToSet = (currentTitle && currentTitle.trim() !== '') ? currentTitle : (draft.title || currentTitle);
+
                 this.form.patchValue({
-                    title: draft.title || this.form.value.title,
+                    title: titleToSet,
                     priority: draft.priority || this.form.value.priority,
                     estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
                     description: draft.generatedHtmlDescription || draft.description || this.form.value.description,

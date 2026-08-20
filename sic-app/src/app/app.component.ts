@@ -6,10 +6,13 @@ import { LanguageService } from './core/services/language.service';
 import { DateTimeUtil } from './core/utils/datetime.util';
 import { SicNumberConfigService } from './core/component/sic-number/sic-number.config';
 
+import { SicToastComponent } from './core/component/sic-toast/sic-toast.component';
+
 @Component({
   selector: 'app-root',
   imports: [
     RouterOutlet,
+    SicToastComponent,
 ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

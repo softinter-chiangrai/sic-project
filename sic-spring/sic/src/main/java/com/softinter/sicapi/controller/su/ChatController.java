@@ -5,6 +5,8 @@ import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.entity.su.*;
 import com.softinter.sicapi.repository.su.*;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.SuUserBusinessService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +35,8 @@ public class ChatController {
     private final SuChatGroupLogRepository chatGroupLogRepository;
     private final CurrentUserService currentUserService;
     private final SimpMessagingTemplate messagingTemplate;
+
+    private final SuUserBusinessService userBusinessService;
 
     // ========== Private Chat ==========
     
@@ -82,17 +86,20 @@ public class ChatController {
     }
 
     @GetMapping("/members")
-    @Operation(summary = "Get all chat members from groups that current user belongs to")
+    @Operation(summary = "Get all available chat members in system/business")
     public ResponseEntity<List<ChatMemberResponse>> getChatMembers() {
         String currentUserId = currentUserService.getUserId();
         
-        List<SuChatGroup> userGroups = chatGroupRepository.findByMemberUserId(currentUserId);
+        List<UserResponse> availableUsers = userBusinessService.getAvailableUsers();
         
-        List<ChatMemberResponse> members = userGroups.stream()
-                .flatMap(group -> group.getMembers().stream())
-                .filter(member -> !member.getUserId().equals(currentUserId))
-                .map(this::toMemberResponse)
-                .distinct()
+        List<ChatMemberResponse> members = availableUsers.stream()
+                .filter(u -> !u.getId().equals(currentUserId))
+                .map(u -> {
+                    ChatMemberResponse member = new ChatMemberResponse();
+                    member.setUserId(u.getId());
+                    member.setUserName(u.getName());
+                    return member;
+                })
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(members);

@@ -90,10 +90,16 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.taskLoading.set(true);
     this.service.getTasksByProject(projectId).subscribe({
       next: (tasks) => {
-        const list = (tasks || []).map((t: any) => ({
-          value: t.value || t.id,
-          text: t.text || `${t.taskCode} - ${t.taskName}`,
-        }));
+        const list = (tasks || [])
+          .filter((t: any) => {
+            const text = (t.text || t.taskName || '').trim().toUpperCase();
+            const code = (t.taskCode || t.code || '').trim().toUpperCase();
+            return !text.startsWith('BUG-') && !text.startsWith('[BUG]') && !code.startsWith('BUG-') && !code.startsWith('BG-');
+          })
+          .map((t: any) => ({
+            value: t.value || t.id,
+            text: t.text || `${t.taskCode} - ${t.taskName}`,
+          }));
         this.taskOptions.set(list);
         this.taskLoading.set(false);
       },
@@ -155,7 +161,8 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
             this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
           }
 
-          if (draft.scenarioName) {
+          const currentScenarioName = this.formData.form.get('scenarioName')?.value;
+          if (draft.scenarioName && (!currentScenarioName || currentScenarioName.trim() === '')) {
             this.formData.form.patchValue({ scenarioName: draft.scenarioName });
           }
 
