@@ -36,7 +36,8 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
 
-  @ViewChild('roleCombobox') roleCombobox!: SicComboboxComponent;
+  // ✅ URL สำหรับ combobox บทบาท
+  roleComboboxUrl = this.service.getRoleComboboxUrl();
 
   isEdit = false;
   memberId: string | null = null;
@@ -108,32 +109,6 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
-  onRoleSelect(item: ComboboxRole | null) {
-    if (!item) return;
-
-    const roleId = item.value;
-    if (!roleId) return;
-
-    const current = this.form.get('roleIds')?.value || [];
-    if (current.includes(roleId)) {
-      this.dialog.warn('ซ้ำ', 'บทบาทนี้ถูกเลือกแล้ว');
-      this.roleCombobox.clearSelection();
-      return;
-    }
-
-    const newList = [...current, roleId];
-    this.form.patchValue({ roleIds: newList });
-    this.form.markAsDirty();
-    this.roleCombobox.clearSelection();
-  }
-
-  removeRole(roleId: string) {
-    const current = this.form.get('roleIds')?.value || [];
-    const newList = current.filter((id: string) => id !== roleId);
-    this.form.patchValue({ roleIds: newList });
-    this.form.markAsDirty();
-  }
-
   onBack() {
     if (this.form.dirty) {
       this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then((ok) => {
@@ -167,10 +142,5 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
           console.error('Update error', err);
         },
       });
-  }
-
-  getRoleName(roleId: string): string {
-    const role = this.allRoles().find((r) => r.value === roleId);
-    return role ? role.text : roleId;
   }
 }

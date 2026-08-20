@@ -64,9 +64,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   isLoading = false;
   isSaving = false;
 
-  stepUsersCache: Record<number, UserOption[]> = {};
-  stepUsersLoading: Record<number, boolean> = {};
-
   form = this.fb.group({
     id: [null],
     flowCode: ['', [Validators.required, Validators.maxLength(50)]],
@@ -95,8 +92,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         .map((stepGroup, index) => ({ index, stepGroup }))
         .filter(({ stepGroup }) => {
           const approverRole = stepGroup.get('approverRole')?.value;
-          const selectedUserIds = (stepGroup.get('selectedUserIds')?.value as string[]) || [];
-          return !approverRole || selectedUserIds.length === 0;
+          const selectedUserIds = stepGroup.get('selectedUserIds')?.value;
+          const hasUsers = Array.isArray(selectedUserIds) && selectedUserIds.length > 0;
+          return !approverRole || !hasUsers;
         });
 
       if (invalidSteps.length > 0) {
@@ -126,11 +124,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         next: (data) => {
           this.form.patchValue(data as any);
           this.steps.clear();
-          data.steps?.forEach((step, i) => {
+          data.steps?.forEach((step) => {
             this.steps.push(this.createStepForm(step));
-            if (step.approverRole) {
-              this.loadUsersForStep(i, step.approverRole);
-            }
           });
           this.reorderSteps();
           this.cdr.detectChanges();
@@ -150,9 +145,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         [Validators.required, Validators.min(1)],
       ],
       stepName: [step?.stepName || '', [Validators.required, Validators.maxLength(255)]],
-      approverRole: [step?.approverRole || ''],
+      approverRole: [step?.approverRole || '', [Validators.required]],
       approverUserId: [step?.approverUserId || ''],
-      selectedUserIds: [this.parseUserIds(step?.approverUserId)],
+      selectedUserIds: [this.parseUserIds(step?.approverUserId), [Validators.required]],
       isRequired: [step?.isRequired !== false],
       timeoutDays: [step?.timeoutDays || null],
       canSkip: [step?.canSkip || false],
@@ -180,8 +175,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
     this.steps.removeAt(index);
-    delete this.stepUsersCache[index];
-    delete this.stepUsersLoading[index];
     this.reorderSteps();
     this.cdr.detectChanges();
   }
@@ -192,10 +185,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const stepGroup = stepsArray.at(index) as FormGroup;
     stepsArray.removeAt(index);
     stepsArray.insert(index - 1, stepGroup);
-    [this.stepUsersCache[index], this.stepUsersCache[index - 1]] = [
-      this.stepUsersCache[index - 1],
-      this.stepUsersCache[index],
-    ];
     this.reorderSteps();
     this.form.markAsDirty();
     this.cdr.detectChanges();
@@ -207,77 +196,22 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const stepGroup = stepsArray.at(index) as FormGroup;
     stepsArray.removeAt(index);
     stepsArray.insert(index + 1, stepGroup);
-    [this.stepUsersCache[index], this.stepUsersCache[index + 1]] = [
-      this.stepUsersCache[index + 1],
-      this.stepUsersCache[index],
-    ];
     this.reorderSteps();
     this.form.markAsDirty();
     this.cdr.detectChanges();
   }
 
-  onRoleChange(event: Event, index: number): void {
-    const select = event.target as HTMLSelectElement;
-    const roleCode = select.value;
-    const stepGroup = this.steps.at(index) as FormGroup;
-    stepGroup.get('approverRole')?.setValue(roleCode);
-    stepGroup.get('selectedUserIds')?.setValue([]);
-    stepGroup.get('approverUserId')?.setValue('');
-    this.stepUsersCache[index] = [];
-
-    if (roleCode) {
-      this.loadUsersForStep(index, roleCode);
-    }
-    this.cdr.detectChanges();
-  }
-
   loadUsersForStep(index: number, roleCode: string): void {
-    const businessId = this.businessService.getCurrentBusinessId();
-    if (!businessId || !roleCode) return;
-
     const stepGroup = this.steps.at(index) as FormGroup;
     stepGroup.get('selectedUserIds')?.setValue([]);
     stepGroup.get('approverUserId')?.setValue('');
-    this.stepUsersCache[index] = [];
-    this.stepUsersLoading[index] = true;
     this.cdr.detectChanges();
-
-    this.http
-      .get<{ value: string; text: string }[]>(
-        `${this.apiBaseUrl}/api/su/business-roles/${businessId}/users-by-role`,
-        { params: { roleCode } },
-      )
-      .pipe(
-        finalize(() => {
-          this.stepUsersLoading[index] = false;
-          this.cdr.detectChanges();
-        }),
-      )
-      .subscribe({
-        next: (users) => {
-          this.stepUsersCache[index] = users;
-        },
-        error: () => {
-          this.stepUsersCache[index] = [];
-        },
-      });
   }
 
-  toggleUser(index: number, userId: string): void {
-    const stepGroup = this.steps.at(index) as FormGroup;
-    const current: string[] = stepGroup.get('selectedUserIds')?.value ?? [];
-    const next = current.includes(userId)
-      ? current.filter((id) => id !== userId)
-      : [...current, userId];
-    stepGroup.get('selectedUserIds')?.setValue(next);
-    stepGroup.get('approverUserId')?.setValue(next.join(','));
-    this.form.markAsDirty();
-  }
-
-  isUserSelected(index: number, userId: string): boolean {
-    const stepGroup = this.steps.at(index) as FormGroup;
-    const current: string[] = stepGroup.get('selectedUserIds')?.value ?? [];
-    return current.includes(userId);
+  getUsersByRoleApiUrl(roleCode?: string): string {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (!businessId || !roleCode) return '';
+    return `${this.apiBaseUrl}/api/su/business-roles/${businessId}/users-by-role?roleCode=${encodeURIComponent(roleCode)}`;
   }
 
   private reorderSteps(): void {
@@ -291,9 +225,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     for (let i = 0; i < stepControls.length; i++) {
       const group = stepControls[i];
       const role = group.get('approverRole')?.value;
-      const userIds = (group.get('selectedUserIds')?.value as string[]) || [];
-      // ✅ ต้องมีทั้งบทบาท AND ต้องมีผู้ใช้
-      if (!role || userIds.length === 0) {
+      const userIds = group.get('selectedUserIds')?.value;
+      const hasUsers = Array.isArray(userIds) && userIds.length > 0;
+      if (!role || !hasUsers) {
         return true;
       }
     }
@@ -318,7 +252,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     if (this.hasMissingApprover()) {
       this.dialog.warn(
         'ยังไม่สมบูรณ์',
-        'ทุกขั้นตอนต้องมีผู้อนุมัติอย่างน้อย 1 คน (บทบาท หรือเลือกผู้ใช้)',
+        'ทุกขั้นตอนต้องเลือกบทบาทและเลือกผู้อนุมัติอย่างน้อย 1 คน',
       );
       return;
     }

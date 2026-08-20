@@ -21,10 +21,14 @@ public class PmDiagramTabResponse {
 
     private UUID projectId;
     private String projectName;
+    private UUID requirementId;
+    private String requirementTitle;
     private Integer sortOrder;
     private Boolean isActive;
     private Instant createdDate;
     private Instant updatedDate;
     private Integer versionCount;
     private Integer rowVersion;
+    private String approvalStatus;
+    private Boolean isApproved;
 }

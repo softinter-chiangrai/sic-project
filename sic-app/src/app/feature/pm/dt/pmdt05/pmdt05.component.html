@@ -85,11 +85,12 @@
     }
 
     @for (tab of tabs(); track tab.id) {
-      <button
+      <div
         (click)="switchTab(tab.id)"
         (dblclick)="editTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer"
-        [class.border-[var(--crm-success)]]="currentTabId === tab.id"
+        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer select-none"
+        [class.border-[var(--crm-primary)]]="currentTabId === tab.id"
+        [class.bg-[var(--sidebar-hover)]]="currentTabId === tab.id"
         [class.text-[var(--text-active)]]="currentTabId === tab.id"
         [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
         [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
@@ -97,23 +98,69 @@
       >
         <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <span class="text-sm">
+        <span class="text-sm font-medium">
           {{ tab.name }}
         </span>
 
-        <span class="text-[0.6rem] opacity-60 text-[var(--text-muted)]">
+        <span class="text-[0.65rem] opacity-60 text-[var(--text-muted)]">
           {{ tab.diagramType }}
         </span>
 
+        <!-- ป้ายแสดงสถานะการอนุมัติ (Approval Status Badge) -->
+        @if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
+          <span
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+            title="ผ่านการอนุมัติแล้ว (Approved)"
+          >
+            <i class="bi bi-check-circle-fill text-[9px]"></i>
+            <span>อนุมัติแล้ว</span>
+          </span>
+        } @else if (tab.approvalStatus === 'PENDING' || tab.approvalStatus === 'IN_REVIEW' || tab.approvalStatus === 'In Review' || tab.approvalStatus === 'PARTIALLY_APPROVED') {
+          <span
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+            title="กำลังรอการอนุมัติ (Pending Approval)"
+          >
+            <i class="bi bi-clock-history text-[9px]"></i>
+            <span>รออนุมัติ</span>
+          </span>
+        } @else if (tab.approvalStatus === 'REJECTED' || tab.approvalStatus === 'NEED_REVISION') {
+          <span
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+            title="ปฏิเสธ / ต้องแก้ไข"
+          >
+            <i class="bi bi-x-circle-fill text-[9px]"></i>
+            <span>{{ tab.approvalStatus === 'NEED_REVISION' ? 'ต้องแก้ไข' : 'ไม่อนุมัติ' }}</span>
+          </span>
+        } @else {
+          <span
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-normal bg-slate-500/10 text-[var(--text-muted)] border border-slate-500/20 opacity-75"
+            title="ยังไม่ส่งอนุมัติ (ฉบับร่าง)"
+          >
+            <i class="bi bi-dash-circle text-[9px]"></i>
+            <span>ยังไม่อนุมัติ</span>
+          </span>
+        }
+
+        <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ) -->
+        <button
+          (click)="editTab(tab.id); $event.stopPropagation()"
+          class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
+          [class.opacity-100]="currentTabId === tab.id"
+          title="แก้ไขข้อมูล / ส่ง Approve"
+        >
+          <i class="bi bi-pencil text-xs"></i>
+        </button>
+
+        <!-- ปุ่มลบ Tab -->
         <button
           (click)="deleteTab(tab.id, $event)"
-          class="ml-1 text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+          class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
           [class.opacity-100]="currentTabId === tab.id"
-          title="ลบ"
+          title="ลบ Diagram"
         >
           <i class="bi bi-x text-sm"></i>
         </button>
-      </button>
+      </div>
     }
 
     <button

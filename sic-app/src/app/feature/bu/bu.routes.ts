@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 import { burt01Resolver } from './rt/burt01/burt01.resolver';
-import { burt02Resolver } from './rt/burt02/burt02.resolver';
-import { burt02AResolver } from './rt/burt02/burt02A/burt02A.resolver';
 import { burt03Resolver } from './rt/burt03/burt03.resolver';
 import { burt04Resolver } from './rt/burt04/burt04.resolver';
 import { burt04AResolver } from './rt/burt04/burt04A/burt04A.resolver';
@@ -24,17 +22,15 @@ export const routes: Routes = [
     resolve: { form: burt01Resolver },
   },
 
-  // ===== BURT02 - Customer / Permission =====
+  // ===== BURT02 - Role & Permission Management =====
   {
     path: 'burt02',
     loadComponent: () => import('./rt/burt02/burt02.component').then((m) => m.Burt02Component),
-    resolve: { form: burt02Resolver },
   },
   {
     path: 'burt02/:id',
     loadComponent: () =>
       import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
-    resolve: { form: burt02AResolver },
   },
 
   // ===== BURT03 - Role Management =====

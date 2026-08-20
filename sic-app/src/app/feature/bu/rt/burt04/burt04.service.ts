@@ -82,4 +82,8 @@ export class burt04Service {
   getComboboxRoles(): Observable<ComboboxRole[]> {
     return this.http.get<ComboboxRole[]>(this.roleComboboxUrl);
   }
+
+  getRoleComboboxUrl(): string {
+    return this.roleComboboxUrl;
+  }
 }

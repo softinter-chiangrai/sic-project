@@ -16,6 +16,7 @@ import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramVersionRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
@@ -47,6 +48,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmTraceLinkRepository traceLinkRepository;
     private final EditSessionService editSessionService;
     private final DocumentVersionService documentVersionService;
+    private final ApprovalService approvalService;
 
     // ===== CREATE =====
     @Override
@@ -69,8 +71,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         UUID businessId = BusinessContextHolder.getBusinessId();
 
         List<PmDiagramTab> existing = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
-                request.getProjectId()
-        );
+                request.getProjectId());
         int maxSort = existing.isEmpty() ? 0 : existing.stream().mapToInt(PmDiagramTab::getSortOrder).max().orElse(0);
 
         PmDiagramTab tab = new PmDiagramTab();
@@ -94,14 +95,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 request.getProjectId(),
                 "REQUIREMENT", request.getRequirementId(),
                 diagramType, saved.getId(),
-                TraceRelationship.DESIGNED_BY
-        );
+                TraceRelationship.DESIGNED_BY);
         traceLinkService.createLink(
                 request.getProjectId(),
                 "REQUIREMENT", request.getRequirementId(),
                 "DIAGRAM", saved.getId(),
-                TraceRelationship.DESIGNED_BY
-        );
+                TraceRelationship.DESIGNED_BY);
 
         // 5. สร้าง Trace Link เพิ่มเติม (ถ้ามี relatedRequirementIds)
         if (request.getRelatedRequirementIds() != null) {
@@ -114,14 +113,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                             request.getProjectId(),
                             "REQUIREMENT", reqId,
                             diagramType, saved.getId(),
-                            TraceRelationship.DESIGNED_BY
-                    );
+                            TraceRelationship.DESIGNED_BY);
                     traceLinkService.createLink(
                             request.getProjectId(),
                             "REQUIREMENT", reqId,
                             "DIAGRAM", saved.getId(),
-                            TraceRelationship.DESIGNED_BY
-                    );
+                            TraceRelationship.DESIGNED_BY);
                 }
             }
         }
@@ -133,8 +130,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                         request.getProjectId(),
                         "DFD", dfdId,
                         "DFD", saved.getId(),
-                        TraceRelationship.RELATED_TO
-                );
+                        TraceRelationship.RELATED_TO);
             }
         }
 
@@ -146,8 +142,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                             request.getProjectId(),
                             "DFD", dfdId,
                             "ER", saved.getId(),
-                            TraceRelationship.IMPLEMENTED_BY
-                    );
+                            TraceRelationship.IMPLEMENTED_BY);
                 }
             }
             if (request.getRelatedRequirementIdsForEr() != null) {
@@ -157,8 +152,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                                 request.getProjectId(),
                                 "REQUIREMENT", reqId,
                                 "ER", saved.getId(),
-                                TraceRelationship.DESIGNED_BY
-                        );
+                                TraceRelationship.DESIGNED_BY);
                     }
                 }
             }
@@ -171,8 +165,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getProjectId(),
                 saved.getName(),
                 "v1.0",
-                "Initial version"
-        );
+                "Initial version");
 
         return toResponse(saved);
     }
@@ -196,18 +189,17 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                     tab.getProjectId(),
                     "REQUIREMENT", request.getRequirementId(),
                     diagramType, tab.getId(),
-                    TraceRelationship.DESIGNED_BY
-            );
+                    TraceRelationship.DESIGNED_BY);
             traceLinkService.createLink(
                     tab.getProjectId(),
                     "REQUIREMENT", request.getRequirementId(),
                     "DIAGRAM", tab.getId(),
-                    TraceRelationship.DESIGNED_BY
-            );
+                    TraceRelationship.DESIGNED_BY);
         }
 
         // อัปเดตข้อมูล Diagram
-        EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.MODIFIED;
+        EntityState state = request.getState() != null ? EntityState.values()[request.getState()]
+                : EntityState.MODIFIED;
 
         if (state == EntityState.MODIFIED) {
             String userId = currentUserService.getUserId();
@@ -216,11 +208,15 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 throw new IllegalStateException("This diagram is locked. A Change Request is required to edit it.");
             }
 
-            if (request.getRowVersion() != null && request.getRowVersion() != 0 && !request.getRowVersion().equals(tab.getRowVersion())) {
+            if (request.getRowVersion() != null && request.getRowVersion() != 0
+                    && !request.getRowVersion().equals(tab.getRowVersion())) {
                 if (request.getGraphData() == null && request.getMermaidScript() == null) {
-                    throw new RuntimeException("Record has been modified by another user. Please refresh and try again.");
+                    throw new RuntimeException(
+                            "Record has been modified by another user. Please refresh and try again.");
                 } else {
-                    log.warn("[PmDiagramTab] RowVersion mismatch during diagram auto-save (req: {}, db: {}). Updating diagram...", request.getRowVersion(), tab.getRowVersion());
+                    log.warn(
+                            "[PmDiagramTab] RowVersion mismatch during diagram auto-save (req: {}, db: {}). Updating diagram...",
+                            request.getRowVersion(), tab.getRowVersion());
                 }
             }
 
@@ -233,9 +229,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
             DocumentDiffHelper.checkChange(changes, "ชื่อแท็บ (Name)", tab.getName(), request.getName());
-            DocumentDiffHelper.checkChange(changes, "Mermaid Script", tab.getMermaidScript(), request.getMermaidScript());
+            DocumentDiffHelper.checkChange(changes, "Mermaid Script", tab.getMermaidScript(),
+                    request.getMermaidScript());
             DocumentDiffHelper.checkChange(changes, "Graph Data", tab.getGraphData(), request.getGraphData());
-            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตไดอะแกรม " + (request.getName() != null ? request.getName() : tab.getName()));
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes,
+                    "อัปเดตไดอะแกรม " + (request.getName() != null ? request.getName() : tab.getName()));
 
             if (request.getName() != null) {
                 tab.setName(request.getName());
@@ -263,7 +261,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             try {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 snapshotJson = mapper.writeValueAsString(saved);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             // ✅ Create document version
             String newVersion = documentVersionService.incrementVersion(oldVersion);
@@ -274,8 +273,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                     saved.getName(),
                     newVersion,
                     diffSummary,
-                    snapshotJson
-            );
+                    snapshotJson);
 
             return toResponse(saved);
 
@@ -283,12 +281,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             tab.setIsDelete(true);
             tab.setDeleteDate(Instant.now());
             tabRepository.save(tab);
-            
+
             // ✅ Soft delete all versions
             documentVersionService.deleteVersionsByDocument(
                     tab.getDiagramType().toUpperCase(),
-                    tab.getId()
-            );
+                    tab.getId());
             return toResponse(tab);
         }
 
@@ -302,11 +299,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
 
-        // ✅ 1. Soft delete Trace Links ที่เกี่ยวข้องกับ Diagram นี้ (ทั้งที่เป็น source และ target)
+        // ✅ 1. Soft delete Trace Links ที่เกี่ยวข้องกับ Diagram นี้ (ทั้งที่เป็น source
+        // และ target)
         // ลบ Trace Link ที่มี Diagram นี้เป็น Source
         List<PmTraceLink> sourceLinks = traceLinkRepository.findBySourceTypeAndSourceId(
-                tab.getDiagramType().toUpperCase(), tab.getId()
-        );
+                tab.getDiagramType().toUpperCase(), tab.getId());
         for (PmTraceLink link : sourceLinks) {
             link.setIsDelete(true);
             link.setDeleteBy(currentUserService.getUserId());
@@ -316,8 +313,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         // ลบ Trace Link ที่มี Diagram นี้เป็น Target
         List<PmTraceLink> targetLinks = traceLinkRepository.findByTargetTypeAndTargetId(
-                tab.getDiagramType().toUpperCase(), tab.getId()
-        );
+                tab.getDiagramType().toUpperCase(), tab.getId());
         for (PmTraceLink link : targetLinks) {
             link.setIsDelete(true);
             link.setDeleteBy(currentUserService.getUserId());
@@ -335,8 +331,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         // ✅ 3. Soft delete all versions
         documentVersionService.deleteVersionsByDocument(
                 tab.getDiagramType().toUpperCase(),
-                tab.getId()
-        );
+                tab.getId());
     }
 
     // ===== DUPLICATE =====
@@ -368,8 +363,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getDiagramType().toUpperCase(),
                 saved.getId(),
                 "v1.0",
-                "Duplicated from " + original.getName()
-        );
+                "Duplicated from " + original.getName());
 
         return toResponse(saved);
     }
@@ -441,8 +435,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getDiagramType().toUpperCase(),
                 saved.getId(),
                 "v" + version.getVersionNumber(),
-                "Restored from version " + version.getVersionNumber()
-        );
+                "Restored from version " + version.getVersionNumber());
 
         return toResponse(saved);
     }
@@ -475,9 +468,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     }
 
     private String getCurrentVersion(PmDiagramTab tab) {
-        if (tab.getId() == null) return "v1.0";
-        List<PmDiagramVersion> versions = versionRepository.findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
-        if (versions.isEmpty()) return "v1.0";
+        if (tab.getId() == null)
+            return "v1.0";
+        List<PmDiagramVersion> versions = versionRepository
+                .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
+        if (versions.isEmpty())
+            return "v1.0";
         return "v" + versions.get(0).getVersionNumber();
     }
 
@@ -503,9 +499,36 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         dto.setRowVersion(tab.getRowVersion());
 
         if (tab.getId() != null) {
+            // Find linked Requirement for Traceability
+            List<PmTraceLink> links = traceLinkRepository.findByTargetTypeAndTargetId(
+                    tab.getDiagramType().toUpperCase(), tab.getId());
+            if (links.isEmpty()) {
+                links = traceLinkRepository.findByTargetTypeAndTargetId("DIAGRAM", tab.getId());
+            }
+            for (PmTraceLink link : links) {
+                if ("REQUIREMENT".equalsIgnoreCase(link.getSourceType())) {
+                    dto.setRequirementId(link.getSourceId());
+                    requirementRepository.findById(link.getSourceId())
+                            .ifPresent(r -> dto.setRequirementTitle(r.getTitle()));
+                    break;
+                }
+            }
+        }
+
+        if (tab.getId() != null) {
             dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
+            try {
+                var status = approvalService.getCurrentStatus("DIAGRAM", tab.getId());
+                dto.setApprovalStatus(status != null ? status.name() : "DRAFT");
+                dto.setIsApproved(status == com.softinter.sicapi.entity.enums.ApprovalStatus.APPROVED);
+            } catch (Exception e) {
+                dto.setApprovalStatus("DRAFT");
+                dto.setIsApproved(false);
+            }
         } else {
             dto.setVersionCount(0);
+            dto.setApprovalStatus("DRAFT");
+            dto.setIsApproved(false);
         }
 
         return dto;

@@ -17,12 +17,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, take, takeUntil, interval } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { DialogService } from '../../../../core/services/dialog.service';
-import type { DiagramModel } from './diagram.model';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
 import { Pmdt05AComponent } from './pmdt05A/pmdt05A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
 import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
+import { ApprovalService } from '../pmdt03/approval.service';
+import { DiagramModel } from './diagram.model';
 
 @Component({
   selector: 'app-pmdt05',
@@ -38,6 +39,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private drawioService = inject(DrawioConnectorService);
   private diagramService = inject(DiagramService);
+  private approvalService = inject(ApprovalService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
@@ -366,6 +368,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       name: tab.name,
       type: tab.diagramType,
       rowVersion: tab.rowVersion || 0,
+      requirementId: tab.requirementId,
+      requirementTitle: tab.requirementTitle,
+      approvalStatus: tab.approvalStatus,
+      isApproved: tab.isApproved,
     };
     this.dialogService.open({
       type: 'confirm',
@@ -373,22 +379,45 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       componentInputs: {
         projectId: this.projectId,
         editData: editData,
-        selectedRequirementId: '',
-        requirementTitle: '',
-        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string) => {
+        selectedRequirementId: tab.requirementId || '',
+        requirementTitle: tab.requirementTitle || '',
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string, flowId?: string) => {
           if (!data) return;
           const updatedTab = {
             ...tab,
             name: name,
             diagramType: type,
+            requirementId: reqId || undefined,
             state: 3,
             rowVersion: data.rowVersion || 0,
           };
           this.diagramService.updateTab(updatedTab as any).subscribe({
             next: (res) => {
-              this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
-              if (this.currentTabId === tabId) this.currentDiagram = res;
-              this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+              if (flowId && res.id) {
+                this.approvalService
+                  .submitForApproval({
+                    documentType: 'DIAGRAM',
+                    documentId: res.id,
+                    documentCode: 'DIAG-' + res.id.substring(0, 8).toUpperCase(),
+                    documentTitle: res.name || 'Diagram Document',
+                    flowId: flowId,
+                    comment: 'ส่งขออนุมัติ Diagram จากการแก้ไขข้อมูล',
+                  })
+                  .subscribe({
+                    next: () => {
+                      this.dialogService.success('สำเร็จ', `อัปเดตและส่งขออนุมัติ Diagram "${res.name}" เรียบร้อยแล้ว`);
+                      this.loadTabs();
+                    },
+                    error: (err) => {
+                      this.dialogService.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                      this.loadTabs();
+                    }
+                  });
+              } else {
+                this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
+                if (this.currentTabId === tabId) this.currentDiagram = res;
+                this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+              }
             },
             error: (err) => {
               this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

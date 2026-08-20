@@ -26,6 +26,9 @@ export interface DiagramModel {
   state?: number;
   rowVersion?: number;
   requirementId?: string;
+  requirementTitle?: string;
+  approvalStatus?: string;
+  isApproved?: boolean;
 }
 
 export interface DiagramVersion {

@@ -238,7 +238,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
         this.roleId = id;
         this.loadData(id);
       } else {
-        this.router.navigate(['/feature/bu/pmrt27']);
+        this.router.navigate(['/feature/bu/burt02']);
       }
     });
   }
@@ -313,13 +313,13 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/bu/pmrt27']);
+    this.router.navigate(['/feature/bu/burt02']);
   }
 
   submit() {
     if (!this.roleId) {
       this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบรหัสบทบาท');
-      this.router.navigate(['/feature/bu/pmrt27']);
+      this.router.navigate(['/feature/bu/burt02']);
       return;
     }
 
@@ -346,7 +346,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
-            this.router.navigate(['/feature/bu/pmrt27']);
+            this.router.navigate(['/feature/bu/burt02']);
           });
         },
         error: (error) => {

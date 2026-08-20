@@ -22,47 +22,17 @@
 
     <!-- ✅ เลือกบทบาท -->
     <div>
-      <label class="block text-sm font-medium text-[var(--text-active)] mb-1">
-        บทบาทในธุรกิจ <span class="text-[var(--crm-danger)]">*</span>
-      </label>
-
-      <!-- ✅ ใช้ #roleCombobox และ (selectionChanged) -->
       <sic-combobox
-        #roleCombobox
-        label=""
-        [apiUrl]="'http://localhost:5265/api/business/combobox-role'"
+        label="บทบาทในธุรกิจ"
+        formControlName="roleIds"
+        [apiUrl]="roleComboboxUrl"
         valueField="value"
         textField="text"
         placeholder="พิมพ์หรือเลือกบทบาท..."
         [clearable]="true"
-        (selectionChanged)="onRoleSelect($event)"
+        [multiple]="true"
+        [errorMessages]="{ required: 'กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท' }"
       ></sic-combobox>
-
-      <!-- ✅ แสดงรายการบทบาทที่เลือกแล้ว -->
-      <div class="mt-3 flex flex-wrap gap-2">
-        @for (roleId of form.get('roleIds')?.value || []; track roleId) {
-          <span
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20"
-          >
-            {{ getRoleName(roleId) }}
-            <button
-              type="button"
-              (click)="removeRole(roleId)"
-              class="ml-1 text-[var(--crm-primary)] hover:text-[var(--crm-danger)] transition-colors"
-              title="ลบบทบาทนี้"
-            >
-              <i class="bi bi-x-lg text-xs"></i>
-            </button>
-          </span>
-        }
-        @if ((form.get('roleIds')?.value || []).length === 0) {
-          <span class="text-sm text-[var(--text-muted)]">ยังไม่มีบทบาทที่เลือก</span>
-        }
-      </div>
-
-      @if (form.get('roleIds')?.touched && form.get('roleIds')?.invalid) {
-        <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท</p>
-      }
     </div>
 
     <!-- Active Status -->

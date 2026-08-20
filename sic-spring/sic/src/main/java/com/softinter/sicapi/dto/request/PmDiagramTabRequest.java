@@ -24,8 +24,6 @@ public class PmDiagramTabRequest {
     @NotNull(message = "Project ID is required")
     private UUID projectId;
 
-    // ===== ✅ 新增: Requirement ID (สำหรับ Traceability) =====
-    @NotNull(message = "Requirement ID is required for traceability")
     private UUID requirementId;
 
     private Map<String, Object> metadata;

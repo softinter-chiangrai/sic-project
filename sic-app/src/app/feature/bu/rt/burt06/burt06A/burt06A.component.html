@@ -106,7 +106,7 @@
           @if (steps.hasError('missingApprover')) {
             <div class="text-[var(--crm-danger)] text-sm mb-3 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
               <i class="bi bi-exclamation-triangle-fill"></i>
-              <span>⚠️ ทุกขั้นตอนต้องมีผู้อนุมัติ (เลือกบทบาท หรือเลือกผู้ใช้)</span>
+              <span>⚠️ ทุกขั้นตอนต้องเลือกบทบาทและเลือกผู้อนุมัติอย่างน้อย 1 คน</span>
             </div>
           }
 
@@ -115,7 +115,7 @@
               <div
                 [formGroupName]="i"
                 class="border border-[var(--border)] rounded-xl p-5 bg-[var(--sidebar)] shadow-sm"
-                [class.border-[var(--crm-danger)]]="steps.hasError('missingApprover') && step.get('approverRole')?.value === '' && step.get('selectedUserIds')?.value?.length === 0"
+                [class.border-[var(--crm-danger)]]="steps.hasError('missingApprover') && (!step.get('approverRole')?.value || !step.get('selectedUserIds')?.value?.length)"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
@@ -180,63 +180,27 @@
                   ></sic-combobox>
                 </div>
 
-                <!-- User multi-select -->
+                <!-- User multi-select using sic-combobox -->
                 @if (step.get('approverRole')?.value) {
                   <div class="mt-3">
-                    <p class="text-sm font-medium text-[var(--text-active)] mb-2">
-                      <i class="bi bi-people mr-1 text-[var(--crm-primary)]"></i>
-                      เลือกผู้อนุมัติ
-                      <span class="text-[var(--text-muted)] font-normal text-xs ml-1">
-                        (ถ้าไม่เลือกจะอนุมัติได้ทุกคนใน Role)
-                      </span>
-                    </p>
-
-                    @if (stepUsersLoading[i]) {
-                      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                        <div class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-                        กำลังโหลดรายชื่อ...
-                      </div>
-                    } @else if (stepUsersCache[i]?.length) {
-                      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1">
-                        @for (user of stepUsersCache[i]; track user.value) {
-                          <label
-                            class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors"
-                            [class]="isUserSelected(i, user.value)
-                              ? 'border-[var(--crm-primary)] bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]'
-                              : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] hover:border-[var(--crm-primary)]/50'"
-                            (click)="toggleUser(i, user.value)"
-                          >
-                            <i class="bi text-base"
-                              [class]="isUserSelected(i, user.value) ? 'bi-check-square-fill' : 'bi-square'"
-                            ></i>
-                            <span class="text-sm truncate">{{ user.text }}</span>
-                          </label>
-                        }
-                      </div>
-                      @if (step.get('selectedUserIds')?.value?.length) {
-                        <p class="text-xs text-[var(--crm-primary)] mt-1">
-                          เลือกแล้ว {{ step.get('selectedUserIds')?.value?.length }} คน
-                        </p>
-                      }
-                    } @else {
-                      <p class="text-sm text-[var(--text-muted)] italic">
-                        <i class="bi bi-info-circle mr-1"></i>
-                        ไม่พบผู้ใช้งานใน Role นี้ หรือยังไม่ได้โหลด
-                        <button type="button"
-                          class="ml-2 text-[var(--crm-primary)] underline text-xs"
-                          (click)="loadUsersForStep(i, $safeNavigationMigration(step.get('approverRole')?.value))">
-                          โหลดใหม่
-                        </button>
-                      </p>
-                    }
+                    <sic-combobox
+                      label="เลือกผู้อนุมัติ"
+                      formControlName="selectedUserIds"
+                      [multiple]="true"
+                      [apiUrl]="getUsersByRoleApiUrl(step.get('approverRole')?.value)"
+                      valueField="value"
+                      textField="text"
+                      placeholder="เลือกผู้อนุมัติอย่างน้อย 1 คน..."
+                      [errorMessages]="{ required: 'กรุณาเลือกผู้อนุมัติอย่างน้อย 1 คน' }"
+                    ></sic-combobox>
                   </div>
                 }
 
-                <!-- ✅ แสดงข้อความเตือนถ้า Step นี้ไม่มีผู้อนุมัติ -->
-                @if (step.get('approverRole')?.value === '' && step.get('selectedUserIds')?.value?.length === 0) {
+                <!-- ✅ แสดงข้อความเตือนถ้า Step นี้ไม่มีบทบาท -->
+                @if (!step.get('approverRole')?.value) {
                   <div class="text-[var(--crm-danger)] text-xs mt-1 flex items-center gap-1">
                     <i class="bi bi-exclamation-circle-fill"></i>
-                    <span>กรุณาเลือกบทบาทหรือเลือกผู้ใช้สำหรับขั้นตอนนี้</span>
+                    <span>กรุณาเลือกบทบาทสำหรับขั้นตอนนี้</span>
                   </div>
                 }
 
