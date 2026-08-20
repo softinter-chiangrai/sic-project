@@ -84,6 +84,10 @@ export class NotificationService {
     }
   }
 
+  showToastNotification(message: string, type: 'info' | 'success' | 'danger' | 'warning' = 'info', duration = 4000): void {
+    this.toastService.show(message, type, duration);
+  }
+
   handleIncomingNotification(notification: AppNotification): void {
     const current = this.notifications$.getValue();
     this.notifications$.next([notification, ...current]);

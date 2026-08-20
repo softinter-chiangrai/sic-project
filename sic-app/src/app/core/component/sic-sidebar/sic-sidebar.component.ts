@@ -155,7 +155,17 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   }
 
   toggleNotificationPanel(): void {
-    this.showNotificationPanel.update(v => !v);
+    const unreadNotifications = this.notifications().filter(n => !n.read);
+    if (unreadNotifications.length > 0) {
+      unreadNotifications.slice(0, 3).forEach((n) => {
+        const text = n.title ? `${n.title}: ${n.message || ''}` : n.message;
+        if (text) {
+          this.notificationSvc.showToastNotification(text);
+        }
+      });
+    } else {
+      this.notificationSvc.showToastNotification('ไม่มีการแจ้งเตือนใหม่');
+    }
   }
 
   markNotificationAsRead(id: string): void {

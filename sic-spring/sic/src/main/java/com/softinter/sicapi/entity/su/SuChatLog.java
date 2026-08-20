@@ -63,8 +63,5 @@ public class SuChatLog extends BaseBusinessEntity {
     private SuUpload attachment;
 
     @Column(name = "is_read")
-    private Boolean isRead;  
-    
-    @Column(name = "is_deleted")  
-    private Boolean isDeleted;  
+    private Boolean isRead;
 }
