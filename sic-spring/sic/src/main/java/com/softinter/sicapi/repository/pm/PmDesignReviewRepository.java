@@ -21,7 +21,7 @@ public interface PmDesignReviewRepository extends JpaRepository<PmDesignReview, 
     @Query("SELECT r FROM PmDesignReview r WHERE r.businessId = :businessId AND r.isDelete = false AND " +
            "(:projectId IS NULL OR r.project.id = :projectId) AND " +
            "(:status IS NULL OR r.status = :status) AND " +
-           "(:keyword IS NULL OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.reviewCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.reviewer) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "(:keyword IS NULL OR :keyword = '' OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.reviewCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.reviewer) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<PmDesignReview> findReviews(
             @Param("businessId") UUID businessId,
             @Param("projectId") UUID projectId,

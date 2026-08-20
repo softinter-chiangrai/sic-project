@@ -73,9 +73,9 @@ export class Pmdt03Component implements OnInit {
   // ===== Options =====
   documentTypes = [
     'REQUIREMENT',
-    'DFD',
-    'ER',
     'SPECIFICATION',
+    'DIAGRAM',
+    'DESIGN_REVIEW',
     'CHANGE_REQUEST',
     'TEST_PLAN',
     'UAT',
@@ -272,9 +272,11 @@ export class Pmdt03Component implements OnInit {
   getDocumentIcon(type: string): string {
     const map: Record<string, string> = {
       REQUIREMENT: 'bi-clipboard-check',
+      SPECIFICATION: 'bi-file-text',
+      DIAGRAM: 'bi-diagram-3',
       DFD: 'bi-diagram-3',
       ER: 'bi-table',
-      SPECIFICATION: 'bi-file-text',
+      DESIGN_REVIEW: 'bi-palette2',
       CHANGE_REQUEST: 'bi-arrow-left-right',
       TEST_PLAN: 'bi-clipboard-data',
       UAT: 'bi-check2-all',

@@ -71,4 +71,9 @@ export class Pmdt09Service {
   deleteDesignReview(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  addComment(reviewId: string, comment: { commentText: string; commentType?: string; severity?: string; assignedTo?: string }): Observable<ReviewComment> {
+    return this.http.post<ReviewComment>(`${this.baseUrl}/${reviewId}/comments`, comment);
+  }
 }
+

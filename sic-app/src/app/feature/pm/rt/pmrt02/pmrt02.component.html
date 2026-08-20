@@ -180,15 +180,33 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                <sic-table-actions
-                  [showView]="true"
-                  [showEdit]="true"
-                  [showPrint]="false"
-                  [showDelete]="false"
-                  viewTitle="ดู Dashboard"
-                  (onView)="goToView(project.id)"
-                  (onEdit)="goToEdit(project.id)">
-                </sic-table-actions>
+                <div class="flex items-center justify-center gap-1">
+                  <!-- ปุ่มไปหน้า Dashboard (PMRT03) -->
+                  <button
+                    type="button"
+                    (click)="goToDashboard(project.id)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดู Dashboard โครงการ"
+                  >
+                    <i class="bi bi-speedometer2"></i>
+                  </button>
+
+                  <!-- Reusable Table Actions (View, Print, Edit, Delete) -->
+                  <sic-table-actions
+                    [showView]="true"
+                    [showPrint]="true"
+                    [showEdit]="true"
+                    [showDelete]="true"
+                    viewTitle="ดูรายละเอียดโครงการ (อ่านอย่างเดียว)"
+                    printTitle="พิมพ์ข้อมูลโครงการ"
+                    editTitle="แก้ไขโครงการ"
+                    deleteTitle="ลบโครงการ"
+                    (onView)="goToDetailView(project.id)"
+                    (onPrint)="printProject(project)"
+                    (onEdit)="goToEdit(project.id)"
+                    (onDelete)="deleteProject(project.id)">
+                  </sic-table-actions>
+                </div>
               </td>
             </tr>
           } @empty {

@@ -16,8 +16,10 @@ export type ApprovalMode = 'CHAIN' | 'PARALLEL' | 'ANY' | 'SINGLE';
 export type DocumentType =
     | 'REQUIREMENT'
     | 'SPECIFICATION'
+    | 'DIAGRAM'
     | 'DFD'
     | 'ER'
+    | 'DESIGN_REVIEW'
     | 'DELIVERY'
     | 'INVOICE'
     | 'MA_RENEWAL'

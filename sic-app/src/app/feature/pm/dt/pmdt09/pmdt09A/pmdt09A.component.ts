@@ -9,6 +9,7 @@ import { delay } from 'rxjs/operators';
 
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
@@ -16,6 +17,8 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { environment } from '../../../../../../environments/environment';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
 
 // ===== Model =====
 export interface ReviewCommentModel {
@@ -57,7 +60,7 @@ class Pmdt09AForm {
       reviewCode: [null, [Validators.required, Validators.maxLength(30)]],
       title: [null, [Validators.required, Validators.maxLength(255)]],
       description: [null, [Validators.required]],
-      reviewableType: [null, [Validators.required]],
+      reviewableType: [null],
       reviewableId: [null, [Validators.required]],
       reviewableName: [null],
       projectId: [null, [Validators.required]],
@@ -69,6 +72,7 @@ class Pmdt09AForm {
       dueDate: [null, [Validators.required]],
       figmaUrl: ['https://www.figma.com/proto/sample-ui-flow-demo'],
       embedMode: ['prototype'],
+      approvalFlowId: [null],
       comments: [[]],
       isActive: [true],
       state: [null],
@@ -86,13 +90,13 @@ export class Pmdt09AService {
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/projects/combobox`;
   apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/specifications/combobox`;
   apiGetUsers = `${environment.apiBaseUrl}/api/users/available`;
+  apiGetApprovalFlows = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/DESIGN_REVIEW`;
 
   readonly reviewableTypeOptions = [
     { value: 'SPECIFICATION', label: 'Specification' },
     { value: 'REQUIREMENT', label: 'Requirement' },
     { value: 'UI_SCREEN', label: 'UI Screen / Figma Mockup' },
-    { value: 'DFD', label: 'Data Flow Diagram (DFD)' },
-    { value: 'ER_DIAGRAM', label: 'ER Diagram' },
+    { value: 'DIAGRAM', label: 'Diagram (DFD / ER / Architecture)' },
   ];
 
   readonly severityOptions = [
@@ -117,7 +121,12 @@ export class Pmdt09AService {
   getDesignReview(id: string): Observable<DesignReviewModel> {
     return this.http.get<DesignReviewModel>(`${this.baseUrl}/${id}`);
   }
+
+  addComment(reviewId: string, comment: { commentText: string; commentType?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${reviewId}/comments`, comment);
+  }
 }
+
 
 // ===== Component =====
 @Component({
@@ -143,46 +152,41 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   readonly router = inject(Router);
   readonly service = inject(Pmdt09AService);
   readonly dialog = inject(DialogService);
+  readonly customerState = inject(CustomerStateService);
+  private readonly approvalService = inject(ApprovalService);
   private readonly fb = inject(FormBuilder);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly http = inject(HttpClient);
 
   @ViewChild('figmaIframe') figmaIframe?: ElementRef<HTMLIFrameElement>;
 
   form!: FormGroup;
+
   isEdit = false;
   reviewId: string | null = null;
   isLoading = false;
+  isSaving = false;
+
+  // ===== Approval Flow =====
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
 
   // ===== Figma & Embed API State =====
   activeEmbedUrl: SafeResourceUrl | null = null;
   rawEmbedUrl = '';
   isFigmaLoading = false;
-  lastEventReceived: string | null = null;
-  eventsLog: string[] = [];
   isFullscreen = false;
 
   // ===== Options =====
   severityOptions = ['Low', 'Medium', 'High'];
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
-  commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
-
-  private messageEventListener = (event: MessageEvent) => {
-    if (event.origin && event.origin.includes('figma.com')) {
-      console.log('⚡ Figma Event Received:', event.data);
-      const logText = `[${new Date().toLocaleTimeString()}] ${typeof event.data === 'string' ? event.data : JSON.stringify(event.data)}`;
-      this.lastEventReceived = logText;
-      this.eventsLog.unshift(logText);
-      if (this.eventsLog.length > 5) this.eventsLog.pop();
-    }
-  };
 
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
     this.initForm();
-
-    // Listen to Figma Embed postMessage events
-    window.addEventListener('message', this.messageEventListener);
+    this.loadFlows();
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -195,12 +199,19 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       }
     });
 
-    // รับค่า queryParams (เช่น projectId, requirementId) เมื่อกดสร้างมาจากหน้ารายละเอียด Requirement (PMRT05)
+    // รับค่า queryParams หรือดึงจาก CustomerStateService เมื่อกดสร้างใหม่
     this.route.queryParams.subscribe((queryParams) => {
       if (!this.isEdit) {
-        if (queryParams['projectId']) {
-          this.form.patchValue({ projectId: queryParams['projectId'] });
+        const projectId = queryParams['projectId'] || this.customerState.getProjectId();
+        const projectName = this.customerState.getProjectName();
+
+        if (projectId) {
+          this.form.patchValue({
+            projectId: projectId,
+            projectName: projectName || null,
+          });
         }
+
         if (queryParams['requirementId']) {
           this.form.patchValue({
             reviewableType: 'Requirement',
@@ -223,13 +234,49 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     });
   }
 
-  ngOnDestroy(): void {
-    window.removeEventListener('message', this.messageEventListener);
+  loadFlows(): void {
+    this.isLoadingFlows = true;
+    this.approvalService
+      .getFlowsByDocumentType('DESIGN_REVIEW')
+      .subscribe({
+        next: (flows) => {
+          this.flows = flows;
+          this.isLoadingFlows = false;
+          if (flows.length === 1) {
+            this.selectedFlowId = flows[0].id;
+            this.form.patchValue({ approvalFlowId: flows[0].id });
+          }
+        },
+        error: () => {
+          this.isLoadingFlows = false;
+        },
+      });
   }
+
+  loadApprovalFlowForReview(reviewId: string): void {
+    this.approvalService.getDocumentStatus('DESIGN_REVIEW', reviewId).subscribe({
+      next: (approval) => {
+        let flowId: string | null = null;
+        if (approval && (approval as any).flowId) {
+          flowId = (approval as any).flowId;
+        } else if (approval && (approval as any).flow?.id) {
+          flowId = (approval as any).flow.id;
+        }
+        if (flowId) {
+          this.selectedFlowId = flowId;
+          this.form.patchValue({ approvalFlowId: flowId });
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  ngOnDestroy(): void {}
 
   initForm(): void {
     this.form = Pmdt09AForm.createForm(this.fb);
   }
+
 
   loadDesignReview(id: string) {
     this.isLoading = true;
@@ -242,6 +289,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.form.patchValue(formData);
         this.isLoading = false;
         this.updateEmbedUrl();
+        this.loadApprovalFlowForReview(id);
         console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
       },
       error: (error) => {
@@ -331,27 +379,105 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      
+      const fieldLabels: Record<string, string> = {
+        reviewCode: 'รหัส Design Review',
+        title: 'ชื่อเรื่อง',
+        description: 'คำอธิบาย',
+        reviewableType: 'ประเภทงานที่ตรวจสอบ',
+        reviewableId: 'Specification/รายการที่ตรวจสอบ',
+        projectId: 'โครงการ (Project)',
+        severity: 'ระดับความรุนแรง',
+        status: 'สถานะ',
+        dueDate: 'กำหนดส่ง',
+      };
+
+      const invalidControls = Object.keys(this.form.controls)
+        .filter((key) => this.form.get(key)?.invalid)
+        .map((key) => fieldLabels[key] || key);
+
+      console.warn('❌ Form Invalid! Invalid fields:', invalidControls);
+
+      const errorMsg = invalidControls.length > 0
+        ? `กรุณากรอกข้อมูลในช่องที่จำเป็นให้ครบถ้วน:\n• ${invalidControls.join('\n• ')}`
+        : 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง';
+
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', errorMsg);
       return;
     }
 
+    this.isSaving = true;
     const data = { ...this.form.value };
     if (Array.isArray(data.assignedTo)) {
       data.assignedTo = data.assignedTo.join(', ');
     }
 
     this.service.save(data).subscribe({
-      next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/design-review']);
-        });
+      next: (response: any) => {
+        const savedId = (typeof response === 'string' ? response : response?.id) || data.id || this.reviewId;
+        
+        if (this.selectedFlowId && savedId) {
+          this.approvalService
+            .submitForApproval({
+              documentType: 'DESIGN_REVIEW',
+              documentId: savedId,
+              documentCode: data.reviewCode,
+              documentTitle: data.title,
+              flowId: this.selectedFlowId,
+              comment: 'ส่งขออนุมัติ Design Review',
+            })
+            .subscribe({
+              next: () => {
+                this.isSaving = false;
+                this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                  this.form.markAsPristine();
+                  this.router.navigate(['/feature/pm/design-review']);
+                });
+              },
+              error: (err) => {
+                this.isSaving = false;
+                this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+              }
+            });
+        } else {
+          this.isSaving = false;
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
+            this.form.markAsPristine();
+            this.router.navigate(['/feature/pm/design-review']);
+          });
+        }
       },
       error: (error) => {
+        this.isSaving = false;
         this.dialog.error('บันทึกไม่สำเร็จ', error);
       },
     });
   }
+
+  onDelete(): void {
+    if (!this.reviewId) return;
+    this.dialog.confirm(
+      'ยืนยันการลบ',
+      `คุณต้องการลบรายการ Design Review "${this.form.get('reviewCode')?.value} - ${this.form.get('title')?.value}" ใช่หรือไม่?`
+    ).then((confirmed) => {
+      if (confirmed) {
+        this.isLoading = true;
+        this.http.delete(`${environment.apiBaseUrl}/api/pm/design-reviews/${this.reviewId}`).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ลบรายการ Design Review เรียบร้อยแล้ว').then(() => {
+              this.form.markAsPristine();
+              this.router.navigate(['/feature/pm/design-review']);
+            });
+          },
+          error: (err) => {
+            console.error('Error deleting design review:', err);
+            this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบรายการ');
+            this.isLoading = false;
+          }
+        });
+      }
+    });
+  }
 }
 
-export default Pmdt09AComponent;
+export default Pmdt09AComponent;

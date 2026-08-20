@@ -41,6 +41,7 @@ import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
@@ -76,6 +77,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmSpecificationRepository specificationRepository;
+    private final PmDesignReviewRepository designReviewRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -640,6 +642,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 changeRequestRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Change Request not found: " + documentId));
                 break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Design Review not found: " + documentId));
+                break;
             default:
                 break;
         }
@@ -668,6 +674,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     changeRequestRepository.save(cr);
                 });
                 break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(docId).ifPresent(dr -> {
+                    dr.setStatus("In Progress");
+                    designReviewRepository.save(dr);
+                });
+                break;
             default:
                 break;
         }
@@ -694,6 +706,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 changeRequestRepository.findById(docId).ifPresent(cr -> {
                     cr.setStatus("APPROVED");
                     changeRequestRepository.save(cr);
+                });
+                break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(docId).ifPresent(dr -> {
+                    dr.setStatus("Resolved");
+                    designReviewRepository.save(dr);
                 });
                 break;
             default:
@@ -759,6 +777,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     changeRequestRepository.save(cr);
                 });
                 break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(docId).ifPresent(dr -> {
+                    dr.setStatus("Open");
+                    designReviewRepository.save(dr);
+                });
+                break;
             default:
                 break;
         }
@@ -785,6 +809,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 changeRequestRepository.findById(docId).ifPresent(cr -> {
                     cr.setStatus("DRAFT");
                     changeRequestRepository.save(cr);
+                });
+                break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(docId).ifPresent(dr -> {
+                    dr.setStatus("Open");
+                    designReviewRepository.save(dr);
                 });
                 break;
             default:

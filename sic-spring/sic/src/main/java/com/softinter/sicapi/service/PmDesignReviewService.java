@@ -1,7 +1,9 @@
 package com.softinter.sicapi.service;
 
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
+import com.softinter.sicapi.dto.request.PmReviewCommentRequest;
 import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
+import com.softinter.sicapi.dto.response.PmReviewCommentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,4 +14,6 @@ public interface PmDesignReviewService {
     PmDesignReviewResponse findById(UUID id, UUID businessId);
     UUID save(PmDesignReviewRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
+    PmReviewCommentResponse addComment(UUID reviewId, PmReviewCommentRequest request, UUID businessId, String userId);
 }
+

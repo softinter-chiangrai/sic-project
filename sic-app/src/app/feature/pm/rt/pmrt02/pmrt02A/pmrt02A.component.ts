@@ -48,6 +48,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   form!: FormGroup;
   isEdit = false;
+  isViewOnly = false;
   projectId: string | null = null;
   isLoading = false;
   isSaving = false; // ✅ เพิ่ม property
@@ -82,6 +83,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     this.initForm();
 
     this.route.queryParams.subscribe((params) => {
+      const mode = params['mode'];
+      if (mode === 'view') {
+        this.isViewOnly = true;
+      }
       const customerId = params['customerId'];
       const customerName = params['customerName'] || '';
       if (customerId) {
@@ -128,6 +133,9 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       .getById(id)
       .pipe(finalize(() => {
       this.isLoading = false;
+      if (this.isViewOnly) {
+        this.form.disable();
+      }
       this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
     }))
       .subscribe({
@@ -156,6 +164,8 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   submit() {
+    if (this.isViewOnly) return;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -163,7 +173,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving = true;
-    const data = this.form.value as ProjectModel;
+    const data = this.form.getRawValue() as ProjectModel;
 
     // ✅ ตรวจสอบ before call
     let request$;
@@ -187,5 +197,5 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 }

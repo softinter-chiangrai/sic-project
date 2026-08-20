@@ -203,7 +203,7 @@ export class Pmrt02Component implements OnInit {
     this.loadProjects();
   }
 
-  // ===== Navigation =====
+  // ===== Navigation & Actions =====
   goToAdd() {
     const customerId = this.filterCustomerId();
     if (customerId) {
@@ -213,13 +213,105 @@ export class Pmrt02Component implements OnInit {
     }
   }
 
+  goToDashboard(projectId: string) {
+    this.navigation.navigate(['/feature/pm/pmrt03'], {
+      queryParams: { projectId: projectId }
+    });
+  }
+
+  goToDetailView(id: string) {
+    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit'], {
+      queryParams: { mode: 'view' }
+    });
+  }
+
   goToEdit(id: string) {
     this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit']);
   }
 
-  goToView(projectId: string) {
-    this.navigation.navigate(['/feature/pm/pmrt03'], {
-      queryParams: { projectId: projectId }
+  printProject(project: PmCustomerProject) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>โครงการ - ${project.projectCode || ''}</title>
+        <style>
+          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
+          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
+          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
+          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+          .content { font-size: 14px; margin-top: 16px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>[${project.projectCode || '-'}] ${project.projectName || 'Project Detail'}</h1>
+        <table class="info-table">
+          <tr>
+            <td class="label">รหัสโครงการ</td>
+            <td>${project.projectCode || '-'}</td>
+            <td class="label">ชื่อโครงการ</td>
+            <td>${project.projectName || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ลูกค้า</td>
+            <td>${project.customerName || '-'}</td>
+            <td class="label">สถานะ</td>
+            <td>${this.getStatusText(project.status) || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label">ความสำคัญ (Priority)</td>
+            <td>${project.priority || '-'}</td>
+            <td class="label">ระยะเวลา</td>
+            <td>${this.formatDate(project.startDate)} - ${this.formatDate(project.plannedEndDate)}</td>
+          </tr>
+          <tr>
+            <td class="label">Manday ตามแผน</td>
+            <td>${project.budgetManday || 0}</td>
+            <td class="label">Manday ที่ใช้จริง</td>
+            <td>${project.usedManday || 0} (${this.getProgress(project.usedManday, project.budgetManday)}%)</td>
+          </tr>
+        </table>
+        <div class="content">
+          <h3>คำอธิบาย</h3>
+          <div>${project.description || '-'}</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 300);
+  }
+
+  deleteProject(id: string) {
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบโครงการนี้ใช่หรือไม่?').then((ok) => {
+      if (ok) {
+        this.service.deleteProject(id).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'โครงการถูกลบเรียบร้อยแล้ว');
+            this.loadProjects();
+          },
+          error: (err) => {
+            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาด');
+          },
+        });
+      }
     });
   }
 

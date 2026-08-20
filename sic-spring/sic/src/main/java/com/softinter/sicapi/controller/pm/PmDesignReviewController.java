@@ -77,6 +77,21 @@ public class PmDesignReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
+    @PostMapping("/{id}/comments")
+    @Operation(summary = "Add comment to design review")
+    public ResponseEntity<com.softinter.sicapi.dto.response.PmReviewCommentResponse> addComment(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.softinter.sicapi.dto.request.PmReviewCommentRequest request
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String userId = currentUserService.getUserId();
+        com.softinter.sicapi.dto.response.PmReviewCommentResponse response = designReviewService.addComment(id, request, businessId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete design review")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
@@ -89,3 +104,4 @@ public class PmDesignReviewController {
         return ResponseEntity.noContent().build();
     }
 }
+

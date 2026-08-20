@@ -142,12 +142,14 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
     const routeMap: Record<string, string> = {
       requirement: '/feature/pm/requirement',
       specification: '/feature/pm/specification',
+      diagram: '/feature/pm/diagram',
+      design_review: '/feature/pm/design-review',
       delivery: '/feature/pm/delivery',
       invoice: '/feature/pm/invoice',
       change_request: '/feature/pm/change-request',
       ma_renewal: '/feature/pm/renewal',
-      dfd: '/feature/pm/dfd',
-      er: '/feature/pm/er',
+      dfd: '/feature/pm/diagram',
+      er: '/feature/pm/diagram',
       uat: '/feature/pm/uat',
       test_plan: '/feature/pm/test-plan',
     };
@@ -200,6 +202,8 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
     const map: Record<string, string> = {
       REQUIREMENT: 'Requirement',
       SPECIFICATION: 'Specification',
+      DIAGRAM: 'Diagram',
+      DESIGN_REVIEW: 'Design Review',
       DFD: 'DFD',
       ER: 'ER Diagram',
       DELIVERY: 'Delivery',

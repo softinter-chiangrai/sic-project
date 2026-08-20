@@ -1,12 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { DesignReview, Pmdt09Service } from './pmdt09.service';
+import { environment } from '../../../../../environments/environment';
+import { DesignReview, Pmdt09Service, ReviewComment } from './pmdt09.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+
+
 
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,6 +21,11 @@ export class Pmdt09Component implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private service = inject(Pmdt09Service);
+  private sanitizer = inject(DomSanitizer);
+  private dialog = inject(DialogService);
+
+  @ViewChild('modalFigmaIframe') modalFigmaIframe?: ElementRef<HTMLIFrameElement>;
+
 
   // ===== State =====
   protected projectId = signal<string | null>(null);
@@ -23,11 +34,26 @@ export class Pmdt09Component implements OnInit {
   protected filterType = signal('all');
   protected filterSeverity = signal('all');
   protected currentPage = signal(1);
-  protected pageSize = signal(10);
+  protected pageSize = signal(12);
   protected sortBy = signal('reviewCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
-  protected expandedReview = signal<string | null>(null);
+
+  // ===== Card Comments Section State =====
+  protected activeCommentCardId = signal<string | null>(null);
+  protected newCommentText = signal<Record<string, string>>({});
+  protected newCommentType = signal<Record<string, string>>({});
+  protected isSubmittingComment = signal<Record<string, boolean>>({});
+
+  // ===== Live Modal Preview State =====
+  protected previewModalOpen = signal(false);
+  protected selectedReviewForPreview = signal<DesignReview | null>(null);
+  protected sanitizedModalFigmaUrl = signal<SafeResourceUrl | null>(null);
+  protected isModalFigmaLoading = signal(false);
+  protected isModalFullscreen = signal(false);
+
+  // Cache for sanitized card embed URLs
+  private sanitizedUrlsCache = new Map<string, SafeResourceUrl>();
 
   // ===== Data =====
   protected reviews = signal<DesignReview[]>([]);
@@ -72,8 +98,9 @@ export class Pmdt09Component implements OnInit {
 
   // ===== Options =====
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
-  typeOptions = ['Requirement', 'DFD', 'ER Diagram', 'Specification', 'UI Prototype', 'Test Case', 'User Manual'];
+  typeOptions = ['Requirement', 'Specification', 'Diagram', 'UI Prototype', 'Test Case', 'User Manual'];
   severityOptions = ['Low', 'Medium', 'High'];
+  commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
 
   // ===== Lifecycle =====
   ngOnInit() {
@@ -104,6 +131,137 @@ export class Pmdt09Component implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  // ===== HTML String Cleaner =====
+  cleanHtml(raw?: string): string {
+    if (!raw) return '';
+    const temp = document.createElement('div');
+    temp.innerHTML = raw;
+    return temp.textContent || temp.innerText || '';
+  }
+
+  // ===== Figma URL Converter & Embedder =====
+  getSanitizedFigmaUrl(rawUrl?: string): SafeResourceUrl | null {
+    if (!rawUrl || !rawUrl.trim()) return null;
+    const key = rawUrl.trim();
+    if (this.sanitizedUrlsCache.has(key)) {
+      return this.sanitizedUrlsCache.get(key)!;
+    }
+
+    const clientId = environment.figma?.clientId ? `&client-id=${environment.figma.clientId}` : '';
+    let target = key;
+    if (!target.includes('figma.com/embed')) {
+      const encoded = encodeURIComponent(target);
+      target = `https://www.figma.com/embed?embed_host=softflow${clientId}&url=${encoded}`;
+    } else if (environment.figma?.clientId && !target.includes('client-id=')) {
+      target += `&client-id=${environment.figma.clientId}`;
+    }
+
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(target);
+    this.sanitizedUrlsCache.set(key, safeUrl);
+    return safeUrl;
+  }
+
+  // ===== Card Comments Toggle & Add =====
+  toggleCardComments(reviewId: string) {
+    this.activeCommentCardId.set(this.activeCommentCardId() === reviewId ? null : reviewId);
+  }
+
+  setCommentText(reviewId: string, text: string) {
+    this.newCommentText.update((curr) => ({ ...curr, [reviewId]: text }));
+  }
+
+  addCardComment(reviewId: string) {
+    const text = this.newCommentText()[reviewId]?.trim();
+    if (!text) return;
+
+    this.isSubmittingComment.update((curr) => ({ ...curr, [reviewId]: true }));
+
+    this.service.addComment(reviewId, {
+      commentText: text,
+      commentType: 'General',
+    }).subscribe({
+      next: (createdComment: ReviewComment) => {
+        this.isSubmittingComment.update((curr) => ({ ...curr, [reviewId]: false }));
+        this.setCommentText(reviewId, '');
+
+        // Update local review comments in state
+        this.reviews.update((list) =>
+          list.map((r) => {
+            if (r.id === reviewId) {
+              const updatedComments = [...(r.comments || []), createdComment];
+              return { ...r, comments: updatedComments };
+            }
+            return r;
+          })
+        );
+      },
+      error: (err) => {
+        console.error('Error adding comment:', err);
+        this.isSubmittingComment.update((curr) => ({ ...curr, [reviewId]: false }));
+      },
+    });
+  }
+
+
+  // ===== Live Modal Preview =====
+  openLivePreview(review: DesignReview) {
+    this.selectedReviewForPreview.set(review);
+    if (review.figmaUrl) {
+      this.isModalFigmaLoading.set(true);
+      const safe = this.getSanitizedFigmaUrl(review.figmaUrl);
+      this.sanitizedModalFigmaUrl.set(safe);
+      setTimeout(() => {
+        this.isModalFigmaLoading.set(false);
+      }, 1000);
+    } else {
+      this.sanitizedModalFigmaUrl.set(null);
+    }
+    this.previewModalOpen.set(true);
+  }
+
+  closeLivePreview() {
+    this.previewModalOpen.set(false);
+    this.selectedReviewForPreview.set(null);
+    this.sanitizedModalFigmaUrl.set(null);
+    this.isModalFullscreen.set(false);
+  }
+
+  toggleModalFullscreen() {
+    this.isModalFullscreen.set(!this.isModalFullscreen());
+  }
+
+  openExternalFigma(url?: string) {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+
+  // ===== Embed API Controls =====
+  sendModalFigmaCommand(commandType: string) {
+    if (!this.modalFigmaIframe?.nativeElement?.contentWindow) {
+      console.warn('Modal Figma Iframe not ready');
+      return;
+    }
+    const message = { type: commandType };
+    this.modalFigmaIframe.nativeElement.contentWindow.postMessage(message, 'https://www.figma.com');
+  }
+
+  modalNext() {
+    this.sendModalFigmaCommand('next');
+  }
+
+  modalPrev() {
+    this.sendModalFigmaCommand('prev');
+  }
+
+  modalRestart() {
+    this.sendModalFigmaCommand('restart');
+  }
+
+  modalToggleHints() {
+    this.sendModalFigmaCommand('toggleHints');
   }
 
   // ===== Actions =====
@@ -152,10 +310,6 @@ export class Pmdt09Component implements OnInit {
     this.loadData();
   }
 
-  toggleExpand(id: string) {
-    this.expandedReview.set(this.expandedReview() === id ? null : id);
-  }
-
   goToAdd() {
     this.router.navigate(['/feature/pm/design-review/new']);
   }
@@ -168,22 +322,46 @@ export class Pmdt09Component implements OnInit {
     this.router.navigate(['/feature/pm/design-review', id, 'view']);
   }
 
+  onDeleteDesignReview(review: DesignReview) {
+    this.dialog.confirm(
+      'ยืนยันการลบ',
+      `คุณต้องการลบรายการ Design Review "${review.reviewCode} - ${review.title}" ใช่หรือไม่?`
+    ).then((confirmed) => {
+      if (confirmed) {
+        this.isLoading.set(true);
+        this.service.deleteDesignReview(review.id).subscribe({
+          next: () => {
+            this.dialog.success('ลบสำเร็จ', 'ลบรายการ Design Review เรียบร้อยแล้ว');
+            this.loadData();
+          },
+          error: (err) => {
+            console.error('Error deleting design review:', err);
+            this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบรายการ');
+            this.isLoading.set(false);
+          }
+        });
+      }
+    });
+  }
+
+
   // ===== Utility =====
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      Open: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Resolved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Closed: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      Open: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/40',
+      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40',
+      Resolved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40',
+      Closed: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700',
     };
     return map[status] || map['Open'];
   }
 
   getSeverityClass(severity: string): string {
     const map: Record<string, string> = {
-      Low: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Low: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      Medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+      High: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+      Critical: 'bg-red-200 text-red-900 dark:bg-red-950 dark:text-red-200 font-bold',
     };
     return map[severity] || map['Low'];
   }
@@ -199,7 +377,8 @@ export class Pmdt09Component implements OnInit {
     return map[type] || map['Suggestion'];
   }
 
-  formatDate(dateStr: string): string {
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -212,7 +391,8 @@ export class Pmdt09Component implements OnInit {
     }
   }
 
-  formatDateTime(dateStr: string): string {
+  formatDateTime(dateStr?: string): string {
+    if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('th-TH', {
@@ -233,3 +413,4 @@ export class Pmdt09Component implements OnInit {
 }
 
 export default Pmdt09Component;
+
