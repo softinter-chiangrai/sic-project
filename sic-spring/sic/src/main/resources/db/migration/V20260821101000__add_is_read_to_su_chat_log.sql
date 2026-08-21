@@ -1,0 +1,10 @@
+-- Ensure all su_chat_log columns exist
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS sender_name VARCHAR(100);
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS receiver_name VARCHAR(100);
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS cancelled_by VARCHAR(100);
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS call_accepted BOOLEAN;
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS call_duration_seconds INTEGER;
+ALTER TABLE su_chat_log ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
+

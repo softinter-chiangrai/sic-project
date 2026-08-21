@@ -19796,15 +19796,15 @@ export abstract class BaseActionComponent implements  OnDestroy {
             <div class="mt-0.5">
               <div class="flex gap-2">
                 <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
+                  [tooltip]=" 'CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
                   <img src="images/language.png" alt="Change Language" class="h-6 w-6 object-contain rounded-full" />
                 </button>
                 <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()">
+                  [tooltip]=" 'CHANGE_THEME' | translate " (click)="toggleTheme()">
                   <img src="images/day-and-night.png" alt="Change Theme" class="h-6 w-6 object-contain" />
                 </button>
                 <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full"
-                  [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate ">
+                  [tooltip]=" 'CHAT' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center">
                     <img src="images/chat.png" alt="Chat Link" class="h-4 object-contain rounded-full" />
                   </div>
@@ -19912,7 +19912,7 @@ export abstract class BaseActionComponent implements  OnDestroy {
           <div class="flex items-center gap-2 text-[0.8rem] text-[var(--text-active)]">
             <span class="min-w-[150px] font-medium tabular-nums">{{ datetime() }}</span>
           </div>
-          <button type="button" [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate " tooltipPosition="top"
+          <button type="button" [tooltip]=" 'SIGNOUT' | translate " tooltipPosition="top"
             class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
             (click)="logout()">
             <i class="bi bi-box-arrow-right text-sm"></i>
@@ -21121,12 +21121,12 @@ export class SicSidebarService {
             <div class="mt-0.5">
               <div class="flex gap-2">
                 <div class="flex-initial w-6 h-6">
-                  <img src="images/language.png" [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()" alt="English" class="h-6 w-6 object-contain rounded-full cursor-pointer" />    
+                  <img src="images/language.png" [tooltip]=" 'CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()" alt="English" class="h-6 w-6 object-contain rounded-full cursor-pointer" />    
                 </div>
                 <div class="flex-initial w-6 h-6">
-                  <img src="images/day-and-night.png" [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()" alt="English" class="h-6 w-6 object-contain cursor-pointer" />    
+                  <img src="images/day-and-night.png" [tooltip]=" 'CHANGE_THEME' | translate " (click)="toggleTheme()" alt="English" class="h-6 w-6 object-contain cursor-pointer" />    
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'CHAT' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center cursor-pointer">
                     <img
                       src="images/chat.png"
@@ -21141,7 +21141,7 @@ export class SicSidebarService {
                     7
                   </div>
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_NOTIFY' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'NOTIFY' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center cursor-pointer">
                     <img
                       src="images/bell.png"
@@ -21156,7 +21156,7 @@ export class SicSidebarService {
                     7
                   </div>
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_CALENDAR' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'CALENDAR' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center">
                     <img
                       src="images/calendar.png"
@@ -21238,7 +21238,7 @@ export class SicSidebarService {
 
           <button
             type="button"
-            [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate "
+            [tooltip]=" 'SIGNOUT' | translate "
             tooltipPosition ="top"
             class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
             (click)="logout()"
@@ -71500,16 +71500,16 @@ export class Product {
         </div>
     </div>
     <div class="flex items-center gap-3">
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate ">
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_LANGUAGE' | translate ">
             <img src="images/language.png" (click)="toggleLanguage()" alt="English"
                 class="h-9 w-9 object-contain rounded-full cursor-pointer" />
         </div>
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate ">
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_THEME' | translate ">
             <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
                 class="h-9 w-9 object-contain cursor-pointer" />
         </div>
         <div class="flex-initial" >
-            <sic-button variant="primary" (click)="login()" >{{ 'COMMON.ALL.APP_SIGNIN' | translate }}</sic-button>
+            <sic-button variant="primary" (click)="login()" >{{ 'SIGNIN' | translate }}</sic-button>
         </div>
     </div>
 </header>
@@ -73435,16 +73435,16 @@ export class ProfileService {
         </div>
     </div>
     <div class="flex items-center gap-3">
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate ">
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_LANGUAGE' | translate ">
             <img src="images/language.png" (click)="toggleLanguage()" alt="English"
                 class="h-9 w-9 object-contain rounded-full cursor-pointer" />
         </div>
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate ">
+        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_THEME' | translate ">
             <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
                 class="h-9 w-9 object-contain cursor-pointer" />
         </div>
         <div class="flex-initial" >
-            <sic-button variant="danger" (click)="logout()" >{{ 'COMMON.ALL.APP_SIGNOUT' | translate }}</sic-button>
+            <sic-button variant="danger" (click)="logout()" >{{ 'SIGNOUT' | translate }}</sic-button>
         </div>
     </div>
 </header> -->

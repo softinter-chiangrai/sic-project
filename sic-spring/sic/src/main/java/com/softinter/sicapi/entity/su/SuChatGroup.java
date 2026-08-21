@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class SuChatGroup extends BaseEntity {
+public class SuChatGroup extends BaseBusinessEntity {
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;

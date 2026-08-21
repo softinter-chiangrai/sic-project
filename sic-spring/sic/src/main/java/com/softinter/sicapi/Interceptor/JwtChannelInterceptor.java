@@ -76,7 +76,9 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
         List<SimpleGrantedAuthority> authorities = getAuthoritiesFromJwt(jwt);
 
-        return new UsernamePasswordAuthenticationToken(userId, null, authorities);
+        // Spring STOMP convertAndSendToUser uses Principal.getName()
+        // We supply userId as principal name, with Jwt credentials/details
+        return new UsernamePasswordAuthenticationToken(userId, jwt, authorities);
     }
 
     private List<SimpleGrantedAuthority> getAuthoritiesFromJwt(Jwt jwt) {

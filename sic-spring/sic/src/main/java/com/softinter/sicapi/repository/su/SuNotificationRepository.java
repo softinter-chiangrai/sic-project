@@ -16,6 +16,12 @@ public interface SuNotificationRepository extends JpaRepository<SuNotification, 
     @Query("SELECT n FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isDelete = false ORDER BY n.createdDate DESC")
     List<SuNotification> findByRecipientUserIdOrderByCreatedDateDesc(@Param("recipientUserId") String recipientUserId);
 
+    @Query("SELECT n FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isDelete = false")
+    org.springframework.data.domain.Page<SuNotification> findByRecipientUserIdAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT n FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isRead = false AND n.isDelete = false")
+    org.springframework.data.domain.Page<SuNotification> findByRecipientUserIdAndIsReadFalseAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, org.springframework.data.domain.Pageable pageable);
+
     @Query("SELECT COUNT(n) FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isRead = false AND n.isDelete = false")
     long countUnreadByRecipientUserId(@Param("recipientUserId") String recipientUserId);
 

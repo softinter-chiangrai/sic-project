@@ -38,7 +38,7 @@
               <img src="images/day-and-night.png" alt="Theme" class="h-6 w-6 object-contain" />
             </button>
             <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full cursor-pointer"
-              [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate "
+              [tooltip]=" 'CHAT' | translate "
               (click)="toggleChat()">
               <div class="absolute inset-0 flex items-center justify-center">
                 <img src="images/chat.png" alt="Chat" class="h-4 object-contain rounded-full" />
@@ -48,7 +48,7 @@
               </div>
             </div>
             <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full cursor-pointer"
-              [tooltip]=" 'COMMON.ALL.APP_NOTIFICATION' | translate "
+              [tooltip]=" 'NOTIFICATION' | translate "
               (click)="toggleNotificationPanel()">
               <div class="absolute inset-0 flex items-center justify-center">
                 <img src="images/bell.png" alt="Notification" class="h-4 object-contain rounded-full" />
@@ -77,31 +77,16 @@
 
   <!-- ── Floating Notification Panel ── -->
   @if (showNotificationPanel()) {
-    <div class="fixed top-14 left-4 md:left-64 z-[999] w-80 max-h-96 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 shadow-xl backdrop-blur-lg">
-      <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 mb-2">
-        <span class="font-bold text-sm text-[var(--text-active)]">การแจ้งเตือน</span>
-        <button (click)="markAllNotificationsAsRead()" class="text-xs text-[var(--crm-primary)] hover:underline cursor-pointer border-0 bg-transparent">
-          อ่านทั้งหมด
-        </button>
-      </div>
-      @if (notifications().length === 0) {
-        <div class="py-6 text-center text-xs text-[var(--text-muted)]">ไม่มีการแจ้งเตือนใหม่</div>
-      } @else {
-        <div class="space-y-2">
-          @for (n of notifications(); track n.id) {
-            <div (click)="markNotificationAsRead(n.id)"
-                 class="p-2.5 rounded-lg border text-xs cursor-pointer transition-colors"
-                 [class.bg-[var(--sidebar-hover)]]="!n.read"
-                 [class.border-[var(--border)]]="n.read">
-              <div class="font-semibold text-[var(--text-active)] mb-0.5">{{ n.title }}</div>
-              <div class="text-[var(--text-muted)] leading-relaxed mb-1">{{ n.message }}</div>
-              @if (n.linkUrl) {
-                <a [routerLink]="n.linkUrl" (click)="showNotificationPanel.set(false)" class="text-[var(--crm-primary)] text-[0.7rem] hover:underline font-medium">ดูรายละเอียด →</a>
-              }
-            </div>
-          }
-        </div>
-      }
+    <!-- Backdrop to close when clicking outside (like Facebook) -->
+    <div
+      class="fixed inset-0 z-[998]"
+      (click)="showNotificationPanel.set(false)">
+    </div>
+    <div class="fixed top-14 right-4 md:right-6 z-[999] w-96 max-w-[calc(100vw-2rem)] animate-in fade-in zoom-in-95 duration-200">
+      <sic-notification-panel
+        [isOpen]="showNotificationPanel()"
+        (closePanel)="showNotificationPanel.set(false)">
+      </sic-notification-panel>
     </div>
   }
 
@@ -139,15 +124,15 @@
             <div class="mt-0.5">
               <div class="flex gap-2">
                 <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
+                  [tooltip]=" 'CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()">
                   <img src="images/language.png" alt="Change Language" class="h-6 w-6 object-contain rounded-full" />
                 </button>
                 <button type="button" class="flex-initial w-6 h-6 border-0 bg-transparent p-0 cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()">
+                  [tooltip]=" 'CHANGE_THEME' | translate " (click)="toggleTheme()">
                   <img src="images/day-and-night.png" alt="Change Theme" class="h-6 w-6 object-contain" />
                 </button>
                 <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate "
+                  [tooltip]=" 'CHAT' | translate "
                   (click)="toggleChat()">
                   <div class="absolute inset-0 flex items-center justify-center">
                     <img src="images/chat.png" alt="Chat" class="h-4 object-contain rounded-full" />
@@ -157,7 +142,7 @@
                   </div>
                 </div>
                 <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full cursor-pointer"
-                  [tooltip]=" 'COMMON.ALL.APP_NOTIFICATION' | translate "
+                  [tooltip]=" 'NOTIFICATION' | translate "
                   (click)="toggleNotificationPanel()">
                   <div class="absolute inset-0 flex items-center justify-center">
                     <img src="images/bell.png" alt="Notifications" class="h-4 object-contain rounded-full" />
@@ -269,7 +254,7 @@
           <div class="flex items-center gap-2 text-[0.8rem] text-[var(--text-active)]">
             <span class="min-w-[150px] font-medium tabular-nums">{{ datetime() }}</span>
           </div>
-          <button type="button" [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate " tooltipPosition="top"
+          <button type="button" [tooltip]=" 'SIGNOUT' | translate " tooltipPosition="top"
             class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
             (click)="logout()">
             <i class="bi bi-box-arrow-right text-sm"></i>

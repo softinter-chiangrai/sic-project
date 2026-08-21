@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
+import { SicToastService } from '../sic-toast/sic-toast.service';
 import { CallStatus, ChatService, ChatMember, ChatMessage, ChatGroup, ChatGroupMessage, IncomingCallInfo, StorageUploadReference } from '../../services/chat.service';
 
 // ── Directive: bind MediaStream to <video>.srcObject ──────────────────────
@@ -39,6 +40,8 @@ interface OpenChat {
   inputText: string;
   unreadCount: number;
   isLoading: boolean;
+  replyingTo?: ChatMessage | null;
+  editingMessage?: ChatMessage | null;
 }
 
 interface OpenGroupChat {
@@ -49,6 +52,8 @@ interface OpenGroupChat {
   inputText: string;
   unreadCount: number;
   isLoading: boolean;
+  replyingTo?: ChatGroupMessage | null;
+  editingMessage?: ChatGroupMessage | null;
 }
 
 @Component({
@@ -63,6 +68,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly auth = inject(AuthService);
   private readonly chatSvc = inject(ChatService);
+  private readonly toastSvc = inject(SicToastService);
   private readonly http = inject(HttpClient);
   private readonly destroy$ = new Subject<void>();
 
@@ -188,7 +194,42 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   sendMessage(chat: OpenChat): void {
     const text = chat.inputText.trim();
     if (!text) return;
-    this.chatSvc.sendTextMessage(chat.peerId, text);
+
+    if (chat.editingMessage) {
+      this.chatSvc.editMessage(chat.editingMessage.id, text);
+      chat.editingMessage = null;
+      chat.inputText = '';
+      return;
+    }
+
+    let finalMessage = text;
+    if (chat.replyingTo) {
+      const quoted = chat.replyingTo.message?.split('\n')[0] ?? 'ไฟล์แนบ';
+      finalMessage = `> ตอบกลับ: "${quoted}"\n${text}`;
+      chat.replyingTo = null;
+    }
+
+    this.chatSvc.sendTextMessage(chat.peerId, finalMessage);
+    chat.inputText = '';
+  }
+
+  startReply(chat: OpenChat, msg: ChatMessage): void {
+    chat.replyingTo = msg;
+    chat.editingMessage = null;
+  }
+
+  cancelReply(chat: OpenChat): void {
+    chat.replyingTo = null;
+  }
+
+  startEdit(chat: OpenChat, msg: ChatMessage): void {
+    chat.editingMessage = msg;
+    chat.replyingTo = null;
+    chat.inputText = msg.message;
+  }
+
+  cancelEdit(chat: OpenChat): void {
+    chat.editingMessage = null;
     chat.inputText = '';
   }
 
@@ -219,7 +260,16 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
       msg.messageType !== 3 &&
       msg.senderId === this.currentUserId() &&
       !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 2 * 60 * 1000
+      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+    );
+  }
+
+  canEdit(msg: ChatMessage): boolean {
+    return (
+      msg.messageType === 0 &&
+      msg.senderId === this.currentUserId() &&
+      !msg.isCancelled &&
+      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
     );
   }
 
@@ -502,7 +552,21 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
 
   callerName(): string {
     const info = this.incomingCall();
-    return info?.callerName ?? '';
+    if (!info) return '';
+    if (info.callerName && !this.isUuid(info.callerName)) {
+      return info.callerName;
+    }
+    const member = this.members().find(m => m.userId === info.callerId);
+    return member?.displayName || info.callerName || info.callerId;
+  }
+
+  peerDisplayName(peerId: string): string {
+    const member = this.members().find(m => m.userId === peerId);
+    return member?.displayName || peerId;
+  }
+
+  private isUuid(str: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -595,8 +659,17 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     this.chatSvc.messageReceived$
       .pipe(takeUntil(this.destroy$))
       .subscribe(msg => {
-        const peerId = msg.senderId === this.currentUserId() ? msg.receiverId : msg.senderId;
+        const isIncoming = msg.senderId !== this.currentUserId();
+        const peerId = isIncoming ? msg.senderId : msg.receiverId;
         const open = this.openChats().find(c => c.peerId === peerId);
+
+        if (isIncoming && msg.messageType !== 3) {
+          const sender = this.members().find(m => m.userId === msg.senderId);
+          const senderName = sender?.displayName ?? msg.senderId;
+          const previewText = msg.messageType === 1 ? 'ส่งรูปภาพ' : (msg.messageType === 2 ? 'ส่งไฟล์แนบ' : msg.message);
+          this.toastSvc.show(`💬 ${senderName}: ${previewText}`, 'info', 4000);
+        }
+
         if (open) {
           this.openChats.update(cs =>
             cs.map(c =>
@@ -604,12 +677,12 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
                 ? {
                     ...c,
                     messages: [...c.messages, msg],
-                    unreadCount: msg.senderId !== this.currentUserId() ? c.unreadCount + 1 : c.unreadCount,
+                    unreadCount: isIncoming ? c.unreadCount + 1 : c.unreadCount,
                   }
                 : c,
             ),
           );
-        } else if (msg.senderId !== this.currentUserId() && msg.messageType !== 3) {
+        } else if (isIncoming && msg.messageType !== 3) {
           // Auto-open window for new incoming message (skip call log entries)
           const sender = this.members().find(m => m.userId === msg.senderId);
           const newChat: OpenChat = {
@@ -638,6 +711,17 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
           cs.map(c => ({
             ...c,
             messages: c.messages.map(m => m.id === id ? { ...m, isCancelled: true } : m),
+          })),
+        );
+      });
+
+    this.chatSvc.messageEdited$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(editedMsg => {
+        this.openChats.update(cs =>
+          cs.map(c => ({
+            ...c,
+            messages: c.messages.map(m => m.id === editedMsg.id ? { ...m, message: editedMsg.message } : m),
           })),
         );
       });

@@ -42,13 +42,36 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat/private")
     @Transactional
-    public void sendPrivateMessage(@Payload ChatMessageRequest request) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
+    public void sendPrivateMessage(@Payload ChatMessageRequest request, java.security.Principal principal) {
+        String currentUserId = null;
+        String currentUsername = null;
+
+        if (principal instanceof org.springframework.security.core.Authentication auth) {
+            if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+                currentUserId = jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
+                currentUsername = jwt.getClaimAsString("preferred_username");
+            } else if (auth.getName() != null) {
+                currentUserId = auth.getName();
+            }
+        }
+        
+        if (currentUserId == null) {
+            try {
+                currentUserId = currentUserService.getUserId();
+                currentUsername = currentUserService.getUsername();
+            } catch (Exception e) {
+                log.warn("Could not determine currentUserId from currentUserService: {}", e.getMessage());
+            }
+        }
+
+        if (currentUserId == null) {
+            log.error("sendPrivateMessage failed: Unauthenticated user");
+            return;
+        }
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
+        chatLog.setSenderName(currentUsername != null ? currentUsername : currentUserId);
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage() != null ? request.getMessage() : "");
         chatLog.setMessageType(request.getMessageType() != null ? request.getMessageType() : ChatMessageType.TEXT);
@@ -114,19 +137,37 @@ public class ChatWebSocketController {
 
     @MessageMapping("/call/signal")
     @Transactional
-    public void handleCallSignal(@Payload CallSignalMessage signal) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
+    public void handleCallSignal(@Payload CallSignalMessage signal, java.security.Principal principal) {
+        String currentUserId = null;
+        String currentUsername = null;
+
+        if (principal instanceof org.springframework.security.core.Authentication auth) {
+            if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+                currentUserId = jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
+                currentUsername = jwt.getClaimAsString("preferred_username");
+            } else if (auth.getName() != null) {
+                currentUserId = auth.getName();
+            }
+        }
+        if (currentUserId == null) {
+            try {
+                currentUserId = currentUserService.getUserId();
+                currentUsername = currentUserService.getUsername();
+            } catch (Exception e) {
+                log.warn("Could not determine currentUserId: {}", e.getMessage());
+            }
+        }
 
         if (signal.getCallerId() == null || signal.getCallerId().isBlank()) {
             signal.setCallerId(currentUserId);
         }
         if (signal.getCallerName() == null || signal.getCallerName().isBlank()) {
-            signal.setCallerName(currentUsername);
+            signal.setCallerName(currentUsername != null ? currentUsername : currentUserId);
         }
 
         String action = signal.getAction();
-        log.info("📞 WebRTC Signal: action={}, caller={}, target={}, group={}", action, currentUserId, signal.getTargetUserId(), signal.getGroupId());
+        log.info("📞 WebRTC Signal: action={}, callerId={}, targetUserId={}, groupId={}",
+                action, signal.getCallerId(), signal.getTargetUserId(), signal.getGroupId());
 
         if ("start".equalsIgnoreCase(action)) {
             if (signal.getGroupId() != null && !signal.getGroupId().isBlank()) {
@@ -135,11 +176,13 @@ public class ChatWebSocketController {
                 List<SuChatGroupMember> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId);
                 for (SuChatGroupMember member : members) {
                     if (!member.getUserId().equals(currentUserId)) {
+                        log.info("📞 Forwarding group call to user: {}", member.getUserId());
                         messagingTemplate.convertAndSendToUser(member.getUserId(), "/queue/call", signal);
                     }
                 }
             } else if (signal.getTargetUserId() != null) {
                 // 1-on-1 Call: Send to target user
+                log.info("📞 Forwarding 1-on-1 call to target user: {}", signal.getTargetUserId());
                 messagingTemplate.convertAndSendToUser(signal.getTargetUserId(), "/queue/call", signal);
             }
         } else if ("answer".equalsIgnoreCase(action) || "ice-candidate".equalsIgnoreCase(action) || "recording".equalsIgnoreCase(action)) {
@@ -176,6 +219,11 @@ public class ChatWebSocketController {
         response.setMessageType(logMsg.getMessageType());
         response.setAttachmentId(logMsg.getAttachmentId());
         response.setRead(Boolean.TRUE.equals(logMsg.getIsRead()));
+        response.setCancelled(Boolean.TRUE.equals(logMsg.getIsCancelled()));
+        response.setCancelledAt(logMsg.getCancelledAt());
+        response.setCancelledBy(logMsg.getCancelledBy());
+        response.setCallAccepted(logMsg.getCallAccepted());
+        response.setCallDurationSeconds(logMsg.getCallDurationSeconds());
         response.setCreatedDate(logMsg.getCreatedDate());
         return response;
     }
@@ -191,6 +239,9 @@ public class ChatWebSocketController {
         response.setMessage(logMsg.getMessage());
         response.setMessageType(logMsg.getMessageType());
         response.setAttachmentId(logMsg.getAttachmentId());
+        response.setCancelled(Boolean.TRUE.equals(logMsg.getIsCancelled()));
+        response.setCancelledAt(logMsg.getCancelledAt());
+        response.setCancelledBy(logMsg.getCancelledBy());
         response.setCreatedDate(logMsg.getCreatedDate());
         return response;
     }

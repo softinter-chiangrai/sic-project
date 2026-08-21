@@ -29,14 +29,32 @@ public class NotificationController {
 
     @GetMapping
     @Operation(summary = "Get user notifications")
-    public ResponseEntity<List<NotificationResponse>> getNotifications() {
+    public ResponseEntity<?> getNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false, defaultValue = "false") boolean unreadOnly) {
         String currentUserId = currentUserService.getUserId();
-        List<NotificationResponse> notifications = notificationRepository
-                .findByRecipientUserIdOrderByCreatedDateDesc(currentUserId)
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                page, size, org.springframework.data.domain.Sort.by("createdDate").descending()
+        );
+        org.springframework.data.domain.Page<SuNotification> notifPage = unreadOnly
+                ? notificationRepository.findByRecipientUserIdAndIsReadFalseAndIsDeleteFalse(currentUserId, pageable)
+                : notificationRepository.findByRecipientUserIdAndIsDeleteFalse(currentUserId, pageable);
+
+        List<NotificationResponse> items = notifPage.getContent()
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(notifications);
+
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("items", items);
+        response.put("page", notifPage.getNumber());
+        response.put("size", notifPage.getSize());
+        response.put("totalElements", notifPage.getTotalElements());
+        response.put("totalPages", notifPage.getTotalPages());
+        response.put("hasMore", notifPage.hasNext());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/unread-count")

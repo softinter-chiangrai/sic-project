@@ -59,6 +59,7 @@ import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
 import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
 import { pmrt06Resolver } from './rt/pmrt06/pmrt06.resolver';
+import { pmrt07Resolver } from './rt/pmrt07/pmrt07.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
 
 export const PM_ROUTES: Routes = [
@@ -168,6 +169,18 @@ export const PM_ROUTES: Routes = [
     pathMatch: 'full',
   },
 
+  // ===== Notification Center (PMRT07) =====
+  {
+    path: 'pmrt07',
+    loadComponent: () => import('./rt/pmrt07/pmrt07.component').then((m) => m.Pmrt07Component),
+    resolve: { pageData: pmrt07Resolver },
+  },
+  {
+    path: 'notifications',
+    redirectTo: 'pmrt07',
+    pathMatch: 'full',
+  },
+
   // ============================================================
   // ===== PMDT01: PHASE MANAGEMENT =====
   // ============================================================
@@ -262,7 +275,6 @@ export const PM_ROUTES: Routes = [
   {
     path: 'approval',
     loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-    canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt03Resolver },
   },
   {
@@ -274,7 +286,6 @@ export const PM_ROUTES: Routes = [
     path: 'approval/:id',
     loadComponent: () =>
       import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
-    canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt03AResolver },
   },
   {

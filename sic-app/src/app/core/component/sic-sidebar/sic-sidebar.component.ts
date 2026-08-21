@@ -1,4 +1,4 @@
-import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
+import { isPlatformBrowser, NgTemplateOutlet, DatePipe } from '@angular/common';
 import {
   Component,
   effect,
@@ -23,6 +23,7 @@ import { DateTimeUtil } from '../../utils/datetime.util';
 import { SicCardComponent } from '../sic-card/sic-card.component';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 import { ChatService } from '../../services/chat.service';
+import { SicNotificationPanelComponent } from '../sic-notification-panel/sic-notification-panel.component';
 import {
   BusinessInfoModel,
   MenuItemModel,
@@ -42,6 +43,8 @@ import { BreadcrumbService } from '../../services/breadcrumb.service';
     NgTemplateOutlet,
     SicCardComponent,
     FormsModule,
+    DatePipe,
+    SicNotificationPanelComponent,
   ],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
@@ -125,6 +128,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.currentUrl.set(this.router.url);
     this.loadInfomations();
 
+    this.notificationSvc.loadNotifications();
+    this.notificationSvc.loadUnreadCount();
+
     this.notificationSvc.notifications$.subscribe(n => this.notifications.set(n));
     this.notificationSvc.unreadCount$.subscribe(c => this.unreadNotificationCount.set(c));
 
@@ -155,16 +161,10 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   }
 
   toggleNotificationPanel(): void {
-    const unreadNotifications = this.notifications().filter(n => !n.read);
-    if (unreadNotifications.length > 0) {
-      unreadNotifications.slice(0, 3).forEach((n) => {
-        const text = n.title ? `${n.title}: ${n.message || ''}` : n.message;
-        if (text) {
-          this.notificationSvc.showToastNotification(text);
-        }
-      });
-    } else {
-      this.notificationSvc.showToastNotification('ไม่มีการแจ้งเตือนใหม่');
+    const nextState = !this.showNotificationPanel();
+    this.showNotificationPanel.set(nextState);
+    if (nextState) {
+      this.notificationSvc.loadNotifications();
     }
   }
 

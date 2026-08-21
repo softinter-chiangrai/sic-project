@@ -215,8 +215,9 @@ public class FileStorageServiceImpl implements FileStorageService {
         // 🔥 ใช้ findFirstBy... แทน findBy... เพื่อป้องกัน unique result error
         SuUpload sessionRecord = uploadRepository
                 .findFirstByUploadGroupIdAndIsActiveFalseOrderByCreatedDateDesc(sessionId)
+                .or(() -> uploadRepository.findById(sessionId))
                 .orElseThrow(() -> {
-                    log.error("❌ Session not found for uploadGroupId: {}", sessionId);
+                    log.error("❌ Session not found for ID or uploadGroupId: {}", sessionId);
                     return new RuntimeException("Session not found for ID: " + sessionId);
                 });
 
@@ -279,6 +280,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         // 🔥 sessionId คือ uploadGroupId
         SuUpload sessionRecord = uploadRepository
                 .findFirstByUploadGroupIdAndIsActiveFalseOrderByCreatedDateDesc(sessionId)
+                .or(() -> uploadRepository.findById(sessionId))
                 .orElseThrow(() -> new RuntimeException("Session not found for ID: " + sessionId));
 
         // 🔥 ตรวจสอบว่า session หมดอายุหรือยัง

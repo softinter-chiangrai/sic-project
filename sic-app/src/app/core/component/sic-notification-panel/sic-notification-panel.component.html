@@ -1,0 +1,187 @@
+<div class="sic-notif-panel-wrapper">
+  <!-- Header -->
+  <div class="sic-notif-header">
+    <div class="sic-notif-title-row">
+      <h2 class="sic-notif-title">การแจ้งเตือน</h2>
+      
+      <div class="sic-notif-actions">
+        <button type="button" class="sic-notif-more-btn" (click)="toggleMenu($event)" title="ตัวเลือก">
+          <i class="bi bi-three-dots"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        @if (showMenu()) {
+          <div class="sic-notif-dropdown-menu">
+            <button type="button" class="sic-notif-menu-item" (click)="markAllAsRead()">
+              <i class="bi bi-check2-all text-base text-[var(--crm-primary)]"></i>
+              <span>ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</span>
+            </button>
+            <button type="button" class="sic-notif-menu-item" (click)="closePanel.emit(); showMenu.set(false)">
+              <i class="bi bi-x-lg text-sm text-[var(--text-muted)]"></i>
+              <span>ปิดหน้าต่าง</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Filter Tabs (ทั้งหมด / ยังไม่ได้อ่าน) -->
+    <div class="sic-notif-tabs">
+      <button
+        type="button"
+        class="sic-notif-tab-pill"
+        [class.active]="activeTab() === 'all'"
+        (click)="setTab('all')">
+        ทั้งหมด
+      </button>
+
+      <button
+        type="button"
+        class="sic-notif-tab-pill"
+        [class.active]="activeTab() === 'unread'"
+        (click)="setTab('unread')">
+        ยังไม่ได้อ่าน
+        @if (unreadCount() > 0) {
+          <span class="sic-notif-pill-count">{{ unreadCount() }}</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Content / Notification List -->
+  <div class="sic-notif-content custom-scrollbar" (scroll)="onScroll($event)">
+    @if (filteredNotifications().length === 0 && !isLoading()) {
+      <div class="sic-notif-empty">
+        <div class="sic-notif-empty-icon">
+          <i class="bi bi-bell-slash"></i>
+        </div>
+        <p class="sic-notif-empty-text">
+          @if (activeTab() === 'unread') {
+            ไม่มีการแจ้งเตือนที่ยังไม่ได้อ่าน
+          } @else {
+            ไม่มีประวัติการแจ้งเตือน
+          }
+        </p>
+      </div>
+    } @else {
+      <!-- Section: ใหม่ -->
+      @if (newNotifications().length > 0) {
+        <div class="sic-notif-section">
+          <div class="sic-notif-section-header">
+            <span class="sic-notif-section-title">ใหม่</span>
+            <button type="button" class="sic-notif-view-all-btn" (click)="onViewAllClick()">
+              ดูทั้งหมด
+            </button>
+          </div>
+
+          <div class="sic-notif-list">
+            @for (item of newNotifications(); track item.id) {
+              <div
+                class="sic-notif-item"
+                [class.unread]="!item.read"
+                (click)="onItemClick(item)">
+                
+                <!-- Avatar with Badge Icon -->
+                <div class="sic-notif-avatar-box">
+                  <div class="sic-notif-avatar">
+                    <img
+                      src="images/profile.png"
+                      alt="Avatar"
+                      (error)="$any($event.target).src='images/profile.png'" />
+                  </div>
+                  <div class="sic-notif-badge" [ngClass]="getBadgeBgClass(item.type)">
+                    <i class="bi" [ngClass]="getBadgeIcon(item.type)"></i>
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="sic-notif-body">
+                  <p class="sic-notif-text">
+                    <span class="sic-notif-sender">{{ item.title || item.senderName || 'ระบบ' }}</span>
+                    {{ item.message }}
+                  </p>
+
+                  <div class="sic-notif-meta">
+                    <span class="sic-notif-time">{{ formatRelativeTime(item.createdDate) }}</span>
+                    @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
+                      <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation(); closePanel.emit()" class="sic-notif-link">
+                        ดูรายละเอียด
+                      </a>
+                    }
+                  </div>
+                </div>
+
+                <!-- Unread Blue Dot -->
+                @if (!item.read) {
+                  <div class="sic-notif-unread-dot" title="ยังไม่ได้อ่าน"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Section: ก่อนหน้านี้ -->
+      @if (earlierNotifications().length > 0) {
+        <div class="sic-notif-section" [class.mt-3]="newNotifications().length > 0">
+          <div class="sic-notif-section-header">
+            <span class="sic-notif-section-title">ก่อนหน้านี้</span>
+          </div>
+
+          <div class="sic-notif-list">
+            @for (item of earlierNotifications(); track item.id) {
+              <div
+                class="sic-notif-item"
+                [class.unread]="!item.read"
+                (click)="onItemClick(item)">
+                
+                <!-- Avatar with Badge Icon -->
+                <div class="sic-notif-avatar-box">
+                  <div class="sic-notif-avatar">
+                    <img
+                      src="images/profile.png"
+                      alt="Avatar"
+                      (error)="$any($event.target).src='images/profile.png'" />
+                  </div>
+                  <div class="sic-notif-badge" [ngClass]="getBadgeBgClass(item.type)">
+                    <i class="bi" [ngClass]="getBadgeIcon(item.type)"></i>
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="sic-notif-body">
+                  <p class="sic-notif-text">
+                    <span class="sic-notif-sender">{{ item.title || item.senderName || 'ระบบ' }}</span>
+                    {{ item.message }}
+                  </p>
+
+                  <div class="sic-notif-meta">
+                    <span class="sic-notif-time">{{ formatRelativeTime(item.createdDate) }}</span>
+                    @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
+                      <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation(); closePanel.emit()" class="sic-notif-link">
+                        ดูรายละเอียด
+                      </a>
+                    }
+                  </div>
+                </div>
+
+                <!-- Unread Blue Dot -->
+                @if (!item.read) {
+                  <div class="sic-notif-unread-dot" title="ยังไม่ได้อ่าน"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Infinite Scroll Loading Indicator -->
+    @if (isLoading()) {
+      <div class="sic-notif-loading-indicator">
+        <i class="bi bi-arrow-repeat animate-spin"></i>
+        <span>กำลังโหลด...</span>
+      </div>
+    }
+  </div>
+</div>

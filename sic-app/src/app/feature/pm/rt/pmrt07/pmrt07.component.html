@@ -1,0 +1,199 @@
+<div class="pmrt07-container">
+  <!-- Center Main Card Container (Style Facebook / Modern Center) -->
+  <div class="pmrt07-card">
+    
+    <!-- Top Header -->
+    <div class="pmrt07-header">
+      <div class="pmrt07-header-top">
+        <h1 class="pmrt07-title">
+          <i class="bi bi-bell-fill text-[var(--crm-primary)]"></i>
+          การแจ้งเตือน
+        </h1>
+
+        <!-- More Options Menu Button -->
+        <div class="pmrt07-actions">
+          <button type="button" class="pmrt07-icon-btn" (click)="toggleMenu($event)" title="ตัวเลือกเพิ่มเติม">
+            <i class="bi bi-three-dots"></i>
+          </button>
+
+          @if (showMenu()) {
+            <div class="pmrt07-dropdown">
+              <button type="button" class="pmrt07-dropdown-item" (click)="markAllAsRead()">
+                <i class="bi bi-check2-all text-[var(--crm-primary)]"></i>
+                <span>ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Filter Tabs (ทั้งหมด / ยังไม่ได้อ่าน) -->
+      <div class="pmrt07-tabs">
+        <button
+          type="button"
+          class="pmrt07-tab-pill"
+          [class.active]="activeTab() === 'all'"
+          (click)="setTab('all')">
+          ทั้งหมด
+        </button>
+
+        <button
+          type="button"
+          class="pmrt07-tab-pill"
+          [class.active]="activeTab() === 'unread'"
+          (click)="setTab('unread')">
+          ยังไม่ได้อ่าน
+          @if (unreadCount() > 0) {
+            <span class="pmrt07-badge-count">{{ unreadCount() }}</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification Feed / List -->
+    <div class="pmrt07-feed" (scroll)="onScroll($event)">
+
+      <!-- Empty State -->
+      @if (filteredNotifications().length === 0 && !isLoading()) {
+        <div class="pmrt07-empty">
+          <div class="pmrt07-empty-icon">
+            <i class="bi bi-bell-slash"></i>
+          </div>
+          <h3 class="pmrt07-empty-title">
+            @if (activeTab() === 'unread') {
+              ไม่มีการแจ้งเตือนที่ยังไม่ได้อ่าน
+            } @else {
+              ยังไม่มีประวัติการแจ้งเตือน
+            }
+          </h3>
+          <p class="pmrt07-empty-desc">เมื่อมีกิจกรรมหรือเอกสารใหม่ การแจ้งเตือนจะปรากฏที่นี่</p>
+        </div>
+      } @else {
+
+        <!-- Group: ใหม่ (< 24 ชั่วโมง) -->
+        @if (newNotifications().length > 0) {
+          <div class="pmrt07-section">
+            <div class="pmrt07-section-heading">
+              <span>ใหม่</span>
+            </div>
+
+            <div class="pmrt07-list">
+              @for (item of newNotifications(); track item.id) {
+                <div
+                  class="pmrt07-item"
+                  [class.unread]="!item.read"
+                  (click)="onItemClick(item)">
+
+                  <!-- Avatar Box with Type Badge -->
+                  <div class="pmrt07-avatar-wrapper">
+                    <div class="pmrt07-avatar">
+                      <img
+                        src="images/profile.png"
+                        alt="Sender Avatar"
+                        (error)="$any($event.target).src='images/profile.png'" />
+                    </div>
+                    <div class="pmrt07-type-badge" [ngClass]="getBadgeBgClass(item.type)">
+                      <i class="bi" [ngClass]="getBadgeIcon(item.type)"></i>
+                    </div>
+                  </div>
+
+                  <!-- Text Details -->
+                  <div class="pmrt07-info">
+                    <p class="pmrt07-message">
+                      <span class="pmrt07-sender">{{ item.title || item.senderName || 'ระบบแจ้งเตือน' }}</span>
+                      {{ item.message }}
+                    </p>
+
+                    <div class="pmrt07-meta">
+                      <span class="pmrt07-time">{{ formatRelativeTime(item.createdDate) }}</span>
+                      @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
+                        <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation()" class="pmrt07-detail-link">
+                          ดูรายละเอียด
+                        </a>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Unread Blue Dot -->
+                  @if (!item.read) {
+                    <div class="pmrt07-dot" title="ยังไม่ได้อ่าน"></div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Group: ก่อนหน้านี้ (>= 24 ชั่วโมง) -->
+        @if (earlierNotifications().length > 0) {
+          <div class="pmrt07-section" [class.mt-4]="newNotifications().length > 0">
+            <div class="pmrt07-section-heading">
+              <span>ก่อนหน้านี้</span>
+            </div>
+
+            <div class="pmrt07-list">
+              @for (item of earlierNotifications(); track item.id) {
+                <div
+                  class="pmrt07-item"
+                  [class.unread]="!item.read"
+                  (click)="onItemClick(item)">
+
+                  <!-- Avatar Box with Type Badge -->
+                  <div class="pmrt07-avatar-wrapper">
+                    <div class="pmrt07-avatar">
+                      <img
+                        src="images/profile.png"
+                        alt="Sender Avatar"
+                        (error)="$any($event.target).src='images/profile.png'" />
+                    </div>
+                    <div class="pmrt07-type-badge" [ngClass]="getBadgeBgClass(item.type)">
+                      <i class="bi" [ngClass]="getBadgeIcon(item.type)"></i>
+                    </div>
+                  </div>
+
+                  <!-- Text Details -->
+                  <div class="pmrt07-info">
+                    <p class="pmrt07-message">
+                      <span class="pmrt07-sender">{{ item.title || item.senderName || 'ระบบแจ้งเตือน' }}</span>
+                      {{ item.message }}
+                    </p>
+
+                    <div class="pmrt07-meta">
+                      <span class="pmrt07-time">{{ formatRelativeTime(item.createdDate) }}</span>
+                      @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
+                        <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation()" class="pmrt07-detail-link">
+                          ดูรายละเอียด
+                        </a>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Unread Blue Dot -->
+                  @if (!item.read) {
+                    <div class="pmrt07-dot" title="ยังไม่ได้อ่าน"></div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Infinite Scroll Loading Spinner -->
+      @if (isLoading()) {
+        <div class="pmrt07-loading">
+          <i class="bi bi-arrow-repeat animate-spin text-lg"></i>
+          <span>กำลังโหลดข้อมูลเพิ่มเติม...</span>
+        </div>
+      }
+
+      <!-- End of List Notice -->
+      @if (!hasMore() && filteredNotifications().length > 0 && !isLoading()) {
+        <div class="pmrt07-end">
+          <span>แสดงการแจ้งเตือนทั้งหมดแล้ว</span>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

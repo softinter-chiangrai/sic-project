@@ -1,5 +1,47 @@
-@for (toast of toastService.toasts(); track toast.id) {
-  <div class="sic-toast__item sic-toast__item--{{ toast.type }}" (click)="dismiss(toast.id)">
-    {{ toast.message }}
-  </div>
-}
+<div class="sic-toast-container">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="sic-toast-item sic-toast-item--{{ toast.type }}"
+      (click)="dismiss(toast.id)">
+      
+      <!-- Icon based on type -->
+      <div class="sic-toast-icon-wrapper">
+        @switch (toast.type) {
+          @case ('success') {
+            <i class="bi bi-check-circle-fill"></i>
+          }
+          @case ('danger') {
+            <i class="bi bi-x-circle-fill"></i>
+          }
+          @case ('warning') {
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          }
+          @default {
+            <i class="bi bi-info-circle-fill"></i>
+          }
+        }
+      </div>
+
+      <!-- Message Content -->
+      <div class="sic-toast-content">
+        <p class="sic-toast-message">{{ toast.message }}</p>
+      </div>
+
+      <!-- Dismiss Button -->
+      <button
+        type="button"
+        class="sic-toast-close"
+        (click)="dismiss(toast.id); $event.stopPropagation()"
+        aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <!-- Progress bar timer if duration > 0 -->
+      @if (toast.duration > 0) {
+        <div
+          class="sic-toast-progress-bar"
+          [style.animationDuration.ms]="toast.duration"></div>
+      }
+    </div>
+  }
+</div>

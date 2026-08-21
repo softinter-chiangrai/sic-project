@@ -18,5 +18,10 @@ public class ChatMessageResponse {
     private ChatMessageType messageType;
     private UUID attachmentId;
     private boolean isRead;
+    private boolean isCancelled;
+    private Instant cancelledAt;
+    private String cancelledBy;
+    private Boolean callAccepted;
+    private Integer callDurationSeconds;
     private Instant createdDate;
 }

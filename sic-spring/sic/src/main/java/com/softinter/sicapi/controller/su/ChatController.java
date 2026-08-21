@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class ChatController {
     private final SuUserBusinessService userBusinessService;
 
     // ========== Private Chat ==========
-    
+
     @GetMapping("/history/{userId}")
     @Operation(summary = "Get chat history with user")
     public ResponseEntity<List<ChatMessageResponse>> getChatHistory(@PathVariable String userId) {
@@ -73,7 +74,7 @@ public class ChatController {
     }
 
     // ========== Chat Groups ==========
-    
+
     @GetMapping("/groups")
     @Operation(summary = "Get chat groups")
     public ResponseEntity<List<ChatGroupResponse>> getChatGroups() {
@@ -89,9 +90,9 @@ public class ChatController {
     @Operation(summary = "Get all available chat members in system/business")
     public ResponseEntity<List<ChatMemberResponse>> getChatMembers() {
         String currentUserId = currentUserService.getUserId();
-        
+
         List<UserResponse> availableUsers = userBusinessService.getAvailableUsers();
-        
+
         List<ChatMemberResponse> members = availableUsers.stream()
                 .filter(u -> !u.getId().equals(currentUserId))
                 .map(u -> {
@@ -101,7 +102,7 @@ public class ChatController {
                     return member;
                 })
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(members);
     }
 
@@ -120,9 +121,20 @@ public class ChatController {
     @Operation(summary = "Create chat group")
     public ResponseEntity<ChatGroupResponse> createGroup(@RequestBody CreateGroupRequest request) {
         String currentUserId = currentUserService.getUserId();
+        UUID businessId = currentUserService.getBusinessId();
+        if (businessId == null) {
+            List<UserBusinessResponse> ubs = userBusinessService.findByUserId(currentUserId);
+            if (!ubs.isEmpty() && ubs.get(0).getBusinessId() != null) {
+                businessId = ubs.get(0).getBusinessId();
+            } else {
+                // Fallback default
+                businessId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+            }
+        }
 
         SuChatGroup group = new SuChatGroup();
         group.setName(request.getName());
+        group.setBusinessId(businessId);
         group.setCreatedBy(currentUserId);
         group.setCreatedDate(Instant.now());
 
@@ -131,14 +143,22 @@ public class ChatController {
         SuChatGroupMember creatorMember = new SuChatGroupMember();
         creatorMember.setGroup(group);
         creatorMember.setUserId(currentUserId);
+        creatorMember.setBusinessId(businessId);
+        creatorMember.setCreatedBy(currentUserId);
+        creatorMember.setCreatedDate(Instant.now());
         chatGroupMemberRepository.save(creatorMember);
 
         if (request.getMemberUserIds() != null) {
-            for (String memberId : request.getMemberUserIds()) {
-                SuChatGroupMember member = new SuChatGroupMember();
-                member.setGroup(group);
-                member.setUserId(memberId);
-                chatGroupMemberRepository.save(member);
+            for (String otherUserId : request.getMemberUserIds()) {
+                if (!otherUserId.equals(currentUserId)) {
+                    SuChatGroupMember member = new SuChatGroupMember();
+                    member.setGroup(group);
+                    member.setUserId(otherUserId);
+                    member.setBusinessId(businessId);
+                    member.setCreatedBy(currentUserId);
+                    member.setCreatedDate(Instant.now());
+                    chatGroupMemberRepository.save(member);
+                }
             }
         }
 
@@ -178,29 +198,51 @@ public class ChatController {
         return ResponseEntity.ok(members);
     }
 
-    // ========== WebSocket ==========
-    
-    @MessageMapping("/chat.send")
-    public void sendWebSocketMessage(@Payload ChatMessageRequest request) {
+    @PostMapping("/cancel/{messageId}")
+    @Operation(summary = "Cancel / Delete chat message")
+    public ResponseEntity<Void> cancelChatMessage(@PathVariable UUID messageId) {
         String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
+        chatLogRepository.findById(messageId).ifPresent(msg -> {
+            if (msg.getSenderId().equals(currentUserId)) {
+                msg.setIsCancelled(true);
+                msg.setCancelledAt(Instant.now());
+                msg.setCancelledBy(currentUserId);
+                chatLogRepository.save(msg);
 
-        SuChatLog chatLog = new SuChatLog();
-        chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername);
-        chatLog.setReceiverId(request.getReceiverId());
-        chatLog.setMessage(request.getMessage());
-        chatLog.setMessageType(request.getMessageType());
-        chatLog.setIsRead(false);
-        chatLog.setCreatedDate(Instant.now());
-        chatLogRepository.save(chatLog);
+                Map<String, Object> event = Map.of("messageId", messageId.toString(), "isCancelled", true);
+                messagingTemplate.convertAndSendToUser(msg.getReceiverId(), "/queue/messages/cancel", event);
+                messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/cancel", event);
+            }
+        });
+        return ResponseEntity.ok().build();
+    }
 
-        ChatMessageResponse response = toChatMessageResponse(chatLog);
-        messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
+    @PostMapping("/edit/{messageId}")
+    @Operation(summary = "Edit chat message")
+    public ResponseEntity<ChatMessageResponse> editChatMessage(@PathVariable UUID messageId,
+            @RequestBody Map<String, String> body) {
+        String newText = body.get("message");
+        if (newText == null)
+            return ResponseEntity.badRequest().build();
+        String currentUserId = currentUserService.getUserId();
+
+        SuChatLog msg = chatLogRepository.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+        if (!msg.getSenderId().equals(currentUserId)) {
+            return ResponseEntity.status(403).build();
+        }
+        msg.setMessage(newText);
+        msg.setUpdatedDate(Instant.now());
+        chatLogRepository.save(msg);
+
+        ChatMessageResponse response = toChatMessageResponse(msg);
+        messagingTemplate.convertAndSendToUser(msg.getReceiverId(), "/queue/messages/edit", response);
+        messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/edit", response);
+        return ResponseEntity.ok(response);
     }
 
     // ========== Private Helper Methods ==========
-    
+
     private ChatMessageResponse toChatMessageResponse(SuChatLog log) {
         ChatMessageResponse response = new ChatMessageResponse();
         response.setId(log.getId());
@@ -212,6 +254,11 @@ public class ChatController {
         response.setMessageType(log.getMessageType());
         response.setAttachmentId(log.getAttachmentId());
         response.setRead(Boolean.TRUE.equals(log.getIsRead()));
+        response.setCancelled(Boolean.TRUE.equals(log.getIsCancelled()));
+        response.setCancelledAt(log.getCancelledAt());
+        response.setCancelledBy(log.getCancelledBy());
+        response.setCallAccepted(log.getCallAccepted());
+        response.setCallDurationSeconds(log.getCallDurationSeconds());
         response.setCreatedDate(log.getCreatedDate());
         return response;
     }
@@ -251,6 +298,9 @@ public class ChatController {
         response.setMessage(log.getMessage());
         response.setMessageType(log.getMessageType());
         response.setAttachmentId(log.getAttachmentId());
+        response.setCancelled(Boolean.TRUE.equals(log.getIsCancelled()));
+        response.setCancelledAt(log.getCancelledAt());
+        response.setCancelledBy(log.getCancelledBy());
         response.setCreatedDate(log.getCreatedDate());
         return response;
     }

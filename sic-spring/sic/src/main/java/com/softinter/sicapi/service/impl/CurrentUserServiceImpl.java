@@ -24,8 +24,16 @@ public class CurrentUserServiceImpl implements CurrentUserService {
     @Override
     public String getUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getSubject();
+        if (authentication != null) {
+            if (authentication.getPrincipal() instanceof Jwt jwt) {
+                return jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
+            }
+            if (authentication.getPrincipal() instanceof String str && !str.isBlank() && !"anonymousUser".equalsIgnoreCase(str)) {
+                return str;
+            }
+            if (authentication.getName() != null && !authentication.getName().isBlank() && !"anonymousUser".equalsIgnoreCase(authentication.getName())) {
+                return authentication.getName();
+            }
         }
         throw new UnauthorizedException("No authenticated user found");
     }

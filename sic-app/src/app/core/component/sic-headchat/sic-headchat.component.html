@@ -3,32 +3,37 @@
      ════════════════════════════════════════════════════════════════════════ -->
 <div class="headchat-root">
 
-  <!-- ── Incoming-call dialog ──────────────────────────────────────────── -->
+  <!-- ── Fullscreen Incoming-call Modal ────────────────────────────────── -->
   @if (incomingCall()) {
-    <div class="headchat-incoming">
-      <div class="headchat-incoming-icon">
-        @if (incomingCall()!.callType === 'video') {
-          <i class="bi bi-camera-video-fill"></i>
-        } @else {
-          <i class="bi bi-telephone-fill"></i>
-        }
-      </div>
-      <div class="headchat-incoming-info">
-        <p class="headchat-incoming-name">{{ callerName() }}</p>
-        <p class="headchat-incoming-type">
+    <div class="headchat-incoming-fullscreen">
+      <div class="headchat-incoming-backdrop"></div>
+      <div class="headchat-incoming-modal">
+        <div class="headchat-incoming-pulse-ring"></div>
+        <div class="headchat-incoming-avatar-wrap">
+          <i class="bi" [class.bi-camera-video-fill]="incomingCall()!.callType === 'video'" [class.bi-person-fill]="incomingCall()!.callType !== 'video'"></i>
+        </div>
+        
+        <h2 class="headchat-incoming-title">{{ callerName() }}</h2>
+        <div class="headchat-incoming-subtitle">
           @if (incomingCall()!.groupName) {
-            <i class="bi bi-people-fill"></i> {{ incomingCall()!.groupName }} ·
+            <span class="headchat-incoming-group-tag"><i class="bi bi-people-fill"></i> {{ incomingCall()!.groupName }}</span>
           }
-          {{ incomingCall()!.callType === 'video' ? 'วิดีโอคอล' : 'โทรศัพท์' }}
-        </p>
-      </div>
-      <div class="headchat-incoming-actions">
-        <button class="headchat-btn-accept" (click)="acceptCall()" title="รับสาย">
-          <i class="bi bi-telephone-fill"></i>
-        </button>
-        <button class="headchat-btn-reject" (click)="rejectCall()" title="ปฏิเสธ">
-          <i class="bi bi-telephone-x-fill"></i>
-        </button>
+          <span class="headchat-incoming-status-text">
+            <i class="bi" [class.bi-camera-video]="incomingCall()!.callType === 'video'" [class.bi-telephone]="incomingCall()!.callType !== 'video'"></i>
+            {{ incomingCall()!.callType === 'video' ? 'สายวิดีโอคอลเรียกเข้า...' : 'สายสนทนาเรียกเข้า...' }}
+          </span>
+        </div>
+
+        <div class="headchat-incoming-fullscreen-actions">
+          <button class="headchat-fullscreen-btn headchat-fullscreen-btn--reject" (click)="rejectCall()" title="ปฏิเสธ">
+            <i class="bi bi-telephone-x-fill"></i>
+            <span>ปฏิเสธ</span>
+          </button>
+          <button class="headchat-fullscreen-btn headchat-fullscreen-btn--accept" (click)="acceptCall()" title="รับสาย">
+            <i class="bi bi-telephone-fill"></i>
+            <span>รับสาย</span>
+          </button>
+        </div>
       </div>
     </div>
   }
@@ -48,7 +53,8 @@
         } @else {
           <div class="headchat-call-waiting">
             <i class="bi bi-person-circle"></i>
-            <p>{{ callStatus() === 'calling' ? 'กำลังโทร...' : 'กำลังเชื่อมต่อ...' }}</p>
+            <p class="headchat-call-waiting-name">{{ currentCallPeer() ? peerDisplayName(currentCallPeer()!) : '' }}</p>
+            <p class="headchat-call-waiting-status">{{ callStatus() === 'calling' ? 'กำลังโทร...' : 'กำลังเชื่อมต่อ...' }}</p>
           </div>
         }
         @if (localStream() && currentCallType() === 'video') {
@@ -133,14 +139,12 @@
         </div>
         <span class="headchat-win-name" [title]="chat.peerName">{{ chat.peerName }}</span>
         <div class="headchat-win-actions">
-          @if (chat.isOnline) {
-            <button class="headchat-win-btn" (click)="startCall(chat.peerId, 'audio')" title="โทรด้วยเสียง">
-              <i class="bi bi-telephone"></i>
-            </button>
-            <button class="headchat-win-btn" (click)="startCall(chat.peerId, 'video')" title="วิดีโอคอล">
-              <i class="bi bi-camera-video"></i>
-            </button>
-          }
+          <button class="headchat-win-btn" (click)="startCall(chat.peerId, 'audio')" title="โทรด้วยเสียง">
+            <i class="bi bi-telephone"></i>
+          </button>
+          <button class="headchat-win-btn" (click)="startCall(chat.peerId, 'video')" title="วิดีโอคอล">
+            <i class="bi bi-camera-video"></i>
+          </button>
           <button class="headchat-win-btn headchat-win-close" (click)="closeChat(chat.peerId)" title="ปิด">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -215,18 +219,55 @@
               } @else {
                 <span class="headchat-msg-text">{{ msg.message }}</span>
               }
-              <span class="headchat-msg-time">
-                {{ msg.sentAt | date:'HH:mm' }}
-              </span>
-              @if (canCancel(msg)) {
-                <button class="headchat-msg-cancel-btn" (click)="cancelMessage(msg)" title="ยกเลิกข้อความ">
-                  <i class="bi bi-trash"></i>
-                </button>
-              }
+              <div class="headchat-msg-footer">
+                <span class="headchat-msg-time">
+                  {{ msg.sentAt | date:'HH:mm' }}
+                </span>
+                <div class="headchat-msg-actions">
+                  @if (!msg.isCancelled) {
+                    <button class="headchat-msg-action-btn" (click)="startReply(chat, msg)" title="ตอบกลับ">
+                      <i class="bi bi-reply-fill"></i>
+                    </button>
+                  }
+                  @if (canEdit(msg)) {
+                    <button class="headchat-msg-action-btn" (click)="startEdit(chat, msg)" title="แก้ไขข้อความ">
+                      <i class="bi bi-pencil-fill"></i>
+                    </button>
+                  }
+                  @if (canCancel(msg)) {
+                    <button class="headchat-msg-action-btn headchat-msg-action-btn--danger" (click)="cancelMessage(msg)" title="ยกเลิก/ลบข้อความ">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                </div>
+              </div>
             </div>
           }
         }
       </div>
+
+      <!-- Reply / Edit Preview Banner -->
+      @if (chat.replyingTo) {
+        <div class="headchat-preview-banner">
+          <div class="headchat-preview-content">
+            <span class="headchat-preview-title"><i class="bi bi-reply-fill"></i> กำลังตอบกลับ</span>
+            <span class="headchat-preview-text">{{ chat.replyingTo.message || 'ไฟล์แนบ' }}</span>
+          </div>
+          <button class="headchat-preview-close" (click)="cancelReply(chat)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      } @else if (chat.editingMessage) {
+        <div class="headchat-preview-banner headchat-preview-banner--edit">
+          <div class="headchat-preview-content">
+            <span class="headchat-preview-title"><i class="bi bi-pencil-fill"></i> กำลังแก้ไขข้อความ</span>
+            <span class="headchat-preview-text">{{ chat.editingMessage.message }}</span>
+          </div>
+          <button class="headchat-preview-close" (click)="cancelEdit(chat)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      }
 
       <!-- Input area -->
       <div class="headchat-input-row">
@@ -241,15 +282,15 @@
         <input
           class="headchat-input-text"
           type="text"
-          placeholder="พิมพ์ข้อความ..."
+          [placeholder]="chat.editingMessage ? 'แก้ไขข้อความ...' : (chat.replyingTo ? 'พิมพ์ข้อความตอบกลับ...' : 'พิมพ์ข้อความ...')"
           [(ngModel)]="chat.inputText"
           (keydown.enter)="onEnter($event, chat)" />
         <button
           class="headchat-input-send"
           (click)="sendMessage(chat)"
           [disabled]="!chat.inputText.trim()"
-          title="ส่ง">
-          <i class="bi bi-send-fill"></i>
+          [title]="chat.editingMessage ? 'บันทึกการแก้ไข' : 'ส่ง'">
+          <i class="bi" [class.bi-check-lg]="chat.editingMessage" [class.bi-send-fill]="!chat.editingMessage"></i>
         </button>
       </div>
 

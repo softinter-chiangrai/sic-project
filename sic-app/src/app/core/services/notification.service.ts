@@ -18,6 +18,15 @@ export interface AppNotification {
   createdDate: string | Date;
 }
 
+export interface NotificationPageResponse {
+  items: AppNotification[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly platformId = inject(PLATFORM_ID);
@@ -28,17 +37,74 @@ export class NotificationService {
   readonly unreadCount$ = new BehaviorSubject<number>(0);
   readonly newNotificationReceived$ = new Subject<AppNotification>();
 
-  async loadNotifications(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId)) return;
+  async loadNotifications(page = 0, size = 15, unreadOnly = false): Promise<NotificationPageResponse | null> {
+    if (!isPlatformBrowser(this.platformId)) return null;
     try {
-      const list = await firstValueFrom(
-        this.http.get<AppNotification[]>(`${environment.apiBaseUrl}/api/su/notifications`),
+      const res = await firstValueFrom(
+        this.http.get<any>(`${environment.apiBaseUrl}/api/su/notifications`, {
+          params: { page: page.toString(), size: size.toString(), unreadOnly: unreadOnly.toString() }
+        }),
       );
-      this.notifications$.next(list);
-      const unread = list.filter(n => !n.read).length;
-      this.unreadCount$.next(unread);
+
+      let items: AppNotification[] = [];
+      let pageData: NotificationPageResponse;
+
+      if (Array.isArray(res)) {
+        items = res;
+        pageData = {
+          items,
+          page: 0,
+          size: items.length,
+          totalElements: items.length,
+          totalPages: 1,
+          hasMore: false
+        };
+      } else {
+        items = res.items || [];
+        pageData = res;
+      }
+
+      if (page === 0) {
+        this.notifications$.next(items);
+      } else {
+        const current = this.notifications$.getValue();
+        // deduplicate by id
+        const existingIds = new Set(current.map(n => n.id));
+        const newItems = items.filter(n => !existingIds.has(n.id));
+        this.notifications$.next([...current, ...newItems]);
+      }
+
+      this.loadUnreadCount();
+      return pageData;
     } catch (err) {
       console.error('[NotificationService] loadNotifications error:', err);
+      return null;
+    }
+  }
+
+  async fetchNotificationsPage(page: number, size = 15, unreadOnly = false): Promise<NotificationPageResponse | null> {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    try {
+      const res = await firstValueFrom(
+        this.http.get<any>(`${environment.apiBaseUrl}/api/su/notifications`, {
+          params: { page: page.toString(), size: size.toString(), unreadOnly: unreadOnly.toString() }
+        }),
+      );
+
+      if (Array.isArray(res)) {
+        return {
+          items: res,
+          page: 0,
+          size: res.length,
+          totalElements: res.length,
+          totalPages: 1,
+          hasMore: false
+        };
+      }
+      return res;
+    } catch (err) {
+      console.error('[NotificationService] fetchNotificationsPage error:', err);
+      return null;
     }
   }
 

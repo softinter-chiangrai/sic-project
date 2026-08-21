@@ -121,12 +121,12 @@
             <div class="mt-0.5">
               <div class="flex gap-2">
                 <div class="flex-initial w-6 h-6">
-                  <img src="images/language.png" [tooltip]=" 'COMMON.ALL.APP_CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()" alt="English" class="h-6 w-6 object-contain rounded-full cursor-pointer" />    
+                  <img src="images/language.png" [tooltip]=" 'CHANGE_LANGUAGE' | translate " (click)="toggleLanguage()" alt="English" class="h-6 w-6 object-contain rounded-full cursor-pointer" />    
                 </div>
                 <div class="flex-initial w-6 h-6">
-                  <img src="images/day-and-night.png" [tooltip]=" 'COMMON.ALL.APP_CHANGE_THEME' | translate " (click)="toggleTheme()" alt="English" class="h-6 w-6 object-contain cursor-pointer" />    
+                  <img src="images/day-and-night.png" [tooltip]=" 'CHANGE_THEME' | translate " (click)="toggleTheme()" alt="English" class="h-6 w-6 object-contain cursor-pointer" />    
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_CHAT' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'CHAT' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center cursor-pointer">
                     <img
                       src="images/chat.png"
@@ -141,7 +141,7 @@
                     7
                   </div>
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_NOTIFY' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'NOTIFY' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center cursor-pointer">
                     <img
                       src="images/bell.png"
@@ -156,7 +156,7 @@
                     7
                   </div>
                 </div>
-                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'COMMON.ALL.APP_CALENDAR' | translate ">
+                <div class="flex-initial relative w-6 h-6 flex-shrink-0 rounded-full" [tooltip]=" 'CALENDAR' | translate ">
                   <div class="absolute inset-0 flex items-center justify-center">
                     <img
                       src="images/calendar.png"
@@ -238,7 +238,7 @@
 
           <button
             type="button"
-            [tooltip]=" 'COMMON.ALL.APP_SIGNOUT' | translate "
+            [tooltip]=" 'SIGNOUT' | translate "
             tooltipPosition ="top"
             class="cursor-pointer flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] transition-colors hover:border-[var(--crm-danger)] hover:text-[var(--crm-danger)]"
             (click)="logout()"

@@ -16,5 +16,8 @@ public class ChatGroupMessageResponse {
     private String message;
     private ChatMessageType messageType;
     private UUID attachmentId;
+    private boolean isCancelled;
+    private Instant cancelledAt;
+    private String cancelledBy;
     private Instant createdDate;
 }

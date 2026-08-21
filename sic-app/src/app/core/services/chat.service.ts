@@ -98,6 +98,7 @@ export class ChatService {
   // ── Observable streams ──
   readonly messageReceived$ = new Subject<ChatMessage>();
   readonly messageCancelled$ = new Subject<string>();
+  readonly messageEdited$ = new Subject<ChatMessage>();
   readonly callLogUpdated$ = new Subject<ChatMessage>();
   readonly userStatusChanged$ = new Subject<{ userId: string; isOnline: boolean }>();
   readonly incomingCall$ = new Subject<IncomingCallInfo>();
@@ -217,6 +218,20 @@ export class ChatService {
 
   cancelMessage(messageId: string): void {
     this.publishStomp('/app/chat/cancel', { messageId });
+    // REST fallback for reliability
+    this.http.post(`${environment.apiBaseUrl}/api/su/chat/cancel/${messageId}`, {}).subscribe({
+      next: () => this.messageCancelled$.next(messageId),
+      error: () => {},
+    });
+  }
+
+  editMessage(messageId: string, message: string): void {
+    this.http.post<any>(`${environment.apiBaseUrl}/api/su/chat/edit/${messageId}`, { message }).subscribe({
+      next: (res) => {
+        if (res) this.messageEdited$.next(this.toChatMessage(res));
+      },
+      error: (err) => console.error('[ChatService] Error editing message:', err),
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -573,26 +588,32 @@ export class ChatService {
     if (!isPlatformBrowser(this.platformId)) return;
     this.currentCallPeer = peerUserId;
     this.callStartTime = Date.now();
-    this.callStatus$.next('calling');
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: callType === 'video',
-    });
-    this.localStream$.next(stream);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: callType === 'video',
+      });
+      this.callStatus$.next('calling');
+      this.localStream$.next(stream);
 
-    this.peerConnection = this.buildPeerConnection(peerUserId);
-    stream.getTracks().forEach(t => this.peerConnection!.addTrack(t, stream));
+      this.peerConnection = this.buildPeerConnection(peerUserId);
+      stream.getTracks().forEach(t => this.peerConnection!.addTrack(t, stream));
 
-    const offer = await this.peerConnection.createOffer();
-    await this.peerConnection.setLocalDescription(offer);
+      const offer = await this.peerConnection.createOffer();
+      await this.peerConnection.setLocalDescription(offer);
 
-    this.publishStomp('/app/call/signal', {
-      action: 'start',
-      targetUserId: peerUserId,
-      callType,
-      sdpOffer: JSON.stringify(offer),
-    });
+      this.publishStomp('/app/call/signal', {
+        action: 'start',
+        targetUserId: peerUserId,
+        callType,
+        sdpOffer: JSON.stringify(offer),
+      });
+    } catch (err: any) {
+      console.error('[ChatService] Error starting call:', err);
+      this.notificationSvc.showToastNotification('ไม่สามารถเข้าถึงไมค์หรือกล้องได้ กรุณาอนุญาต Microphone/Camera ใน Browser', 'danger', 5000);
+      this.cleanupCall();
+    }
   }
 
   async answerCall(callerId: string, sdpOffer: string, callType: 'audio' | 'video', accept: boolean, groupId?: string): Promise<void> {
@@ -609,28 +630,34 @@ export class ChatService {
 
     this.currentCallPeer = callerId;
     this.callStartTime = Date.now();
-    this.callStatus$.next('connected');
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: callType === 'video',
-    });
-    this.localStream$.next(stream);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: callType === 'video',
+      });
+      this.callStatus$.next('connected');
+      this.localStream$.next(stream);
 
-    this.peerConnection = this.buildPeerConnection(callerId);
-    stream.getTracks().forEach(t => this.peerConnection!.addTrack(t, stream));
+      this.peerConnection = this.buildPeerConnection(callerId);
+      stream.getTracks().forEach(t => this.peerConnection!.addTrack(t, stream));
 
-    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(sdpOffer)));
-    const answer = await this.peerConnection.createAnswer();
-    await this.peerConnection.setLocalDescription(answer);
+      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(sdpOffer)));
+      const answer = await this.peerConnection.createAnswer();
+      await this.peerConnection.setLocalDescription(answer);
 
-    this.publishStomp('/app/call/signal', {
-      action: 'answer',
-      targetUserId: callerId,
-      sdpAnswer: JSON.stringify(answer),
-      accepted: true,
-      groupId,
-    });
+      this.publishStomp('/app/call/signal', {
+        action: 'answer',
+        targetUserId: callerId,
+        sdpAnswer: JSON.stringify(answer),
+        accepted: true,
+        groupId,
+      });
+    } catch (err: any) {
+      console.error('[ChatService] Error answering call:', err);
+      this.notificationSvc.showToastNotification('ไม่สามารถเข้าถึงไมค์หรือกล้องได้ กรุณาอนุญาต Microphone/Camera ใน Browser', 'danger', 5000);
+      this.cleanupCall();
+    }
   }
 
   endCall(): void {
@@ -699,6 +726,16 @@ export class ChatService {
         if (data.messageId) this.messageCancelled$.next(data.messageId);
       } catch (err) {
         console.error('[ChatService] Error parsing cancelled message:', err);
+      }
+    });
+
+    // 2.1 Message editing
+    this.stompClient.subscribe('/user/queue/messages/edit', (msg) => {
+      try {
+        const data = JSON.parse(msg.body);
+        this.messageEdited$.next(this.toChatMessage(data));
+      } catch (err) {
+        console.error('[ChatService] Error parsing edited message:', err);
       }
     });
 
