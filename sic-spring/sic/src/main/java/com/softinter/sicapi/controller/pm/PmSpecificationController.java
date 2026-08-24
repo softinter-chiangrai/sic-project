@@ -36,8 +36,23 @@ import java.util.UUID;
 public class PmSpecificationController {
 
     private final PmSpecificationService specificationService;
+    private final com.softinter.sicapi.service.PmSpecificationExportService exportService;
     private final SpecificationGeneratorService generatorService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export Specification Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        byte[] pdfBytes = exportService.exportSpecificationPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"spec-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
 
     @GetMapping
     @Operation(summary = "Get specifications with pagination")

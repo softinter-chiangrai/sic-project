@@ -7,9 +7,9 @@ import { finalize } from 'rxjs/operators';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -28,9 +28,10 @@ import { ProjectModel } from './pmrt02A.model';
     RouterModule,
     SicButtonComponent,
     SicInputComponent,
-    SicInputAreaComponent,
     SicDatepickerComponent,
     SicNumberComponent,
+    SicComboboxComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmrt02A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -77,7 +78,12 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     'Closed',
     'MA Active',
   ];
-  priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
+  priorityOptions = [
+    { value: 'Low', text: '🟢 Low (ต่ำ)' },
+    { value: 'Medium', text: '🟡 Medium (ปานกลาง)' },
+    { value: 'High', text: '🔴 High (สูง)' },
+    { value: 'Critical', text: '🔥 Critical (วิกฤต)' },
+  ];
 
   ngOnInit(): void {
     this.initForm();

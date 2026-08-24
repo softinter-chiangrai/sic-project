@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="TH Sarabun New">
+        <normal>fonts/THSarabunNew.ttf</normal>
+        <bold>fonts/THSarabunNew-Bold.ttf</bold>
+        <italic>fonts/THSarabunNew-Italic.ttf</italic>
+        <boldItalic>fonts/THSarabunNew-BoldItalic.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'TH Sarabun New', 'Sarabun', sans-serif</export>
+            <export key="net.sf.jasperreports.xhtml">'TH Sarabun New', 'Sarabun', sans-serif</export>
+        </exportFonts>
+    </fontFamily>
+</fontFamilies>

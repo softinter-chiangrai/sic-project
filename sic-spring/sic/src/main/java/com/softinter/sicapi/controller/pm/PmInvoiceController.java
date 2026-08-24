@@ -28,7 +28,19 @@ import java.util.UUID;
 public class PmInvoiceController {
 
     private final PmInvoiceService invoiceService;
+    private final com.softinter.sicapi.service.PmInvoiceExportService exportService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export Invoice Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = exportService.exportInvoicePdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"invoice-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
 
     @GetMapping("/paging")
     @Operation(summary = "Get invoice list with pagination")

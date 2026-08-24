@@ -230,73 +230,31 @@ export class Pmrt02Component implements OnInit {
   }
 
   printProject(project: PmCustomerProject) {
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+    if (!project.id) {
+      this.dialog.warn('ไม่พบรหัสโครงการ', 'ไม่สามารถพิมพ์เอกสารได้');
       return;
     }
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>โครงการ - ${project.projectCode || ''}</title>
-        <style>
-          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
-          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
-          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
-          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
-          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-          .content { font-size: 14px; margin-top: 16px; }
-          @media print {
-            body { padding: 0; }
+    this.isLoading.set(true);
+    this.service.exportProjectPdf(project.id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
           }
-        </style>
-      </head>
-      <body>
-        <h1>[${project.projectCode || '-'}] ${project.projectName || 'Project Detail'}</h1>
-        <table class="info-table">
-          <tr>
-            <td class="label">รหัสโครงการ</td>
-            <td>${project.projectCode || '-'}</td>
-            <td class="label">ชื่อโครงการ</td>
-            <td>${project.projectName || '-'}</td>
-          </tr>
-          <tr>
-            <td class="label">ลูกค้า</td>
-            <td>${project.customerName || '-'}</td>
-            <td class="label">สถานะ</td>
-            <td>${this.getStatusText(project.status) || '-'}</td>
-          </tr>
-          <tr>
-            <td class="label">ความสำคัญ (Priority)</td>
-            <td>${project.priority || '-'}</td>
-            <td class="label">ระยะเวลา</td>
-            <td>${this.formatDate(project.startDate)} - ${this.formatDate(project.plannedEndDate)}</td>
-          </tr>
-          <tr>
-            <td class="label">Manday ตามแผน</td>
-            <td>${project.budgetManday || 0}</td>
-            <td class="label">Manday ที่ใช้จริง</td>
-            <td>${project.usedManday || 0} (${this.getProgress(project.usedManday, project.budgetManday)}%)</td>
-          </tr>
-        </table>
-        <div class="content">
-          <h3>คำอธิบาย</h3>
-          <div>${project.description || '-'}</div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 300);
+        },
+        error: (err) => {
+          console.error('Print project error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+        },
+      });
   }
 
   deleteProject(id: string) {

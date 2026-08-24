@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +32,7 @@ import com.softinter.sicapi.repository.db.DbParameterRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmRequirementExportService;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
@@ -47,6 +50,7 @@ import lombok.RequiredArgsConstructor;
 public class PmRequirementController {
 
     private final PmRequirementService requirementService;
+    private final PmRequirementExportService requirementExportService;
     private final PmCustomerProjectRepository projectRepository;
     private final DbParameterRepository parameterRepository;
     private final CurrentUserService currentUserService;
@@ -154,23 +158,113 @@ public class PmRequirementController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
+
     @GetMapping("/combobox")
-@Operation(summary = "Get requirement combobox list")
-public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
-        @RequestParam(required = false) UUID projectId) {
-    UUID businessId = BusinessContextHolder.getBusinessId();
-    if (businessId == null) {
-        return ResponseEntity.badRequest().build();
+    @Operation(summary = "Get requirement combobox list")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
+            @RequestParam(required = false) UUID projectId) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<PmRequirement> requirements;
+        if (projectId != null) {
+            requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        } else {
+            requirements = requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        }
+        List<ComboboxResponse> list = requirements.stream()
+                .map(r -> new ComboboxResponse(r.getId().toString(), r.getTitle()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
     }
-    List<PmRequirement> requirements;
-    if (projectId != null) {
-        requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
-    } else {
-        requirements = requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+
+    // ================================================================
+    // Export
+    // ================================================================
+
+    /**
+     * Export requirement document as PDF.
+     * GET /api/pm/requirement/{id}/export?format=pdf
+     *
+     * @param id     Requirement UUID
+     * @param format export format (currently only "pdf" is supported)
+     */
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export requirement document as PDF")
+    public ResponseEntity<byte[]> exportRequirement(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "pdf") String format) {
+
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = requirementExportService.exportRequirementPdf(id, businessId);
+
+        // Resolve the filename from requirement code
+        String filename = "requirement_" + id + ".pdf";
+        try {
+            PmRequirement req = requirementRepository.findByIdAndBusinessId(id, businessId).orElse(null);
+            if (req != null && req.getRequirementCode() != null) {
+                filename = req.getRequirementCode().replaceAll("[^a-zA-Z0-9_\\-]", "_") + ".pdf";
+            }
+        } catch (Exception ignored) {}
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
-    List<ComboboxResponse> list = requirements.stream()
-            .map(r -> new ComboboxResponse(r.getId().toString(), r.getTitle()))
-            .collect(Collectors.toList());
-    return ResponseEntity.ok(list);
-}
+
+    /**
+     * Export endpoint matching frontend's RequirementExportService call:
+     * POST /api/pm/requirement/export  (body: { requirementId, format, data })
+     */
+    @PostMapping("/export")
+    @Operation(summary = "Export requirement document (POST, matches frontend export service)")
+    public ResponseEntity<byte[]> exportRequirementPost(
+            @RequestBody java.util.Map<String, Object> body) {
+
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Object reqIdObj = body.get("requirementId");
+        if (reqIdObj == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        UUID requirementId;
+        try {
+            requirementId = UUID.fromString(reqIdObj.toString());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = requirementExportService.exportRequirementPdf(requirementId, businessId);
+
+        String filename = "requirement_" + requirementId + ".pdf";
+        try {
+            PmRequirement req = requirementRepository.findByIdAndBusinessId(requirementId, businessId).orElse(null);
+            if (req != null && req.getRequirementCode() != null) {
+                filename = req.getRequirementCode().replaceAll("[^a-zA-Z0-9_\\-]", "_") + ".pdf";
+            }
+        } catch (Exception ignored) {}
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
 }

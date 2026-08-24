@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="RenewalReport"
+              language="java"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="515"
+              leftMargin="40"
+              rightMargin="40"
+              topMargin="40"
+              bottomMargin="40"
+              uuid="d1e2f3a4-b5c6-7890-abcd-ef1234567890">
+
+    <!-- ========================================================
+         STYLES DEFINITIONS (Clean, Minimal & Elegant)
+         ======================================================== -->
+    <style name="DocTitle" fontName="TH Sarabun New" fontSize="20" isBold="true" forecolor="#1E293B"/>
+    <style name="DocSubtitle" fontName="TH Sarabun New" fontSize="13" forecolor="#64748B"/>
+    
+    <style name="SectionHeading" fontName="TH Sarabun New" fontSize="14" isBold="true" forecolor="#1E293B"/>
+    
+    <style name="Label" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#475569"/>
+    <style name="Value" fontName="TH Sarabun New" fontSize="13" isBold="false" forecolor="#1E293B"/>
+    <style name="ValueBold" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#1E293B"/>
+    
+    <style name="ContentText" fontName="TH Sarabun New" fontSize="13" forecolor="#334155"/>
+    <style name="FooterText" fontName="TH Sarabun New" fontSize="11" forecolor="#94A3B8"/>
+
+    <!-- ========================================================
+         PARAMETERS
+         ======================================================== -->
+    <parameter name="exportDate" class="java.lang.String">
+        <defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+    </parameter>
+    <parameter name="businessName" class="java.lang.String">
+        <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+    </parameter>
+    <parameter name="logoPath" class="java.lang.String">
+        <defaultValueExpression><![CDATA["images/softinter_logo.png"]]></defaultValueExpression>
+    </parameter>
+
+    <!-- ========================================================
+         FIELDS
+         ======================================================== -->
+    <field name="renewalNo"          class="java.lang.String"/>
+    <field name="contractNo"         class="java.lang.String"/>
+    <field name="customerName"       class="java.lang.String"/>
+    <field name="projectName"        class="java.lang.String"/>
+    <field name="currentEndDate"     class="java.lang.String"/>
+    <field name="newStartDate"       class="java.lang.String"/>
+    <field name="newEndDate"         class="java.lang.String"/>
+    <field name="proposedAmount"     class="java.lang.String"/>
+    <field name="status"             class="java.lang.String"/>
+    <field name="remark"             class="java.lang.String"/>
+
+    <!-- ========================================================
+         TITLE BAND — Clean Minimal Header
+         ======================================================== -->
+    <title>
+        <band height="105">
+            <!-- Left: Logo & Company -->
+            <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="0" y="0" width="105" height="38"/>
+                <imageExpression><![CDATA[this.getClass().getClassLoader().getResourceAsStream($P{logoPath})]]></imageExpression>
+            </image>
+            <staticText>
+                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[SOFTINTER CO., LTD.]]></text>
+            </staticText>
+
+            <!-- Right: Title & Date -->
+            <staticText>
+                <reportElement style="DocTitle" x="230" y="0" width="285" height="24"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <text><![CDATA[ใบเสนอต่อสัญญาบริการบำรุงรักษา (MA)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <text><![CDATA[MA Contract Renewal Proposal]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="FooterText" x="230" y="42" width="285" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
+            </textField>
+
+            <!-- Divider -->
+            <line>
+                <reportElement x="0" y="68" width="515" height="1" forecolor="#CBD5E1"/>
+                <graphicElement><pen lineWidth="0.8"/></graphicElement>
+            </line>
+
+            <!-- Renewal Main Banner -->
+            <rectangle radius="3">
+                <reportElement x="0" y="74" width="515" height="26" backcolor="#F8FAFC" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" x="10" y="77" width="80" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[เลขที่ใบเสนอต่อ MA:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="95" y="77" width="410" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[($F{renewalNo} != null ? $F{renewalNo} : "-") + " [สถานะ: " + ($F{status} != null ? $F{status} : "DRAFT") + "]"]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- ========================================================
+         DETAIL BAND — Simple, Clean Sections
+         ======================================================== -->
+    <detail>
+        <band height="550">
+            <!-- ────────────────────────────────────────────────────────
+                 SECTION 1: ข้อมูลสัญญาเดิมและโครงการ
+                 ──────────────────────────────────────────────────────── -->
+            <staticText>
+                <reportElement style="SectionHeading" x="0" y="8" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[1. ข้อมูลสัญญาเดิมและโครงการ (Contract & Project Details)]]></text>
+            </staticText>
+            <line>
+                <reportElement x="0" y="28" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Row 1: Contract No & Customer -->
+            <staticText>
+                <reportElement style="Label" x="10" y="34" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[เลขที่สัญญาเดิม:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="110" y="34" width="145" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{contractNo} != null ? $F{contractNo} : "-"]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="34" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[ลูกค้า / องค์กร:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="358" y="34" width="150" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></textFieldExpression>
+            </textField>
+
+            <!-- Row 2: Project & Current End Date -->
+            <staticText>
+                <reportElement style="Label" x="10" y="54" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[โครงการ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="110" y="54" width="145" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="54" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[วันสิ้นสุดสัญญาเดิม:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="370" y="54" width="138" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{currentEndDate} != null ? $F{currentEndDate} : "-"]]></textFieldExpression>
+            </textField>
+
+
+            <!-- ────────────────────────────────────────────────────────
+                 SECTION 2: ข้อเสนอการต่อสัญญาใหม่
+                 ──────────────────────────────────────────────────────── -->
+            <staticText>
+                <reportElement style="SectionHeading" x="0" y="90" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[2. ข้อเสนอระยะเวลาและมูลค่าการต่อสัญญา (Renewal Term & Pricing)]]></text>
+            </staticText>
+            <line>
+                <reportElement x="0" y="110" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Row 1: New Start Date & New End Date -->
+            <staticText>
+                <reportElement style="Label" x="10" y="116" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[วันเริ่มต้นรอบใหม่:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="118" y="116" width="135" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{newStartDate} != null ? $F{newStartDate} : "-"]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="116" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[วันสิ้นสุดรอบใหม่:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="378" y="116" width="130" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{newEndDate} != null ? $F{newEndDate} : "-"]]></textFieldExpression>
+            </textField>
+
+            <!-- Row 2: Proposed Amount & Status -->
+            <staticText>
+                <reportElement style="Label" x="10" y="138" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[มูลค่าเสนอต่อสัญญา:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="118" y="138" width="135" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{proposedAmount} != null ? $F{proposedAmount} + " บาท" : "0.00 บาท"]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="138" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[สถานะเอกสาร:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="378" y="138" width="130" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{status} != null ? $F{status} : "-"]]></textFieldExpression>
+            </textField>
+
+
+            <!-- ────────────────────────────────────────────────────────
+                 SECTION 3: หมายเหตุและข้อกำหนดเพิ่มเติม (Remark)
+                 ──────────────────────────────────────────────────────── -->
+            <staticText>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="174" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[3. เงื่อนไขและหมายเหตุเพิ่มเติม (Terms & Remarks)]]></text>
+            </staticText>
+            <line>
+                <reportElement positionType="Float" x="0" y="194" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <rectangle radius="3">
+                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="202" width="515" height="150" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="ContentText" positionType="Float" x="10" y="208" width="495" height="138"/>
+                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
+                <textFieldExpression><![CDATA[$F{remark} != null && !$F{remark}.isBlank() ? $F{remark} : "การต่อสัญญาบริการบำรุงรักษาครอบคลุมการแก้ไขปัญหา การให้คำปรึกษา และการปรับปรุงความเสถียรของระบบตามขอบเขตงานเดิม"]]></textFieldExpression>
+            </textField>
+
+
+            <!-- ────────────────────────────────────────────────────────
+                 SECTION 4: การลงนามยืนยัน (Sign-off)
+                 ──────────────────────────────────────────────────────── -->
+            <staticText>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="375" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[4. การลงนามอนุมัติและยืนยันการต่อสัญญา (Sign-off & Confirmation)]]></text>
+            </staticText>
+            <line>
+                <reportElement positionType="Float" x="0" y="395" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Signatures: Proposer -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="0" y="407" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" positionType="Float" x="10" y="413" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ผู้เสนอการต่อสัญญา (Account Manager)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="462" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="484" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ตำแหน่ง: .....................................................]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="505" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+            </staticText>
+
+            <!-- Signatures: Client Confirmation -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="270" y="407" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" positionType="Float" x="280" y="413" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ลูกค้าผู้มีอำนาจอนุมัติ (Customer Authorized)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="462" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="484" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ตำแหน่ง: .....................................................]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="505" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+            </staticText>
+        </band>
+    </detail>
+
+    <!-- ========================================================
+         PAGE FOOTER
+         ======================================================== -->
+    <pageFooter>
+        <band height="30">
+            <line>
+                <reportElement x="0" y="4" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+            <staticText>
+                <reportElement style="FooterText" x="0" y="10" width="350" height="16"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+            </staticText>
+            <textField>
+                <reportElement style="FooterText" x="380" y="10" width="135" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+</jasperReport>

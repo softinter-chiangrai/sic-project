@@ -15,7 +15,8 @@ export class RequirementExportService {
 
 
   async exportRequirement(data: RequirementModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
-    const url = `${this.apiBaseUrl}/api/requirement/export`;
+    // POST /api/pm/requirement/export
+    const url = `${this.apiBaseUrl}/api/pm/requirement/export`;
 
     const payload = {
       requirementId: data.id,
@@ -44,7 +45,8 @@ export class RequirementExportService {
    * Export using JasperReports (if backend supports)
    */
   async exportWithJasper(requirementId: string, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
-    const url = `${this.apiBaseUrl}/api/requirement/export/jasper/${requirementId}?format=${format}`;
+    // GET /api/pm/requirement/{id}/export?format=pdf
+    const url = `${this.apiBaseUrl}/api/pm/requirement/${requirementId}/export?format=${format}`;
     
     const response = await lastValueFrom(
       this.http.get(url, {

@@ -58,4 +58,8 @@ export class Pmrt02Service {
     let httpParams = new HttpParams().set('businessId', this.getBusinessId());
     return this.http.delete<void>(`${this.baseUrl}/${id}`, { params: httpParams });
   }
+
+  exportProjectPdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/export?format=pdf`, { responseType: 'blob' });
+  }
 }

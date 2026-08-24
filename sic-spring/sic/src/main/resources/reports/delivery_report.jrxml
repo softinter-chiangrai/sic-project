@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="DeliveryReport"
+              language="java"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="515"
+              leftMargin="40"
+              rightMargin="40"
+              topMargin="40"
+              bottomMargin="40"
+              uuid="e1f2a3b4-c5d6-7890-bcde-fa1234567890">
+
+    <!-- ========================================================
+         STYLES DEFINITIONS (Clean, Minimal & Elegant)
+         ======================================================== -->
+    <style name="DocTitle" fontName="TH Sarabun New" fontSize="20" isBold="true" forecolor="#1E293B"/>
+    <style name="DocSubtitle" fontName="TH Sarabun New" fontSize="13" forecolor="#64748B"/>
+    
+    <style name="SectionHeading" fontName="TH Sarabun New" fontSize="14" isBold="true" forecolor="#1E293B"/>
+    <style name="TableHeader" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#1E293B" backcolor="#F1F5F9" mode="Opaque"/>
+    
+    <style name="Label" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#475569"/>
+    <style name="Value" fontName="TH Sarabun New" fontSize="13" isBold="false" forecolor="#1E293B"/>
+    <style name="ValueBold" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#1E293B"/>
+    
+    <style name="ContentText" fontName="TH Sarabun New" fontSize="13" forecolor="#334155"/>
+    <style name="FooterText" fontName="TH Sarabun New" fontSize="11" forecolor="#94A3B8"/>
+
+    <!-- ========================================================
+         PARAMETERS
+         ======================================================== -->
+    <parameter name="exportDate" class="java.lang.String">
+        <defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+    </parameter>
+    <parameter name="businessName" class="java.lang.String">
+        <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+    </parameter>
+    <parameter name="logoPath" class="java.lang.String">
+        <defaultValueExpression><![CDATA["images/softinter_logo.png"]]></defaultValueExpression>
+    </parameter>
+
+    <!-- Header Parameters for Single Delivery Instance -->
+    <parameter name="deliveryCode"       class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="deliveryTitle"      class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="projectName"        class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="contractNo"         class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="deliveryType"       class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="deliveryVersion"    class="java.lang.String"><defaultValueExpression><![CDATA["1.0"]]></defaultValueExpression></parameter>
+    <parameter name="deliveryDate"       class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="status"             class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+    <parameter name="deliverySummary"    class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+
+    <!-- ========================================================
+         FIELDS (Items & Checklist Rows)
+         ======================================================== -->
+    <field name="category"           class="java.lang.String"/>
+    <field name="code"               class="java.lang.String"/>
+    <field name="title"              class="java.lang.String"/>
+    <field name="status"             class="java.lang.String"/>
+    <field name="remark"             class="java.lang.String"/>
+
+    <!-- ========================================================
+         TITLE BAND — Clean Minimal Header
+         ======================================================== -->
+    <title>
+        <band height="255">
+            <!-- Left: Logo & Company -->
+            <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="0" y="0" width="105" height="38"/>
+                <imageExpression><![CDATA[this.getClass().getClassLoader().getResourceAsStream($P{logoPath})]]></imageExpression>
+            </image>
+            <staticText>
+                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[SOFTINTER CO., LTD.]]></text>
+            </staticText>
+
+            <!-- Right: Title & Date -->
+            <staticText>
+                <reportElement style="DocTitle" x="230" y="0" width="285" height="24"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <text><![CDATA[เอกสารส่งมอบและตรวจรับงาน]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <text><![CDATA[Delivery Acceptance & Handover Certificate]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="FooterText" x="230" y="42" width="285" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
+            </textField>
+
+            <!-- Divider -->
+            <line>
+                <reportElement x="0" y="68" width="515" height="1" forecolor="#CBD5E1"/>
+                <graphicElement><pen lineWidth="0.8"/></graphicElement>
+            </line>
+
+            <!-- Delivery Main Banner -->
+            <rectangle radius="3">
+                <reportElement x="0" y="74" width="515" height="26" backcolor="#F8FAFC" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" x="10" y="77" width="80" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[หัวข้อการส่งมอบ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="95" y="77" width="410" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[($P{deliveryCode} != null ? "[" + $P{deliveryCode} + "] " : "") + ($P{deliveryTitle} != null ? $P{deliveryTitle} : "-")]]></textFieldExpression>
+            </textField>
+
+            <!-- General Info Details -->
+            <staticText>
+                <reportElement style="SectionHeading" x="0" y="108" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[1. ข้อมูลการส่งมอบงาน (Handover Details)]]></text>
+            </staticText>
+            <line>
+                <reportElement x="0" y="128" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Row 1: Code & Status -->
+            <staticText>
+                <reportElement style="Label" x="10" y="134" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[รหัสการส่งมอบ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="110" y="134" width="145" height="18"/>
+                <textFieldExpression><![CDATA[$P{deliveryCode}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="134" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[สถานะ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="358" y="134" width="150" height="18"/>
+                <textFieldExpression><![CDATA[$P{status}]]></textFieldExpression>
+            </textField>
+
+            <!-- Row 2: Project & Contract -->
+            <staticText>
+                <reportElement style="Label" x="10" y="154" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[โครงการ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="110" y="154" width="145" height="18"/>
+                <textFieldExpression><![CDATA[$P{projectName}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="154" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[สัญญาอ้างอิง:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="358" y="154" width="150" height="18"/>
+                <textFieldExpression><![CDATA[$P{contractNo}]]></textFieldExpression>
+            </textField>
+
+            <!-- Row 3: Version & Delivery Date -->
+            <staticText>
+                <reportElement style="Label" x="10" y="174" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[เวอร์ชันที่ส่งมอบ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="110" y="174" width="145" height="18"/>
+                <textFieldExpression><![CDATA[$P{deliveryVersion}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement style="Label" x="270" y="174" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[วันที่ส่งมอบ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="358" y="174" width="150" height="18"/>
+                <textFieldExpression><![CDATA[$P{deliveryDate}]]></textFieldExpression>
+            </textField>
+
+            <!-- Summary Text Box -->
+            <staticText>
+                <reportElement style="Label" x="10" y="196" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[สรุปการส่งมอบ:]]></text>
+            </staticText>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="ContentText" x="110" y="198" width="395" height="26"/>
+                <textFieldExpression><![CDATA[$P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : "ส่งมอบงานตามข้อกำหนดเรียบร้อย"]]></textFieldExpression>
+            </textField>
+
+            <!-- Section 2 Header -->
+            <staticText>
+                <reportElement style="SectionHeading" x="0" y="232" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[2. รายการส่งมอบและรายการตรวจสอบ (Deliverables & Checklists)]]></text>
+            </staticText>
+            <line>
+                <reportElement x="0" y="252" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+        </band>
+    </title>
+
+    <!-- ========================================================
+         COLUMN HEADER FOR DELIVERABLE ITEMS TABLE
+         ======================================================== -->
+    <columnHeader>
+        <band height="22">
+            <rectangle radius="2">
+                <reportElement style="TableHeader" x="0" y="0" width="515" height="22"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="TableHeader" x="6" y="0" width="95" height="22"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[หมวดหมู่]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="TableHeader" x="105" y="0" width="80" height="22"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[รหัสอ้างอิง]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="TableHeader" x="190" y="0" width="185" height="22"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[รายการงานที่ส่งมอบ / Checklist]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="TableHeader" x="380" y="0" width="65" height="22"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ผลการตรวจ]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="TableHeader" x="450" y="0" width="60" height="22"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[หมายเหตุ]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <!-- ========================================================
+         DETAIL BAND — Table Rows
+         ======================================================== -->
+    <detail>
+        <band height="22">
+            <rectangle>
+                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="515" height="22" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.4" lineColor="#E2E8F0"/></graphicElement>
+            </rectangle>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="6" y="2" width="95" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{category}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="105" y="2" width="80" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{code}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="190" y="2" width="185" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="ValueBold" positionType="Float" x="380" y="2" width="65" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="450" y="2" width="60" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{remark}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <!-- ========================================================
+         PAGE FOOTER
+         ======================================================== -->
+    <pageFooter>
+        <band height="30">
+            <line>
+                <reportElement x="0" y="4" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+            <staticText>
+                <reportElement style="FooterText" x="0" y="10" width="350" height="16"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+            </staticText>
+            <textField>
+                <reportElement style="FooterText" x="380" y="10" width="135" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <!-- ========================================================
+         SUMMARY BAND — Clean Sign-off Section
+         ======================================================== -->
+    <summary>
+        <band height="185">
+            <staticText>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="15" width="515" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[3. การลงนามส่งมอบและตรวจรับงาน (Sign-off & Handover Certificate)]]></text>
+            </staticText>
+            <line>
+                <reportElement positionType="Float" x="0" y="35" width="515" height="1" forecolor="#E2E8F0"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Signatures: Delivery PM -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="0" y="45" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" positionType="Float" x="10" y="51" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ผู้ส่งมอบงาน (Project Manager)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="100" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="122" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ตำแหน่ง: .....................................................]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="143" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+            </staticText>
+
+            <!-- Signatures: Customer Acceptance -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="270" y="45" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Label" positionType="Float" x="280" y="51" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ผู้ตรวจรับงาน / ลูกค้า (Customer Acceptance)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="100" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="122" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[ตำแหน่ง: .....................................................]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="143" width="225" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+            </staticText>
+        </band>
+    </summary>
+
+</jasperReport>

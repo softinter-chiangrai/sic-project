@@ -47,39 +47,8 @@ export class Pmrt01Component implements OnInit {
   protected businessId = '';
 
   // ===== Computed =====
-  protected filteredCustomers = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    let result = this.customers();
-    if (term) {
-      result = result.filter(
-        (c) =>
-          c.customerCode?.toLowerCase().includes(term) ||
-          c.companyNameEn?.toLowerCase().includes(term) ||
-          c.companyNameLocal?.toLowerCase().includes(term) ||
-          c.email?.toLowerCase().includes(term) ||
-          c.contactPerson?.toLowerCase().includes(term),
-      );
-    }
-    if (status === 'active') result = result.filter((c) => c.isActive);
-    else if (status === 'inactive') result = result.filter((c) => !c.isActive);
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof CustomerModel] ?? '';
-      const bVal = b[sortField as keyof CustomerModel] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return result;
-  });
-
   protected paginatedCustomers = computed(() => {
-    const all = this.filteredCustomers();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
+    return this.customers();
   });
 
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
@@ -114,7 +83,14 @@ export class Pmrt01Component implements OnInit {
     this.isLoading.set(true);
     const page = this.currentPage() - 1;
     this.service
-      .getCustomers(this.businessId, page, this.pageSize(), this.searchTerm() || undefined)
+      .getCustomers(
+        this.businessId,
+        page,
+        this.pageSize(),
+        this.searchTerm() || undefined,
+        this.sortBy() || undefined,
+        this.sortDir()
+      )
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (pageData) => {
@@ -133,17 +109,20 @@ export class Pmrt01Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.loadCustomers();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.loadCustomers();
   }
 
   onFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.filterStatus.set(select.value);
     this.currentPage.set(1);
+    this.loadCustomers();
   }
 
   onSortChange(field: string) {
@@ -153,12 +132,13 @@ export class Pmrt01Component implements OnInit {
       this.sortBy.set(field);
       this.sortDir.set('asc');
     }
+    this.loadCustomers();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    this.loadCustomers(); // โหลดข้อมูลใหม่
+    this.loadCustomers();
   }
 
   goToAdd() {

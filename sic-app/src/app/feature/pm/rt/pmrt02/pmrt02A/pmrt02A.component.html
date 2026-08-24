@@ -1,167 +1,272 @@
 <!-- src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.html -->
-@if (isLoading) {
-  <div class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
-  </div>
-}
+<div class="space-y-6 max-w-5xl mx-auto py-4">
 
-@if (!isLoading && form) {
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="grid grid-cols-6 gap-4">
-      
-      <!-- HEADER -->
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isViewOnly ? 'รายละเอียดโครงการ' : isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ' }}
-        </h2>
-        @if (customerName()) {
-          <p class="text-sm text-[var(--text-muted)] mt-2">
-            ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
-          </p>
-        }
+  <!-- ===== LOADING ===== -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+    </div>
+  }
+
+  <!-- ===== FORM ===== -->
+  @if (!isLoading && form) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+
+      <!-- HEADER BAR -->
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            (click)="onBack()"
+            class="w-10 h-10 rounded-xl flex items-center justify-center border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] transition-all cursor-pointer shadow-sm"
+            title="ย้อนกลับ"
+          >
+            <i class="bi bi-arrow-left text-lg"></i>
+          </button>
+          <div>
+            <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-briefcase-fill text-[var(--crm-primary)]"></i>
+              {{ isViewOnly ? 'รายละเอียดโครงการ' : isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มโครงการใหม่' }}
+            </h1>
+            @if (customerName()) {
+              <p class="text-sm text-[var(--text-muted)] mt-0.5 flex items-center gap-1.5">
+                <i class="bi bi-building text-xs"></i>
+                ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
+              </p>
+            }
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS (Top Right) -->
+        <div class="flex items-center gap-2.5">
+          <sic-button
+            [type]="'button'"
+            variant="secondary"
+            (click)="onBack()"
+          >
+            <i class="bi bi-x-lg mr-1.5"></i> ยกเลิก
+          </sic-button>
+
+          @if (!isViewOnly) {
+            <sic-button
+              [type]="'submit'"
+              variant="primary"
+              [disabled]="isSaving"
+            >
+              <i class="bi bi-floppy mr-1.5"></i>
+              {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึกการแก้ไข' : 'สร้างโครงการ') }}
+            </sic-button>
+          }
+        </div>
       </div>
 
-      <!-- Project Code -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="รหัสโครงการ"
-          formControlName="projectCode"
-          [required]="true"
-          placeholder="PRJ-001"
-        ></sic-input>
-        @if (form.get('projectCode')?.touched && form.get('projectCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัสโครงการ</p>
-        }
-      </div>
-
-      <!-- Project Name -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input
-          label="ชื่อโครงการ"
-          formControlName="projectName"
-          [required]="true"
-          placeholder="ระบบ CRM"
-        ></sic-input>
-        @if (form.get('projectName')?.touched && form.get('projectName')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อโครงการ</p>
-        }
-      </div>
-
-      <!-- ✅ Hidden fields -->
+      <!-- Hidden fields -->
       <input type="hidden" formControlName="customerId" />
       <input type="hidden" formControlName="contractId" />
       <input type="hidden" formControlName="contractNo" />
 
-      <!-- Dates -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-datepicker
-            label="วันที่เริ่ม"
-            formControlName="startDate"
-            [required]="true"
-            placeholder="เลือกวันที่เริ่ม"
-          ></sic-datepicker>
-          @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
-          }
+      <!-- CARD 1: ข้อมูลทั่วไปของโครงการ (General Information) -->
+      <div class="p-6 md:p-7 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-5">
+        <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+          <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+            ข้อมูลทั่วไปของโครงการ
+          </h2>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)]">
+            Basic Details
+          </span>
         </div>
-        <div class="flex-1">
-          <sic-datepicker
-            label="วันที่สิ้นสุดตามแผน"
-            formControlName="plannedEndDate"
-            [required]="true"
-            placeholder="เลือกวันที่สิ้นสุด"
-          ></sic-datepicker>
-          @if (form.get('plannedEndDate')?.touched && form.get('plannedEndDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
-          }
-        </div>
-      </div>
 
-      <!-- Actual End Date (Optional) -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-datepicker
-          label="วันที่สิ้นสุดจริง"
-          formControlName="actualEndDate"
-          placeholder="เลือกวันที่สิ้นสุดจริง"
-        ></sic-datepicker>
-      </div>
-
-      <!-- Mandays -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <div class="flex-1">
-          <sic-number
-            label="Manday ตามแผน"
-            formControlName="budgetManday"
-            [required]="true"
-            placeholder="0"
-          ></sic-number>
-          @if (form.get('budgetManday')?.touched && form.get('budgetManday')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday</p>
-          }
-        </div>
-        <div class="flex-1">
-          <sic-number
-            label="Manday ที่ใช้จริง"
-            formControlName="usedManday"
-            placeholder="0"
-          ></sic-number>
-        </div>
-      </div>
-
-      <!-- ✅ Priority -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ระดับความสำคัญ</label>
-        <select
-          formControlName="priority"
-          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-        >
-          @for (priority of priorityOptions; track priority) {
-            <option [value]="priority">{{ priority }}</option>
-          }
-        </select>
-      </div>
-
-      <!-- Description -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
-          label="คำอธิบายเพิ่มเติม"
-          formControlName="description"
-          [rows]="3"
-          placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับโครงการ"
-        ></sic-input-area>
-      </div>
-
-      <!-- Active Status -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
-          />
-          <span class="text-[var(--text-active)]">เปิดใช้งานโครงการ</span>
-        </label>
-      </div>
-
-      <!-- Buttons -->
-      <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
-            <i class="bi bi-arrow-left"></i> ย้อนกลับ
-          </sic-button>
-        </div>
-        @if (!isViewOnly) {
-          <div class="flex-1">
-            <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">
-              <i class="bi bi-floppy"></i>
-              {{ isEdit ? 'บันทึก' : 'สร้าง' }}
-            </sic-button>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+          <!-- Project Code -->
+          <div class="md:col-span-4">
+            <sic-input
+              label="รหัสโครงการ"
+              formControlName="projectCode"
+              [required]="true"
+              placeholder="เช่น PRJ-001"
+              [disabled]="isViewOnly"
+            ></sic-input>
+            @if (form.get('projectCode')?.touched && form.get('projectCode')?.invalid) {
+              <p class="text-xs text-[var(--crm-danger)] mt-1.5 flex items-center gap-1">
+                <i class="bi bi-exclamation-circle"></i> กรุณาระบุรหัสโครงการ
+              </p>
+            }
           </div>
+
+          <!-- Project Name -->
+          <div class="md:col-span-8">
+            <sic-input
+              label="ชื่อโครงการ"
+              formControlName="projectName"
+              [required]="true"
+              placeholder="เช่น ระบบซื้อขายสินค้าออนไลน์"
+              [disabled]="isViewOnly"
+            ></sic-input>
+            @if (form.get('projectName')?.touched && form.get('projectName')?.invalid) {
+              <p class="text-xs text-[var(--crm-danger)] mt-1.5 flex items-center gap-1">
+                <i class="bi bi-exclamation-circle"></i> กรุณาระบุชื่อโครงการ
+              </p>
+            }
+          </div>
+
+          <!-- Priority -->
+          <div class="md:col-span-6">
+            <sic-combobox
+              label="ระดับความสำคัญ"
+              formControlName="priority"
+              [items]="priorityOptions"
+              valueField="value"
+              displayField="text"
+              [disabled]="isViewOnly"
+            ></sic-combobox>
+          </div>
+
+          <!-- Active Status Switch -->
+          <div class="md:col-span-6 flex items-center md:pt-6">
+            <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] w-full hover:border-[var(--crm-primary)]/50 transition-colors">
+              <input
+                type="checkbox"
+                formControlName="isActive"
+                [disabled]="isViewOnly"
+                class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded cursor-pointer"
+              />
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-[var(--text-active)]">เปิดใช้งานโครงการ (Active Status)</span>
+                <span class="text-xs text-[var(--text-muted)]">กำหนดให้โครงการนี้พร้อมทำงานและแสดงผลในระบบ</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: แผนงานและระยะเวลา (Timeline & Workload) -->
+      <div class="p-6 md:p-7 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-5">
+        <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+          <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-calendar-range text-[var(--crm-primary)]"></i>
+            ระยะเวลาและ Manday
+          </h2>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)]">
+            Schedule & Estimation
+          </span>
+        </div>
+
+        <!-- Dates Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <sic-datepicker
+              label="วันที่เริ่มโครงการ"
+              formControlName="startDate"
+              [required]="true"
+              placeholder="เลือกวันที่เริ่ม"
+              [disabled]="isViewOnly"
+            ></sic-datepicker>
+            @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
+              <p class="text-xs text-[var(--crm-danger)] mt-1.5 flex items-center gap-1">
+                <i class="bi bi-exclamation-circle"></i> กรุณาระบุวันที่เริ่ม
+              </p>
+            }
+          </div>
+
+          <div>
+            <sic-datepicker
+              label="วันที่สิ้นสุดตามแผน"
+              formControlName="plannedEndDate"
+              [required]="true"
+              placeholder="เลือกวันที่สิ้นสุดตามแผน"
+              [disabled]="isViewOnly"
+            ></sic-datepicker>
+            @if (form.get('plannedEndDate')?.touched && form.get('plannedEndDate')?.invalid) {
+              <p class="text-xs text-[var(--crm-danger)] mt-1.5 flex items-center gap-1">
+                <i class="bi bi-exclamation-circle"></i> กรุณาระบุวันที่สิ้นสุด
+              </p>
+            }
+          </div>
+
+          <div>
+            <sic-datepicker
+              label="วันที่สิ้นสุดจริง"
+              formControlName="actualEndDate"
+              placeholder="เลือกวันที่สิ้นสุดจริง (ถ้ามี)"
+              [disabled]="isViewOnly"
+            ></sic-datepicker>
+          </div>
+        </div>
+
+        <!-- Manday Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[var(--border)]/60">
+          <div>
+            <sic-number
+              label="Manday ตามแผน (Budget Manday)"
+              formControlName="budgetManday"
+              [required]="true"
+              placeholder="0.00"
+              [disabled]="isViewOnly"
+            ></sic-number>
+            @if (form.get('budgetManday')?.touched && form.get('budgetManday')?.invalid) {
+              <p class="text-xs text-[var(--crm-danger)] mt-1.5 flex items-center gap-1">
+                <i class="bi bi-exclamation-circle"></i> กรุณาระบุ Manday ตามแผน
+              </p>
+            }
+          </div>
+
+          <div>
+            <sic-number
+              label="Manday ที่ใช้จริง (Used Manday)"
+              formControlName="usedManday"
+              placeholder="0.00"
+              [disabled]="isViewOnly"
+            ></sic-number>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: รายละเอียดและคำอธิบายโครงการ (Rich Text Editor with Tiptap) -->
+      <div class="p-6 md:p-7 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+          <div class="flex items-center gap-2">
+            <i class="bi bi-file-earmark-richtext text-[var(--crm-primary)]"></i>
+            <h2 class="text-base font-semibold text-[var(--text-active)]">คำอธิบายเพิ่มเติม</h2>
+          </div>
+          <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+            <i class="bi bi-markdown"></i> รองรับ Rich Text Formatting
+          </span>
+        </div>
+
+        <div>
+          <sic-tiptap-editor
+            formControlName="description"
+            placeholderInput="ระบุคำอธิบาย ขอบเขต หรือรายละเอียดเพิ่มเติมของโครงการ..."
+            minHeightInput="180px"
+            [disabledInput]="isViewOnly"
+          ></sic-tiptap-editor>
+        </div>
+      </div>
+
+      <!-- BOTTOM ACTIONS BAR -->
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <sic-button
+          [type]="'button'"
+          variant="secondary"
+          (click)="onBack()"
+        >
+          <i class="bi bi-arrow-left mr-1.5"></i> ย้อนกลับ
+        </sic-button>
+
+        @if (!isViewOnly) {
+          <sic-button
+            [type]="'submit'"
+            variant="primary"
+            [disabled]="isSaving"
+          >
+            <i class="bi bi-floppy mr-1.5"></i>
+            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึกข้อมูล' : 'สร้างโครงการ') }}
+          </sic-button>
         }
       </div>
 
-    </div>
-  </form>
-}
+    </form>
+  }
+</div>

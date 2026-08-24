@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import com.softinter.sicapi.service.PmCustomerProjectExportService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 @RestController
 @RequestMapping("/api/pm/customer-projects")
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ import java.util.UUID;
 public class PmCustomerProjectController {
 
     private final PmCustomerProjectService projectService;
+    private final PmCustomerProjectExportService projectExportService;
 
     @GetMapping
     @Operation(summary = "รายการโครงการของลูกค้า (แบบแบ่งหน้า)")
@@ -54,6 +59,37 @@ public class PmCustomerProjectController {
     @Operation(summary = "ดึงข้อมูลโครงการโดย ID")
     public ResponseEntity<PmCustomerProjectResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(projectService.findById(id));
+    }
+
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export project document as PDF (JasperReports)")
+    public ResponseEntity<byte[]> exportProject(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "pdf") String format) {
+
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = projectExportService.exportProjectPdf(id, businessId);
+
+        String filename = "project_" + id + ".pdf";
+        try {
+            PmCustomerProjectResponse proj = projectService.findById(id);
+            if (proj != null && proj.getProjectCode() != null) {
+                filename = proj.getProjectCode().replaceAll("[^a-zA-Z0-9_\\-]", "_") + ".pdf";
+            }
+        } catch (Exception ignored) {}
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 
     @PostMapping

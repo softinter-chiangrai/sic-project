@@ -28,7 +28,19 @@ import java.util.UUID;
 public class PmMaRenewalController {
 
     private final PmMaRenewalService renewalService;
+    private final com.softinter.sicapi.service.PmMaRenewalExportService exportService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export MA Renewal Proposal Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = exportService.exportRenewalPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"ma-renewal-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
 
     @GetMapping("/paging")
     @Operation(summary = "Get MA renewal proposals list with pagination")

@@ -33,7 +33,19 @@ import com.softinter.sicapi.util.PaginationUtil;
 public class PmCustomerContractController {
 
     private final PmCustomerContractService contractService;
+    private final com.softinter.sicapi.service.PmCustomerContractExportService exportService;
     private final BusinessAccessService businessAccessService;
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export Contract Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = businessAccessService.getBusinessId();
+        byte[] pdfBytes = exportService.exportContractPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"contract-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
 
     // ===== รายการสัญญา =====
     @GetMapping

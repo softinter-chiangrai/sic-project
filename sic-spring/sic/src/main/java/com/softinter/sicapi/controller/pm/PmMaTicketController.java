@@ -28,7 +28,19 @@ import java.util.UUID;
 public class PmMaTicketController {
 
     private final PmMaTicketService ticketService;
+    private final com.softinter.sicapi.service.PmMaTicketExportService exportService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export MA Ticket Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = exportService.exportTicketPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"ma-ticket-" + id + ".pdf\"")
+                .body(pdfBytes);
+    }
 
     @GetMapping("/paging")
     @Operation(summary = "Get MA tickets list with pagination")

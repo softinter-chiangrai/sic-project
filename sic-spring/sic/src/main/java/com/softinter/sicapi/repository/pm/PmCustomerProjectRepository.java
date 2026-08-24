@@ -25,6 +25,10 @@ public interface PmCustomerProjectRepository extends JpaRepository<PmCustomerPro
 
     Optional<PmCustomerProject> findByIdAndIsDeleteFalse(UUID id);
 
+    Optional<PmCustomerProject> findByIdAndBusinessId(UUID id, UUID businessId);
+
+    Optional<PmCustomerProject> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
+
     Page<PmCustomerProject> findByCustomerIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(UUID customerId, String keyword, Pageable pageable);
 
     // สำหรับค้นหาด้วย keyword + businessId
