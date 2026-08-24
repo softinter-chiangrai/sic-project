@@ -1,16 +1,14 @@
 // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
 
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { delay, finalize } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 
-import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { ProjectDashboard, RecentPhase, RecentTask } from './pmrt03.model';
+import { Pmrt03Service } from './pmrt03.service';
 
 @Component({
   selector: 'app-pmrt03',
@@ -23,7 +21,7 @@ import { ProjectDashboard, RecentPhase, RecentTask } from './pmrt03.model';
 export class Pmrt03Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private http = inject(HttpClient);
+  private pmrt03Service = inject(Pmrt03Service);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
 
@@ -32,8 +30,6 @@ export class Pmrt03Component implements OnInit {
   protected project = signal<ProjectDashboard | null>(null);
   protected projectId = signal<string>('');
   protected error = signal<string | null>(null);
-
-  private apiUrl = environment.apiBaseUrl + '/api/pm/projects';
 
   // ===== Lifecycle =====
   ngOnInit() {
@@ -53,8 +49,7 @@ export class Pmrt03Component implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    // ใช้ Mock Data (เปลี่ยนเป็น HTTP จริงเมื่อเชื่อมต่อ API)
-    this.getMockData(id)
+    this.pmrt03Service.getDashboard(id)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (data) => {
@@ -67,92 +62,6 @@ export class Pmrt03Component implements OnInit {
           this.navigation.navigate(['/feature/pm/pmrt02']);
         },
       });
-  }
-
-  // ===== Mock Data (ลบเมื่อเชื่อมต่อ API จริง) =====
-  private getMockData(id: string): Observable<ProjectDashboard> {
-    const mockData: ProjectDashboard = {
-      id: id,
-      projectCode: 'PRJ-001',
-      projectName: 'ระบบบริหารจัดการลูกค้า (CRM)',
-      customerId: '1',
-      customerName: 'บริษัท ซอฟต์อินเตอร์ จำกัด',
-      contractId: '1',
-      contractNo: 'CT-001',
-      projectManager: 'สมศักดิ์ รุ่งเรือง',
-      ba: 'สมหญิง รักเรียน',
-      sa: 'วิชัย พัฒนาชัย',
-      startDate: '2024-01-15',
-      plannedEndDate: '2024-06-30',
-      actualEndDate: undefined,
-      budgetManday: 120,
-      usedManday: 85,
-      status: 'Development',
-      priority: 'High',
-      description:
-        'พัฒนาระบบ CRM สำหรับบริหารจัดการข้อมูลลูกค้า ติดตามการขาย และการบริการหลังการขาย',
-      isActive: true,
-      phaseCount: 5,
-      taskCount: 23,
-      taskCompletedCount: 12,
-      requirementCount: 15,
-      bugCount: 8,
-      bugOpenCount: 3,
-      recentPhases: [
-        {
-          id: 'p1',
-          phaseCode: 'PH-001',
-          phaseName: 'Requirement & Analysis',
-          status: 'Done',
-          progress: 100,
-          endDate: '2024-02-28',
-        },
-        {
-          id: 'p2',
-          phaseCode: 'PH-002',
-          phaseName: 'System Design',
-          status: 'In Progress',
-          progress: 75,
-          endDate: '2024-03-31',
-        },
-        {
-          id: 'p3',
-          phaseCode: 'PH-003',
-          phaseName: 'Development',
-          status: 'Not Started',
-          progress: 0,
-          endDate: '2024-05-31',
-        },
-      ],
-      recentTasks: [
-        {
-          id: 't1',
-          taskCode: 'TASK-001',
-          taskName: 'ออกแบบ Database Schema',
-          assignedTo: 'วิชัย พัฒนาชัย',
-          status: 'Done',
-          priority: 'High',
-        },
-        {
-          id: 't2',
-          taskCode: 'TASK-002',
-          taskName: 'พัฒนา API Login',
-          assignedTo: 'สมชาย ใจดี',
-          status: 'In Progress',
-          priority: 'High',
-        },
-        {
-          id: 't3',
-          taskCode: 'TASK-003',
-          taskName: 'พัฒนา UI Dashboard',
-          assignedTo: 'มานี มีทรัพย์',
-          status: 'Todo',
-          priority: 'Medium',
-        },
-      ],
-    };
-
-    return of(mockData).pipe(delay(500));
   }
 
   // ===== Navigation Actions =====

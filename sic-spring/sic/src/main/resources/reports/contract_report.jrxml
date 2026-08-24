@@ -37,21 +37,19 @@
     <parameter name="businessName" class="java.lang.String">
         <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
     </parameter>
-    <parameter name="logoPath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["images/softinter_logo.png"]]></defaultValueExpression>
-    </parameter>
+    <parameter name="logoStream" class="java.io.InputStream"/>
 
     <!-- ========================================================
          FIELDS
          ======================================================== -->
     <field name="contractNo"         class="java.lang.String"/>
-    <field name="contractType"       class="java.lang.String"/>
-    <field name="customerName"       class="java.lang.String"/>
     <field name="projectName"        class="java.lang.String"/>
-    <field name="contractValue"      class="java.lang.String"/>
-    <field name="signStatus"         class="java.lang.String"/>
+    <field name="customerName"       class="java.lang.String"/>
+    <field name="contractType"       class="java.lang.String"/>
     <field name="startDate"          class="java.lang.String"/>
     <field name="endDate"            class="java.lang.String"/>
+    <field name="contractValue"      class="java.lang.String"/>
+    <field name="billingCycle"       class="java.lang.String"/>
     <field name="paymentTerms"       class="java.lang.String"/>
     <field name="scopeSummary"       class="java.lang.String"/>
     <field name="renewalStatus"      class="java.lang.String"/>
@@ -64,7 +62,7 @@
             <!-- Left: Logo & Company -->
             <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
                 <reportElement x="0" y="0" width="105" height="38"/>
-                <imageExpression><![CDATA[this.getClass().getClassLoader().getResourceAsStream($P{logoPath})]]></imageExpression>
+                <imageExpression><![CDATA[$P{logoStream}]]></imageExpression>
             </image>
             <staticText>
                 <reportElement style="DocSubtitle" x="0" y="40" width="220" height="18"/>

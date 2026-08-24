@@ -35,7 +35,7 @@ export interface ProjectDashboard {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   description?: string;
   isActive: boolean;
-  rowVersion?: number;
+  rowVersion: number;
 
   phaseCount: number;
   taskCount: number;

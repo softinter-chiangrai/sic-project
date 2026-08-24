@@ -38,9 +38,7 @@
     <parameter name="businessName" class="java.lang.String">
         <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
     </parameter>
-    <parameter name="logoPath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["images/softinter_logo.png"]]></defaultValueExpression>
-    </parameter>
+    <parameter name="logoStream" class="java.io.InputStream"/>
 
     <!-- ========================================================
          FIELDS
@@ -68,7 +66,7 @@
             <!-- Left: Logo & Company -->
             <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
                 <reportElement x="0" y="0" width="105" height="38"/>
-                <imageExpression><![CDATA[this.getClass().getClassLoader().getResourceAsStream($P{logoPath})]]></imageExpression>
+                <imageExpression><![CDATA[$P{logoStream}]]></imageExpression>
             </image>
             <staticText>
                 <reportElement style="DocSubtitle" x="0" y="40" width="220" height="18"/>

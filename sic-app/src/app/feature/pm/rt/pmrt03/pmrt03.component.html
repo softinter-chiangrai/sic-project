@@ -63,13 +63,18 @@
             }
           </div>
           <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mt-1 flex-wrap">
-            <span><i class="bi bi-person"></i> {{ p.customerName }}</span>
-            <span><i class="bi bi-file-earmark-text"></i> สัญญา: {{ p.contractNo }}</span>
-            <span><i class="bi bi-person-badge"></i> PM: {{ p.projectManager }}</span>
-            <span
-              ><i class="bi bi-calendar"></i> {{ formatDate(p.startDate) }} -
-              {{ formatDate(p.plannedEndDate) }}</span
-            >
+            @if (p.customerName) {
+              <span><i class="bi bi-person"></i> {{ p.customerName }}</span>
+            }
+            @if (p.contractNo) {
+              <span><i class="bi bi-file-earmark-text"></i> สัญญา: {{ p.contractNo }}</span>
+            }
+            @if (p.projectManager) {
+              <span><i class="bi bi-person-badge"></i> PM: {{ p.projectManager }}</span>
+            }
+            <span>
+              <i class="bi bi-calendar"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.plannedEndDate) }}
+            </span>
           </div>
         </div>
       </div>
