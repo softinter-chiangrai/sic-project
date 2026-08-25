@@ -103,16 +103,16 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
 
         SpecificationReportDto dto = new SpecificationReportDto(
                 spec.getSpecificationCode(),
-                spec.getTitle(),
-                spec.getSpecificationType() != null ? spec.getSpecificationType() : "System",
+                com.softinter.sicapi.util.ReportHelper.thaify(spec.getTitle()),
+                com.softinter.sicapi.util.ReportHelper.thaify(spec.getSpecificationType() != null ? spec.getSpecificationType() : "System"),
                 spec.getVersion() != null ? spec.getVersion() : "1.0",
-                spec.getStatus() != null ? spec.getStatus() : "Draft",
-                spec.getPriority() != null ? spec.getPriority() : "Medium",
-                spec.getOwner() != null ? spec.getOwner() : "-",
+                com.softinter.sicapi.util.ReportHelper.thaify(spec.getStatus() != null ? spec.getStatus() : "Draft"),
+                com.softinter.sicapi.util.ReportHelper.thaify(spec.getPriority() != null ? spec.getPriority() : "Medium"),
+                com.softinter.sicapi.util.ReportHelper.thaify(spec.getOwner() != null ? spec.getOwner() : "-"),
                 spec.getEstimatedManday() != null ? String.valueOf(spec.getEstimatedManday()) : "0",
-                projectName,
-                reqTitle,
-                stripHtml(spec.getDescription()),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
+                com.softinter.sicapi.util.ReportHelper.thaify(reqTitle),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(spec.getDescription())),
                 createdDateStr
         );
 
@@ -125,6 +125,8 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(dto));
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

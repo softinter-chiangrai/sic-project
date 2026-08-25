@@ -125,14 +125,14 @@ public class PmMaRenewalExportServiceImpl implements PmMaRenewalExportService {
         RenewalReportDto dto = new RenewalReportDto(
                 renewal.getRenewalNo(),
                 contractNo,
-                customerName,
-                projectName,
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
                 currentEndDateStr,
                 newStartDateStr,
                 newEndDateStr,
                 proposedAmtStr,
-                renewal.getStatus() != null ? renewal.getStatus().name() : "DRAFT",
-                stripHtml(renewal.getRemark())
+                com.softinter.sicapi.util.ReportHelper.thaify(renewal.getStatus() != null ? renewal.getStatus().name() : "DRAFT"),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(renewal.getRemark()))
         );
 
         try {
@@ -144,6 +144,8 @@ public class PmMaRenewalExportServiceImpl implements PmMaRenewalExportService {
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(dto));
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

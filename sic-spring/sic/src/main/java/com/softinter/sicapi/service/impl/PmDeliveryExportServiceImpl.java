@@ -80,9 +80,9 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
             reportItems.add(new DeliveryReportItemDto(
                     "DELIVERABLE (" + (it.getItemType() != null ? it.getItemType() : "ITEM") + ")",
                     it.getItemCode() != null ? it.getItemCode() : "-",
-                    it.getItemTitle() != null ? it.getItemTitle() : "-",
-                    it.getItemStatus() != null ? it.getItemStatus() : "DONE",
-                    it.getRemark() != null ? it.getRemark() : ""
+                    com.softinter.sicapi.util.ReportHelper.thaify(it.getItemTitle() != null ? it.getItemTitle() : "-"),
+                    com.softinter.sicapi.util.ReportHelper.thaify(it.getItemStatus() != null ? it.getItemStatus() : "DONE"),
+                    com.softinter.sicapi.util.ReportHelper.thaify(it.getRemark() != null ? it.getRemark() : "")
             ));
         }
 
@@ -92,14 +92,14 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
             reportItems.add(new DeliveryReportItemDto(
                     "CHECKLIST (" + (chk.getItemCategory() != null ? chk.getItemCategory() : "GENERAL") + ")",
                     "-",
-                    chk.getItemName(),
-                    Boolean.TRUE.equals(chk.getIsChecked()) ? "PASS" : "PENDING",
-                    chk.getRemark() != null ? chk.getRemark() : ""
+                    com.softinter.sicapi.util.ReportHelper.thaify(chk.getItemName()),
+                    com.softinter.sicapi.util.ReportHelper.thaify(Boolean.TRUE.equals(chk.getIsChecked()) ? "PASS" : "PENDING"),
+                    com.softinter.sicapi.util.ReportHelper.thaify(chk.getRemark() != null ? chk.getRemark() : "")
             ));
         }
 
         if (reportItems.isEmpty()) {
-            reportItems.add(new DeliveryReportItemDto("GENERAL", delivery.getDeliveryCode(), delivery.getDeliveryTitle(), delivery.getStatus(), "Delivery Package Initial"));
+            reportItems.add(new DeliveryReportItemDto("GENERAL", delivery.getDeliveryCode(), com.softinter.sicapi.util.ReportHelper.thaify(delivery.getDeliveryTitle()), com.softinter.sicapi.util.ReportHelper.thaify(delivery.getStatus()), "Delivery Package Initial"));
         }
 
         String deliveryDateStr = delivery.getDeliveryDate() != null
@@ -116,14 +116,16 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
             parameters.put("deliveryCode", delivery.getDeliveryCode() != null ? delivery.getDeliveryCode() : "-");
-            parameters.put("deliveryTitle", delivery.getDeliveryTitle() != null ? delivery.getDeliveryTitle() : "-");
-            parameters.put("projectName", projectName);
+            parameters.put("deliveryTitle", com.softinter.sicapi.util.ReportHelper.thaify(delivery.getDeliveryTitle() != null ? delivery.getDeliveryTitle() : "-"));
+            parameters.put("projectName", com.softinter.sicapi.util.ReportHelper.thaify(projectName));
             parameters.put("contractNo", contractNo);
             parameters.put("deliveryType", delivery.getDeliveryType() != null ? delivery.getDeliveryType() : "FINAL");
             parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0");
             parameters.put("deliveryDate", deliveryDateStr);
-            parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
-            parameters.put("deliverySummary", stripHtml(delivery.getDeliverySummary()));
+            parameters.put("status", com.softinter.sicapi.util.ReportHelper.thaify(delivery.getStatus() != null ? delivery.getStatus() : "-"));
+            parameters.put("deliverySummary", com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(delivery.getDeliverySummary())));
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportItems);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

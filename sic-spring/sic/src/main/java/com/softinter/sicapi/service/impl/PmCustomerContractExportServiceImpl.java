@@ -115,16 +115,16 @@ public class PmCustomerContractExportServiceImpl implements PmCustomerContractEx
 
         ContractReportDto dto = new ContractReportDto(
                 contract.getContractNo(),
-                contract.getContractType() != null ? contract.getContractType() : "General",
-                customerName,
-                projectName,
+                com.softinter.sicapi.util.ReportHelper.thaify(contract.getContractType() != null ? contract.getContractType() : "General"),
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
                 contractValStr,
-                contract.getSignStatus() != null ? contract.getSignStatus() : "-",
+                com.softinter.sicapi.util.ReportHelper.thaify(contract.getSignStatus() != null ? contract.getSignStatus() : "-"),
                 startDateStr,
                 endDateStr,
-                stripHtml(contract.getPaymentTerms()),
-                stripHtml(contract.getScopeSummary()),
-                contract.getRenewalStatus() != null ? contract.getRenewalStatus() : "NONE"
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(contract.getPaymentTerms())),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(contract.getScopeSummary())),
+                com.softinter.sicapi.util.ReportHelper.thaify(contract.getRenewalStatus() != null ? contract.getRenewalStatus() : "NONE")
         );
 
         try {
@@ -136,6 +136,8 @@ public class PmCustomerContractExportServiceImpl implements PmCustomerContractEx
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(dto));
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

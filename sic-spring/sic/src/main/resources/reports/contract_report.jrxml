@@ -11,10 +11,10 @@
               rightMargin="40"
               topMargin="40"
               bottomMargin="40"
-              uuid="c1d2e3f4-a5b6-7890-bcde-fa2345678901">
+              uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
 
     <!-- ========================================================
-         STYLES DEFINITIONS (Clean, Minimal & Elegant)
+         STYLES DEFINITIONS
          ======================================================== -->
     <style name="DocTitle" fontName="TH Sarabun New" fontSize="20" isBold="true" forecolor="#1E293B"/>
     <style name="DocSubtitle" fontName="TH Sarabun New" fontSize="13" forecolor="#64748B"/>
@@ -43,19 +43,19 @@
          FIELDS
          ======================================================== -->
     <field name="contractNo"         class="java.lang.String"/>
-    <field name="projectName"        class="java.lang.String"/>
-    <field name="customerName"       class="java.lang.String"/>
     <field name="contractType"       class="java.lang.String"/>
+    <field name="customerName"       class="java.lang.String"/>
+    <field name="projectName"        class="java.lang.String"/>
+    <field name="contractValue"      class="java.lang.String"/>
     <field name="startDate"          class="java.lang.String"/>
     <field name="endDate"            class="java.lang.String"/>
-    <field name="contractValue"      class="java.lang.String"/>
-    <field name="billingCycle"       class="java.lang.String"/>
+    <field name="signStatus"         class="java.lang.String"/>
+    <field name="renewalStatus"      class="java.lang.String"/>
     <field name="paymentTerms"       class="java.lang.String"/>
     <field name="scopeSummary"       class="java.lang.String"/>
-    <field name="renewalStatus"      class="java.lang.String"/>
 
     <!-- ========================================================
-         TITLE BAND — Clean Minimal Header
+         TITLE BAND
          ======================================================== -->
     <title>
         <band height="105">
@@ -65,26 +65,26 @@
                 <imageExpression><![CDATA[$P{logoStream}]]></imageExpression>
             </image>
             <staticText>
-                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <text><![CDATA[SOFTINTER CO., LTD.]]></text>
             </staticText>
 
             <!-- Right: Title & Date -->
+            <textField isBlankWhenNull="true">
+                <reportElement style="DocTitle" x="230" y="0" width="285" height="26"/>
+                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เอกสารสรุปสัญญาว่าจ้าง")]]></textFieldExpression>
+            </textField>
             <staticText>
-                <reportElement style="DocTitle" x="230" y="0" width="285" height="24"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <text><![CDATA[เอกสารสรุปสัญญาว่าจ้าง]]></text>
-            </staticText>
-            <staticText>
-                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="16"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="18"/>
+                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
                 <text><![CDATA[Customer Contract Summary]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="FooterText" x="230" y="42" width="285" height="16"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
+                <reportElement style="FooterText" x="230" y="44" width="285" height="18"/>
+                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-"))]]></textFieldExpression>
             </textField>
 
             <!-- Divider -->
@@ -95,17 +95,17 @@
 
             <!-- Contract Main Banner -->
             <rectangle radius="3">
-                <reportElement x="0" y="74" width="515" height="26" backcolor="#F8FAFC" mode="Opaque"/>
+                <reportElement x="0" y="74" width="515" height="28" backcolor="#F8FAFC" mode="Opaque"/>
                 <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
             </rectangle>
-            <staticText>
-                <reportElement style="Label" x="10" y="77" width="60" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[เลขที่สัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="72" y="77" width="433" height="20"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="10" y="76" width="75" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เลขที่สัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="88" y="76" width="417" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[($F{contractNo} != null ? $F{contractNo} : "-") + " (" + ($F{contractType} != null ? $F{contractType} : "General") + ")"]]></textFieldExpression>
             </textField>
         </band>
@@ -119,82 +119,82 @@
             <!-- ────────────────────────────────────────────────────────
                  SECTION 1: ข้อมูลทั่วไปของสัญญา
                  ──────────────────────────────────────────────────────── -->
-            <staticText>
-                <reportElement style="SectionHeading" x="0" y="8" width="515" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[1. ข้อมูลทั่วไปของสัญญา (Contract Information)]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="SectionHeading" x="0" y="6" width="515" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("1. ข้อมูลทั่วไปของสัญญา (Contract Information)")]]></textFieldExpression>
+            </textField>
             <line>
                 <reportElement x="0" y="28" width="515" height="1" forecolor="#E2E8F0"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
             <!-- Row 1: Contract No & Sign Status -->
-            <staticText>
-                <reportElement style="Label" x="10" y="34" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[เลขที่สัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="98" y="34" width="155" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="10" y="32" width="95" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เลขที่สัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="110" y="32" width="145" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{contractNo} != null ? $F{contractNo} : "-"]]></textFieldExpression>
             </textField>
 
-            <staticText>
-                <reportElement style="Label" x="270" y="34" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[สถานะการลงนาม:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="358" y="34" width="150" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="270" y="32" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("สถานะการลงนาม:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="380" y="32" width="128" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{signStatus} != null ? $F{signStatus} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 2: Customer & Project -->
-            <staticText>
-                <reportElement style="Label" x="10" y="54" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[คู่สัญญา (ลูกค้า):]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="98" y="54" width="155" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="10" y="54" width="95" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("คู่สัญญา (ลูกค้า):")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="110" y="54" width="145" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></textFieldExpression>
             </textField>
 
-            <staticText>
-                <reportElement style="Label" x="270" y="54" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[โครงการที่เกี่ยวข้อง:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="358" y="54" width="150" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="270" y="54" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("โครงการที่เกี่ยวข้อง:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="380" y="54" width="128" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 3: Contract Value & Renewal Status -->
-            <staticText>
-                <reportElement style="Label" x="10" y="74" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[มูลค่าสัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="98" y="74" width="155" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{contractValue} != null ? $F{contractValue} + " บาท" : "0.00 บาท"]]></textFieldExpression>
+                <reportElement style="Label" x="10" y="76" width="95" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("มูลค่าสัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="ValueBold" x="110" y="76" width="145" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[($F{contractValue} != null ? $F{contractValue} : "0.00") + " " + com.softinter.sicapi.util.ReportHelper.thaify("บาท")]]></textFieldExpression>
             </textField>
 
-            <staticText>
-                <reportElement style="Label" x="270" y="74" width="85" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[สถานะการต่อสัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="358" y="74" width="150" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="270" y="76" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("สถานะการต่อสัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="380" y="76" width="128" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{renewalStatus} != null ? $F{renewalStatus} : "-"]]></textFieldExpression>
             </textField>
 
@@ -202,62 +202,62 @@
             <!-- ────────────────────────────────────────────────────────
                  SECTION 2: ระยะเวลาและเงื่อนไขการชำระเงิน
                  ──────────────────────────────────────────────────────── -->
-            <staticText>
-                <reportElement style="SectionHeading" x="0" y="106" width="515" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[2. ระยะเวลาและเงื่อนไขการชำระเงิน (Duration & Payment Terms)]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="SectionHeading" x="0" y="104" width="515" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("2. ระยะเวลาและเงื่อนไขการชำระเงิน (Duration & Payment Terms)")]]></textFieldExpression>
+            </textField>
             <line>
                 <reportElement x="0" y="126" width="515" height="1" forecolor="#E2E8F0"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
             <!-- Row 1: Start Date & End Date -->
-            <staticText>
-                <reportElement style="Label" x="10" y="132" width="105" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[วันเริ่มต้นสัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="118" y="132" width="135" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="10" y="130" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันเริ่มต้นสัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="120" y="130" width="135" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{startDate} != null ? $F{startDate} : "-"]]></textFieldExpression>
             </textField>
 
-            <staticText>
-                <reportElement style="Label" x="270" y="132" width="105" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[วันสิ้นสุดสัญญา:]]></text>
-            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="378" y="132" width="130" height="18"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="Label" x="270" y="130" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันสิ้นสุดสัญญา:")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" x="380" y="130" width="128" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{endDate} != null ? $F{endDate} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 2: Payment Terms Box -->
-            <staticText>
-                <reportElement style="Label" x="10" y="154" width="105" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[เงื่อนไขการชำระเงิน:]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Label" x="10" y="154" width="105" height="20"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เงื่อนไขการชำระเงิน:")]]></textFieldExpression>
+            </textField>
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="118" y="154" width="390" height="30"/>
+                <reportElement style="Value" positionType="Float" x="120" y="154" width="388" height="30"/>
                 <textElement verticalAlignment="Top"/>
-                <textFieldExpression><![CDATA[$F{paymentTerms} != null && !$F{paymentTerms}.isBlank() ? $F{paymentTerms} : "ตามข้อตกลงมาตรฐาน"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{paymentTerms} != null && !$F{paymentTerms}.isBlank() ? $F{paymentTerms} : com.softinter.sicapi.util.ReportHelper.thaify("ตามข้อตกลงมาตรฐาน")]]></textFieldExpression>
             </textField>
 
 
             <!-- ────────────────────────────────────────────────────────
                  SECTION 3: สรุปขอบเขตงานตามสัญญา (Scope Summary)
                  ──────────────────────────────────────────────────────── -->
-            <staticText>
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="196" width="515" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[3. สรุปขอบเขตงานและข้อกำหนดสัญญา (Scope Summary)]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="196" width="515" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("3. สรุปขอบเขตงานและข้อกำหนดสัญญา (Scope Summary)")]]></textFieldExpression>
+            </textField>
             <line>
-                <reportElement positionType="Float" x="0" y="216" width="515" height="1" forecolor="#E2E8F0"/>
+                <reportElement positionType="Float" x="0" y="218" width="515" height="1" forecolor="#E2E8F0"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
@@ -268,18 +268,18 @@
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement style="ContentText" positionType="Float" x="10" y="230" width="495" height="123"/>
                 <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
-                <textFieldExpression><![CDATA[$F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : com.softinter.sicapi.util.ReportHelper.thaify("ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม")]]></textFieldExpression>
             </textField>
 
 
             <!-- ────────────────────────────────────────────────────────
                  SECTION 4: การลงนามสัญญา (Sign-off)
                  ──────────────────────────────────────────────────────── -->
-            <staticText>
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="375" width="515" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[4. การลงนามรับรองสัญญา (Contract Execution)]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="373" width="515" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("4. การลงนามรับรองสัญญา (Contract Execution)")]]></textFieldExpression>
+            </textField>
             <line>
                 <reportElement positionType="Float" x="0" y="395" width="515" height="1" forecolor="#E2E8F0"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
@@ -290,52 +290,52 @@
                 <reportElement positionType="Float" x="0" y="407" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
                 <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
             </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Label" positionType="Float" x="10" y="413" width="225" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้ให้บริการ (Service Provider)")]]></textFieldExpression>
+            </textField>
             <staticText>
-                <reportElement style="Label" positionType="Float" x="10" y="413" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[ผู้ให้บริการ (Service Provider)]]></text>
-            </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="462" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <reportElement style="Value" positionType="Float" x="10" y="462" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
                 <text><![CDATA[(..................................................................)]]></text>
             </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="484" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[ตำแหน่ง: กรรมการผู้มีอำนาจลงนาม]]></text>
-            </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="505" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="10" y="484" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: กรรมการผู้มีอำนาจลงนาม")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="10" y="505" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
+            </textField>
 
             <!-- Signatures: Client -->
             <rectangle radius="3">
                 <reportElement positionType="Float" x="270" y="407" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
                 <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
             </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Label" positionType="Float" x="280" y="413" width="225" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้ว่าจ้าง / ลูกค้า (Client / Customer)")]]></textFieldExpression>
+            </textField>
             <staticText>
-                <reportElement style="Label" positionType="Float" x="280" y="413" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[ผู้ว่าจ้าง / ลูกค้า (Client / Customer)]]></text>
-            </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="462" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <reportElement style="Value" positionType="Float" x="280" y="462" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
                 <text><![CDATA[(..................................................................)]]></text>
             </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="484" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[ตำแหน่ง: ผู้มีอำนาจลงนาม]]></text>
-            </staticText>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="505" width="225" height="16"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <text><![CDATA[วันที่: ........ / ........ / ................]]></text>
-            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="280" y="484" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: ผู้มีอำนาจลงนาม")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="280" y="505" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
+            </textField>
         </band>
     </detail>
 
@@ -349,14 +349,14 @@
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
             <staticText>
-                <reportElement style="FooterText" x="0" y="10" width="350" height="16"/>
-                <textElement verticalAlignment="Middle"/>
+                <reportElement style="FooterText" x="0" y="8" width="350" height="18"/>
+                <textElement verticalAlignment="Bottom"/>
                 <text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
             </staticText>
             <textField>
-                <reportElement style="FooterText" x="380" y="10" width="135" height="16"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <reportElement style="FooterText" x="380" y="8" width="135" height="18"/>
+                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("หน้า ") + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
         </band>
     </pageFooter>

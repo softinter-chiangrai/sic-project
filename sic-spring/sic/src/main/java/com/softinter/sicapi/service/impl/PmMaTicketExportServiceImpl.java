@@ -127,19 +127,19 @@ public class PmMaTicketExportServiceImpl implements PmMaTicketExportService {
 
         TicketReportDto dto = new TicketReportDto(
                 ticket.getTicketNo(),
-                ticket.getTitle(),
-                customerName,
-                projectName,
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getTitle()),
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
                 contractNo,
-                ticket.getTicketType() != null ? ticket.getTicketType().name() : "GENERAL",
-                ticket.getSeverity() != null ? ticket.getSeverity().name() : "MEDIUM",
-                ticket.getStatus() != null ? ticket.getStatus().name() : "OPEN",
-                ticket.getReportedBy() != null ? ticket.getReportedBy() : "-",
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getTicketType() != null ? ticket.getTicketType().name() : "GENERAL"),
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getSeverity() != null ? ticket.getSeverity().name() : "MEDIUM"),
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getStatus() != null ? ticket.getStatus().name() : "OPEN"),
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getReportedBy() != null ? ticket.getReportedBy() : "-"),
                 reportedDateStr,
-                ticket.getAssignedTo() != null ? ticket.getAssignedTo() : "Unassigned",
+                com.softinter.sicapi.util.ReportHelper.thaify(ticket.getAssignedTo() != null ? ticket.getAssignedTo() : "Unassigned"),
                 resolvedDateStr,
-                stripHtml(ticket.getDescription()),
-                stripHtml(ticket.getResolutionSummary())
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(ticket.getDescription())),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(ticket.getResolutionSummary()))
         );
 
         try {
@@ -151,6 +151,8 @@ public class PmMaTicketExportServiceImpl implements PmMaTicketExportService {
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(dto));
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

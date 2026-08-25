@@ -141,10 +141,10 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
 
         InvoiceReportDto dto = new InvoiceReportDto(
                 inv.getInvoiceNo(),
-                customerName,
-                projectName,
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
                 contractNo,
-                inv.getBillingType() != null ? inv.getBillingType().name() : "MILESTONE",
+                com.softinter.sicapi.util.ReportHelper.thaify(inv.getBillingType() != null ? inv.getBillingType().name() : "MILESTONE"),
                 issueDateStr,
                 dueDateStr,
                 subtotalStr,
@@ -152,8 +152,8 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
                 vatAmtStr,
                 totalAmtStr,
                 paidAmtStr,
-                inv.getPaymentStatus() != null ? inv.getPaymentStatus().name() : "UNPAID",
-                stripHtml(inv.getRemark())
+                com.softinter.sicapi.util.ReportHelper.thaify(inv.getPaymentStatus() != null ? inv.getPaymentStatus().name() : "UNPAID"),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(inv.getRemark()))
         );
 
         try {
@@ -165,6 +165,8 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(dto));
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);

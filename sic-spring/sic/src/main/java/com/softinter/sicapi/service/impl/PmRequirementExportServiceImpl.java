@@ -151,18 +151,18 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
         // 5. Build DTO list for datasource (one row = one requirement)
         RequirementReportDto dto = new RequirementReportDto(
                 req.getRequirementCode(),
-                req.getTitle(),
-                stripHtml(req.getDescription()),
-                req.getRequirementType(),
-                req.getSource(),
-                req.getPriority(),
-                req.getBusinessValue(),
-                stripHtml(req.getAcceptanceCriteria()),
-                projectName,
-                customerName,
-                req.getStatus(),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getTitle()),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(req.getDescription())),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getRequirementType()),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getSource()),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getPriority()),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getBusinessValue()),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(req.getAcceptanceCriteria())),
+                com.softinter.sicapi.util.ReportHelper.thaify(projectName),
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(req.getStatus()),
                 req.getVersion(),
-                createdByName,
+                com.softinter.sicapi.util.ReportHelper.thaify(createdByName),
                 createdDateStr
         );
 
@@ -180,6 +180,7 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
             // Parameters
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             // Data source
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(dataList);

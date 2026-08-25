@@ -125,17 +125,17 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
 
         ProjectReportDto dto = new ProjectReportDto(
                 project.getProjectCode(),
-                project.getProjectName(),
-                customerName,
-                project.getStatus(),
-                project.getPriority(),
+                com.softinter.sicapi.util.ReportHelper.thaify(project.getProjectName()),
+                com.softinter.sicapi.util.ReportHelper.thaify(customerName),
+                com.softinter.sicapi.util.ReportHelper.thaify(project.getStatus()),
+                com.softinter.sicapi.util.ReportHelper.thaify(project.getPriority()),
                 startDateStr,
                 plannedEndDateStr,
                 actualEndDateStr,
                 String.valueOf(budget),
                 String.valueOf(used),
                 progressStr,
-                stripHtml(project.getDescription()),
+                com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(project.getDescription())),
                 createdDateStr
         );
 
@@ -150,6 +150,7 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("exportDate", exportDate);
+            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(dataList);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
