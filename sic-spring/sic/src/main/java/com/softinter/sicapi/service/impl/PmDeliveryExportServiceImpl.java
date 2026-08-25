@@ -1,21 +1,28 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.entity.pm.*;
-import com.softinter.sicapi.repository.pm.*;
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmDelivery;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.service.PmDeliveryExportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.sql.Connection;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -23,35 +30,12 @@ import java.util.*;
 public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
 
     private final PmDeliveryRepository deliveryRepository;
-    private final PmDeliveryChecklistRepository checklistRepository;
-    private final PmDeliveryItemRepository deliveryItemRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final DataSource dataSource;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Bangkok"));
-
-    public static class DeliveryReportItemDto {
-        private final String category;
-        private final String code;
-        private final String title;
-        private final String status;
-        private final String remark;
-
-        public DeliveryReportItemDto(String category, String code, String title, String status, String remark) {
-            this.category = category;
-            this.code = code;
-            this.title = title;
-            this.status = status;
-            this.remark = remark;
-        }
-
-        public String getCategory() { return category; }
-        public String getCode() { return code; }
-        public String getTitle() { return title; }
-        public String getStatus() { return status; }
-        public String getRemark() { return remark; }
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -72,63 +56,30 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
                     .map(PmCustomerContract::getContractNo).orElse("-");
         }
 
-        List<DeliveryReportItemDto> reportItems = new ArrayList<>();
-
-        // Linked deliverable items
-        List<PmDeliveryItem> items = deliveryItemRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
-        for (PmDeliveryItem it : items) {
-            reportItems.add(new DeliveryReportItemDto(
-                    "DELIVERABLE (" + (it.getItemType() != null ? it.getItemType() : "ITEM") + ")",
-                    it.getItemCode() != null ? it.getItemCode() : "-",
-                    com.softinter.sicapi.util.ReportHelper.thaify(it.getItemTitle() != null ? it.getItemTitle() : "-"),
-                    com.softinter.sicapi.util.ReportHelper.thaify(it.getItemStatus() != null ? it.getItemStatus() : "DONE"),
-                    com.softinter.sicapi.util.ReportHelper.thaify(it.getRemark() != null ? it.getRemark() : "")
-            ));
-        }
-
-        // Checklists
-        List<PmDeliveryChecklist> checklists = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
-        for (PmDeliveryChecklist chk : checklists) {
-            reportItems.add(new DeliveryReportItemDto(
-                    "CHECKLIST (" + (chk.getItemCategory() != null ? chk.getItemCategory() : "GENERAL") + ")",
-                    "-",
-                    com.softinter.sicapi.util.ReportHelper.thaify(chk.getItemName()),
-                    com.softinter.sicapi.util.ReportHelper.thaify(Boolean.TRUE.equals(chk.getIsChecked()) ? "PASS" : "PENDING"),
-                    com.softinter.sicapi.util.ReportHelper.thaify(chk.getRemark() != null ? chk.getRemark() : "")
-            ));
-        }
-
-        if (reportItems.isEmpty()) {
-            reportItems.add(new DeliveryReportItemDto("GENERAL", delivery.getDeliveryCode(), com.softinter.sicapi.util.ReportHelper.thaify(delivery.getDeliveryTitle()), com.softinter.sicapi.util.ReportHelper.thaify(delivery.getStatus()), "Delivery Package Initial"));
-        }
-
         String deliveryDateStr = delivery.getDeliveryDate() != null
                 ? delivery.getDeliveryDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "-";
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
 
-        try {
-            ClassPathResource templateResource = new ClassPathResource("reports/delivery_report.jrxml");
-            JasperReport jasperReport;
-            try (InputStream is = templateResource.getInputStream()) {
-                jasperReport = JasperCompileManager.compileReport(is);
-            }
+        try (Connection conn = dataSource.getConnection();
+             InputStream is = new ClassPathResource("reports/delivery_report.jrxml").getInputStream()) {
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
             Map<String, Object> parameters = new HashMap<>();
+            parameters.put("deliveryId", deliveryId != null ? deliveryId.toString() : "");
             parameters.put("exportDate", exportDate);
             parameters.put("deliveryCode", delivery.getDeliveryCode() != null ? delivery.getDeliveryCode() : "-");
-            parameters.put("deliveryTitle", com.softinter.sicapi.util.ReportHelper.thaify(delivery.getDeliveryTitle() != null ? delivery.getDeliveryTitle() : "-"));
-            parameters.put("projectName", com.softinter.sicapi.util.ReportHelper.thaify(projectName));
+            parameters.put("deliveryTitle", delivery.getDeliveryTitle() != null ? delivery.getDeliveryTitle() : "-");
+            parameters.put("projectName", projectName);
             parameters.put("contractNo", contractNo);
             parameters.put("deliveryType", delivery.getDeliveryType() != null ? delivery.getDeliveryType() : "FINAL");
             parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0");
             parameters.put("deliveryDate", deliveryDateStr);
-            parameters.put("status", com.softinter.sicapi.util.ReportHelper.thaify(delivery.getStatus() != null ? delivery.getStatus() : "-"));
-            parameters.put("deliverySummary", com.softinter.sicapi.util.ReportHelper.thaify(stripHtml(delivery.getDeliverySummary())));
-
+            parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
+            parameters.put("deliverySummary", stripHtml(delivery.getDeliverySummary()));
             parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportItems);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
@@ -151,3 +102,4 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
                    .trim();
     }
 }
+

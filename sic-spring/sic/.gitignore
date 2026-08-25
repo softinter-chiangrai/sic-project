@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 *.log
+/requirement_report_sql.jasper
 
 ### NetBeans ###
 /nbproject/private/

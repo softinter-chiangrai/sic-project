@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
+/requirement_report_sql.jasper
 
 # Node
 /node_modules

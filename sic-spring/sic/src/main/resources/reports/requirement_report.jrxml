@@ -1,364 +1,215 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="RequirementReport"
-              language="java"
-              pageWidth="595"
-              pageHeight="842"
-              columnWidth="515"
-              leftMargin="40"
-              rightMargin="40"
-              topMargin="40"
-              bottomMargin="40"
-              uuid="b8c9d0e1-f2a3-4567-8901-bcdefa234567">
-
-    <!-- ========================================================
-         STYLES DEFINITIONS
-         ======================================================== -->
-    <style name="DocTitle" fontName="TH Sarabun New" fontSize="20" isBold="true" forecolor="#1E293B"/>
-    <style name="DocSubtitle" fontName="TH Sarabun New" fontSize="13" forecolor="#64748B"/>
-    
-    <style name="SectionHeading" fontName="TH Sarabun New" fontSize="14" isBold="true" forecolor="#1E293B"/>
-    
-    <style name="Label" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#475569"/>
-    <style name="Value" fontName="TH Sarabun New" fontSize="13" isBold="false" forecolor="#1E293B"/>
-    <style name="ValueBold" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#1E293B"/>
-    
-    <style name="ContentText" fontName="TH Sarabun New" fontSize="13" forecolor="#334155"/>
-    <style name="FooterText" fontName="TH Sarabun New" fontSize="11" forecolor="#94A3B8"/>
-
-    <!-- ========================================================
-         PARAMETERS
-         ======================================================== -->
-    <parameter name="exportDate" class="java.lang.String">
-        <defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="RequirementReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="b8c9d0e1-f2a3-4567-8901-bcdefa234567">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="false"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+	<parameter name="requirementId" class="java.lang.String"/>
+	<parameter name="exportDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="businessName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoStream" class="java.io.InputStream">
+        <defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
     </parameter>
-    <parameter name="businessName" class="java.lang.String">
-        <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
-    </parameter>
-    <parameter name="logoStream" class="java.io.InputStream"/>
-
-    <!-- ========================================================
-         FIELDS
-         ======================================================== -->
-    <field name="requirementCode"    class="java.lang.String"/>
-    <field name="title"              class="java.lang.String"/>
-    <field name="projectName"        class="java.lang.String"/>
-    <field name="version"            class="java.lang.String"/>
-    <field name="requirementType"    class="java.lang.String"/>
-    <field name="priority"           class="java.lang.String"/>
-    <field name="status"             class="java.lang.String"/>
-    <field name="createdBy"          class="java.lang.String"/>
-    <field name="createdDate"        class="java.lang.String"/>
-    <field name="description"        class="java.lang.String"/>
-    <field name="acceptanceCriteria" class="java.lang.String"/>
-
-    <!-- ========================================================
-         TITLE BAND — Clean Minimal Header
-         ======================================================== -->
-    <title>
-        <band height="105">
-            <!-- Left: Logo & Company Name -->
-            <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
-                <reportElement x="0" y="0" width="105" height="38"/>
-                <imageExpression><![CDATA[$P{logoStream}]]></imageExpression>
-            </image>
-            <staticText>
-                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <text><![CDATA[SOFTINTER CO., LTD.]]></text>
-            </staticText>
-
-            <!-- Right: Document Name & Export Date -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="DocTitle" x="230" y="0" width="285" height="26"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เอกสารข้อกำหนดความต้องการ")]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="18"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <text><![CDATA[Requirement Specification]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="FooterText" x="230" y="44" width="285" height="18"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-"))]]></textFieldExpression>
-            </textField>
-
-            <!-- Clean Divider Line -->
-            <line>
-                <reportElement x="0" y="68" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.8"/></graphicElement>
-            </line>
-
-            <!-- Requirement Main Title Banner -->
-            <rectangle radius="3">
-                <reportElement x="0" y="74" width="515" height="28" backcolor="#F8FAFC" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="76" width="65" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("หัวข้อ Req:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="78" y="76" width="427" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[($F{requirementCode} != null ? "[" + $F{requirementCode} + "] " : "") + ($F{title} != null ? $F{title} : "-")]]></textFieldExpression>
-            </textField>
-        </band>
-    </title>
-
-    <!-- ========================================================
-         DETAIL BAND — Simple, Clean Sections
-         ======================================================== -->
-    <detail>
-        <band height="550">
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 1: ข้อมูลทั่วไป (General Information)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" x="0" y="6" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("1. ข้อมูลทั่วไป (General Information)")]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="28" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Row 1: Code & Status -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="32" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("รหัส Req:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="32" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{requirementCode} != null ? $F{requirementCode} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="32" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("สถานะ:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="365" y="32" width="143" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{status} != null ? $F{status} : "-"]]></textFieldExpression>
-            </textField>
-
-            <!-- Row 2: Project & Version -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="54" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("โครงการ:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="54" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="54" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เวอร์ชัน:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="365" y="54" width="143" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{version} != null ? $F{version} : "v1.0"]]></textFieldExpression>
-            </textField>
-
-            <!-- Row 3: Type & Priority -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="76" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ประเภท:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="76" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{requirementType} != null ? $F{requirementType} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="76" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ความสำคัญ:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="365" y="76" width="143" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{priority} != null ? $F{priority} : "-"]]></textFieldExpression>
-            </textField>
-
-            <!-- Row 4: Author & Date -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="98" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้จัดทำ:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="98" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{createdBy} != null ? $F{createdBy} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="98" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่จัดทำ:")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="365" y="98" width="143" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[$F{createdDate} != null ? $F{createdDate} : "-"]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 2: รายละเอียดความต้องการ (Description)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" x="0" y="126" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("2. รายละเอียดความต้องการ (Requirement Description)")]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="148" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Clean Outline Box -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="154" width="515" height="90" backcolor="#FFFFFF" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="ContentText" positionType="Float" x="10" y="160" width="495" height="78"/>
-                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
-                <textFieldExpression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : com.softinter.sicapi.util.ReportHelper.thaify("ไม่มีรายละเอียดเพิ่มเติม")]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 3: เกณฑ์การยอมรับ (Acceptance Criteria)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="256" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("3. เกณฑ์การยอมรับและการทดสอบ (Acceptance Criteria)")]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="278" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Clean Outline Box -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="284" width="515" height="90" backcolor="#FFFFFF" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="ContentText" positionType="Float" x="10" y="290" width="495" height="78"/>
-                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
-                <textFieldExpression><![CDATA[$F{acceptanceCriteria} != null && !$F{acceptanceCriteria}.isBlank() ? $F{acceptanceCriteria} : com.softinter.sicapi.util.ReportHelper.thaify("ไม่มีเงื่อนไขการยอมรับเพิ่มเติม")]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 4: การลงนาม (Sign-off)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="386" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("4. การลงนามจัดทำและตรวจรับ (Sign-off)")]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="408" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Signatures: Prepared By -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="0" y="418" width="245" height="120" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="424" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้จัดทำ (Prepared By)")]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="468" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="490" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: .....................................................")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="510" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
-            </textField>
-
-            <!-- Signatures: Approved By -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="270" y="418" width="245" height="120" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="280" y="424" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้ตรวจรับ / ผู้อนุมัติ (Approved By)")]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="468" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="490" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: .....................................................")]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="510" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
-            </textField>
-        </band>
-    </detail>
-
-    <!-- ========================================================
-         PAGE FOOTER
-         ======================================================== -->
-    <pageFooter>
-        <band height="30">
-            <line>
-                <reportElement x="0" y="4" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-            <staticText>
-                <reportElement style="FooterText" x="0" y="8" width="350" height="18"/>
-                <textElement verticalAlignment="Bottom"/>
-                <text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
-            </staticText>
-            <textField>
-                <reportElement style="FooterText" x="380" y="8" width="135" height="18"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("หน้า ") + $V{PAGE_NUMBER}]]></textFieldExpression>
-            </textField>
-        </band>
-    </pageFooter>
-
+	<query language="sql"><![CDATA[SELECT 
+                r.requirement_code                            AS "requirementCode",
+                r.title                                       AS "title",
+                COALESCE(p.project_name, '-')                 AS "projectName",
+                COALESCE(c.company_name_local, c.company_name_en, '-') AS "customerName",
+                COALESCE(r.version, '-')                      AS "version",
+                COALESCE(r.requirement_type, '-')             AS "requirementType",
+                COALESCE(r.source, '-')                       AS "source",
+                COALESCE(r.priority, '-')                     AS "priority",
+                COALESCE(r.business_value, '-')               AS "businessValue",
+                COALESCE(r.status, '-')                       AS "status",
+                COALESCE(r.created_by, '-')                   AS "createdBy",
+                TO_CHAR(r.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
+                COALESCE(r.description, 'ไม่มีรายละเอียดเพิ่มเติม')          AS "description",
+                COALESCE(r.acceptance_criteria, 'ไม่มีเงื่อนไขการยอมรับเพิ่มเติม') AS "acceptanceCriteria"
+            FROM pm_requirement r
+            LEFT JOIN pm_customer_project p ON r.project_id = p.id
+            LEFT JOIN pm_customer c ON p.customer_id = c.id
+            WHERE r.is_delete = false
+              AND ($P{requirementId} IS NULL OR $P{requirementId} = '' OR r.id = CAST($P{requirementId} AS uuid))
+            ORDER BY r.created_date DESC
+            LIMIT 1;]]></query>
+	<field name="requirementCode" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="projectName" class="java.lang.String"/>
+	<field name="version" class="java.lang.String"/>
+	<field name="requirementType" class="java.lang.String"/>
+	<field name="priority" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="createdBy" class="java.lang.String"/>
+	<field name="createdDate" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="acceptanceCriteria" class="java.lang.String"/>
+	<title height="105">
+		<element kind="image" uuid="93271e69-bdba-468c-ad41-f1c1f815f8f3" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="5b40c4d2-2ebb-42fd-a7bf-72db94239196" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="ffa775f2-24bd-4280-b6ff-24fbf83bdb7d" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA["เอกสารข้อกำหนดความต้องการ"]]></expression>
+		</element>
+		<element kind="staticText" uuid="1e80db2c-3d4f-4556-ae73-30339a9e5aa3" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[Requirement Specification]]></text>
+		</element>
+		<element kind="textField" uuid="63bb72df-8bdd-4662-aa6e-814bd393269c" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
+		</element>
+		<element kind="line" uuid="4b9462e4-cb70-4074-8ba4-996d42dc60cc" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="rectangle" uuid="7b0c6f1d-990e-4b30-88f4-c17eb4fc9717" mode="Opaque" x="0" y="74" width="515" height="28" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="textField" uuid="e9bc279d-781f-4561-8d0f-88d2c1d4161c" x="10" y="76" width="65" height="22" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["หัวข้อ Req:"]]></expression>
+		</element>
+		<element kind="textField" uuid="12e271c0-27e8-45b5-bd9e-9da15e097fa6" x="78" y="76" width="427" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+			<expression><![CDATA[($F{requirementCode} != null ? "[" + $F{requirementCode} + "] " : "") + ($F{title} != null ? $F{title} : "-")]]></expression>
+		</element>
+	</title>
+	<detail>
+		<band height="550">
+			<element kind="textField" uuid="d075a10e-7d48-47dd-a8bc-d9d1ff4018a1" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["1. ข้อมูลทั่วไป (General Information)"]]></expression>
+			</element>
+			<element kind="line" uuid="10f5a799-d824-47a7-8647-b8d542110ba4" x="0" y="28" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="textField" uuid="77416fdd-375f-4912-8bfd-ed9b13dcba6d" x="10" y="32" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["รหัส Req:"]]></expression>
+			</element>
+			<element kind="textField" uuid="5430927b-dfff-49a0-a091-7b24996b43f3" x="105" y="32" width="148" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{requirementCode} != null ? $F{requirementCode} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="78d8cd69-47d9-40bb-a45f-d4efdbaa5d26" x="270" y="32" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["สถานะ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="b58bfadc-ae74-4608-9e90-8a0b2131bb3a" x="365" y="32" width="143" height="20" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+				<expression><![CDATA[$F{status} != null ? $F{status} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="7c3544cb-d6bc-49ab-9bc6-081d92a57819" x="10" y="54" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["โครงการ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="d8337a0f-7723-4ec3-8218-77f349a2dc36" x="105" y="54" width="148" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="d5f5fb8a-8ed5-404f-a20d-7135f0d48552" x="270" y="54" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["เวอร์ชัน:"]]></expression>
+			</element>
+			<element kind="textField" uuid="bd5460dc-7ad4-47b7-90bd-c60e13ee4aa6" x="365" y="54" width="143" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{version} != null ? $F{version} : "v1.0"]]></expression>
+			</element>
+			<element kind="textField" uuid="d969f271-61a5-4616-bee1-b6db4f6cc4d0" x="10" y="76" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["ประเภท:"]]></expression>
+			</element>
+			<element kind="textField" uuid="567d8e7a-4cdc-4ee0-90a6-63b5476b67d7" x="105" y="76" width="148" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{requirementType} != null ? $F{requirementType} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="7b9134b8-7221-4464-9782-3d168cc19edb" x="270" y="76" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["ความสำคัญ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="10d420cc-f7e0-41f4-ba23-008f4a755f89" x="365" y="76" width="143" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{priority} != null ? $F{priority} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="7f814eab-6a12-4d39-97f1-3087f23e5535" x="10" y="98" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["ผู้จัดทำ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="8dff47bd-4f92-4c9b-a0a2-f85ef758a12a" x="105" y="98" width="148" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{createdBy} != null ? $F{createdBy} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="56edf020-bffc-42ae-aa24-35ffea7efcf1" x="270" y="98" width="90" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["วันที่จัดทำ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="6b4538a1-95c5-4165-a73b-4b4bcec79c0f" x="365" y="98" width="143" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{createdDate} != null ? $F{createdDate} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="a31c0f70-80ba-4da6-a936-822ed27429c1" x="0" y="126" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["2. รายละเอียดความต้องการ (Requirement Description)"]]></expression>
+			</element>
+			<element kind="line" uuid="02926dbf-c764-4b30-a3ce-5b83fe2a69ae" x="0" y="148" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="rectangle" uuid="ba796765-7eb7-4a77-bf08-61ad771afbd2" positionType="Float" stretchType="ElementGroupHeight" mode="Opaque" x="0" y="154" width="515" height="90" backcolor="#FFFFFF" radius="3">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="textField" uuid="3e1faca4-0279-4dfa-b572-27261a97275c" positionType="Float" x="10" y="160" width="495" height="78" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+				<paragraph lineSpacing="1_1_2" style="ContentText"/>
+				<expression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : "ไม่มีรายละเอียดเพิ่มเติม"]]></expression>
+			</element>
+			<element kind="textField" uuid="51a1b75e-b347-4d70-bbc0-5d2e210784f5" positionType="Float" x="0" y="256" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["3. เกณฑ์การยอมรับและการทดสอบ (Acceptance Criteria)"]]></expression>
+			</element>
+			<element kind="line" uuid="7620fbae-7e7e-4584-a417-835dec58aa45" positionType="Float" x="0" y="278" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="rectangle" uuid="5ceb9bd0-f4d6-4c7f-a251-25789257ae84" positionType="Float" stretchType="ElementGroupHeight" mode="Opaque" x="0" y="284" width="515" height="90" backcolor="#FFFFFF" radius="3">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="textField" uuid="dd979ac5-17a2-4e2b-9978-7bcdb2991d50" positionType="Float" x="10" y="290" width="495" height="78" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+				<paragraph lineSpacing="1_1_2" style="ContentText"/>
+				<expression><![CDATA[$F{acceptanceCriteria} != null && !$F{acceptanceCriteria}.isBlank() ? $F{acceptanceCriteria} : "ไม่มีเงื่อนไขการยอมรับเพิ่มเติม"]]></expression>
+			</element>
+			<element kind="textField" uuid="059beec8-f2ee-4a44-b4bd-393f2f178549" positionType="Float" x="0" y="386" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["4. การลงนามจัดทำและตรวจรับ (Sign-off)"]]></expression>
+			</element>
+			<element kind="line" uuid="c0a3d285-47c5-4546-8fb1-1d8f2c4deeab" positionType="Float" x="0" y="408" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="rectangle" uuid="8f3b8448-ebe6-4b2e-84f5-1566e9b2cd62" positionType="Float" mode="Opaque" x="0" y="418" width="245" height="120" backcolor="#FAFAFA" radius="3">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="textField" uuid="c0e68fa4-2054-4eb0-8386-597a3e26e8a9" positionType="Float" x="10" y="424" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["ผู้จัดทำ (Prepared By)"]]></expression>
+			</element>
+			<element kind="staticText" uuid="a980def3-fa0c-4bf1-b784-80686dcb6da2" positionType="Float" x="10" y="468" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<text><![CDATA[(..................................................................)]]></text>
+			</element>
+			<element kind="textField" uuid="ffec1643-5905-43ec-924b-e45dc520c403" positionType="Float" x="10" y="490" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
+			</element>
+			<element kind="textField" uuid="f459192d-2468-40d2-8b83-e3af2672d4f8" positionType="Float" x="10" y="510" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
+			</element>
+			<element kind="rectangle" uuid="23b76d9c-5d6e-4d3a-b878-37c6974814c6" positionType="Float" mode="Opaque" x="270" y="418" width="245" height="120" backcolor="#FAFAFA" radius="3">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="textField" uuid="1425e658-8dd5-44fa-ac47-700d75c571b8" positionType="Float" x="280" y="424" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+				<expression><![CDATA["ผู้ตรวจรับ / ผู้อนุมัติ (Approved By)"]]></expression>
+			</element>
+			<element kind="staticText" uuid="a70226e0-5a90-4b3e-8bec-a64eb37fe2f0" positionType="Float" x="280" y="468" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<text><![CDATA[(..................................................................)]]></text>
+			</element>
+			<element kind="textField" uuid="b196cbe0-1d7c-4f66-ac45-5d37692bc601" positionType="Float" x="280" y="490" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
+			</element>
+			<element kind="textField" uuid="aabed898-ee56-4851-9a80-0f723b1d1012" positionType="Float" x="280" y="510" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
+			</element>
+		</band>
+	</detail>
+	<pageFooter height="30">
+		<element kind="line" uuid="b8ef6f20-c9bf-4787-858a-f260a595ae3b" x="0" y="4" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+		<element kind="staticText" uuid="c95d5cf4-5522-41ca-a4a9-408a1e776648" x="0" y="8" width="350" height="18" vTextAlign="Bottom" style="FooterText">
+			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+		</element>
+		<element kind="textField" uuid="29e151ba-ed1c-4c6b-9e7a-c598baa71d78" x="380" y="8" width="135" height="18" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[+ $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
 </jasperReport>

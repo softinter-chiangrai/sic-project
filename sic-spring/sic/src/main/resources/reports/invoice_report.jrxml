@@ -32,13 +32,43 @@
     <!-- ========================================================
          PARAMETERS
          ======================================================== -->
+    <parameter name="invoiceId" class="java.lang.String"/>
     <parameter name="exportDate" class="java.lang.String">
         <defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
     </parameter>
     <parameter name="businessName" class="java.lang.String">
         <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
     </parameter>
-    <parameter name="logoStream" class="java.io.InputStream"/>
+    <parameter name="logoStream" class="java.io.InputStream">
+        <defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
+    </parameter>
+
+        <queryString>
+        <![CDATA[
+            SELECT 
+                inv.invoice_no                               AS "invoiceNo",
+                COALESCE(c.company_name_local, c.company_name_en, '-') AS "customerName",
+                COALESCE(p.project_name, '-')                AS "projectName",
+                COALESCE(ct.contract_no, '-')                AS "contractNo",
+                COALESCE(CAST(inv.billing_type AS VARCHAR), 'MILESTONE') AS "billingType",
+                COALESCE(TO_CHAR(inv.subtotal_amount, 'FM999,999,999,990.00'), '0.00') AS "subtotalAmount",
+                COALESCE(CAST(inv.vat_rate AS VARCHAR), '7.00') AS "vatRate",
+                COALESCE(TO_CHAR(inv.vat_amount, 'FM999,999,999,990.00'), '0.00') AS "vatAmount",
+                COALESCE(TO_CHAR(inv.total_amount, 'FM999,999,999,990.00'), '0.00') AS "totalAmount",
+                COALESCE(TO_CHAR(inv.issue_date, 'DD/MM/YYYY'), '-') AS "issueDate",
+                COALESCE(TO_CHAR(inv.due_date, 'DD/MM/YYYY'), '-')   AS "dueDate",
+                COALESCE(CAST(inv.payment_status AS VARCHAR), 'UNPAID') AS "paymentStatus",
+                COALESCE(inv.remark, 'ไม่มีหมายเหตุเพิ่มเติม')         AS "remark"
+            FROM pm_invoice inv
+            LEFT JOIN pm_customer c ON inv.customer_id = c.id
+            LEFT JOIN pm_customer_project p ON inv.project_id = p.id
+            LEFT JOIN pm_customer_contract ct ON inv.contract_id = ct.id
+            WHERE inv.is_delete = false
+              AND ($P{invoiceId} IS NULL OR $P{invoiceId} = '' OR inv.id = CAST($P{invoiceId} AS uuid))
+            ORDER BY inv.created_date DESC
+            LIMIT 1;
+        ]]>
+    </queryString>
 
     <!-- ========================================================
          FIELDS
@@ -65,7 +95,7 @@
             <!-- Left: Logo & Company -->
             <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
                 <reportElement x="0" y="0" width="105" height="38"/>
-                <imageExpression><![CDATA[$P{logoStream}]]></imageExpression>
+                <imageExpression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></imageExpression>
             </image>
             <staticText>
                 <reportElement style="DocSubtitle" x="0" y="40" width="220" height="20"/>
@@ -77,7 +107,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="DocTitle" x="230" y="0" width="285" height="26"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ใบแจ้งหนี้ / ใบเรียกเก็บเงิน")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ใบแจ้งหนี้ / ใบเรียกเก็บเงิน"]]></textFieldExpression>
             </textField>
             <staticText>
                 <reportElement style="DocSubtitle" x="230" y="24" width="285" height="18"/>
@@ -87,7 +117,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="FooterText" x="230" y="44" width="285" height="18"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-"))]]></textFieldExpression>
+                <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
             </textField>
 
             <!-- Divider -->
@@ -104,12 +134,12 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="10" y="76" width="80" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("เลขที่ใบแจ้งหนี้:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["เลขที่ใบแจ้งหนี้:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="ValueBold" x="95" y="76" width="410" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[($F{invoiceNo} != null ? $F{invoiceNo} : "-") + " [" + com.softinter.sicapi.util.ReportHelper.thaify("สถานะการชำระ: ") + ($F{paymentStatus} != null ? $F{paymentStatus} : "UNPAID") + "]"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[($F{invoiceNo} != null ? $F{invoiceNo} : "-") + " [" + "สถานะการชำระ: ") + ($F{paymentStatus} != null ? $F{paymentStatus} : "UNPAID") + "]"]]></textFieldExpression>
             </textField>
         </band>
     </title>
@@ -125,7 +155,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="SectionHeading" x="0" y="6" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("1. ข้อมูลผู้รับบริการและโครงการ (Customer & Project Information)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["]]></textFieldExpression>
             </textField>
             <line>
                 <reportElement x="0" y="28" width="515" height="1" forecolor="#E2E8F0"/>
@@ -136,7 +166,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="10" y="32" width="95" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ชื่อลูกค้า / องค์กร:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ชื่อลูกค้า / องค์กร:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="ValueBold" x="110" y="32" width="145" height="20"/>
@@ -147,7 +177,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="270" y="32" width="85" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("โครงการ:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["โครงการ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="358" y="32" width="150" height="20"/>
@@ -159,7 +189,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="10" y="54" width="95" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("สัญญาอ้างอิง:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["สัญญาอ้างอิง:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="110" y="54" width="145" height="20"/>
@@ -170,7 +200,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="270" y="54" width="85" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ประเภทการเรียกเก็บ:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ประเภทการเรียกเก็บ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="358" y="54" width="150" height="20"/>
@@ -182,7 +212,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="10" y="76" width="95" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่ออกใบแจ้งหนี้:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["วันที่ออกใบแจ้งหนี้:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="110" y="76" width="145" height="20"/>
@@ -193,7 +223,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="270" y="76" width="85" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("กำหนดชำระ:")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["กำหนดชำระ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="ValueBold" x="358" y="76" width="150" height="20"/>
@@ -208,7 +238,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="SectionHeading" x="0" y="104" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("2. รายการสรุปยอดเงินและภาษี (Financial Summary)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["2. รายการสรุปยอดเงินและภาษี (Financial Summary)"]]></textFieldExpression>
             </textField>
             <line>
                 <reportElement x="0" y="126" width="515" height="1" forecolor="#E2E8F0"/>
@@ -223,12 +253,12 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="TableHeader" x="10" y="132" width="300" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("รายการ (Description)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["รายการ (Description)"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="TableHeader" x="320" y="132" width="185" height="22"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("จำนวนเงิน (บาท)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["จำนวนเงิน (บาท)"]]></textFieldExpression>
             </textField>
 
             <!-- Table Row 1: Subtotal -->
@@ -239,7 +269,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="10" y="158" width="300" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("มูลค่าบริการก่อนภาษี (Subtotal)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["มูลค่าบริการก่อนภาษี (Subtotal)"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="320" y="158" width="185" height="20"/>
@@ -255,7 +285,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="10" y="182" width="300" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ภาษีมูลค่าเพิ่ม (VAT ") + ($F{vatRate} != null ? $F{vatRate} : "7.00") + "%):"]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ภาษีมูลค่าเพิ่ม (VAT ") + ($F{vatRate} != null ? $F{vatRate} : "7.00") + "%):"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" x="320" y="182" width="185" height="20"/>
@@ -271,12 +301,12 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" x="10" y="208" width="300" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ยอดรวมสุทธิทั้งสิ้น (Grand Total)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="ValueBold" x="320" y="208" width="185" height="20"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[($F{totalAmount} != null ? $F{totalAmount} : "0.00") + " " + com.softinter.sicapi.util.ReportHelper.thaify("บาท")]]></textFieldExpression>
+                <textFieldExpression><![CDATA[($F{totalAmount} != null ? $F{totalAmount} : "0.00") + " " + "บาท"]]></textFieldExpression>
             </textField>
 
 
@@ -286,7 +316,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="SectionHeading" positionType="Float" x="0" y="238" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("3. หมายเหตุและข้อกำหนดการชำระเงิน (Payment Instructions)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["3. หมายเหตุและข้อกำหนดการชำระเงิน (Payment Instructions)"]]></textFieldExpression>
             </textField>
             <line>
                 <reportElement positionType="Float" x="0" y="260" width="515" height="1" forecolor="#E2E8F0"/>
@@ -300,7 +330,7 @@
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement style="ContentText" positionType="Float" x="10" y="272" width="495" height="78"/>
                 <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
-                <textFieldExpression><![CDATA[$F{remark} != null && !$F{remark}.isBlank() ? $F{remark} : com.softinter.sicapi.util.ReportHelper.thaify("กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน")]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{remark} != null && !$F{remark}.isBlank() ? $F{remark} : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน"]]></textFieldExpression>
             </textField>
 
 
@@ -310,7 +340,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="SectionHeading" positionType="Float" x="0" y="373" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("4. การลงนามผู้ออกเอกสาร (Authorized Signature)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["4. การลงนามผู้ออกเอกสาร (Authorized Signature)"]]></textFieldExpression>
             </textField>
             <line>
                 <reportElement positionType="Float" x="0" y="395" width="515" height="1" forecolor="#E2E8F0"/>
@@ -325,7 +355,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" positionType="Float" x="10" y="413" width="225" height="20"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้ออกเอกสาร (Finance & Billing)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ผู้ออกเอกสาร (Finance & Billing)"]]></textFieldExpression>
             </textField>
             <staticText>
                 <reportElement style="Value" positionType="Float" x="10" y="462" width="225" height="18"/>
@@ -335,12 +365,12 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" positionType="Float" x="10" y="484" width="225" height="18"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: เจ้าหน้าที่การเงิน")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ตำแหน่ง: เจ้าหน้าที่การเงิน"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" positionType="Float" x="10" y="505" width="225" height="18"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
             </textField>
 
             <!-- Signatures: Payer Acceptance -->
@@ -351,7 +381,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Label" positionType="Float" x="280" y="413" width="225" height="20"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ผู้รับวางบิล / จ่ายเงิน (Customer Accounts Payable)")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ผู้รับวางบิล / จ่ายเงิน (Customer Accounts Payable)"]]></textFieldExpression>
             </textField>
             <staticText>
                 <reportElement style="Value" positionType="Float" x="280" y="462" width="225" height="18"/>
@@ -361,12 +391,12 @@
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" positionType="Float" x="280" y="484" width="225" height="18"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("ตำแหน่ง: .....................................................")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
                 <reportElement style="Value" positionType="Float" x="280" y="505" width="225" height="18"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("วันที่: ........ / ........ / ................")]]></textFieldExpression>
+                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
             </textField>
         </band>
     </detail>
@@ -388,7 +418,7 @@
             <textField>
                 <reportElement style="FooterText" x="380" y="10" width="135" height="16"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[com.softinter.sicapi.util.ReportHelper.thaify("หน้า ") + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[ + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
         </band>
     </pageFooter>

@@ -3,54 +3,28 @@ package com.softinter.sicapi.util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 
-import javax.imageio.ImageIO;
-import java.awt.Image;
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 @Slf4j
-public final class ReportHelper {
+public class ReportHelper {
+
+    private static final String LOGO_PATH = "images/softinter_logo.png";
 
     private ReportHelper() {}
 
     /**
-     * Loads the company logo image as a ByteArrayInputStream so it remains open and readable during JasperReports filling.
+     * คืนค่า InputStream ของรูป Logo บริษัท (หรือ null ถ้าไม่พบไฟล์)
      */
     public static InputStream getLogoInputStream() {
         try {
-            ClassPathResource logoRes = new ClassPathResource("images/softinter_logo.png");
-            if (logoRes.exists()) {
-                try (InputStream is = logoRes.getInputStream()) {
-                    return new ByteArrayInputStream(is.readAllBytes());
-                }
+            ClassPathResource resource = new ClassPathResource(LOGO_PATH);
+            if (resource.exists()) {
+                return resource.getInputStream();
             }
+            log.warn("Report logo not found at classpath: {}", LOGO_PATH);
         } catch (Exception e) {
-            log.warn("Could not load company logo image: {}", e.getMessage());
+            log.warn("Could not load report logo from {}: {}", LOGO_PATH, e.getMessage());
         }
         return null;
-    }
-
-    /**
-     * Loads the company logo as a BufferedImage in memory.
-     */
-    public static Image getLogoImage() {
-        try {
-            ClassPathResource logoRes = new ClassPathResource("images/softinter_logo.png");
-            if (logoRes.exists()) {
-                try (InputStream is = logoRes.getInputStream()) {
-                    return ImageIO.read(is);
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Could not load company logo image as AWT Image: {}", e.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Adjusts Thai text (upper vowels, tone marks) to PUA codes for perfect PDF rendering with TH Sarabun New.
-     */
-    public static String thaify(String text) {
-        return ThaiGlyphUtil.adjust(text);
     }
 }
