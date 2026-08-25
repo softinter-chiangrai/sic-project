@@ -74,26 +74,26 @@
     <!-- ========================================================
          FIELDS
          ======================================================== -->
-    <field name="projectCode"        class="java.lang.String"/>
-    <field name="projectName"        class="java.lang.String"/>
-    <field name="customerName"       class="java.lang.String"/>
-    <field name="status"             class="java.lang.String"/>
-    <field name="priority"           class="java.lang.String"/>
-    <field name="startDate"          class="java.lang.String"/>
-    <field name="plannedEndDate"     class="java.lang.String"/>
-    <field name="actualEndDate"      class="java.lang.String"/>
-    <field name="budgetManday"       class="java.lang.String"/>
-    <field name="usedManday"         class="java.lang.String"/>
-    <field name="progress"           class="java.lang.String"/>
-    <field name="description"        class="java.lang.String"/>
-    <field name="createdDate"        class="java.lang.String"/>
+    <field name="projectCode"     class="java.lang.String"/>
+    <field name="projectName"     class="java.lang.String"/>
+    <field name="customerName"    class="java.lang.String"/>
+    <field name="status"          class="java.lang.String"/>
+    <field name="priority"        class="java.lang.String"/>
+    <field name="startDate"       class="java.lang.String"/>
+    <field name="plannedEndDate"  class="java.lang.String"/>
+    <field name="actualEndDate"   class="java.lang.String"/>
+    <field name="budgetManday"    class="java.lang.String"/>
+    <field name="usedManday"      class="java.lang.String"/>
+    <field name="progress"        class="java.lang.String"/>
+    <field name="description"     class="java.lang.String"/>
+    <field name="createdDate"     class="java.lang.String"/>
 
     <!-- ========================================================
          TITLE BAND — Clean Minimal Header
          ======================================================== -->
     <title>
         <band height="105">
-            <!-- Left: Logo & Company Name -->
+            <!-- Left: Logo & Company -->
             <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
                 <reportElement x="0" y="0" width="105" height="38"/>
                 <imageExpression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></imageExpression>
@@ -104,16 +104,16 @@
                 <text><![CDATA[SOFTINTER CO., LTD.]]></text>
             </staticText>
 
-            <!-- Right: Document Name & Export Date -->
+            <!-- Right: Title & Date -->
             <textField isBlankWhenNull="true">
                 <reportElement style="DocTitle" x="230" y="0" width="285" height="26"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["รายงานสรุปข้อมูลโครงการ"]]></textFieldExpression>
+                <textFieldExpression><![CDATA["รายงานข้อมูลโครงการ (Project Report)"]]></textFieldExpression>
             </textField>
             <staticText>
                 <reportElement style="DocSubtitle" x="230" y="24" width="285" height="18"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <text><![CDATA[Project Summary Report]]></text>
+                <text><![CDATA[Project Overview & Summary Report]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
                 <reportElement style="FooterText" x="230" y="44" width="285" height="18"/>
@@ -121,13 +121,13 @@
                 <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
             </textField>
 
-            <!-- Clean Top Divider Line -->
+            <!-- Divider -->
             <line>
                 <reportElement x="0" y="68" width="515" height="1" forecolor="#CBD5E1"/>
                 <graphicElement><pen lineWidth="0.8"/></graphicElement>
             </line>
 
-            <!-- Project Main Title Banner (Clean Light Box) -->
+            <!-- Project Name Banner -->
             <rectangle radius="3">
                 <reportElement x="0" y="74" width="515" height="28" backcolor="#F8FAFC" mode="Opaque"/>
                 <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
@@ -146,78 +146,84 @@
     </title>
 
     <!-- ========================================================
-         DETAIL BAND — Simple, Clean Sections
+         DETAIL BAND — Simple, Clean Sections & Natural Flow
          ======================================================== -->
     <detail>
-        <band height="550">
+        <band height="280" splitType="Stretch">
             <!-- ────────────────────────────────────────────────────────
                  SECTION 1: ข้อมูลทั่วไป (General Information)
                  ──────────────────────────────────────────────────────── -->
             <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" x="0" y="6" width="515" height="22"/>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="6" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA["1. ข้อมูลทั่วไป (General Information)"]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="0" y="28" width="515" height="1" forecolor="#E2E8F0"/>
+                <reportElement positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
+            <!-- Metadata Box 1 -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
+            </rectangle>
+
             <!-- Row 1: Code & Status -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="32" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="10" y="38" width="90" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["รหัสโครงการ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="32" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="ValueBold" positionType="Float" x="105" y="38" width="148" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{projectCode} != null ? $F{projectCode} : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="32" width="85" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="270" y="38" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["สถานะ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="360" y="32" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="ValueBold" positionType="Float" x="360" y="38" width="148" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{status} != null ? $F{status} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 2: Customer & Priority -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="54" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="10" y="56" width="90" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["ลูกค้า / องค์กร:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="54" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="105" y="56" width="148" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="54" width="85" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="270" y="56" width="85" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["ความสำคัญ:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="360" y="54" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="360" y="56" width="148" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{priority} != null ? $F{priority} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 3: Created Date -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="76" width="90" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="10" y="74" width="90" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["วันที่สร้าง:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="105" y="76" width="148" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="105" y="74" width="148" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{createdDate} != null ? $F{createdDate} : "-"]]></textFieldExpression>
             </textField>
 
@@ -226,81 +232,87 @@
                  SECTION 2: แผนงานและสถิติ (Timeline & Manday)
                  ──────────────────────────────────────────────────────── -->
             <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" x="0" y="104" width="515" height="22"/>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="110" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA["2. แผนงานและระยะเวลา (Timeline & Workload)"]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="0" y="126" width="515" height="1" forecolor="#E2E8F0"/>
+                <reportElement positionType="Float" x="0" y="132" width="515" height="1" forecolor="#CBD5E1"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
+            <!-- Timeline Box -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="0" y="138" width="515" height="64" backcolor="#F8FAFC" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
+            </rectangle>
+
             <!-- Row 1: Start Date & Planned End Date -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="130" width="105" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Label" positionType="Float" x="10" y="142" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA["วันที่เริ่มต้น:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="120" y="130" width="133" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="120" y="142" width="133" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{startDate} != null ? $F{startDate} : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="130" width="125" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["กำหนดสิ้นสุดตามแผน:"]]></textFieldExpression>
+                <reportElement style="Label" positionType="Float" x="270" y="142" width="125" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["แผนสิ้นสุด:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="400" y="130" width="108" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="400" y="142" width="108" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{plannedEndDate} != null ? $F{plannedEndDate} : "-"]]></textFieldExpression>
             </textField>
 
             <!-- Row 2: Actual End Date & Progress -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="152" width="105" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่สิ้นสุดจริง:"]]></textFieldExpression>
+                <reportElement style="Label" positionType="Float" x="10" y="160" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["สิ้นสุดจริง:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="120" y="152" width="133" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="120" y="160" width="133" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{actualEndDate} != null ? $F{actualEndDate} : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="152" width="125" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ความคืบหน้า:"]]></textFieldExpression>
+                <reportElement style="Label" positionType="Float" x="270" y="160" width="125" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["ความคืบหน้า (Manday):"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="400" y="152" width="108" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="ValueBold" positionType="Float" x="400" y="160" width="108" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{progress} != null ? $F{progress} : "0%"]]></textFieldExpression>
             </textField>
 
-            <!-- Row 3: Budget Manday & Used Manday -->
+            <!-- Row 3: Budget & Used Manday -->
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="174" width="105" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["Manday ตามแผน:"]]></textFieldExpression>
+                <reportElement style="Label" positionType="Float" x="10" y="178" width="105" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["งบประมาณ Manday:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="120" y="174" width="133" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="120" y="178" width="133" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[($F{budgetManday} != null ? $F{budgetManday} : "0") + " " + "วัน"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="270" y="174" width="125" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["Manday ใช้จริง:"]]></textFieldExpression>
+                <reportElement style="Label" positionType="Float" x="270" y="178" width="125" height="18"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["Manday ที่ใช้ไป:"]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement style="Value" x="400" y="174" width="108" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
+                <reportElement style="Value" positionType="Float" x="400" y="178" width="108" height="18"/>
+                <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[($F{usedManday} != null ? $F{usedManday} : "0") + " " + "วัน"]]></textFieldExpression>
             </textField>
 
@@ -309,96 +321,26 @@
                  SECTION 3: รายละเอียดขอบเขตโครงการ (Scope & Description)
                  ──────────────────────────────────────────────────────── -->
             <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" x="0" y="204" width="515" height="22"/>
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="214" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA["3. รายละเอียดและขอบเขตโครงการ (Scope & Description)"]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="0" y="226" width="515" height="1" forecolor="#E2E8F0"/>
+                <reportElement positionType="Float" x="0" y="236" width="515" height="1" forecolor="#CBD5E1"/>
                 <graphicElement><pen lineWidth="0.6"/></graphicElement>
             </line>
 
-            <!-- Clean Outline Box for Content -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="232" width="515" height="130" backcolor="#FFFFFF" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
+            <!-- Natural Flowing HTML Content -->
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="ContentText" positionType="Float" x="10" y="238" width="495" height="118"/>
-                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2"/>
+                <reportElement style="ContentText" positionType="Float" x="0" y="244" width="515" height="26"/>
+                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2" markup="html"/>
                 <textFieldExpression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : "ไม่มีรายละเอียดเพิ่มเติม"]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 4: การลงนามรับรอง (Sign-off)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="376" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["4. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="398" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Signatures: Project Manager -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="0" y="408" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="414" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ผู้รับผิดชอบโครงการ (Project Manager)"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="465" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="487" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="508" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
-            </textField>
-
-            <!-- Signatures: Customer / Approver -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="270" y="408" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="280" y="414" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ผู้อนุมัติ / ตัวแทนลูกค้า (Authorized)"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="465" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="487" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="508" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
             </textField>
         </band>
     </detail>
 
     <!-- ========================================================
-         PAGE FOOTER
+         PAGE FOOTER (Must be placed before summary)
          ======================================================== -->
     <pageFooter>
         <band height="30">
@@ -418,5 +360,77 @@
             </textField>
         </band>
     </pageFooter>
+
+    <!-- ========================================================
+         SUMMARY BAND: Sign-off Section (Will stay neatly together)
+         ======================================================== -->
+    <summary>
+        <band height="180" splitType="Prevent">
+            <!-- ────────────────────────────────────────────────────────
+                 SECTION 4: การลงนามรับรอง (Sign-off)
+                 ──────────────────────────────────────────────────────── -->
+            <textField isBlankWhenNull="true">
+                <reportElement style="SectionHeading" positionType="Float" x="0" y="10" width="515" height="22"/>
+                <textElement verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["4. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)"]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement positionType="Float" x="0" y="32" width="515" height="1" forecolor="#CBD5E1"/>
+                <graphicElement><pen lineWidth="0.6"/></graphicElement>
+            </line>
+
+            <!-- Signatures: Project Manager -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="0" y="42" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Label" positionType="Float" x="10" y="48" width="225" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["ผู้รับผิดชอบโครงการ (Project Manager)"]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="10" y="98" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="10" y="120" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="10" y="140" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
+            </textField>
+
+            <!-- Signatures: Customer / Approver -->
+            <rectangle radius="3">
+                <reportElement positionType="Float" x="270" y="42" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Label" positionType="Float" x="280" y="48" width="225" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["ผู้อนุมัติ / ตัวแทนลูกค้า (Authorized)"]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement style="Value" positionType="Float" x="280" y="98" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <text><![CDATA[(..................................................................)]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="280" y="120" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Value" positionType="Float" x="280" y="140" width="225" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
+                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
 
 </jasperReport>

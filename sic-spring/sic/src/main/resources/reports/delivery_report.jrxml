@@ -223,7 +223,7 @@
             </textField>
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement style="ContentText" x="110" y="200" width="395" height="26"/>
-                <textElement verticalAlignment="Top"/>
+                <textElement verticalAlignment="Top" lineSpacing="1_1_2" markup="html"/>
                 <textFieldExpression><![CDATA[$P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : "ส่งมอบงานตามข้อกำหนดเรียบร้อย"]]></textFieldExpression>
             </textField>
 
@@ -278,12 +278,12 @@
     </columnHeader>
 
     <!-- ========================================================
-         DETAIL BAND — Table Rows
+         DETAIL BAND — Deliverable Items Rows
          ======================================================== -->
     <detail>
-        <band height="24">
+        <band height="24" splitType="Stretch">
             <rectangle>
-                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="515" height="24" backcolor="#FFFFFF" mode="Opaque"/>
+                <reportElement positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="515" height="24" backcolor="#FFFFFF"/>
                 <graphicElement><pen lineWidth="0.4" lineColor="#E2E8F0"/></graphicElement>
             </rectangle>
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
@@ -292,7 +292,7 @@
                 <textFieldExpression><![CDATA[$F{category}]]></textFieldExpression>
             </textField>
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="105" y="2" width="80" height="20"/>
+                <reportElement style="ValueBold" positionType="Float" x="105" y="2" width="80" height="20"/>
                 <textElement verticalAlignment="Bottom"/>
                 <textFieldExpression><![CDATA[$F{code}]]></textFieldExpression>
             </textField>
@@ -315,7 +315,7 @@
     </detail>
 
     <!-- ========================================================
-         PAGE FOOTER
+         PAGE FOOTER (Must come before summary)
          ======================================================== -->
     <pageFooter>
         <band height="30">
@@ -331,7 +331,7 @@
             <textField>
                 <reportElement style="FooterText" x="380" y="8" width="135" height="18"/>
                 <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["หน้า ") + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[ + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
         </band>
     </pageFooter>
@@ -340,11 +340,11 @@
          SUMMARY BAND — Clean Sign-off Section
          ======================================================== -->
     <summary>
-        <band height="185">
+        <band height="185" splitType="Prevent">
             <textField isBlankWhenNull="true">
                 <reportElement style="SectionHeading" positionType="Float" x="0" y="15" width="515" height="22"/>
                 <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["]]></textFieldExpression>
+                <textFieldExpression><![CDATA["3. การลงนามรับรองการส่งมอบและตรวจรับ (Handover & Acceptance Sign-off)"]]></textFieldExpression>
             </textField>
             <line>
                 <reportElement positionType="Float" x="0" y="37" width="515" height="1" forecolor="#E2E8F0"/>
