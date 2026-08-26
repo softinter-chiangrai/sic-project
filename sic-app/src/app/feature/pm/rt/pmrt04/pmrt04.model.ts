@@ -37,6 +37,8 @@ export interface Contract {
   scopeSummary: string;
   signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
   renewalStatus: string;
+  parentContractId?: string;
+  parentContractNo?: string;
   isActive: boolean;
   createdAt: string;
   rowVersion?: number;

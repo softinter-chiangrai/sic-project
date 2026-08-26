@@ -61,6 +61,13 @@ public class PmCustomerContract extends BaseBusinessEntity {
     @Column(name = "renewal_status", length = 50)
     private String renewalStatus;
 
+    @Column(name = "parent_contract_id")
+    private UUID parentContractId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_contract_id", insertable = false, updatable = false)
+    private PmCustomerContract parentContract;
+
     @Transient
     private UUID projectId;
 

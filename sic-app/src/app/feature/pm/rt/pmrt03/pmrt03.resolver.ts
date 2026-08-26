@@ -8,11 +8,14 @@ import { Pmrt03Form } from './pmrt03.form';
 import { Pmrt03Model, Pmrt03PageData } from './pmrt03.model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+
 export const pmrt03Resolver: ResolveFn<Pmrt03PageData> = async (route) => {
   const fb = inject(FormBuilder);
   const service = inject(Pmrt03Service);
   const router = inject(Router);
-  const id = route.paramMap.get('id') || route.queryParams['projectId'];
+  const customerState = inject(CustomerStateService);
+  const id = route.paramMap.get('id') || route.queryParams['projectId'] || customerState.getProjectId();
 
   const form = Pmrt03Form.createForm(fb);
 

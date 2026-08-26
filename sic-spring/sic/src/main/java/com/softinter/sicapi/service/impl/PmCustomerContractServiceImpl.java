@@ -116,9 +116,29 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     contract.setScopeSummary(request.getScopeSummary());
     contract.setSignStatus(request.getSignStatus());
     contract.setRenewalStatus(request.getRenewalStatus());
+    contract.setParentContractId(request.getParentContractId());
     contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
     contract = contractRepository.save(contract);
+
+    // ✅ ถ้าเป็นการสร้างสัญญาใหม่จากการต่อสัญญา (มี parentContractId) ให้อัปเดตสัญญาเดิมเป็น "ต่อแล้ว"
+    if (isNew && request.getParentContractId() != null) {
+        contractRepository.findById(request.getParentContractId()).ifPresent(parent -> {
+            parent.setRenewalStatus("ต่อแล้ว");
+            contractRepository.save(parent);
+
+            // บันทึก Version/Audit Log ให้สัญญาเดิมด้วย
+            documentVersionService.createVersion(
+                    "CONTRACT",
+                    parent.getId(),
+                    parent.getProjectId(),
+                    parent.getContractNo(),
+                    "v-renewed",
+                    "ต่อสัญญาฉบับใหม่: " + request.getContractNo(),
+                    null
+            );
+        });
+    }
 
     // Snapshot data
     String snapshotJson = null;
@@ -144,21 +164,22 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     if (request.getProjectId() != null) {
         // เคลียร์ contractId ของโครงการเก่าที่เคยชี้มาที่สัญญานี้
         projectRepository.findByContractIdAndIsDeleteFalse(contractId)
-                .forEach(p -> {
-                    if (!p.getId().equals(request.getProjectId())) {
-                        p.setContractId(null);
-                        projectRepository.save(p);
+                .forEach(oldProject -> {
+                    if (!oldProject.getId().equals(request.getProjectId())) {
+                        oldProject.setContractId(null);
+                        projectRepository.save(oldProject);
                     }
                 });
 
-        // อัปเดตโครงการใหม่
-        projectRepository.findById(request.getProjectId()).ifPresent(project -> {
-            project.setContractId(contractId);
-            projectRepository.save(project);
-        });
+        // อัปเดต contractId ให้กับโครงการที่เลือก
+        projectRepository.findById(request.getProjectId())
+                .ifPresent(newProject -> {
+                    newProject.setContractId(contractId);
+                    projectRepository.save(newProject);
+                });
     }
 
-    return contractId; // หรือ return contract.getId() ก็ได้
+    return contract.getId();
 }
 
     @Override
@@ -221,6 +242,13 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         dto.setScopeSummary(contract.getScopeSummary());
         dto.setSignStatus(contract.getSignStatus());
         dto.setRenewalStatus(contract.getRenewalStatus());
+        dto.setParentContractId(contract.getParentContractId());
+        if (contract.getParentContract() != null) {
+            dto.setParentContractNo(contract.getParentContract().getContractNo());
+        } else if (contract.getParentContractId() != null) {
+            contractRepository.findById(contract.getParentContractId())
+                    .ifPresent(p -> dto.setParentContractNo(p.getContractNo()));
+        }
         dto.setIsActive(contract.getIsActive());
         dto.setRowVersion(contract.getRowVersion());
         dto.setCreatedDate(contract.getCreatedDate());

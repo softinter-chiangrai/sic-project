@@ -21,7 +21,9 @@ export interface ContractModel {
   contractNo: string;
   contractType: string;
   customerId?: string;
-  projectId: string;
+  customerName?: string;
+  projectId?: string;
+  projectName?: string;
   startDate: string | Date;
   endDate: string | Date;
   contractValue: number;
@@ -29,6 +31,8 @@ export interface ContractModel {
   scopeSummary: string;
   signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
   renewalStatus: string;
+  parentContractId?: string;
+  parentContractNo?: string;
   isActive: boolean;
   state?: number;
   rowVersion?: number;

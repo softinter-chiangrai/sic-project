@@ -22,6 +22,8 @@ public class PmCustomerContractResponse {
     private String scopeSummary;
     private String signStatus;
     private String renewalStatus;
+    private UUID parentContractId;
+    private String parentContractNo;
     private Boolean isActive;
     private Integer rowVersion;
     private Instant createdDate;

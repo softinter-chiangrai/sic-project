@@ -86,6 +86,14 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     this.initForm();
     this.loadFlows();
 
+    // Check queryParams for projectId
+    this.route.queryParams.subscribe((queryParams) => {
+      const qProjectId = queryParams['projectId'];
+      if (qProjectId) {
+        this.fetchProjectName(qProjectId);
+      }
+    });
+
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
@@ -101,6 +109,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   initForm(): void {
     this.form = this.fb.group(
       {
+        newContractNo: ['', Validators.required],
         newStartDate: [null, Validators.required],
         newEndDate: [null, Validators.required],
         newContractValue: [null, [Validators.required, Validators.min(0)]],
@@ -110,6 +119,27 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       },
       { validators: this.dateRangeValidator.bind(this) },
     );
+  }
+
+  /**
+   * คำนวณเลขที่สัญญาใหม่สำหรับการต่อสัญญาแบบ Auto-increment
+   * ตัวอย่าง: CTR-2024 -> CTR-2024-R1
+   *         CTR-2024-R1 -> CTR-2024-R2
+   *         CTR-2024-R -> CTR-2024-R1
+   */
+  private computeRenewalContractNo(originalContractNo: string): string {
+    if (!originalContractNo) return '';
+    const match = originalContractNo.match(/^(.*?)-R(\d+)$/i);
+    if (match) {
+      const base = match[1];
+      const seq = parseInt(match[2], 10) + 1;
+      return `${base}-R${seq}`;
+    }
+    if (originalContractNo.endsWith('-R') || originalContractNo.endsWith('-r')) {
+      const base = originalContractNo.substring(0, originalContractNo.length - 2);
+      return `${base}-R1`;
+    }
+    return `${originalContractNo}-R1`;
   }
 
   loadFlows(): void {
@@ -171,6 +201,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           newEndDate.setFullYear(newEndDate.getFullYear() + 1);
 
           this.form.patchValue({
+            newContractNo: this.computeRenewalContractNo(data.contractNo),
             newStartDate: newStartDate.toISOString().split('T')[0],
             newEndDate: newEndDate.toISOString().split('T')[0],
             newContractValue: data.contractValue,
@@ -192,34 +223,22 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   }
 
   private resolveCustomerAndProjectNames(contract: ContractModel): void {
-    // 1. Initial fallback to CustomerStateService
-    if (this.customerState.getProjectName()) {
+    // 1. Check direct properties from contract API response
+    if (contract.projectName) {
+      this.projectDisplayName = contract.projectName;
+    } else if (this.customerState.getProjectName()) {
       this.projectDisplayName = this.customerState.getProjectName();
     }
-    if (this.customerState.getCustomerName()) {
+
+    if (contract.customerName) {
+      this.customerDisplayName = contract.customerName;
+    } else if (this.customerState.getCustomerName()) {
       this.customerDisplayName = this.customerState.getCustomerName();
     }
 
-    // 2. Fetch Project if projectId exists
-    if (contract.projectId) {
-      this.projectService.getProject(contract.projectId).subscribe({
-        next: (proj) => {
-          if (proj) {
-            this.projectDisplayName = proj.projectName || proj.projectCode || contract.projectId;
-            if (proj.customerName) {
-              this.customerDisplayName = proj.customerName;
-            } else if (proj.customerId && !this.customerDisplayName) {
-              this.fetchCustomerName(proj.customerId);
-            }
-            this.cdr.detectChanges();
-          }
-        },
-        error: () => {
-          if (!this.projectDisplayName) {
-            this.projectDisplayName = contract.projectId;
-          }
-        },
-      });
+    // 2. Fetch Project if projectId exists and projectName is not yet resolved
+    if (contract.projectId && !this.projectDisplayName) {
+      this.fetchProjectName(contract.projectId);
     }
 
     // 3. Fetch Customer if customerId exists and not already resolved
@@ -228,18 +247,46 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     }
   }
 
+  private fetchProjectName(projectId: string): void {
+    if (!projectId) return;
+    this.projectService.getProject(projectId).subscribe({
+      next: (proj) => {
+        if (proj) {
+          this.ngZone.run(() => {
+            this.projectDisplayName = proj.projectName || proj.projectCode || projectId;
+            if (proj.customerName && !this.customerDisplayName) {
+              this.customerDisplayName = proj.customerName;
+            } else if (proj.customerId && !this.customerDisplayName) {
+              this.fetchCustomerName(proj.customerId);
+            }
+            this.cdr.detectChanges();
+          });
+        }
+      },
+      error: () => {
+        if (!this.projectDisplayName) {
+          this.projectDisplayName = projectId;
+          this.cdr.detectChanges();
+        }
+      },
+    });
+  }
+
   private fetchCustomerName(customerId: string): void {
     this.customerService.getCustomer(customerId).subscribe({
       next: (cust) => {
         if (cust) {
-          this.customerDisplayName =
-            cust.companyNameLocal || cust.companyNameEn || cust.customerCode || customerId;
-          this.cdr.detectChanges();
+          this.ngZone.run(() => {
+            this.customerDisplayName =
+              cust.companyNameLocal || cust.companyNameEn || cust.customerCode || customerId;
+            this.cdr.detectChanges();
+          });
         }
       },
       error: () => {
         if (!this.customerDisplayName) {
           this.customerDisplayName = customerId;
+          this.cdr.detectChanges();
         }
       },
     });
@@ -294,7 +341,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     const newContract: ContractModel = {
       ...original,
       id: undefined,
-      contractNo: `${original.contractNo}-R`,
+      contractNo: formValue.newContractNo || `${original.contractNo}-R`,
+      parentContractId: original.id,
       startDate: DateTimeUtil.toInstantIsoString(formValue.newStartDate) || startDateStr,
       endDate: DateTimeUtil.toInstantIsoString(formValue.newEndDate) || endDateStr,
       contractValue: formValue.newContractValue,
@@ -311,7 +359,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     this.dialog
       .confirm(
         'ยืนยันการต่อสัญญา',
-        `คุณต้องการต่อสัญญา ${original.contractNo} ตั้งแต่วันที่ ${this.formatDate(startDateStr)} ถึง ${this.formatDate(endDateStr)} มูลค่า ${this.formatCurrency(formValue.newContractValue)} ใช่หรือไม่?`,
+        `คุณต้องการต่อสัญญาเป็น ${newContract.contractNo} (จากสัญญาเดิม ${original.contractNo}) ตั้งแต่วันที่ ${this.formatDate(startDateStr)} ถึง ${this.formatDate(endDateStr)} มูลค่า ${this.formatCurrency(formValue.newContractValue)} ใช่หรือไม่?`,
       )
       .then((confirmed) => {
         if (confirmed) {

@@ -84,6 +84,23 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- เลขที่สัญญาใหม่ (แก้ไขได้/Auto-generated) -->
+            <div class="md:col-span-2">
+              <sic-input
+                label="เลขที่สัญญา (ใหม่)"
+                type="text"
+                formControlName="newContractNo"
+                [required]="true"
+                placeholder="ระบุเลขที่สัญญาใหม่ เช่น CTR-001-R1"
+              ></sic-input>
+              @if (form.get('newContractNo')?.touched && form.get('newContractNo')?.invalid) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขที่สัญญาใหม่</p>
+              }
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                * ระบบสร้างค่าเริ่มต้นอัตโนมัติ (-R1, -R2...) คุณสามารถแก้ไขเลขที่สัญญาตามเอกสารจริงได้
+              </p>
+            </div>
+
             <!-- วันที่เริ่มใหม่ -->
             <div>
               <sic-datepicker

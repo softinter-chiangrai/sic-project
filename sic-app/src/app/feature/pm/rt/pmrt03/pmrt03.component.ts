@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { ProjectDashboard, RecentPhase, RecentTask } from './pmrt03.model';
@@ -24,6 +25,7 @@ export class Pmrt03Component implements OnInit {
   private pmrt03Service = inject(Pmrt03Service);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected isLoading = signal(false);
@@ -34,7 +36,7 @@ export class Pmrt03Component implements OnInit {
   // ===== Lifecycle =====
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'];
+      const projectId = params['projectId'] || this.customerState.getProjectId();
       if (projectId) {
         this.projectId.set(projectId);
         this.loadDashboard(projectId);

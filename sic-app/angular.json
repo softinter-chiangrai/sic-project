@@ -3,9 +3,9 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": "bc27c70a-5c2e-4b70-8aac-021d53b2215f"
+    "analytics": "bc27c70a-5c2e-4b70-8aac-021d53b2215f",
     "cache": {
-      "enabled": false
+      "enabled": true
     }
   },
   "newProjectRoot": "projects",
@@ -56,12 +56,11 @@
               }
             ],
             "styles": [
-  "node_modules/@fontsource/material-symbols-outlined/index.css",
-  "node_modules/@flogeez/angular-tiptap-editor/src/lib/styles/index.css",
-  "src/styles.css",
-  "node_modules/bootstrap-icons/font/bootstrap-icons.css"
-],
-
+              "node_modules/@fontsource/material-symbols-outlined/index.css",
+              "node_modules/@flogeez/angular-tiptap-editor/src/lib/styles/index.css",
+              "src/styles.css",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css"
+            ],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
@@ -93,7 +92,11 @@
               ],
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": {
+                "scripts": true,
+                "styles": false,
+                "vendor": false
+              }
             }
           },
           "defaultConfiguration": "production"
@@ -105,7 +108,8 @@
               "buildTarget": "sic-app:build:production"
             },
             "development": {
-              "buildTarget": "sic-app:build:development"
+              "buildTarget": "sic-app:build:development",
+              "hmr": true
             }
           },
           "defaultConfiguration": "development"
