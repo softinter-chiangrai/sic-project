@@ -52,6 +52,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   form!: FormGroup;
   isEdit = false;
+  isView = false;
   contractId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -60,51 +61,66 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   customerId: string | null = null;
   projectId: string | null = null;
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => (this.isView ? false : (this.form?.dirty ?? false));
 
- // pmrt04A.component.ts
-ngOnInit(): void {
-  this.initForm();
+  // pmrt04A.component.ts
+  ngOnInit(): void {
+    this.initForm();
 
-  // รับ projectId จาก queryParams (optional) เพื่อใช้ในกรณีสร้างใหม่
-  this.route.queryParams.subscribe((params) => {
-    const projectId = params['projectId'];
-    if (projectId) {
-      this.projectId = projectId;
-      this.projectService.getProject(projectId).subscribe({
-        next: (project) => {
-          this.customerId = project.customerId;
-          this.form.patchValue({ projectId, customerId: project.customerId });
-          this.cdr.detectChanges();
-        },
-        error: () => this.navigation.navigate(['/feature/pm/pmrt04'])
-      });
+    if (this.router.url.includes('/view')) {
+      this.isView = true;
     }
-  });
 
-  // กรณีแก้ไข: โหลดข้อมูลสัญญา ซึ่งจะได้ projectId และ customerId จาก data
-  this.route.params.subscribe((params) => {
-    const id = params['id'];
-    if (id) {
-      this.isEdit = true;
-      this.contractId = id;
-      this.loadContract(id); // ใน loadContract จะ set this.projectId = data.projectId
-    }
-  });
-}
+    // รับ projectId จาก queryParams (optional) เพื่อใช้ในกรณีสร้างใหม่
+    this.route.queryParams.subscribe((params) => {
+      if (params['mode'] === 'view') {
+        this.isView = true;
+      }
+      const projectId = params['projectId'];
+      if (projectId) {
+        this.projectId = projectId;
+        this.projectService.getProject(projectId).subscribe({
+          next: (project) => {
+            this.customerId = project.customerId;
+            this.form.patchValue({ projectId, customerId: project.customerId });
+            if (this.isView) {
+              this.form.disable();
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => this.navigation.navigate(['/feature/pm/pmrt04']),
+        });
+      }
+    });
+
+    // กรณีแก้ไขหรือดู: โหลดข้อมูลสัญญา ซึ่งจะได้ projectId และ customerId จาก data
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.contractId = id;
+        this.loadContract(id); // ใน loadContract จะ set this.projectId = data.projectId
+      }
+    });
+  }
 
   initForm(): void {
     this.form = Pmrt04AForm.createForm(this.fb);
   }
 
- loadContract(id: string) {
+  loadContract(id: string) {
     this.isLoading = true;
     this.service
       .getContract(id)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.cdr.detectChanges(); 
-      }))
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          if (this.isView) {
+            this.form.disable();
+          }
+          this.cdr.detectChanges();
+        }),
+      )
       .subscribe({
         next: (data) => {
           if (data.customerId) {
@@ -114,6 +130,9 @@ ngOnInit(): void {
             this.projectId = data.projectId;
           }
           this.form.patchValue(data);
+          if (this.isView) {
+            this.form.disable();
+          }
           this.form.markAsPristine();
           console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
           this.cdr.detectChanges(); // ✅ อัปเดต View ทันที

@@ -15,8 +15,8 @@ import { finalize, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
+import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract } from './pmrt04.model';
 
@@ -33,6 +33,7 @@ export class Pmrt04Component implements OnInit {
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
   private projectService = inject(Pmrt02Service);
+  private contractService = inject(Pmrt04Service);
   private navigation = inject(NavigationService);
 
   // ===== State =====
@@ -264,11 +265,50 @@ export class Pmrt04Component implements OnInit {
   }
 
   goToView(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
+    const projectId = this.filterProjectId();
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view'], {
+      queryParams: { projectId }
+    });
   }
 
   goToRenew(contractId: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId]);
+    const projectId = this.filterProjectId();
+    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId], {
+      queryParams: { projectId }
+    });
+  }
+
+  printContract(contract: Contract) {
+    if (!contract.id) {
+      this.dialog.warn('ไม่พบรหัสสัญญา', 'ไม่สามารถส่งออกเอกสารได้');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.contractService
+      .exportContractPdf(contract.id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.download = `contract-${contract.contractNo || contract.id}.pdf`;
+            a.click();
+          }
+        },
+        error: (error) => {
+          console.error('Export contract PDF error:', error);
+          this.dialog.error(
+            'ส่งออกเอกสารไม่สำเร็จ',
+            error.error?.message || 'เกิดข้อผิดพลาดในการสร้างเอกสาร PDF'
+          );
+        },
+      });
   }
 
   goBackToCustomer() {

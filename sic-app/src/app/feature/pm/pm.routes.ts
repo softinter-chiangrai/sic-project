@@ -141,6 +141,13 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt04AResolver },
   },
   {
+    path: 'pmrt04/:id/view',
+    loadComponent: () =>
+      import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { form: pmrt04AResolver },
+  },
+  {
     path: 'pmrt04/renew/:id',
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.Pmrt04BComponent),

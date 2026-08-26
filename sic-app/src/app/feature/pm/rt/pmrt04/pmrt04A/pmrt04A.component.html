@@ -16,7 +16,7 @@
       <!-- HEADER -->
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา' }}
+          {{ isView ? 'รายละเอียดสัญญา' : (isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา') }}
         </h2>
       </div>
 
@@ -127,7 +127,7 @@
 
       <!-- Buttons -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5">
-        <div class="flex-1">
+        <div [class]="isView ? 'w-full' : 'flex-1'">
           <sic-button
             [fullWidth]="true"
             [type]="'button'"
@@ -138,21 +138,23 @@
             ย้อนกลับ
           </sic-button>
         </div>
-        <div class="flex-1">
-          <sic-button
-            [fullWidth]="true"
-            [type]="'submit'"
-            variant="primary"
-            [disabled]="isSaving"
-          >
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
-              <i class="bi bi-floppy"></i>
-            }
-            {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
-          </sic-button>
-        </div>
+        @if (!isView) {
+          <div class="flex-1">
+            <sic-button
+              [fullWidth]="true"
+              [type]="'submit'"
+              variant="primary"
+              [disabled]="isSaving"
+            >
+              @if (isSaving) {
+                <i class="bi bi-arrow-repeat animate-spin"></i>
+              } @else {
+                <i class="bi bi-floppy"></i>
+              }
+              {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+            </sic-button>
+          </div>
+        }
       </div>
 
     </div>
