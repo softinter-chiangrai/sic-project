@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -24,13 +24,13 @@ public class PmMaRenewalRequest {
     private UUID projectId;
 
     @NotNull(message = "Current end date is required")
-    private LocalDate currentEndDate;
+    private Instant currentEndDate;
 
     @NotNull(message = "New start date is required")
-    private LocalDate newStartDate;
+    private Instant newStartDate;
 
     @NotNull(message = "New end date is required")
-    private LocalDate newEndDate;
+    private Instant newEndDate;
 
     @NotNull(message = "Proposed amount is required")
     private BigDecimal proposedAmount;

@@ -19,6 +19,7 @@ import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract } from './pmrt04.model';
+import { NavigationService } from '../../../../core/services/navigation.service';
 
 @Component({
   selector: 'app-pmrt04',

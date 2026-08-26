@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -29,13 +29,13 @@ public class PmMaRenewal extends BaseBusinessEntity {
     private UUID projectId;
 
     @Column(name = "current_end_date", nullable = false)
-    private LocalDate currentEndDate;
+    private Instant currentEndDate;
 
     @Column(name = "new_start_date", nullable = false)
-    private LocalDate newStartDate;
+    private Instant newStartDate;
 
     @Column(name = "new_end_date", nullable = false)
-    private LocalDate newEndDate;
+    private Instant newEndDate;
 
     @Column(name = "proposed_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal proposedAmount = BigDecimal.ZERO;

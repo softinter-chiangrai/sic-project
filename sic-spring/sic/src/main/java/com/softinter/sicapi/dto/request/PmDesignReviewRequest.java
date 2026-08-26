@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -31,7 +31,7 @@ public class PmDesignReviewRequest {
     private String assignedTo;
     private String severity = "Medium";
     private String status = "Open";
-    private LocalDate dueDate;
+    private Instant dueDate;
     private String figmaUrl;
     private String embedMode = "prototype";
     private Boolean isActive = true;

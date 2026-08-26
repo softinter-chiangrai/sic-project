@@ -132,7 +132,7 @@ public class PmPaymentServiceImpl implements PmPaymentService {
     private void mapRequestToEntity(PmPaymentRequest req, PmPayment entity) {
         entity.setPaymentNo(req.getPaymentNo());
         entity.setInvoiceId(req.getInvoiceId());
-        entity.setPaymentDate(req.getPaymentDate() != null ? req.getPaymentDate() : LocalDate.now());
+        entity.setPaymentDate(req.getPaymentDate() != null ? req.getPaymentDate() : Instant.now());
         entity.setPaymentMethod(req.getPaymentMethod() != null ? req.getPaymentMethod() : PaymentMethod.BANK_TRANSFER);
         entity.setAmount(req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO);
         entity.setReferenceNo(req.getReferenceNo());

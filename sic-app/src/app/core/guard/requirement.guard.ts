@@ -4,7 +4,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { DialogService } from '../services/dialog.service';
 import { CustomerStateService } from '../services/customer-state.service';
 
-export const requirementGuard: CanActivateFn = (route, state) => {
+export const requirementGuard: CanActivateFn = async (route, state) => {
   const router = inject(Router);
   const dialog = inject(DialogService);
   const customerState = inject(CustomerStateService);
@@ -39,7 +39,7 @@ export const requirementGuard: CanActivateFn = (route, state) => {
   }
 
   // 5. ไม่มี requirementId → แจ้งเตือนและกลับไปหน้ารายการ
-  dialog.warn('กรุณาเลือก Requirement', 'ไม่พบข้อมูล Requirement');
+  await dialog.warn('กรุณาเลือก Requirement', 'ไม่พบข้อมูล Requirement');
   const projectId = customerState.getProjectId();
   const customerId = customerState.getCustomerId();
   router.navigate(['/feature/pm/pmdt04'], {

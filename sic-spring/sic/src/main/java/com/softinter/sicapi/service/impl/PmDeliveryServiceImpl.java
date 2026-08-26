@@ -443,8 +443,8 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         invReq.setDeliveryId(delivery.getId());
         invReq.setMilestoneId(delivery.getMilestoneId());
         invReq.setBillingType(BillingType.MILESTONE);
-        invReq.setIssueDate(LocalDate.now());
-        invReq.setDueDate(LocalDate.now().plusDays(30));
+        invReq.setIssueDate(Instant.now());
+        invReq.setDueDate(Instant.now().plus(java.time.Duration.ofDays(30)));
         invReq.setSubtotalAmount(subtotal);
         invReq.setPaymentStatus(PaymentStatus.UNPAID);
         invReq.setRemark("Generated from Delivery Acceptance: " + delivery.getDeliveryTitle() + " (" + delivery.getDeliveryCode() + ")");

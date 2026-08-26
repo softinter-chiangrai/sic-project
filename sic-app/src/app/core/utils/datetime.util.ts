@@ -146,4 +146,18 @@ export class DateTimeUtil {
     }
     return format.replaceAll('BBBB', 'YYYY').replaceAll('BB', 'YY');
   }
+
+  /**
+   * แปลง Date, string ("YYYY-MM-DD" หรือรูปแบบอื่นๆ) หรือ timestamp ให้เป็น ISO-8601 UTC Instant String
+   * ตัวอย่าง: "2027-07-31" -> "2027-07-31T00:00:00.000Z"
+   */
+  static toInstantIsoString(value: string | Date | null | undefined): string | null {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return isNaN(value.getTime()) ? null : value.toISOString();
+    }
+    const d = dayjs(value);
+    if (!d.isValid()) return null;
+    return d.toISOString();
+  }
 }

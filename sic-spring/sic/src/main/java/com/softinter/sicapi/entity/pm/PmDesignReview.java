@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +48,7 @@ public class PmDesignReview extends BaseBusinessEntity {
     private String status = "Open";
 
     @Column(name = "due_date")
-    private LocalDate dueDate;
+    private Instant dueDate;
 
     @Column(name = "figma_url", columnDefinition = "TEXT")
     private String figmaUrl;

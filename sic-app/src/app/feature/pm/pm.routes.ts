@@ -66,6 +66,7 @@ export const PM_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () => import('./rt/pmrt03/pmrt03.component').then(m => m.Pmrt03Component),
+    canActivate: [customerGuard, projectGuard],
     resolve: { form: pmrt03Resolver },
   },
   // ===== Customer (PMRT01) =====
@@ -101,6 +102,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmrt02AResolver },
   },
   {
@@ -108,6 +110,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt02/pmrt02A/pmrt02A.component').then((m) => m.Pmrt02AComponent),
     canActivate: [customerGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmrt02AResolver },
   },
 
@@ -131,6 +134,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmrt04AResolver },
   },
   {
@@ -138,6 +142,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04A/pmrt04A.component').then((m) => m.Pmrt04AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmrt04AResolver },
   },
   {
@@ -152,6 +157,7 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('./rt/pmrt04/pmrt04B/pmrt04B.component').then((m) => m.Pmrt04BComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmrt04BResolver },
   },
 
@@ -380,12 +386,14 @@ export const PM_ROUTES: Routes = [
     path: 'change-request/new',
     loadComponent: () => import('./dt/pmdt06/pmdt06A/pmdt06A.component').then(m => m.Pmdt06AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmdt06AResolver },
   },
   {
     path: 'change-request/:id/edit',
     loadComponent: () => import('./dt/pmdt06/pmdt06A/pmdt06A.component').then(m => m.Pmdt06AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { form: pmdt06AResolver },
   },
   {
@@ -458,12 +466,14 @@ export const PM_ROUTES: Routes = [
     path: 'design-review/new',
     loadComponent: () => import('./dt/pmdt09/pmdt09A/pmdt09A.component').then((m) => m.Pmdt09AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt09AResolver },
   },
   {
     path: 'design-review/:id/edit',
     loadComponent: () => import('./dt/pmdt09/pmdt09A/pmdt09A.component').then((m) => m.Pmdt09AComponent),
     canActivate: [customerGuard, projectGuard, requirementGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt09AResolver },
   },
 
@@ -555,12 +565,14 @@ export const PM_ROUTES: Routes = [
     path: 'test-case/new',
     loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt12AResolver },
   },
   {
     path: 'test-case/:id/edit',
     loadComponent: () => import('./dt/pmdt12/pmdt12A/pmdt12A.component').then((m) => m.Pmdt12AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt12AResolver },
   },
   {
@@ -597,12 +609,14 @@ export const PM_ROUTES: Routes = [
     path: 'bug/new',
     loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt13AResolver },
   },
   {
     path: 'bug/:id/edit',
     loadComponent: () => import('./dt/pmdt13/pmdt13A/pmdt13A.component').then((m) => m.Pmdt13AComponent),
     canActivate: [customerGuard, projectGuard],
+    canDeactivate: [CanDeactivateGuard],
     resolve: { pageData: pmdt13AResolver },
   },
   {

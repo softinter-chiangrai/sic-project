@@ -5,7 +5,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { CustomerStateService } from '../services/customer-state.service';
 import { DialogService } from '../services/dialog.service';
 
-export const projectGuard: CanActivateFn = (route, state) => {
+export const projectGuard: CanActivateFn = async (route, state) => {
   const customerState = inject(CustomerStateService);
   const router = inject(Router);
   const dialog = inject(DialogService);
@@ -27,7 +27,7 @@ export const projectGuard: CanActivateFn = (route, state) => {
   // 3. ถ้ายังไม่มี → แจ้งเตือนและพาไปเลือกโครงการ
   if (!projectId) {
     const customerId = customerState.getCustomerId();
-    dialog.warn(
+    await dialog.warn(
       'กรุณาเลือกโครงการก่อน',
       'คุณต้องเลือกโครงการเพื่อเข้าถึงหน้านี้'
     );

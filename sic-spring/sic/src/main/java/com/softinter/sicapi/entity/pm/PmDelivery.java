@@ -34,7 +34,7 @@ public class PmDelivery extends BaseBusinessEntity {
     private UUID milestoneId;
 
     @Column(name = "delivery_date")
-    private LocalDate deliveryDate;
+    private Instant deliveryDate;
 
     @Column(name = "delivery_version", length = 20)
     private String deliveryVersion = "1.0";

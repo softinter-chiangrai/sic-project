@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -40,10 +40,10 @@ public class PmInvoice extends BaseBusinessEntity {
     private BillingType billingType = BillingType.MILESTONE;
 
     @Column(name = "issue_date", nullable = false)
-    private LocalDate issueDate;
+    private Instant issueDate;
 
     @Column(name = "due_date", nullable = false)
-    private LocalDate dueDate;
+    private Instant dueDate;
 
     @Column(name = "subtotal_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal subtotalAmount = BigDecimal.ZERO;

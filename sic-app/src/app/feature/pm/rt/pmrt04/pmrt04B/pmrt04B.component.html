@@ -49,11 +49,11 @@
             </div>
             <div>
               <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ลูกค้า</p>
-              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.customerId || '-' }}</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ customerDisplayName || '-' }}</p>
             </div>
             <div>
               <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">โครงการ</p>
-              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.projectId || '-' }}</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ projectDisplayName || '-' }}</p>
             </div>
             <div>
               <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่เริ่ม</p>
@@ -131,31 +131,63 @@
               }
             </div>
 
-            <!-- สถานะการต่อ -->
+            <!-- สถานะการต่อ (Combobox) -->
             <div>
-              <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-                >สถานะการต่อสัญญา</label
-              >
-              <select
+              <sic-combobox
+                label="สถานะการต่อสัญญา"
+                [options]="renewalStatusOptions"
+                valueField="value"
+                textField="text"
                 formControlName="renewalStatus"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20"
-              >
-                <option value="ต่อแล้ว">ต่อแล้ว</option>
-                <option value="รอต่อ">รอต่อ</option>
-                <option value="ยังไม่ต่อ">ยังไม่ต่อ</option>
-                <option value="ยกเลิก">ยกเลิก</option>
-              </select>
+                placeholder="เลือกสถานะการต่อสัญญา"
+                [clearable]="false"
+              ></sic-combobox>
             </div>
           </div>
 
-          <!-- หมายเหตุ -->
+          <!-- หมายเหตุการต่อสัญญา (Tiptap Editor) -->
           <div class="mt-4">
-            <sic-input-area
-              label="หมายเหตุการต่อสัญญา"
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-sm font-medium text-[var(--text-active)]">
+                หมายเหตุการต่อสัญญา
+              </label>
+              <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                <i class="bi bi-markdown"></i> รองรับ Rich Text
+              </span>
+            </div>
+            <sic-tiptap-editor
               formControlName="renewalRemark"
-              [rows]="2"
-              placeholder="ระบุเหตุผลหรือรายละเอียดเพิ่มเติม (ถ้ามี)"
-            ></sic-input-area>
+              placeholderInput="ระบุเหตุผลหรือรายละเอียดเพิ่มเติมในการต่อสัญญา..."
+              minHeightInput="160px"
+            ></sic-tiptap-editor>
+          </div>
+
+          <!-- กระบวนการอนุมัติ (Approval Flow) -->
+          <div class="border-t border-[var(--border)] pt-4 mt-4">
+            <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
+              <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+              กระบวนการอนุมัติ (Approval Flow)
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <sic-combobox
+                  label="เลือกกระบวนการอนุมัติ"
+                  [apiUrl]="documenttypeapiUrl"
+                  valueField="id"
+                  textField="flowName"
+                  placeholder="เลือกกระบวนการอนุมัติ (ถ้ามี)"
+                  [clearable]="true"
+                  formControlName="approvalFlowId"
+                  (selectionChanged)="selectedFlowId = $event?.id"
+                ></sic-combobox>
+                @if (!selectedFlowId && flows.length > 0) {
+                  <p class="text-xs text-[var(--text-muted)] mt-1">
+                    * คุณสามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
+                  </p>
+                }
+              </div>
+            </div>
           </div>
         </div>
 

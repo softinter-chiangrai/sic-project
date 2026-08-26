@@ -35,12 +35,10 @@ export class Pmrt03Component implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       const projectId = params['projectId'];
-      if (!projectId) {
-        this.navigation.navigate(['/feature/pm/pmrt02']);
-        return;
+      if (projectId) {
+        this.projectId.set(projectId);
+        this.loadDashboard(projectId);
       }
-      this.projectId.set(projectId);
-      this.loadDashboard(projectId);
     });
   }
 

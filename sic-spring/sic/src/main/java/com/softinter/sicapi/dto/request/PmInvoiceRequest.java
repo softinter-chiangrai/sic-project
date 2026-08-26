@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -28,10 +28,10 @@ public class PmInvoiceRequest {
     private BillingType billingType = BillingType.MILESTONE;
 
     @NotNull(message = "Issue date is required")
-    private LocalDate issueDate;
+    private Instant issueDate;
 
     @NotNull(message = "Due date is required")
-    private LocalDate dueDate;
+    private Instant dueDate;
 
     @NotNull(message = "Subtotal amount is required")
     private BigDecimal subtotalAmount;

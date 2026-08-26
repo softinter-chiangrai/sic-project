@@ -25,6 +25,7 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 
 import { ChangeRequestFormModel } from './pmdt06A.model';
 
@@ -46,7 +47,7 @@ import { ChangeRequestFormModel } from './pmdt06A.model';
     changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt06A.component.html',
 })
-export class Pmdt06AComponent implements OnInit {
+export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private route = inject(ActivatedRoute);
@@ -102,6 +103,8 @@ export class Pmdt06AComponent implements OnInit {
     selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
 
     documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
+
+    pageDirty = () => this.isView ? false : (this.form?.dirty ?? false);
 
     // ===== Methods =====
 

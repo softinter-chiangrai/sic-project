@@ -96,8 +96,8 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             newContract.setProjectId(entity.getProjectId());
             newContract.setContractNo("CT-MA-" + System.currentTimeMillis());
             newContract.setContractType("MA");
-            newContract.setStartDate(entity.getNewStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-            newContract.setEndDate(entity.getNewEndDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+            newContract.setStartDate(entity.getNewStartDate());
+            newContract.setEndDate(entity.getNewEndDate());
             newContract.setContractValue(entity.getProposedAmount());
             newContract.setSignStatus("ACTIVE");
             newContract.setCreatedBy(userId);
@@ -127,9 +127,9 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         entity.setContractId(req.getContractId());
         entity.setCustomerId(req.getCustomerId());
         entity.setProjectId(req.getProjectId());
-        entity.setCurrentEndDate(req.getCurrentEndDate() != null ? req.getCurrentEndDate() : LocalDate.now());
-        entity.setNewStartDate(req.getNewStartDate() != null ? req.getNewStartDate() : LocalDate.now());
-        entity.setNewEndDate(req.getNewEndDate() != null ? req.getNewEndDate() : LocalDate.now().plusYears(1));
+        entity.setCurrentEndDate(req.getCurrentEndDate() != null ? req.getCurrentEndDate() : Instant.now());
+        entity.setNewStartDate(req.getNewStartDate() != null ? req.getNewStartDate() : Instant.now());
+        entity.setNewEndDate(req.getNewEndDate() != null ? req.getNewEndDate() : Instant.now().plus(java.time.Duration.ofDays(365)));
         entity.setProposedAmount(req.getProposedAmount() != null ? req.getProposedAmount() : BigDecimal.ZERO);
         entity.setStatus(req.getStatus() != null ? req.getStatus() : MaRenewalStatus.DRAFT);
         entity.setNewContractId(req.getNewContractId());

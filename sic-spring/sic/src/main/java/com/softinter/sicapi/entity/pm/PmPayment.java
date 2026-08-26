@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -24,7 +24,7 @@ public class PmPayment extends BaseBusinessEntity {
     private UUID invoiceId;
 
     @Column(name = "payment_date", nullable = false)
-    private LocalDate paymentDate;
+    private Instant paymentDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 30)

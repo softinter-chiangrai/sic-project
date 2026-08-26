@@ -21,6 +21,7 @@ import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { ContractModel } from './pmrt04A.model';
 import { Pmrt04AService } from './pmrt04A.service';
 import { Pmrt04AForm } from './pmrt04A.form';
+import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 
 // ===== Component =====
 @Component({
@@ -183,7 +184,13 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving = true;
 
     // ✅ ดึงค่าจากฟอร์ม
-    const data = this.form.value as ContractModel;
+    const data = { ...this.form.value } as ContractModel;
+    if (data.startDate) {
+      data.startDate = DateTimeUtil.toInstantIsoString(data.startDate) || data.startDate;
+    }
+    if (data.endDate) {
+      data.endDate = DateTimeUtil.toInstantIsoString(data.endDate) || data.endDate;
+    }
 
     // ✅ สำคัญ: เพิ่ม customerId จาก queryParams ลงในข้อมูลที่ส่ง
     if (this.customerId) {

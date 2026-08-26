@@ -5,7 +5,7 @@ import { CustomerStateService } from '../services/customer-state.service';
 import { DialogService } from '../services/dialog.service';
 
 
-export const customerGuard: CanActivateFn = (route, state) => {
+export const customerGuard: CanActivateFn = async (route, state) => {
   const customerState = inject(CustomerStateService);
   const router = inject(Router);
   const dialog = inject(DialogService);
@@ -26,7 +26,7 @@ export const customerGuard: CanActivateFn = (route, state) => {
   }
 
   if (!customerId) {
-    dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
+    await dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
     router.navigate(['/feature/pm/pmrt01']);
     return false;
   }

@@ -24,8 +24,8 @@ public class PmInvoiceResponse {
     private UUID milestoneId;
     private String milestoneTitle;
     private BillingType billingType;
-    private LocalDate issueDate;
-    private LocalDate dueDate;
+    private Instant issueDate;
+    private Instant dueDate;
     private BigDecimal subtotalAmount;
     private BigDecimal vatRate;
     private BigDecimal vatAmount;

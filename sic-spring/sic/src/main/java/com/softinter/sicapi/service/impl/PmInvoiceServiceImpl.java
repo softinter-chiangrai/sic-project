@@ -143,8 +143,8 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         entity.setDeliveryId(req.getDeliveryId());
         entity.setMilestoneId(req.getMilestoneId());
         entity.setBillingType(req.getBillingType() != null ? req.getBillingType() : BillingType.MILESTONE);
-        entity.setIssueDate(req.getIssueDate() != null ? req.getIssueDate() : LocalDate.now());
-        entity.setDueDate(req.getDueDate() != null ? req.getDueDate() : LocalDate.now().plusDays(30));
+        entity.setIssueDate(req.getIssueDate() != null ? req.getIssueDate() : Instant.now());
+        entity.setDueDate(req.getDueDate() != null ? req.getDueDate() : Instant.now().plus(java.time.Duration.ofDays(30)));
 
         BigDecimal subtotal = req.getSubtotalAmount() != null ? req.getSubtotalAmount() : BigDecimal.ZERO;
         BigDecimal vatRate = req.getVatRate() != null ? req.getVatRate() : new BigDecimal("7.00");

@@ -7,14 +7,23 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { environment } from '../../../../../../environments/environment';
+import { ApprovalService } from '../../../dt/pmdt03/approval.service';
+import type { ApprovalFlow } from '../../../dt/pmdt03/approval.model';
+import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
+import { Pmrt01AService } from '../../pmrt01/pmrt01A/pmrt01A.service';
 import { ContractModel } from '../pmrt04A/pmrt04A.model';
 import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
+import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 
 
 @Component({
@@ -25,9 +34,11 @@ import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
+    SicComboboxComponent,
     SicInputComponent,
     SicDatepickerComponent,
     SicInputAreaComponent,
+    SicTiptapEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt04B.component.html',
@@ -36,6 +47,10 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private service = inject(Pmrt04AService);
+  private approvalService = inject(ApprovalService);
+  private projectService = inject(Pmrt02Service);
+  private customerService = inject(Pmrt01AService);
+  private customerState = inject(CustomerStateService);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
@@ -47,10 +62,29 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   isSaving = false;
   originalContract: ContractModel | null = null;
 
+  // Customer & Project Display Names
+  customerDisplayName = '';
+  projectDisplayName = '';
+
+  // Renewal Status Options for Combobox
+  renewalStatusOptions = [
+    { value: 'ต่อแล้ว', text: 'ต่อแล้ว' },
+    { value: 'รอต่อ', text: 'รอต่อ' },
+    { value: 'ยังไม่ต่อ', text: 'ยังไม่ต่อ' },
+    { value: 'ยกเลิก', text: 'ยกเลิก' },
+  ];
+
+  // ===== Approval Flow =====
+  flows: ApprovalFlow[] = [];
+  selectedFlowId: string | null = null;
+  isLoadingFlows = false;
+  documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/MA_RENEWAL`;
+
   pageDirty = () => this.form?.dirty ?? false;
 
   ngOnInit(): void {
     this.initForm();
+    this.loadFlows();
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -72,9 +106,35 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
         newContractValue: [null, [Validators.required, Validators.min(0)]],
         renewalRemark: [''],
         renewalStatus: ['ต่อแล้ว'],
+        approvalFlowId: [null],
       },
       { validators: this.dateRangeValidator.bind(this) },
     );
+  }
+
+  loadFlows(): void {
+    this.isLoadingFlows = true;
+    this.approvalService
+      .getFlowsByDocumentType('MA_RENEWAL')
+      .pipe(
+        finalize(() => {
+          this.isLoadingFlows = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (flows) => {
+          this.flows = flows || [];
+          if (this.flows.length === 1 && !this.selectedFlowId) {
+            this.selectedFlowId = this.flows[0].id;
+            this.form.patchValue({ approvalFlowId: this.flows[0].id });
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          console.warn('ไม่สามารถโหลด Approval Flow สำหรับ MA_RENEWAL');
+        },
+      });
   }
 
   dateRangeValidator(group: FormGroup): { [key: string]: any } | null {
@@ -102,6 +162,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: (data) => {
           this.originalContract = data;
+          this.resolveCustomerAndProjectNames(data);
 
           const currentEndDate = new Date(data.endDate);
           const newStartDate = new Date(currentEndDate);
@@ -128,6 +189,60 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           this.navigation.navigate(['/feature/pm/pmrt04']);
         },
       });
+  }
+
+  private resolveCustomerAndProjectNames(contract: ContractModel): void {
+    // 1. Initial fallback to CustomerStateService
+    if (this.customerState.getProjectName()) {
+      this.projectDisplayName = this.customerState.getProjectName();
+    }
+    if (this.customerState.getCustomerName()) {
+      this.customerDisplayName = this.customerState.getCustomerName();
+    }
+
+    // 2. Fetch Project if projectId exists
+    if (contract.projectId) {
+      this.projectService.getProject(contract.projectId).subscribe({
+        next: (proj) => {
+          if (proj) {
+            this.projectDisplayName = proj.projectName || proj.projectCode || contract.projectId;
+            if (proj.customerName) {
+              this.customerDisplayName = proj.customerName;
+            } else if (proj.customerId && !this.customerDisplayName) {
+              this.fetchCustomerName(proj.customerId);
+            }
+            this.cdr.detectChanges();
+          }
+        },
+        error: () => {
+          if (!this.projectDisplayName) {
+            this.projectDisplayName = contract.projectId;
+          }
+        },
+      });
+    }
+
+    // 3. Fetch Customer if customerId exists and not already resolved
+    if (contract.customerId && !this.customerDisplayName) {
+      this.fetchCustomerName(contract.customerId);
+    }
+  }
+
+  private fetchCustomerName(customerId: string): void {
+    this.customerService.getCustomer(customerId).subscribe({
+      next: (cust) => {
+        if (cust) {
+          this.customerDisplayName =
+            cust.companyNameLocal || cust.companyNameEn || cust.customerCode || customerId;
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {
+        if (!this.customerDisplayName) {
+          this.customerDisplayName = customerId;
+        }
+      },
+    });
   }
 
   // ✅ เมธอดสำหรับนำทางกลับไปหน้ารายการสัญญา โดยใช้ projectId จากข้อมูลสัญญา
@@ -180,8 +295,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       ...original,
       id: undefined,
       contractNo: `${original.contractNo}-R`,
-      startDate: startDateStr,
-      endDate: endDateStr,
+      startDate: DateTimeUtil.toInstantIsoString(formValue.newStartDate) || startDateStr,
+      endDate: DateTimeUtil.toInstantIsoString(formValue.newEndDate) || endDateStr,
       contractValue: formValue.newContractValue,
       renewalStatus: formValue.renewalStatus,
       isActive: true,
@@ -203,25 +318,76 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           this.isSaving = true;
           this.service
             .save(newContract)
-            .pipe(
-              finalize(() => {
-                // ✅ ใช้ NgZone.run() เพื่ออัปเดต isSaving และ View
+            .subscribe({
+              next: (savedContractRes: any) => {
+                const savedId =
+                  (typeof savedContractRes === 'string'
+                    ? savedContractRes
+                    : savedContractRes?.id) ||
+                  newContract.id ||
+                  this.contractId;
+
+                if (this.selectedFlowId && savedId) {
+                  this.approvalService
+                    .submitForApproval({
+                      documentType: 'MA_RENEWAL',
+                      documentId: savedId,
+                      documentCode: newContract.contractNo,
+                      documentTitle: `ต่ออายุสัญญา ${original.contractNo}`,
+                      flowId: this.selectedFlowId,
+                      comment: formValue.renewalRemark || 'ส่งขออนุมัติการต่ออายุสัญญา',
+                    })
+                    .pipe(
+                      finalize(() => {
+                        this.ngZone.run(() => {
+                          this.isSaving = false;
+                          this.cdr.detectChanges();
+                        });
+                      }),
+                    )
+                    .subscribe({
+                      next: () => {
+                        this.dialog
+                          .success(
+                            'ต่อสัญญาและส่งขออนุมัติสำเร็จ',
+                            `สัญญา ${original.contractNo} ถูกต่ออายุและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว`,
+                          )
+                          .then(() => {
+                            this.form.markAsPristine();
+                            this.navigateBack();
+                          });
+                      },
+                      error: (err) => {
+                        console.error('Submit approval error:', err);
+                        this.dialog
+                          .success(
+                            'ต่อสัญญาสำเร็จ',
+                            `สัญญาถูกต่ออายุแล้ว แต่การส่งขออนุมัติเกิดข้อผิดพลาด: ${err.error?.message || 'ไม่สามารถส่งขออนุมัติได้'}`,
+                          )
+                          .then(() => {
+                            this.form.markAsPristine();
+                            this.navigateBack();
+                          });
+                      },
+                    });
+                } else {
+                  this.ngZone.run(() => {
+                    this.isSaving = false;
+                    this.cdr.detectChanges();
+                  });
+                  this.dialog
+                    .success('ต่อสัญญาสำเร็จ', `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`)
+                    .then(() => {
+                      this.form.markAsPristine();
+                      this.navigateBack();
+                    });
+                }
+              },
+              error: (error) => {
                 this.ngZone.run(() => {
                   this.isSaving = false;
                   this.cdr.detectChanges();
                 });
-              }),
-            )
-            .subscribe({
-              next: () => {
-                this.dialog
-                  .success('ต่อสัญญาสำเร็จ', `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`)
-                  .then(() => {
-                    this.form.markAsPristine();
-                    this.navigateBack(); // ✅ กลับไปหน้ารายการสัญญา
-                  });
-              },
-              error: (error) => {
                 this.dialog.error('ต่อสัญญาไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
               },
             });

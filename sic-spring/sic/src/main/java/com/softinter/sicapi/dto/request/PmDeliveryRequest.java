@@ -25,7 +25,7 @@ public class PmDeliveryRequest {
     private String deliveryType = "FINAL";
     private UUID contractId;
     private UUID milestoneId;
-    private LocalDate deliveryDate;
+    private Instant deliveryDate;
     private String deliveryVersion = "1.0";
     private String releaseNote;
     private String deliverySummary;
