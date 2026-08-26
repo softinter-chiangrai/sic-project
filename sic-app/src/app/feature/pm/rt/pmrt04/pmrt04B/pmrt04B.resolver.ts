@@ -1,35 +1,27 @@
-// src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.resolver.ts
 import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
 import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmrt04BService } from './pmrt04B.service';
-import { Pmrt04BForm } from './pmrt04B.form';
-import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
 
-export const pmrt04BResolver: ResolveFn<Pmrt04BPageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmrt04BService);
+export const pmrt04BResolver: ResolveFn<any> = async (route) => {
+  const service = inject(Pmrt04AService);
   const router = inject(Router);
   const id = route.paramMap.get('id');
 
-  const form = Pmrt04BForm.createForm(fb);
-
   if (!id) {
-    return { deliverableData: new SicFromData<Pmrt04BModel>(form) };
+    return null;
   }
 
   try {
-    const data = await lastValueFrom(service.getDeliverableById(id));
+    const data = await lastValueFrom(service.getContract(id));
     if (data) {
-      form.patchValue(data);
-      return { deliverableData: new SicFromData<Pmrt04BModel>(form, data) };
+      return data;
     }
     router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    return EMPTY;
+  } catch (error) {
+    console.error('pmrt04BResolver load contract error:', error);
+    router.navigate(['/feature/pm/pmrt04']);
+    return EMPTY;
   }
 };
