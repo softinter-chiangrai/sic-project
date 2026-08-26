@@ -94,6 +94,14 @@ app:
     client-secret: gRKO02QqgLYIsxrSL4txGeb7i2GXsYzu7FvInpTU
     redirect-uri: http://localhost:4200/feature/pm/design-review
 
+  report-service:
+    enabled: true
+    base-url: ${REPORT_SERVICE_URL:http://localhost:80}
+    access-token: ${REPORT_SERVICE_TOKEN:sw7vuLj4VcTyksKN9ZFNYDRmtu_O2uYk}
+    timeout-seconds: 30
+    fallback-to-local: true
+
+
 logging:
   pattern:
     console: "%msg%n"

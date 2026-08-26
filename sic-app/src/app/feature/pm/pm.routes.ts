@@ -429,14 +429,9 @@ export const PM_ROUTES: Routes = [
   {
     path: 'discussion',
     loadComponent: () => import('./dt/pmdt08/pmdt08.component').then((m) => m.Pmdt08Component),
-    canActivate: [customerGuard, projectGuard],
     resolve: { form: pmdt08Resolver },
   },
-  {
-    path: 'pmdt08',
-    redirectTo: 'discussion',
-    pathMatch: 'full',
-  },
+
 
   // ============================================================
   // ===== PMDT09: DESIGN REVIEW =====

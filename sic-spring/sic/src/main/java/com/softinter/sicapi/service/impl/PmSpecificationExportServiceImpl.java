@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.service.PmSpecificationExportService;
+import com.softinter.sicapi.service.ReportServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class PmSpecificationExportServiceImpl implements PmSpecificationExportService {
 
     private final DataSource dataSource;
+    private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Bangkok"));
@@ -33,14 +35,28 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
 
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
 
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("specificationId", specId != null ? specId.toString() : "");
+        parameters.put("businessId", businessId != null ? businessId.toString() : "");
+        parameters.put("exportDate", exportDate);
+
+        // 1. Try generating via external report-service
+        try {
+            return reportServiceClient.generateAndDownloadReport("pm_specification_report", parameters, "pdf");
+        } catch (Exception e) {
+            log.warn("Failed to generate Specification PDF via Report Service: {}. Checking fallback...", e.getMessage());
+            if (!reportServiceClient.isFallbackEnabled()) {
+                throw new RuntimeException("Report Service failed to generate Specification PDF: " + e.getMessage(), e);
+            }
+        }
+
+        // 2. Fallback: Local JasperReports generation
+        log.info("Falling back to local JasperReports generation for specification: id={}", specId);
         try (Connection conn = dataSource.getConnection();
              InputStream is = new ClassPathResource("reports/specification_report.jrxml").getInputStream()) {
 
             JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("specificationId", specId != null ? specId.toString() : "");
-            parameters.put("exportDate", exportDate);
             parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
@@ -50,7 +66,7 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
 
             return baos.toByteArray();
         } catch (Exception e) {
-            log.error("Failed to generate Specification PDF: {}", e.getMessage(), e);
+            log.error("Failed to generate Specification PDF locally: {}", e.getMessage(), e);
             throw new RuntimeException("Error generating Specification PDF: " + e.getMessage(), e);
         }
     }

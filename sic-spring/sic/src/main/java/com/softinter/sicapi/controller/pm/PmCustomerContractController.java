@@ -47,6 +47,12 @@ public class PmCustomerContractController {
                 .body(pdfBytes);
     }
 
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export Contract Document as PDF")
+    public ResponseEntity<byte[]> exportContract(@PathVariable UUID id) {
+        return exportPdf(id);
+    }
+
     // ===== รายการสัญญา =====
     @GetMapping
     @Operation(summary = "ดึงรายการสัญญาแบบแบ่งหน้า")

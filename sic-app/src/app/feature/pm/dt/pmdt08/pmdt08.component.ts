@@ -92,17 +92,6 @@ export class Pmdt08Component implements OnInit {
       error: () => {},
     });
 
-    this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'];
-      if (pid) {
-        this.projectId.set(pid);
-        this.loadPosts();
-      } else {
-        this.dialog.warn('ไม่พบ Project', 'กรุณาเลือก Project ก่อน');
-        this.router.navigate(['/feature/pm/pmrt02']);
-      }
-    });
-
     // ฟอร์มสำหรับแสดงความคิดเห็น (comment)
     this.commentForm = this.fb.group({
       content: ['', Validators.required],

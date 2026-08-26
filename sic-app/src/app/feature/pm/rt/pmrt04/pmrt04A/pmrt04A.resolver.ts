@@ -21,10 +21,10 @@ export const pmrt04AResolver: ResolveFn<Pmrt04APageData> = async (route) => {
   }
 
   try {
-    const data = await lastValueFrom(service.getInstallmentById(id));
+    const data = await lastValueFrom(service.getContract(id));
     if (data) {
-      form.patchValue(data);
-      return { installmentData: new SicFromData<Pmrt04AModel>(form, data) };
+      form.patchValue(data as any);
+      return { installmentData: new SicFromData<Pmrt04AModel>(form, data as any) };
     }
     router.navigate(['/not-found']);
     return EMPTY as any;

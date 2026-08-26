@@ -1,50 +1,27 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="TicketReport"
-              language="java"
-              pageWidth="595"
-              pageHeight="842"
-              columnWidth="515"
-              leftMargin="40"
-              rightMargin="40"
-              topMargin="40"
-              bottomMargin="40"
-              uuid="e1f2a3b4-c5d6-7890-1234-bcdefa456789">
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="TicketReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="e1f2a3b4-c5d6-7890-1234-bcdefa456789">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="false"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
 
-    <!-- ========================================================
-         STYLES DEFINITIONS
-         ======================================================== -->
-    <style name="DocTitle" fontName="TH Sarabun New" fontSize="20" isBold="true" forecolor="#1E293B"/>
-    <style name="DocSubtitle" fontName="TH Sarabun New" fontSize="13" forecolor="#64748B"/>
-    
-    <style name="SectionHeading" fontName="TH Sarabun New" fontSize="14" isBold="true" forecolor="#1E293B"/>
-    
-    <style name="Label" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#475569"/>
-    <style name="Value" fontName="TH Sarabun New" fontSize="13" isBold="false" forecolor="#1E293B"/>
-    <style name="ValueBold" fontName="TH Sarabun New" fontSize="13" isBold="true" forecolor="#1E293B"/>
-    
-    <style name="ContentText" fontName="TH Sarabun New" fontSize="13" forecolor="#334155"/>
-    <style name="FooterText" fontName="TH Sarabun New" fontSize="11" forecolor="#94A3B8"/>
+	<parameter name="ticketId" class="java.lang.String"/>
+	<parameter name="exportDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="businessName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoStream" class="java.io.InputStream">
+		<defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
+	</parameter>
 
-    <!-- ========================================================
-         PARAMETERS
-         ======================================================== -->
-    <parameter name="ticketId" class="java.lang.String"/>
-    <parameter name="exportDate" class="java.lang.String">
-        <defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
-    </parameter>
-    <parameter name="businessName" class="java.lang.String">
-        <defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
-    </parameter>
-    <parameter name="logoStream" class="java.io.InputStream">
-        <defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
-    </parameter>
-
-        <queryString>
-        <![CDATA[
-            SELECT 
+	<query language="sql"><![CDATA[SELECT 
                 t.ticket_no                                          AS "ticketNo",
                 t.title                                              AS "title",
                 COALESCE(t.ticket_type, 'Incident')                  AS "ticketType",
@@ -64,359 +41,225 @@
             WHERE t.is_delete = false
               AND ($P{ticketId} IS NULL OR $P{ticketId} = '' OR t.id = CAST($P{ticketId} AS uuid))
             ORDER BY t.created_date DESC
-            LIMIT 1;
-        ]]>
-    </queryString>
+            LIMIT 1;]]></query>
 
-    <!-- ========================================================
-         FIELDS
-         ======================================================== -->
-    <field name="ticketNo"          class="java.lang.String"/>
-    <field name="title"             class="java.lang.String"/>
-    <field name="projectName"       class="java.lang.String"/>
-    <field name="customerName"      class="java.lang.String"/>
-    <field name="ticketType"        class="java.lang.String"/>
-    <field name="severity"          class="java.lang.String"/>
-    <field name="status"            class="java.lang.String"/>
-    <field name="reportedBy"        class="java.lang.String"/>
-    <field name="reportedDate"      class="java.lang.String"/>
-    <field name="assignedTo"        class="java.lang.String"/>
-    <field name="resolvedDate"      class="java.lang.String"/>
-    <field name="description"       class="java.lang.String"/>
-    <field name="resolutionSummary" class="java.lang.String"/>
+	<field name="ticketNo" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="projectName" class="java.lang.String"/>
+	<field name="customerName" class="java.lang.String"/>
+	<field name="ticketType" class="java.lang.String"/>
+	<field name="severity" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="reportedBy" class="java.lang.String"/>
+	<field name="reportedDate" class="java.lang.String"/>
+	<field name="assignedTo" class="java.lang.String"/>
+	<field name="resolvedDate" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="resolutionSummary" class="java.lang.String"/>
 
-    <!-- ========================================================
+	<!-- ========================================================
          TITLE BAND — Clean Minimal Header
          ======================================================== -->
-    <title>
-        <band height="105">
-            <!-- Left: Logo & Company -->
-            <image scaleImage="RetainShape" vAlign="Middle" onErrorType="Blank">
-                <reportElement x="0" y="0" width="105" height="38"/>
-                <imageExpression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></imageExpression>
-            </image>
-            <staticText>
-                <reportElement style="DocSubtitle" x="0" y="40" width="220" height="20"/>
-                <textElement verticalAlignment="Bottom"/>
-                <text><![CDATA[SOFTINTER CO., LTD.]]></text>
-            </staticText>
+	<title height="105">
+		<element kind="image" uuid="11c97a5b-42fa-4cb2-81ab-2a4c89d71e21" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA["รายงานใบแจ้งปัญหา (Ticket Report)"]]></expression>
+		</element>
+		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[Incident & Support Resolution Report]]></text>
+		</element>
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
+		</element>
+		<element kind="line" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="rectangle" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" mode="Opaque" x="0" y="74" width="515" height="28" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="10" y="76" width="75" height="22" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["หัวข้อแจ้ง:"]]></expression>
+		</element>
+		<element kind="textField" uuid="35ab8e21-0a4c-47b2-843e-958a1b24ca02" x="88" y="76" width="417" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+			<expression><![CDATA[($F{ticketNo} != null ? "[" + $F{ticketNo} + "] " : "") + ($F{title} != null ? $F{title} : "-")]]></expression>
+		</element>
+	</title>
 
-            <!-- Right: Title & Date -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="DocTitle" x="230" y="0" width="285" height="26"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["รายงานใบแจ้งปัญหา (Ticket Report)"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="DocSubtitle" x="230" y="24" width="285" height="18"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <text><![CDATA[Incident & Support Resolution Report]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="FooterText" x="230" y="44" width="285" height="18"/>
-                <textElement textAlignment="Right" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></textFieldExpression>
-            </textField>
-
-            <!-- Divider -->
-            <line>
-                <reportElement x="0" y="68" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.8"/></graphicElement>
-            </line>
-
-            <!-- Ticket Main Banner -->
-            <rectangle radius="3">
-                <reportElement x="0" y="74" width="515" height="28" backcolor="#F8FAFC" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" x="10" y="76" width="75" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["หัวข้อแจ้ง:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" x="88" y="76" width="417" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA[($F{ticketNo} != null ? "[" + $F{ticketNo} + "] " : "") + ($F{title} != null ? $F{title} : "-")]]></textFieldExpression>
-            </textField>
-        </band>
-    </title>
-
-    <!-- ========================================================
+	<!-- ========================================================
          DETAIL BAND — Simple, Clean Sections & Natural Flow
          ======================================================== -->
-    <detail>
-        <band height="310" splitType="Stretch">
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 1: ข้อมูล Ticket และโครงการ
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="6" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["1. ข้อมูลการแจ้งเรื่องและโครงการ (Ticket & Project Metadata)"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
+	<detail>
+		<band height="310" splitType="Stretch">
+			<!-- SECTION 1: ข้อมูล Ticket และโครงการ -->
+			<element kind="textField" uuid="09fa417b-5c2a-489e-b12a-3b567a14ce92" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["1. ข้อมูลการแจ้งเรื่องและโครงการ (Ticket & Project Metadata)"]]></expression>
+			</element>
+			<element kind="line" uuid="7cf41209-4a3b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="rectangle" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="100" backcolor="#F8FAFC" radius="3">
+				<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+			</element>
 
-            <!-- Metadata Box -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="0" y="34" width="515" height="100" backcolor="#F8FAFC" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#E2E8F0"/></graphicElement>
-            </rectangle>
+			<!-- Row 1: Code & Status -->
+			<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["รหัส Ticket:"]]></expression>
+			</element>
+			<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" positionType="Float" x="105" y="38" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{ticketNo} != null ? $F{ticketNo} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" positionType="Float" x="270" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["สถานะงาน:"]]></expression>
+			</element>
+			<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" positionType="Float" x="365" y="38" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{status} != null ? $F{status} : "-"]]></expression>
+			</element>
 
-            <!-- Row 1: Code & Status -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="38" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["รหัส Ticket:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" positionType="Float" x="105" y="38" width="148" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{ticketNo} != null ? $F{ticketNo} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- Row 2: Customer & Project -->
+			<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ลูกค้า / องค์กร:"]]></expression>
+			</element>
+			<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" positionType="Float" x="105" y="56" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" positionType="Float" x="270" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["โครงการ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" positionType="Float" x="365" y="56" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></expression>
+			</element>
 
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="270" y="38" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["สถานะงาน:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" positionType="Float" x="365" y="38" width="143" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{status} != null ? $F{status} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- Row 3: Type & Severity -->
+			<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" positionType="Float" x="10" y="74" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ประเภทงาน:"]]></expression>
+			</element>
+			<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" positionType="Float" x="105" y="74" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{ticketType} != null ? $F{ticketType} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ระดับความรุนแรง:"]]></expression>
+			</element>
+			<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="370" y="74" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{severity} != null ? $F{severity} : "-"]]></expression>
+			</element>
 
-            <!-- Row 2: Customer & Project -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="56" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["ลูกค้า / องค์กร:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="105" y="56" width="148" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- Row 4: Reported By & Reported Date -->
+			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ผู้แจ้งเรื่อง:"]]></expression>
+			</element>
+			<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="105" y="92" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{reportedBy} != null ? $F{reportedBy} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="270" y="92" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["วันที่แจ้งเรื่อง:"]]></expression>
+			</element>
+			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="370" y="92" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{reportedDate} != null ? $F{reportedDate} : "-"]]></expression>
+			</element>
 
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="270" y="56" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["โครงการ:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="365" y="56" width="143" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- Row 5: Assigned To & Resolved Date -->
+			<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" positionType="Float" x="10" y="110" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ผู้รับผิดชอบ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" positionType="Float" x="105" y="110" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{assignedTo} != null ? $F{assignedTo} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="270" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["วันที่แก้ไขเสร็จ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="b13e9a72-3c4b-48a5-926f-47b2ae601b2a" positionType="Float" x="370" y="110" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{resolvedDate} != null ? $F{resolvedDate} : "-"]]></expression>
+			</element>
 
-            <!-- Row 3: Type & Severity -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="74" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["ประเภทงาน:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="105" y="74" width="148" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{ticketType} != null ? $F{ticketType} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- SECTION 2: รายละเอียดปัญหา (Problem Description) -->
+			<element kind="textField" uuid="8ea6f8e7-4d5c-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="146" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["2. รายละเอียดปัญหาและอาการที่พบ (Problem Description)"]]></expression>
+			</element>
+			<element kind="line" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" x="0" y="168" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="textField" uuid="921ca47b-4d5c-48ca-913b-2a567c82a4c9" positionType="Float" x="0" y="176" width="515" height="26" markup="html" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+				<paragraph lineSpacing="1_1_2" style="ContentText"/>
+				<expression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : "ไม่มีรายละเอียดเพิ่มเติม"]]></expression>
+			</element>
 
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="270" y="74" width="95" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["ระดับความรุนแรง:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="ValueBold" positionType="Float" x="370" y="74" width="138" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{severity} != null ? $F{severity} : "-"]]></textFieldExpression>
-            </textField>
+			<!-- SECTION 3: สรุปผลการแก้ไขปัญหา (Resolution Summary) -->
+			<element kind="textField" uuid="3d2194c7-4d5c-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="214" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["3. สรุปผลและแนวทางการแก้ไขปัญหา (Resolution & Action Taken)"]]></expression>
+			</element>
+			<element kind="line" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" positionType="Float" x="0" y="236" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="textField" uuid="62d1a3c7-4d5c-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="244" width="515" height="26" markup="html" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+				<paragraph lineSpacing="1_1_2" style="ContentText"/>
+				<expression><![CDATA[$F{resolutionSummary} != null && !$F{resolutionSummary}.isBlank() ? $F{resolutionSummary} : "อยู่ระหว่างการดำเนินการแก้ไขปัญหา"]]></expression>
+			</element>
+		</band>
+	</detail>
 
-            <!-- Row 4: Reported By & Reported Date -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="92" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["ผู้แจ้งเรื่อง:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="105" y="92" width="148" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{reportedBy} != null ? $F{reportedBy} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="270" y="92" width="95" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["วันที่แจ้งเรื่อง:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="370" y="92" width="138" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{reportedDate} != null ? $F{reportedDate} : "-"]]></textFieldExpression>
-            </textField>
-
-            <!-- Row 5: Assigned To & Resolved Date -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="110" width="90" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["ผู้รับผิดชอบ:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="105" y="110" width="148" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{assignedTo} != null ? $F{assignedTo} : "-"]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="270" y="110" width="95" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["วันที่แก้ไขเสร็จ:"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="370" y="110" width="138" height="18"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{resolvedDate} != null ? $F{resolvedDate} : "-"]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 2: รายละเอียดปัญหา (Problem Description)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="146" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["2. รายละเอียดปัญหาและอาการที่พบ (Problem Description)"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="168" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Natural Flowing HTML Content -->
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="ContentText" positionType="Float" x="0" y="176" width="515" height="26"/>
-                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2" markup="html"/>
-                <textFieldExpression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : "ไม่มีรายละเอียดเพิ่มเติม"]]></textFieldExpression>
-            </textField>
-
-
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 3: สรุปผลการแก้ไขปัญหา (Resolution Summary)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="214" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["3. สรุปผลและแนวทางการแก้ไขปัญหา (Resolution & Action Taken)"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="236" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-
-            <!-- Natural Flowing HTML Content -->
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement style="ContentText" positionType="Float" x="0" y="244" width="515" height="26"/>
-                <textElement textAlignment="Left" verticalAlignment="Top" lineSpacing="1_1_2" markup="html"/>
-                <textFieldExpression><![CDATA[$F{resolutionSummary} != null && !$F{resolutionSummary}.isBlank() ? $F{resolutionSummary} : "อยู่ระหว่างการดำเนินการแก้ไขปัญหา"]]></textFieldExpression>
-            </textField>
-        </band>
-    </detail>
-
-    <!-- ========================================================
+	<!-- ========================================================
          PAGE FOOTER (Must be placed before summary)
          ======================================================== -->
-    <pageFooter>
-        <band height="30">
-            <line>
-                <reportElement x="0" y="4" width="515" height="1" forecolor="#E2E8F0"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
-            <staticText>
-                <reportElement style="FooterText" x="0" y="10" width="350" height="16"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
-            </staticText>
-            <textField>
-                <reportElement style="FooterText" x="380" y="10" width="135" height="16"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[ + $V{PAGE_NUMBER}]]></textFieldExpression>
-            </textField>
-        </band>
-    </pageFooter>
+	<pageFooter height="30">
+		<element kind="line" uuid="b13e9a72-4d5c-48a5-926f-47b2ae601b2a" x="0" y="4" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+		<element kind="staticText" uuid="8ea6f8e7-5e6d-47b2-913b-2a567c82a4c9" x="0" y="10" width="350" height="16" vTextAlign="Middle" style="FooterText">
+			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-5e6d-4b92-bca8-e5659858df34" x="380" y="10" width="135" height="16" hTextAlign="Right" vTextAlign="Middle" style="FooterText">
+			<expression><![CDATA[+ $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
 
-    <!-- ========================================================
+	<!-- ========================================================
          SUMMARY BAND: Sign-off Section (Will stay neatly together)
          ======================================================== -->
-    <summary>
-        <band height="180" splitType="Prevent">
-            <!-- ────────────────────────────────────────────────────────
-                 SECTION 4: การลงนามปิดงาน (Sign-off)
-                 ──────────────────────────────────────────────────────── -->
-            <textField isBlankWhenNull="true">
-                <reportElement style="SectionHeading" positionType="Float" x="0" y="10" width="515" height="22"/>
-                <textElement verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["4. การลงนามรับรองผลการแก้ไข (Resolution Sign-off)"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement positionType="Float" x="0" y="32" width="515" height="1" forecolor="#CBD5E1"/>
-                <graphicElement><pen lineWidth="0.6"/></graphicElement>
-            </line>
+	<summary height="180" splitType="Prevent">
+		<!-- SECTION 4: การลงนามปิดงาน (Sign-off) -->
+		<element kind="textField" uuid="921ca47b-5e6d-48ca-913b-2a567c82a4c9" positionType="Float" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA["4. การลงนามรับรองผลการแก้ไข (Resolution Sign-off)"]]></expression>
+		</element>
+		<element kind="line" uuid="3d2194c7-5e6d-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
+		</element>
 
-            <!-- Signatures: Engineer -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="0" y="42" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="10" y="48" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วิศวกรผู้แก้ไข (Support Engineer)"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="10" y="98" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="120" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ตำแหน่ง: Support Engineer"]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="10" y="140" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
-            </textField>
+		<!-- Signatures: Engineer -->
+		<element kind="rectangle" uuid="7cf41209-5e6d-489e-913a-7a561bc49a12" positionType="Float" mode="Opaque" x="0" y="42" width="245" height="125" backcolor="#FAFAFA" radius="3">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="62d1a3c7-5e6d-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["วิศวกรผู้แก้ไข (Support Engineer)"]]></expression>
+		</element>
+		<element kind="staticText" uuid="b13e9a72-5e6d-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="98" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<text><![CDATA[(..................................................................)]]></text>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-6f7e-47b2-913b-2a567c82a4c9" positionType="Float" x="10" y="120" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["ตำแหน่ง: Support Engineer"]]></expression>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-6f7e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="140" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
+		</element>
 
-            <!-- Signatures: Client Acceptance -->
-            <rectangle radius="3">
-                <reportElement positionType="Float" x="270" y="42" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
-                <graphicElement><pen lineWidth="0.5" lineColor="#CBD5E1"/></graphicElement>
-            </rectangle>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Label" positionType="Float" x="280" y="48" width="225" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ผู้รับการแก้ไข / ผู้แจ้ง (Customer Acceptance)"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement style="Value" positionType="Float" x="280" y="98" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <text><![CDATA[(..................................................................)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="120" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["ตำแหน่ง: ....................................................."]]></textFieldExpression>
-            </textField>
-            <textField isBlankWhenNull="true">
-                <reportElement style="Value" positionType="Float" x="280" y="140" width="225" height="18"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom"/>
-                <textFieldExpression><![CDATA["วันที่: ........ / ........ / ................"]]></textFieldExpression>
-            </textField>
-        </band>
-    </summary>
-
+		<!-- Signatures: Client Acceptance -->
+		<element kind="rectangle" uuid="921ca47b-6f7e-48ca-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="270" y="42" width="245" height="125" backcolor="#FAFAFA" mode="Opaque"/>
+		<element kind="textField" uuid="3d2194c7-6f7e-47b2-843e-958a1b24ca02" positionType="Float" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["ผู้รับการแก้ไข / ผู้แจ้ง (Customer Acceptance)"]]></expression>
+		</element>
+		<element kind="staticText" uuid="7cf41209-6f7e-489e-913a-7a561bc49a12" positionType="Float" x="280" y="98" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<text><![CDATA[(..................................................................)]]></text>
+		</element>
+		<element kind="textField" uuid="62d1a3c7-6f7e-48ca-91b5-827a4192b0c5" positionType="Float" x="280" y="120" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
+		</element>
+		<element kind="textField" uuid="b13e9a72-6f7e-48a5-926f-47b2ae601b2a" positionType="Float" x="280" y="140" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
+		</element>
+	</summary>
 </jasperReport>
+

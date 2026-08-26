@@ -78,8 +78,8 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     }
 
     @Override
-@Transactional(readOnly = true)
-public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
+    @Transactional
+    public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
     PmCustomerContract contract;
     boolean isNew = (request.getId() == null);
     String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";

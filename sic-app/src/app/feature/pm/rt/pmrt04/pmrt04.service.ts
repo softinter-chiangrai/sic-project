@@ -18,6 +18,10 @@ export class Pmrt04Service {
     return this.http.get<Pmrt04Model>(`${this.baseUrl}/${id}`);
   }
 
+  exportContractPdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, { responseType: 'blob' });
+  }
+
   /** ดึงสัญญาสำหรับ combobox โดยสามารถกรองตาม customerId */
   getComboboxContracts(customerId?: string): Observable<ComboboxItem[]> {
     let params = new HttpParams().set('businessId', this.getBusinessId());
