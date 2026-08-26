@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Dashboard</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('dashboard', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Dashboard')}"></header>
+
+			<div class="dashboard-content">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Reporting Overview', 'Dashboard', 'Overview of your Jasper reporting infrastructure and health metrics.')}"></section>
+
+				<section class="metrics-grid">
+					<article class="metric-card">
+						<span class="material-symbols-outlined icon metric-icon" aria-hidden="true">description</span>
+						<p class="metric-label">Report Template</p>
+						<div class="metric-value-row">
+							<strong th:text="${dashboardTemplateStats.totalCount}">0</strong>
+							<span class="metric-badge" th:text="${dashboardTemplateStats.lastUpload == '-' ? 'No uploads yet' : dashboardTemplateStats.lastUpload}">No uploads yet</span>
+						</div>
+					</article>
+					<article class="metric-card">
+						<span class="material-symbols-outlined icon metric-icon" aria-hidden="true">database</span>
+						<p class="metric-label">Connected Databases</p>
+						<div class="metric-value-row">
+							<strong th:text="${dashboardDataSourceStats.activeCount}">0</strong>
+							<span class="metric-badge metric-badge--info" th:text="|${dashboardDataSourceStats.failedCount} failures|">0 failures</span>
+						</div>
+					</article>
+					<article class="metric-card">
+						<span class="material-symbols-outlined icon metric-icon" aria-hidden="true">vpn_key</span>
+						<p class="metric-label">Active API Keys</p>
+						<div class="metric-value-row">
+							<strong th:text="${dashboardAccessTokenStats.activeCount}">0</strong>
+							<span class="metric-badge" th:text="|${dashboardAccessTokenStats.expiringSoonCount} expiring soon|">0 expiring soon</span>
+						</div>
+					</article>
+				</section>
+
+				<div class="dashboard-grid">
+					<section class="activity-panel">
+						<div class="section-header">
+							<div>
+								<h3>Recent Activity</h3>
+								<p>Latest 3 audit log events across reports, templates, data sources, and access tokens.</p>
+							</div>
+						</div>
+
+						<div class="activity-list">
+							<article th:if="${#lists.isEmpty(recentActivities)}" class="activity-item activity-item--empty">
+								<div class="activity-icon">
+									<span class="material-symbols-outlined icon icon--lg" aria-hidden="true">history</span>
+								</div>
+								<div class="activity-copy">
+									<h4>No recent activity</h4>
+									<p>Audit events will appear here after the first report or admin action.</p>
+								</div>
+							</article>
+
+							<article th:each="activity : ${recentActivities}" th:class="${activity.itemClass}">
+								<div th:class="${activity.iconClass}">
+									<span class="material-symbols-outlined icon icon--lg" aria-hidden="true" th:text="${activity.iconName}">history</span>
+								</div>
+								<div class="activity-copy">
+									<h4 th:text="${activity.title}">Report Generated</h4>
+									<p th:text="${activity.detail}">Generated file report.pdf • reports-api</p>
+								</div>
+								<div th:class="${activity.metaClass}">
+									<p th:text="${activity.timestamp}">27 Mar 2026, 10:20</p>
+									<strong th:text="${activity.status}">Completed</strong>
+								</div>
+							</article>
+						</div>
+					</section>
+
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

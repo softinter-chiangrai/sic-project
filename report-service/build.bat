@@ -1,0 +1,1 @@
+docker build --no-cache --progress=plain -f docker/Dockerfile --tag sarankon/report-service:latest .

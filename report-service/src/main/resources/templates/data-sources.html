@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Data Sources</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/data-sources.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('data-sources', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Data Sources')}"></header>
+
+			<div class="dashboard-content resource-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Connectivity', 'Data Sources', 'Manage external database connections and health checks.')}"></section>
+
+				<section class="stats-grid stats-grid--with-action">
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('check-circle', ' entity-icon--success', 'Active Links', ${dataSourceStats.activeCount})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('timer', ' entity-icon--violet', 'Avg Response', ${dataSourceStats.averageResponse})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('warning', ' entity-icon--warning', 'Failures', ${dataSourceStats.failedCount})}"></article>
+					<div class="stats-grid__action">
+						<button class="action-button action-button--primary stats-grid__button" type="button" onclick="window.location.href='/data-sources/edit'">
+							<span class="material-symbols-outlined icon icon--md" aria-hidden="true">add</span>
+							<span>Add New Data Source</span>
+						</button>
+					</div>
+				</section>
+
+				<th:block th:replace="~{fragments/resource-list :: dataPanel(~{::div[@data-fragment='table-content']}, ~{::div[@data-fragment='footer-content']})}">
+					<div data-fragment="table-content" class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Data Source Name</th>
+									<th>Database Type</th>
+									<th>Database Name</th>
+									<th>Status</th>
+									<th>Last Tested</th>
+									<th class="table-actions">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(dataSources)}">
+									<td colspan="7">No data sources saved yet.</td>
+								</tr>
+								<tr th:each="dataSource : ${dataSources}">
+									<td class="mono-cell" th:text="${dataSource.id}">1</td>
+									<td>
+										<div class="entity-cell">
+											<div class="entity-icon">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true" th:text="${dataSource.icon}">storage</span>
+											</div>
+											<div>
+												<strong th:text="${dataSource.connectionLabel}">Primary</strong>
+												<p th:text="${dataSource.hostAddress}">127.0.0.1</p>
+											</div>
+										</div>
+									</td>
+									<td><span th:class="${dataSource.typePillClass}" th:text="${#strings.capitalize(dataSource.databaseType)}">PostgreSQL</span></td>
+									<td class="mono-cell" th:text="${dataSource.databaseName}">reporting</td>
+									<td><span th:class="${dataSource.statusClass}" th:text="${dataSource.status}">Not tested</span></td>
+									<td th:text="${dataSource.lastTested}">Never</td>
+									<td class="table-actions">
+										<div class="row-actions">
+											<a th:href="@{|/data-sources/edit/${dataSource.id}|}" th:attr="aria-label='Edit ' + ${dataSource.connectionLabel}">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">edit</span>
+											</a>
+											<form method="post" th:action="@{|/data-sources/delete/${dataSource.id}|}" th:id="|delete-data-source-${dataSource.id}|">
+												<input type="hidden" name="page" th:value="${currentPage}">
+												<input type="hidden" name="size" th:value="${pageSize}">
+												<button
+													type="button"
+													class="row-action--danger"
+													data-dialog-open="delete-data-source-modal"
+													th:attr="aria-label='Delete ' + ${dataSource.connectionLabel}"
+													th:data-delete-form="|delete-data-source-${dataSource.id}|"
+													th:data-delete-label="${dataSource.connectionLabel}">
+													<span class="material-symbols-outlined icon icon--md" aria-hidden="true">delete</span>
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div data-fragment="footer-content" class="table-footer">
+						<p th:text="${filteredTotal == 0} ? 'Showing 0 results' : |Showing ${pageStart}-${pageEnd} of ${filteredTotal} result(s)|">Showing 0 results</p>
+						<div class="pager" th:if="${totalPages > 0}">
+							<a th:if="${hasPreviousPage}" th:href="@{/data-sources(page=${currentPage - 1}, size=${pageSize})}">Previous</a>
+							<span th:unless="${hasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${pageNumbers}">
+								<span th:if="${pageNumber == currentPage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentPage}" th:href="@{/data-sources(page=${pageNumber}, size=${pageSize})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${hasNextPage}" th:href="@{/data-sources(page=${currentPage + 1}, size=${pageSize})}">Next</a>
+							<span th:unless="${hasNextPage}">Next</span>
+						</div>
+					</div>
+				</th:block>
+
+				<dialog th:replace="~{fragments/modal :: confirmDialog('delete-data-source-modal', 'Delete Data Source', 'Delete this data source? This action cannot be undone.', 'Cancel', 'Delete Data Source', 'delete')}"></dialog>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Report Templates | JasperInsight</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error": "#fff7f6",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "error": "#9f403d",
+              "secondary": "#506076",
+              "inverse-primary": "#618bff",
+              "secondary-dim": "#44546a",
+              "surface": "#f7f9fb",
+              "secondary-fixed": "#d3e4fe",
+              "surface-variant": "#d9e4ea",
+              "surface-bright": "#f7f9fb",
+              "surface-container-highest": "#d9e4ea",
+              "surface-container-high": "#e1e9ee",
+              "background": "#f7f9fb",
+              "tertiary": "#5d5d78",
+              "outline-variant": "#a9b4b9",
+              "tertiary-dim": "#51516c",
+              "on-secondary": "#f7f9ff",
+              "primary": "#0053db",
+              "primary-fixed-dim": "#c7d3ff",
+              "tertiary-fixed-dim": "#cbc9e9",
+              "on-primary-fixed-variant": "#0050d4",
+              "tertiary-container": "#d9d7f8",
+              "on-background": "#2a3439",
+              "secondary-fixed-dim": "#c5d6f0",
+              "outline": "#717c82",
+              "on-primary": "#f8f7ff",
+              "on-secondary-container": "#435368",
+              "inverse-on-surface": "#9a9d9f",
+              "surface-tint": "#0053db",
+              "on-primary-container": "#0048bf",
+              "on-primary-fixed": "#003798",
+              "surface-container": "#e8eff3",
+              "primary-dim": "#0048c1",
+              "on-tertiary-container": "#4a4a65",
+              "surface-container-lowest": "#ffffff",
+              "on-surface": "#2a3439",
+              "inverse-surface": "#0b0f10",
+              "on-tertiary-fixed": "#373851",
+              "surface-dim": "#cfdce3",
+              "error-dim": "#4e0309",
+              "on-error-container": "#752121",
+              "on-tertiary": "#fbf7ff",
+              "primary-container": "#dbe1ff",
+              "secondary-container": "#d3e4fe",
+              "error-container": "#fe8983",
+              "primary-fixed": "#dbe1ff",
+              "on-secondary-fixed": "#314055",
+              "on-tertiary-fixed-variant": "#54546f",
+              "on-surface-variant": "#566166",
+              "tertiary-fixed": "#d9d7f8",
+              "surface-container-low": "#f0f4f7"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.375rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #2a3439;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar Component -->
+<aside class="fixed inset-y-0 left-0 flex flex-col w-64 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-blue-900 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="description">description</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-blue-900 dark:text-blue-100 font-manrope">JasperInsight</h1>
+<p class="text-[10px] tracking-wider uppercase text-slate-500 font-inter">Management Console</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-xs tracking-wider uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 font-semibold border-r-4 border-blue-700 dark:border-blue-400 bg-slate-200/50" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-xs tracking-wider uppercase">Report Templates</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="api">api</span>
+<span class="font-inter text-xs tracking-wider uppercase">API Configuration</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="font-inter text-xs tracking-wider uppercase">Data Sources</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-inter text-xs tracking-wider uppercase">Audit Logs</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-4">
+<button class="w-full bg-blue-900 text-white py-3 rounded-lg font-manrope font-bold text-sm shadow-sm hover:bg-blue-800 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                Create New Report
+            </button>
+<div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-4 py-2 text-slate-500">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-xs font-inter uppercase tracking-wider">John Doe</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-2 text-slate-500">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-xs font-inter uppercase tracking-wider">Logout</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- Top Nav / Breadcrumbs -->
+<header class="w-full h-16 sticky top-0 z-30 flex items-center px-8 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl justify-start">
+<nav class="flex items-center gap-2 text-sm font-inter text-slate-500">
+<a class="hover:text-blue-600 transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-xs" data-icon="chevron_right">chevron_right</span>
+<span class="text-blue-700 font-bold">Report Templates</span>
+</nav>
+</header>
+<div class="p-10 max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="mb-10">
+<h2 class="text-4xl font-extrabold font-manrope text-on-surface tracking-tight mb-2">Report Templates</h2>
+<p class="text-on-surface-variant font-body max-w-2xl">Create and manage pixel-perfect JRXML report templates. Connect your production databases and preview results in real-time before deployment.</p>
+</div>
+<!-- Configuration Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Form & Settings -->
+<div class="lg:col-span-5 space-y-8">
+<!-- Details Section -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border-b-2 border-surface-container">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="edit_note">edit_note</span>
+<h3 class="font-manrope font-bold text-lg text-on-surface uppercase tracking-wider text-xs">Template Details</h3>
+</div>
+<div class="space-y-5">
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">Template Name</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none" placeholder="e.g. Monthly Inventory Summary" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">Description</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none resize-none" placeholder="Describe the purpose of this report..." rows="3"></textarea>
+</div>
+</div>
+</section>
+<!-- Data Source Section -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border-b-2 border-surface-container">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="database">database</span>
+<h3 class="font-manrope font-bold text-lg text-on-surface uppercase tracking-wider text-xs">Data Connectivity</h3>
+</div>
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">Connected Data Sources</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none cursor-pointer pr-10">
+<option>Select a data source...</option>
+<option>PostgreSQL_Production</option>
+<option>Inventory_Log_DB</option>
+<option>Marketing_Analytics_RDS</option>
+<option>User_Activity_Warehouse</option>
+</select>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+<p class="mt-2 text-[11px] text-outline font-body flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="info">info</span>
+                                Ensure the template parameters match the selected source schema.
+                            </p>
+</div>
+</section><section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border-b-2 border-surface-container">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="settings_input_component">settings_input_component</span>
+<h3 class="font-manrope font-bold text-lg text-on-surface uppercase tracking-wider text-xs">Report Parameters</h3>
+</div>
+<div class="space-y-5">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">Start Date</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none" type="date"/>
+</div>
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">End Date</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none" type="date"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-inter font-semibold uppercase tracking-widest text-on-surface-variant mb-2">Region</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none" placeholder="e.g. North America" type="text"/>
+</div>
+<button class="w-full mt-2 py-3 rounded-lg border border-primary text-primary font-manrope font-bold text-xs uppercase tracking-widest hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+      Refresh Preview
+    </button>
+</div>
+</section>
+<!-- Upload Section -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border-b-2 border-surface-container">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="cloud_upload">cloud_upload</span>
+<h3 class="font-manrope font-bold text-lg text-on-surface uppercase tracking-wider text-xs">Upload JRXML</h3>
+</div>
+<div class="border-2 border-dashed border-surface-container-highest rounded-xl p-10 flex flex-col items-center justify-center bg-surface-container-low/30 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="upload_file">upload_file</span>
+</div>
+<p class="text-sm font-semibold text-on-surface mb-1">Drag and drop your .jrxml file here</p>
+<p class="text-xs text-on-surface-variant">or <span class="text-primary underline font-medium">browse files</span></p>
+<div class="mt-4 flex gap-2">
+<span class="px-2 py-1 rounded bg-surface-container-highest text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Max 50MB</span>
+<span class="px-2 py-1 rounded bg-primary-container text-[10px] font-bold uppercase tracking-tighter text-on-primary-container">.jrxml only</span>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-4 pt-4">
+<button class="flex-1 bg-gradient-to-br from-primary to-primary-dim text-white py-4 rounded-lg font-manrope font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="save">save</span>
+                            Save Template
+                        </button>
+<button class="px-6 py-4 rounded-lg font-manrope font-bold text-sm text-on-surface hover:bg-surface-container transition-all flex items-center justify-center gap-2">
+                            Cancel
+                        </button>
+</div>
+</div>
+<!-- Right Column: Preview -->
+<div class="lg:col-span-7 h-full flex flex-col space-y-6">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="visibility">visibility</span>
+<h3 class="font-manrope font-bold text-on-surface uppercase tracking-wider text-xs">Preview Example</h3>
+</div>
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="play_circle">play_circle</span>
+                            Test Run
+                        </button>
+</div>
+<!-- PDF Mimic Preview Container -->
+<div class="flex-1 min-h-[800px] bg-slate-500 rounded-xl overflow-hidden shadow-2xl relative p-8">
+<!-- Preview Top Bar -->
+<div class="absolute top-0 left-0 right-0 h-10 glass-panel border-b border-white/20 flex items-center justify-between px-4 z-10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-600 text-sm" data-icon="zoom_in">zoom_in</span>
+<span class="material-symbols-outlined text-slate-600 text-sm" data-icon="zoom_out">zoom_out</span>
+<div class="h-4 w-px bg-slate-300"></div>
+<span class="text-[10px] font-bold text-slate-600">PAGE 1 OF 3</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-600 text-sm" data-icon="print">print</span>
+<span class="material-symbols-outlined text-slate-600 text-sm" data-icon="download">download</span>
+</div>
+</div>
+<!-- Main Report Sheet -->
+<div class="w-full h-full bg-white shadow-sm mx-auto p-12 flex flex-col space-y-10">
+<!-- Report Header -->
+<div class="flex justify-between items-start border-b-4 border-primary pb-8">
+<div>
+<div class="w-12 h-12 bg-slate-200 rounded flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-slate-400" data-icon="image">image</span>
+</div>
+<h4 class="text-2xl font-manrope font-extrabold text-blue-900 tracking-tight">JasperInsight Reporting</h4>
+<p class="text-xs text-slate-500 uppercase font-inter tracking-[0.2em] mt-1">Operational Audit Service</p>
+</div>
+<div class="text-right">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Report Identifier</p>
+<p class="text-sm font-mono text-slate-800">#TMPL-2023-8892</p>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Generated Date</p>
+<p class="text-sm font-mono text-slate-800">2023-10-24 14:30 EST</p>
+</div>
+</div>
+<!-- Placeholder Content Grid -->
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<div class="h-4 w-1/2 bg-slate-100 rounded"></div>
+<div class="h-32 w-full bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
+<!-- Mock Chart Image -->
+<div class="flex gap-2 items-end">
+<div class="w-4 h-16 bg-blue-100 rounded-t"></div>
+<div class="w-4 h-24 bg-blue-200 rounded-t"></div>
+<div class="w-4 h-12 bg-blue-300 rounded-t"></div>
+<div class="w-4 h-20 bg-blue-900 rounded-t"></div>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="h-4 w-1/3 bg-slate-100 rounded"></div>
+<div class="space-y-2">
+<div class="h-2 w-full bg-slate-50 rounded"></div>
+<div class="h-2 w-full bg-slate-50 rounded"></div>
+<div class="h-2 w-3/4 bg-slate-50 rounded"></div>
+<div class="h-2 w-full bg-slate-50 rounded"></div>
+</div>
+</div>
+</div>
+<!-- Mock Data Table -->
+<div class="flex-1 flex flex-col">
+<div class="h-8 w-full bg-slate-900 rounded-t flex items-center px-4 gap-4">
+<div class="h-2 w-12 bg-white/20 rounded"></div>
+<div class="h-2 w-24 bg-white/20 rounded"></div>
+<div class="h-2 w-16 bg-white/20 rounded"></div>
+<div class="h-2 flex-1 bg-white/20 rounded"></div>
+</div>
+<div class="border border-t-0 border-slate-100 rounded-b overflow-hidden">
+<div class="grid grid-cols-4 gap-4 p-4 border-b border-slate-50">
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+</div>
+<div class="grid grid-cols-4 gap-4 p-4 border-b border-slate-50">
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+</div>
+<div class="grid grid-cols-4 gap-4 p-4 border-b border-slate-50">
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+<div class="h-2 bg-slate-100 rounded"></div>
+</div>
+<div class="grid grid-cols-4 gap-4 p-4">
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+<div class="h-2 bg-slate-50 rounded"></div>
+</div>
+</div>
+</div>
+<!-- Report Footer -->
+<div class="pt-8 border-t border-slate-100 flex justify-between">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Confidential | JasperInsight</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Page 1</p>
+</div>
+</div>
+<!-- Overlay Label -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 hover:opacity-100 transition-opacity bg-slate-900/10 backdrop-blur-[2px]">
+<div class="bg-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-sm font-bold text-on-surface">Live Template Renderer</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

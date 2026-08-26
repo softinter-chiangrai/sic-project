@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Queue Generate</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<link rel="stylesheet" th:href="@{/css/custom-dropdown.css}">
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/custom-dropdown.js}"></script>
+	<script defer th:src="@{/js/report-queue.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('queue-generate', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Queue Generate')}"></header>
+
+			<div class="dashboard-content edit-page report-queue-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Report Delivery', 'Queue Generate', 'Submit a report generation request into the queue and monitor its status until it completes.')}"></section>
+				<div th:replace="~{fragments/toast :: statusToast('queue-feedback-alert', 'queue-feedback-message', 'Queue updates will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="summary-copy">
+								<h3>Submit Queue Request</h3>
+							</div>
+							<div class="field-stack">
+								<div class="field field--dropdown">
+									<label for="queue-template-select">Report Template</label>
+									<select id="queue-template-select" data-custom-dropdown data-dropdown-placeholder="Select a report template">
+										<option value="">Select a report template</option>
+									</select>
+								</div>
+								<div class="field">
+									<label for="queue-callback-url">Callback URL (Optional)</label>
+									<input id="queue-callback-url" type="url" placeholder="https://example.com/webhook/report-status">
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card report-template-parameters-card">
+							<div class="section-heading">
+								<div>
+									<h4>Report Parameters</h4>
+								</div>
+							</div>
+							<div class="field-stack">
+								<div class="parameter-list" id="parameter-fields"></div>
+								<div id="parameter-empty-state" class="parameter-list__empty" hidden>Select a report template to see its parameters.</div>
+								<div class="button-row button-row--stacked">
+									<div class="field field--dropdown report-template-generate-format">
+										<label for="queue-format">Output Format</label>
+										<select id="queue-format" data-custom-dropdown>
+											<option value="pdf" selected>PDF</option>
+											<option value="docx">DOCX</option>
+											<option value="xlsx">XLSX</option>
+										</select>
+									</div>
+									<button class="action-button action-button--neutral report-template-generate-button" id="queue-submit-button" type="button" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">pending_actions</span>
+										<span>Queue Generate</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</aside>
+				</div>
+
+				<section class="data-panel">
+					<div class="section-header section-header--panel">
+						<div>
+							<h3>Queue Status</h3>
+							<p>Recently queued report generation requests, refreshed automatically.</p>
+						</div>
+					</div>
+					<div class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Template</th>
+									<th>Requested By</th>
+									<th>Status</th>
+									<th>Submitted</th>
+									<th>Completed</th>
+									<th>Webhook</th>
+									<th>Download</th>
+								</tr>
+							</thead>
+							<tbody id="queue-table-body">
+								<tr>
+									<td colspan="8">Loading queued requests...</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="table-footer">
+						<p id="queue-table-summary">Showing 0 queue items</p>
+						<div class="pager">
+							<a id="queue-prev-page" href="#">Previous</a>
+							<span id="queue-current-page">1</span>
+							<a id="queue-next-page" href="#">Next</a>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

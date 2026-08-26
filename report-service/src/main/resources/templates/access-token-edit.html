@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Edit Access Token</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<meta name="access_token_id" th:if="${accessTokenId != null}" th:content="${accessTokenId}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<link rel="stylesheet" th:href="@{/css/custom-dropdown.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/custom-dropdown.js}"></script>
+	<script defer th:src="@{/js/access-token-edit.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('access-token', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar(${editTitle})}"></header>
+
+			<div class="dashboard-content edit-page access-token-edit-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Access Management', ${editTitle}, 'Update token metadata, set lifecycle controls, and manage credential actions.')}" ></section>
+				<div th:replace="~{fragments/toast :: statusToast('token-feedback-alert', 'token-feedback-message', 'Access token updates will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="section-heading">
+								<div>
+									<h3>Token Identity</h3>
+								</div>
+							</div>
+							<div class="field-stack">
+								<div class="field">
+									<label for="token-name">Token Name</label>
+									<input id="token-name" type="text" value="" placeholder="e.g. Reporting API Production">
+								</div>
+								<div class="field">
+									<label for="token-description">Description</label>
+									<textarea id="token-description" placeholder="Describe where this token is used and who owns it."></textarea>
+								</div>
+								<div class="field-grid">
+									<div class="field field--dropdown">
+										<label for="token-expiry">Expiry</label>
+										<select id="token-expiry" data-custom-dropdown data-dropdown-placeholder="Select expiry">
+											<option selected disabled>Select expiry</option>
+											<option>30 days</option>
+											<option>60 days</option>
+											<option>90 days</option>
+											<option>Never</option>
+										</select>
+									</div>
+									<div class="field field--dropdown">
+										<label for="token-status">Status</label>
+										<select id="token-status" data-custom-dropdown data-dropdown-placeholder="Select status">
+											<option selected disabled>Select status</option>
+											<option>Active</option>
+											<option>Suspended</option>
+											<option>Revoked</option>
+										</select>
+									</div>
+								</div>
+								<div class="button-row">
+									<a class="text-button" id="back-to-tokens" th:href="@{/access-tokens}">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">arrow_back</span>
+										<span>Back to Tokens</span>
+									</a>
+									<button class="action-button action-button--primary" id="save-access-token" type="button" data-dialog-open="save-access-token-modal" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">save</span>
+										<span>Save Access Token Changes</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card summary-card">
+							<div class="summary-hero">
+								<div class="summary-copy">
+									<h3>Credential Overview</h3>
+								</div>
+							</div>
+							<ul class="summary-list">
+								<li>
+									<span>Stored Access Token</span>
+									<span class="summary-list__value-group">
+										<strong id="masked-api-key">Not generated</strong>
+										<button class="summary-copy-button" type="button" data-copy-target="masked-api-key" aria-label="Copy full access token">
+											<span class="material-symbols-outlined icon icon--md" aria-hidden="true">content_copy</span>
+										</button>
+									</span>
+								</li>
+								<li><span>Created</span><strong id="token-created-at">-</strong></li>
+								<li><span>Last Used</span><strong id="token-last-used">-</strong></li>
+							</ul>
+							<div class="mini-stats">
+								<div class="metric-stack">
+									<p>Calls Today</p>
+									<strong id="token-calls-today">0</strong>
+								</div>
+								<div class="metric-stack">
+									<p>Error Rate</p>
+									<strong id="token-error-rate">--</strong>
+								</div>
+							</div>
+							<div class="button-row button-row--stacked">
+								<button class="action-button action-button--primary" id="generate-token" type="button" data-dialog-open="generate-access-token-modal" disabled>
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">key</span>
+									<span>Generate Token</span>
+								</button>
+								<button class="action-button action-button--neutral" id="register-token" type="button" data-dialog-open="register-access-token-modal" disabled>
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">app_registration</span>
+									<span>Register Token</span>
+								</button>
+								<button class="text-button" id="revoke-token" type="button" data-dialog-open="revoke-access-token-modal" disabled>
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">no_accounts</span>
+									<span>Revoke Token</span>
+								</button>
+							</div>
+						</section>
+					</aside>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<dialog th:replace="~{fragments/modal :: confirmDialog('save-access-token-modal', 'Confirm Save', 'Save this access token metadata and lifecycle configuration?', 'Cancel', 'Confirm Save', 'check_circle')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: choiceDialog('unsaved-access-token-modal', 'Unsaved Changes', 'You have unsaved changes on this access token. Save before leaving this page?', 'Stay', 'Leave Without Saving', 'discard', 'logout', 'Save and Leave', 'confirm', 'save')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: confirmDialog('generate-access-token-modal', 'Generate Access Token', 'Generate a new access token for this configuration? Any previously issued token will be replaced.', 'Cancel', 'Generate Token', 'key')}"></dialog>
+	<dialog class="app-dialog" id="register-access-token-modal" data-app-dialog>
+		<div class="app-dialog__card">
+			<div class="app-dialog__copy">
+				<h3>Register Access Token</h3>
+				<p>Register a token value you created outside the system. Any previously stored token will be replaced.</p>
+			</div>
+			<div class="field-stack">
+				<div class="field">
+					<label for="manual-token-value">Token Value</label>
+					<textarea id="manual-token-value" placeholder="Paste a token value to register."></textarea>
+				</div>
+			</div>
+			<form class="button-row app-dialog__actions" method="dialog">
+				<button class="text-button" type="submit" value="cancel">Cancel</button>
+				<button class="action-button action-button--neutral" type="submit" value="confirm">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true">app_registration</span>
+					<span>Register Token</span>
+				</button>
+			</form>
+		</div>
+	</dialog>
+	<dialog th:replace="~{fragments/modal :: confirmDialog('revoke-access-token-modal', 'Revoke Access Token', 'Revoke this access token? Any client using it will stop working immediately.', 'Cancel', 'Revoke Token', 'block')}"></dialog>
+	<dialog class="app-dialog" id="access-token-reveal-modal" data-app-dialog>
+		<div class="app-dialog__card">
+			<div class="app-dialog__copy">
+				<h3>New Access Token</h3>
+				<p>Copy this token now. For security reasons this full value is only shown immediately after generation.</p>
+			</div>
+			<div class="field-stack">
+				<div class="field">
+					<label for="generated-token-value">Generated Token</label>
+					<textarea id="generated-token-value" readonly></textarea>
+				</div>
+			</div>
+			<form class="button-row app-dialog__actions app-dialog__actions--single" method="dialog">
+				<button class="ghost-button" id="copy-generated-token" type="button">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true">content_copy</span>
+					<span>Copy Token</span>
+				</button>
+				<button class="action-button action-button--primary" type="submit" value="confirm">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true">check_circle</span>
+					<span>Done</span>
+				</button>
+			</form>
+		</div>
+	</dialog>
+</body>
+</html>

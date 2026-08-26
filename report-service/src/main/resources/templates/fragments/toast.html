@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div th:fragment="statusToast(alertId, messageId, defaultMessage)">
+		<div class="status-alert status-alert--toast" th:id="${alertId}" hidden>
+			<span class="material-symbols-outlined icon icon--md" aria-hidden="true">info</span>
+			<p th:id="${messageId}" th:text="${defaultMessage}">Status updates will appear here.</p>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${'Jasper Report Server | ' + editTitle}"></title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<meta name="report_template_id" th:if="${reportTemplateId != null}" th:content="${reportTemplateId}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<link rel="stylesheet" th:href="@{/css/custom-dropdown.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/custom-dropdown.js}"></script>
+	<script defer th:src="@{/js/report-template-edit.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('templates', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar(${editTitle})}"></header>
+
+			<div class="dashboard-content edit-page report-template-edit-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Template Library', ${editTitle}, 'Update JRXML metadata and optional data source bindings.')}" ></section>
+				<div th:replace="~{fragments/toast :: statusToast('template-feedback-alert', 'template-feedback-message', 'Template updates will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="summary-copy">
+								<h3>Template Details</h3>
+							</div>
+							<div class="field-stack">
+								<div class="field-grid">
+									<div class="field">
+										<label for="template-code">Template Code</label>
+										<input id="template-code" type="text" placeholder="Enter template code" pattern="[A-Z0-9]*" spellcheck="false" autocomplete="off">
+									</div>
+									<div class="field">
+										<label for="template-name">Template Name</label>
+										<input id="template-name" type="text" placeholder="Enter template name">
+									</div>
+								</div>
+								<div class="field">
+									<label for="template-description">Description (Optional)</label>
+									<textarea id="template-description" placeholder="Enter template description"></textarea>
+								</div>
+								<div class="field field--dropdown">
+									<label for="template-source">Connected Data Source (Optional)</label>
+									<select id="template-source" data-custom-dropdown data-dropdown-placeholder="No data source selected">
+										<option value="">No data source selected</option>
+									</select>
+								</div>
+								<div class="upload-box">
+									<span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+									<strong>Upload a .jrxml file to compile and extract report parameters</strong>
+									<p class="upload-note" id="upload-note">No JRXML file uploaded yet.</p>
+									<input id="template-file" type="file" accept=".jrxml">
+									<div class="upload-box__actions">
+										<button class="text-button" id="choose-template-file" type="button">
+											<span class="material-symbols-outlined icon icon--md" aria-hidden="true">attach_file</span>
+											<span>Choose JRXML File</span>
+										</button>
+										<button class="ghost-button" id="download-template-file" type="button" disabled>
+											<span class="material-symbols-outlined icon icon--md" aria-hidden="true">download</span>
+											<span>Download JRXML</span>
+										</button>
+									</div>
+								</div>
+								<div class="button-row">
+									<a class="text-button" id="back-to-templates" th:href="@{/report-templates}">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">arrow_back</span>
+										<span>Back to Templates</span>
+									</a>
+									<button class="action-button action-button--primary" id="save-template" type="button" data-dialog-open="save-template-modal" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">save</span>
+										<span>Save Report Template Changes</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card summary-card">
+							<div class="summary-copy">
+								<h3>Deployment Summary</h3>
+							</div>
+							<ul class="summary-list">
+								<li><span>Current Source</span><strong id="summary-current-source">-</strong></li>
+								<li><span>Last Published</span><strong id="summary-last-published">-</strong></li>
+							</ul>
+							<div class="mini-stats">
+								<div class="metric-stack">
+									<p>Avg Runtime</p>
+									<strong id="summary-average-runtime">-</strong>
+								</div>
+								<div class="metric-stack">
+									<p>Monthly Runs</p>
+									<strong id="summary-monthly-runs">-</strong>
+								</div>
+							</div>
+						</section>
+
+						<section class="edit-card report-template-parameters-card">
+							<div class="section-heading">
+								<div>
+									<h4>Report Parameters</h4>
+								</div>
+							</div>
+							<div class="field-stack">
+								<div class="parameter-list" id="parameter-fields"></div>
+								<div class="button-row button-row--stacked">
+									<button class="action-button action-button--primary" id="preview-template" type="button" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">sync</span>
+										<span>Preview</span>
+									</button>
+									<div class="field field--dropdown report-template-generate-format">
+										<label for="generate-format">Output Format</label>
+										<select id="generate-format" data-custom-dropdown>
+											<option value="pdf" selected>PDF</option>
+											<option value="docx">DOCX</option>
+											<option value="xlsx">XLSX</option>
+										</select>
+									</div>
+									<button class="action-button action-button--neutral report-template-generate-button" id="generate-template" type="button" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">description</span>
+										<span>Generate</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</aside>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<dialog th:replace="~{fragments/modal :: confirmDialog('save-template-modal', 'Confirm Save', 'Save this report template with the current JRXML file and parameter mapping?', 'Cancel', 'Confirm Save', 'check_circle')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: choiceDialog('unsaved-template-modal', 'Unsaved Changes', 'You have unsaved changes on this report template. Save before leaving this page?', 'Stay', 'Leave Without Saving', 'discard', 'logout', 'Save and Leave', 'confirm', 'save')}"></dialog>
+	<dialog class="app-dialog app-dialog--wide" id="report-preview-modal" data-app-dialog>
+		<div class="app-dialog__card app-dialog__card--preview">
+			<div th:replace="~{fragments/toast :: statusToast('template-preview-feedback-alert', 'template-preview-feedback-message', 'Preview updates will appear here.')}"></div>
+			<div class="app-dialog__copy">
+				<h3>Report Preview</h3>
+			</div>
+			<div class="preview-stage is-loading" id="report-preview-stage" aria-live="polite">
+				<div class="preview-loading" id="report-preview-loading" role="status">
+					<span class="material-symbols-outlined icon icon--lg" id="report-preview-status-icon" aria-hidden="true">hourglass_top</span>
+					<strong id="report-preview-status-title">Generating preview...</strong>
+					<p id="report-preview-status-message">The popup is ready. Your document will appear here when rendering finishes.</p>
+				</div>
+				<iframe class="preview-frame" id="report-preview-frame" title="Report Preview" hidden></iframe>
+			</div>
+			<form class="button-row app-dialog__actions app-dialog__actions--single" method="dialog">
+				<button class="text-button" type="submit" value="cancel">Close Preview</button>
+			</form>
+		</div>
+	</dialog>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Account Configuration | Jasper Server Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#f0f4f7",
+              "on-primary": "#f8f7ff",
+              "on-background": "#2a3439",
+              "outline": "#717c82",
+              "on-primary-container": "#0048bf",
+              "surface-container-lowest": "#ffffff",
+              "primary-container": "#dbe1ff",
+              "tertiary-fixed": "#d9d7f8",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "primary": "#0053db",
+              "secondary-fixed": "#d3e4fe",
+              "inverse-primary": "#618bff",
+              "tertiary": "#5d5d78",
+              "on-tertiary-fixed": "#373851",
+              "on-error-container": "#752121",
+              "tertiary-container": "#d9d7f8",
+              "surface-container-high": "#e1e9ee",
+              "error": "#9f403d",
+              "primary-dim": "#0048c1",
+              "secondary-container": "#d3e4fe",
+              "on-tertiary": "#fbf7ff",
+              "primary-fixed": "#dbe1ff",
+              "on-surface": "#2a3439",
+              "secondary": "#506076",
+              "surface-bright": "#f7f9fb",
+              "primary-fixed-dim": "#c7d3ff",
+              "surface-variant": "#d9e4ea",
+              "on-primary-fixed": "#003798",
+              "surface-dim": "#cfdce3",
+              "error-dim": "#4e0309",
+              "secondary-dim": "#44546a",
+              "background": "#f7f9fb",
+              "inverse-on-surface": "#9a9d9f",
+              "tertiary-dim": "#51516c",
+              "on-secondary": "#f7f9ff",
+              "secondary-fixed-dim": "#c5d6f0",
+              "surface": "#f7f9fb",
+              "on-tertiary-container": "#4a4a65",
+              "on-error": "#fff7f6",
+              "on-surface-variant": "#566166",
+              "surface-tint": "#0053db",
+              "on-secondary-fixed": "#314055",
+              "outline-variant": "#a9b4b9",
+              "on-primary-fixed-variant": "#0050d4",
+              "on-tertiary-fixed-variant": "#54546f",
+              "tertiary-fixed-dim": "#cbc9e9",
+              "surface-container": "#e8eff3",
+              "surface-container-highest": "#d9e4ea",
+              "error-container": "#fe8983",
+              "on-secondary-container": "#435368",
+              "inverse-surface": "#0b0f10"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3 {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="w-full top-0 border-b-0 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="flex justify-between items-center px-8 py-4 max-w-5xl mx-auto">
+<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Jasper Server Setup</div>
+<div class="flex items-center gap-6">
+</div>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800/50 h-px w-full"></div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center px-6 py-12">
+<div class="w-full max-w-xl">
+<!-- Header Section -->
+<div class="mb-12 flex flex-col gap-2 px-2">
+<span class="font-label text-xs font-bold tracking-[0.1em] text-primary uppercase">Step 3 of 4</span>
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Admin Configuration</h1>
+</div>
+<!-- Configuration Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_32px_64px_-12px_rgba(42,52,57,0.06)] overflow-hidden relative group">
+<!-- Subtle Gradient Accent -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-dim"></div>
+<div class="p-10">
+<div class="mb-8">
+<p class="text-on-surface-variant font-body leading-relaxed">
+                        Establish the primary administrative credentials for your server instance. These credentials will grant full access to system settings.
+                    </p>
+</div>
+<form class="space-y-8">
+<!-- Username Field -->
+<div class="space-y-2">
+<label class="flex items-center justify-between" for="username">
+<span class="font-headline text-sm font-bold tracking-wide text-on-surface">Admin Username</span>
+<span class="text-[10px] font-bold tracking-widest text-outline uppercase opacity-60">Required</span>
+</label>
+<div class="relative">
+<input class="w-full px-5 py-4 bg-surface-container-low border-none rounded-lg text-on-surface font-body focus:ring-0 focus:bg-surface-container-lowest focus:shadow-sm transition-all duration-200 placeholder:text-outline-variant" id="username" placeholder="e.g. sys_admin" type="text"/>
+<div class="absolute bottom-0 left-0 h-0.5 w-0 bg-primary group-focus-within:w-full transition-all duration-300"></div>
+</div>
+<p class="font-label text-xs text-on-surface-variant flex items-center gap-2 mt-2">
+<span class="material-symbols-outlined text-[14px]">info</span>
+                            Alphanumeric characters and underscores only.
+                        </p>
+</div>
+<!-- Password Fields -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-headline text-sm font-bold tracking-wide text-on-surface" for="password">Password</label>
+<div class="relative">
+<input class="w-full px-5 py-4 bg-surface-container-low border-none rounded-lg text-on-surface font-body focus:ring-0 focus:bg-surface-container-lowest transition-all duration-200" id="password" type="password" value="••••••••"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant cursor-pointer text-[20px]">visibility_off</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-headline text-sm font-bold tracking-wide text-on-surface" for="confirm_password">Confirm Password</label>
+<div class="relative">
+<input class="w-full px-5 py-4 bg-surface-container-low border-none rounded-lg text-on-surface font-body focus:ring-0 focus:bg-surface-container-lowest transition-all duration-200" id="confirm_password" type="password" value="••••••••"/>
+</div>
+</div>
+</div>
+<!-- Validation Checklist -->
+<div class="bg-surface-container-low p-5 rounded-lg space-y-3">
+<h4 class="font-headline text-xs font-extrabold tracking-widest text-secondary uppercase mb-1">Security Requirements</h4>
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-body text-xs text-on-surface">Minimum 12 characters length</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-body text-xs text-on-surface">Includes upper &amp; lowercase letters</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-outline-variant/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant opacity-40">circle</span>
+</div>
+<span class="font-body text-xs text-on-surface-variant">Contains at least one special character (@, #, $)</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-between pt-6">
+<button class="px-6 py-3 font-label text-sm font-semibold text-secondary hover:bg-surface-container transition-all rounded-lg flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            Previous
+                        </button>
+<button class="px-10 py-4 bg-gradient-to-br from-primary to-primary-dim text-white font-headline font-bold text-sm tracking-wide rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center gap-3" type="button">
+                            Continue
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Contextual Security Note -->
+</div>
+</main>
+<!-- Footer -->
+</body></html>

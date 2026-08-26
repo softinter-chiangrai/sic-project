@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<aside class="sidebar" th:fragment="sidebar(activePage, username)">
+		<div class="sidebar-brand">
+			<div class="brand-mark">
+				<span class="material-symbols-outlined icon icon--lg" aria-hidden="true">description</span>
+			</div>
+			<div>
+				<h1>Report Server</h1>
+				<p>Management Console</p>
+			</div>
+		</div>
+
+		<nav class="sidebar-nav">
+			<a class="nav-item" th:classappend="${activePage == 'dashboard'} ? ' is-active'" th:href="@{/}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">dashboard</span>
+				<span>Dashboard</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'generate-report'} ? ' is-active'" th:href="@{/reports/generate}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">play_circle</span>
+				<span>Generate Report</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'queue-generate'} ? ' is-active'" th:href="@{/reports/queue}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">pending_actions</span>
+				<span>Queue Generate</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'bulk-generate'} ? ' is-active'" th:href="@{/reports/bulk}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">archive</span>
+				<span>Bulk Generate</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'reports'} ? ' is-active'" th:href="@{/reports}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">folder_managed</span>
+				<span>Reports</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'templates'} ? ' is-active'" th:href="@{/report-templates}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">description</span>
+				<span>Report Templates</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'data-sources'} ? ' is-active'" th:href="@{/data-sources}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">database</span>
+				<span>Data Sources</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'access-token'} ? ' is-active'" th:href="@{/access-tokens}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">vpn_key</span>
+				<span>Access Tokens</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'audit-logs'} ? ' is-active'" th:href="@{/audit-logs}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">history</span>
+				<span>Audit Logs</span>
+			</a>
+			<a class="nav-item" th:classappend="${activePage == 'settings'} ? ' is-active'" th:href="@{/settings}">
+				<span class="material-symbols-outlined icon icon--md" aria-hidden="true">settings</span>
+				<span>Settings</span>
+			</a>
+		</nav>
+
+		<a class="cta-button" th:href="@{/report-templates/edit}">
+			<span class="material-symbols-outlined icon icon--md" aria-hidden="true">add</span>
+			<span>Create New Report</span>
+		</a>
+
+		<div class="sidebar-footer">
+			<div class="profile-row">
+				<div class="profile-avatar" th:text="${#strings.toUpperCase(#strings.substring(username, 0, 1))}">A</div>
+				<div>
+					<strong th:text="${username}">admin</strong>
+					<p>Signed in</p>
+				</div>
+			</div>
+			<form th:action="@{/logout}" method="post">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+				<button class="logout-button" type="submit">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true">logout</span>
+					<span>Logout</span>
+				</button>
+			</form>
+		</div>
+	</aside>
+
+	<header class="topbar" th:fragment="topbar(title)">
+		<nav class="breadcrumbs" aria-label="Breadcrumb">
+			<span>Home</span>
+			<span>/</span>
+			<strong th:text="${title}">Dashboard</strong>
+		</nav>
+	</header>
+</body>
+</html>

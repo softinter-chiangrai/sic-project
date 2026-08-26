@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Reports</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('reports', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Reports')}"></header>
+
+			<div class="dashboard-content resource-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Report Delivery', 'Reports', 'Browse report templates and review generated download files.')}"></section>
+				
+
+				<section class="stats-grid">
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('folder_zip', ' entity-icon--blue', 'Generated Files', ${reportStats.totalGenerated})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('download', ' entity-icon--success', 'Downloads', ${reportStats.totalDownloads})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('schedule', ' entity-icon--warning', 'Latest Generated', ${reportStats.latestGenerated})}"></article>
+				</section>
+
+				<th:block th:replace="~{fragments/resource-list :: dataPanel(~{::div[@data-fragment='table-content']}, ~{::div[@data-fragment='footer-content']})}">
+					<div data-fragment="table-content" class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Template Code</th>
+									<th>Template Name</th>
+									<th>Data Source</th>
+									<th>Uploaded File</th>
+									<th>Last Updated</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(reportTemplates)}">
+									<td colspan="6">No report templates available yet.</td>
+								</tr>
+								<tr th:each="reportTemplate : ${reportTemplates}"
+									th:classappend="${selectedTemplateId == reportTemplate.id} ? 'table-row-selectable table-row-selectable--active' : 'table-row-selectable'"
+									th:data-href="@{/reports(templatePage=${currentTemplatePage}, filesPage=0, selectedTemplateId=${reportTemplate.id})}"
+									onclick="window.location=this.dataset.href">
+									<td class="mono-cell" th:text="${reportTemplate.id}">1</td>
+									<td class="mono-cell" th:text="${reportTemplate.templateCode == null || reportTemplate.templateCode.isBlank() ? '-' : reportTemplate.templateCode}">A4REPORT</td>
+									<td>
+										<div class="entity-cell">
+											<div class="entity-icon entity-icon--blue">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">description</span>
+											</div>
+											<div>
+												<strong th:text="${reportTemplate.templateName}">A4 Report</strong>
+												<p th:text="${selectedTemplateId == reportTemplate.id} ? 'Selected' : 'Click to view download files'">Click to view download files</p>
+											</div>
+										</div>
+									</td>
+									<td th:text="${reportTemplate.dataSourceName}">Primary Warehouse</td>
+									<td class="mono-cell" th:text="${reportTemplate.originalFileName}">sales-summary.jrxml</td>
+									<td th:text="${reportTemplate.lastUpdated}">26 Mar 2026, 10:20</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div data-fragment="footer-content" class="table-footer">
+						<p th:text="${templateFilteredTotal == 0} ? 'Showing 0 report templates' : |Showing ${templatePageStart}-${templatePageEnd} of ${templateFilteredTotal} report templates|">Showing 0 report templates</p>
+						<div class="pager" th:if="${templateTotalPages > 0}">
+							<a th:if="${templateHasPreviousPage}" th:href="@{/reports(templatePage=${currentTemplatePage - 1}, filesPage=${currentFilesPage}, selectedTemplateId=${selectedTemplateId})}">Previous</a>
+							<span th:unless="${templateHasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${templatePageNumbers}">
+								<span th:if="${pageNumber == currentTemplatePage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentTemplatePage}" th:href="@{/reports(templatePage=${pageNumber}, filesPage=${currentFilesPage}, selectedTemplateId=${selectedTemplateId})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${templateHasNextPage}" th:href="@{/reports(templatePage=${currentTemplatePage + 1}, filesPage=${currentFilesPage}, selectedTemplateId=${selectedTemplateId})}">Next</a>
+							<span th:unless="${templateHasNextPage}">Next</span>
+						</div>
+					</div>
+				</th:block>
+
+				<section class="data-panel">
+					<div class="section-header section-header--panel">
+						<div>
+							<h3>Download Files</h3>
+							<p th:text="${selectedTemplateName == null} ? 'Select a report template to review generated download files.' : |Generated files for ${selectedTemplateName}.|">Generated files for the selected report template.</p>
+						</div>
+					</div>
+					<div class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Downloaded File</th>
+									<th>Format</th>
+									<th>Generated At</th>
+									<th>Generated By</th>
+									<th>Downloads</th>
+									<th>Download URL</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(downloadFiles)}">
+									<td colspan="7" th:if="${selectedTemplateId == null}">No report template selected.</td>
+									<td colspan="7" th:unless="${selectedTemplateId == null}">No download files generated for this report template yet.</td>
+								</tr>
+								<tr th:each="downloadFile : ${downloadFiles}">
+									<td class="mono-cell" th:text="${downloadFile.id}">1</td>
+									<td class="mono-cell" th:text="${downloadFile.fileName}">A4Report-20260326-102030.pdf</td>
+									<td><span th:class="${downloadFile.formatBadgeClass}" th:text="${downloadFile.format}">PDF</span></td>
+									<td th:text="${downloadFile.generatedAt}">26 Mar 2026, 10:25</td>
+									<td th:text="${downloadFile.generatedByToken}">api-client</td>
+									<td th:text="${downloadFile.downloadCount}">0</td>
+									<td class="mono-cell">
+										<a th:if="${downloadFile.downloadAvailable}" th:href="${downloadFile.downloadPath}" th:text="${downloadFile.downloadPath}" target="_blank" rel="noopener noreferrer">/reports/files/1/download</a>
+										<span th:unless="${downloadFile.downloadAvailable}" th:text="${downloadFile.downloadStatus}">Deleted</span>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="table-footer">
+						<p th:text="${filesFilteredTotal == 0} ? 'Showing 0 download files' : |Showing ${filesPageStart}-${filesPageEnd} of ${filesFilteredTotal} download files|">Showing 0 download files</p>
+						<div class="pager" th:if="${filesTotalPages > 0}">
+							<a th:if="${filesHasPreviousPage}" th:href="@{/reports(templatePage=${currentTemplatePage}, filesPage=${currentFilesPage - 1}, selectedTemplateId=${selectedTemplateId})}">Previous</a>
+							<span th:unless="${filesHasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${filesPageNumbers}">
+								<span th:if="${pageNumber == currentFilesPage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentFilesPage}" th:href="@{/reports(templatePage=${currentTemplatePage}, filesPage=${pageNumber}, selectedTemplateId=${selectedTemplateId})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${filesHasNextPage}" th:href="@{/reports(templatePage=${currentTemplatePage}, filesPage=${currentFilesPage + 1}, selectedTemplateId=${selectedTemplateId})}">Next</a>
+							<span th:unless="${filesHasNextPage}">Next</span>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

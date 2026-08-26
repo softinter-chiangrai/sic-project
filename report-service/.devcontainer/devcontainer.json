@@ -1,0 +1,39 @@
+// .devcontainer/devcontainer.json
+{
+    "name": "Report Service Dev Container",
+
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "dev-container",
+
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspaces,type=bind,consistency=cached",
+        "source=${localWorkspaceFolderBasename}-target,target=${containerWorkspaceFolder}/target,type=volume"
+    ],
+
+    "workspaceFolder": "/workspaces",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-containers",
+                "vscjava.vscode-java-pack",
+                "vscjava.vscode-maven",
+                "vscjava.vscode-spring-initializr",
+                "vscjava.vscode-spring-boot-dashboard",
+                "vmware.vscode-spring-boot",
+                "vmware.vscode-boot-dev-pack",
+
+                "pkief.material-icon-theme",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "streetsidesoftware.code-spell-checker",
+                "ms-vscode.vscode-chat-customizations-evaluations",
+                "bierner.github-markdown-preview",
+                
+                "anthropic.claude-code"
+            ]
+        }
+    },
+
+    "remoteUser": "root"
+}

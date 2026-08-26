@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Report Templates</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/report-templates.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('templates', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Report Templates')}"></header>
+
+			<div class="dashboard-content resource-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Template Library', 'Report Templates', 'Upload and Manage the JRXML templates used across your reporting workflows.')}"></section>
+
+				<section class="stats-grid stats-grid--with-action">
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('description', ' entity-icon--blue', 'Total Templates', ${reportTemplateStats.totalCount})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('hub', ' entity-icon--violet', 'Most Active Source', ${reportTemplateStats.mostActiveSource})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('schedule', ' entity-icon--warning', 'Last Upload', ${reportTemplateStats.lastUpload})}"></article>
+					<div class="stats-grid__action">
+						<button class="action-button action-button--primary stats-grid__button" type="button" onclick="window.location.href='/report-templates/edit'">
+							<span class="material-symbols-outlined icon icon--md" aria-hidden="true">cloud_upload</span>
+							<span>Upload New Template</span>
+						</button>
+					</div>
+				</section>
+
+				<th:block th:replace="~{fragments/resource-list :: dataPanel(~{::div[@data-fragment='table-content']}, ~{::div[@data-fragment='footer-content']})}">
+					<div data-fragment="table-content" class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Template Code</th>
+									<th>Template Name</th>
+									<th>Data Source</th>
+									<th>Uploaded File</th>
+									<th>Last Updated</th>
+									<th class="table-actions">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(reportTemplates)}">
+									<td colspan="7">No report templates uploaded yet.</td>
+								</tr>
+								<tr th:each="reportTemplate : ${reportTemplates}">
+									<td class="mono-cell" th:text="${reportTemplate.id}">1</td>
+									<td class="mono-cell" th:text="${reportTemplate.templateCode == null || reportTemplate.templateCode.isBlank() ? '-' : reportTemplate.templateCode}">SALESSUMMARY</td>
+									<td>
+										<div class="entity-cell">
+											<div class="entity-icon entity-icon--blue">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">description</span>
+											</div>
+											<div>
+												<strong th:text="${reportTemplate.templateName}">Sales Summary</strong>
+											</div>
+										</div>
+									</td>
+									<td th:text="${reportTemplate.dataSourceName}">Primary Warehouse</td>
+									<td>
+										<div class="file-cell">
+											<span class="mono-cell" th:text="${reportTemplate.originalFileName}">sales-summary.jrxml</span>
+											<a class="file-download-link" th:href="@{|/api/report-templates/${reportTemplate.id}/jrxml|}" th:download="${reportTemplate.originalFileName}" th:attr="aria-label='Download ' + ${reportTemplate.originalFileName}">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">download</span>
+											</a>
+										</div>
+									</td>
+									<td th:text="${reportTemplate.lastUpdated}">20 May 2025, 09:45</td>
+									<td class="table-actions">
+										<div class="row-actions">
+											<a th:href="@{|/report-templates/edit/${reportTemplate.id}|}" th:attr="aria-label='Edit ' + ${reportTemplate.templateName}">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">edit</span>
+											</a>
+											<form method="post" th:action="@{|/report-templates/delete/${reportTemplate.id}|}" th:id="|delete-report-template-${reportTemplate.id}|">
+												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+												<input type="hidden" name="page" th:value="${currentPage}">
+												<input type="hidden" name="size" th:value="${pageSize}">
+												<button
+													type="button"
+													class="row-action--danger"
+													data-dialog-open="delete-report-template-modal"
+													th:attr="aria-label='Delete ' + ${reportTemplate.templateName}"
+													th:data-delete-form="|delete-report-template-${reportTemplate.id}|"
+													th:data-delete-label="${reportTemplate.templateName}">
+													<span class="material-symbols-outlined icon icon--md" aria-hidden="true">delete</span>
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div data-fragment="footer-content" class="table-footer">
+						<p th:text="${filteredTotal == 0} ? 'Showing 0 templates' : |Showing ${pageStart}-${pageEnd} of ${filteredTotal} templates|">Showing 0 templates</p>
+						<div class="pager" th:if="${totalPages > 0}">
+							<a th:if="${hasPreviousPage}" th:href="@{/report-templates(page=${currentPage - 1}, size=${pageSize})}">Previous</a>
+							<span th:unless="${hasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${pageNumbers}">
+								<span th:if="${pageNumber == currentPage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentPage}" th:href="@{/report-templates(page=${pageNumber}, size=${pageSize})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${hasNextPage}" th:href="@{/report-templates(page=${currentPage + 1}, size=${pageSize})}">Next</a>
+							<span th:unless="${hasNextPage}">Next</span>
+						</div>
+					</div>
+				</th:block>
+
+				<dialog th:replace="~{fragments/modal :: confirmDialog('delete-report-template-modal', 'Delete Report Template', 'Delete this report template? This action cannot be undone.', 'Cancel', 'Delete Template', 'delete')}"></dialog>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

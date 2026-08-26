@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Edit Data Source</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<meta name="data_source_id" th:if="${dataSourceId != null}" th:content="${dataSourceId}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/data-source-edit.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('data-sources', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar(${editTitle})}"></header>
+
+			<div class="dashboard-content edit-page data-source-edit-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Connectivity', ${editTitle}, 'Update connection details for an external database link.')}" ></section>
+				<div th:replace="~{fragments/toast :: statusToast('connection-health-alert', 'connection-health-alert-message', 'Connection test result will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="summary-copy">
+								<h3>Connection Profile</h3>
+							</div>
+							<div class="field-stack">
+								<div class="field">
+									<label for="connection-label">Connection Label</label>
+									<input id="connection-label" type="text" placeholder="Enter connection label">
+								</div>
+								<div>
+									<p class="group-label">Database Type</p>
+									<input id="database-type" type="hidden" value="">
+									<div class="option-grid" role="listbox" aria-label="Database Type">
+										<button class="option-card" type="button" data-db-type="postgresql" data-default-port="5432" aria-pressed="false">
+											<span class="material-symbols-outlined" aria-hidden="true">database</span>
+											<strong>PostgreSQL</strong>
+										</button>
+										<button class="option-card" type="button" data-db-type="mysql" data-default-port="3306" aria-pressed="false">
+											<span class="material-symbols-outlined" aria-hidden="true">storage</span>
+											<strong>MySQL</strong>
+										</button>
+										<button class="option-card" type="button" data-db-type="mariadb" data-default-port="3306" aria-pressed="false">
+											<span class="material-symbols-outlined" aria-hidden="true">layers</span>
+											<strong>MariaDB</strong>
+										</button>
+										<button class="option-card" type="button" data-db-type="oracle" data-default-port="1521" aria-pressed="false">
+											<span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+											<strong>Oracle</strong>
+										</button>
+									</div>
+								</div>
+								<div class="field-grid--tight">
+									<div class="field">
+										<label for="host-address">Host Address</label>
+										<input id="host-address" type="text" placeholder="Enter host address">
+									</div>
+									<div class="field">
+										<label for="host-port">Port</label>
+										<input id="host-port" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Select database type">
+									</div>
+								</div>
+								<div class="field-grid">
+									<div class="field">
+										<label for="db-username">Username</label>
+										<input id="db-username" type="text" placeholder="Enter username">
+									</div>
+									<div class="field">
+										<label for="db-password">Password</label>
+										<input id="db-password" type="password" placeholder="Enter password">
+									</div>
+								</div>
+								<div class="field">
+									<label for="database-name">Database Name</label>
+									<input id="database-name" type="text" placeholder="Enter database name">
+								</div>
+								<div class="field-grid">
+									<div class="field">
+										<label for="connect-timeout-seconds">Connect Timeout (seconds)</label>
+										<input id="connect-timeout-seconds" type="number" min="1" step="1" value="10" placeholder="Enter connect timeout in seconds">
+									</div>
+									<div class="field">
+										<label for="socket-timeout-seconds">Socket Timeout (seconds)</label>
+										<input id="socket-timeout-seconds" type="number" min="1" step="1" value="30" placeholder="Enter socket timeout in seconds">
+									</div>
+								</div>
+								<div class="button-row">
+									<a class="text-button" id="back-to-sources" th:href="@{/data-sources}">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">arrow_back</span>
+										<span>Back to Sources</span>
+									</a>
+									<button class="action-button action-button--primary" id="save-data-source" type="button" data-dialog-open="save-confirm-modal" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">save</span>
+										<span>Save Data Source Changes</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card summary-card">
+							<div class="summary-copy">
+								<h3>Connection Health</h3>
+							</div>
+							<ul class="summary-list">
+								<li><span>Status</span><strong id="connection-status-value">Not tested</strong></li>
+								<li><span>Last Tested</span><strong id="connection-tested-value">-</strong></li>
+								<li><span>Response Time</span><strong id="connection-response-value">-</strong></li>
+							</ul>
+							<div class="button-row button-row--single">
+								<button class="action-button action-button--primary" id="test-connection" type="button">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">sync</span>
+									<span>Test Connection</span>
+								</button>
+							</div>
+						</section>
+					</aside>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<dialog th:replace="~{fragments/modal :: confirmDialog('save-confirm-modal', 'Confirm Save', 'Save this data source configuration with the current connection details?', 'Cancel', 'Confirm Save', 'check_circle')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: choiceDialog('unsaved-changes-modal', 'Unsaved Changes', 'You have unsaved changes on this data source. Save before leaving this page?', 'Stay', 'Leave Without Saving', 'discard', 'logout', 'Save and Leave', 'confirm', 'save')}"></dialog>
+</body>
+</html>

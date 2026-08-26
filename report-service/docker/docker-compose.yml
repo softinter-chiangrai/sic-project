@@ -1,0 +1,27 @@
+name: report-service
+
+services:
+  report-service:
+    image: sarankon/report-service:latest
+    container_name: report-service
+    hostname: report-service
+    restart: unless-stopped
+    networks:
+      - report-service-network
+      - sic-shared
+    ports:
+      - "80:80"
+    environment:
+      - TZ=UTC
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - ./data/report-service:/app/data:Z
+
+networks:
+  report-service-network:
+    driver: bridge
+  sic-shared:
+    external: true

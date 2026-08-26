@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>API Manager - Add New Token</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary": "#f8f7ff",
+              "surface-container-low": "#f0f4f7",
+              "outline": "#717c82",
+              "on-primary-container": "#0048bf",
+              "on-background": "#2a3439",
+              "surface-container-lowest": "#ffffff",
+              "primary-container": "#dbe1ff",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "primary": "#0053db",
+              "tertiary-fixed": "#d9d7f8",
+              "secondary-fixed": "#d3e4fe",
+              "inverse-primary": "#618bff",
+              "tertiary": "#5d5d78",
+              "on-tertiary-fixed": "#373851",
+              "on-error-container": "#752121",
+              "tertiary-container": "#d9d7f8",
+              "surface-container-high": "#e1e9ee",
+              "error": "#9f403d",
+              "primary-dim": "#0048c1",
+              "secondary-container": "#d3e4fe",
+              "on-tertiary": "#fbf7ff",
+              "primary-fixed": "#dbe1ff",
+              "on-surface": "#2a3439",
+              "secondary": "#506076",
+              "surface-variant": "#d9e4ea",
+              "surface-bright": "#f7f9fb",
+              "primary-fixed-dim": "#c7d3ff",
+              "on-primary-fixed": "#003798",
+              "error-dim": "#4e0309",
+              "surface-dim": "#cfdce3",
+              "tertiary-dim": "#51516c",
+              "on-secondary": "#f7f9ff",
+              "secondary-dim": "#44546a",
+              "background": "#f7f9fb",
+              "inverse-on-surface": "#9a9d9f",
+              "secondary-fixed-dim": "#c5d6f0",
+              "surface": "#f7f9fb",
+              "on-tertiary-container": "#4a4a65",
+              "on-error": "#fff7f6",
+              "on-surface-variant": "#566166",
+              "outline-variant": "#a9b4b9",
+              "surface-tint": "#0053db",
+              "on-secondary-fixed": "#314055",
+              "tertiary-fixed-dim": "#cbc9e9",
+              "surface-container": "#e8eff3",
+              "surface-container-highest": "#d9e4ea",
+              "error-container": "#fe8983",
+              "on-primary-fixed-variant": "#0050d4",
+              "on-tertiary-fixed-variant": "#54546f",
+              "on-secondary-container": "#435368",
+              "inverse-surface": "#0b0f10"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface flex min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="flex flex-col h-screen w-[280px] bg-[#f8f9fb] border-r border-slate-100 flex-shrink-0 sticky top-0">
+<div class="px-8 py-10 flex items-center space-x-3">
+<div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">description</span>
+</div>
+<div>
+<h1 class="text-[22px] font-extrabold tracking-tight text-[#1a365d] leading-none">JasperInsight</h1>
+<p class="text-[10px] font-bold font-headline uppercase tracking-[0.15em] text-slate-400 mt-1">MANAGEMENT CONSOLE</p>
+</div>
+</div>
+<nav class="flex-1 mt-4">
+<a class="flex items-center px-8 py-5 space-x-4 text-slate-500 hover:bg-slate-200/30 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="dashboard" style="font-variation-settings: 'FILL' 1">grid_view</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">DASHBOARD</span>
+</a>
+<a class="flex items-center px-8 py-5 space-x-4 text-slate-500 hover:bg-slate-200/30 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="description" style="font-variation-settings: 'FILL' 1">article</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">REPORT TEMPLATES</span>
+</a>
+<!-- Active Navigation State: API CONFIGURATION -->
+<a class="flex items-center px-8 py-5 space-x-4 text-primary bg-[#eef2ff] border-r-[4px] border-primary group relative" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="settings_input_component" style="font-variation-settings: 'FILL' 1">layers</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">API CONFIGURATION</span>
+</a>
+<a class="flex items-center px-8 py-5 space-x-4 text-slate-500 hover:bg-slate-200/30 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="database" style="font-variation-settings: 'FILL' 1">storage</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">DATA SOURCES</span>
+</a>
+<a class="flex items-center px-8 py-5 space-x-4 text-slate-500 hover:bg-slate-200/30 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="history">history</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">AUDIT LOGS</span>
+</a>
+</nav>
+<div class="mt-auto px-6 py-8 border-t border-slate-100 space-y-6">
+<button class="w-full flex items-center justify-center space-x-3 px-4 py-4 bg-primary text-white rounded-lg shadow-md shadow-blue-500/20 hover:bg-primary-dim transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+<span class="font-headline uppercase tracking-widest text-[10px] font-bold">Create New Report</span>
+</button>
+<div class="space-y-4 pt-2">
+<div class="flex items-center space-x-4 px-2">
+<img alt="Profile" class="w-9 h-9 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbNX6XcpiFv669UINssUZ7z7z6d3mZvS8ig8E_WQo6jr3mQd5xdXrCnrIt7LYfYf3RPGS4IYKcTByrGsiVQ-aa07K3iUnxJOed1CjQrQzm1oOi0FvbRCfTKyjFYfCpor6ZdTsmhYCvDfoitsR_CeOZltybTE6_Q9n3BCVaxywVBj3XS3L_4UXkxj7eqVbDky9tHVNmZUCu7xG-PH5pY91ziZq9bqn71B4xVruYdEeM9LE4iVyKzupgxTrGe9ON-SgjeYsOxn2xSWoG"/>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold text-slate-700">JOHN DOE</span>
+</div>
+<a class="flex items-center px-2 py-1 space-x-4 text-slate-500 hover:text-slate-900 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="logout">logout</span>
+<span class="font-headline uppercase tracking-[0.1em] text-[11px] font-bold">LOGOUT</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar Component (Breadcrumb Style) -->
+<header class="flex justify-between items-center w-full px-12 py-6 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-10">
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2 text-[10px] font-bold tracking-[0.1em] text-slate-400 font-headline uppercase">
+<a class="hover:text-blue-900 transition-colors" href="#">HOME</a>
+<span class="text-slate-300">/</span>
+<a class="hover:text-blue-900 transition-colors" href="#">API CONFIGURATION</a>
+<span class="text-slate-300">/</span>
+<span class="text-blue-900">ADD TOKEN</span>
+</div>
+</div>
+<div class="flex items-center space-x-6"></div>
+</header>
+<!-- Content Area -->
+<div class="p-12 max-w-5xl">
+<div class="mb-10 text-left">
+<h2 class="text-3xl font-extrabold font-headline text-slate-900 tracking-tight mb-2">Add New Token</h2>
+<p class="text-slate-500 max-w-2xl leading-relaxed">
+                    Generate a new secure access token to authenticate external applications and automated services with the Azure Insights reporting engine. 
+                    Ensure you grant the minimum necessary permissions for security compliance.
+                </p>
+</div>
+<!-- Main Form Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_12px_40px_-15px_rgba(0,0,0,0.04)] overflow-hidden border border-slate-100">
+<div class="p-10">
+<form class="space-y-10">
+<!-- Token Name -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+<div>
+<label class="block font-headline uppercase tracking-widest text-[11px] font-bold text-slate-900 mb-1">Token Name</label>
+<p class="text-xs text-slate-400 leading-relaxed">A descriptive name to identify this token in your audit logs and management dashboard.</p>
+</div>
+<div class="md:col-span-2">
+<input class="w-full px-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-slate-400" placeholder="e.g., Marketing Dashboard Read-Only" type="text"/>
+</div>
+</div>
+<div class="h-px bg-slate-50"></div>
+<!-- Description -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+<div>
+<label class="block font-headline uppercase tracking-widest text-[11px] font-bold text-slate-900 mb-1">Description</label>
+<p class="text-xs text-slate-400 leading-relaxed">A brief explanation of the token’s purpose and where it will be used.</p>
+</div>
+<div class="md:col-span-2">
+<textarea class="w-full px-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-slate-400 min-h-[100px] resize-none" placeholder="e.g., Used for the quarterly marketing performance dashboard integration"></textarea>
+</div>
+</div>
+<div class="h-px bg-slate-50"></div>
+<!-- Expiry -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+<div>
+<label class="block font-headline uppercase tracking-widest text-[11px] font-bold text-slate-900 mb-1">Expiry</label>
+<p class="text-xs text-slate-400 leading-relaxed">Define how long this token will remain active. For security, we recommend 30 or 60 days.</p>
+</div>
+<div class="md:col-span-2">
+<select class="w-full px-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface focus:ring-2 focus:ring-primary-container transition-all">
+<option>30 days</option>
+<option>60 days</option>
+<option>90 days</option>
+<option selected="">Never</option>
+</select>
+</div>
+</div>
+</form>
+</div>
+<!-- Action Footer -->
+<div class="bg-slate-50 px-10 py-8 flex items-center justify-end space-x-4 border-t border-slate-100">
+<button class="px-6 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-white transition-all">
+                        Cancel
+                    </button>
+<button class="px-8 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-primary to-primary-dim rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[0.98] transition-all">
+                        Generate Token
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

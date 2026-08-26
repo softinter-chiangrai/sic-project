@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<dialog class="app-dialog" th:fragment="confirmDialog(dialogId, title, description, cancelLabel, confirmLabel, confirmIcon)" th:id="${dialogId}" data-app-dialog>
+		<div class="app-dialog__card">
+			<div class="app-dialog__copy">
+				<h3 th:text="${title}">Confirm Action</h3>
+				<p th:text="${description}">Are you sure you want to continue?</p>
+			</div>
+			<form class="button-row app-dialog__actions" method="dialog">
+				<button class="text-button" type="submit" value="cancel" th:text="${cancelLabel}">Cancel</button>
+				<button class="action-button action-button--primary" type="submit" value="confirm">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true" th:text="${confirmIcon}">check_circle</span>
+					<span th:text="${confirmLabel}">Confirm</span>
+				</button>
+			</form>
+		</div>
+	</dialog>
+
+	<dialog class="app-dialog" th:fragment="choiceDialog(dialogId, title, description, cancelLabel, secondaryLabel, secondaryValue, secondaryIcon, confirmLabel, confirmValue, confirmIcon)" th:id="${dialogId}" data-app-dialog>
+		<div class="app-dialog__card">
+			<div class="app-dialog__copy">
+				<h3 th:text="${title}">Unsaved Changes</h3>
+				<p th:text="${description}">Save your changes before leaving this page?</p>
+			</div>
+			<form class="button-row app-dialog__actions app-dialog__actions--triple" method="dialog">
+				<button class="text-button" type="submit" value="cancel" th:text="${cancelLabel}">Stay</button>
+				<button class="ghost-button" type="submit" th:value="${secondaryValue}">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true" th:text="${secondaryIcon}">logout</span>
+					<span th:text="${secondaryLabel}">Leave Without Saving</span>
+				</button>
+				<button class="action-button action-button--primary" type="submit" th:value="${confirmValue}">
+					<span class="material-symbols-outlined icon icon--md" aria-hidden="true" th:text="${confirmIcon}">save</span>
+					<span th:text="${confirmLabel}">Save and Leave</span>
+				</button>
+			</form>
+		</div>
+	</dialog>
+</body>
+</html>

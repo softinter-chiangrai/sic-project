@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<section class="page-intro page-intro--compact" th:fragment="pageIntro(eyebrow, title, description)">
+		<p class="eyebrow" th:text="${eyebrow}">Section</p>
+		<h2 th:text="${title}">Title</h2>
+		<p th:text="${description}">Description</p>
+	</section>
+
+	<section class="toolbar-grid toolbar-grid--split" th:fragment="splitToolbar(leftContent, rightContent)">
+		<th:block th:replace="${leftContent}"></th:block>
+		<th:block th:replace="${rightContent}"></th:block>
+	</section>
+
+	<section class="toolbar-grid toolbar-grid--single" th:fragment="singleToolbar(content)">
+		<th:block th:replace="${content}"></th:block>
+	</section>
+
+	<section class="data-panel" th:fragment="dataPanel(tableContent, footerContent)">
+		<th:block th:replace="${tableContent}"></th:block>
+		<th:block th:replace="${footerContent}"></th:block>
+	</section>
+
+	<article class="stat-card" th:fragment="statCard(label, value, modifierClass)" th:classappend="${modifierClass}">
+		<p th:text="${label}">Label</p>
+		<strong th:text="${value}">0</strong>
+	</article>
+
+	<article class="stat-card stat-card--primary-detail" th:fragment="detailStatCard(label, value, progressLabel, progressValue, progressWidth)">
+		<div class="stat-header-inline">
+			<p th:text="${label}">Label</p>
+			<strong th:text="${value}">00</strong>
+		</div>
+		<div class="progress-meta">
+			<span th:text="${progressLabel}">Usage Quota</span>
+			<span th:text="${progressValue}">0%</span>
+		</div>
+		<div class="progress-track"><span th:style="|width: ${progressWidth}|"></span></div>
+	</article>
+
+	<article class="stat-card stat-card--inline" th:fragment="inlineStatCard(icon, iconClass, label, value)">
+		<div class="entity-icon" th:classappend="${iconClass}">
+			<span class="material-symbols-outlined icon icon--md" aria-hidden="true" th:text="${#strings.replace(icon, '-', '_')}">check_circle</span>
+		</div>
+		<div>
+			<p th:text="${label}">Label</p>
+			<strong th:text="${value}">0</strong>
+		</div>
+	</article>
+</body>
+</html>

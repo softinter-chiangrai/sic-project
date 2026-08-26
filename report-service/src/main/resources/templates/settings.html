@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Settings</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/settings.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('settings', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Settings')}"></header>
+
+			<div class="dashboard-content edit-page settings-edit-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('System Control', 'Settings', 'Configure generated-report cleanup timezone, schedule, and run administrative cleanup actions safely.')}"></section>
+				<div th:replace="~{fragments/toast :: statusToast('settings-feedback-alert', 'settings-feedback-message', 'Settings updates will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="field-stack settings-card-sections">
+								<section class="settings-card-section">
+									<div class="section-heading">
+										<div>
+											<h3>General</h3>
+											<p>Configure shared download-link behavior that applies across generated report views and actions.</p>
+										</div>
+									</div>
+									<div class="field-stack">
+										<div class="field">
+											<label for="download-base-url">Download Base URL</label>
+											<input id="download-base-url" type="url" inputmode="url" placeholder="https://current-request-host" th:placeholder="${settingsSummary.autoDetectedDownloadBaseUrl}" th:value="${settingsSummary.downloadBaseUrl}">
+											<p th:text="'Optional. When filled, generated download URLs use this base domain. Leave blank to use ' + ${settingsSummary.autoDetectedDownloadBaseUrl} + ' automatically.'">Optional. When filled, generated download URLs use this base domain. Leave blank to use the current request automatically.</p>
+										</div>
+									</div>
+								</section>
+
+								<div class="settings-card-divider" aria-hidden="true"></div>
+
+								<section class="settings-card-section">
+									<div class="section-heading">
+										<div>
+											<h3>Generated Report Cleanup Schedule</h3>
+											<p>Automatic cleanup removes generated report files from storage and leaves the history visible but no longer downloadable.</p>
+										</div>
+									</div>
+									<div class="field-stack">
+										<div class="settings-toggle-row">
+											<label class="settings-toggle" for="cleanup-enabled">
+												<input id="cleanup-enabled" type="checkbox" th:checked="${settingsSummary.cleanupEnabled}">
+												<span class="settings-toggle__track" aria-hidden="true"><span class="settings-toggle__thumb"></span></span>
+												<span class="settings-toggle__copy">
+													<strong>Enable Automatic Cleanup</strong>
+													<span>Run the generated report cleanup schedule automatically every month at 05:00 by default.</span>
+												</span>
+											</label>
+										</div>
+										<div class="field-grid">
+											<div class="field field--dropdown">
+												<label for="cleanup-frequency">Cleanup Frequency</label>
+												<input id="cleanup-frequency" type="hidden" th:value="${settingsSummary.cleanupFrequency != '-' ? settingsSummary.cleanupFrequency : 'Monthly'}">
+												<button id="cleanup-frequency-trigger" class="settings-schedule-control settings-schedule-dropdown" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="cleanup-frequency-list">
+													<span id="cleanup-frequency-label" th:text="${settingsSummary.cleanupFrequency != '-' ? settingsSummary.cleanupFrequency : 'Monthly'}">Monthly</span>
+													<span class="material-symbols-outlined icon icon--md settings-schedule-dropdown__icon" aria-hidden="true">expand_more</span>
+												</button>
+												<div id="cleanup-frequency-list" class="settings-dropdown-menu" role="listbox" aria-label="Cleanup Frequency" hidden>
+													<button class="settings-dropdown-option" type="button" data-value="Daily" role="option" th:attr="aria-selected=${settingsSummary.cleanupFrequency == 'Daily'}">Daily</button>
+													<button class="settings-dropdown-option" type="button" data-value="Weekly" role="option" th:attr="aria-selected=${settingsSummary.cleanupFrequency == 'Weekly'}">Weekly</button>
+													<button class="settings-dropdown-option" type="button" data-value="Monthly" role="option" th:attr="aria-selected=${settingsSummary.cleanupFrequency == 'Monthly'}">Monthly</button>
+												</div>
+											</div>
+											<div class="field field--dropdown field--time-dropdown">
+												<label for="cleanup-time">Cleanup Time</label>
+												<input id="cleanup-time" type="hidden" th:value="${settingsSummary.cleanupTime != '-' ? settingsSummary.cleanupTime : '05:00'}">
+												<button id="cleanup-time-trigger" class="settings-schedule-control settings-schedule-dropdown settings-time-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="cleanup-time-panel">
+													<span id="cleanup-time-label" th:text="${settingsSummary.cleanupTime != '-' ? settingsSummary.cleanupTime : '05:00'}">05:00</span>
+													<span class="material-symbols-outlined icon icon--md settings-time-trigger__icon" aria-hidden="true">schedule</span>
+												</button>
+												<div id="cleanup-time-panel" class="settings-time-menu" hidden>
+													<div class="settings-time-menu__copy">
+														<strong>Select Cleanup Time</strong>
+														<span>Use 24-hour format for the automatic cleanup schedule.</span>
+													</div>
+													<div class="settings-time-menu__grid">
+														<label class="settings-time-field settings-time-field--dropdown" for="cleanup-time-hour">
+															<span>Hour</span>
+															<input id="cleanup-time-hour" type="hidden">
+															<button id="cleanup-time-hour-trigger" class="settings-time-select settings-time-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="cleanup-time-hour-list">
+																<span id="cleanup-time-hour-label" class="settings-time-dropdown-label">05</span>
+																<span class="material-symbols-outlined icon icon--md settings-time-dropdown__icon" aria-hidden="true">expand_more</span>
+															</button>
+															<div id="cleanup-time-hour-list" class="settings-dropdown-menu settings-time-dropdown-menu" role="listbox" aria-label="Cleanup Time Hour" hidden></div>
+														</label>
+														<label class="settings-time-field settings-time-field--dropdown" for="cleanup-time-minute">
+															<span>Minute</span>
+															<input id="cleanup-time-minute" type="hidden">
+															<button id="cleanup-time-minute-trigger" class="settings-time-select settings-time-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="cleanup-time-minute-list">
+																<span id="cleanup-time-minute-label" class="settings-time-dropdown-label">00</span>
+																<span class="material-symbols-outlined icon icon--md settings-time-dropdown__icon" aria-hidden="true">expand_more</span>
+															</button>
+															<div id="cleanup-time-minute-list" class="settings-dropdown-menu settings-time-dropdown-menu" role="listbox" aria-label="Cleanup Time Minute" hidden></div>
+														</label>
+													</div>
+													<div class="settings-time-menu__actions">
+														<button id="cleanup-time-apply" class="action-button action-button--primary settings-time-apply" type="button">Apply Time</button>
+													</div>
+												</div>
+											</div>
+											<div class="field field--dropdown">
+												<label for="cleanup-timezone">Timezone</label>
+												<input id="cleanup-timezone" type="hidden" th:value="${settingsSummary.cleanupTimezone != '-' ? settingsSummary.cleanupTimezone : 'Asia/Bangkok'}">
+												<button id="cleanup-timezone-trigger" class="settings-schedule-control settings-schedule-dropdown" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="cleanup-timezone-list">
+													<span id="cleanup-timezone-label" th:text="${settingsSummary.cleanupTimezoneLabel}">Bangkok (UTC+07:00)</span>
+													<span class="material-symbols-outlined icon icon--md settings-schedule-dropdown__icon" aria-hidden="true">expand_more</span>
+												</button>
+												<div id="cleanup-timezone-list" class="settings-dropdown-menu settings-time-dropdown-menu settings-timezone-dropdown-menu" role="listbox" aria-label="Cleanup Timezone" hidden>
+											<div class="settings-dropdown-group-label">UTC</div>
+											<button class="settings-dropdown-option" type="button" data-value="UTC" data-label="UTC (UTC+00:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'UTC'}">UTC (UTC+00:00)</button>
+											<div class="settings-dropdown-group-label">Asia</div>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Dubai" data-label="Dubai (UTC+04:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Dubai'}">Dubai (UTC+04:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Kolkata" data-label="Kolkata (UTC+05:30)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Kolkata'}">Kolkata (UTC+05:30)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Bangkok" data-label="Bangkok (UTC+07:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Bangkok'}">Bangkok (UTC+07:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Ho_Chi_Minh" data-label="Ho Chi Minh City (UTC+07:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Ho_Chi_Minh'}">Ho Chi Minh City (UTC+07:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Jakarta" data-label="Jakarta (UTC+07:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Jakarta'}">Jakarta (UTC+07:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Hong_Kong" data-label="Hong Kong (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Hong_Kong'}">Hong Kong (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Kuala_Lumpur" data-label="Kuala Lumpur (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Kuala_Lumpur'}">Kuala Lumpur (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Manila" data-label="Manila (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Manila'}">Manila (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Shanghai" data-label="Shanghai (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Shanghai'}">Shanghai (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Singapore" data-label="Singapore (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Singapore'}">Singapore (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Taipei" data-label="Taipei (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Taipei'}">Taipei (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Seoul" data-label="Seoul (UTC+09:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Seoul'}">Seoul (UTC+09:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Asia/Tokyo" data-label="Tokyo (UTC+09:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Asia/Tokyo'}">Tokyo (UTC+09:00)</button>
+											<div class="settings-dropdown-group-label">Europe</div>
+											<button class="settings-dropdown-option" type="button" data-value="Europe/London" data-label="London (UTC+01:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Europe/London'}">London (UTC+01:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Europe/Paris" data-label="Paris (UTC+02:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Europe/Paris'}">Paris (UTC+02:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Europe/Berlin" data-label="Berlin (UTC+02:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Europe/Berlin'}">Berlin (UTC+02:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Europe/Madrid" data-label="Madrid (UTC+02:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Europe/Madrid'}">Madrid (UTC+02:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Europe/Istanbul" data-label="Istanbul (UTC+03:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Europe/Istanbul'}">Istanbul (UTC+03:00)</button>
+											<div class="settings-dropdown-group-label">Americas</div>
+											<button class="settings-dropdown-option" type="button" data-value="America/Sao_Paulo" data-label="Sao Paulo (UTC-03:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'America/Sao_Paulo'}">Sao Paulo (UTC-03:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="America/New_York" data-label="New York (UTC-04:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'America/New_York'}">New York (UTC-04:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="America/Chicago" data-label="Chicago (UTC-05:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'America/Chicago'}">Chicago (UTC-05:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="America/Denver" data-label="Denver (UTC-06:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'America/Denver'}">Denver (UTC-06:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="America/Los_Angeles" data-label="Los Angeles (UTC-07:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'America/Los_Angeles'}">Los Angeles (UTC-07:00)</button>
+											<div class="settings-dropdown-group-label">Africa</div>
+											<button class="settings-dropdown-option" type="button" data-value="Africa/Johannesburg" data-label="Johannesburg (UTC+02:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Africa/Johannesburg'}">Johannesburg (UTC+02:00)</button>
+											<div class="settings-dropdown-group-label">Oceania</div>
+											<button class="settings-dropdown-option" type="button" data-value="Australia/Perth" data-label="Perth (UTC+08:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Australia/Perth'}">Perth (UTC+08:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Australia/Sydney" data-label="Sydney (UTC+10:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Australia/Sydney'}">Sydney (UTC+10:00)</button>
+											<button class="settings-dropdown-option" type="button" data-value="Pacific/Auckland" data-label="Auckland (UTC+12:00)" role="option" th:attr="aria-selected=${settingsSummary.cleanupTimezone == 'Pacific/Auckland'}">Auckland (UTC+12:00)</button>
+										</div>
+									</div>
+								</div>
+								<div class="check-list settings-note-list">
+									<div class="check-item">
+										<span class="dot"><span class="material-symbols-outlined icon icon--sm" aria-hidden="true">calendar_today</span></span>
+										<span>Daily runs every day, Weekly runs on Monday, and Monthly runs on day 1 in the selected timezone.</span>
+									</div>
+									<div class="check-item">
+										<span class="dot"><span class="material-symbols-outlined icon icon--sm" aria-hidden="true">history</span></span>
+										<span>Cleaned generated files remain in history as deleted entries and cannot be downloaded again.</span>
+									</div>
+								</div>
+									</div>
+								</section>
+
+								<div class="settings-card-divider" aria-hidden="true"></div>
+
+								<section class="settings-card-section">
+									<div class="button-row settings-button-row">
+										<a class="text-button" id="back-to-dashboard" th:href="@{/}">
+											<span class="material-symbols-outlined icon icon--md" aria-hidden="true">arrow_back</span>
+											<span>Back to Dashboard</span>
+										</a>
+										<button class="action-button action-button--primary" id="save-settings" type="button" data-dialog-open="save-settings-modal" disabled>
+											<span class="material-symbols-outlined icon icon--md" aria-hidden="true">save</span>
+											<span>Save Settings</span>
+										</button>
+									</div>
+								</section>
+						</section>
+
+						<section class="edit-card settings-danger-card">
+							<div class="section-heading">
+								<div>
+									<h3>Cleanup Actions</h3>
+									<p>Run destructive cleanup manually when you need to reset generated output or wipe the entire system dataset.</p>
+								</div>
+							</div>
+							<div class="field-stack">
+								<section class="settings-action-panel">
+									<div class="section-heading">
+										<div>
+											<h4>Clear Logs and Generated Files</h4>
+											<p>Deletes generated report files, download logs, and audit logs while keeping report templates, data sources, and access tokens.</p>
+										</div>
+									</div>
+									<button class="ghost-button ghost-button--danger" id="clear-generated-files-and-logs" type="button" data-dialog-open="clear-generated-files-and-logs-modal">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">delete_sweep</span>
+										<span>Clear Logs and Generated Files</span>
+									</button>
+								</section>
+								<section class="settings-action-panel settings-action-panel--danger">
+									<div class="section-heading">
+										<div>
+											<h4>Clear All System Data</h4>
+											<p>Deletes templates, data sources, access tokens, generated files, and logs. Cleanup audit history remains preserved.</p>
+										</div>
+									</div>
+									<button class="action-button action-button--danger" id="clear-all-system-data" type="button" data-dialog-open="clear-all-system-data-modal">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">warning</span>
+										<span>Clear All System Data</span>
+									</button>
+								</section>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card summary-card">
+							<div class="summary-copy">
+								<h3>Cleanup Summary</h3>
+								<p>Review the active schedule and the next cleanup window before saving changes.</p>
+							</div>
+							<ul class="summary-list">
+								<li><span>Automatic Cleanup</span><strong id="summary-cleanup-status" th:text="${settingsSummary.cleanupStatus}">Enabled</strong></li>
+								<li><span>Current Frequency</span><strong id="summary-cleanup-frequency" th:text="${settingsSummary.cleanupFrequency}">Monthly</strong></li>
+								<li><span>Current Time</span><strong id="summary-cleanup-time" th:text="${settingsSummary.cleanupTime}">05:00</strong></li>
+								<li><span>Timezone</span><strong id="summary-cleanup-timezone" th:text="${settingsSummary.cleanupTimezoneLabel}">Bangkok (UTC+07:00)</strong></li>
+								<li><span>Download Base URL</span><strong id="summary-download-base-url" th:text="${settingsSummary.downloadBaseUrlDisplay}">Auto-detect from current request</strong></li>
+								<li><span>Schedule</span><strong id="summary-cleanup-description" th:text="${settingsSummary.cleanupDescription}">monthly on day 1 at 05:00</strong></li>
+								<li><span>Next Cleanup</span><strong id="summary-next-cleanup" th:text="${settingsSummary.nextCleanupAt}">-</strong></li>
+								<li><span>Last Automatic Cleanup</span><strong id="summary-last-cleanup" th:text="${settingsSummary.lastCleanupAt}">-</strong></li>
+							</ul>
+						</section>
+					</aside>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<dialog th:replace="~{fragments/modal :: confirmDialog('save-settings-modal', 'Save Settings', 'Save the generated report cleanup settings with the current status, frequency, time, and timezone?', 'Cancel', 'Save Settings', 'check_circle')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: choiceDialog('unsaved-settings-modal', 'Unsaved Changes', 'You have unsaved settings changes. Save before leaving this page?', 'Stay', 'Leave Without Saving', 'discard', 'logout', 'Save and Leave', 'confirm', 'save')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: confirmDialog('clear-generated-files-and-logs-modal', 'Clear Logs and Generated Files', 'Delete generated report files, download logs, and audit logs now? Cleanup history entries will remain available.', 'Cancel', 'Run Cleanup', 'delete_sweep')}"></dialog>
+	<dialog th:replace="~{fragments/modal :: confirmDialog('clear-all-system-data-modal', 'Clear All System Data', 'Delete all templates, data sources, access tokens, generated report files, and logs now? This action cannot be undone.', 'Cancel', 'Clear All Data', 'warning')}"></dialog>
+</body>
+</html>

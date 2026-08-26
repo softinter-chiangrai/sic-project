@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="Sarabun">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-Bold.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-Italic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-BoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun Light">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-Light.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-Light.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-LightItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-LightItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun Medium">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-Medium.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-Medium.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-MediumItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-MediumItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun SemiBold">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-SemiBold.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-SemiBold.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-SemiBoldItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-SemiBoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun ExtraBold">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-ExtraBold.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-ExtraBold.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-ExtraBoldItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-ExtraBoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun Thin">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-Thin.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-Thin.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-ThinItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-ThinItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Sarabun ExtraLight">
+        <normal><![CDATA[fonts/Sarabun/Sarabun-ExtraLight.ttf]]></normal>
+        <bold><![CDATA[fonts/Sarabun/Sarabun-ExtraLight.ttf]]></bold>
+        <italic><![CDATA[fonts/Sarabun/Sarabun-ExtraLightItalic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/Sarabun/Sarabun-ExtraLightItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="TH SarabunPSK">
+        <normal><![CDATA[fonts/THSarabunPSK/THSarabun.ttf]]></normal>
+        <bold><![CDATA[fonts/THSarabunPSK/THSarabun Bold.ttf]]></bold>
+        <italic><![CDATA[fonts/THSarabunPSK/THSarabun Italic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/THSarabunPSK/THSarabun BoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="THSarabunNew">
+        <normal><![CDATA[fonts/THSarabunNew/THSarabunNew.ttf]]></normal>
+        <bold><![CDATA[fonts/THSarabunNew/THSarabunNew Bold.ttf]]></bold>
+        <italic><![CDATA[fonts/THSarabunNew/THSarabunNew Italic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/THSarabunNew/THSarabunNew BoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="TH Sarabun New">
+        <normal><![CDATA[fonts/THSarabunNew/THSarabunNew.ttf]]></normal>
+        <bold><![CDATA[fonts/THSarabunNew/THSarabunNew Bold.ttf]]></bold>
+        <italic><![CDATA[fonts/THSarabunNew/THSarabunNew Italic.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/THSarabunNew/THSarabunNew BoldItalic.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 128">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode128-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode128-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode128-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode128-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 128 Text">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode128Text-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode128Text-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode128Text-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode128Text-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 39">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode39-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode39-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode39-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode39-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 39 Extended">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode39Extended-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode39Extended-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode39Extended-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode39Extended-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 39 Extended Text">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode39ExtendedText-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode39ExtendedText-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode39ExtendedText-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode39ExtendedText-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode 39 Text">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcode39Text-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcode39Text-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcode39Text-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcode39Text-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Libre Barcode EAN13 Text">
+        <normal><![CDATA[fonts/LibreBarcode/LibreBarcodeEAN13Text-Regular.ttf]]></normal>
+        <bold><![CDATA[fonts/LibreBarcode/LibreBarcodeEAN13Text-Regular.ttf]]></bold>
+        <italic><![CDATA[fonts/LibreBarcode/LibreBarcodeEAN13Text-Regular.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/LibreBarcode/LibreBarcodeEAN13Text-Regular.ttf]]></boldItalic>
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+    </fontFamily>
+</fontFamilies>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Login</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+	<main>
+		<section class="panel">
+			<header class="brand">
+				<div class="brand-badge">
+					<span class="material-symbols-outlined icon icon--xl brand-icon" aria-hidden="true">analytics</span>
+				</div>
+				<h1>Jasper Report Server</h1>
+				<p>Management Console</p>
+			</header>
+
+			<div class="card">
+				<h2>Welcome back</h2>
+				<p class="subtitle">Please enter your credentials to access the console.</p>
+
+				<div class="alert alert-error" th:if="${param.error}">
+					Invalid username or password.
+				</div>
+				<div class="alert alert-success" th:if="${param.logout}">
+					You have been signed out successfully.
+				</div>
+
+				<form th:action="@{/login}" method="post">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+					<div class="field">
+						<div class="field-head">
+							<label for="username">Username</label>
+						</div>
+						<div class="input-wrap">
+							<span class="material-symbols-outlined icon icon--md input-icon" aria-hidden="true">person</span>
+							<input id="username" name="username" type="text" autocomplete="username" placeholder="username" required autofocus>
+						</div>
+					</div>
+
+					<div class="field">
+						<div class="field-head">
+							<label for="password">Password</label>
+						</div>
+						<div class="input-wrap">
+							<span class="material-symbols-outlined icon icon--md input-icon" aria-hidden="true">lock</span>
+							<input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+						</div>
+					</div>
+
+					<p class="session-hint">
+						<span class="material-symbols-outlined icon icon--sm" aria-hidden="true">schedule</span>
+						<span>Your login session will stay active for 12 hours.</span>
+					</p>
+
+					<button type="submit">
+						<span class="button-content">
+							<span>Sign In</span>
+							<span class="material-symbols-outlined icon icon--md" aria-hidden="true">arrow_forward</span>
+						</span>
+					</button>
+				</form>
+			</div>
+		</section>
+	</main>
+	<div class="footer-bar"></div>
+</body>
+</html>

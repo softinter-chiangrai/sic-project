@@ -1,0 +1,14 @@
+{
+  "tabWidth": 2,
+  "printWidth": 160,
+  "singleQuote": false,
+  "overrides": [
+    {
+      "files": "*compose.yml",
+      "options": {
+        "tabWidth": 4,
+        "proseWrap": "always"
+      }
+    }
+  ]
+}

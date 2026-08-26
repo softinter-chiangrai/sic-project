@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Access Tokens</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<script defer th:src="@{/js/dialog.js}"></script>
+	<script defer th:src="@{/js/access-tokens.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('access-token', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Access Tokens')}"></header>
+
+			<div class="dashboard-content resource-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Access Management', 'Access Tokens', 'Manage programmatic access to the report service engine and monitor token usage.')}"></section>
+
+				<section class="stats-grid stats-grid--with-action">
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('vpn-key', ' entity-icon--success', 'Active Tokens', ${accessTokenStats.activeCount})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('schedule', ' entity-icon--warning', 'Expiring Soon', ${accessTokenStats.expiringSoonCount})}"></article>
+					<article th:replace="~{fragments/resource-list :: inlineStatCard('lock-reset', ' entity-icon--violet', 'Revoked Tokens', ${accessTokenStats.revokedCount})}"></article>
+					<div class="stats-grid__action">
+						<button class="action-button action-button--primary stats-grid__button" type="button" onclick="window.location.href='/access-tokens/edit'">
+							<span class="material-symbols-outlined icon icon--md" aria-hidden="true">add</span>
+							<span>Generate New Token</span>
+						</button>
+					</div>
+				</section>
+
+				<th:block th:replace="~{fragments/resource-list :: dataPanel(~{::div[@data-fragment='table-content']}, ~{::div[@data-fragment='footer-content']})}">
+					<div data-fragment="table-content" class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Token Name</th>
+									<th>API Key</th>
+									<th>Created</th>
+									<th>Last Used</th>
+									<th>Status</th>
+									<th class="table-actions">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(accessTokens)}">
+									<td colspan="7">No access tokens generated yet.</td>
+								</tr>
+								<tr th:each="accessToken : ${accessTokens}">
+									<td class="mono-cell" th:text="${accessToken.id}">1</td>
+									<td>
+										<div class="entity-cell">
+											<div class="entity-icon entity-icon--success">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">vpn_key</span>
+											</div>
+											<div>
+												<strong th:text="${accessToken.tokenName}">Primary Reporting Token</strong>
+												<p th:text="${accessToken.status}">Active</p>
+											</div>
+										</div>
+									</td>
+									<td class="mono-cell" th:text="${accessToken.maskedToken}">••••••••••••abcd</td>
+									<td th:text="${accessToken.created}">26 Mar 2026, 13:00</td>
+									<td th:text="${accessToken.lastUsed}">Never</td>
+									<td><span th:class="${accessToken.statusClass}" th:text="${accessToken.status}">Active</span></td>
+									<td class="table-actions">
+										<div class="row-actions">
+											<a th:href="@{|/access-tokens/edit/${accessToken.id}|}" th:attr="aria-label='Edit ' + ${accessToken.tokenName}">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">edit</span>
+											</a>
+											<form method="post" th:action="@{|/access-tokens/revoke/${accessToken.id}|}" th:id="|revoke-access-token-${accessToken.id}|">
+												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+												<input type="hidden" name="page" th:value="${currentPage}">
+												<input type="hidden" name="size" th:value="${pageSize}">
+												<button
+													type="button"
+													class="row-action--danger"
+													data-dialog-open="revoke-access-token-modal"
+													th:attr="aria-label='Revoke ' + ${accessToken.tokenName}"
+													th:data-delete-form="|revoke-access-token-${accessToken.id}|"
+													th:data-delete-label="${accessToken.tokenName}"
+													data-dialog-kind="revoke"
+													th:disabled="${accessToken.status == 'Revoked'}">
+													<span class="material-symbols-outlined icon icon--md" aria-hidden="true">block</span>
+												</button>
+											</form>
+											<form method="post" th:action="@{|/access-tokens/delete/${accessToken.id}|}" th:id="|delete-access-token-${accessToken.id}|">
+												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+												<input type="hidden" name="page" th:value="${currentPage}">
+												<input type="hidden" name="size" th:value="${pageSize}">
+												<button
+													type="button"
+													class="row-action--danger"
+													data-dialog-open="delete-access-token-modal"
+													th:attr="aria-label='Delete ' + ${accessToken.tokenName}"
+													th:data-delete-form="|delete-access-token-${accessToken.id}|"
+													th:data-delete-label="${accessToken.tokenName}"
+													data-dialog-kind="delete">
+													<span class="material-symbols-outlined icon icon--md" aria-hidden="true">delete</span>
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div data-fragment="footer-content" class="table-footer">
+						<p th:text="${filteredTotal == 0} ? 'Showing 0 access tokens' : |Showing ${pageStart}-${pageEnd} of ${filteredTotal} access tokens|">Showing 0 access tokens</p>
+						<div class="pager" th:if="${totalPages > 0}">
+							<a th:if="${hasPreviousPage}" th:href="@{/access-tokens(page=${currentPage - 1}, size=${pageSize})}">Previous</a>
+							<span th:unless="${hasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${pageNumbers}">
+								<span th:if="${pageNumber == currentPage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentPage}" th:href="@{/access-tokens(page=${pageNumber}, size=${pageSize})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${hasNextPage}" th:href="@{/access-tokens(page=${currentPage + 1}, size=${pageSize})}">Next</a>
+							<span th:unless="${hasNextPage}">Next</span>
+						</div>
+					</div>
+				</th:block>
+
+				<dialog th:replace="~{fragments/modal :: confirmDialog('revoke-access-token-modal', 'Revoke Access Token', 'Revoke this access token? Any client using it will stop working immediately.', 'Cancel', 'Revoke Token', 'block')}"></dialog>
+				<dialog th:replace="~{fragments/modal :: confirmDialog('delete-access-token-modal', 'Delete Access Token', 'Delete this access token? This action cannot be undone.', 'Cancel', 'Delete Token', 'delete')}"></dialog>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

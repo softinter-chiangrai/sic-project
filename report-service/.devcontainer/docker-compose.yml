@@ -1,0 +1,118 @@
+name: report-service-dev-container
+
+networks:
+    default:
+        name: report-service-dev-network
+        driver: bridge
+
+services:
+    dev-container:
+        image: report-service-dev-container:latest
+        container_name: report-service-dev-container
+        hostname: report-service-dev-container
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        environment:
+            - TZ=UTC
+        command: sleep infinity
+        networks:
+            - default
+
+    postgres:
+        image: postgres:${POSTGRES_VERSION}
+        container_name: report-service-dev-postgres
+        hostname: report-service-dev-postgres
+        restart: unless-stopped
+        environment:
+            - TZ=Asia/Bangkok
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        networks:
+            - default
+        ports:
+            - 5432:5432
+
+    pgadmin:
+        depends_on:
+            - postgres
+        image: elestio/pgadmin:${PGADMIN_VERSION}
+        container_name: report-service-dev-pgadmin
+        hostname: report-service-dev-pgadmin
+        restart: unless-stopped
+        environment:
+            - TZ=Asia/Bangkok
+            - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+            - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+            - PGADMIN_LISTEN_PORT=8080
+        networks:
+            - default
+        ports:
+            - 5434:8080
+
+    mariadb:
+        image: mariadb:${MARIADB_VERSION}
+        container_name: report-service-dev-mariadb
+        hostname: report-service-dev-mariadb
+        restart: unless-stopped
+        # volumes:
+        #     - ./data/database:/var/lib/mysql:Z
+        environment:
+            - TZ=Asia/Bangkok
+            - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+            - MARIADB_USER=${MARIADB_USER}
+            - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+            - MARIADB_DATABASE=${MARIADB_DATABASE}
+        networks:
+            - default
+        ports:
+            - 3306:3306
+
+    phpmyadmin:
+        depends_on:
+            - mariadb
+        image: phpmyadmin:${PHPMYADMIN_VERSION}
+        container_name: report-service-dev-phpmyadmin
+        hostname: report-service-dev-phpmyadmin
+        restart: unless-stopped
+        environment:
+            - TZ=Asia/Bangkok
+            - MEMORY_LIMIT=512M
+            - UPLOAD_LIMIT=128M
+            - MAX_EXECUTION_TIME=1000
+            - PMA_ARBITRARY=0
+            - PMA_VERBOSES=Database
+            - PMA_HOSTS=mariadb
+            - PMA_PORTS=3306
+            # - PMA_USER=${MARIADB_USER}
+            # - PMA_PASSWORD=${MARIADB_PASSWORD}
+        networks:
+            - default
+        ports:
+            - 3308:80
+
+    oracle-db:
+        image: container-registry.oracle.com/database/free:latest
+        container_name: report-service-dev-oracle-database
+        hostname: report-service-dev-oracle-database
+        restart: unless-stopped
+        environment:
+            # Set the timezone for the Oracle Database container
+            - TZ=Asia/Bangkok
+            - ORACLE_PWD=${ORACLE_PWD}
+            - ORACLE_SID=${ORACLE_SID}
+            - ORACLE_PDB=${ORACLE_PDB}
+            - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET}
+        networks:
+            - default
+        ports:
+            - 1521:1521
+            - 5500:5500
+
+# -- 1. เปลี่ยน Timezone ของระบบฐานข้อมูล (Database Time Zone)
+# ALTER DATABASE SET TIME_ZONE='Asia/Bangkok';
+
+# -- 2. เปลี่ยน Timezone ของระบบปฏิบัติการจำลองใน Database (DBTIMEZONE)
+# ALTER SYSTEM SET TIME_ZONE='Asia/Bangkok' SCOPE=SPFILE;

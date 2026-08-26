@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JasperInsight Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary-fixed-variant": "#4d5d73",
+              "on-primary-container": "#0048bf",
+              "on-primary-fixed": "#003798",
+              "primary-dim": "#0048c1",
+              "tertiary-fixed": "#d9d7f8",
+              "on-tertiary-fixed": "#373851",
+              "inverse-on-surface": "#9a9d9f",
+              "outline": "#717c82",
+              "surface-dim": "#cfdce3",
+              "secondary-dim": "#44546a",
+              "on-secondary-fixed": "#314055",
+              "on-tertiary-fixed-variant": "#54546f",
+              "tertiary-fixed-dim": "#cbc9e9",
+              "outline-variant": "#a9b4b9",
+              "on-error": "#fff7f6",
+              "error-dim": "#4e0309",
+              "tertiary": "#5d5d78",
+              "secondary-fixed-dim": "#c5d6f0",
+              "surface-variant": "#d9e4ea",
+              "on-background": "#2a3439",
+              "surface-bright": "#f7f9fb",
+              "surface-tint": "#0053db",
+              "inverse-surface": "#0b0f10",
+              "surface-container-low": "#f0f4f7",
+              "primary-fixed-dim": "#c7d3ff",
+              "on-primary-fixed-variant": "#0050d4",
+              "surface-container-highest": "#d9e4ea",
+              "on-surface": "#2a3439",
+              "on-secondary": "#f7f9ff",
+              "tertiary-container": "#d9d7f8",
+              "error": "#9f403d",
+              "surface-container-high": "#e1e9ee",
+              "on-primary": "#f8f7ff",
+              "tertiary-dim": "#51516c",
+              "surface": "#f7f9fb",
+              "primary-fixed": "#dbe1ff",
+              "surface-container": "#e8eff3",
+              "background": "#f7f9fb",
+              "on-tertiary-container": "#4a4a65",
+              "inverse-primary": "#618bff",
+              "primary-container": "#dbe1ff",
+              "on-error-container": "#752121",
+              "surface-container-lowest": "#ffffff",
+              "error-container": "#fe8983",
+              "on-secondary-container": "#435368",
+              "secondary": "#506076",
+              "on-tertiary": "#fbf7ff",
+              "secondary-fixed": "#d3e4fe",
+              "primary": "#0053db",
+              "on-surface-variant": "#566166"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.375rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-glass {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed inset-y-0 left-0 flex flex-col w-64 bg-slate-50 border-r-0 z-40">
+<!-- Brand Header -->
+<div class="px-6 py-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-2xl" data-icon="description">description</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-blue-900 font-headline leading-tight">JasperInsight</h1>
+<p class="text-[10px] font-inter tracking-wider uppercase text-slate-500">Management Console</p>
+</div>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 px-3 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-blue-700 font-semibold border-r-4 border-blue-700 transition-colors bg-slate-200/50">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-xs tracking-wider uppercase">Dashboard</span>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-xs tracking-wider uppercase">Report Templates</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="api">api</span>
+<span class="font-inter text-xs tracking-wider uppercase">API Configuration</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="font-inter text-xs tracking-wider uppercase">Data Sources</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-inter text-xs tracking-wider uppercase">Audit Logs</span>
+</a>
+</nav>
+<!-- Sidebar CTA -->
+<div class="px-6 mb-6">
+<button class="w-full bg-primary hover:bg-primary-dim text-on-primary py-3 rounded-lg font-medium text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                Create New Report
+            </button>
+</div>
+<!-- Footer Navigation -->
+<div class="border-t border-slate-200/60 p-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors rounded-lg" href="#">
+<img alt="John Doe" class="w-6 h-6 rounded-full" data-alt="User profile photo of John Doe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbu2AcRiW6HJZe5k-pmjXojgHl9wu6TyX8KbXnswyK1ln7pAI35TtWs9jf-FJI5TBsMvTl-XEXB-UUchFFOewbVbKwzVD213CoDE3toRkeXRSGoGgnWWeJAhV3MACpW6iqPm2HpyfAVAcjV9U-dkb0nTKNklL03l-AVX-X9KT8s5DHyx2tVawHCkUm0H6fjyU4dvXuqL8o2Sd8pDy0r5KLG0lCiF1-TJ0qqp5_5jlX7xP1Ecnf-EM758PtXaVr8zw4qDHlJ6i66U1E"/>
+<span class="font-inter text-xs tracking-wider uppercase">John Doe</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-inter text-xs tracking-wider uppercase">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen bg-surface flex flex-col">
+<!-- TopNavBar Shell -->
+<header class="w-full h-16 sticky top-0 z-30 bg-white/80 backdrop-blur-xl flex items-center justify-between px-8 shadow-sm">
+<div class="flex items-center gap-4">
+<nav class="flex text-xs font-inter text-slate-400 gap-2">
+<span class="hover:text-primary cursor-pointer">Home</span>
+<span>/</span>
+<span class="text-on-surface font-medium">Dashboard</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="p-10 space-y-10">
+<!-- Header Section -->
+<div class="space-y-1">
+<h2 class="text-4xl font-extrabold font-headline tracking-tight text-blue-900">Dashboard</h2>
+<p class="text-slate-500 font-body">Overview of your Jasper reporting infrastructure and health metrics.</p>
+</div>
+<!-- Bento Grid - Key Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-none border-b border-slate-100 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="description">description</span>
+</div>
+<p class="text-[10px] font-inter tracking-[0.15em] uppercase text-slate-400 font-semibold mb-4">Total Reports</p>
+<div class="flex items-end gap-3">
+<span class="text-5xl font-extrabold font-headline text-on-surface leading-none">1,284</span>
+<span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[10px]" data-icon="trending_up">trending_up</span>
+                            12%
+                        </span>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-none border-b border-slate-100 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="vpn_key">vpn_key</span>
+</div>
+<p class="text-[10px] font-inter tracking-[0.15em] uppercase text-slate-400 font-semibold mb-4">Active API Keys</p>
+<div class="flex items-end gap-3">
+<span class="text-5xl font-extrabold font-headline text-on-surface leading-none">24</span>
+<span class="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full mb-1">Stable</span>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-none border-b border-slate-100 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-6xl" data-icon="database">database</span>
+</div>
+<p class="text-[10px] font-inter tracking-[0.15em] uppercase text-slate-400 font-semibold mb-4">Connected Databases</p>
+<div class="flex items-end gap-3">
+<span class="text-5xl font-extrabold font-headline text-on-surface leading-none">08</span>
+<span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[10px]" data-icon="check_circle">check_circle</span>
+                            Online
+                        </span>
+</div>
+</div>
+</section>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+<!-- Recent Activities (List) -->
+<section class="lg:col-span-2 space-y-6">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<h3 class="font-headline text-xl font-bold text-blue-900">Recent Activity</h3>
+<span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-bold">LIVE</span>
+</div>
+<button class="text-xs font-semibold text-primary hover:underline">View All History</button>
+</div>
+<div class="space-y-4">
+<!-- Activity Item 1 -->
+<div class="flex items-center justify-between p-5 bg-white rounded-xl shadow-sm border-l-4 border-blue-600 transition-transform hover:-translate-y-0.5 duration-200">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Monthly_Financial_Review_Oct.pdf</h4>
+<p class="text-xs text-slate-400">Triggered by <span class="text-slate-600">Scheduler_Service</span> • 12.4 MB</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-500">2 mins ago</p>
+<span class="text-[10px] text-emerald-600 font-bold tracking-widest uppercase">Success</span>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex items-center justify-between p-5 bg-white rounded-xl shadow-sm border-l-4 border-slate-200">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined" data-icon="table_chart">table_chart</span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">User_Engagement_Analytics.xlsx</h4>
+<p class="text-xs text-slate-400">Triggered by <span class="text-slate-600">Admin_User</span> • 4.1 MB</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-500">45 mins ago</p>
+<span class="text-[10px] text-emerald-600 font-bold tracking-widest uppercase">Success</span>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex items-center justify-between p-5 bg-white rounded-xl shadow-sm border-l-4 border-error">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-error/5 rounded-lg flex items-center justify-center text-error">
+<span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Sales_Forecast_Q4_Draft.jrxml</h4>
+<p class="text-xs text-slate-400">Source: <span class="text-slate-600">PostgreSQL_Production</span> • Error Code 403</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-500">2 hours ago</p>
+<span class="text-[10px] text-error font-bold tracking-widest uppercase">Failed</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sidebar Content (Quick Action Card) -->
+<aside class="space-y-8">
+<!-- Quick Action Card -->
+<div class="bg-gradient-to-br from-blue-700 to-primary-dim p-8 rounded-xl text-on-primary shadow-xl relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-9xl" data-icon="upload_file">upload_file</span>
+</div>
+<h3 class="font-headline text-xl font-bold mb-2">Upload Jasper Template</h3>
+<p class="text-sm text-blue-100/80 mb-6 leading-relaxed">Add a new .jrxml file to your repository to start generating reports instantly via API.</p>
+<label class="group cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-blue-400/30 rounded-lg p-6 hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined text-3xl mb-2" data-icon="cloud_upload">cloud_upload</span>
+<span class="text-xs font-semibold">Drop file or click to browse</span>
+<input class="hidden" type="file"/>
+</label>
+</div>
+<!-- System Status Card -->
+</aside>
+</div>
+</div>
+</main>
+</body></html>

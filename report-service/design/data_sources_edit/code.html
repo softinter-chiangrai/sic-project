@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Data Sources - JasperInsight</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-variant": "#d9e4ea",
+              "secondary-fixed": "#d3e4fe",
+              "on-primary-container": "#0048bf",
+              "inverse-surface": "#0b0f10",
+              "outline": "#717c82",
+              "on-error": "#fff7f6",
+              "tertiary-container": "#d9d7f8",
+              "on-secondary": "#f7f9ff",
+              "surface": "#f7f9fb",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "secondary-container": "#d3e4fe",
+              "on-tertiary": "#fbf7ff",
+              "on-error-container": "#752121",
+              "primary-container": "#dbe1ff",
+              "on-background": "#2a3439",
+              "tertiary-fixed-dim": "#cbc9e9",
+              "on-secondary-fixed": "#314055",
+              "on-tertiary-fixed-variant": "#54546f",
+              "error": "#9f403d",
+              "error-dim": "#4e0309",
+              "on-tertiary-fixed": "#373851",
+              "on-secondary-container": "#435368",
+              "on-primary-fixed-variant": "#0050d4",
+              "on-primary": "#f8f7ff",
+              "primary-fixed": "#dbe1ff",
+              "secondary": "#506076",
+              "surface-container-lowest": "#ffffff",
+              "surface-tint": "#0053db",
+              "on-tertiary-container": "#4a4a65",
+              "on-surface": "#2a3439",
+              "outline-variant": "#a9b4b9",
+              "surface-container-low": "#f0f4f7",
+              "primary-dim": "#0048c1",
+              "on-surface-variant": "#566166",
+              "secondary-fixed-dim": "#c5d6f0",
+              "inverse-primary": "#618bff",
+              "error-container": "#fe8983",
+              "tertiary-fixed": "#d9d7f8",
+              "tertiary-dim": "#51516c",
+              "primary-fixed-dim": "#c7d3ff",
+              "surface-container-highest": "#d9e4ea",
+              "surface-container": "#e8eff3",
+              "surface-container-high": "#e1e9ee",
+              "background": "#f7f9fb",
+              "secondary-dim": "#44546a",
+              "surface-dim": "#cfdce3",
+              "tertiary": "#5d5d78",
+              "surface-bright": "#f7f9fb",
+              "on-primary-fixed": "#003798",
+              "primary": "#0053db",
+              "inverse-on-surface": "#9a9d9f"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Fixed Shell) -->
+<aside class="fixed inset-y-0 left-0 flex flex-col w-64 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dim flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-blue-900 dark:text-blue-100 font-headline leading-none">JasperInsight</h1>
+<p class="font-inter text-[10px] tracking-wider uppercase text-slate-500 mt-1">Management Console</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-inter text-xs tracking-wider uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-inter text-xs tracking-wider uppercase">Report Templates</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined">api</span>
+<span class="font-inter text-xs tracking-wider uppercase">API Configuration</span>
+</a>
+<!-- Active State: Data Sources -->
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 font-semibold border-r-4 border-blue-700 dark:border-blue-400 bg-slate-200/50 dark:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">database</span>
+<span class="font-inter text-xs tracking-wider uppercase">Data Sources</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-inter text-xs tracking-wider uppercase">Audit Logs</span>
+</a>
+</nav>
+<div class="px-6 py-6 space-y-4">
+<button class="w-full bg-gradient-to-tr from-primary to-primary-dim text-white text-sm font-medium py-3 rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                Create New Report
+            </button>
+<div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 dark:text-slate-400 text-sm hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span>John Doe</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 dark:text-slate-400 text-sm hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar (Fixed Shell) -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 z-40 flex items-center justify-between px-8">
+<div class="flex items-center gap-6">
+<nav class="flex items-center gap-2 text-xs font-label uppercase tracking-widest text-outline">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface-variant">Data Sources</span>
+</nav>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-10 max-w-5xl mx-auto">
+<!-- Header Section -->
+<header class="mb-12 max-w-2xl mx-auto">
+<h2 class="text-4xl font-extrabold font-headline tracking-tight text-blue-900">Data Sources</h2>
+<p class="text-on-surface-variant mt-2 max-w-2xl">Connect and manage your cloud and local infrastructure databases to power your automated reporting insights.</p>
+</header>
+<div class="flex justify-center">
+<!-- Centered New Connection Form -->
+<section class="w-full max-w-2xl bg-surface-container-lowest rounded-xl p-8 shadow-sm border-b border-slate-100 relative overflow-hidden">
+<!-- Subtle Gradient Accent -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<div class="flex items-center gap-3 mb-8">
+<div class="p-2 bg-primary-fixed rounded-lg text-primary">
+<span class="material-symbols-outlined">add_link</span>
+</div>
+<h3 class="font-headline font-bold text-lg text-on-surface">New Connection</h3>
+</div>
+<form class="space-y-6">
+<div>
+<label class="block text-[10px] font-label font-bold uppercase tracking-[0.15em] text-outline mb-3">Database Type</label>
+<div class="grid grid-cols-3 gap-4">
+<button class="flex flex-col items-center gap-2 p-6 border border-primary bg-primary-container/20 rounded-lg text-primary transition-all group" type="button">
+<span class="material-symbols-outlined text-4xl">database</span>
+<span class="text-xs font-medium">PostgreSQL</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-6 border border-outline-variant hover:border-primary/50 rounded-lg text-on-surface-variant transition-all hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-4xl">storage</span>
+<span class="text-xs font-medium">MySQL</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-6 border border-outline-variant hover:border-primary/50 rounded-lg text-on-surface-variant transition-all hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-4xl">layers</span>
+<span class="text-xs font-medium">MariaDB</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-4">
+<div class="col-span-3">
+<label class="block text-[10px] font-label font-bold uppercase tracking-[0.15em] text-outline mb-1.5 ml-1">Host Address</label>
+<input class="w-full px-4 py-3 bg-surface-container-low rounded-lg border-none focus:bg-white focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none" placeholder="db.jasperinsight.io" type="text"/>
+</div>
+<div class="col-span-1">
+<label class="block text-[10px] font-label font-bold uppercase tracking-[0.15em] text-outline mb-1.5 ml-1">Port</label>
+<input class="w-full px-4 py-3 bg-surface-container-low rounded-lg border-none focus:bg-white focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none" placeholder="5432" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-[10px] font-label font-bold uppercase tracking-[0.15em] text-outline mb-1.5 ml-1">Username</label>
+<input class="w-full px-4 py-3 bg-surface-container-low rounded-lg border-none focus:bg-white focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none" placeholder="admin_user" type="text"/>
+</div>
+<div>
+<label class="block text-[10px] font-label font-bold uppercase tracking-[0.15em] text-outline mb-1.5 ml-1">Password</label>
+<input class="w-full px-4 py-3 bg-surface-container-low rounded-lg border-none focus:bg-white focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<div class="pt-6 flex flex-col gap-3">
+<button class="w-full bg-gradient-to-br from-primary to-primary-dim text-white font-medium py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98]" type="button">
+                            Save Configuration
+                        </button>
+<button class="w-full py-3 text-primary text-sm font-semibold hover:bg-primary-container/20 rounded-lg transition-all" type="button">
+                            Test Connection
+                        </button>
+</div>
+</form>
+</section>
+</div>
+</main>
+</body></html>

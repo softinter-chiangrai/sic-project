@@ -1,0 +1,1 @@
+docker push sarankon/report-service:latest

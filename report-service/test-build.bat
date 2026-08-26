@@ -1,0 +1,1 @@
+docker build --no-cache --progress=plain -f docker/Dockerfile --tag report-service:test .

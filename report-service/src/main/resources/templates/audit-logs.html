@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Audit Logs</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/custom-dropdown.css}">
+	<script defer th:src="@{/js/custom-dropdown.js}"></script>
+	<script defer th:src="@{/js/audit-logs.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('audit-logs', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Audit Logs')}"></header>
+
+			<div class="dashboard-content resource-page">
+				<section class="page-intro page-intro--compact page-intro--single-line">
+					<p class="eyebrow">Traceability</p>
+					<h2>Audit Logs</h2>
+					<p>Review system activity, administrative changes, and security-relevant events across the platform.</p>
+				</section>
+
+				<th:block th:replace="~{fragments/resource-list :: singleToolbar(~{::form[@data-fragment='toolbar-content']})}">
+					<form data-fragment="toolbar-content" class="search-panel search-panel--audit search-panel--audit-stacked" method="get" th:action="@{/audit-logs}">
+						<input type="hidden" name="page" value="0">
+						<input type="hidden" name="size" th:value="${pageSize}">
+						<input type="hidden" name="datePreset" th:value="${currentDatePreset}" data-audit-date-preset-input>
+						<input type="hidden" th:value="${auditLogPresetToday}" data-audit-display-today-input>
+						<div class="search-panel__row search-panel__row--primary">
+							<label class="search-field search-field--audit" for="audit-search">
+								<span class="material-symbols-outlined icon icon--md" aria-hidden="true">search</span>
+								<input id="audit-search" name="q" type="text" th:value="${currentQuery}" placeholder="Search by event, actor, target or status...">
+								<a class="search-field__clear-all" th:href="@{/audit-logs}" th:classappend="${(currentQuery == null || currentQuery.isBlank()) && (currentCategory == null || currentCategory.isBlank()) && (currentStatus == null || currentStatus.isBlank()) && currentFromDate == null && currentToDate == null && (currentFormat == null || currentFormat == 'xlsx')} ? ' search-field__clear-all--hidden' : ''">
+									<span>Clear All</span>
+								</a>
+							</label>
+							<div class="search-panel__filters search-panel__filters--primary">
+								<label class="filter-select filter-select--audit filter-select--dropdown" for="audit-category">
+									<select id="audit-category" name="category" data-custom-dropdown data-dropdown-icon="filter_alt">
+										<option value="" th:selected="${currentCategory == null || currentCategory.isBlank()}">All Categories</option>
+										<option value="reports" th:selected="${currentCategory == 'reports'}">Reports</option>
+										<option value="report-templates" th:selected="${currentCategory == 'report-templates'}">Report Templates</option>
+										<option value="data-sources" th:selected="${currentCategory == 'data-sources'}">Data Sources</option>
+										<option value="access-tokens" th:selected="${currentCategory == 'access-tokens'}">Access Tokens</option>
+										<option value="settings" th:selected="${currentCategory == 'settings'}">Settings</option>
+									</select>
+								</label>
+								<label class="filter-select filter-select--audit filter-select--dropdown" for="audit-status">
+									<select id="audit-status" name="status" data-custom-dropdown data-dropdown-icon="task_alt">
+										<option value="" th:selected="${currentStatus == null || currentStatus.isBlank()}">All Statuses</option>
+										<option value="Completed" th:selected="${currentStatus == 'Completed'}">Completed</option>
+										<option value="Failed" th:selected="${currentStatus == 'Failed'}">Failed</option>
+									</select>
+								</label>
+							</div>
+							<div class="search-panel__actions search-panel__actions--audit-primary">
+								<button class="action-button action-button--primary toolbar-align-end toolbar-align-end--equal" type="submit">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">search</span>
+									<span>Search Logs</span>
+								</button>
+							</div>
+						</div>
+						<div class="search-panel__row search-panel__row--dates">
+							<div class="audit-toolbar-grid audit-toolbar-grid--dates">
+								<a class="ghost-button ghost-button--filter" th:classappend="${currentDatePreset == 'today'} ? ' ghost-button--active' : ''" th:href="@{/audit-logs(q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset='today', fromDate=${auditLogPresetToday}, toDate=${auditLogPresetToday}, format=${currentFormat}, page=0, size=${pageSize})}">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">today</span>
+									<span>Today</span>
+								</a>
+								<a class="ghost-button ghost-button--filter" th:classappend="${currentDatePreset == 'last-7-days'} ? ' ghost-button--active' : ''" th:href="@{/audit-logs(q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset='last-7-days', fromDate=${auditLogPresetLast7Start}, toDate=${auditLogPresetToday}, format=${currentFormat}, page=0, size=${pageSize})}">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">date_range</span>
+									<span>Last 7 Days</span>
+								</a>
+								<a class="ghost-button ghost-button--filter" th:classappend="${currentDatePreset == 'this-month'} ? ' ghost-button--active' : ''" th:href="@{/audit-logs(q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset='this-month', fromDate=${auditLogPresetMonthStart}, toDate=${auditLogPresetToday}, format=${currentFormat}, page=0, size=${pageSize})}">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">calendar_month</span>
+									<span>This Month</span>
+								</a>
+								<div class="filter-select filter-select--date filter-select--date-wide audit-date-filter" data-audit-date-picker>
+									<input id="audit-from-date" name="fromDate" type="hidden" th:value="${currentFromDate}" data-placeholder="Date Start">
+									<button class="audit-date-trigger" type="button" aria-haspopup="dialog" aria-expanded="false">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">calendar_today</span>
+										<span class="audit-date-trigger__label">Date Start</span>
+									</button>
+									<div class="audit-date-picker" hidden>
+										<div class="audit-date-picker__header">
+											<button class="audit-date-picker__nav" type="button" data-direction="previous" aria-label="Previous month">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">chevron_left</span>
+											</button>
+											<strong class="audit-date-picker__month">April 2026</strong>
+											<button class="audit-date-picker__nav" type="button" data-direction="next" aria-label="Next month">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">chevron_right</span>
+											</button>
+										</div>
+										<div class="audit-date-picker__weekdays" aria-hidden="true">
+											<span>Su</span>
+											<span>Mo</span>
+											<span>Tu</span>
+											<span>We</span>
+											<span>Th</span>
+											<span>Fr</span>
+											<span>Sa</span>
+										</div>
+										<div class="audit-date-picker__days"></div>
+										<div class="audit-date-picker__footer">
+											<button class="audit-date-picker__action" type="button" data-action="clear">Clear</button>
+											<button class="audit-date-picker__action" type="button" data-action="today">Today</button>
+										</div>
+									</div>
+								</div>
+								<div class="filter-select filter-select--date filter-select--date-wide audit-date-filter" data-audit-date-picker>
+									<input id="audit-to-date" name="toDate" type="hidden" th:value="${currentToDate}" data-placeholder="Date Stop">
+									<button class="audit-date-trigger" type="button" aria-haspopup="dialog" aria-expanded="false">
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">event</span>
+										<span class="audit-date-trigger__label">Date Stop</span>
+									</button>
+									<div class="audit-date-picker" hidden>
+										<div class="audit-date-picker__header">
+											<button class="audit-date-picker__nav" type="button" data-direction="previous" aria-label="Previous month">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">chevron_left</span>
+											</button>
+											<strong class="audit-date-picker__month">April 2026</strong>
+											<button class="audit-date-picker__nav" type="button" data-direction="next" aria-label="Next month">
+												<span class="material-symbols-outlined icon icon--md" aria-hidden="true">chevron_right</span>
+											</button>
+										</div>
+										<div class="audit-date-picker__weekdays" aria-hidden="true">
+											<span>Su</span>
+											<span>Mo</span>
+											<span>Tu</span>
+											<span>We</span>
+											<span>Th</span>
+											<span>Fr</span>
+											<span>Sa</span>
+										</div>
+										<div class="audit-date-picker__days"></div>
+										<div class="audit-date-picker__footer">
+											<button class="audit-date-picker__action" type="button" data-action="clear">Clear</button>
+											<button class="audit-date-picker__action" type="button" data-action="today">Today</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="search-panel__actions search-panel__actions--audit-secondary">
+								<label class="filter-select filter-select--format filter-select--dropdown" for="audit-export-format">
+									<select id="audit-export-format" name="format" data-custom-dropdown data-dropdown-icon="save_alt">
+										<option value="xlsx" th:selected="${currentFormat == null || currentFormat == 'xlsx'}">XLSX</option>
+										<option value="csv" th:selected="${currentFormat == 'csv'}">CSV</option>
+									</select>
+								</label>
+								<button class="action-button action-button--neutral toolbar-align-end toolbar-align-end--equal" type="submit" th:formaction="@{/audit-logs/export}" formmethod="get">
+									<span class="material-symbols-outlined icon icon--md" aria-hidden="true">download</span>
+									<span>Export Logs</span>
+								</button>
+							</div>
+						</div>
+					</form>
+				</th:block>
+
+				<th:block th:replace="~{fragments/resource-list :: dataPanel(~{::div[@data-fragment='table-content']}, ~{::div[@data-fragment='footer-content']})}">
+					<div data-fragment="table-content" class="table-wrap">
+						<table class="resource-table">
+							<thead>
+								<tr>
+									<th>Category</th>
+									<th>Event</th>
+									<th>Actor</th>
+									<th>Target</th>
+									<th>Timestamp</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:if="${#lists.isEmpty(auditLogs)}">
+									<td colspan="6" th:if="${(currentQuery == null || currentQuery.isBlank()) && (currentCategory == null || currentCategory.isBlank()) && (currentStatus == null || currentStatus.isBlank()) && currentFromDate == null && currentToDate == null}">No audit events recorded yet.</td>
+									<td colspan="6" th:unless="${(currentQuery == null || currentQuery.isBlank()) && (currentCategory == null || currentCategory.isBlank()) && (currentStatus == null || currentStatus.isBlank()) && currentFromDate == null && currentToDate == null}">No audit events match your search.</td>
+								</tr>
+								<tr th:each="auditLog : ${auditLogs}">
+									<td><span class="pill pill--info" th:text="${auditLog.categoryLabel}">Reports</span></td>
+									<td><strong class="meta-strong" th:text="${auditLog.eventName}">Report Downloaded</strong><p th:text="${auditLog.eventDetail}">A4Report-20260326-102030.pdf</p></td>
+									<td th:text="${auditLog.actor}">Public Download</td>
+									<td th:text="${auditLog.target}">Monthly Sales Report</td>
+									<td th:text="${auditLog.timestamp}">23 Mar 2026, 15:40</td>
+									<td><span th:class="${auditLog.statusClass}" th:text="${auditLog.status}">Completed</span></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div data-fragment="footer-content" class="table-footer">
+						<p th:text="${filteredTotal == 0} ? 'Showing 0 audit events' : |Showing ${pageStart}-${pageEnd} of ${filteredTotal} audit events|">Showing 0 audit events</p>
+						<div class="pager" th:if="${totalPages > 0}">
+							<a th:if="${hasPreviousPage}" th:href="@{/audit-logs(page=${currentPage - 1}, size=${pageSize}, q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset=${currentDatePreset}, fromDate=${currentFromDate}, toDate=${currentToDate}, format=${currentFormat})}">Previous</a>
+							<span th:unless="${hasPreviousPage}">Previous</span>
+							<th:block th:each="pageNumber : ${pageNumbers}">
+								<span th:if="${pageNumber == currentPage}" th:text="${pageNumber + 1}">1</span>
+								<a th:unless="${pageNumber == currentPage}" th:href="@{/audit-logs(page=${pageNumber}, size=${pageSize}, q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset=${currentDatePreset}, fromDate=${currentFromDate}, toDate=${currentToDate}, format=${currentFormat})}" th:text="${pageNumber + 1}">2</a>
+							</th:block>
+							<a th:if="${hasNextPage}" th:href="@{/audit-logs(page=${currentPage + 1}, size=${pageSize}, q=${currentQuery}, category=${currentCategory}, status=${currentStatus}, datePreset=${currentDatePreset}, fromDate=${currentFromDate}, toDate=${currentToDate}, format=${currentFormat})}">Next</a>
+							<span th:unless="${hasNextPage}">Next</span>
+						</div>
+					</div>
+				</th:block>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

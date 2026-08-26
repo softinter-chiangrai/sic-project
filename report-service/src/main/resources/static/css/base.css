@@ -1,0 +1,404 @@
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/Inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype");
+	font-weight: 100 900;
+	font-style: italic;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "Manrope";
+	src: url("/fonts/Manrope/Manrope-VariableFont_wght.ttf") format("truetype");
+	font-weight: 200 800;
+	font-style: normal;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "Material Symbols Outlined";
+	src: url("/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-400-normal.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "Material Symbols Outlined";
+	src: url("/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "Material Symbols Outlined";
+	src: url("/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-600-normal.woff2") format("woff2");
+	font-weight: 600;
+	font-style: normal;
+	font-display: block;
+}
+
+:root {
+	color-scheme: light;
+	--background: #f7f9fb;
+	--surface: rgba(255, 255, 255, 0.78);
+	--surface-strong: #ffffff;
+	--surface-low: #eef4f8;
+	--surface-lowest: #fbfdff;
+	--surface-outline: rgba(113, 124, 130, 0.18);
+	--text: #2a3439;
+	--text-strong: #17315c;
+	--muted: #566166;
+	--outline: #a9b4b9;
+	--primary: #0053db;
+	--primary-dim: #0048c1;
+	--primary-soft: rgba(0, 83, 219, 0.14);
+	--primary-softer: rgba(0, 83, 219, 0.08);
+	--success: #17643c;
+	--success-bg: #e7f7ee;
+	--danger: #9f403d;
+	--danger-bg: #ffe7e5;
+	--card-shadow: 0 30px 80px rgba(42, 52, 57, 0.10);
+	--panel-shadow: 0 26px 70px rgba(37, 48, 54, 0.12);
+	--radius-xl: 24px;
+	--radius-lg: 18px;
+	--radius-md: 14px;
+	--radius-panel: var(--radius-xl);
+	--radius-box: 20px;
+	--radius-control: 16px;
+	--radius-chip: 12px;
+	--radius-pill: 999px;
+	--space-page: 28px;
+	--space-layout: 24px;
+	--space-cluster: 20px;
+	--space-compact: 18px;
+	--space-card: 24px;
+	--space-card-lg: 28px;
+	--space-panel: 32px;
+	--space-block: 18px;
+	--space-inset: 22px;
+	--space-gap-sm: 10px;
+	--space-gap-md: 14px;
+	--space-gap-lg: 16px;
+	--space-control-y: 14px;
+	--space-control-x: 16px;
+	--space-control-y-lg: 15px;
+	--space-control-x-lg: 20px;
+	--space-control-icon-inset: 16px;
+	--space-control-icon-inset-sm: 14px;
+	--space-control-x-icon: 18px;
+	--space-control-icon-offset: 48px;
+	--space-control-icon-offset-sm: 44px;
+	--space-chip-y: 8px;
+	--space-chip-x: 12px;
+	--blur-glass: 14px;
+	--shadow-brand: 0 14px 26px rgba(0, 83, 219, 0.2);
+	--shadow-primary-md: 0 18px 28px rgba(0, 83, 219, 0.22);
+	--shadow-primary-lg: 0 22px 34px rgba(0, 83, 219, 0.28);
+	--shadow-soft: 0 12px 22px rgba(32, 48, 63, 0.06);
+	--shadow-primary-panel: 0 26px 48px rgba(0, 72, 193, 0.25);
+	--shadow-soft-lg: 0 12px 30px rgba(42, 52, 57, 0.08);
+	--shadow-primary-button: 0 16px 32px rgba(0, 83, 219, 0.25);
+	--shadow-primary-button-hover: 0 20px 40px rgba(0, 83, 219, 0.3);
+	--size-brand-mark: 48px;
+	--size-profile-avatar: 40px;
+	--size-entity-icon: 42px;
+	--size-activity-icon: 52px;
+	--size-brand-badge: 72px;
+	--size-action-icon: 36px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+}
+
+body {
+	font-family: "Inter", "Noto Sans Thai", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+	color: var(--text);
+	background: var(--background);
+}
+
+body.modal-open {
+	overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: "Manrope", "Inter", "Noto Sans Thai", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+	font-weight: 800;
+	margin: 0;
+}
+
+a {
+	color: var(--primary);
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--primary-dim);
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.1rem;
+	height: 1.1rem;
+	vertical-align: middle;
+	flex: 0 0 auto;
+}
+
+.icon--sm {
+	width: 1rem;
+	height: 1rem;
+}
+
+.icon--md {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.icon--lg {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+.icon--xl {
+	width: 2.25rem;
+	height: 2.25rem;
+}
+
+.icon--hero {
+	width: 3.75rem;
+	height: 3.75rem;
+}
+
+.material-symbols-outlined {
+	font-family: "Material Symbols Outlined";
+	font-weight: 500;
+	font-style: normal;
+	font-size: 1.1rem;
+	line-height: 1;
+	letter-spacing: normal;
+	text-transform: none;
+	white-space: nowrap;
+	direction: ltr;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-feature-settings: 'liga';
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	font-variation-settings: 'FILL' 0, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.icon--sm {
+	font-size: 1rem;
+}
+
+.material-symbols-outlined.icon--md {
+	font-size: 1.25rem;
+}
+
+.material-symbols-outlined.icon--lg {
+	font-size: 1.5rem;
+}
+
+.material-symbols-outlined.icon--xl {
+	font-size: 2.25rem;
+}
+
+.material-symbols-outlined.icon--hero {
+	font-size: 3.75rem;
+}
+
+.page-intro {
+	display: grid;
+	gap: 0;
+}
+
+.page-intro h2 {
+	font-size: clamp(2.2rem, 5vw, 3.4rem);
+	letter-spacing: -0.05em;
+	color: var(--text-strong);
+}
+
+.page-intro p:last-child {
+	margin-top: 10px;
+	max-width: 680px;
+	font-size: 1rem;
+	line-height: 1.7;
+	color: var(--muted);
+}
+
+.eyebrow {
+	margin: 0 0 10px;
+	font-size: 0.74rem;
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	font-weight: 700;
+	color: var(--primary);
+}
+
+.app-dialog {
+	width: min(100%, 640px);
+	max-width: calc(100vw - 48px);
+	padding: 24px;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	overflow: visible;
+}
+
+.app-dialog--wide {
+	width: min(100%, 1100px);
+	max-width: calc(100vw - 48px);
+}
+
+.app-dialog::backdrop {
+	background: rgba(16, 24, 40, 0.28);
+	backdrop-filter: blur(8px);
+}
+
+.app-dialog__card {
+	background: rgba(255, 255, 255, 0.96);
+	border: 1px solid rgba(169, 180, 185, 0.2);
+	border-radius: var(--radius-panel);
+	box-shadow: var(--panel-shadow);
+	padding: clamp(20px, 2vw, 28px);
+	display: grid;
+	gap: var(--space-gap-lg);
+}
+
+.app-dialog__card--preview {
+	gap: var(--space-compact);
+}
+
+.app-dialog__copy {
+	display: grid;
+	gap: 8px;
+}
+
+.app-dialog__copy h3 {
+	font-size: 1.2rem;
+	color: var(--text-strong);
+	letter-spacing: -0.03em;
+}
+
+.app-dialog__copy p {
+	margin: 0;
+	color: var(--muted);
+	line-height: 1.6;
+}
+
+.app-dialog__actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+	align-items: stretch;
+	margin: 0;
+	padding: 0;
+}
+
+.app-dialog__actions--single {
+	grid-template-columns: 1fr;
+}
+
+.app-dialog__actions .text-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 52px;
+	padding: var(--space-control-y) var(--space-control-x);
+	border: 0;
+	border-radius: var(--radius-control);
+	font-weight: 700;
+	color: var(--primary);
+	background: rgba(0, 83, 219, 0.08);
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.app-dialog__actions .text-button:hover {
+	background: rgba(0, 83, 219, 0.12);
+	color: var(--primary-dim);
+	transform: translateY(-1px);
+}
+
+.app-dialog__actions .ghost-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: var(--space-control-y) var(--space-control-x);
+	border: 0;
+	border-radius: var(--radius-control);
+	font-weight: 700;
+	background: rgba(226, 234, 241, 0.72);
+	color: var(--muted);
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.app-dialog__actions .ghost-button:hover {
+	background: rgba(226, 234, 241, 0.96);
+	color: var(--text);
+	transform: translateY(-1px);
+}
+
+.app-dialog__actions .action-button,
+.app-dialog__actions .ghost-button,
+.app-dialog__actions .text-button {
+	width: 100%;
+	min-width: 0;
+	min-height: 52px;
+	padding-inline: 20px;
+	white-space: nowrap;
+}
+
+.app-dialog__actions--triple {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.app-dialog__actions--triple .text-button {
+	grid-column: 1 / -1;
+}
+
+.app-dialog__actions--triple .material-symbols-outlined,
+.app-dialog__actions .material-symbols-outlined {
+	font-weight: 500;
+}
+
+@media (max-width: 720px) {
+	.app-dialog__actions {
+		grid-template-columns: 1fr;
+	}
+}

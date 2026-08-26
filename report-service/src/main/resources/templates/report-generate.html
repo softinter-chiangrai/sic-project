@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jasper Report Server | Generate Report</title>
+	<link rel="preload" th:href="@{/fonts/Inter/Inter-VariableFont_opsz,wght.ttf}" href="/fonts/Inter/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/Manrope/Manrope-VariableFont_wght.ttf}" href="/fonts/Manrope/Manrope-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" th:href="@{/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2}" href="/fonts/MaterialSymbolsOutlined/webfonts/material-symbols-outlined-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<link rel="stylesheet" th:href="@{/css/base.css}">
+	<link rel="stylesheet" th:href="@{/css/app-shell.css}">
+	<link rel="stylesheet" th:href="@{/css/resource-list.css}">
+	<link rel="stylesheet" th:href="@{/css/edit-page.css}">
+	<link rel="stylesheet" th:href="@{/css/custom-dropdown.css}">
+	<script defer th:src="@{/js/toast.js}"></script>
+	<script defer th:src="@{/js/custom-dropdown.js}"></script>
+	<script defer th:src="@{/js/report-generate.js}"></script>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-shell">
+		<aside th:replace="~{fragments/app-shell :: sidebar('generate-report', ${username})}"></aside>
+
+		<main class="dashboard-main">
+			<header th:replace="~{fragments/app-shell :: topbar('Generate Report')}"></header>
+
+			<div class="dashboard-content edit-page report-generate-page">
+				<section th:replace="~{fragments/resource-list :: pageIntro('Report Delivery', 'Generate Report', 'Select a saved report template, fill in parameters, and generate a downloadable file.')}"></section>
+				<div th:replace="~{fragments/toast :: statusToast('generate-feedback-alert', 'generate-feedback-message', 'Generate updates will appear here.')}"></div>
+
+				<div class="edit-layout">
+					<div class="edit-column">
+						<section class="edit-card edit-card--hero">
+							<div class="summary-copy">
+								<h3>Report Selection</h3>
+							</div>
+							<div class="field-stack">
+								<div class="field field--dropdown">
+									<label for="generate-template-select">Report Template</label>
+									<select id="generate-template-select" data-custom-dropdown data-dropdown-placeholder="Select a report template">
+										<option value="">Select a report template</option>
+									</select>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<aside class="edit-sidebar">
+						<section class="edit-card report-template-parameters-card">
+							<div class="section-heading">
+								<div>
+									<h4>Report Parameters</h4>
+								</div>
+							</div>
+							<div class="field-stack">
+								<div class="parameter-list" id="parameter-fields"></div>
+								<div id="parameter-empty-state" class="parameter-list__empty" hidden>Select a report template to see its parameters.</div>
+								<div class="button-row button-row--stacked">
+									<div class="field field--dropdown report-template-generate-format">
+										<label for="generate-format">Output Format</label>
+										<select id="generate-format" data-custom-dropdown>
+											<option value="pdf" selected>PDF</option>
+											<option value="docx">DOCX</option>
+											<option value="xlsx">XLSX</option>
+										</select>
+									</div>
+									<button class="action-button action-button--neutral report-template-generate-button" id="generate-report-button" type="button" disabled>
+										<span class="material-symbols-outlined icon icon--md" aria-hidden="true">description</span>
+										<span>Generate</span>
+									</button>
+								</div>
+							</div>
+						</section>
+					</aside>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

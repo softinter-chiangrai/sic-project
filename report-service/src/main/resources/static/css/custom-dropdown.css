@@ -1,0 +1,184 @@
+.dropdown-native-select {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+}
+
+.field--dropdown,
+.filter-select--dropdown {
+	position: relative;
+}
+
+.filter-select--dropdown {
+	padding: 0;
+	background: transparent;
+	border: 0;
+	overflow: visible;
+}
+
+.app-dropdown-trigger {
+	position: relative;
+	width: 100%;
+	border: 1px solid rgba(117, 133, 146, 0.18);
+	border-radius: var(--radius-control);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(239, 245, 250, 0.94)),
+		rgba(255, 255, 255, 0.92);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.86),
+		0 10px 18px rgba(34, 58, 81, 0.06);
+	color: var(--text-strong);
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	transition: box-shadow 0.16s ease, border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+	cursor: pointer;
+	text-align: left;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: var(--space-control-y) calc(var(--space-control-x) + 42px) var(--space-control-y) var(--space-control-x);
+	min-height: 54px;
+	outline: 0;
+}
+
+.app-dropdown-trigger:hover:not(:disabled) {
+	border-color: rgba(0, 83, 219, 0.22);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.92),
+		0 14px 24px rgba(28, 61, 92, 0.08);
+}
+
+.app-dropdown-trigger:focus-visible {
+	border-color: rgba(0, 83, 219, 0.32);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 248, 252, 0.96)),
+		rgba(255, 255, 255, 0.98);
+	}
+
+.app-dropdown-trigger__leading-icon,
+.app-dropdown-trigger__icon {
+	color: var(--primary);
+	flex: 0 0 auto;
+}
+
+.app-dropdown-trigger__label {
+	min-width: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.app-dropdown-trigger__icon {
+	position: absolute;
+	right: 16px;
+	top: 50%;
+	transform: translateY(-50%);
+	transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.field--dropdown.is-open .app-dropdown-trigger__icon,
+.filter-select--dropdown.is-open .app-dropdown-trigger__icon {
+	transform: translateY(-50%) rotate(180deg);
+}
+
+.app-dropdown-trigger:disabled {
+	cursor: not-allowed;
+	background-image: none;
+	box-shadow: none;
+	color: rgba(115, 127, 138, 0.7);
+	border-color: rgba(117, 133, 146, 0.14);
+	}
+
+.field--invalid .app-dropdown-trigger,
+.dropdown-native-select.is-invalid + .app-dropdown-trigger {
+	border-color: rgba(159, 64, 61, 0.44);
+	box-shadow: 0 0 0 4px rgba(159, 64, 61, 0.08);
+	background:
+		linear-gradient(180deg, rgba(255, 250, 250, 0.99), rgba(255, 244, 244, 0.96)),
+		rgba(255, 248, 248, 0.98);
+}
+
+.filter-select--dropdown .app-dropdown-trigger {
+	min-height: 48px;
+	padding-top: 11px;
+	padding-bottom: 11px;
+	font-size: 0.96rem;
+	}
+
+.app-dropdown-menu {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: calc(100% + 10px);
+	z-index: 20;
+	padding: 8px;
+	border-radius: var(--radius-box);
+	border: 1px solid rgba(130, 146, 160, 0.18);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 247, 251, 0.96)),
+		rgba(255, 255, 255, 0.96);
+	box-shadow: 0 24px 44px rgba(24, 44, 63, 0.14);
+	backdrop-filter: blur(16px);
+	display: grid;
+	gap: 6px;
+	overflow: auto;
+	max-height: min(320px, 60vh);
+	}
+
+.app-dropdown-menu[hidden] {
+	display: none;
+}
+
+.app-dropdown-option {
+	width: 100%;
+	border: 0;
+	border-radius: var(--radius-lg);
+	padding: 12px 14px;
+	background: transparent;
+	color: var(--text-strong);
+	font-size: 0.98rem;
+	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.app-dropdown-option:hover,
+.app-dropdown-option:focus-visible {
+	outline: none;
+	background: rgba(0, 83, 219, 0.08);
+	color: var(--primary-dim);
+	transform: translateY(-1px);
+}
+
+.app-dropdown-option.is-selected {
+	background: linear-gradient(135deg, rgba(0, 83, 219, 0.16), rgba(0, 72, 193, 0.12));
+	color: var(--primary-dim);
+	box-shadow: inset 0 0 0 1px rgba(0, 83, 219, 0.1);
+}
+
+.app-dropdown-option:disabled {
+	cursor: default;
+	opacity: 0.58;
+	transform: none;
+}
+
+.app-dropdown-option:disabled:hover,
+.app-dropdown-option:disabled:focus-visible {
+	background: transparent;
+	color: var(--text-strong);
+	transform: none;
+}
+
+@media (max-width: 720px) {
+	.filter-select--dropdown,
+	.filter-select--dropdown .app-dropdown-trigger {
+		width: 100%;
+		max-width: none;
+		min-width: 0;
+	}
+}

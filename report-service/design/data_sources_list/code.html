@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Data Sources | Admin Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-container": "#d3e4fe",
+                        "primary-fixed-dim": "#c7d3ff",
+                        "on-tertiary-fixed-variant": "#54546f",
+                        "tertiary-fixed": "#d9d7f8",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-bright": "#f7f9fb",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-background": "#2a3439",
+                        "on-secondary": "#f7f9ff",
+                        "secondary-dim": "#44546a",
+                        "error": "#9f403d",
+                        "surface-dim": "#cfdce3",
+                        "surface-container-high": "#e1e9ee",
+                        "tertiary-dim": "#51516c",
+                        "error-dim": "#4e0309",
+                        "on-primary-fixed-variant": "#0050d4",
+                        "error-container": "#fe8983",
+                        "inverse-surface": "#0b0f10",
+                        "on-error-container": "#752121",
+                        "on-secondary-container": "#435368",
+                        "secondary-fixed-dim": "#c5d6f0",
+                        "surface-tint": "#0053db",
+                        "surface-variant": "#d9e4ea",
+                        "on-tertiary-fixed": "#373851",
+                        "inverse-primary": "#618bff",
+                        "tertiary": "#5d5d78",
+                        "primary-dim": "#0048c1",
+                        "background": "#f7f9fb",
+                        "on-surface-variant": "#566166",
+                        "on-tertiary": "#fbf7ff",
+                        "tertiary-container": "#d9d7f8",
+                        "surface-container": "#e8eff3",
+                        "on-secondary-fixed": "#314055",
+                        "on-secondary-fixed-variant": "#4d5d73",
+                        "surface": "#f7f9fb",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container-low": "#f0f4f7",
+                        "outline-variant": "#a9b4b9",
+                        "outline": "#717c82",
+                        "on-tertiary-container": "#4a4a65",
+                        "on-error": "#fff7f6",
+                        "primary": "#0053db",
+                        "on-primary-container": "#0048bf",
+                        "secondary": "#506076",
+                        "on-primary": "#f8f7ff",
+                        "on-primary-fixed": "#003798",
+                        "tertiary-fixed-dim": "#cbc9e9",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#dbe1ff",
+                        "surface-container-highest": "#d9e4ea",
+                        "on-surface": "#2a3439"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.375rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex">
+<!-- SideNavBar Component -->
+<aside class="fixed inset-y-0 left-0 flex flex-col w-64 bg-slate-50 border-r-0 z-40">
+<!-- Brand Header -->
+<div class="px-6 py-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-2xl" data-icon="description">description</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-blue-900 font-headline leading-tight">JasperInsight</h1>
+<p class="text-[10px] font-inter tracking-wider uppercase text-slate-500">Management Console</p>
+</div>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-xs tracking-wider uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-xs tracking-wider uppercase">Report Templates</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="api">api</span>
+<span class="font-inter text-xs tracking-wider uppercase">API Configuration</span>
+</a>
+<!-- Active State styling (blue background, white text, sharp edges - as per Screen 2 reference) -->
+<div class="flex items-center gap-3 px-4 py-3 text-blue-700 font-semibold border-r-4 border-blue-700 transition-colors bg-slate-200/50">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="font-inter text-xs tracking-wider uppercase">Data Sources</span>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-inter text-xs tracking-wider uppercase">Audit Logs</span>
+</a>
+</nav>
+<!-- Sidebar CTA -->
+<div class="px-6 mb-6">
+<button class="w-full bg-primary hover:bg-primary-dim text-on-primary py-3 rounded-lg font-medium text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                Create New Report
+            </button>
+</div>
+<!-- Footer Navigation -->
+<div class="border-t border-slate-200/60 p-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors rounded-lg" href="#">
+<img alt="John Doe" class="w-6 h-6 rounded-full" data-alt="User profile photo of John Doe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbu2AcRiW6HJZe5k-pmjXojgHl9wu6TyX8KbXnswyK1ln7pAI35TtWs9jf-FJI5TBsMvTl-XEXB-UUchFFOewbVbKwzVD213CoDE3toRkeXRSGoGgnWWeJAhV3MACpW6iqPm2HpyfAVAcjV9U-dkb0nTKNklL03l-AVX-X9KT8s5DHyx2tVawHCkUm0H6fjyU4dvXuqL8o2Sd8pDy0r5KLG0lCiF1-TJ0qqp5_5jlX7xP1Ecnf-EM758PtXaVr8zw4qDHlJ6i66U1E"/>
+<span class="font-inter text-xs tracking-wider uppercase">John Doe</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-inter text-xs tracking-wider uppercase">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 min-h-screen flex flex-col">
+<!-- TopAppBar Component (Integrated Header) -->
+<header class="flex justify-between items-center px-10 h-16 w-full bg-white dark:bg-[#111827] sticky top-0 z-30 shadow-sm">
+<div class="flex items-center gap-4">
+<nav class="flex items-center text-[10px] font-bold tracking-widest text-slate-400 font-manrope uppercase">
+<a class="hover:text-primary transition-colors" href="#">HOME</a>
+<span class="mx-2 material-symbols-outlined text-[12px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-[#1A365D]">DATA SOURCES</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-10 space-y-8 max-w-7xl">
+<!-- Page Heading & Actions -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-headline font-extrabold text-[#1A365D] tracking-tight">Data Sources</h2>
+<p class="text-slate-500 text-sm mt-1">Manage external database connections and sync parameters.</p>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-dim text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                    ADD NEW DATA SOURCE
+                </button>
+</div>
+<!-- Dashboard Style Bento Layout for Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl border-b border-outline-variant/15 flex items-center gap-5">
+<div class="w-12 h-12 bg-secondary-container/30 text-primary flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Links</p>
+<p class="text-2xl font-headline font-extrabold text-on-surface">14</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border-b border-outline-variant/15 flex items-center gap-5">
+<div class="w-12 h-12 bg-tertiary-container/30 text-tertiary flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Response</p>
+<p class="text-2xl font-headline font-extrabold text-on-surface">24ms</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border-b border-outline-variant/15 flex items-center gap-5">
+<div class="w-12 h-12 bg-error-container/20 text-error flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Failures (24h)</p>
+<p class="text-2xl font-headline font-extrabold text-on-surface">2</p>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm ring-1 ring-slate-100">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-slate-100">
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope">DATA SOURCE NAME</th>
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope">TYPE</th>
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope">HOST</th>
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope">STATUS</th>
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope">LAST TESTED</th>
+<th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest font-manrope text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-100 rounded text-slate-600">
+<span class="material-symbols-outlined text-[20px]" data-icon="storage">storage</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#1A365D]">Primary_Production_DB</p>
+<p class="text-[11px] text-slate-400">AWS-RDS-Cluster-01</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wide">PostgreSQL</span>
+</td>
+<td class="px-6 py-5 font-mono text-[11px] text-slate-500">10.0.4.155</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Active
+                                    </div>
+</td>
+<td class="px-6 py-5 text-xs text-slate-500">2 mins ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors" title="Test Connection">
+<span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-error transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-100 rounded text-slate-600">
+<span class="material-symbols-outlined text-[20px]" data-icon="dns">dns</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#1A365D]">Legacy_User_Archives</p>
+<p class="text-[11px] text-slate-400">On-Premise-SVR-44</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold rounded uppercase tracking-wide">MySQL</span>
+</td>
+<td class="px-6 py-5 font-mono text-[11px] text-slate-500">192.168.1.12</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        Idle
+                                    </div>
+</td>
+<td class="px-6 py-5 text-xs text-slate-500">1 hour ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span></button>
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1.5 text-slate-400 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-100 rounded text-slate-600">
+<span class="material-symbols-outlined text-[20px]" data-icon="dataset">dataset</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#1A365D]">MariaDB_Cluster_West</p>
+<p class="text-[11px] text-slate-400">GC-Compute-Engine-W2</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded uppercase tracking-wide">MariaDB</span>
+</td>
+<td class="px-6 py-5 font-mono text-[11px] text-slate-500">35.222.11.44</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-xs font-semibold text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                        Failed
+                                    </div>
+</td>
+<td class="px-6 py-5 text-xs text-slate-500 font-medium text-error">Failed 14m ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span></button>
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1.5 text-slate-400 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-100 rounded text-slate-600">
+<span class="material-symbols-outlined text-[20px]" data-icon="cloud">cloud</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#1A365D]">Client_Facing_Metrics</p>
+<p class="text-[11px] text-slate-400">Azure-DB-Proxy</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wide">PostgreSQL</span>
+</td>
+<td class="px-6 py-5 font-mono text-[11px] text-slate-500">db.client.azure.com</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Active
+                                    </div>
+</td>
+<td class="px-6 py-5 text-xs text-slate-500">Just now</td>
+<td class="px-6 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span></button>
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1.5 text-slate-400 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer of list -->
+<div class="px-6 py-4 bg-surface-container-low/30 border-t border-slate-50 flex justify-between items-center">
+<p class="text-xs text-slate-400 font-medium tracking-tight">Showing 4 of 12 configured data sources</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant/30 text-xs font-bold text-slate-500 rounded hover:bg-white transition-colors">PREVIOUS</button>
+<button class="px-3 py-1 bg-white border border-outline-variant/30 text-xs font-bold text-[#1A365D] rounded shadow-sm">1</button>
+<button class="px-3 py-1 border border-outline-variant/30 text-xs font-bold text-slate-500 rounded hover:bg-white transition-colors">2</button>
+<button class="px-3 py-1 border border-outline-variant/30 text-xs font-bold text-slate-500 rounded hover:bg-white transition-colors">NEXT</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
