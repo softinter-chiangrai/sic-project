@@ -6,7 +6,7 @@ import { SignUpForm } from './sign-up.form';
 import { SignUpModel, SignUpPageData } from './sign-up.model';
 import { SicFromData } from '../../core/model/sic-from-data';
 
-export const sign-upResolver: ResolveFn<SignUpPageData> = (route) => {
+export const signUpResolver: ResolveFn<SignUpPageData> = (route) => {
   const fb = inject(FormBuilder);
   const service = inject(SignUpService);
   const router = inject(Router);

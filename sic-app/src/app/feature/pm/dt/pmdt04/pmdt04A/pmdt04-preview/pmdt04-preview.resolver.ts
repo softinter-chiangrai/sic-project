@@ -6,7 +6,7 @@ import { Pmdt04PreviewForm } from './pmdt04-preview.form';
 import { Pmdt04PreviewModel, Pmdt04PreviewPageData } from './pmdt04-preview.model';
 import { SicFromData } from '../../../../../../core/model/sic-from-data';
 
-export const pmdt04-previewResolver: ResolveFn<Pmdt04PreviewPageData> = (route) => {
+export const pmdt04PreviewResolver: ResolveFn<Pmdt04PreviewPageData> = (route) => {
   const fb = inject(FormBuilder);
   const service = inject(Pmdt04PreviewService);
   const router = inject(Router);

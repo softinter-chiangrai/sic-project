@@ -6,7 +6,7 @@ import { BusinessOptionsForm } from './business-options.form';
 import { BusinessOptionsModel, BusinessOptionsPageData } from './business-options.model';
 import { SicFromData } from '../../../core/model/sic-from-data';
 
-export const business-optionsResolver: ResolveFn<BusinessOptionsPageData> = (route) => {
+export const businessOptionsResolver: ResolveFn<BusinessOptionsPageData> = (route) => {
   const fb = inject(FormBuilder);
   const service = inject(BusinessOptionsService);
   const router = inject(Router);

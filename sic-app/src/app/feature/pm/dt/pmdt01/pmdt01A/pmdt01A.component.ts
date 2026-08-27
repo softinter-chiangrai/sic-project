@@ -1,17 +1,19 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { Pmdt01AModel } from './pmdt01A.model';
+import { Pmdt01AModel, Pmdt01APageData } from './pmdt01A.model';
 import { Pmdt01AService } from './pmdt01A.service';
+import { Pmdt01AForm } from './pmdt01A.form';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 @Component({
   selector: 'app-pmdt01A',
@@ -42,16 +44,7 @@ export class Pmdt01AComponent implements OnInit {
   userApiUrl = '';
   selectedOwnerNames: Record<string, string> = {};
 
-  form = this.fb.group({
-    phaseName: ['', Validators.required],
-    description: [''],
-    startDate: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endDate: ['', Validators.required],
-    endTime: ['', Validators.required],
-    owner: [[] as string[]],
-    color: [''],
-  });
+  form: FormGroup = Pmdt01AForm.createForm(this.fb);
 
   ngOnInit() {
     const businessId = this.businessService.getCurrentBusinessId();
@@ -63,13 +56,27 @@ export class Pmdt01AComponent implements OnInit {
       this.projectId = params['projectId'] || '';
     });
 
+    // Check if resolver preloaded data
+    const resolvedData: Pmdt01APageData = this.route.snapshot.data['form'];
+    if (resolvedData?.phaseData?.formGroup) {
+      this.form = resolvedData.phaseData.formGroup;
+      if (resolvedData.phaseData.value?.id) {
+        this.data = resolvedData.phaseData.value;
+        this.isEdit = true;
+        this.phaseId = this.data.id || null;
+        this.patchForm(this.data);
+      }
+    }
+
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
         this.phaseId = id;
         this.isEdit = true;
-        this.loadPhase(id);
-      } else {
+        if (!this.data) {
+          this.loadPhase(id);
+        }
+      } else if (!this.isEdit) {
         this.isEdit = false;
         this.phaseId = null;
       }
@@ -139,7 +146,7 @@ export class Pmdt01AComponent implements OnInit {
     let ownerString = '';
     if (Array.isArray(raw.owner)) {
       ownerString = raw.owner
-        .map((val) => this.selectedOwnerNames[val] || val)
+        .map((val: string) => this.selectedOwnerNames[val] || val)
         .filter(Boolean)
         .join(', ');
     } else if (typeof raw.owner === 'string') {
@@ -180,4 +187,4 @@ export class Pmdt01AComponent implements OnInit {
       queryParams: { projectId: this.projectId },
     });
   }
-}
+}

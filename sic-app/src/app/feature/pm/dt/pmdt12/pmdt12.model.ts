@@ -42,3 +42,13 @@ export interface PmTestScenarioModel extends SicBaseStateModel {
   createdDate?: string;
   updatedDate?: string;
 }
+
+export interface Pmdt12Model extends SicBaseStateModel {
+  id?: string;
+  code?: string;
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+

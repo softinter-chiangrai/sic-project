@@ -8,10 +8,10 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 
 // Services
 import { SicSidebarService } from '../../core/component/sic-sidebar/sic-sidebar.service';
@@ -20,6 +20,7 @@ import { Pmrt02Service } from '../pm/rt/pmrt02/pmrt02.service';
 import { Pmdt09Service } from '../pm/dt/pmdt09/pmdt09.service';
 import { AuditLogService } from '../pm/dt/pmdt20/audit-log.service';
 import { burt04Service } from '../bu/rt/burt04/burt04.service';
+import { DashboardService } from './dashboard.service';
 
 // Models
 import {
@@ -28,33 +29,15 @@ import {
   ProfileInfoModel,
 } from '../../core/component/sic-sidebar/sic-sidebar.model';
 import { PmCustomerProject } from '../pm/rt/pmrt02/pmrt02.model';
-import { DesignReview } from '../pm/dt/pmdt09/pmdt09.service';
+import { DesignReview } from '../pm/dt/pmdt09/pmdt09.model';
 import { AuditLog } from '../pm/dt/pmdt20/audit-log.service';
 import { SicDatePipe } from '../../core/pipes/sic-date.pipe';
-
-export interface SmartProgramTile {
-  code: string;
-  name: string;
-  path: string;
-  icon: string;
-  category: string;
-  badgeCount?: number;
-  badgeType?: 'danger' | 'warning' | 'info' | 'success';
-}
-
-export interface SdlcStageSummary {
-  stage: string;
-  thStage: string;
-  icon: string;
-  count: number;
-  colorClass: string;
-  bgClass: string;
-}
+import { DashboardPageData, SdlcStageSummary, SmartProgramTile } from './dashboard.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, SicDatePipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +49,8 @@ export class DashboardComponent implements OnInit {
   private readonly pmdt09Service = inject(Pmdt09Service);
   private readonly auditLogService = inject(AuditLogService);
   private readonly burt04Service = inject(burt04Service);
+  private readonly dashboardService = inject(DashboardService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
 
@@ -240,6 +225,18 @@ export class DashboardComponent implements OnInit {
     if (!isPlatformBrowser(this.platformId)) return;
 
     this.isAdmin.set(this.authService.isAdmin());
+
+    // Populate preloaded data from resolver if available
+    const resolvedData: DashboardPageData = this.route.snapshot.data['form'] || this.route.snapshot.data['data'];
+    if (resolvedData) {
+      if (resolvedData.profile) this.profile.set(resolvedData.profile);
+      if (resolvedData.business) this.business.set(resolvedData.business);
+      if (resolvedData.rawMenu?.length) this.rawMenu.set(resolvedData.rawMenu);
+      if (resolvedData.projects?.length) this.realProjects.set(resolvedData.projects);
+      if (resolvedData.reviews?.length) this.realDesignReviews.set(resolvedData.reviews);
+      if (resolvedData.auditLogs?.length) this.realAuditLogs.set(resolvedData.auditLogs);
+    }
+
     this.loadAllRealData();
   }
 

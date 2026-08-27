@@ -2,48 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { DesignReview, PaginationResponse, ReviewComment } from './pmdt09.model';
 
-export interface ReviewComment {
-  id: string;
-  author: string;
-  commentText: string;
-  commentType: string;
-  severity?: string;
-  assignedTo?: string;
-  createdAt: string;
-}
-
-export interface DesignReview {
-  id: string;
-  reviewCode: string;
-  title: string;
-  description: string;
-  projectId: string;
-  projectCode?: string;
-  projectName?: string;
-  reviewableType: string;
-  reviewableId?: string;
-  reviewableName?: string;
-  reviewer: string;
-  assignedTo: string;
-  severity: string;
-  status: string;
-  dueDate: string;
-  figmaUrl?: string;
-  embedMode?: 'design' | 'prototype';
-  isActive: boolean;
-  createdDate?: string;
-  createdBy?: string;
-  comments?: ReviewComment[];
-}
-
-export interface PaginationResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  size: number;
-  totalPages: number;
-}
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt09Service {
@@ -76,4 +36,3 @@ export class Pmdt09Service {
     return this.http.post<ReviewComment>(`${this.baseUrl}/${reviewId}/comments`, comment);
   }
 }
-

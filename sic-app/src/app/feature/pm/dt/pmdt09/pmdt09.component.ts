@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { DesignReview, Pmdt09Service, ReviewComment } from './pmdt09.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { Pmdt09Service } from './pmdt09.service';
+import { DesignReview, ReviewComment } from './pmdt09.model';
 
 
 
