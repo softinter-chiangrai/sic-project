@@ -126,7 +126,7 @@ export class SicNotificationPanelComponent {
 
   onViewAllClick() {
     this.closePanel.emit();
-    this.router.navigate(['/feature/pm/pmrt07']);
+    this.router.navigate(['/feature/pm/notifications']);
   }
 
   onItemClick(item: AppNotification) {

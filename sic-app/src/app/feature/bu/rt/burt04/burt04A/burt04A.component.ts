@@ -104,7 +104,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
         error: (err: any) => {
           console.error('Load member error', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
-          this.router.navigate(['/feature/bu/burt04']);
+          this.router.navigate(['/feature/bu/team']);
         },
       });
   }
@@ -112,10 +112,10 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   onBack() {
     if (this.form.dirty) {
       this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then((ok) => {
-        if (ok) this.router.navigate(['/feature/bu/burt04']);
+        if (ok) this.router.navigate(['/feature/bu/team']);
       });
     } else {
-      this.router.navigate(['/feature/bu/burt04']);
+      this.router.navigate(['/feature/bu/team']);
     }
   }
 
@@ -135,7 +135,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
-          this.router.navigate(['/feature/bu/burt04']);
+          this.router.navigate(['/feature/bu/team']);
         },
         error: (err: any) => {
           this.dialog.error('ผิดพลาด', err.message || 'ไม่สามารถบันทึกได้');

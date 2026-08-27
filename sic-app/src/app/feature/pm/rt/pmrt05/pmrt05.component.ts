@@ -352,7 +352,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt07'], {
+    this.navigation.navigate(['/feature/pm/change-request'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -370,7 +370,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/task-list'], {
+    this.navigation.navigate(['/feature/pm/task-board'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -379,7 +379,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/test-case'], {
+    this.navigation.navigate(['/feature/pm/test-management'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -388,7 +388,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/bug'], {
+    this.navigation.navigate(['/feature/pm/bug/new'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

@@ -42,7 +42,7 @@ export const requirementGuard: CanActivateFn = async (route, state) => {
   await dialog.warn('กรุณาเลือก Requirement', 'ไม่พบข้อมูล Requirement');
   const projectId = customerState.getProjectId();
   const customerId = customerState.getCustomerId();
-  router.navigate(['/feature/pm/pmdt04'], {
+  router.navigate(['/feature/pm/requirement'], {
     queryParams: {
       projectId: projectId || undefined,
       customerId: customerId || undefined,

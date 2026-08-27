@@ -122,11 +122,11 @@ export class Burt06Component implements OnInit {
   }
 
   openCreateForm(): void {
-    this.router.navigate(['/feature/bu/burt06/new']);
+    this.router.navigate(['/feature/bu/approval-flow/new']);
   }
 
   openEditForm(flow: ApprovalFlow): void {
-    this.router.navigate(['/feature/bu/burt06', flow.id, 'edit']);
+    this.router.navigate(['/feature/bu/approval-flow', flow.id, 'edit']);
   }
 
   deleteFlow(flow: ApprovalFlow): void {

@@ -381,7 +381,7 @@ export class Pmdt02Component implements OnInit {
           this.projectId.set(pid);
           this.loadPhaseDetail(phaseId);
         } else {
-          this.router.navigate(['/feature/pm/pmdt01'], {
+          this.router.navigate(['/feature/pm/phase'], {
             queryParams: { projectId: this.projectId() },
           });
         }
@@ -400,7 +400,7 @@ export class Pmdt02Component implements OnInit {
       error: (err) => {
         console.error(err);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
-        this.router.navigate(['/feature/pm/pmdt01'], {
+        this.router.navigate(['/feature/pm/phase'], {
           queryParams: { projectId: this.projectId() },
         });
       },
@@ -1211,7 +1211,7 @@ export class Pmdt02Component implements OnInit {
 
   // ===== NAVIGATION =====
   goBack() {
-    this.router.navigate(['/feature/pm/pmdt01'], { queryParams: { projectId: this.projectId() } });
+    this.router.navigate(['/feature/pm/phase'], { queryParams: { projectId: this.projectId() } });
   }
 
   // ===== UTILITIES =====

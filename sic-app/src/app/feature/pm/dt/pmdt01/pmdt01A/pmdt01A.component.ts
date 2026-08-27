@@ -174,7 +174,7 @@ export class Pmdt01AComponent implements OnInit {
           'สำเร็จ',
           this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
         );
-        this.router.navigate(['/feature/pm/pmdt01'], {
+        this.router.navigate(['/feature/pm/phase'], {
           queryParams: { projectId: this.projectId },
         });
       },
@@ -183,7 +183,7 @@ export class Pmdt01AComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/feature/pm/pmdt01'], {
+    this.router.navigate(['/feature/pm/phase'], {
       queryParams: { projectId: this.projectId },
     });
   }

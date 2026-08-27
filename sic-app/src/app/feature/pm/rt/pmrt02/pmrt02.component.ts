@@ -111,7 +111,7 @@ export class Pmrt02Component implements OnInit {
       let customerId = params['customerId'] || this.customerState.getCustomerId();
       if (!customerId) {
         this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-        this.navigation.navigate(['/feature/pm/pmrt01']);
+        this.navigation.navigate(['/feature/pm/customer']);
         return;
       }
 
@@ -214,6 +214,10 @@ export class Pmrt02Component implements OnInit {
   }
 
   goToDashboard(projectId: string) {
+    const project = this.projects().find(p => p.id === projectId);
+    if (project) {
+      this.customerState.setProject(project.id, project.projectName);
+    }
     this.navigation.navigate(['/feature/pm/project-dashboard'], {
       queryParams: { projectId: projectId }
     });

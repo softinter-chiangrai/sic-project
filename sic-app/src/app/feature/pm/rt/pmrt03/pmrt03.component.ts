@@ -59,7 +59,7 @@ export class Pmrt03Component implements OnInit {
           console.error('Load project dashboard error:', err);
           this.error.set('ไม่สามารถโหลดข้อมูลโครงการได้');
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลโครงการหรือเกิดข้อผิดพลาด');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/project']);
         },
       });
   }

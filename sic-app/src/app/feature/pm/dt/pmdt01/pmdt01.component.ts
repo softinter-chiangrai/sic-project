@@ -36,7 +36,7 @@ export class Pmdt01Component implements OnInit {
           this.loadPhases();
         }
       } else {
-        this.router.navigate(['/feature/pm/pmrt02']);
+        this.router.navigate(['/feature/pm/project']);
       }
     });
   }

@@ -89,7 +89,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
             }
             this.cdr.detectChanges();
           },
-          error: () => this.navigation.navigate(['/feature/pm/pmrt04']),
+          error: () => this.navigation.navigate(['/feature/pm/contract']),
         });
       }
     });
@@ -141,7 +141,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
-          this.navigation.navigate(['/feature/pm/pmrt04']);
+          this.navigation.navigate(['/feature/pm/contract']);
         },
       });
   }

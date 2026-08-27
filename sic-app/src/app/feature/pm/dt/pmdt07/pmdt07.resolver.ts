@@ -60,7 +60,7 @@ export const pmdt07EditResolver: ResolveFn<Pmdt07Form> = (route) => {
             specification: new SicFromData<PmSpecificationModel>(form)
         })),
         catchError(() => {
-            router.navigate(['/feature/pm/pmdt07']);
+            router.navigate(['/feature/pm/specification']);
             return EMPTY;
         })
     );

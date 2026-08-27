@@ -165,7 +165,7 @@ export class Burt04AComponent implements OnInit {
   }
 
   goToEdit(id: string) {
-    this.router.navigate(['/feature/bu/burt04', id, 'edit']);
+    this.router.navigate(['/feature/bu/team', id, 'edit']);
   }
 
   toggleActive(member: MemberWithUI) {

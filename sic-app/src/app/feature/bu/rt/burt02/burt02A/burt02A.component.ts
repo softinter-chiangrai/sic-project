@@ -313,13 +313,13 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/bu/burt02']);
+    this.router.navigate(['/feature/bu/permission']);
   }
 
   submit() {
     if (!this.roleId) {
       this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบรหัสบทบาท');
-      this.router.navigate(['/feature/bu/burt02']);
+      this.router.navigate(['/feature/bu/permission']);
       return;
     }
 
@@ -346,7 +346,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
-            this.router.navigate(['/feature/bu/burt02']);
+            this.router.navigate(['/feature/bu/permission']);
           });
         },
         error: (error) => {

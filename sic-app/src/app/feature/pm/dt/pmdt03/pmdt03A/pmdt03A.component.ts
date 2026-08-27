@@ -53,7 +53,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
   protected approval = signal<Approval | null>(null);
   protected isLoading = signal(false);
   protected error = signal<string | null>(null);
-  protected returnUrl = signal<string>('/feature/pm/pmdt03');
+  protected returnUrl = signal<string>('/feature/pm/approval');
 
   // ===== Computed =====
   protected documentType = computed(() => this.approval()?.documentType ?? null);
@@ -154,7 +154,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       test_plan: '/feature/pm/test-plan',
     };
 
-    const baseRoute = routeMap[docType] || '/feature/pm/pmdt03';
+    const baseRoute = routeMap[docType] || '/feature/pm/approval';
     this.navigation.navigate([baseRoute, docId, 'edit']);
   }
 

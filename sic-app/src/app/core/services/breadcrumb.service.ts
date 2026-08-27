@@ -32,6 +32,7 @@ const COMMON_PATH_LABELS: Record<string, string> = {
   'work-package': 'Work Package',
   task: 'งาน (Task)',
   'task-list': 'รายการงานทั้งหมด',
+  'task-board': 'บอร์ดงาน (Task Board)',
   'my-tasks': 'งานของฉัน',
   manual: 'คู่มือใช้งาน',
   invoice: 'ใบแจ้งหนี้',

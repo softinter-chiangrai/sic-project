@@ -26,10 +26,10 @@ export const pmdt07AResolver: ResolveFn<Pmdt07APageData> = async (route) => {
       form.patchValue(data);
       return { taskData: new SicFromData<Pmdt07AModel>(form, data as unknown as Pmdt07AModel) };
     }
-    router.navigate(['/feature/pm/pmdt07']);
+    router.navigate(['/feature/pm/specification']);
     return EMPTY as any;
   } catch {
-    router.navigate(['/feature/pm/pmdt07']);
+    router.navigate(['/feature/pm/specification']);
     return EMPTY as any;
   }
 };

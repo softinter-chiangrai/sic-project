@@ -229,7 +229,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 },
                 error: () => {
                     this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Change Request นี้');
-                    this.navigation.navigate(['/feature/pm/pmdt07']);
+                    this.navigation.navigate(['/feature/pm/change-request']);
                 },
             });
     }
@@ -353,11 +353,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     private navigateBack() {
         if (this.projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt07'], {
+            this.navigation.navigate(['/feature/pm/change-request'], {
                 queryParams: { projectId: this.projectId }
             });
         } else {
-            this.navigation.navigate(['/feature/pm/pmdt07']);
+            this.navigation.navigate(['/feature/pm/change-request']);
         }
     }
 

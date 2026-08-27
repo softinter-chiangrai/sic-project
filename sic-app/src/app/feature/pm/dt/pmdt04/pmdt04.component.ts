@@ -80,7 +80,7 @@ export class Pmdt04Component implements OnInit {
     const projectId = this.customerState.getProjectId();
     if (!projectId) {
       this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
       return;
     }
 
@@ -183,7 +183,7 @@ export class Pmdt04Component implements OnInit {
   goToView(id: string) {
     const projectId = this.customerState.getProjectId();
     const requirement = this.requirements().find(r => r.id === id);
-    this.navigation.navigate(['/feature/pm/pmrt05'], {
+    this.navigation.navigate(['/feature/pm/matrix'], {
       queryParams: {
         requirementId: id,
         projectId: projectId,

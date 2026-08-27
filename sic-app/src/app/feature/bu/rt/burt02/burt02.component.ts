@@ -236,7 +236,7 @@ export class Burt02Component implements OnInit {
   }
 
   goToManagePermissions(roleId: string) {
-    this.router.navigate(['/feature/bu/burt02', roleId]);
+    this.router.navigate(['/feature/bu/permission', roleId]);
   }
 
   // ===== Utility =====

@@ -161,15 +161,15 @@ export class Burt05Component implements OnInit {
 
   // ---------- Navigation & Actions ----------
   goToAdd() {
-    this.router.navigate(['/feature/bu/burt05/new']);
+    this.router.navigate(['/feature/bu/program/new']);
   }
 
   goToEdit(program: Program | TreeNode) {
-    this.router.navigate(['/feature/bu/burt05', program.id, 'edit']);
+    this.router.navigate(['/feature/bu/program', program.id, 'edit']);
   }
 
   goToPermissions(program: Program | TreeNode) {
-    this.router.navigate(['/feature/bu/burt05', program.id, 'permissions']);
+    this.router.navigate(['/feature/bu/program', program.id, 'permissions']);
   }
 
   deleteProgram(program: Program | TreeNode) {

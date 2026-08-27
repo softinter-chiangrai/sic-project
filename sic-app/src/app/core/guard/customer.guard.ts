@@ -27,7 +27,7 @@ export const customerGuard: CanActivateFn = async (route, state) => {
 
   if (!customerId) {
     await dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-    router.navigate(['/feature/pm/pmrt01']);
+    router.navigate(['/feature/pm/customer']);
     return false;
   }
 

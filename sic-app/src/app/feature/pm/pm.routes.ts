@@ -27,8 +27,6 @@ import { pmdt07AResolver } from './dt/pmdt07/pmdt07A/pmdt07A.resolver';
 import { pmdt08Resolver } from './dt/pmdt08/pmdt08.resolver';
 import { pmdt09Resolver } from './dt/pmdt09/pmdt09.resolver';
 import { pmdt09AResolver } from './dt/pmdt09/pmdt09A/pmdt09A.resolver';
-import { pmdt10Resolver } from './dt/pmdt10/pmdt10.resolver';
-import { pmdt10AResolver } from './dt/pmdt10/pmdt10A/pmdt10A.resolver';
 import { pmdt11Resolver } from './dt/pmdt11/pmdt11.resolver';
 import { pmdt12Resolver } from './dt/pmdt12/pmdt12.resolver';
 import { pmdt12AResolver } from './dt/pmdt12/pmdt12A/pmdt12A.resolver';
@@ -423,20 +421,8 @@ export const PM_ROUTES: Routes = [
   },
 
   // ============================================================
-  // ===== PMDT10: TASK OVERVIEW & MY TASKS =====
+  // ===== PMDT10: TASK BOARD =====
   // ============================================================
-  {
-    path: 'task-overview',
-    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
-    canActivate: [customerGuard, projectGuard],
-    resolve: { pageData: pmdt10Resolver },
-  },
-  {
-    path: 'my-tasks',
-    loadComponent: () => import('./dt/pmdt10/pmdt10A/pmdt10A.component').then((m) => m.Pmdt10AComponent),
-    canActivate: [customerGuard],
-    resolve: { pageData: pmdt10AResolver },
-  },
   {
     path: 'task-board',
     loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then((m) => m.Pmdt10BComponent),

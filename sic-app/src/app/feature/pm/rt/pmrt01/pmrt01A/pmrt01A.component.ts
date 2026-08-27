@@ -130,7 +130,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
           this.isLoading = false;
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
-          this.navigation.navigate(['/feature/pm/pmrt01']);
+          this.navigation.navigate(['/feature/pm/customer']);
         },
       });
   }

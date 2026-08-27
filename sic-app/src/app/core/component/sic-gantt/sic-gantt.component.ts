@@ -189,7 +189,7 @@ export class SicGanttComponent implements OnInit {
           const pid = qParams['projectId'] || this.customerState.getProjectId();
           if (!pid) {
             this.dialog.warn('กรุณาเลือกโครงการ', 'ไม่พบรหัสโครงการ');
-            this.navigation.navigate(['/feature/pm/pmrt02']);
+            this.navigation.navigate(['/feature/pm/project']);
             return;
           }
           this.projectId.set(pid);
@@ -328,7 +328,7 @@ export class SicGanttComponent implements OnInit {
       error: (err) => {
         this.dialog.error('โหลดโครงการไม่สำเร็จ', err.message);
         this.isLoading.set(false);
-        this.navigation.navigate(['/feature/pm/pmrt02']);
+        this.navigation.navigate(['/feature/pm/project']);
       }
     });
   }
@@ -399,7 +399,7 @@ export class SicGanttComponent implements OnInit {
       this.router.navigate(['/feature/pm/phase', this.phaseId()], { queryParams: { projectId } });
     } else {
       // กลับไปหน้า project list หรือ dashboard
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
     }
   }
 }

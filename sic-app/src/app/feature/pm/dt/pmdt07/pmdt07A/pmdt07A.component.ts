@@ -357,7 +357,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             error: () => {
                 this.isLoading = false;
                 this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
-                this.navigation.navigate(['/feature/pm/pmdt08']);
+                this.navigation.navigate(['/feature/pm/specification']);
             }
         });
     }
@@ -662,9 +662,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     private navigateBack(projectId?: string): void {
         if (projectId) {
-            this.navigation.navigate(['/feature/pm/pmdt08'], { queryParams: { projectId } });
+            this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId } });
         } else {
-            this.navigation.navigate(['/feature/pm/pmdt08']);
+            this.navigation.navigate(['/feature/pm/specification']);
         }
     }
 

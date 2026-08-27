@@ -101,7 +101,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
         this.loadContract(id);
       } else {
         this.dialog.error('ไม่พบรหัสสัญญา', 'กรุณาระบุรหัสสัญญา');
-        this.navigation.navigate(['/feature/pm/pmrt04']);
+        this.navigation.navigate(['/feature/pm/contract']);
       }
     });
   }
@@ -211,7 +211,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
         error: (error) => {
           console.error('Load contract error:', error);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญา');
-          this.navigation.navigate(['/feature/pm/pmrt04']);
+          this.navigation.navigate(['/feature/pm/contract']);
         },
       });
   }

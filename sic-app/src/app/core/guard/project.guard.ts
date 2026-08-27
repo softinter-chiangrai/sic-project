@@ -31,7 +31,7 @@ export const projectGuard: CanActivateFn = async (route, state) => {
       'กรุณาเลือกโครงการก่อน',
       'คุณต้องเลือกโครงการเพื่อเข้าถึงหน้านี้'
     );
-    router.navigate(['/feature/pm/pmrt02'], {
+    router.navigate(['/feature/pm/project'], {
       queryParams: { customerId: customerId || undefined }
     });
     return false;

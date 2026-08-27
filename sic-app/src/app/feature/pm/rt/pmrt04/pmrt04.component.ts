@@ -104,7 +104,7 @@ export class Pmrt04Component implements OnInit {
 
       if (!projectId) {
         this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
-        this.navigation.navigate(['/feature/pm/pmrt02']);
+        this.navigation.navigate(['/feature/pm/project']);
         return;
       }
 
@@ -121,7 +121,7 @@ export class Pmrt04Component implements OnInit {
           error: (err) => {
             console.error('Error loading project:', err);
             this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
-            this.navigation.navigate(['/feature/pm/pmrt02']);
+            this.navigation.navigate(['/feature/pm/project']);
           },
         });
       }
@@ -249,25 +249,25 @@ export class Pmrt04Component implements OnInit {
       if (projectId) {
         queryParams.projectId = projectId;
       }
-      this.navigation.navigate(['/feature/pm/pmrt04/new'], {
+      this.navigation.navigate(['/feature/pm/contract/new'], {
         queryParams,
       });
     } else {
       this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
     }
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/contract', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
+    this.navigation.navigate(['/feature/pm/contract', id, 'view']);
   }
 
   goToRenew(contractId: string) {
-    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId]);
+    this.navigation.navigate(['/feature/pm/contract/renew', contractId]);
   }
 
   printContract(contract: Contract) {

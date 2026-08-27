@@ -312,7 +312,7 @@ export class Burt05AComponent implements OnInit {
           next: () => {
             this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
             this.isSaving.set(false);
-            this.router.navigate(['/feature/bu/burt05']);
+            this.router.navigate(['/feature/bu/program']);
           },
           error: (err: any) => {
             this.isSaving.set(false);
@@ -328,7 +328,7 @@ export class Burt05AComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/feature/bu/burt05']);
+    this.router.navigate(['/feature/bu/program']);
   }
 
   getRoleLevel(roleId: string): string {

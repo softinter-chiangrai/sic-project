@@ -240,11 +240,11 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         .confirm('ยืนยัน', 'คุณยังไม่ได้บันทึกข้อมูล ต้องการออกใช่หรือไม่?')
         .then((confirmed) => {
           if (confirmed) {
-            this.router.navigate(['/feature/bu/burt06']);
+            this.router.navigate(['/feature/bu/approval-flow']);
           }
         });
     } else {
-      this.router.navigate(['/feature/bu/burt06']);
+      this.router.navigate(['/feature/bu/approval-flow']);
     }
   }
 
@@ -288,7 +288,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     request.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
-        this.router.navigate(['/feature/bu/burt06']);
+        this.router.navigate(['/feature/bu/approval-flow']);
       },
       error: (err) => {
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

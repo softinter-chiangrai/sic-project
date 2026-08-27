@@ -129,7 +129,7 @@ export class Pmdt07Component implements OnInit {
         if (projectId) queryParams.projectId = projectId;
         if (requirementId) queryParams.requirementId = requirementId;
 
-        this.navigation.navigate(['/feature/pm/pmdt08/new'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification/new'], { queryParams });
     }
 
     goToEdit(id: string): void {
@@ -139,7 +139,7 @@ export class Pmdt07Component implements OnInit {
         if (projectId) queryParams.projectId = projectId;
         if (requirementId) queryParams.requirementId = requirementId;
 
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'edit'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification', id, 'edit'], { queryParams });
     }
 
     goToView(id: string): void {
@@ -149,7 +149,7 @@ export class Pmdt07Component implements OnInit {
         if (projectId) queryParams.projectId = projectId;
         if (requirementId) queryParams.requirementId = requirementId;
 
-        this.navigation.navigate(['/feature/pm/pmdt08', id, 'view'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification', id, 'view'], { queryParams });
     }
 
     printDocument(spec: PmSpecificationModel): void {

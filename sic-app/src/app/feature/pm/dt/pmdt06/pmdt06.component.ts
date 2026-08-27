@@ -121,24 +121,24 @@ export class Pmdt06Component implements OnInit {
 
   goToAdd() {
     if (this.projectId()) {
-      this.navigation.navigate(['/feature/pm/pmdt07/new'], {
+      this.navigation.navigate(['/feature/pm/change-request/new'], {
         queryParams: { projectId: this.projectId() },
       });
     } else {
-      this.navigation.navigate(['/feature/pm/pmdt07/new']);
+      this.navigation.navigate(['/feature/pm/change-request/new']);
     }
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/change-request', id, 'edit']);
   }
 
   goToView(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'view']);
+    this.navigation.navigate(['/feature/pm/change-request', id, 'view']);
   }
 
   goToImpact(id: string) {
-    this.navigation.navigate(['/feature/pm/pmdt07', id, 'edit'], {
+    this.navigation.navigate(['/feature/pm/change-request', id, 'edit'], {
       queryParams: { showImpact: true } // optional
     });
   }
