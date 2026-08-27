@@ -207,26 +207,26 @@ export class Pmrt02Component implements OnInit {
   goToAdd() {
     const customerId = this.filterCustomerId();
     if (customerId) {
-      this.navigation.navigate(['/feature/pm/pmrt02/new'], { queryParams: { customerId } });
+      this.navigation.navigate(['/feature/pm/project/new'], { queryParams: { customerId } });
     } else {
-      this.navigation.navigate(['/feature/pm/pmrt02/new']);
+      this.navigation.navigate(['/feature/pm/project/new']);
     }
   }
 
   goToDashboard(projectId: string) {
-    this.navigation.navigate(['/feature/pm/pmrt03'], {
+    this.navigation.navigate(['/feature/pm/project-dashboard'], {
       queryParams: { projectId: projectId }
     });
   }
 
   goToDetailView(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit'], {
+    this.navigation.navigate(['/feature/pm/project', id, 'edit'], {
       queryParams: { mode: 'view' }
     });
   }
 
   goToEdit(id: string) {
-    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/project', id, 'edit']);
   }
 
   printProject(project: PmCustomerProject) {
@@ -274,7 +274,7 @@ export class Pmrt02Component implements OnInit {
   }
 
   goBackToCustomer() {
-    this.navigation.navigate(['/feature/pm/pmrt01']);
+    this.navigation.navigate(['/feature/pm/customer']);
   }
 
   // ===== Utility =====

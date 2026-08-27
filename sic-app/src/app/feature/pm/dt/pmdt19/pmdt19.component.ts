@@ -144,7 +144,7 @@ export class Pmdt19Component implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/feature/pm/pmrt03'], {
+    this.router.navigate(['/feature/pm/project-dashboard'], {
       queryParams: { projectId: this.customerState.getProjectId() || undefined }
     });
   }

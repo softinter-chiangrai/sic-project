@@ -160,7 +160,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.navigation.navigate(['/feature/pm/pmrt01']);
+    this.navigation.navigate(['/feature/pm/customer']);
   }
 
   submit() {
@@ -188,7 +188,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
             this.formCustomerData.markAsPristine();
-            this.navigation.navigate(['/feature/pm/pmrt01']);
+            this.navigation.navigate(['/feature/pm/customer']);
           });
         },
         error: (err) => {
@@ -200,7 +200,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
             this.formCustomerData.markAsPristine();
-            this.navigation.navigate(['/feature/pm/pmrt01']);
+            this.navigation.navigate(['/feature/pm/customer']);
           });
         },
         error: (err) => {

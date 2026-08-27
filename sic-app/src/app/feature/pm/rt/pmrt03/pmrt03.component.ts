@@ -67,7 +67,7 @@ export class Pmrt03Component implements OnInit {
   // ===== Navigation Actions =====
   goToEdit() {
     const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/pmrt02', id, 'edit']);
+    this.navigation.navigate(['/feature/pm/project', id, 'edit']);
   }
 
   goToPhases() {
@@ -92,7 +92,7 @@ export class Pmrt03Component implements OnInit {
 
   goToContracts() {
     const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/contract'], { queryParams: { projectId: id } });
   }
 
   goToDiscussion() {
@@ -137,7 +137,7 @@ export class Pmrt03Component implements OnInit {
 
   goToChangeRequests() {
     const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/pmdt07'], { queryParams: { projectId: id } });
+    this.navigation.navigate(['/feature/pm/change-request'], { queryParams: { projectId: id } });
   }
 
   goToAuditLog() {
@@ -154,7 +154,7 @@ export class Pmrt03Component implements OnInit {
   }
 
   goBack() {
-    this.navigation.navigate(['/feature/pm/pmrt02']);
+    this.navigation.navigate(['/feature/pm/project']);
   }
 
   // ===== Utility =====

@@ -259,24 +259,15 @@ export class Pmrt04Component implements OnInit {
   }
 
   goToEdit(id: string) {
-    const projectId = this.filterProjectId();
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit'], {
-      queryParams: { projectId }
-    });
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'edit']);
   }
 
   goToView(id: string) {
-    const projectId = this.filterProjectId();
-    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view'], {
-      queryParams: { projectId }
-    });
+    this.navigation.navigate(['/feature/pm/pmrt04', id, 'view']);
   }
 
   goToRenew(contractId: string) {
-    const projectId = this.filterProjectId();
-    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId], {
-      queryParams: { projectId }
-    });
+    this.navigation.navigate(['/feature/pm/pmrt04/renew', contractId]);
   }
 
   printContract(contract: Contract) {
@@ -315,16 +306,16 @@ export class Pmrt04Component implements OnInit {
   goBackToCustomer() {
     const customerId = this.filterCustomerId();
     if (customerId) {
-      this.navigation.navigate(['/feature/pm/pmrt02'], {
+      this.navigation.navigate(['/feature/pm/project'], {
         queryParams: { customerId: customerId },
       });
     } else {
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
     }
   }
 
   goToProject(projectId: string) {
-    this.navigation.navigate(['/feature/pm/pmrt03'], {
+    this.navigation.navigate(['/feature/pm/project-dashboard'], {
       queryParams: { projectId: projectId },
     });
   }

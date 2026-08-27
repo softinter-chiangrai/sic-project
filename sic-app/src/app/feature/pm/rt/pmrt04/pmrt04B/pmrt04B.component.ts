@@ -291,10 +291,10 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     const projectId = this.originalContract?.projectId;
     if (projectId) {
       // ส่ง projectId กลับไปเพื่อให้หน้ารายการแสดงสัญญาของโครงการนั้น
-      this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId } });
+      this.navigation.navigate(['/feature/pm/contract'], { queryParams: { projectId } });
     } else {
       // ถ้าไม่มี projectId ไปหน้า list ทั่วไป
-      this.navigation.navigate(['/feature/pm/pmrt04']);
+      this.navigation.navigate(['/feature/pm/contract']);
     }
   }
 

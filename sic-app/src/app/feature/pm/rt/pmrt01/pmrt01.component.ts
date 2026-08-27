@@ -142,7 +142,7 @@ export class Pmrt01Component implements OnInit {
   }
 
   goToAdd() {
-     this.navigation.navigate(['/feature/pm/pmrt01/new']);
+     this.navigation.navigate(['/feature/pm/customer/new']);
   }
 
   goToEdit(id: string | undefined) {
@@ -150,7 +150,7 @@ export class Pmrt01Component implements OnInit {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
       return;
     }
-    this.navigation.navigate(['/feature/pm/pmrt01', id, 'edit']); 
+    this.navigation.navigate(['/feature/pm/customer', id, 'edit']); 
   }
 
   toggleActive(customer: CustomerModel) {
@@ -234,7 +234,7 @@ export class Pmrt01Component implements OnInit {
   }
   goToProjects(customer: CustomerModel) {
   this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-  this.navigation.navigate(['/feature/pm/pmrt02'], {
+  this.navigation.navigate(['/feature/pm/project'], {
     queryParams: { customerId: customer.id }
   });
 }

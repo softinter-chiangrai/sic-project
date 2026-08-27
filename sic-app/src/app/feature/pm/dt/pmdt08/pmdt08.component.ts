@@ -513,7 +513,7 @@ export class Pmdt08Component implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/feature/pm/pmrt02']);
+    this.router.navigate(['/feature/pm/project']);
   }
 
   loadMore(): void {

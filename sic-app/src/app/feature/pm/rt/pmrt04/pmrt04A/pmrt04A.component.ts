@@ -148,15 +148,15 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   onBack(): void {
     if (this.projectId) {
-      this.navigation.navigate(['/feature/pm/pmrt04'], {
+      this.navigation.navigate(['/feature/pm/contract'], {
         queryParams: { projectId: this.projectId },
       });
     } else if (this.customerId) {
-      this.navigation.navigate(['/feature/pm/pmrt04'], {
+      this.navigation.navigate(['/feature/pm/contract'], {
         queryParams: { customerId: this.customerId },
       });
     } else {
-      this.navigation.navigate(['/feature/pm/pmrt04']);
+      this.navigation.navigate(['/feature/pm/contract']);
     }
   }
 
@@ -213,11 +213,11 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
             this.form.markAsPristine();
             // ✅ กลับไปหน้ารายการสัญญาพร้อม projectId หรือ customerId
             if (this.projectId) {
-              this.navigation.navigate(['/feature/pm/pmrt04'], {
+              this.navigation.navigate(['/feature/pm/contract'], {
                 queryParams: { projectId: this.projectId },
               });
             } else {
-              this.navigation.navigate(['/feature/pm/pmrt04'], {
+              this.navigation.navigate(['/feature/pm/contract'], {
                 queryParams: { customerId: this.customerId },
               });
             }

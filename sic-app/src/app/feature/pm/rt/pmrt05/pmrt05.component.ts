@@ -93,7 +93,7 @@ export class Pmrt05Component implements OnInit {
         const projId = params['projectId'];
         if (!reqId || !projId) {
           this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/project']);
           return;
         }
         this.requirementId.set(reqId);
@@ -118,7 +118,7 @@ export class Pmrt05Component implements OnInit {
         error: (err) => {
           console.error('Load requirement error:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/project']);
         },
       });
   }
@@ -319,13 +319,13 @@ export class Pmrt05Component implements OnInit {
 
   // ===== Navigation Actions =====
   goBack() {
-    this.navigation.navigate(['/feature/pm/pmrt02']);
+    this.navigation.navigate(['/feature/pm/project']);
   }
 
   createSpec() {
     const projId = this.projectId();
     if (!projId) return;
-    this.navigation.navigate(['/feature/pm/pmdt08'], {
+    this.navigation.navigate(['/feature/pm/specification/new'], {
       queryParams: { projectId: projId, requirementId: this.requirementId() },
     });
   }

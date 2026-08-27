@@ -35,7 +35,7 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
       customer: new SicFromData<CustomerModel>(form),
     })),
     catchError(() => {
-      navigation.navigate(['/feature/pm/pmrt01']); // ✅ ใช้ navigation.navigate
+      navigation.navigate(['/feature/pm/customer']); // ✅ ใช้ navigation.navigate
       return EMPTY;
     }),
   );

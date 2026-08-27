@@ -154,7 +154,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         error: (err) => {
           console.error('Load project error:', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการ');
-          this.navigation.navigate(['/feature/pm/pmrt02']);
+          this.navigation.navigate(['/feature/pm/project']);
         },
       });
   }
@@ -163,9 +163,9 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     const customerId = this.form.get('customerId')?.value;
     if (customerId) {
       this.customerState.setCustomer(customerId);
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
     } else {
-      this.navigation.navigate(['/feature/pm/pmrt02']);
+      this.navigation.navigate(['/feature/pm/project']);
     }
   }
 
@@ -192,10 +192,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     request$.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย');
-        // ✅ กลับไป pmrt02 พร้อม customerId (ใช้ CustomerStateService)
+        // ✅ กลับไป project พร้อม customerId (ใช้ CustomerStateService)
         const customerId = this.form.get('customerId')?.value;
         if (customerId) this.customerState.setCustomer(customerId);
-        this.navigation.navigate(['/feature/pm/pmrt02']);
+        this.navigation.navigate(['/feature/pm/project']);
       },
       error: (err) => {
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

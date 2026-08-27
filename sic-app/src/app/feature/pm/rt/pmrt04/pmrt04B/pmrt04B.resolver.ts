@@ -21,7 +21,7 @@ export const pmrt04BResolver: ResolveFn<any> = async (route) => {
     return EMPTY;
   } catch (error) {
     console.error('pmrt04BResolver load contract error:', error);
-    router.navigate(['/feature/pm/pmrt04']);
+    router.navigate(['/feature/pm/contract']);
     return EMPTY;
   }
 };
