@@ -84,7 +84,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setIsDelete(false);
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
-            requirement.setVersion("v1.0");
+            requirement.setVersion("v0.1");
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
             PmRequirement saved = requirementRepository.save(requirement);
@@ -95,7 +95,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getRequirementCode(),
-                    saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                    saved.getVersion() != null ? saved.getVersion() : "v0.1",
                     "Initial requirement version"
             );
             requirement = saved;
@@ -119,7 +119,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
             String oldStatus = requirement.getStatus();
             String oldVersion = requirement.getVersion();
-            if (oldVersion == null) oldVersion = "v1.0";
+            if (oldVersion == null) oldVersion = "v0.1";
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();

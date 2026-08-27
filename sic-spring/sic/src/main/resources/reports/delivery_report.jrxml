@@ -198,7 +198,7 @@
          ======================================================== -->
 	<detail>
 		<band height="24" splitType="Stretch">
-			<element kind="rectangle" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="515" height="24" backcolor="#FFFFFF">
+			<element kind="rectangle" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="515" height="24" backcolor="#FFFFFF">
 				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
 			</element>
 			<element kind="textField" uuid="921ca47b-4d5c-48ca-913b-2a567c82a4c9" positionType="Float" x="6" y="2" width="95" height="20" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="Value">

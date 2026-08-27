@@ -164,7 +164,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getId(),
                 saved.getProjectId(),
                 saved.getName(),
-                "v1.0",
+                "v0.1",
                 "Initial version");
 
         return toResponse(saved);
@@ -362,7 +362,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         documentVersionService.createVersion(
                 saved.getDiagramType().toUpperCase(),
                 saved.getId(),
-                "v1.0",
+                "v0.1",
                 "Duplicated from " + original.getName());
 
         return toResponse(saved);
@@ -469,11 +469,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private String getCurrentVersion(PmDiagramTab tab) {
         if (tab.getId() == null)
-            return "v1.0";
+            return "v0.1";
         List<PmDiagramVersion> versions = versionRepository
                 .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
         if (versions.isEmpty())
-            return "v1.0";
+            return "v0.1";
         return "v" + versions.get(0).getVersionNumber();
     }
 

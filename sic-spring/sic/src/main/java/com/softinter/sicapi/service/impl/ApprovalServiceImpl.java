@@ -696,17 +696,21 @@ public class ApprovalServiceImpl implements ApprovalService {
     private void updateDocumentStatusOnApprove(PmApproval approval) {
         String docType = approval.getDocumentType();
         UUID docId = approval.getDocumentId();
+        String currentVer = approval.getVersion();
+        final String majorVersion = versionService.promoteToMajorVersion(currentVer);
 
         switch (docType.toUpperCase()) {
             case "REQUIREMENT":
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Approved");
+                    req.setVersion(majorVersion);
                     requirementRepository.save(req);
                 });
                 break;
             case "SPECIFICATION":
                 specificationRepository.findById(docId).ifPresent(spec -> {
                     spec.setStatus("Approved");
+                    spec.setVersion(majorVersion);
                     specificationRepository.save(spec);
                 });
                 break;
@@ -732,14 +736,14 @@ public class ApprovalServiceImpl implements ApprovalService {
             versionReq.setDocumentType(docType);
             versionReq.setDocumentId(docId);
             versionReq.setDocumentCode(approval.getDocumentCode());
-            versionReq.setVersionNo(approval.getVersion() != null ? approval.getVersion() : "v1.0");
+            versionReq.setVersionNo(majorVersion);
             versionReq.setChangeSummary("Automatic version generated upon approval");
             versionReq.setApprovalStatus("APPROVED");
             versionReq.setApprovedBy(approval.getFinalApprover());
             versionReq.setApprovedDate(Instant.now());
             versionReq.setIsActive(true);
             versionService.saveVersion(versionReq);
-            log.info("Auto document version created for {} - {}", docType, docId);
+            log.info("Auto document version created for {} - {} with major version {}", docType, docId, majorVersion);
         } catch (Exception e) {
             log.error("Error generating auto version on approval: {}", e.getMessage(), e);
         }

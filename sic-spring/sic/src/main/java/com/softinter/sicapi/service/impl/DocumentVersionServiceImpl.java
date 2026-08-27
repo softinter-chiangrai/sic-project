@@ -180,19 +180,55 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     public String incrementVersion(String currentVersion) {
         if (currentVersion == null || currentVersion.isBlank()) {
+            return "v0.1";
+        }
+        try {
+            boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
+            String numPart = hasPrefix ? currentVersion.substring(1).trim() : currentVersion.trim();
+            
+            // Support X.Y format
+            if (numPart.contains(".")) {
+                String[] parts = numPart.split("\\.");
+                long major = Long.parseLong(parts[0]);
+                long minor = Long.parseLong(parts[1]);
+                minor += 1;
+                return (hasPrefix ? "v" : "") + major + "." + minor;
+            } else {
+                long major = Long.parseLong(numPart);
+                return (hasPrefix ? "v" : "") + major + ".1";
+            }
+        } catch (Exception e) {
+            log.warn("Could not increment version: {}, returning v0.1", currentVersion);
+            return "v0.1";
+        }
+    }
+
+    @Override
+    public String promoteToMajorVersion(String currentVersion) {
+        if (currentVersion == null || currentVersion.isBlank()) {
             return "v1.0";
         }
         try {
-            String numPart = currentVersion;
-            if (currentVersion.startsWith("v") || currentVersion.startsWith("V")) {
-                numPart = currentVersion.substring(1);
+            boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
+            String numPart = hasPrefix ? currentVersion.substring(1).trim() : currentVersion.trim();
+            
+            if (numPart.contains(".")) {
+                String[] parts = numPart.split("\\.");
+                long major = Long.parseLong(parts[0]);
+                long minor = Long.parseLong(parts[1]);
+                if (major == 0) {
+                    major = 1;
+                } else if (minor > 0) {
+                    major += 1;
+                }
+                return (hasPrefix ? "v" : "") + major + ".0";
+            } else {
+                long major = Long.parseLong(numPart);
+                if (major == 0) major = 1;
+                return (hasPrefix ? "v" : "") + major + ".0";
             }
-            double val = Double.parseDouble(numPart);
-            val += 0.1;
-            String newNum = String.format("%.1f", val);
-            return (currentVersion.startsWith("v") || currentVersion.startsWith("V")) ? "v" + newNum : newNum;
-        } catch (NumberFormatException e) {
-            log.warn("Could not increment version: {}, returning v1.0", currentVersion);
+        } catch (Exception e) {
+            log.warn("Could not promote to major version: {}, returning v1.0", currentVersion);
             return "v1.0";
         }
     }

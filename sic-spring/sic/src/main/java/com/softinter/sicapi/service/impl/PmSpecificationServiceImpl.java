@@ -120,7 +120,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("v1.0");
+            spec.setVersion("v0.1");
             spec.setStatus("Draft");
             spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -152,7 +152,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         saved.getId(),
                         saved.getProject().getId(),
                         saved.getSpecificationCode(),
-                        saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                        saved.getVersion() != null ? saved.getVersion() : "v0.1",
                         "Initial specification version"
                 );
             }
@@ -200,7 +200,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
             }
 
-            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0";
+            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v0.1";
             String oldStatus = spec.getStatus();
 
             // ✅ Auto Diff Detection
@@ -222,7 +222,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             mapRequestToEntity(request, spec);
 
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
-            String newVersion = incrementVersion(oldVersion);
+            String newVersion = documentVersionService.incrementVersion(oldVersion);
             spec.setVersion(newVersion);
             spec = specificationRepository.save(spec);
 
@@ -383,24 +383,5 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         response.setUpdatedDate(spec.getUpdatedDate());
 
         return response;
-    }
-
-    private String incrementVersion(String currentVersion) {
-        if (currentVersion == null || currentVersion.isBlank()) {
-            return "v1.0";
-        }
-        try {
-            String numPart = currentVersion;
-            if (currentVersion.startsWith("v") || currentVersion.startsWith("V")) {
-                numPart = currentVersion.substring(1);
-            }
-            double val = Double.parseDouble(numPart);
-            val += 0.1;
-            String newNum = String.format("%.1f", val);
-            return (currentVersion.startsWith("v") || currentVersion.startsWith("V")) ? "v" + newNum : newNum;
-        } catch (NumberFormatException e) {
-            log.warn("ไม่สามารถเพิ่มเวอร์ชันได้: {}, ใช้ v1.0", currentVersion);
-            return "v1.0";
-        }
     }
 }

@@ -130,7 +130,7 @@
 				<expression><![CDATA["เวอร์ชัน:"]]></expression>
 			</element>
 			<element kind="textField" uuid="d61ebca5-0e69-42b7-a068-d0df545b63bc" positionType="Float" x="365" y="56" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-				<expression><![CDATA[$F{version} != null ? $F{version} : "v1.0"]]></expression>
+				<expression><![CDATA[$F{version} != null ? $F{version} : "v0.1"]]></expression>
 			</element>
 
 			<!-- Row 3 -->

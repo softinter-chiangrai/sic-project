@@ -127,6 +127,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setCreatedDate(Instant.now());
             entity.setIsDelete(false);
             entity.setIsLocked(false);
+            entity.setDeliveryVersion("0.1");
             mapRequestToEntity(request, entity);
             entity = deliveryRepository.save(entity);
 
@@ -136,7 +137,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                     entity.getId(),
                     entity.getProjectId(),
                     entity.getDeliveryCode(),
-                    "v1.0",
+                    "v" + entity.getDeliveryVersion(),
                     "สร้างเอกสารส่งมอบงวดงาน (Initial delivery)"
             );
 
@@ -186,7 +187,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 snapshotJson = mapper.writeValueAsString(entity);
             } catch (Exception ignored) {}
 
-            String nextVersion = "v" + (entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "1.0");
+            String nextVersion = "v" + (entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1");
             documentVersionService.createVersion(
                     "DELIVERY",
                     entity.getId(),
@@ -463,7 +464,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setContractId(req.getContractId());
         entity.setMilestoneId(req.getMilestoneId());
         entity.setDeliveryDate(req.getDeliveryDate());
-        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "1.0");
+        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "0.1");
         entity.setReleaseNote(req.getReleaseNote());
         entity.setDeliverySummary(req.getDeliverySummary());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");

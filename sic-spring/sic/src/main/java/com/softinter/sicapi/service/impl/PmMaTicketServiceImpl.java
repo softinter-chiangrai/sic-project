@@ -116,7 +116,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getTicketNo(),
-                "v1.0",
+                "v0.1",
                 diffSummary,
                 snapshotJson
         );

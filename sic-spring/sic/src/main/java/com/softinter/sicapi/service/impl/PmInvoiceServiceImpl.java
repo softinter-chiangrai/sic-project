@@ -116,7 +116,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getInvoiceNo(),
-                "v1.0",
+                "v0.1",
                 diffSummary,
                 snapshotJson
         );

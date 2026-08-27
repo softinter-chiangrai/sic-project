@@ -95,12 +95,6 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/pmrt04'], { queryParams: { projectId: id } });
   }
 
-  goToPlanning() {
-    const id = this.projectId();
-    // ไปที่หน้า Task (Planning) หรือถ้ามีหน้า Planning แยกก็เปลี่ยน path
-    this.navigation.navigate(['/feature/pm/task'], { queryParams: { projectId: id } });
-  }
-
   goToDiscussion() {
     const id = this.projectId();
     this.navigation.navigate(['/feature/pm/discussion'], { queryParams: { projectId: id } });

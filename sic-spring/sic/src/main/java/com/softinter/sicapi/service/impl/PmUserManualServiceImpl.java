@@ -115,7 +115,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getManualCode(),
-                entity.getVersion() != null ? entity.getVersion() : "v1.0",
+                entity.getVersion() != null ? entity.getVersion() : "v0.1",
                 diffSummary,
                 snapshotJson
         );
@@ -168,7 +168,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         entity.setManualCode(req.getManualCode());
         entity.setManualTitle(req.getManualTitle());
         entity.setManualType(req.getManualType() != null ? req.getManualType() : "USER");
-        entity.setVersion(req.getVersion() != null ? req.getVersion() : "1.0");
+        entity.setVersion(req.getVersion() != null ? req.getVersion() : "0.1");
         entity.setRelatedSpecId(req.getRelatedSpecId());
         entity.setDeliveryId(req.getDeliveryId());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");

@@ -33,5 +33,7 @@ public interface DocumentVersionService {
 
     String incrementVersion(String currentVersion);
 
+    String promoteToMajorVersion(String currentVersion);
+
     boolean isVersionExists(String documentType, UUID documentId);
 }

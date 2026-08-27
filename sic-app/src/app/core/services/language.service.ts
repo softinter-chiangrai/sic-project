@@ -32,7 +32,7 @@ export class LanguageService {
     this.translate.use(lang);
     this.updateHtmlLang(lang);
 
-    // ✅ reload หน้าปัจจุบัน
+    // Reload page to refresh all components and dynamic labels according to chosen language
     if (isPlatformBrowser(this.platformId)) {
       window.location.reload();
     }
