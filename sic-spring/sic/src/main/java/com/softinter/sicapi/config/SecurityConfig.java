@@ -3,7 +3,6 @@ package com.softinter.sicapi.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,7 +18,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.Collection;
@@ -39,16 +37,7 @@ public class SecurityConfig {
     private String realm;
 
     @Bean
-    public FilterRegistrationBean<BusinessContextFilter> businessContextFilterRegistration(
-            BusinessContextFilter filter) {
-        FilterRegistrationBean<BusinessContextFilter> registration = new FilterRegistrationBean<>(filter);
-        registration.setEnabled(false);
-        return registration;
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, BusinessContextFilter businessContextFilter)
-            throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -71,9 +60,8 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder())
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter()) // ✅ เพิ่มตรงนี้!
-                        ))
-                .addFilterAfter(businessContextFilter, BearerTokenAuthenticationFilter.class);
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        ));
 
         return http.build();
     }
