@@ -124,10 +124,12 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <sic-table-actions
-                  [showView]="false"
+                  [showView]="true"
                   [showEdit]="true"
-                  [showPrint]="false"
+                  [showPrint]="true"
                   [showDelete]="true"
+                  (onView)="goToView(item.id)"
+                  (onPrint)="printTicket(item)"
                   (onEdit)="goToEdit(item.id)"
                   (onDelete)="deleteTicket(item.id)">
                 </sic-table-actions>

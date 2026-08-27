@@ -416,7 +416,7 @@ export class Pmdt12Component implements OnInit {
     });
   }
 
-  quickCreateBugTask(testCase: PmTestCaseModel, event: MouseEvent) {
+  quickCreateBugTask(testCase: PmTestCaseModel, event: Event): void {
     event.stopPropagation();
 
     if (!testCase.taskId) {

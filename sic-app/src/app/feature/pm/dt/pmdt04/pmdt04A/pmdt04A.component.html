@@ -45,22 +45,13 @@
       <!-- Export Buttons -->
       <div class="flex gap-1">
         <button
-          (click)="exportRequirement('pdf')"
+          (click)="exportRequirement()"
           [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all"
-          title="ส่งออก PDF"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-all cursor-pointer"
+          title="ส่งออก PDF (JasperReports)"
         >
           <i class="bi bi-filetype-pdf"></i>
-          PDF
-        </button>
-        <button
-          (click)="exportRequirement('docx')"
-          [disabled]="isSaving || form.invalid"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 transition-all"
-          title="ส่งออก Word"
-        >
-          <i class="bi bi-file-word"></i>
-          DOCX
+          PDF (Jasper)
         </button>
       </div>
     </div>

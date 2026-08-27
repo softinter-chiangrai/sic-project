@@ -1,0 +1,15 @@
+/* Dashboard Host Styling */
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Custom scrollbars for category chips if overflowing */
+::-webkit-scrollbar {
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}

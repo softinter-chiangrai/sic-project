@@ -1,17 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 import { Pmdt14AService } from './pmdt14A/pmdt14A.service';
 import { PmDeliveryModel } from './pmdt14A/pmdt14A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent, SicDatePipe],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -20,6 +24,7 @@ export class Pmdt14Component implements OnInit {
   private readonly router = inject(Router);
   private readonly service = inject(Pmdt14AService);
   private readonly dialog = inject(DialogService);
+  private readonly http = inject(HttpClient);
 
   deliveries = signal<PmDeliveryModel[]>([]);
   isLoading = signal(false);
@@ -116,6 +121,35 @@ export class Pmdt14Component implements OnInit {
 
   goToEdit(id: string): void {
     this.router.navigate(['/feature/pm/delivery', id, 'edit']);
+  }
+
+  printDocument(item: PmDeliveryModel): void {
+    if (!item.id) {
+      this.dialog.warn('ไม่พบรหัสเอกสารส่งมอบ', 'ไม่สามารถพิมพ์เอกสารได้');
+      return;
+    }
+
+    this.isLoading.set(true);
+    const url = `${environment.apiBaseUrl}/api/pm/delivery/${item.id}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print delivery error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+        },
+      });
   }
 
   onDelete(id: string): void {

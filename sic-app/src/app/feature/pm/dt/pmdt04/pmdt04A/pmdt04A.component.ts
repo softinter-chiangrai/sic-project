@@ -474,21 +474,20 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     return map[status] || 'draft';
   }
 
-  // ===== Export =====
-  async exportRequirement(format: 'pdf' | 'docx' | 'html'): Promise<void> {
-    if (this.form.invalid) {
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่งออก');
+  // ===== Export (JasperReports PDF) =====
+  async exportRequirement(): Promise<void> {
+    const id = this.reqId || this.form.get('id')?.value;
+    if (!id) {
+      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งออกเอกสาร');
       return;
     }
 
-    const data = this.form.value;
     this.isSaving = true;
 
     try {
-      // First, ensure the requirement is saved
       if (this.form.dirty) {
         await new Promise<void>((resolve, reject) => {
-          this.service.save(data).subscribe({
+          this.service.save(this.form.value).subscribe({
             next: () => {
               this.form.markAsPristine();
               resolve();
@@ -498,27 +497,23 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         });
       }
 
-      // Get the latest data with ID
-      const exportData = {
-        ...data,
-        id: data.id || this.reqId,
-      };
-
-      const blob = await this.exportService.exportRequirement(exportData, format);
+      const blob = await this.exportService.exportWithJasper(id, 'pdf');
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${data.requirementCode || 'requirement'}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
+      link.download = `${this.form.value.requirementCode || 'requirement'}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      this.dialog.success('ส่งออกสำเร็จ', `ไฟล์ ${format.toUpperCase()} ถูกสร้างเรียบร้อย`);
+      this.dialog.success('ส่งออกสำเร็จ', 'ไฟล์ PDF จาก JasperReports ถูกดาวน์โหลดเรียบร้อย');
     } catch (error: any) {
-      this.dialog.error('ส่งออกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+      console.error('Export error:', error);
+      this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 

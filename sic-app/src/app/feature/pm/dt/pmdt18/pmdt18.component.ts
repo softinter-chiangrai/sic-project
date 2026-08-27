@@ -1,17 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { httpResource } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt18AService } from './pmdt18A/pmdt18A.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, SicTableActionsComponent, SicDatePipe],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +22,8 @@ export class Pmdt18Component implements OnInit {
   private router = inject(Router);
   private service = inject(Pmdt18AService);
   private dialog = inject(DialogService);
+  private http = inject(HttpClient);
+  isLoading = signal(false);
 
   currentPage = signal(0);
   pageSize = signal(10);
@@ -98,8 +102,41 @@ export class Pmdt18Component implements OnInit {
     this.router.navigate(['/feature/pm/renewal/new']);
   }
 
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/renewal', id, 'view']);
+  }
+
   goToEdit(id: string) {
     this.router.navigate(['/feature/pm/renewal', id, 'edit']);
+  }
+
+  printRenewal(item: any) {
+    if (!item.id) {
+      this.dialog.warn('ไม่พบรหัสข้อเสนอต่อสัญญา', 'ไม่สามารถพิมพ์เอกสารได้');
+      return;
+    }
+
+    this.isLoading.set(true);
+    const url = `${apiBaseUrl}/api/pm/renewals/${item.id}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print renewal error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+        },
+      });
   }
 
   deleteRenewal(id: string) {

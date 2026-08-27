@@ -103,7 +103,7 @@
                 v{{ item.deliveryVersion }}
               </td>
               <td class="px-4 py-3 text-xs text-[var(--text)]">
-                {{ item.deliveryDate || '-' }}
+                {{ item.deliveryDate ? (item.deliveryDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
               </td>
               <td class="px-4 py-3">
                 <div class="flex flex-col items-start gap-1">
@@ -128,9 +128,10 @@
                 <sic-table-actions
                   [showView]="true"
                   [showEdit]="true"
-                  [showPrint]="false"
+                  [showPrint]="true"
                   [showDelete]="true"
                   (onView)="goToView(item.id!)"
+                  (onPrint)="printDocument(item)"
                   (onEdit)="goToEdit(item.id!)"
                   (onDelete)="onDelete(item.id!)">
                 </sic-table-actions>

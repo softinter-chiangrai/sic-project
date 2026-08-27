@@ -49,6 +49,10 @@ export class Pmdt15Component implements OnInit {
     this.router.navigate(['/feature/pm/manual/new']);
   }
 
+  goToView(id: string): void {
+    this.router.navigate(['/feature/pm/manual', id, 'edit'], { queryParams: { mode: 'view' } });
+  }
+
   goToEdit(id: string): void {
     this.router.navigate(['/feature/pm/manual', id, 'edit']);
   }

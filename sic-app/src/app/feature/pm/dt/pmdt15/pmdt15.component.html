@@ -65,11 +65,12 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <sic-table-actions
-                    [showView]="false"
+                    [showView]="true"
                     [showEdit]="true"
                     [showPrint]="false"
                     [showDelete]="true"
                     editTitle="แก้ไข / เขียนเนื้อหา"
+                    (onView)="goToView(item.id)"
                     (onEdit)="goToEdit(item.id)"
                     (onDelete)="onDelete(item.id)">
                   </sic-table-actions>

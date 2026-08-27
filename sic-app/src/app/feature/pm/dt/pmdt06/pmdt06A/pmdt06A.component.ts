@@ -27,6 +27,7 @@ import { BusinessService } from '../../../../../core/services/business.service';
 import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 
+import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { ChangeRequestFormModel } from './pmdt06A.model';
 
 @Component({
@@ -43,6 +44,7 @@ import { ChangeRequestFormModel } from './pmdt06A.model';
         SicComboboxComponent,
         SicNumberComponent,
         SicCardComponent,
+        SicDatePipe,
     ],
     changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt06A.component.html',

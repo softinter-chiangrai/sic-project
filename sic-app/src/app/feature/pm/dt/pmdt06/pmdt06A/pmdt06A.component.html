@@ -186,7 +186,7 @@
                   </span>
                   @if (impact.analyzedAt) {
                     <span class="text-[var(--text-muted)] ml-2 text-xs">
-                      {{ impact.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+                      {{ impact.analyzedAt | sicDate: null : 'DD/MM/YYYY HH:mm' }}
                     </span>
                   }
                 </div>

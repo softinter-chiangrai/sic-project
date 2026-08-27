@@ -527,89 +527,71 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     // ===== Print =====
     printSpecification(): void {
-        const spec = this.getPreviewData();
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        if (!printWindow) {
-            this.dialog.warn('เปิดหน้าพิมพ์ไม่สำเร็จ', 'กรุณาอนุญาต Pop-up บนบราวเซอร์');
+        const id = this.specId || this.form.getRawValue().id;
+        if (!id) {
+            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Specification ก่อนพิมพ์เอกสาร');
             return;
         }
 
-        const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Specification - ${spec.specificationCode || ''}</title>
-        <style>
-          body { font-family: 'Sarabun', sans-serif; padding: 24px; color: #333; line-height: 1.6; }
-          h1 { font-size: 20px; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
-          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          .info-table td { padding: 8px 12px; border: 1px solid #eee; }
-          .info-table td.label { font-weight: bold; background-color: #f9f9f9; width: 25%; }
-          .content { font-size: 14px; margin-top: 16px; }
-          @media print {
-            body { padding: 0; }
-          }
-        </style>
-      </head>
-      <body>
-        <h1>[${spec.specificationCode || '-'}] ${spec.title || 'Specification Detail'}</h1>
-        <table class="info-table">
-          <tr>
-            <td class="label">รหัสเอกสาร</td>
-            <td>${spec.specificationCode || '-'}</td>
-            <td class="label">เวอร์ชัน</td>
-            <td>${spec.version || '1.0'}</td>
-          </tr>
-          <tr>
-            <td class="label">ชื่อโครงการ</td>
-            <td>${spec.projectName || '-'}</td>
-            <td class="label">ประเภท</td>
-            <td>${spec.specificationType || spec.specType || '-'}</td>
-          </tr>
-          <tr>
-            <td class="label">ความสำคัญ (Priority)</td>
-            <td>${spec.priority || '-'}</td>
-            <td class="label">สถานะ</td>
-            <td>${spec.status || 'Draft'}</td>
-          </tr>
-          <tr>
-            <td class="label">ผู้สร้าง / Owner</td>
-            <td>${spec.owner || spec.createdBy || '-'}</td>
-            <td class="label">Manday (วัน)</td>
-            <td>${spec.estimatedManday || 0}</td>
-          </tr>
-        </table>
-        <div class="content">
-          <h3>รายละเอียด / ข้อกำหนด</h3>
-          <div>${spec.description || '-'}</div>
-        </div>
-      </body>
-      </html>
-    `;
-
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-            printWindow.print();
-        }, 300);
+        this.isLoading = true;
+        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
+        this.http.get(url, { responseType: 'blob' })
+            .pipe(finalize(() => {
+                this.isLoading = false;
+                this.cdr.markForCheck();
+            }))
+            .subscribe({
+                next: (blob) => {
+                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    const printWindow = window.open(pdfUrl, '_blank');
+                    if (!printWindow) {
+                        const a = document.createElement('a');
+                        a.href = pdfUrl;
+                        a.target = '_blank';
+                        a.click();
+                    }
+                },
+                error: (err) => {
+                    console.error('Print specification error:', err);
+                    this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                },
+            });
     }
 
-    // ===== Export =====
-    async exportSpecification(format: 'pdf' | 'docx'): Promise<void> {
-        try {
-            const data = this.prepareSubmitData();
-            const blob = await this.exportService.exportSpecification(data, format);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Specification_${data.specificationCode || 'Export'}_${new Date().getTime()}.${format === 'pdf' ? 'pdf' : format === 'docx' ? 'docx' : 'html'}`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        } catch {
-            this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการส่งออกไฟล์');
+    // ===== Export (JasperReports PDF) =====
+    exportSpecification(): void {
+        const id = this.specId || this.form.getRawValue().id;
+        if (!id) {
+            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Specification ก่อนส่งออกเอกสาร');
+            return;
         }
+
+        this.isLoading = true;
+        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
+        this.http.get(url, { responseType: 'blob' })
+            .pipe(finalize(() => {
+                this.isLoading = false;
+                this.cdr.markForCheck();
+            }))
+            .subscribe({
+                next: (blob) => {
+                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = pdfUrl;
+                    a.download = `Specification_${this.form.getRawValue().specificationCode || id}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(pdfUrl);
+                    this.dialog.success('ส่งออกสำเร็จ', 'ไฟล์ PDF จาก JasperReports ถูกดาวน์โหลดเรียบร้อย');
+                },
+                error: (err) => {
+                    console.error('Export specification error:', err);
+                    this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                },
+            });
     }
 
     // ===== Submit =====

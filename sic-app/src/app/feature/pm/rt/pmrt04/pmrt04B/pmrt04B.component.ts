@@ -121,12 +121,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     );
   }
 
-  /**
-   * คำนวณเลขที่สัญญาใหม่สำหรับการต่อสัญญาแบบ Auto-increment
-   * ตัวอย่าง: CTR-2024 -> CTR-2024-R1
-   *         CTR-2024-R1 -> CTR-2024-R2
-   *         CTR-2024-R -> CTR-2024-R1
-   */
   private computeRenewalContractNo(originalContractNo: string): string {
     if (!originalContractNo) return '';
     const match = originalContractNo.match(/^(.*?)-R(\d+)$/i);

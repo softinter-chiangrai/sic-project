@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { httpResource } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt17AService } from './pmdt17A/pmdt17A.service';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -20,6 +21,8 @@ export class Pmdt17Component implements OnInit {
   private router = inject(Router);
   private service = inject(Pmdt17AService);
   private dialog = inject(DialogService);
+  private http = inject(HttpClient);
+  isLoading = signal(false);
 
   currentPage = signal(0);
   pageSize = signal(10);
@@ -99,8 +102,41 @@ export class Pmdt17Component implements OnInit {
     this.router.navigate(['/feature/pm/ma-ticket/new']);
   }
 
+  goToView(id: string) {
+    this.router.navigate(['/feature/pm/ma-ticket', id, 'view']);
+  }
+
   goToEdit(id: string) {
     this.router.navigate(['/feature/pm/ma-ticket', id, 'edit']);
+  }
+
+  printTicket(item: any) {
+    if (!item.id) {
+      this.dialog.warn('ไม่พบรหัสตั๋ว MA', 'ไม่สามารถพิมพ์เอกสารได้');
+      return;
+    }
+
+    this.isLoading.set(true);
+    const url = `${apiBaseUrl}/api/pm/ma-tickets/${item.id}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print ticket error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+        },
+      });
   }
 
   deleteTicket(id: string) {

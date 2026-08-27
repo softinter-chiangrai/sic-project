@@ -104,7 +104,7 @@
                 <div class="text-xs text-[var(--text-muted)]">{{ item.projectName || 'N/A' }}</div>
               </td>
               <td class="px-4 py-3 text-xs text-[var(--text)]">
-                {{ item.newStartDate || '-' }} ถึง {{ item.newEndDate || '-' }}
+                {{ item.newStartDate ? (item.newStartDate | sicDate: null : 'DD/MM/YYYY') : '-' }} ถึง {{ item.newEndDate ? (item.newEndDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
               </td>
               <td class="px-4 py-3 text-right font-bold text-[var(--crm-primary)]">
                 {{ item.proposedAmount | currency:'THB':'symbol':'1.2-2' }}
@@ -116,10 +116,12 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <sic-table-actions
-                  [showView]="false"
+                  [showView]="true"
                   [showEdit]="true"
-                  [showPrint]="false"
+                  [showPrint]="true"
                   [showDelete]="true"
+                  (onView)="goToView(item.id)"
+                  (onPrint)="printRenewal(item)"
                   (onEdit)="goToEdit(item.id)"
                   (onDelete)="deleteRenewal(item.id)">
                 </sic-table-actions>

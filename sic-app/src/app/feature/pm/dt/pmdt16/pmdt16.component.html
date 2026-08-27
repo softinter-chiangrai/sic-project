@@ -106,7 +106,7 @@
                 {{ item.billingType }}
               </td>
               <td class="px-4 py-3 text-xs text-[var(--text)]">
-                {{ item.dueDate || '-' }}
+                {{ item.dueDate ? (item.dueDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
               </td>
               <td class="px-4 py-3 text-right font-semibold text-[var(--text-active)]">
                 {{ item.totalAmount | currency:'THB':'symbol':'1.2-2' }}
@@ -121,10 +121,12 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <sic-table-actions
-                  [showView]="false"
+                  [showView]="true"
                   [showEdit]="true"
-                  [showPrint]="false"
+                  [showPrint]="true"
                   [showDelete]="true"
+                  (onView)="goToView(item.id)"
+                  (onPrint)="printInvoice(item)"
                   (onEdit)="goToEdit(item.id)"
                   (onDelete)="deleteInvoice(item.id)">
                 </sic-table-actions>

@@ -6,11 +6,12 @@ import { Pmdt19AService } from './pmdt19A/pmdt19A.service';
 import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SicDatePipe],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

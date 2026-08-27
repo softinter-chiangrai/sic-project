@@ -102,7 +102,7 @@
                   </div>
                 </td>
                 <td class="px-4 py-3.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
-                  {{ ver.createdDate | date:'dd/MM/yyyy HH:mm' }}
+                  {{ ver.createdDate ? (ver.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
                 </td>
                 <td class="px-4 py-3.5">
                   @if (ver.isActive) {
