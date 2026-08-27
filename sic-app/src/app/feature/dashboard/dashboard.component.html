@@ -9,11 +9,11 @@
         <img
           [src]="profileImage"
           alt="Avatar"
-          class="w-14 h-14 rounded-2xl object-cover border-2 border-[var(--crm-primary,#0d6efd)] p-0.5 shadow-sm"
+          class="w-14 h-14 rounded-2xl object-cover border-2 border-[var(--crm-primary)] p-0.5 shadow-sm"
           (error)="$any($event.target).src = 'images/profile.png'"
         />
         <span
-          class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[var(--sidebar)] rounded-full"
+          class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[var(--crm-primary)] border-2 border-[var(--sidebar)] rounded-full"
           title="Online"
         ></span>
       </div>
@@ -25,8 +25,8 @@
             class="px-2.5 py-0.5 text-xs font-semibold rounded-full border"
             [ngClass]="
               isAdmin()
-                ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                ? 'bg-[var(--crm-danger)]/10 text-[var(--crm-danger)] border-[var(--crm-danger)]/20'
+                : 'bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border-[var(--crm-primary)]/20'
             "
           >
             <i class="bi" [ngClass]="isAdmin() ? 'bi-shield-lock-fill me-1' : 'bi-person-badge-fill me-1'"></i>
@@ -43,7 +43,7 @@
           ยินดีต้อนรับ, {{ profile()?.name || 'ผู้ใช้งาน' }} 👋
         </h1>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          มีรายการตรวจแบบค้าง <strong class="text-rose-500 font-semibold">{{ pendingDesignReviews().length }} รายการ</strong> และโครงการที่ดำเนินงานอยู่ <strong class="text-blue-500 font-semibold">{{ realProjects().length }} โครงการ</strong>
+          มีรายการตรวจแบบค้าง <strong class="text-[var(--crm-danger)] font-semibold">{{ pendingDesignReviews().length }} รายการ</strong> และโครงการที่ดำเนินงานอยู่ <strong class="text-[var(--crm-primary)] font-semibold">{{ realProjects().length }} โครงการ</strong>
         </p>
       </div>
     </div>
@@ -52,7 +52,7 @@
     <div class="flex items-center gap-2">
       <button
         (click)="loadAllRealData()"
-        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all"
         title="รีเฟรชข้อมูลจากฐานข้อมูลจริง"
       >
         <i class="bi bi-arrow-repeat text-sm" [class.animate-spin]="isLoading()"></i>
@@ -68,7 +68,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
       <div>
         <h2 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-grid-fill text-[var(--crm-primary,#0d6efd)]"></i>
+          <i class="bi bi-grid-fill text-[var(--crm-primary)]"></i>
           ศูนย์รวมโปรแกรมตามสิทธิ์ (Smart Program Launcher)
         </h2>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
@@ -86,7 +86,7 @@
               class="px-3 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all"
               [ngClass]="
                 selectedCategory() === cat
-                  ? 'bg-[var(--crm-primary,#0d6efd)] text-white shadow-sm'
+                  ? 'bg-[var(--crm-primary)] text-white shadow-sm'
                   : 'bg-[var(--sidebar-hover)] text-[var(--text-muted)] hover:text-[var(--text-active)] border border-[var(--border)]'
               "
             >
@@ -103,7 +103,7 @@
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="ค้นหารหัส / ชื่อโปรแกรม..."
-            class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar-hover)] text-[var(--text-active)] focus:outline-none focus:border-blue-500 transition-all"
+            class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
           />
           @if (searchQuery()) {
             <button
@@ -122,16 +122,16 @@
       @for (prog of filteredTiles(); track prog.code) {
         <a
           [routerLink]="prog.path"
-          class="flex flex-col items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)]/30 hover:bg-[var(--sidebar-hover)] hover:border-blue-500/50 hover:shadow-md transition-all group cursor-pointer text-center relative overflow-hidden"
+          class="flex flex-col items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/50 hover:shadow-md transition-all group cursor-pointer text-center relative overflow-hidden"
         >
           <!-- Real Notification Badge -->
           @if (prog.badgeCount) {
             <span
               class="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-sm"
               [ngClass]="{
-                'bg-rose-500 text-white': prog.badgeType === 'danger',
-                'bg-amber-500 text-white': prog.badgeType === 'warning',
-                'bg-blue-500 text-white': prog.badgeType === 'info'
+                'bg-[var(--crm-danger)] text-white': prog.badgeType === 'danger',
+                'bg-[var(--crm-warning)] text-white': prog.badgeType === 'warning',
+                'bg-[var(--crm-primary)] text-white': prog.badgeType === 'info' || prog.badgeType === 'success'
               }"
               title="{{ prog.badgeCount }} รายการในระบบ"
             >
@@ -139,12 +139,12 @@
             </span>
           }
 
-          <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-[var(--crm-primary)] group-hover:text-white transition-all shadow-sm">
             <i class="bi {{ prog.icon }} text-xl"></i>
           </div>
 
           <div class="w-full">
-            <span class="text-xs font-semibold text-[var(--text-active)] block line-clamp-1 group-hover:text-blue-500 transition-colors">
+            <span class="text-xs font-semibold text-[var(--text-active)] block line-clamp-1 group-hover:text-[var(--crm-primary)] transition-colors">
               {{ prog.name }}
             </span>
             <span class="text-[10px] text-[var(--text-muted)] font-mono block mt-0.5">
@@ -168,7 +168,7 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-diagram-3-fill text-purple-500"></i>
+          <i class="bi bi-diagram-3-fill text-[var(--crm-primary)]"></i>
           สถานะวงจรการส่งมอบโครงการจริง (Real SDLC Delivery Pipeline)
         </h3>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
@@ -212,32 +212,32 @@
         <div class="flex items-center justify-between mb-5">
           <div>
             <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-kanban-fill text-blue-500"></i>
+              <i class="bi bi-kanban-fill text-[var(--crm-primary)]"></i>
               โครงการในระบบจริง (Customer Projects)
             </h3>
             <p class="text-xs text-[var(--text-muted)] mt-0.5">
               ดึงข้อมูลจากทะเบียนโครงการ (PMRT02)
             </p>
           </div>
-          <a routerLink="/feature/pm/rt/pmrt02" class="text-xs font-semibold text-blue-500 hover:underline flex items-center gap-1">
+          <a routerLink="/feature/pm/rt/pmrt02" class="text-xs font-semibold text-[var(--crm-primary)] hover:underline flex items-center gap-1">
             ดูทั้งหมด ({{ realProjects().length }}) <i class="bi bi-arrow-right"></i>
           </a>
         </div>
 
         <div class="space-y-3.5">
           @for (proj of realProjects().slice(0, 4); track proj.id) {
-            <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)]/30 hover:bg-[var(--sidebar-hover)]/60 transition-all">
+            <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all">
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-blue-500/10 text-blue-500">
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
                     {{ proj.projectCode }}
                   </span>
                   <span
                     class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                     [ngClass]="{
-                      'bg-emerald-500/10 text-emerald-500': proj.status === 'COMPLETED' || proj.status === 'ACTIVE',
-                      'bg-blue-500/10 text-blue-500': proj.status === 'IN_PROGRESS',
-                      'bg-amber-500/10 text-amber-500': proj.status === 'PLANNING' || proj.status === 'DRAFT'
+                      'bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]': proj.status === 'COMPLETED' || proj.status === 'ACTIVE',
+                      'bg-[var(--crm-secondary,#3b82f6)]/10 text-[var(--crm-secondary,#3b82f6)]': proj.status === 'IN_PROGRESS',
+                      'bg-[var(--crm-warning)]/10 text-[var(--crm-warning)]': proj.status === 'PLANNING' || proj.status === 'DRAFT'
                     }"
                   >
                     {{ proj.status || 'ACTIVE' }}
@@ -247,7 +247,7 @@
 
                 <div class="flex items-center gap-3 text-xs">
                   <span class="text-[var(--text-muted)]"><i class="bi bi-person me-1"></i>{{ proj.projectManager || 'ยังไม่ระบุ' }}</span>
-                  <span class="text-emerald-500 font-bold">{{ calcProjectProgress(proj) }}% Manday</span>
+                  <span class="text-[var(--crm-primary)] font-bold">{{ calcProjectProgress(proj) }}% Manday</span>
                 </div>
               </div>
 
@@ -258,8 +258,7 @@
               <!-- Progress Bar -->
               <div class="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
                 <div
-                  class="h-full rounded-full transition-all duration-500"
-                  [ngClass]="calcProjectProgress(proj) >= 80 ? 'bg-emerald-500' : 'bg-blue-500'"
+                  class="h-full rounded-full transition-all duration-500 bg-[var(--crm-primary)]"
                   [style.width.%]="calcProjectProgress(proj)"
                 ></div>
               </div>
@@ -277,10 +276,10 @@
       <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-clock-history text-indigo-500"></i>
+            <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
             ประวัติการดำเนินงานจริง (Audit Logs)
           </h3>
-          <a routerLink="/feature/pm/dt/pmdt20" class="text-xs font-medium text-blue-500 hover:underline">
+          <a routerLink="/feature/pm/dt/pmdt20" class="text-xs font-medium text-[var(--crm-primary)] hover:underline">
             ดูบันทึกทั้งหมด
           </a>
         </div>
@@ -288,7 +287,7 @@
         <div class="relative pl-4 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border)]">
           @for (log of realAuditLogs(); track log.id) {
             <div class="relative">
-              <div class="absolute -left-4 top-1 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-[var(--sidebar)]"></div>
+              <div class="absolute -left-4 top-1 w-2 h-2 rounded-full bg-[var(--crm-primary)] ring-4 ring-[var(--sidebar)]"></div>
               <div>
                 <h5 class="text-xs font-semibold text-[var(--text-active)]">
                   {{ log.username || log.userFullname || 'ผู้ใช้งาน' }}
@@ -314,10 +313,10 @@
       <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-palette2 text-rose-500"></i>
+            <i class="bi bi-palette2 text-[var(--crm-danger)]"></i>
             รายการตรวจแบบจริง (Design Reviews)
           </h3>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--crm-danger)]/10 text-[var(--crm-danger)]">
             {{ pendingDesignReviews().length }} รายการ
           </span>
         </div>
@@ -330,17 +329,17 @@
           @for (review of pendingDesignReviews(); track review.id) {
             <div
               (click)="navigateTo('/feature/pm/dt/pmdt09')"
-              class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--sidebar-hover)]/40 hover:bg-[var(--sidebar-hover)] hover:border-blue-500/40 transition-all cursor-pointer group"
+              class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/40 transition-all cursor-pointer group"
             >
               <div class="flex items-center justify-between">
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-blue-500/10 text-blue-500">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
                   {{ review.reviewCode }}
                 </span>
                 <span
                   class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                   [ngClass]="{
-                    'bg-rose-500/10 text-rose-500': review.severity === 'CRITICAL' || review.severity === 'HIGH',
-                    'bg-amber-500/10 text-amber-500': review.severity === 'MEDIUM',
+                    'bg-[var(--crm-danger)]/10 text-[var(--crm-danger)]': review.severity === 'CRITICAL' || review.severity === 'HIGH',
+                    'bg-[var(--crm-warning)]/10 text-[var(--crm-warning)]': review.severity === 'MEDIUM',
                     'bg-slate-500/10 text-slate-500': !review.severity || review.severity === 'LOW'
                   }"
                 >
@@ -348,20 +347,20 @@
                 </span>
               </div>
 
-              <h4 class="text-xs font-semibold text-[var(--text-active)] mt-2 group-hover:text-blue-500 transition-colors line-clamp-2">
+              <h4 class="text-xs font-semibold text-[var(--text-active)] mt-2 group-hover:text-[var(--crm-primary)] transition-colors line-clamp-2">
                 {{ review.title }}
               </h4>
 
               <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--border)]">
                 <span>{{ review.reviewer || review.assignedTo || 'รอผู้ตรวจสอบ' }}</span>
-                <span class="text-rose-500 font-medium">
+                <span class="text-[var(--crm-danger)] font-medium">
                   <i class="bi bi-calendar-event me-1"></i>{{ review.dueDate ? (review.dueDate | sicDate: null : 'DD/MM/YYYY') : 'ไม่มีกำหนด' }}
                 </span>
               </div>
             </div>
           } @empty {
             <div class="py-8 text-center text-xs text-[var(--text-muted)]">
-              <i class="bi bi-check2-circle text-2xl text-emerald-500 mb-1 block"></i>
+              <i class="bi bi-check2-circle text-2xl text-[var(--crm-primary)] mb-1 block"></i>
               ไม่มีรายการตรวจแบบค้างในระบบ
             </div>
           }
