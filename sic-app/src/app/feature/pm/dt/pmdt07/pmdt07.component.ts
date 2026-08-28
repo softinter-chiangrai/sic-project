@@ -109,9 +109,16 @@ export class Pmdt07Component implements OnInit {
         this.loadData();
     }
 
-    onFilterChange(event: Event): void {
-        const select = event.target as HTMLSelectElement;
-        this.filterStatus.set(select.value);
+    readonly statusOptions = [
+        { value: 'Draft', text: 'ร่าง' },
+        { value: 'Review', text: 'ตรวจสอบ' },
+        { value: 'Approved', text: 'อนุมัติ' },
+        { value: 'Released', text: 'เผยแพร่' },
+    ];
+
+    onFilterChange(value: any): void {
+        const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+        this.filterStatus.set(val || 'all');
         this.currentPage.set(1);
         this.loadData();
     }

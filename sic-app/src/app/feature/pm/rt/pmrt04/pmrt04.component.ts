@@ -21,10 +21,13 @@ import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract } from './pmrt04.model';
 import { NavigationService } from '../../../../core/services/navigation.service';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -80,6 +83,17 @@ export class Pmrt04Component implements OnInit {
   protected Math = Math;
 
   // ===== Options =====
+  readonly statusSelectOptions = [
+    { value: 'Draft', text: 'ร่าง (Draft)' },
+    { value: 'Sent', text: 'ส่งแล้ว (Sent)' },
+    { value: 'Signed', text: 'ลงนามแล้ว (Signed)' },
+    { value: 'Expired', text: 'หมดอายุ (Expired)' },
+  ];
+
+  typeSelectOptions = computed(() => {
+    return this.contractTypes().map((t) => ({ value: t, text: t }));
+  });
+
   statusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
   signStatusOptions = ['Draft', 'Sent', 'Signed', 'Expired'];
 
@@ -210,16 +224,16 @@ export class Pmrt04Component implements OnInit {
     this.loadContracts();
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadContracts();
   }
 
-  onTypeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterType.set(select.value);
+  onTypeChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterType.set(val || 'all');
     this.currentPage.set(1);
     this.loadContracts();
   }

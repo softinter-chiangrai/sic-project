@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -19,6 +19,7 @@ import { burt05Service } from '../burt05.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
@@ -47,6 +48,21 @@ export class Burt05AComponent implements OnInit {
   rolePermissions = signal<{ roleId: string; roleName: string; level: string }[]>([]);
   permissionLevels = this.service.getPermissionLevels();
   programs = signal<Program[]>([]);
+
+  programOptions = computed(() => {
+    return this.programs().map((p) => ({
+      value: p.id,
+      text: `${p.programCode} - ${p.programName || p.programNameLocal || p.programNameEn}`,
+    }));
+  });
+
+  readonly permissionSelectOptions = [
+    { value: 'Full', text: 'เต็มรูปแบบ (Full)' },
+    { value: 'Edit', text: 'แก้ไข/เพิ่ม (Edit)' },
+    { value: 'Approve', text: 'อนุมัติ (Approve)' },
+    { value: 'View', text: 'ดูอย่างเดียว (View)' },
+    { value: 'None', text: 'ไม่มีสิทธิ์ (None)' },
+  ];
 
   programForm: FormGroup = this.fb.group({
     programCode: ['', [Validators.required, Validators.maxLength(50)]],
@@ -350,9 +366,9 @@ export class Burt05AComponent implements OnInit {
     return this.rolePermissions().find((rp) => rp.roleId === roleId)?.level || 'None';
   }
 
-  updateRolePermission(roleId: string, level: string) {
+  updateRolePermission(roleId: string, level: any) {
     this.rolePermissions.update((list) =>
-      list.map((rp) => (rp.roleId === roleId ? { ...rp, level } : rp)),
+      list.map((rp) => (rp.roleId === roleId ? { ...rp, level: String(level || 'None') } : rp)),
     );
   }
 

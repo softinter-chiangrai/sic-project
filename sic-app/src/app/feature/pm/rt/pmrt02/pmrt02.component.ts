@@ -16,12 +16,14 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 import { Pmrt02Service } from './pmrt02.service';
 import { PmCustomerProject } from './pmrt02.model';
 
+import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmrt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
   templateUrl: './pmrt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -71,6 +73,36 @@ export class Pmrt02Component implements OnInit {
   protected Math = Math;
 
   // ===== Options =====
+  readonly statusSelectOptions = [
+    'Prospect',
+    'Contract Drafting',
+    'Contract Signed',
+    'Requirement Gathering',
+    'Requirement Approval',
+    'System Analysis',
+    'DFD Design',
+    'ER Design',
+    'Specification Design',
+    'Specification Approval',
+    'Planning',
+    'Development',
+    'Internal Testing',
+    'UAT',
+    'Bug Fixing',
+    'Ready for Delivery',
+    'Delivered',
+    'Invoicing',
+    'Closed',
+    'MA Active',
+  ].map((s) => ({ value: s, text: this.getStatusText(s) }));
+
+  readonly prioritySelectOptions = [
+    { value: 'Low', text: 'Low' },
+    { value: 'Medium', text: 'Medium' },
+    { value: 'High', text: 'High' },
+    { value: 'Critical', text: 'Critical' },
+  ];
+
   statusOptions = [
     'Prospect',
     'Contract Drafting',
@@ -173,16 +205,16 @@ export class Pmrt02Component implements OnInit {
     this.loadProjects();
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadProjects();
   }
 
-  onPriorityChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterPriority.set(select.value);
+  onPriorityChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterPriority.set(val || 'all');
     this.currentPage.set(1);
     this.loadProjects();
   }

@@ -101,6 +101,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     });
 
     selectedTargetType = signal('REQUIREMENT');
+    readonly targetTypeOptions = [
+        { value: 'REQUIREMENT', text: 'ความต้องการระบบ (Requirement)' },
+        { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ (Specification)' },
+        { value: 'TASK', text: 'งาน (Task)' },
+    ];
     selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
     selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
 

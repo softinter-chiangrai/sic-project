@@ -29,6 +29,7 @@ export class Burt01Form {
       phoneNumber: fb.control(null, [Validators.required, Validators.minLength(6)]),
       uploadGroupId: fb.control(null),
       uploadGroupData: fb.control(null),
+      isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null)
     });

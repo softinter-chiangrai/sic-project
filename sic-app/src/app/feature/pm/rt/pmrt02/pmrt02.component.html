@@ -58,28 +58,26 @@
     </div>
 
     <!-- Filter: Status -->
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      @for (status of statusOptions; track status) {
-        <option [value]="status">{{ getStatusText(status) }}</option>
-      }
-    </select>
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="statusSelectOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onFilterChange($event)"
+        placeholder="📊 ทุกสถานะ"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
 
     <!-- Filter: Priority -->
-    <select
-      (change)="onPriorityChange($event)"
-      [value]="filterPriority()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">⚡ ทุกระดับความสำคัญ</option>
-      @for (priority of priorityOptions; track priority) {
-        <option [value]="priority">{{ priority }}</option>
-      }
-    </select>
+    <div class="min-w-[180px]">
+      <sic-combobox
+        [options]="prioritySelectOptions"
+        [ngModel]="filterPriority()"
+        (ngModelChange)="onPriorityChange($event)"
+        placeholder="⚡ ทุกระดับความสำคัญ"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- LOADING -->

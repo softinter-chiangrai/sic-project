@@ -425,6 +425,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         dto.setPhoneNumber(business.getPhoneNumber());
         dto.setUploadGroupId(business.getUploadGroupId());
         dto.setUploadGroupData(new ArrayList<>());
+        dto.setIsActive(business.getIsActive());
         dto.setState(0); // Detached
         dto.setRowVersion(business.getRowVersion());
 

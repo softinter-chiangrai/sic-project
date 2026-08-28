@@ -66,6 +66,13 @@ export class Pmdt10AComponent implements OnInit {
     }));
   }
 
+  readonly priorityOptions = [
+    { value: 'Low', text: 'Low (ต่ำ)' },
+    { value: 'Medium', text: 'Medium (ปานกลาง)' },
+    { value: 'High', text: 'High (สูง)' },
+    { value: 'Critical', text: 'Critical (วิกฤต)' },
+  ];
+
   ngOnInit(): void {
     this.updateAssignedToApiUrl();
   }

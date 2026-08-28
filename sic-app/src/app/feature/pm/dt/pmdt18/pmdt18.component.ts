@@ -10,10 +10,13 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent, SicDatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,9 +91,17 @@ export class Pmdt18Component implements OnInit {
     this.searchTerm.set('');
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  readonly statusOptions = [
+    { value: 'DRAFT', text: 'ร่างข้อเสนอ (Draft)' },
+    { value: 'PROPOSED', text: 'เสนอราคาแล้ว (Proposed)' },
+    { value: 'CONFIRMED', text: 'ตกลงต่อสัญญาแล้ว (Confirmed)' },
+    { value: 'REJECTED', text: 'ปฏิเสธการต่อสัญญา (Rejected)' },
+    { value: 'EXPIRED', text: 'หมดอายุ (Expired)' },
+  ];
+
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
   }
 
   onPageChange(page: number) {

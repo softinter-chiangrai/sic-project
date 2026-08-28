@@ -170,16 +170,12 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">ความสำคัญ</label>
-            <select
+            <sic-combobox
+              label="ความสำคัญ"
               formControlName="priority"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 text-sm outline-none transition-all"
-            >
-              <option value="Low">Low (ต่ำ)</option>
-              <option value="Medium">Medium (ปานกลาง)</option>
-              <option value="High">High (สูง)</option>
-              <option value="Critical">Critical (วิกฤต)</option>
-            </select>
+              [options]="priorityOptions"
+              placeholder="เลือกความสำคัญ"
+            ></sic-combobox>
           </div>
         </div>
 

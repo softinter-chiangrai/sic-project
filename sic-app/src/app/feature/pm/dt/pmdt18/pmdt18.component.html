@@ -39,18 +39,16 @@
         </button>
       }
     </div>
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะข้อเสนอ</option>
-      <option value="DRAFT">ร่างข้อเสนอ (Draft)</option>
-      <option value="PROPOSED">เสนอราคาแล้ว (Proposed)</option>
-      <option value="CONFIRMED">ตกลงต่อสัญญาแล้ว (Confirmed)</option>
-      <option value="REJECTED">ปฏิเสธการต่อสัญญา (Rejected)</option>
-      <option value="EXPIRED">หมดอายุ (Expired)</option>
-    </select>
+
+    <div class="min-w-[200px]">
+      <sic-combobox
+        [options]="statusOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onFilterChange($event)"
+        placeholder="📊 ทุกสถานะข้อเสนอ"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- Loading State -->

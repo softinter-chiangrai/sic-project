@@ -10,7 +10,8 @@
     <div class="flex items-center gap-4">
       <div class="relative flex-shrink-0">
         <div
-          class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)] overflow-hidden">
+          routerLink="/management/profile"
+          class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)] overflow-hidden cursor-pointer">
           <img [src]="profileImageSrc" [alt]="profile.name || 'Profile'" (error)="$any($event.target).src='images/profile.png'" class="h-full w-full rounded-full object-cover" />
         </div>
         <div class="absolute h-6 w-6 -right-2 bottom-[-2PX] rounded-full border-1 border-[var(--crm-success)] bg-white overflow-hidden">
@@ -21,7 +22,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex gap-1">
           <div class="flex-initial min-w-0">
-            <p class="m-0 text-[0.8rem] font-medium text-truncate text-[var(--text-active)]">{{profile.name}}</p>
+            <p routerLink="/management/profile" class="m-0 text-[0.8rem] font-medium text-truncate text-[var(--text-active)] cursor-pointer hover:underline">{{profile.name}}</p>
           </div>
           <div class="flex-none">
             <p class="m-0 text-[0.8rem] font-bold">({{business.code}})</p>
@@ -99,7 +100,8 @@
         <div class="flex items-center gap-4 w-full">
           <div class="relative flex-shrink-0">
             <div
-              class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)] overflow-hidden">
+              routerLink="/management/profile"
+              class="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--crm-primary)] bg-white text-[0.85rem] font-semibold text-[var(--crm-primary)] overflow-hidden cursor-pointer">
               <img [src]="profileImageSrc" [alt]="profile.name || 'Profile'" (error)="$any($event.target).src='images/profile.png'" class="h-full w-full rounded-full object-cover"
                 [tooltip]="profile.name" />
             </div>
@@ -113,7 +115,7 @@
           <div class="min-w-0 flex-1">
             <div class="flex gap-1 min-w-0 w-full">
               <div class="min-w-0 flex-1">
-                <p class="m-0 text-[0.8rem] font-medium truncate text-[var(--text-active)]">
+                <p routerLink="/management/profile" class="m-0 text-[0.8rem] font-medium truncate text-[var(--text-active)] cursor-pointer hover:underline">
                   {{ profile.name }}
                 </p>
               </div>

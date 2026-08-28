@@ -11,17 +11,19 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from './approval.service';
 import type { Approval } from './approval.model';
 import { ApprovalItem } from './pmdt03.model';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmdt03',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmdt03.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -71,6 +73,32 @@ export class Pmdt03Component implements OnInit {
   protected Math = Math;
 
   // ===== Options =====
+  readonly documentTypeOptions = [
+    { value: 'REQUIREMENT', text: 'REQUIREMENT' },
+    { value: 'SPECIFICATION', text: 'SPECIFICATION' },
+    { value: 'DIAGRAM', text: 'DIAGRAM' },
+    { value: 'DESIGN_REVIEW', text: 'DESIGN_REVIEW' },
+    { value: 'CHANGE_REQUEST', text: 'CHANGE_REQUEST' },
+    { value: 'TEST_PLAN', text: 'TEST_PLAN' },
+    { value: 'UAT', text: 'UAT' },
+    { value: 'DELIVERY', text: 'DELIVERY' },
+    { value: 'INVOICE', text: 'INVOICE' },
+    { value: 'MA_RENEWAL', text: 'MA_RENEWAL' },
+  ];
+
+  readonly statusSelectOptions = [
+    { value: 'PENDING', text: 'รอดำเนินการ' },
+    { value: 'APPROVED', text: 'อนุมัติ' },
+    { value: 'REJECTED', text: 'ไม่อนุมัติ' },
+    { value: 'NEED_REVISION', text: 'ขอให้แก้ไข' },
+    { value: 'CANCELLED', text: 'ยกเลิก' },
+  ];
+
+  readonly projectSelectOptions = [
+    { value: '1', text: 'ระบบ CRM' },
+    { value: '2', text: 'ระบบ HR' },
+  ];
+
   documentTypes = [
     'REQUIREMENT',
     'SPECIFICATION',
@@ -189,23 +217,23 @@ export class Pmdt03Component implements OnInit {
     this.loadApprovals();
   }
 
-  onFilterChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadApprovals();
   }
 
-  onTypeChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterType.set(select.value);
+  onTypeChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterType.set(val || 'all');
     this.currentPage.set(1);
     this.loadApprovals();
   }
 
-  onProjectChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterProject.set(select.value);
+  onProjectChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterProject.set(val || 'all');
     this.currentPage.set(1);
     this.loadApprovals();
   }

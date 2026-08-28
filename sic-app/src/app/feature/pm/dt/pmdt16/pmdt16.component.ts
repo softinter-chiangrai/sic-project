@@ -10,10 +10,13 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent, SicDatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,9 +91,16 @@ export class Pmdt16Component implements OnInit {
     this.searchTerm.set('');
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  readonly statusOptions = [
+    { value: 'UNPAID', text: 'รอชำระ (Unpaid)' },
+    { value: 'PARTIAL', text: 'ชำระบางส่วน (Partial)' },
+    { value: 'PAID', text: 'ชำระครบแล้ว (Paid)' },
+    { value: 'OVERDUE', text: 'เกินกำหนด (Overdue)' },
+  ];
+
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
   }
 
   onPageChange(page: number) {

@@ -6,12 +6,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   inject,
   Injectable,
   OnInit,
   signal,
 } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
@@ -61,56 +62,19 @@ export function mapLevelToBooleans(level: string): {
   isSave: boolean;
   isSearch: boolean;
 } {
-  switch (level) {
-    case 'Full':
-      return {
-        isSearch: true,
-        isAdd: true,
-        isSave: true,
-        isRemove: true,
-        isPrint: true,
-        isBack: true,
-      };
-    case 'Edit':
-      return {
-        isSearch: true,
-        isAdd: true,
-        isSave: true,
-        isRemove: false,
-        isPrint: false,
-        isBack: true,
-      };
-    case 'Approve':
-      return {
-        isSearch: true,
-        isAdd: false,
-        isSave: true,
-        isRemove: false,
-        isPrint: false,
-        isBack: true,
-      };
-    case 'View':
-      return {
-        isSearch: true,
-        isAdd: false,
-        isSave: false,
-        isRemove: false,
-        isPrint: false,
-        isBack: true,
-      };
-    case 'None':
-    default:
-      return {
-        isSearch: false,
-        isAdd: false,
-        isSave: false,
-        isRemove: false,
-        isPrint: false,
-        isBack: false,
-      };
-  }
+  return {
+    isAdd: level === 'Full' || level === 'Edit',
+    isSave: level === 'Full' || level === 'Edit' || level === 'Approve',
+    isRemove: level === 'Full',
+    isPrint: level === 'Full',
+    isBack: level !== 'None',
+    isSearch: level !== 'None',
+  };
 }
 
+// ============================================================
+// 3. Models
+// ============================================================
 import { ModulePermission, RolePermissionData } from './burt02A.model';
 
 
@@ -202,6 +166,7 @@ export class burt02AService {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
@@ -226,10 +191,54 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
 
+  searchTerm = signal('');
+  filterLevel = signal('all');
   modules = signal<ModulePermission[]>([]);
   permissionLevels = PERMISSION_LEVELS;
 
+  readonly permissionSelectOptions = [
+    { value: 'Full', text: 'เต็มรูปแบบ (Full)' },
+    { value: 'Edit', text: 'แก้ไข/เพิ่ม (Edit)' },
+    { value: 'Approve', text: 'อนุมัติ (Approve)' },
+    { value: 'View', text: 'ดูอย่างเดียว (View)' },
+    { value: 'None', text: 'ไม่มีสิทธิ์ (None)' },
+  ];
+
+  filteredModules = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const level = this.filterLevel();
+    let list = this.modules();
+
+    if (term) {
+      list = list.filter(
+        (m) =>
+          (m.moduleName && m.moduleName.toLowerCase().includes(term)) ||
+          (m.moduleCode && m.moduleCode.toLowerCase().includes(term)),
+      );
+    }
+
+    if (level !== 'all') {
+      list = list.filter((m) => m.level === level);
+    }
+
+    return list;
+  });
+
   pageDirty = () => false;
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+  }
+
+  onFilterLevelChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterLevel.set(val || 'all');
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
@@ -273,7 +282,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
-  changeLevel(moduleId: string, level: string) {
+  changeLevel(moduleId: string, level: any) {
     const current = this.modules();
     const updated = current.map((mod) => {
       if (mod.moduleId === moduleId) {

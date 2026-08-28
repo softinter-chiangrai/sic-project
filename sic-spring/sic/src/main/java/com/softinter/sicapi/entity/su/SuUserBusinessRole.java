@@ -36,5 +36,5 @@ public class SuUserBusinessRole extends BaseEntity {
     private Boolean isPrimary = false;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
+    private Boolean isActive = true;
 }

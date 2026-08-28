@@ -12,10 +12,13 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent, SicDatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -100,9 +103,17 @@ export class Pmdt14Component implements OnInit {
     this.searchTerm.set('');
   }
 
-  onFilterChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  readonly statusOptions = [
+    { value: 'DRAFT', text: 'ร่าง (Draft)' },
+    { value: 'PREPARING', text: 'กำลังเตรียมงาน' },
+    { value: 'READY', text: 'พร้อมส่งมอบ' },
+    { value: 'DELIVERED', text: 'ส่งมอบแล้ว' },
+    { value: 'CONFIRMED', text: 'ลูกค้ายืนยันรับมอบแล้ว' },
+  ];
+
+  onFilterChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
   }
 
   onPageChange(p: number): void {

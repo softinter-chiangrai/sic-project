@@ -46,7 +46,7 @@ public class SuProgram extends BaseEntity {
     private Integer sortOrder;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
+    private Boolean isActive = true;
 
     @OneToMany(mappedBy = "parentProgram", fetch = FetchType.LAZY)
     private List<SuProgram> childPrograms = new ArrayList<>();

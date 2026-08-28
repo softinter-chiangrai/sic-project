@@ -9,10 +9,13 @@ import { ApprovalFlow } from './burt06.model';
 import { Burt06Service } from './burt06.service';
 
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',
@@ -46,6 +49,18 @@ export class Burt06Component implements OnInit {
     TEST_PLAN: 'Test Plan',
     UAT: 'UAT',
   };
+
+  readonly statusSelectOptions = [
+    { value: 'active', text: 'ใช้งาน (Active)' },
+    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
+  ];
+
+  docTypeSelectOptions = computed(() => {
+    return Object.entries(this.documentTypeMap).map(([key, label]) => ({
+      value: key,
+      text: label,
+    }));
+  });
 
   // Filtered list
   filteredFlows = computed(() => {
@@ -163,15 +178,15 @@ export class Burt06Component implements OnInit {
     this.currentPage.set(1);
   }
 
-  onFilterStatusChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterStatusChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
   }
 
-  onFilterDocTypeChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.filterDocumentType.set(select.value);
+  onFilterDocTypeChange(value: any): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterDocumentType.set(val || 'all');
     this.currentPage.set(1);
   }
 

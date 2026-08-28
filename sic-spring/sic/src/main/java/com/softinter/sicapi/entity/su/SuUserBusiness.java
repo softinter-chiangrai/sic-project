@@ -32,7 +32,7 @@ public class SuUserBusiness extends BaseBusinessEntity {
     private Boolean isDefault = false;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
+    private Boolean isActive = true;
 
     @OneToMany(mappedBy = "userBusiness", fetch = FetchType.LAZY)
     private List<SuUserBusinessRole> userBusinessRoles = new ArrayList<>();

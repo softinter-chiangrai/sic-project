@@ -39,17 +39,16 @@
         </button>
       }
     </div>
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะชำระเงิน</option>
-      <option value="UNPAID">รอชำระ (Unpaid)</option>
-      <option value="PARTIAL">ชำระบางส่วน (Partial)</option>
-      <option value="PAID">ชำระครบแล้ว (Paid)</option>
-      <option value="OVERDUE">เกินกำหนด (Overdue)</option>
-    </select>
+
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="statusOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onFilterChange($event)"
+        placeholder="📊 ทุกสถานะชำระเงิน"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- Loading State -->

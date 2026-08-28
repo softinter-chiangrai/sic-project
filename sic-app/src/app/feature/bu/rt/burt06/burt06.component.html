@@ -45,27 +45,26 @@
     </div>
 
     <!-- Filter: Status -->
-    <select
-      (change)="onFilterStatusChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">🌐 สถานะทั้งหมด</option>
-      <option value="active">✅ ใช้งาน</option>
-      <option value="inactive">⛔ ไม่ใช้งาน</option>
-    </select>
+    <div class="min-w-[170px]">
+      <sic-combobox
+        [options]="statusSelectOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onFilterStatusChange($event)"
+        placeholder="🌐 สถานะทั้งหมด"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
 
     <!-- Filter: Document Type -->
-    <select
-      (change)="onFilterDocTypeChange($event)"
-      [value]="filterDocumentType()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📋 ทุกประเภทเอกสาร</option>
-      @for (entry of documentTypeMap | keyvalue; track entry.key) {
-        <option [value]="entry.key">{{ entry.value }}</option>
-      }
-    </select>
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="docTypeSelectOptions()"
+        [ngModel]="filterDocumentType()"
+        (ngModelChange)="onFilterDocTypeChange($event)"
+        placeholder="📋 ทุกประเภทเอกสาร"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- LOADING -->

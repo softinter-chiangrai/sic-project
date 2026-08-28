@@ -54,6 +54,13 @@ export class Pmdt02CComponent implements OnInit {
   testCasesLoading = signal(false);
   expandedSteps = signal<Set<string>>(new Set());
 
+  priorityOptions = [
+    { value: 'Low', text: 'ต่ำ (Low)' },
+    { value: 'Medium', text: 'ปานกลาง (Medium)' },
+    { value: 'High', text: 'สูง (High)' },
+    { value: 'Critical', text: 'วิกฤต (Critical)' },
+  ];
+
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
   assigneeNames: Record<string, string> = {};
 

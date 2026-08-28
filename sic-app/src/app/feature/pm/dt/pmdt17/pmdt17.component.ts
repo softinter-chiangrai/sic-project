@@ -9,10 +9,13 @@ import { DialogService } from '../../../../core/services/dialog.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt17',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,9 +91,17 @@ export class Pmdt17Component implements OnInit {
     this.searchTerm.set('');
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  readonly statusOptions = [
+    { value: 'OPEN', text: 'เปิดตั๋ว (Open)' },
+    { value: 'IN_PROGRESS', text: 'กำลังดำเนินการ (In Progress)' },
+    { value: 'WAITING_CUSTOMER', text: 'รอลูกค้าตอบกลับ (Waiting)' },
+    { value: 'RESOLVED', text: 'แก้ไขแล้ว (Resolved)' },
+    { value: 'CLOSED', text: 'ปิดตั๋ว (Closed)' },
+  ];
+
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
   }
 
   onPageChange(page: number) {

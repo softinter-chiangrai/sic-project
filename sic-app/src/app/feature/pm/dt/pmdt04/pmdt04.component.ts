@@ -14,12 +14,14 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { RequirementItem } from './pmdt04.model';
 
 
+import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -43,6 +45,15 @@ export class Pmdt04Component implements OnInit {
   protected requirements = signal<RequirementItem[]>([]);
 
   protected totalItems = signal(0);
+
+  // ===== Options =====
+  readonly statusOptions = [
+    { value: 'Draft', text: 'ร่าง' },
+    { value: 'In Review', text: 'อยู่ระหว่างตรวจสอบ' },
+    { value: 'Approved', text: 'อนุมัติแล้ว' },
+    { value: 'Changed', text: 'เปลี่ยนแปลง' },
+    { value: 'Cancelled', text: 'ยกเลิก' },
+  ];
 
   // ===== Computed =====
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
@@ -144,9 +155,9 @@ export class Pmdt04Component implements OnInit {
     this.loadRequirements();
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadRequirements();
   }

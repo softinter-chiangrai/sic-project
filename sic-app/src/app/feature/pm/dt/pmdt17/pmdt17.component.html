@@ -39,18 +39,16 @@
         </button>
       }
     </div>
-    <select
-      (change)="onFilterChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะตั๋ว</option>
-      <option value="OPEN">เปิดตั๋ว (Open)</option>
-      <option value="IN_PROGRESS">กำลังดำเนินการ (In Progress)</option>
-      <option value="WAITING_CUSTOMER">รอลูกค้าตอบกลับ (Waiting)</option>
-      <option value="RESOLVED">แก้ไขแล้ว (Resolved)</option>
-      <option value="CLOSED">ปิดตั๋ว (Closed)</option>
-    </select>
+
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="statusOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onFilterChange($event)"
+        placeholder="📊 ทุกสถานะตั๋ว"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- Loading State -->

@@ -13,10 +13,13 @@ export interface ScenarioGroup {
   testCases: PmTestCaseModel[];
 }
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +50,28 @@ export class Pmdt12Component implements OnInit {
   protected readonly pageSize = 10;
 
   // ===== Options =====
+  readonly statusSelectOptions = [
+    { value: 'Pass', text: 'ผ่าน (Pass)' },
+    { value: 'Fail', text: 'ไม่ผ่าน (Fail)' },
+    { value: 'Blocked', text: 'ติดปัญหา (Blocked)' },
+    { value: 'Pending', text: 'รอดำเนินการ (Pending)' },
+  ];
+
+  readonly prioritySelectOptions = [
+    { value: 'High', text: 'High (สูง)' },
+    { value: 'Medium', text: 'Medium (ปานกลาง)' },
+    { value: 'Low', text: 'Low (ต่ำ)' },
+  ];
+
+  readonly taskStatusSelectOptions = [
+    { value: 'Testing', text: '🧪 พร้อมทดสอบ' },
+    { value: 'In Progress', text: '🛠️ กำลังพัฒนา' },
+    { value: 'bugfix', text: '🚨 Bugfix' },
+    { value: 'complete', text: '✅ เสร็จสมบูรณ์' },
+    { value: 'To Do', text: '📝 รอดำเนินการ' },
+    { value: 'on hold', text: '⏸️ พักไว้ชั่วคราว' },
+  ];
+
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
   priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -290,21 +315,21 @@ export class Pmdt12Component implements OnInit {
     this.scenarioPageMap.set(new Map());
   }
 
-  onFilterStatusChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterStatusChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.scenarioPageMap.set(new Map());
   }
 
-  onFilterPriorityChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterPriority.set(select.value);
+  onFilterPriorityChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterPriority.set(val || 'all');
     this.scenarioPageMap.set(new Map());
   }
 
-  onFilterTaskStatusChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterTaskStatus.set(select.value);
+  onFilterTaskStatusChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterTaskStatus.set(val || 'all');
     this.scenarioPageMap.set(new Map());
   }
 

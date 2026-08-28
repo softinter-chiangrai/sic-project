@@ -14,6 +14,7 @@ import { SicButtonComponent } from '../../../../core/component/sic-button/sic-bu
 import { SicInputAreaComponent } from '../../../../core/component/sic-input-area/sic-input-area.component';
 import { Burt01Service } from './burt01.service';
 import { SicRadioComponent } from "../../../../core/component/sic-radio/sic-radio.component";
+import { SicCheckboxComponent } from "../../../../core/component/sic-checkbox/sic-checkbox.component";
 import { SicCardComponent } from "../../../../core/component/sic-card/sic-card.component";
 import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
 import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
@@ -21,7 +22,18 @@ import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-burt01',
-  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent, SicButtonComponent],
+  imports: [
+    CommonModule,
+    SicProfileComponent,
+    ReactiveFormsModule,
+    SicComboboxComponent,
+    SicInputComponent,
+    SicInputPhoneComponent,
+    SicInputAreaComponent,
+    SicRadioComponent,
+    SicCheckboxComponent,
+    SicButtonComponent
+  ],
   templateUrl: './burt01.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt01.component.css',

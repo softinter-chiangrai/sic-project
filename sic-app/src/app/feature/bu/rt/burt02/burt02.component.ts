@@ -12,15 +12,17 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { FormsModule } from '@angular/forms';
 import { burt03Service } from '../burt03/burt03.service';
 import { burt04Service } from '../burt04/burt04.service';
 import { burt02AService } from './burt02A/burt02A.component';
 import { RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-burt02',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './burt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -32,6 +34,7 @@ export class Burt02Component implements OnInit {
 
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
+  protected filterUserCount = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('roleCode');
@@ -46,6 +49,7 @@ export class Burt02Component implements OnInit {
   protected filteredRoles = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const status = this.filterStatus();
+    const userCountFilter = this.filterUserCount();
 
     let result = this.roles();
 
@@ -59,6 +63,12 @@ export class Burt02Component implements OnInit {
       result = result.filter((r) => r.isActive);
     } else if (status === 'inactive') {
       result = result.filter((r) => !r.isActive);
+    }
+
+    if (userCountFilter === 'hasUsers') {
+      result = result.filter((r) => r.userCount > 0);
+    } else if (userCountFilter === 'noUsers') {
+      result = result.filter((r) => r.userCount === 0);
     }
 
     const sortField = this.sortBy();
@@ -161,6 +171,17 @@ export class Burt02Component implements OnInit {
     });
   }
 
+  // ===== Options =====
+  readonly statusSelectOptions = [
+    { value: 'active', text: 'ใช้งาน (Active)' },
+    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
+  ];
+
+  readonly userCountSelectOptions = [
+    { value: 'hasUsers', text: '👤 มีผู้ใช้งาน (> 0 คน)' },
+    { value: 'noUsers', text: '⚪ ไม่มีผู้ใช้งาน (0 คน)' },
+  ];
+
   // ===== Actions =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -173,9 +194,15 @@ export class Burt02Component implements OnInit {
     this.currentPage.set(1);
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
+    this.currentPage.set(1);
+  }
+
+  onFilterUserCountChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterUserCount.set(val || 'all');
     this.currentPage.set(1);
   }
 

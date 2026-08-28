@@ -45,40 +45,37 @@
     </div>
 
     <!-- Filter: Module -->
-    <select
-      (change)="onModuleChange($event)"
-      [value]="filterModule()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📋 ทุกโมดูล</option>
-      @for (module of moduleOptions; track module) {
-        <option [value]="module">{{ module }}</option>
-      }
-    </select>
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="moduleSelectOptions"
+        [ngModel]="filterModule()"
+        (ngModelChange)="onModuleChange($event)"
+        placeholder="📋 ทุกโมดูล"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
 
     <!-- Filter: Status -->
-    <select
-      (change)="onStatusChange($event)"
-      [value]="filterStatus()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">📊 ทุกสถานะ</option>
-      @for (status of statusOptions; track status) {
-        <option [value]="status">{{ status }}</option>
-      }
-    </select>
+    <div class="min-w-[160px]">
+      <sic-combobox
+        [options]="statusSelectOptions"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="onStatusChange($event)"
+        placeholder="📊 ทุกสถานะ"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
 
     <!-- Filter: User -->
-    <select
-      (change)="onUserChange($event)"
-      [value]="filterUser()"
-      class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 cursor-pointer transition-all"
-    >
-      <option value="all">👤 ทุกคน</option>
-      @for (user of userOptions; track user) {
-        <option [value]="user">{{ user }}</option>
-      }
-    </select>
+    <div class="min-w-[170px]">
+      <sic-combobox
+        [options]="userSelectOptions"
+        [ngModel]="filterUser()"
+        (ngModelChange)="onUserChange($event)"
+        placeholder="👤 ทุกคน"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
   </div>
 
   <!-- ===== LOADING ===== -->

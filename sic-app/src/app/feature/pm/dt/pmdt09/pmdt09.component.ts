@@ -10,10 +10,12 @@ import { DesignReview, ReviewComment } from './pmdt09.model';
 
 
 
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -98,6 +100,28 @@ export class Pmdt09Component implements OnInit {
   protected Math = Math;
 
   // ===== Options =====
+  readonly statusSelectOptions = [
+    { value: 'Open', text: 'Open' },
+    { value: 'In Progress', text: 'In Progress' },
+    { value: 'Resolved', text: 'Resolved' },
+    { value: 'Closed', text: 'Closed' },
+  ];
+
+  readonly typeSelectOptions = [
+    { value: 'Requirement', text: 'Requirement' },
+    { value: 'Specification', text: 'Specification' },
+    { value: 'Diagram', text: 'Diagram' },
+    { value: 'UI Prototype', text: 'UI Prototype' },
+    { value: 'Test Case', text: 'Test Case' },
+    { value: 'User Manual', text: 'User Manual' },
+  ];
+
+  readonly severitySelectOptions = [
+    { value: 'Low', text: 'Low' },
+    { value: 'Medium', text: 'Medium' },
+    { value: 'High', text: 'High' },
+  ];
+
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
   typeOptions = ['Requirement', 'Specification', 'Diagram', 'UI Prototype', 'Test Case', 'User Manual'];
   severityOptions = ['Low', 'Medium', 'High'];
@@ -273,21 +297,21 @@ export class Pmdt09Component implements OnInit {
     this.loadData();
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadData();
   }
 
-  onTypeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterType.set(select.value);
+  onTypeChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterType.set(val || 'all');
   }
 
-  onSeverityChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterSeverity.set(select.value);
+  onSeverityChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterSeverity.set(val || 'all');
   }
 
   onSortChange(field: string) {

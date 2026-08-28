@@ -74,12 +74,14 @@ const MOCK_LOGS: AuditLog[] = [
   },
 ];
 
+import { FormsModule } from '@angular/forms';
 import { AuditLogService } from './audit-log.service';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmdt20',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmdt20.component.html',
   styleUrls: ['./pmdt20.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -215,6 +217,46 @@ export class Pmdt20Component implements OnInit {
   protected Math = Math;
 
   // ===== Options =====
+  readonly moduleSelectOptions = [
+    'Authentication',
+    'Customer Management',
+    'Contract Management',
+    'Project Management',
+    'Requirement Management',
+    'Change Control',
+    'DFD Designer',
+    'ER Designer',
+    'Specification Management',
+    'Design Review',
+    'Planning & Task',
+    'Task Tracking',
+    'Test Management',
+    'Bug Management',
+    'Delivery Management',
+    'User Manual',
+    'Invoice & Payment',
+    'MA Support Ticket',
+    'Renewal / Extension',
+    'Approval Center',
+    'Dashboard & Report',
+    'Document Version Control',
+    'Audit Log',
+    'User Management',
+  ].map((m) => ({ value: m, text: m }));
+
+  readonly statusSelectOptions = [
+    { value: 'Success', text: 'Success' },
+    { value: 'Failed', text: 'Failed' },
+  ];
+
+  readonly userSelectOptions = [
+    'สมชาย ใจดี',
+    'สมหญิง รักเรียน',
+    'วิชัย พัฒนาชัย',
+    'มานี มีทรัพย์',
+    'สมศักดิ์ รุ่งเรือง',
+  ].map((u) => ({ value: u, text: u }));
+
   moduleOptions = [
     'Authentication',
     'Customer Management',
@@ -252,23 +294,23 @@ export class Pmdt20Component implements OnInit {
     this.loadLogs();
   }
 
-  onModuleChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterModule.set(select.value);
+  onModuleChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterModule.set(val || 'all');
     this.currentPage.set(1);
     this.loadLogs();
   }
 
-  onStatusChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onStatusChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadLogs();
   }
 
-  onUserChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterUser.set(select.value);
+  onUserChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterUser.set(val || 'all');
     this.currentPage.set(1);
     this.loadLogs();
   }

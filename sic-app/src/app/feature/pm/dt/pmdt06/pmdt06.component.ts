@@ -12,12 +12,14 @@ import { ChangeRequestService } from './change-request.service';
 
 import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 
+import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicTableActionsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt06.component.html',
 })
@@ -106,9 +108,18 @@ export class Pmdt06Component implements OnInit {
     this.loadChangeRequests();
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  // Options
+  readonly statusOptions = [
+    { value: 'Draft', text: 'ร่าง' },
+    { value: 'Submitted', text: 'รออนุมัติ' },
+    { value: 'Approved', text: 'อนุมัติ' },
+    { value: 'Rejected', text: 'ปฏิเสธ' },
+    { value: 'Implemented', text: 'ดำเนินการแล้ว' },
+  ];
+
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadChangeRequests();
   }

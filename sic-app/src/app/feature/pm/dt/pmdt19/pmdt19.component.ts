@@ -8,10 +8,13 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicDatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -29,17 +32,17 @@ export class Pmdt19Component implements OnInit {
   filterType = signal<string>('ALL');
   filterDocId = signal<string>('');
 
-  docTypeOptions = [
-    { label: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
-    { label: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
-    { label: 'DFD Diagram', value: 'DFD' },
-    { label: 'ER Diagram', value: 'ER' },
-    { label: 'Specification', value: 'SPEC' },
-    { label: 'Test Case', value: 'TEST_CASE' },
-    { label: 'Delivery Document', value: 'DELIVERY' },
-    { label: 'Contract', value: 'CONTRACT' },
-    { label: 'Change Request', value: 'CHANGE_REQUEST' },
-    { label: 'User Manual', value: 'MANUAL' },
+  readonly docTypeOptions = [
+    { text: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
+    { text: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
+    { text: 'DFD Diagram', value: 'DFD' },
+    { text: 'ER Diagram', value: 'ER' },
+    { text: 'Specification', value: 'SPEC' },
+    { text: 'Test Case', value: 'TEST_CASE' },
+    { text: 'Delivery Document', value: 'DELIVERY' },
+    { text: 'Contract', value: 'CONTRACT' },
+    { text: 'Change Request', value: 'CHANGE_REQUEST' },
+    { text: 'User Manual', value: 'MANUAL' },
   ];
 
   filteredVersions = signal<DocumentVersionModel[]>([]);
@@ -92,8 +95,9 @@ export class Pmdt19Component implements OnInit {
     this.filteredVersions.set(filtered);
   }
 
-  onTypeChange(type: string): void {
-    this.filterType.set(type);
+  onTypeChange(type: any): void {
+    const val = type !== undefined && type !== null ? (typeof type === 'object' && type.target ? type.target.value : type) : 'ALL';
+    this.filterType.set(val || 'ALL');
     this.loadVersions();
   }
 

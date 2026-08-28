@@ -10,10 +10,13 @@ import { burt04Service } from './burt04.service';
 import { MemberWithUI, TeamMember } from './burt04.model';
 
 
+import { FormsModule } from '@angular/forms';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+
 @Component({
   selector: 'app-burt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })
@@ -38,6 +41,14 @@ export class Burt04AComponent implements OnInit {
 
   // ✅ รายการบทบาททั้งหมดสำหรับ filter dropdown
   roleOptions = signal<string[]>([]);
+  roleSelectOptions = computed(() => {
+    return this.roleOptions().map((r) => ({ value: r, text: r }));
+  });
+
+  readonly statusSelectOptions = [
+    { value: 'active', text: 'ใช้งาน (Active)' },
+    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
+  ];
 
   filteredMembers = computed(() => {
     let list = this.members();
@@ -243,16 +254,16 @@ export class Burt04AComponent implements OnInit {
     }
   }
 
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
+  onFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
     this.loadMembers();
   }
 
-  onRoleFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterRole.set(select.value);
+  onRoleFilterChange(value: any) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterRole.set(val || 'all');
     this.currentPage.set(1);
   }
 }

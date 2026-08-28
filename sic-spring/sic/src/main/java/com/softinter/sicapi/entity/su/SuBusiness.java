@@ -95,7 +95,7 @@ public class SuBusiness extends BaseEntity {
     private UUID uploadGroupId;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = false;
+    private Boolean isActive = true;
 
     @OneToMany(mappedBy = "business", fetch = FetchType.LAZY)
     private List<SuUserBusiness> userBusinesses = new ArrayList<>();

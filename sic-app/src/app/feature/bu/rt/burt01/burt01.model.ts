@@ -32,4 +32,5 @@ export interface Burt01Model extends SicBaseStateModel {
   phoneNumber?: string | null;
   uploadGroupId?: string | null;
   uploadGroupData: StorageUploadReference[];
+  isActive?: boolean | null;
 }

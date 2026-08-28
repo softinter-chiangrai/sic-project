@@ -33,6 +33,7 @@ public class BusinessResponse {
     private String phoneNumber;
     private UUID uploadGroupId;
     private List<StorageUploadReference> uploadGroupData = new ArrayList<>();
+    private Boolean isActive;
     private Integer state;
     private Integer rowVersion;
 }
