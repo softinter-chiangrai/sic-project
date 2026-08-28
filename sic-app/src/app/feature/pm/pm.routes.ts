@@ -425,7 +425,7 @@ export const PM_ROUTES: Routes = [
   // ============================================================
   {
     path: 'task-board',
-    loadComponent: () => import('./dt/pmdt10/pmdt10B/pmdt10B.component').then((m) => m.Pmdt10BComponent),
+    loadComponent: () => import('./dt/pmdt10/pmdt10.component').then((m) => m.Pmdt10Component),
     canActivate: [customerGuard, projectGuard],
   },
 

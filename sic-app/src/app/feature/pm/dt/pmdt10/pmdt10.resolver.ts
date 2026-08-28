@@ -3,5 +3,6 @@ import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 
 export const pmdt10Resolver: ResolveFn<any> = (route) => {
-  return of({ loaded: true });
+  const id = route.params['id'];
+  return of({ id: id || null, loaded: true });
 };

@@ -1,333 +1,182 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-
-// ===== Interfaces =====
-interface Task {
-  id: string;
-  taskCode: string;
-  taskName: string;
-  relatedSpec: string;
-  relatedSpecName: string;
-  projectId: string;
-  projectName: string;
-  assignedTo: string;
-  startDate: string;
-  endDate: string;
-  actualStart?: string;
-  actualEnd?: string;
-  estimateManday: number;
-  actualManday: number;
-  status: 'Todo' | 'In Progress' | 'Waiting Review' | 'Waiting Fix' | 'Done' | 'Delayed' | 'Blocked' | 'Cancelled';
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  dependency?: string;
-  dependencyName?: string;
-  description: string;
-  impactIfDelay?: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-// ===== Mock Data =====
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    taskCode: 'TASK-001',
-    taskName: 'ออกแบบ Table Customer',
-    relatedSpec: 'SPEC-001',
-    relatedSpecName: 'Customer Management',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมชาย ใจดี',
-    startDate: '2024-01-15',
-    endDate: '2024-01-20',
-    actualStart: '2024-01-15',
-    actualEnd: '2024-01-22',
-    estimateManday: 3,
-    actualManday: 4,
-    status: 'Done',
-    priority: 'High',
-    dependency: '',
-    dependencyName: '',
-    description: 'ออกแบบโครงสร้างตาราง Customer และความสัมพันธ์',
-    impactIfDelay: 'กระทบงานพัฒนา API',
-    isActive: true,
-    createdAt: '2024-01-10 09:00:00',
-  },
-  {
-    id: '2',
-    taskCode: 'TASK-002',
-    taskName: 'พัฒนา Customer API',
-    relatedSpec: 'SPEC-001',
-    relatedSpecName: 'Customer Management',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'สมชาย ใจดี',
-    startDate: '2024-01-22',
-    endDate: '2024-01-28',
-    actualStart: '2024-01-22',
-    actualEnd: '',
-    estimateManday: 5,
-    actualManday: 4,
-    status: 'In Progress',
-    priority: 'High',
-    dependency: 'TASK-001',
-    dependencyName: 'ออกแบบ Table Customer',
-    description: 'พัฒนา API CRUD สำหรับจัดการข้อมูลลูกค้า',
-    impactIfDelay: 'กระทบงาน UI',
-    isActive: true,
-    createdAt: '2024-01-20 10:00:00',
-  },
-  {
-    id: '3',
-    taskCode: 'TASK-003',
-    taskName: 'พัฒนา Customer UI',
-    relatedSpec: 'SPEC-001',
-    relatedSpecName: 'Customer Management',
-    projectId: '1',
-    projectName: 'ระบบ CRM',
-    assignedTo: 'วิชัย พัฒนาชัย',
-    startDate: '2024-01-29',
-    endDate: '2024-02-05',
-    actualStart: '',
-    actualEnd: '',
-    estimateManday: 4,
-    actualManday: 0,
-    status: 'Todo',
-    priority: 'Medium',
-    dependency: 'TASK-002',
-    dependencyName: 'พัฒนา Customer API',
-    description: 'พัฒนา UI สำหรับจัดการข้อมูลลูกค้า',
-    impactIfDelay: 'กระทบการทดสอบ',
-    isActive: true,
-    createdAt: '2024-01-25 14:00:00',
-  },
-];
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Pmdt10Service } from '../pmdt10.service';
+import { Pmdt10Form } from '../pmdt10.form';
+import type { TaskModel, TaskRequest, TaskResponse, SpecificationSummary, WorkPackageOption } from '../pmdt10.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { BusinessService } from '../../../../../core/services/business.service';
+import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicTimepickerComponent} from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
+import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 
 @Component({
   selector: 'app-pmdt10a',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SicComboboxComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
+    SicColorpickerComponent,
+    SicTiptapEditorComponent,
+  ],
   templateUrl: './pmdt10A.component.html',
   styleUrls: ['./pmdt10A.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt10AComponent implements OnInit {
-  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private service = inject(Pmdt10Service);
+  private dialog = inject(DialogService);
+  private businessService = inject(BusinessService);
 
-  // ===== Developer Info =====
-  currentUser = 'สมชาย ใจดี'; // TODO: inject AuthService
+  @Input() isOpen = false;
+  @Input() isEdit = false;
+  @Input() taskId: string | null = null;
+  @Input() initialSpecId: string | null = null;
+  @Input() specifications: SpecificationSummary[] = [];
+  @Input() workPackages: WorkPackageOption[] = [];
 
-  // ===== State =====
-  protected searchTerm = signal('');
-  protected filterStatus = signal('all');
-  protected filterPriority = signal('all');
-  protected filterProject = signal('all');
-  protected currentPage = signal(1);
-  protected pageSize = signal(10);
-  protected sortBy = signal('taskCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
-  protected isLoading = signal(false);
+  @Output() close = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<TaskResponse>();
 
-  // ===== Data =====
-  protected tasks = signal<Task[]>(MOCK_TASKS);
+  assignedToApiUrl = '';
+  isSaving = false;
+  formData: SicFromData<TaskModel> = new SicFromData<TaskModel>(Pmdt10Form.createForm(this.fb));
 
-  // ===== Computed =====
-  protected myTasks = computed(() => {
-    return this.tasks().filter((t) => t.assignedTo === this.currentUser);
-  });
+  get form() {
+    return this.formData.formGroup;
+  }
 
-  protected filteredTasks = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
-    const priority = this.filterPriority();
-    const project = this.filterProject();
+  get specOptions() {
+    return this.specifications.map((s) => ({
+      value: s.id,
+      text: `[${s.code}] ${s.title}`,
+    }));
+  }
 
-    let result = this.myTasks();
+  get wpOptions() {
+    return this.workPackages.map((wp) => ({
+      value: wp.id,
+      text: `${wp.packageName} (${wp.phaseName})`,
+    }));
+  }
 
-    if (term) {
-      result = result.filter(
-        (t) =>
-          t.taskCode.toLowerCase().includes(term) ||
-          t.taskName.toLowerCase().includes(term) ||
-          t.projectName.toLowerCase().includes(term)
-      );
+  ngOnInit(): void {
+    this.updateAssignedToApiUrl();
+  }
+
+  private updateAssignedToApiUrl(): void {
+    const businessId = this.businessService.getCurrentBusinessId();
+    if (businessId) {
+      this.assignedToApiUrl = this.service.getMembersApiUrl(businessId);
     }
+  }
 
-    if (status !== 'all') {
-      result = result.filter((t) => t.status === status);
-    }
-
-    if (priority !== 'all') {
-      result = result.filter((t) => t.priority === priority);
-    }
-
-    if (project !== 'all') {
-      result = result.filter((t) => t.projectId === project);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof Task] ?? '';
-      const bVal = b[sortField as keyof Task] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
+  initForCreate(defaultSpecId?: string | null) {
+    this.updateAssignedToApiUrl();
+    this.form.reset({
+      startTime: '09:00',
+      endTime: '18:00',
+      estimateManday: 1,
+      priority: 'Medium',
+      status: 'Todo',
+      color: '#3B82F6',
+      specificationId: defaultSpecId || this.initialSpecId || (this.specifications[0]?.id ?? null),
+      workPackageId: this.workPackages[0]?.id ?? null,
+      assigneeIds: [],
     });
+  }
 
-    return result;
-  });
+  loadTaskData(task: TaskResponse) {
+    const startParts = task.startDate ? task.startDate.split('T') : ['', '09:00'];
+    const endParts = task.endDate ? task.endDate.split('T') : ['', '18:00'];
 
-  protected paginatedTasks = computed(() => {
-    const all = this.filteredTasks();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredTasks().length);
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
+    this.form.patchValue({
+      id: task.id,
+      workPackageId: task.workPackageId,
+      specificationId: task.specificationId || null,
+      taskCode: task.taskCode,
+      taskName: task.taskName,
+      description: task.description || '',
+      assignedTo: task.assignedTo || '',
+      startDate: startParts[0] || null,
+      startTime: (startParts[1] || '09:00').substring(0, 5),
+      endDate: endParts[0] || null,
+      endTime: (endParts[1] || '18:00').substring(0, 5),
+      estimateManday: task.estimateManday || 1,
+      priority: task.priority || 'Medium',
+      status: task.status || 'Todo',
+      color: task.color || '#3B82F6',
+      assigneeIds: task.assigneeIds || [],
     });
-  });
-
-  protected Math = Math;
-
-  // ===== Options =====
-  statusOptions = ['Todo', 'In Progress', 'Waiting Review', 'Waiting Fix', 'Done', 'Delayed', 'Blocked', 'Cancelled'];
-  priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
-  projectOptions = [
-    { id: '1', name: 'ระบบ CRM' },
-    { id: '2', name: 'ระบบ HR' },
-  ];
-
-  // ===== Lifecycle =====
-  ngOnInit() {
-    // TODO: เรียก API จริง
   }
 
-  // ===== Actions =====
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-  }
-
-  onFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterStatus.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onPriorityChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterPriority.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.filterProject.set(select.value);
-    this.currentPage.set(1);
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
+  onAssigneeSelectionChanged(items: any[]) {
+    if (!items || items.length === 0) {
+      this.form.patchValue({ assignedTo: null });
+      return;
     }
+    const first = items[0];
+    this.form.patchValue({ assignedTo: first.text || first.name || first.value });
   }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
+  private buildISOString(date: any, time: string): string {
+    if (!date) return '';
+    const dateStr = typeof date === 'string' ? date.split('T')[0] : '';
+    if (!dateStr) return '';
+    const timeStr = time || '00:00';
+    return `${dateStr}T${timeStr}:00Z`;
   }
 
-  clearSearch() {
-    this.searchTerm.set('');
-    this.currentPage.set(1);
-  }
-
-  goToUpdate(id: string) {
-    this.router.navigate(['/feature/pm/my-tasks', id, 'update']);
-  }
-
-  // ===== Utility =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Todo: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      'Waiting Review': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      'Waiting Fix': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Delayed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      Blocked: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
-      Cancelled: 'bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    };
-    return map[status] || map['Todo'];
-  }
-
-  getPriorityClass(priority: string): string {
-    const map: Record<string, string> = {
-      Low: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      Medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      High: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      Critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[priority] || map['Low'];
-  }
-
-  getStatusIcon(status: string): string {
-    const map: Record<string, string> = {
-      Todo: 'bi-circle',
-      'In Progress': 'bi-arrow-repeat',
-      'Waiting Review': 'bi-clock-history',
-      'Waiting Fix': 'bi-tools',
-      Done: 'bi-check2-circle',
-      Delayed: 'bi-exclamation-triangle',
-      Blocked: 'bi-slash-circle',
-      Cancelled: 'bi-x-circle',
-    };
-    return map[status] || 'bi-circle';
-  }
-
-  formatDate(dateStr: string): string {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
+  onSubmit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณาระบุ Specification, Work Package และข้อมูลที่จำเป็นให้ครบถ้วน');
+      return;
     }
+
+    const raw = this.form.value;
+    const data: TaskRequest = {
+      workPackageId: raw.workPackageId!,
+      specificationId: raw.specificationId || undefined,
+      taskCode: raw.taskCode!,
+      taskName: raw.taskName!,
+      description: raw.description || undefined,
+      assignedTo: raw.assignedTo || undefined,
+      startDate: this.buildISOString(raw.startDate, raw.startTime || '09:00'),
+      endDate: this.buildISOString(raw.endDate, raw.endTime || '18:00'),
+      estimateManday: raw.estimateManday!,
+      priority: raw.priority || 'Medium',
+      status: raw.status || 'Todo',
+      color: raw.color || undefined,
+      assigneeIds: raw.assigneeIds || [],
+    };
+
+    this.isSaving = true;
+    const req$ = this.isEdit && this.taskId
+      ? this.service.updateTask(this.taskId, data)
+      : this.service.createTask(data);
+
+    req$.subscribe({
+      next: (res) => {
+        this.isSaving = false;
+        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task พร้อมผูก Specification เรียบร้อย');
+        this.saved.emit(res);
+        this.closeModal();
+      },
+      error: (err) => {
+        this.isSaving = false;
+        this.dialog.error('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก Task');
+      },
+    });
   }
 
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Todo: 'รอเริ่ม',
-      'In Progress': 'กำลังทำ',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Done: 'เสร็จ',
-      Delayed: 'ล่าช้า',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
+  closeModal(): void {
+    this.close.emit();
   }
 }
-
-export default Pmdt10AComponent;

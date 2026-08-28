@@ -17,10 +17,11 @@ import { SicRadioComponent } from "../../../../core/component/sic-radio/sic-radi
 import { SicCardComponent } from "../../../../core/component/sic-card/sic-card.component";
 import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
 import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-burt01',
-  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent],
+  imports: [CommonModule, SicProfileComponent, ReactiveFormsModule, SicComboboxComponent, SicInputComponent, SicInputPhoneComponent, SicInputAreaComponent, SicRadioComponent, SicButtonComponent],
   templateUrl: './burt01.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt01.component.css',
@@ -34,6 +35,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   readonly router = inject(Router);
 
   formData!: SicFromData<Burt01Model>;
+  isSaving = signal(false);
 
   ngOnInit(): void {
      const form:Burt01FormData = this.route.snapshot.data['form'];
@@ -76,14 +78,17 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
 
   save() {
     const data = this.formData.value;
-    this.service.save(data).subscribe({
-      next: (response) => {
-        this.dialog.success('Business Saved', 'Your Business has been successfully saved.');
-      },
-      error: (error) => {
-        this.dialog.error('Save Failed', error);
-      }
-    });
+    this.isSaving.set(true);
+    this.service.save(data)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.dialog.success('Business Saved', 'Your Business has been successfully saved.');
+        },
+        error: (error) => {
+          this.dialog.error('Save Failed', error);
+        }
+      });
   }
 
   onAdd(): void {
@@ -91,7 +96,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   }
   
   onBack(): void {
-    console.log('back');
+    this.router.navigate(['/feature/dashboard']);
   }
   
   onPrint(): void {
@@ -99,8 +104,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   }
   
   onSave(): void {
-    console.log('save');
-    
+    this.submit();
   }
 
   onSearch(): void {
