@@ -24,4 +24,5 @@ public class ApprovalStepResponse {
     private boolean isComplete;
     private Boolean isRequired;
     private Integer timeoutDays;
+    private String timeoutAction;
 }

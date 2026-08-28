@@ -139,9 +139,14 @@
                             }
 
                             @if (step.timeoutDays) {
-                                <div class="text-xs text-[var(--text-muted)] mt-0.5">
-                                    <i class="bi bi-clock mr-1"></i>
-                                    กำหนดภายใน {{ step.timeoutDays }} วัน
+                                <div class="text-xs text-[var(--text-muted)] mt-0.5 flex items-center gap-1">
+                                    <i class="bi bi-clock"></i>
+                                    <span>กำหนดภายใน {{ step.timeoutDays }} วัน</span>
+                                    @if (step.timeoutAction && step.timeoutAction !== 'NONE') {
+                                        <span class="text-[10px] px-1.5 py-0.2 bg-[var(--border)] rounded text-[var(--text)]">
+                                            ({{ step.timeoutAction }})
+                                        </span>
+                                    }
                                 </div>
                             }
                         </div>

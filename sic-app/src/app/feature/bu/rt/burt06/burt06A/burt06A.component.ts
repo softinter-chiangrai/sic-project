@@ -66,7 +66,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     id: [null],
     flowCode: ['', [Validators.required, Validators.maxLength(50)]],
     flowName: ['', [Validators.required, Validators.maxLength(255)]],
-    documentType: ['', [Validators.required]],
+    documentType: [null as string | null, [Validators.required]],
     approvalMode: ['CHAIN', [Validators.required]],
     description: [''],
     isActive: [true],
@@ -137,6 +137,13 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
+  timeoutActionOptions = [
+    { value: 'NONE', text: 'ไม่ทำอะไร (แจ้งเตือนเท่านั้น)' },
+    { value: 'AUTO_SKIP', text: 'ข้ามขั้นตอนอัตโนมัติ (Auto Skip)' },
+    { value: 'AUTO_APPROVE', text: 'อนุมัติอัตโนมัติ (Auto Approve)' },
+    { value: 'AUTO_REJECT', text: 'ปฏิเสธอัตโนมัติ (Auto Reject)' },
+  ];
+
   createStepForm(step?: ApprovalFlowStep): FormGroup {
     return this.fb.group({
       id: [step?.id || null],
@@ -149,7 +156,11 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       approverUserId: [step?.approverUserId || ''],
       selectedUserIds: [this.parseUserIds(step?.approverUserId), [Validators.required]],
       isRequired: [step?.isRequired !== false],
-      timeoutDays: [step?.timeoutDays || null],
+      timeoutDays: [
+        step?.timeoutDays !== undefined && step?.timeoutDays !== null ? step.timeoutDays : 1,
+        [Validators.required, Validators.min(1)],
+      ],
+      timeoutAction: [step?.timeoutAction || 'NONE', [Validators.required]],
       canSkip: [step?.canSkip || false],
       rowVersion: [step?.rowVersion || null],
     });

@@ -52,4 +52,6 @@ public interface ApprovalService {
     void validateDocument(String documentType, UUID documentId);
 
     CancelApprovalResponse cancelByFlow(UUID flowId, String reason);
+    
+    void processTimeouts();
 }

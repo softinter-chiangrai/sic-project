@@ -13,6 +13,7 @@ public class SaveApprovalFlowStepRequest {
     private String approverUserId;
     private Boolean isRequired;
     private Integer timeoutDays;
+    private String timeoutAction;
     private Boolean canSkip;
     private String conditionExpression;
     private Integer rowVersion;

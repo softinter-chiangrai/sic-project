@@ -922,6 +922,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setComplete(stepStatus.getIsCompleted());
         response.setIsRequired(stepStatus.getStep().getIsRequired());
         response.setTimeoutDays(stepStatus.getStep().getTimeoutDays());
+        response.setTimeoutAction(stepStatus.getStep().getTimeoutAction() != null ? stepStatus.getStep().getTimeoutAction() : "NONE");
         return response;
     }
 
@@ -936,6 +937,150 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setNewStatus(log.getNewStatus());
         response.setCreatedDate(log.getCreatedDate());
         return response;
+    }
+
+    @Override
+    @Transactional
+    public void processTimeouts() {
+        List<PmApproval> pendingApprovals = approvalRepository.findAll((root, query, cb) -> 
+            cb.and(
+                cb.equal(root.get("status"), ApprovalStatus.PENDING),
+                cb.isFalse(root.get("isDelete")),
+                cb.isNotNull(root.get("currentStep"))
+            )
+        );
+
+        Instant now = Instant.now();
+
+        for (PmApproval approval : pendingApprovals) {
+            PmApprovalFlowStep currentStep = approval.getCurrentStep();
+            if (currentStep == null || currentStep.getTimeoutDays() == null || currentStep.getTimeoutDays() <= 0) {
+                continue;
+            }
+
+            Instant baseTime = approval.getRequestedDate() != null ? approval.getRequestedDate() : approval.getCreatedDate();
+            // Check last approval date if any previous step completed
+            Instant lastActionDate = approval.getStepStatuses().stream()
+                    .filter(ss -> Boolean.TRUE.equals(ss.getIsCompleted()) && ss.getApprovalDate() != null)
+                    .map(PmApprovalStepStatus::getApprovalDate)
+                    .max(Instant::compareTo)
+                    .orElse(baseTime);
+
+            long timeoutMillis = currentStep.getTimeoutDays().longValue() * 24L * 60L * 60L * 1000L;
+            Instant dueDate = lastActionDate.plusMillis(timeoutMillis);
+
+            if (now.isAfter(dueDate)) {
+                String action = currentStep.getTimeoutAction() != null ? currentStep.getTimeoutAction() : "NONE";
+                if ("NONE".equalsIgnoreCase(action) && Boolean.TRUE.equals(currentStep.getCanSkip())) {
+                    action = "AUTO_SKIP";
+                }
+
+                if ("AUTO_SKIP".equalsIgnoreCase(action)) {
+                    handleAutoSkip(approval, currentStep);
+                } else if ("AUTO_APPROVE".equalsIgnoreCase(action)) {
+                    handleAutoApprove(approval, currentStep);
+                } else if ("AUTO_REJECT".equalsIgnoreCase(action)) {
+                    handleAutoReject(approval, currentStep);
+                }
+            }
+        }
+    }
+
+    private void handleAutoSkip(PmApproval approval, PmApprovalFlowStep currentStep) {
+        List<PmApprovalStepStatus> pendingStatuses = approval.getStepStatuses().stream()
+                .filter(ss -> ss.getStep().getId().equals(currentStep.getId()) && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                .collect(Collectors.toList());
+
+        for (PmApprovalStepStatus stepStatus : pendingStatuses) {
+            stepStatus.setStatus(ApprovalStatus.APPROVED);
+            stepStatus.setIsCompleted(true);
+            stepStatus.setApprovalDate(Instant.now());
+            stepStatus.setComment("Skipped automatically due to timeout (" + currentStep.getTimeoutDays() + " days)");
+            stepStatus.setApproverName("System (Auto-Skip)");
+            stepStatusRepository.save(stepStatus);
+            createLog(approval, stepStatus, "AUTO_SKIP", "system", "System", "Auto-skipped due to timeout", ApprovalStatus.PENDING, ApprovalStatus.APPROVED);
+        }
+
+        advanceToNextStepOrComplete(approval, currentStep.getStepName());
+    }
+
+    private void handleAutoApprove(PmApproval approval, PmApprovalFlowStep currentStep) {
+        List<PmApprovalStepStatus> pendingStatuses = approval.getStepStatuses().stream()
+                .filter(ss -> ss.getStep().getId().equals(currentStep.getId()) && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                .collect(Collectors.toList());
+
+        for (PmApprovalStepStatus stepStatus : pendingStatuses) {
+            stepStatus.setStatus(ApprovalStatus.APPROVED);
+            stepStatus.setIsCompleted(true);
+            stepStatus.setApprovalDate(Instant.now());
+            stepStatus.setComment("Approved automatically due to timeout (" + currentStep.getTimeoutDays() + " days)");
+            stepStatus.setApproverName("System (Auto-Approve)");
+            stepStatusRepository.save(stepStatus);
+            createLog(approval, stepStatus, "AUTO_APPROVE", "system", "System", "Auto-approved due to timeout", ApprovalStatus.PENDING, ApprovalStatus.APPROVED);
+        }
+
+        advanceToNextStepOrComplete(approval, currentStep.getStepName());
+    }
+
+    private void handleAutoReject(PmApproval approval, PmApprovalFlowStep currentStep) {
+        List<PmApprovalStepStatus> pendingStatuses = approval.getStepStatuses().stream()
+                .filter(ss -> ss.getStep().getId().equals(currentStep.getId()) && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                .collect(Collectors.toList());
+
+        for (PmApprovalStepStatus stepStatus : pendingStatuses) {
+            stepStatus.setStatus(ApprovalStatus.REJECTED);
+            stepStatus.setIsCompleted(true);
+            stepStatus.setApprovalDate(Instant.now());
+            stepStatus.setComment("Rejected automatically due to timeout (" + currentStep.getTimeoutDays() + " days)");
+            stepStatus.setApproverName("System (Auto-Reject)");
+            stepStatusRepository.save(stepStatus);
+        }
+
+        approval.setStatus(ApprovalStatus.REJECTED);
+        approval.setFinalApprover("system");
+        approval.setFinalApprovalDate(Instant.now());
+        approval.setCurrentStep(null);
+        approval.setComment("Rejected automatically due to timeout (" + currentStep.getTimeoutDays() + " days)");
+        approvalRepository.save(approval);
+
+        createLog(approval, null, "AUTO_REJECT", "system", "System", "Auto-rejected due to timeout", ApprovalStatus.PENDING, ApprovalStatus.REJECTED);
+        updateDocumentStatusOnReject(approval);
+        notificationService.notifyRejected(approval, currentStep.getStepName());
+    }
+
+    private void advanceToNextStepOrComplete(PmApproval approval, String previousStepName) {
+        boolean allDone = approval.getStepStatuses().stream()
+                .allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
+
+        if (allDone) {
+            approval.setStatus(ApprovalStatus.APPROVED);
+            approval.setFinalApprover("system");
+            approval.setFinalApprovalDate(Instant.now());
+            approval.setCurrentStep(null);
+            approvalRepository.save(approval);
+
+            updateDocumentStatusOnApprove(approval);
+            notificationService.notifyApproved(approval, previousStepName);
+        } else {
+            PmApprovalStepStatus nextPending = approval.getStepStatuses().stream()
+                    .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (nextPending != null) {
+                approval.setCurrentStep(nextPending.getStep());
+                approvalRepository.save(approval);
+                notificationService.notifySubmitted(approval);
+            } else {
+                approval.setStatus(ApprovalStatus.APPROVED);
+                approval.setFinalApprover("system");
+                approval.setFinalApprovalDate(Instant.now());
+                approval.setCurrentStep(null);
+                approvalRepository.save(approval);
+                updateDocumentStatusOnApprove(approval);
+                notificationService.notifyApproved(approval, previousStepName);
+            }
+        }
     }
 
     private String getUserName(String userId) {

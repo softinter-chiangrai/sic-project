@@ -15,6 +15,7 @@ public class ApprovalFlowStepResponse {
     private String approverUserId;
     private Boolean isRequired;
     private Integer timeoutDays;
+    private String timeoutAction;
     private Boolean canSkip;
     private String conditionExpression;
 }

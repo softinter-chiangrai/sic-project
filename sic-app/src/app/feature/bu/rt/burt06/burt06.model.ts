@@ -23,6 +23,7 @@ export interface ApprovalFlowStep {
   approverUserId?: string;
   isRequired: boolean;
   timeoutDays?: number;
+  timeoutAction?: string;
   canSkip: boolean;
   rowVersion?: number;
 }

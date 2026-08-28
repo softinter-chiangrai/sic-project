@@ -282,6 +282,17 @@ export class Pmdt03Component implements OnInit {
     return map[status] || status;
   }
 
+  isOverdue(dueDate?: string, status?: string): boolean {
+    if (!dueDate || status !== 'PENDING') return false;
+    return new Date(dueDate).getTime() < Date.now();
+  }
+
+  isDueSoon(dueDate?: string, status?: string): boolean {
+    if (!dueDate || status !== 'PENDING') return false;
+    const diff = new Date(dueDate).getTime() - Date.now();
+    return diff > 0 && diff <= 24 * 60 * 60 * 1000;
+  }
+
   formatDate(dateStr: string): string {
     try {
       const date = new Date(dateStr);

@@ -110,6 +110,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                 step.setApproverUserId(stepReq.getApproverUserId());
                 step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
                 step.setTimeoutDays(stepReq.getTimeoutDays());
+                step.setTimeoutAction(stepReq.getTimeoutAction() != null ? stepReq.getTimeoutAction() : "NONE");
                 step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
                 step.setConditionExpression(stepReq.getConditionExpression());
                 step.setCreatedBy(currentUserService.getUserId());
@@ -181,6 +182,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
                 step.setApproverUserId(stepReq.getApproverUserId());
                 step.setIsRequired(stepReq.getIsRequired() != null ? stepReq.getIsRequired() : true);
                 step.setTimeoutDays(stepReq.getTimeoutDays());
+                step.setTimeoutAction(stepReq.getTimeoutAction() != null ? stepReq.getTimeoutAction() : "NONE");
                 step.setCanSkip(stepReq.getCanSkip() != null ? stepReq.getCanSkip() : false);
                 step.setConditionExpression(stepReq.getConditionExpression());
                 step.setCreatedBy(currentUserService.getUserId());
@@ -263,6 +265,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
         response.setApproverUserId(step.getApproverUserId());
         response.setIsRequired(step.getIsRequired());
         response.setTimeoutDays(step.getTimeoutDays());
+        response.setTimeoutAction(step.getTimeoutAction() != null ? step.getTimeoutAction() : "NONE");
         response.setCanSkip(step.getCanSkip());
         response.setConditionExpression(step.getConditionExpression());
         return response;

@@ -69,6 +69,7 @@ export interface ApprovalStepStatus {
     isComplete: boolean;
     isRequired: boolean;
     timeoutDays: number | null;
+    timeoutAction?: string | null;
 }
 
 export interface ApprovalLog {

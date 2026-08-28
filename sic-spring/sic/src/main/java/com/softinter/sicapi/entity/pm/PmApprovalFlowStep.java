@@ -35,6 +35,9 @@ public class PmApprovalFlowStep extends BaseEntity {
     @Column(name = "timeout_days")
     private Integer timeoutDays;
 
+    @Column(name = "timeout_action", length = 30)
+    private String timeoutAction = "NONE";
+
     @Column(name = "can_skip")
     private Boolean canSkip = false;
 

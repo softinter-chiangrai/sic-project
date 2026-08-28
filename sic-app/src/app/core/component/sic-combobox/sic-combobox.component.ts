@@ -12,8 +12,10 @@ import {
   HostListener,
   Injector,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
+  SimpleChanges,
   TemplateRef,
   ViewChild,
   forwardRef,
@@ -66,7 +68,7 @@ export class SicComboboxOptionTemplate {
     },
   ],
 })
-export class SicComboboxComponent implements ControlValueAccessor, AfterContentInit, AfterViewInit, OnDestroy {
+export class SicComboboxComponent implements ControlValueAccessor, OnChanges, AfterContentInit, AfterViewInit, OnDestroy {
   @Input() label?: string;
   @Input() apiUrl = '';
   private _options: any[] = [];
@@ -158,20 +160,19 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
   opened = false;
   loading = false;
   hasProjectedTemplate = false;
-
-  inputText = '';
-  selectedText = '';
-  selectedItem: unknown = null;
+  selectedItem: any = null;
   selectedItems: any[] = [];
+  selectedText = '';
+  inputText = '';
+  searchTerm = '';
   value: any = null;
-  activeIndex = -1;
+  touched = false;
   pageNumber = 1;
   totalPages = 1;
   totalElements = 0;
-  touched = false;
+  activeIndex = -1;
   dropdownPanelStyle: Record<string, string> = {};
 
-  private searchTerm = '';
   private onChange: (value: any) => void = () => {};
   private onTouched: () => void = () => {};
   private ngControl: NgControl | null = null;
@@ -191,6 +192,15 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     private readonly validator: SicValidator,
   ) {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['apiUrl'] || changes['params']) {
+      if (this.ready && this.apiUrl) {
+        this.pageNumber = 1;
+        this.loadOptions(true);
+      }
+    }
+  }
+
   ngAfterContentInit(): void {
     this.hasProjectedTemplate = !!this.optionTemplate;
   }
@@ -204,6 +214,11 @@ export class SicComboboxComponent implements ControlValueAccessor, AfterContentI
     this.readyHandle = setTimeout(() => {
       this.ready = true;
       this.readyHandle = null;
+
+      // Auto-load options globally whenever apiUrl is provided
+      if (this.apiUrl && (!this.options || this.options.length === 0)) {
+        this.loadOptions(true);
+      }
     }, 0);
 
     this.languageChangeSubscription = this.translate.onLangChange.subscribe(() => {

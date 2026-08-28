@@ -203,7 +203,26 @@
                 <span class="text-[var(--text-active)]">{{ item.requester }}</span>
               </td>
               <td class="px-4 py-3 hidden lg:table-cell">
-                <span class="text-sm text-[var(--text-muted)]">{{ formatDate(item.requestedDate) }}</span>
+                <div>
+                  <span class="text-sm text-[var(--text-muted)]">{{ formatDate(item.requestedDate) }}</span>
+                  @if (item.dueDate && item.status === 'PENDING') {
+                    <div class="mt-0.5">
+                      @if (isOverdue(item.dueDate, item.status)) {
+                        <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
+                          <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(item.dueDate) }})
+                        </span>
+                      } @else if (isDueSoon(item.dueDate, item.status)) {
+                        <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
+                          <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
+                        </span>
+                      } @else {
+                        <span class="text-xs text-[var(--text-muted)] block">
+                          ครบกำหนด: {{ formatDate(item.dueDate) }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
               </td>
               <td class="px-4 py-3">
                 <span [class]="getStatusClass(item.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
