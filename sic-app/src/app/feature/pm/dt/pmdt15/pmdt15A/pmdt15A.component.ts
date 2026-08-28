@@ -5,8 +5,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -28,7 +28,7 @@ import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
     SicUploadComponent,
   ],
   templateUrl: './pmdt15A.component.html',

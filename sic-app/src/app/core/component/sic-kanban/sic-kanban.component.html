@@ -486,7 +486,7 @@
                 <h4 class="kanban-card-title">{{ ms.milestoneName }}</h4>
 
                 @if (ms.description) {
-                  <p class="kanban-card-desc">{{ ms.description }}</p>
+                  <p class="kanban-card-desc">{{ ms.description | sicStripHtml }}</p>
                 }
 
                 <!-- Meta (Due Date & WP Count) -->

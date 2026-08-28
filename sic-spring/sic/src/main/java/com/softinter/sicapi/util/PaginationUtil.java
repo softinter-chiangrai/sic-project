@@ -2,6 +2,7 @@ package com.softinter.sicapi.util;
 
 import com.softinter.sicapi.dto.Pageable;
 import com.softinter.sicapi.dto.response.PaginationResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ public class PaginationUtil {
         return response;
     }
 
-    public static <T> PaginationResponse<T> of(org.springframework.data.domain.Page<T> page) {
+    public static <T> PaginationResponse<T> of(Page<T> page) {
         if (page == null) {
             return of(new ArrayList<>(), 0, 10, 0);
         }

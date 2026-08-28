@@ -41,7 +41,7 @@
                 {{ getStatusText(phase.status) }}
               </span>
             </div>
-            <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{{ phase.description || 'ไม่มีคำอธิบาย' }}</p>
+            <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{{ (phase.description | sicStripHtml) || 'ไม่มีคำอธิบาย' }}</p>
             <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-3">
               <span><i class="bi bi-calendar3"></i> {{ formatDate(phase.startDate) }} - {{ formatDate(phase.endDate) }}</span>
               <span><i class="bi bi-person"></i> {{ phase.owner || '-' }}</span>

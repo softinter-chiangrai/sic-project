@@ -15,11 +15,19 @@ import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    SicTableActionsComponent,
+    SicComboboxComponent,
+    SicStripHtmlPipe,
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt06.component.html',
 })

@@ -173,8 +173,8 @@ export class Burt02Component implements OnInit {
 
   // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'active', text: 'ใช้งาน (Active)' },
-    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
+    { value: 'active', text: 'ใช้งาน' },
+    { value: 'inactive', text: 'ไม่ใช้งาน' },
   ];
 
   readonly userCountSelectOptions = [

@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -14,21 +14,19 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { UserOption } from './burt06A.model';
 import { ApprovalFlowStep, ApprovalFlow } from '../burt06.model';
 import { Burt06Service } from '../burt06.service';
-
 
 @Component({
   selector: 'app-burt06a',
@@ -39,7 +37,7 @@ import { Burt06Service } from '../burt06.service';
     RouterModule,
     SicButtonComponent,
     SicInputComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
     SicCheckboxComponent,
     SicCardComponent,
     SicComboboxComponent,
@@ -61,8 +59,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
   isEdit = false;
   flowId: string | null = null;
-  isLoading = false;
-  isSaving = false;
+  isLoading = signal(false);
+  isSaving = signal(false);
 
   form = this.fb.group({
     id: [null],
@@ -116,10 +114,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   }
 
   loadFlow(id: string): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.service
       .getFlow(id)
-      .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (data) => {
           this.form.patchValue(data as any);
@@ -128,11 +125,14 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
             this.steps.push(this.createStepForm(step));
           });
           this.reorderSteps();
+          this.isLoading.set(false);
           this.cdr.detectChanges();
         },
         error: () => {
+          this.isLoading.set(false);
+          this.cdr.detectChanges();
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Flow ที่ต้องการ');
-          this.router.navigate(['/feature/bu/burt06']);
+          this.router.navigate(['/feature/bu/approval-flow']);
         },
       });
   }
@@ -263,7 +263,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
     const raw = this.form.value;
 
     const steps = (raw.steps as any[])?.map((s) => ({
@@ -273,7 +273,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
     const hasEmptyStepName = steps?.some((s: any) => !s.stepName?.trim());
     if (hasEmptyStepName) {
-      this.isSaving = false;
+      this.isSaving.set(false);
       this.dialog.warn('ข้อมูลไม่สมบูรณ์', 'กรุณากรอกชื่อขั้นตอนให้ครบทุกขั้นตอน');
       return;
     }
@@ -285,12 +285,14 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         ? this.service.updateFlow(this.flowId, data)
         : this.service.createFlow(data);
 
-    request.pipe(finalize(() => (this.isSaving = false))).subscribe({
+    request.subscribe({
       next: () => {
+        this.isSaving.set(false);
         this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
         this.router.navigate(['/feature/bu/approval-flow']);
       },
       error: (err) => {
+        this.isSaving.set(false);
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
     });

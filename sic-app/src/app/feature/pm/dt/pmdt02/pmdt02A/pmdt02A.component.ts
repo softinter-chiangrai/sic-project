@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmdt02AService } from './pmdt02A.service';
 import { Pmdt02AForm } from './pmdt02A.form';
@@ -21,7 +22,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     RouterModule,
     SicDatepickerComponent,
     SicTimepickerComponent,
-    SicColorpickerComponent,   // ✅ import
+    SicColorpickerComponent,
+    SicTiptapEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02A.component.html',

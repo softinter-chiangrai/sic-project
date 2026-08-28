@@ -114,14 +114,13 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">เนื้อหาคำอธิบาย (Section Content)</label>
-              <textarea
-                rows="12"
-                [value]="activeSec.content || ''"
-                (input)="updateActiveSectionContent($any($event.target).value)"
-                placeholder="กรอกรายละเอียดขั้นตอนการทำงาน ข้อแนะนำ หรือหมายเหตุประกอบคู่มือ..."
-                class="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none leading-relaxed font-mono">
-              </textarea>
+              <sic-tiptap-editor
+                label="เนื้อหาคำอธิบาย (Section Content)"
+                [placeholder]="'กรอกรายละเอียดขั้นตอนการทำงาน ข้อแนะนำ หรือหมายเหตุประกอบคู่มือ...'"
+                [minHeight]="'260px'"
+                [ngModel]="activeSec.content || ''"
+                (ngModelChange)="updateActiveSectionContent($event)"
+              ></sic-tiptap-editor>
             </div>
 
             <div class="space-y-2 pt-2">

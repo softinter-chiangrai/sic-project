@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, ChangeDetectionStrategy
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SicInputComponent } from '../sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../sic-input-area/sic-input-area.component';
+import { SicTiptapEditorComponent } from '../sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicButtonComponent } from '../sic-button/sic-button.component';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { DialogService } from '../../services/dialog.service';
@@ -10,17 +10,17 @@ import { DialogService } from '../../services/dialog.service';
 @Component({
   selector: 'sic-change-request-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SicInputComponent, SicInputAreaComponent, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, ReactiveFormsModule, SicInputComponent, SicTiptapEditorComponent, SicButtonComponent, SicComboboxComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <div class="w-[min(92vw,32rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
+    <div class="w-[min(92vw,36rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4" style="border-color: var(--border);">
         <h3 class="text-base font-semibold text-[var(--text-active)]">Create Change Request</h3>
         <p class="text-sm text-[var(--text-muted)]">This document is approved. You need a Change Request to edit.</p>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4 px-5 py-4">
         <sic-input label="Title" formControlName="title" [required]="true"></sic-input>
-        <sic-input-area label="Description" formControlName="description" [rows]="3"></sic-input-area>
+        <sic-tiptap-editor label="Description" formControlName="description" minHeight="120px"></sic-tiptap-editor>
         <sic-combobox label="Change Reason" formControlName="changeReason" [apiUrl]="'/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'" valueField="value" textField="text"></sic-combobox>
         <sic-combobox label="Assignee" formControlName="assigneeId" [apiUrl]="'/api/business/combobox-members?businessId=' + businessId" valueField="value" textField="text" [required]="true"></sic-combobox>
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">

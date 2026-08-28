@@ -9,6 +9,7 @@ import { SicButtonComponent } from '../../../../../core/component/sic-button/sic
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 
@@ -155,7 +156,7 @@ export class Pmdt13AService {
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt13A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

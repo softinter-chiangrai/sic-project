@@ -105,9 +105,10 @@
         </div>
 
         <!-- ===== POST CONTENT ===== -->
-        <div class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed whitespace-pre-wrap">
-          {{ post.content }}
-        </div>
+        <div
+          class="px-4 py-2 text-sm text-[var(--text-active)] leading-relaxed rich-text-content prose-sm max-w-none"
+          [innerHTML]="post.content"
+        ></div>
 
         <!-- ===== ATTACHMENTS ===== -->
         @if (post.attachmentGroupId) {

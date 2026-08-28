@@ -53,13 +53,13 @@
         </div>
 
         <div>
-          <sic-input-area
-            label="รายละเอียด"
+          <sic-tiptap-editor
+            label="ข้อความ"
             formControlName="content"
-            [rows]="4"
             placeholder="คุณกำลังคิดอะไรอยู่? แชร์ความคิดเห็นหรือสอบถามกับทีม..."
             [required]="true"
-          ></sic-input-area>
+            minHeight="180px"
+          ></sic-tiptap-editor>
         </div>
 
         <div class="border border-[var(--border)] rounded-xl p-3 bg-[var(--sidebar)]/50">

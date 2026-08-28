@@ -104,12 +104,13 @@
         formControlName="title"
       ></sic-input>
 
-      <sic-input-area
+      <sic-tiptap-editor
         label="รายละเอียดปัญหาโดยละเอียด (Description)"
         placeholder="อธิบายอาการของปัญหา ขั้นตอนการเกิด และผลกระทบ..."
         [required]="true"
+        minHeight="140px"
         formControlName="description"
-      ></sic-input-area>
+      ></sic-tiptap-editor>
     </div>
 
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
@@ -117,11 +118,12 @@
         <i class="bi bi-check-circle text-[var(--crm-primary)]"></i>
         สรุปการแก้ไขปัญหา (Resolution Summary)
       </h2>
-      <sic-input-area
+      <sic-tiptap-editor
         label="วิธีแก้ไขปัญหาและแนวทางป้องกัน"
         placeholder="ระบุแนวทางการแก้ไขที่ดำเนินการเรียบร้อยแล้ว..."
+        minHeight="140px"
         formControlName="resolutionSummary"
-      ></sic-input-area>
+      ></sic-tiptap-editor>
     </div>
   </form>
 </div>

@@ -2,31 +2,44 @@
 
 <!-- ====== Editor หลัก (แสดงเมื่อไม่ใช่ fullscreen) ====== -->
 @if (!fullscreen) {
-  <div
-    class="sic-tiptap-editor"
-    [class.disabled]="disabled()"
-    [style.min-height]="minHeight()"
-    [style.max-height]="maxHeight()"
-    (click)="openFullscreen()"
-  >
-    <angular-tiptap-editor
-      [config]="editorConfig()"
-      [content]="content()"
-      [editable]="!disabled()"
-      (contentChange)="onContentChange($event)"
-    ></angular-tiptap-editor>
-
-    <!-- แสดง error ถ้ามี -->
-    @if (showError()) {
-      <div class="sic-tiptap-error">{{ errorMessages() | json }}</div>
-      <!-- หรือจะแสดงเฉพาะ error message แรกก็ได้ เช่น -->
-      <!-- <div class="sic-tiptap-error">{{ errorMessages() | keyvalue | first | value }}</div> -->
+  <div class="sic-tiptap-container">
+    @if (label) {
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="text-sm font-medium text-[var(--text-active)]">
+          {{ label }}
+          @if (required) {
+            <span class="text-red-500 font-bold">*</span>
+          }
+        </label>
+        @if (hint) {
+          <span class="text-xs text-[var(--text-muted)]">{{ hint }}</span>
+        }
+      </div>
     }
 
-    <!-- ปุ่มขยายเพื่อเปิด fullscreen (ทางเลือก) -->
-    <button type="button" class="sic-tiptap-expand-btn" (click)="openFullscreen($event)" title="ขยายเต็มจอ">
-      <i class="bi bi-arrows-fullscreen"></i>
-    </button>
+    <div
+      class="sic-tiptap-editor"
+      [class.disabled]="disabledState()"
+      [style.min-height]="minHeightState()"
+      [style.max-height]="maxHeightState()"
+    >
+      <angular-tiptap-editor
+        [config]="editorConfig()"
+        [content]="content()"
+        [editable]="!disabledState()"
+        (contentChange)="onContentChange($event)"
+      ></angular-tiptap-editor>
+
+      <!-- ปุ่มขยายเพื่อเปิด fullscreen -->
+      <button type="button" class="sic-tiptap-expand-btn" (click)="openFullscreen($event)" title="ขยายเต็มจอ">
+        <i class="bi bi-arrows-fullscreen"></i>
+      </button>
+    </div>
+
+    <!-- แสดง error ถ้ามี -->
+    @if (showError() && errorMessage()) {
+      <div class="sic-tiptap-error">{{ errorMessage() }}</div>
+    }
   </div>
 }
 
@@ -47,7 +60,7 @@
         <angular-tiptap-editor
           [config]="editorConfig()"
           [content]="content()"
-          [editable]="!disabled()"
+          [editable]="!disabledState()"
           (contentChange)="onContentChange($event)"
         ></angular-tiptap-editor>
       </div>

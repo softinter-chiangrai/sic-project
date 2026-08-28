@@ -7,10 +7,9 @@ import { DiscussionService } from '../discussion.service';
 import { finalize, Subscription } from 'rxjs';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
-
 
 @Component({
   selector: 'app-pmdt08a',
@@ -20,7 +19,7 @@ import { SicInputUploadComponent } from '../../../../../core/component/sic-input
     ReactiveFormsModule,
     SicButtonComponent,
     SicInputComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
     SicInputUploadComponent,
   ],
   templateUrl: './pmdt08A.component.html',

@@ -11,11 +11,12 @@ import { Burt06Service } from './burt06.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',

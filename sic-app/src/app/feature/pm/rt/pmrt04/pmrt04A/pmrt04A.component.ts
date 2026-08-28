@@ -14,6 +14,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
@@ -34,8 +35,8 @@ import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
-    SicDatepickerComponent, // ✅ เพิ่มตรงนี้
+    SicTiptapEditorComponent,
+    SicDatepickerComponent,
   ],
   templateUrl: './pmrt04A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

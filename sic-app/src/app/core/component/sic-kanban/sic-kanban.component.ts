@@ -21,6 +21,7 @@ import type { WorkPackageResponse } from '../../../feature/pm/dt/pmdt02/pmdt02B/
 import type { MilestoneResponse } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.model';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { SicAvatarComponent } from '../sic-avatar/sic-avatar.component';
+import { SicStripHtmlPipe } from '../../pipes/sic-strip-html.pipe';
 
 export type KanbanViewMode = 'task' | 'workPackage' | 'milestone';
 
@@ -58,7 +59,14 @@ export interface KanbanMilestoneStatusChangeEvent {
 @Component({
   selector: 'sic-kanban',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, SicComboboxComponent, SicAvatarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DragDropModule,
+    SicComboboxComponent,
+    SicAvatarComponent,
+    SicStripHtmlPipe,
+  ],
   templateUrl: './sic-kanban.component.html',
   styleUrl: './sic-kanban.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -9,6 +9,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { HttpClient } from '@angular/common/http';
 import { Pmdt02CService } from './pmdt02C.service';
 import { Pmdt02CForm } from './pmdt02C.form';
@@ -29,6 +30,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicColorpickerComponent,
+    SicTiptapEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02C.component.html',

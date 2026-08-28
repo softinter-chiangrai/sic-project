@@ -5,11 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
+import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SicStripHtmlPipe],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {

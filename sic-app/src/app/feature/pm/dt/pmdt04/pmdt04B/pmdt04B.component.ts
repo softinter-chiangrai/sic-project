@@ -8,9 +8,9 @@ import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -30,7 +30,7 @@ import { Requirement } from './pmdt04B.model';
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
     SicNumberComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,

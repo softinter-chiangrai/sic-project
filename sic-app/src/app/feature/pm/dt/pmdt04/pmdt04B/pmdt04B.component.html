@@ -54,13 +54,13 @@
 
       <!-- Description -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
+        <sic-tiptap-editor
           label="รายละเอียด"
           formControlName="description"
           [required]="true"
-          [rows]="3"
+          minHeight="140px"
           placeholder="อธิบายความต้องการโดยละเอียด"
-        ></sic-input-area>
+        ></sic-tiptap-editor>
         @if (form.get('description')?.touched && form.get('description')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
         }
@@ -91,12 +91,12 @@
 
       <!-- Acceptance Criteria -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area
+        <sic-tiptap-editor
           label="เงื่อนไขการยอมรับ"
           formControlName="acceptanceCriteria"
-          [rows]="2"
+          minHeight="120px"
           placeholder="ระบุเงื่อนไขที่ต้องผ่าน"
-        ></sic-input-area>
+        ></sic-tiptap-editor>
       </div>
 
       <!-- Created By -->

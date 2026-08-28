@@ -20,9 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +45,12 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat/private")
     @Transactional
-    public void sendPrivateMessage(@Payload ChatMessageRequest request, java.security.Principal principal) {
+    public void sendPrivateMessage(@Payload ChatMessageRequest request, Principal principal) {
         String currentUserId = null;
         String currentUsername = null;
 
-        if (principal instanceof org.springframework.security.core.Authentication auth) {
-            if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (principal instanceof Authentication auth) {
+            if (auth.getPrincipal() instanceof Jwt jwt) {
                 currentUserId = jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
                 currentUsername = jwt.getClaimAsString("preferred_username");
             } else if (auth.getName() != null) {
@@ -137,12 +140,12 @@ public class ChatWebSocketController {
 
     @MessageMapping("/call/signal")
     @Transactional
-    public void handleCallSignal(@Payload CallSignalMessage signal, java.security.Principal principal) {
+    public void handleCallSignal(@Payload CallSignalMessage signal, Principal principal) {
         String currentUserId = null;
         String currentUsername = null;
 
-        if (principal instanceof org.springframework.security.core.Authentication auth) {
-            if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (principal instanceof Authentication auth) {
+            if (auth.getPrincipal() instanceof Jwt jwt) {
                 currentUserId = jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
                 currentUsername = jwt.getClaimAsString("preferred_username");
             } else if (auth.getName() != null) {

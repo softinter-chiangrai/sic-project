@@ -20,7 +20,7 @@
             {{ getStatusText(p.status) }}
           </span>
         </h1>
-        <p class="text-sm text-[var(--text-muted)] mt-1">{{ p.description || 'ไม่มีคำอธิบาย' }}</p>
+        <p class="text-sm text-[var(--text-muted)] mt-1">{{ (p.description | sicStripHtml) || 'ไม่มีคำอธิบาย' }}</p>
         <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-2">
           <span><i class="bi bi-calendar3"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</span>
           <span><i class="bi bi-person"></i> {{ p.owner || '-' }}</span>

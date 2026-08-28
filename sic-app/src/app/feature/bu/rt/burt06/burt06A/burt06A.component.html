@@ -16,7 +16,7 @@
   </div>
 
   <!-- Loading -->
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div
         class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
@@ -26,7 +26,7 @@
   }
 
   <!-- Form -->
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
         <!-- === Basic Info === -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -72,12 +72,12 @@
           ></sic-combobox>
         </div>
 
-        <sic-input-area
+        <sic-tiptap-editor
           label="คำอธิบาย"
           formControlName="description"
-          [rows]="2"
+          minHeight="140px"
           placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
-        ></sic-input-area>
+        ></sic-tiptap-editor>
 
         <div class="flex items-center gap-3">
           <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
@@ -241,9 +241,9 @@
             type="submit"
             variant="primary"
             [fullWidth]="false"
-            [disabled]="form.invalid || isSaving"
+            [disabled]="form.invalid || isSaving()"
           >
-            @if (isSaving) {
+            @if (isSaving()) {
               <i class="bi bi-arrow-repeat animate-spin"></i> กำลังบันทึก...
             } @else {
               <i class="bi bi-floppy"></i> {{ isEdit ? 'บันทึก' : 'สร้าง' }}

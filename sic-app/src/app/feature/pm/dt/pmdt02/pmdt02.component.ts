@@ -36,6 +36,8 @@ import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from '
 
 import { FormsModule } from '@angular/forms';
 
+import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+
 export type { CalendarItemDetail };
 
 @Component({
@@ -50,6 +52,7 @@ export type { CalendarItemDetail };
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
     SicKanbanComponent,
+    SicStripHtmlPipe,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',

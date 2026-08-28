@@ -149,7 +149,7 @@
     <!-- ===== DESCRIPTION ===== -->
     @if (p.description) {
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
-        <p class="text-sm text-[var(--text)]">{{ p.description }}</p>
+        <div class="text-sm text-[var(--text)] rich-text-content prose-sm max-w-none" [innerHTML]="p.description"></div>
       </div>
     }
 

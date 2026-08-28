@@ -90,13 +90,11 @@ export const routes: Routes = [
   {
     path: 'approval-flow/new',
     loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
-    resolve: { form: burt06AResolver },
     canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'approval-flow/:id/edit',
     loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
-    resolve: { form: burt06AResolver },
     canDeactivate: [CanDeactivateGuard],
   },
 

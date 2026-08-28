@@ -35,45 +35,74 @@ import {
   ],
 })
 export class SicTiptapEditorComponent implements ControlValueAccessor {
-  // === Inputs (ยังคงเดิม) ===
-  @Input() set placeholderInput(value: string) {
-    this.placeholder.set(value);
+  // === Standard Component Inputs ===
+  @Input() label?: string;
+  @Input() hint?: string;
+  @Input() required = false;
+
+  // === Inputs (Aliases & original inputs) ===
+  @Input() set placeholder(value: string) {
+    this.placeholderState.set(value);
     this.updateEditorConfig();
   }
+  @Input() set placeholderInput(value: string) {
+    this.placeholderState.set(value);
+    this.updateEditorConfig();
+  }
+  @Input() set disabled(value: boolean) {
+    this.disabledState.set(value);
+  }
   @Input() set disabledInput(value: boolean) {
-    this.disabled.set(value);
+    this.disabledState.set(value);
+  }
+  @Input() set minHeight(value: string) {
+    this.minHeightState.set(value);
   }
   @Input() set minHeightInput(value: string) {
-    this.minHeight.set(value);
+    this.minHeightState.set(value);
+  }
+  @Input() set maxHeight(value: string) {
+    this.maxHeightState.set(value);
   }
   @Input() set maxHeightInput(value: string) {
-    this.maxHeight.set(value);
+    this.maxHeightState.set(value);
+  }
+  @Input() set errorMessages(value: Record<string, string>) {
+    this.errorMessagesState.set(value);
   }
   @Input() set errorMessagesInput(value: Record<string, string>) {
-    this.errorMessages.set(value);
+    this.errorMessagesState.set(value);
+  }
+  @Input() set touched(value: boolean) {
+    this.touchedState.set(value);
   }
   @Input() set touchedInput(value: boolean) {
-    this.touched.set(value);
+    this.touchedState.set(value);
   }
 
-  // === ใหม่: Full‑screen mode (ควบคุมจากภายนอก) ===
+  // === Full‑screen mode ===
   @Input() fullscreen: boolean = false;
   @Output() fullscreenClosed = new EventEmitter<void>();
 
   // === State ===
-  placeholder = signal<string>('กรอกรายละเอียด...');
-  disabled = signal<boolean>(false);
-  minHeight = signal<string>('150px');
-  maxHeight = signal<string>('500px');
-  errorMessages = signal<Record<string, string>>({});
-  touched = signal<boolean>(false);
+  placeholderState = signal<string>('กรอกรายละเอียด...');
+  disabledState = signal<boolean>(false);
+  minHeightState = signal<string>('150px');
+  maxHeightState = signal<string>('500px');
+  errorMessagesState = signal<Record<string, string>>({});
+  touchedState = signal<boolean>(false);
   content = signal<string>('');
   editorConfig = signal<AteEditorConfig>(this.buildDefaultConfig());
 
-  // === Computed สำหรับ showError ===
+  // === Computed ===
   showError = computed(() => {
-    // ตรวจสอบว่า control ถูก touched หรือไม่ และมี error หรือไม่
-    return this.touched() && Object.keys(this.errorMessages()).length > 0;
+    return this.touchedState() && Object.keys(this.errorMessagesState()).length > 0;
+  });
+
+  errorMessage = computed(() => {
+    const msgs = this.errorMessagesState();
+    const keys = Object.keys(msgs);
+    return keys.length > 0 ? msgs[keys[0]] : null;
   });
 
   // === ControlValueAccessor ===
@@ -87,7 +116,7 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   // === Config ===
   private buildDefaultConfig(): AteEditorConfig {
     return {
-      placeholder: this.placeholder(),
+      placeholder: this.placeholderState(),
       toolbar: { ...ATE_DEFAULT_TOOLBAR_CONFIG },
       showBubbleMenu: true,
       showCharacterCount: true,
@@ -137,7 +166,7 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled.set(isDisabled);
+    this.disabledState.set(isDisabled);
   }
 
   // === Public Methods ===

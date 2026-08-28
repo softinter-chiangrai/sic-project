@@ -8,6 +8,7 @@ import { SicDatepickerComponent } from '../../../../../core/component/sic-datepi
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { Pmdt01AModel, Pmdt01APageData } from './pmdt01A.model';
 import { Pmdt01AService } from './pmdt01A.service';
 import { Pmdt01AForm } from './pmdt01A.form';
@@ -25,6 +26,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicComboboxComponent,
+    SicTiptapEditorComponent,
     RouterModule,
   ],
   templateUrl: './pmdt01A.component.html',
