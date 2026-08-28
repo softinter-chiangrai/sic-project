@@ -6,6 +6,8 @@
 /out-tsc
 /bazel-out
 /requirement_report_sql.jasper
+/.agents
+/.claude
 
 # Node
 /node_modules

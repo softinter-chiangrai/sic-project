@@ -1,20 +1,35 @@
 // src/app/feature/bu/rt/burt05/burt05A/burt05A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
+import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { Program } from '../burt05.model';
 import { burt05Service } from '../burt05.service';
 
 @Component({
   selector: 'app-burt05A',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SicButtonComponent,
+    SicInputComponent,
+    SicInputNumberComponent,
+    SicCheckboxComponent,
+    SicComboboxComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt05A.component.html',
+  styleUrl: './burt05A.component.css',
 })
 export class Burt05AComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -81,7 +96,7 @@ export class Burt05AComponent implements OnInit {
       error: (err: any) => {
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
-        this.router.navigate(['/feature/bu/burt05']);
+        this.router.navigate(['/feature/bu/program']);
       },
     });
   }
@@ -140,7 +155,7 @@ export class Burt05AComponent implements OnInit {
       error: (err: any) => {
         this.isLoading.set(false);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
-        this.router.navigate(['/feature/bu/burt05']);
+        this.router.navigate(['/feature/bu/program']);
       },
     });
   }
@@ -246,7 +261,7 @@ export class Burt05AComponent implements OnInit {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
           this.isSaving.set(false);
-          this.router.navigate(['/feature/bu/burt05']);
+          this.router.navigate(['/feature/bu/program']);
         },
         error: (err: any) => {
           this.isSaving.set(false);
@@ -261,7 +276,7 @@ export class Burt05AComponent implements OnInit {
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
         this.isSaving.set(false);
-        this.router.navigate(['/feature/bu/burt05']);
+        this.router.navigate(['/feature/bu/program']);
       },
       error: (err: any) => {
         this.isSaving.set(false);

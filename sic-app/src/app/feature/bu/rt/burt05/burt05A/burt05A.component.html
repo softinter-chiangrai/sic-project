@@ -1,10 +1,11 @@
-<!-- src/app/feature/bu/rt/pmrt30/burt05A/burt05A.component.html -->
+<!-- src/app/feature/bu/rt/burt05/burt05A/burt05A.component.html -->
 
-<div class="max-w-3xl mx-auto p-4 space-y-6">
+<div class="space-y-5 p-0.5">
   <!-- HEADER -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
+      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
         @if (isPermissionMode()) {
           กำหนดสิทธิ์เริ่มต้น
         } @else if (isEditMode()) {
@@ -13,7 +14,7 @@
           เพิ่มโปรแกรมใหม่
         }
       </h1>
-      <p class="text-sm text-gray-500 mt-1">
+      <p class="text-sm text-[var(--text-muted)] mt-1">
         @if (isPermissionMode()) {
           กำหนดระดับสิทธิ์ให้แต่ละบทบาทสำหรับโปรแกรมนี้
         } @else {
@@ -21,22 +22,20 @@
         }
       </p>
     </div>
-    <button
-      (click)="goBack()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-    >
-      <i class="bi bi-arrow-left"></i>
-      กลับ
-    </button>
+    <div class="flex gap-2">
+      <sic-button variant="secondary" size="sm" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> กลับ
+      </sic-button>
+    </div>
   </div>
 
   <!-- LOADING -->
   @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
       <div
-        class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+        class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-gray-500">กำลังโหลด...</p>
+      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
     </div>
   }
 
@@ -44,164 +43,137 @@
     <form
       [formGroup]="programForm"
       (ngSubmit)="isPermissionMode() ? savePermissions() : saveProgram()"
-      class="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+      class="space-y-6"
     >
-      <!-- Program Code -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          รหัสโปรแกรม <span class="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          formControlName="programCode"
-          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          placeholder="เช่น PMRT30"
-        />
-        @if (programForm.get('programCode')?.touched && programForm.get('programCode')?.invalid) {
-          <p class="text-xs text-red-500 mt-1">กรุณากรอกรหัสโปรแกรม</p>
-        }
-      </div>
+      <div class="border border-[var(--border)] rounded-xl p-6 bg-[var(--sidebar)] shadow-sm space-y-5">
+        <!-- Program Code & Program Name EN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-input
+            label="รหัสโปรแกรม"
+            formControlName="programCode"
+            placeholder="เช่น PMRT30"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณากรอกรหัสโปรแกรม' }"
+          ></sic-input>
 
-      <!-- Name EN -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          ชื่อ (ภาษาอังกฤษ) <span class="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          formControlName="programNameEn"
-          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          placeholder="เช่น Permission Management"
-        />
-        @if (
-          programForm.get('programNameEn')?.touched && programForm.get('programNameEn')?.invalid
-        ) {
-          <p class="text-xs text-red-500 mt-1">กรุณากรอกชื่อโปรแกรม (ภาษาอังกฤษ)</p>
-        }
-      </div>
+          <sic-input
+            label="ชื่อ (ภาษาอังกฤษ)"
+            formControlName="programNameEn"
+            placeholder="เช่น Permission Management"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณากรอกชื่อโปรแกรม (ภาษาอังกฤษ)' }"
+          ></sic-input>
+        </div>
 
-      <!-- Name Local -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          ชื่อ (ภาษาไทย) <span class="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          formControlName="programNameLocal"
-          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          placeholder="เช่น จัดการสิทธิ์"
-        />
-        @if (
-          programForm.get('programNameLocal')?.touched &&
-          programForm.get('programNameLocal')?.invalid
-        ) {
-          <p class="text-xs text-red-500 mt-1">กรุณากรอกชื่อโปรแกรม (ภาษาไทย)</p>
-        }
-      </div>
+        <!-- Name Local -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-input
+            label="ชื่อ (ภาษาไทย)"
+            formControlName="programNameLocal"
+            placeholder="เช่น จัดการสิทธิ์"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณากรอกชื่อโปรแกรม (ภาษาไทย)' }"
+          ></sic-input>
 
-      <!-- Icon & Route -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >ไอคอน</label
-          >
-          <input
-            type="text"
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-muted)] mb-1.5">
+              โปรแกรมแม่
+            </label>
+            <div class="relative">
+              <select
+                formControlName="parentProgramId"
+                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-colors"
+              >
+                <option [ngValue]="null">ไม่มี (Root)</option>
+                @for (p of programs(); track p.id) {
+                  <option [ngValue]="p.id">{{ p.programCode }} - {{ p.programName }}</option>
+                }
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[var(--text-muted)]">
+                <i class="bi bi-chevron-down text-xs"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Icon & Route -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-input
+            label="ไอคอน"
             formControlName="programIcon"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             placeholder="เช่น bi bi-shield-lock-fill"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >Route Path</label
-          >
-          <input
-            type="text"
+          ></sic-input>
+
+          <sic-input
+            label="Route Path"
             formControlName="routePath"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             placeholder="เช่น pm/pmrt30"
-          />
+          ></sic-input>
         </div>
-      </div>
 
-      <!-- Parent Program & Sort Order -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >โปรแกรมแม่</label
-          >
-          <!-- ✅ แก้ไข: เพิ่ม class ให้สมบูรณ์เหมือน input อื่นๆ -->
-          <select
-            formControlName="parentProgramId"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none pr-8"
-          >
-            <option [value]="null">ไม่มี (Root)</option>
-            @for (p of programs(); track p.id) {
-              <option [value]="p.id">{{ p.programCode }} - {{ p.programName }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >ลำดับ</label
-          >
-          <input
-            type="number"
+        <!-- Sort Order & Active -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <sic-input-number
+            label="ลำดับ"
             formControlName="sortOrder"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          />
-        </div>
-      </div>
+            [min]="0"
+          ></sic-input-number>
 
-      <!-- Active -->
-      <div>
-        <label class="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500/20"
-          />
-          <span class="text-gray-700 dark:text-gray-300">เปิดใช้งาน</span>
-        </label>
+          <div class="pt-5">
+            <sic-checkbox
+              label="เปิดใช้งานโปรแกรม"
+              formControlName="isActive"
+            ></sic-checkbox>
+          </div>
+        </div>
       </div>
 
       <!-- PERMISSION SECTION (เฉพาะ mode กำหนดสิทธิ์) -->
       @if (isPermissionMode()) {
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ระดับสิทธิ์เริ่มต้นของแต่ละบทบาท
-          </h3>
+        <div class="border border-[var(--border)] rounded-xl p-6 bg-[var(--sidebar)] shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+            <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
+              ระดับสิทธิ์เริ่มต้นของแต่ละบทบาท
+            </h3>
+            <span class="text-xs text-[var(--text-muted)]">
+              {{ roles().length }} บทบาท
+            </span>
+          </div>
 
-          <!-- ✅ กรณีไม่มีบทบาท -->
+          <!-- กรณีไม่มีบทบาท -->
           @if (roles().length === 0) {
-            <div class="text-center py-6 text-gray-500 dark:text-gray-400">
-              <i class="bi bi-exclamation-triangle text-3xl block mb-2"></i>
-              <p>ยังไม่มีบทบาทในระบบ</p>
+            <div class="text-center py-8 text-[var(--text-muted)]">
+              <i class="bi bi-exclamation-triangle text-4xl block mb-2 text-[var(--crm-warning)]"></i>
+              <p class="font-medium text-[var(--text-active)]">ยังไม่มีบทบาทในระบบ</p>
               <p class="text-xs mt-1">กรุณาสร้างบทบาทที่หน้า <strong>burt03</strong> ก่อน</p>
             </div>
           }
 
-          <!-- ✅ มีบทบาท → แสดง dropdown -->
+          <!-- มีบทบาท → แสดง dropdown -->
           @if (roles().length > 0) {
-            <div class="space-y-2 max-h-[300px] overflow-y-auto">
+            <div class="space-y-2 max-h-[350px] overflow-y-auto pr-1">
               @for (rp of rolePermissions(); track rp.roleId) {
                 <div
-                  class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                  class="flex items-center justify-between p-3.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--crm-primary)]/40 transition-colors"
                 >
-                  <span class="font-medium text-gray-700 dark:text-gray-300">{{
-                    rp.roleName
-                  }}</span>
-                  <!-- ✅ แก้ไข: เพิ่ม appearance-none ให้ select ในส่วนนี้ด้วย -->
-                  <select
-                    [value]="rp.level"
-                    (change)="updateRolePermission(rp.roleId, $any($event.target).value)"
-                    class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none pr-8"
-                  >
-                    @for (level of permissionLevels; track level.value) {
-                      <option [value]="level.value">{{ level.label }}</option>
-                    }
-                  </select>
+                  <span class="font-medium text-[var(--text-active)] text-sm">
+                    {{ rp.roleName }}
+                  </span>
+                  <div class="relative min-w-[160px]">
+                    <select
+                      [value]="rp.level"
+                      (change)="updateRolePermission(rp.roleId, $any($event.target).value)"
+                      class="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-colors"
+                    >
+                      @for (level of permissionLevels; track level.value) {
+                        <option [value]="level.value">{{ level.label }}</option>
+                      }
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[var(--text-muted)]">
+                      <i class="bi bi-chevron-down text-xs"></i>
+                    </div>
+                  </div>
                 </div>
               }
             </div>
@@ -210,26 +182,27 @@
       }
 
       <!-- BUTTONS -->
-      <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <button
+      <div class="flex gap-4 pt-2">
+        <sic-button
+          [fullWidth]="true"
           type="button"
+          variant="secondary"
           (click)="goBack()"
-          class="flex-1 px-4 py-2 rounded-lg text-sm border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
         >
-          ยกเลิก
-        </button>
-        <button
+          <i class="bi bi-arrow-left"></i> ยกเลิก
+        </sic-button>
+        <sic-button
+          [fullWidth]="true"
           type="submit"
+          variant="primary"
           [disabled]="isSaving() || programForm.invalid"
-          class="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          [loading]="isSaving()"
         >
-          @if (isSaving()) {
-            <i class="bi bi-arrow-repeat animate-spin"></i>
-          } @else {
+          @if (!isSaving()) {
             <i class="bi bi-floppy"></i>
           }
           {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
-        </button>
+        </sic-button>
       </div>
     </form>
   }
