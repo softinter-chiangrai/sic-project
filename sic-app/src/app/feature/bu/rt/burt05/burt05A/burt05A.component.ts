@@ -11,6 +11,7 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { Program } from '../burt05.model';
 import { burt05Service } from '../burt05.service';
 
@@ -32,12 +33,14 @@ import { burt05Service } from '../burt05.service';
   templateUrl: './burt05A.component.html',
   styleUrl: './burt05A.component.css',
 })
-export class Burt05AComponent implements OnInit {
+export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
+
+  pageDirty = () => this.programForm?.dirty ?? false;
 
   isLoading = signal(false);
   isSaving = signal(false);
@@ -277,6 +280,7 @@ export class Burt05AComponent implements OnInit {
         next: () => {
           this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
           this.isSaving.set(false);
+          this.programForm.markAsPristine();
           this.router.navigate(['/feature/bu/program']);
         },
         error: (err: any) => {
@@ -292,6 +296,7 @@ export class Burt05AComponent implements OnInit {
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
         this.isSaving.set(false);
+        this.programForm.markAsPristine();
         this.router.navigate(['/feature/bu/program']);
       },
       error: (err: any) => {
@@ -343,6 +348,7 @@ export class Burt05AComponent implements OnInit {
           next: () => {
             this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
             this.isSaving.set(false);
+            this.programForm.markAsPristine();
             this.router.navigate(['/feature/bu/program']);
           },
           error: (err: any) => {

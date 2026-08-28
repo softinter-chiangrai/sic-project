@@ -7,6 +7,7 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
+  HostListener,
   inject,
   Injectable,
   OnInit,
@@ -194,6 +195,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   searchTerm = signal('');
   filterLevel = signal('all');
   modules = signal<ModulePermission[]>([]);
+  private initialModulesSnapshot = signal<string>('');
   permissionLevels = PERMISSION_LEVELS;
 
   readonly permissionSelectOptions = [
@@ -224,7 +226,10 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
     return list;
   });
 
-  pageDirty = () => false;
+  pageDirty = (): boolean => {
+    if (!this.initialModulesSnapshot()) return false;
+    return this.initialModulesSnapshot() !== JSON.stringify(this.modules());
+  };
 
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -273,6 +278,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
           // ✅ ใช้ roleName ที่แปลแล้วจาก roleDetail
           this.roleName = roleDetail.roleName || roleDetail.roleNameEn || roleDetail.roleCode;
           this.modules.set(permissions.modules);
+          this.initialModulesSnapshot.set(JSON.stringify(permissions.modules));
           console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', permissions.modules);
         },
         error: (error) => {
@@ -354,6 +360,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       )
       .subscribe({
         next: () => {
+          this.initialModulesSnapshot.set(JSON.stringify(this.modules()));
           this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
             this.router.navigate(['/feature/bu/permission']);
           });

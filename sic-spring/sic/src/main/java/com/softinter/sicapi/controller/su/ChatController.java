@@ -6,6 +6,7 @@ import com.softinter.sicapi.entity.su.*;
 import com.softinter.sicapi.repository.su.*;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.SuUserBusinessService;
+import com.softinter.sicapi.service.UserSessionTracker;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -38,6 +39,7 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     private final SuUserBusinessService userBusinessService;
+    private final UserSessionTracker userSessionTracker;
 
     // ========== Private Chat ==========
 
@@ -99,6 +101,7 @@ public class ChatController {
                     ChatMemberResponse member = new ChatMemberResponse();
                     member.setUserId(u.getId());
                     member.setUserName(u.getName());
+                    member.setOnline(userSessionTracker != null && userSessionTracker.isUserOnline(u.getId()));
                     return member;
                 })
                 .collect(Collectors.toList());
@@ -163,6 +166,68 @@ public class ChatController {
         }
 
         return ResponseEntity.ok(toChatGroupResponse(group));
+    }
+
+    @PostMapping("/group/update")
+    @Operation(summary = "Update chat group (rename and add/remove members)")
+    public ResponseEntity<ChatGroupResponse> updateGroup(@RequestBody UpdateGroupRequest request) {
+        String currentUserId = currentUserService.getUserId();
+        SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            group.setName(request.getName().trim());
+            chatGroupRepository.save(group);
+        }
+
+        if (request.getMemberUserIds() != null) {
+            List<SuChatGroupMember> currentMembers = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(group.getId());
+            List<String> targetUserIds = new java.util.ArrayList<>(request.getMemberUserIds());
+            if (!targetUserIds.contains(currentUserId)) {
+                targetUserIds.add(currentUserId); // Always keep group creator / current user
+            }
+
+            // Remove members not in target list
+            for (SuChatGroupMember m : currentMembers) {
+                if (!targetUserIds.contains(m.getUserId())) {
+                    m.setIsDelete(true);
+                    m.setDeleteDate(Instant.now());
+                    m.setDeleteBy(currentUserId);
+                    chatGroupMemberRepository.save(m);
+                }
+            }
+
+            // Add new members
+            List<String> existingUserIds = currentMembers.stream()
+                    .map(SuChatGroupMember::getUserId)
+                    .collect(Collectors.toList());
+
+            UUID businessId = group.getBusinessId();
+            for (String uid : targetUserIds) {
+                if (!existingUserIds.contains(uid)) {
+                    SuChatGroupMember newMember = new SuChatGroupMember();
+                    newMember.setGroup(group);
+                    newMember.setUserId(uid);
+                    newMember.setBusinessId(businessId);
+                    newMember.setCreatedBy(currentUserId);
+                    newMember.setCreatedDate(Instant.now());
+                    chatGroupMemberRepository.save(newMember);
+                }
+            }
+        }
+
+        // Re-fetch updated group with members
+        List<SuChatGroupMember> activeMembers = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(group.getId());
+        group.setMembers(activeMembers);
+
+        ChatGroupResponse response = toChatGroupResponse(group);
+
+        // Broadcast group update to all members via WebSocket
+        for (String memberId : response.getMemberUserIds()) {
+            messagingTemplate.convertAndSendToUser(memberId, "/queue/groups/update", response);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/group/send")
@@ -270,9 +335,17 @@ public class ChatController {
         response.setCreatedByUserId(group.getCreatedBy());
         response.setCreatedDate(group.getCreatedDate());
         if (group.getMembers() != null) {
-            response.setMembers(group.getMembers().stream()
+            List<ChatMemberResponse> memberResponses = group.getMembers().stream()
+                    .filter(m -> !Boolean.TRUE.equals(m.getIsDelete()))
                     .map(this::toMemberResponse)
+                    .collect(Collectors.toList());
+            response.setMembers(memberResponses);
+            response.setMemberUserIds(memberResponses.stream()
+                    .map(ChatMemberResponse::getUserId)
                     .collect(Collectors.toList()));
+        } else {
+            response.setMembers(new java.util.ArrayList<>());
+            response.setMemberUserIds(new java.util.ArrayList<>());
         }
         return response;
     }

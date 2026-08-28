@@ -178,8 +178,8 @@ export class Burt02Component implements OnInit {
   ];
 
   readonly userCountSelectOptions = [
-    { value: 'hasUsers', text: '👤 มีผู้ใช้งาน (> 0 คน)' },
-    { value: 'noUsers', text: '⚪ ไม่มีผู้ใช้งาน (0 คน)' },
+    { value: 'hasUsers', text: 'มีผู้ใช้งาน' },
+    { value: 'noUsers', text: 'ไม่มีผู้ใช้งาน' },
   ];
 
   // ===== Actions =====

@@ -491,8 +491,9 @@ export class ChatService {
 
   getGroups(): Promise<ChatGroup[]> {
     return firstValueFrom(
-      this.http.get<ChatGroup[]>(`${environment.apiBaseUrl}/api/su/chat/groups`),
-    ).then(groups => {
+      this.http.get<any[]>(`${environment.apiBaseUrl}/api/su/chat/groups`),
+    ).then(rawGroups => {
+      const groups = (rawGroups || []).map(g => this.toChatGroup(g));
       groups.forEach(g => this.subscribeGroupTopic(g.id));
       return groups;
     });
@@ -509,10 +510,21 @@ export class ChatService {
 
   createGroup(name: string, memberUserIds: string[]): void {
     firstValueFrom(
-      this.http.post<ChatGroup>(`${environment.apiBaseUrl}/api/su/chat/group/create`, { name, memberUserIds }),
-    ).then(group => {
+      this.http.post<any>(`${environment.apiBaseUrl}/api/su/chat/group/create`, { name, memberUserIds }),
+    ).then(rawGroup => {
+      const group = this.toChatGroup(rawGroup);
       this.subscribeGroupTopic(group.id);
       this.groupCreated$.next(group);
+    }).catch(console.error);
+  }
+
+  updateGroup(groupId: string, name: string, memberUserIds: string[]): void {
+    firstValueFrom(
+      this.http.post<any>(`${environment.apiBaseUrl}/api/su/chat/group/update`, { groupId, name, memberUserIds }),
+    ).then(rawGroup => {
+      const group = this.toChatGroup(rawGroup);
+      this.subscribeGroupTopic(group.id);
+      this.groupUpdated$.next(group);
     }).catch(console.error);
   }
 
@@ -541,10 +553,6 @@ export class ChatService {
       callType,
       sdpOffer: JSON.stringify(offer),
     });
-  }
-
-  updateGroup(groupId: string, name: string, memberUserIds: string[]): void {
-    // REST update fallback if needed
   }
 
   sendGroupTextMessage(groupId: string, text: string): void {
@@ -758,6 +766,33 @@ export class ChatService {
         console.error('[ChatService] Error parsing notification:', err);
       }
     });
+
+    // 5. User Online/Offline Status
+    this.stompClient.subscribe('/topic/user-status', (msg) => {
+      try {
+        const status = JSON.parse(msg.body);
+        if (status.userId) {
+          this.userStatusChanged$.next({
+            userId: status.userId,
+            isOnline: Boolean(status.isOnline),
+          });
+        }
+      } catch (err) {
+        console.error('[ChatService] Error parsing user status:', err);
+      }
+    });
+
+    // 6. Group Update notifications
+    this.stompClient.subscribe('/user/queue/groups/update', (msg) => {
+      try {
+        const data = JSON.parse(msg.body);
+        const group = this.toChatGroup(data);
+        this.subscribeGroupTopic(group.id);
+        this.groupUpdated$.next(group);
+      } catch (err) {
+        console.error('[ChatService] Error parsing group update:', err);
+      }
+    });
   }
 
   private subscribeGroupTopic(groupId: string): void {
@@ -914,6 +949,20 @@ export class ChatService {
       attachmentId: data.attachmentId,
       sentAt: data.createdDate ? new Date(data.createdDate) : new Date(),
       isCancelled: Boolean(data.isCancelled),
+    };
+  }
+
+  private toChatGroup(data: any): ChatGroup {
+    const memberUserIds: string[] = Array.isArray(data.memberUserIds)
+      ? data.memberUserIds
+      : Array.isArray(data.members)
+      ? data.members.map((m: any) => m.userId || m.id)
+      : [];
+
+    return {
+      id: data.id,
+      name: data.name || data.Name || 'กลุ่มสนทนา',
+      memberUserIds,
     };
   }
 }

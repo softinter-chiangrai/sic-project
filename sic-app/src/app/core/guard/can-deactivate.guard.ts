@@ -20,6 +20,9 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     'มีการเปลี่ยนแปลงอยู่',
     'คุณต้องการออกจากหน้านี้หรือไม่?'
   ).then((confirmed) => {
+    if (!confirmed) {
+      window.history.pushState(null, '', state.url);
+    }
     return confirmed;
   });
 };

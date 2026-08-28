@@ -1,19 +1,17 @@
 package com.softinter.sicapi.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.time.Instant;
-import java.util.UUID;
+import lombok.NoArgsConstructor;
 
 @Data
-public class ChatMemberResponse {
-    private UUID id;
-    private UUID groupId;
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserStatusResponse {
     private String userId;
-    private String userName;
-    private String role;
-    private Instant joinedAt;
 
     @JsonProperty("isOnline")
     private boolean isOnline;

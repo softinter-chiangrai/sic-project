@@ -31,6 +31,7 @@ export const routes: Routes = [
     path: 'permission/:id',
     loadComponent: () =>
       import('./rt/burt02/burt02A/burt02A.component').then((m) => m.Burt02AComponent),
+    canDeactivate: [CanDeactivateGuard],
   },
 
   // ===== BURT03 - Role Management =====
@@ -51,6 +52,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./rt/burt04/burt04A/burt04A.component').then((m) => m.Burt04AComponent),
     resolve: { form: burt04AResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'team/add',
@@ -69,12 +71,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
     resolve: { form: burt05AResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'program/:id/edit',
     loadComponent: () =>
       import('./rt/burt05/burt05A/burt05A.component').then((m) => m.Burt05AComponent),
     resolve: { form: burt05AResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
 
   // ===== BURT06 - Member / Flow =====
@@ -87,11 +91,13 @@ export const routes: Routes = [
     path: 'approval-flow/new',
     loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
     resolve: { form: burt06AResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
   {
     path: 'approval-flow/:id/edit',
     loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
     resolve: { form: burt06AResolver },
+    canDeactivate: [CanDeactivateGuard],
   },
 
   // ===== BURP01 - Activity Log =====

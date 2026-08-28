@@ -1,22 +1,20 @@
-package com.softinter.sicapi.dto.response;
+package com.softinter.sicapi.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Data
-public class ChatGroupResponse {
-    private UUID id;
+public class UpdateGroupRequest {
+    private UUID groupId;
 
     @JsonProperty("name")
+    @JsonAlias({"Name", "name"})
     private String name;
 
     private String groupDescription;
-    private String createdByUserId;
-    private List<ChatMemberResponse> members;
     private List<String> memberUserIds;
-    private Instant createdDate;
 }
