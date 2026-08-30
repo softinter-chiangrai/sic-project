@@ -57,32 +57,32 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   customerName = signal<string>('');
 
   statusOptions = [
-    'Prospect',
-    'Contract Drafting',
-    'Contract Signed',
-    'Requirement Gathering',
-    'Requirement Approval',
-    'System Analysis',
-    'DFD Design',
-    'ER Design',
-    'Specification Design',
-    'Specification Approval',
-    'Planning',
-    'Development',
-    'Internal Testing',
-    'UAT',
-    'Bug Fixing',
-    'Ready for Delivery',
-    'Delivered',
-    'Invoicing',
-    'Closed',
-    'MA Active',
+    { value: 'Prospect', text: 'Prospect' },
+    { value: 'Contract Drafting', text: 'Contract Drafting' },
+    { value: 'Contract Signed', text: 'Contract Signed' },
+    { value: 'Requirement Gathering', text: 'Requirement Gathering' },
+    { value: 'Requirement Approval', text: 'Requirement Approval' },
+    { value: 'System Analysis', text: 'System Analysis' },
+    { value: 'DFD Design', text: 'DFD Design' },
+    { value: 'ER Design', text: 'ER Design' },
+    { value: 'Specification Design', text: 'Specification Design' },
+    { value: 'Specification Approval', text: 'Specification Approval' },
+    { value: 'Planning', text: 'Planning' },
+    { value: 'Development', text: 'Development' },
+    { value: 'Internal Testing', text: 'Internal Testing' },
+    { value: 'UAT', text: 'UAT' },
+    { value: 'Bug Fixing', text: 'Bug Fixing' },
+    { value: 'Ready for Delivery', text: 'Ready for Delivery' },
+    { value: 'Delivered', text: 'Delivered' },
+    { value: 'Invoicing', text: 'Invoicing' },
+    { value: 'Closed', text: 'Closed' },
+    { value: 'MA Active', text: 'MA Active' },
   ];
   priorityOptions = [
-    { value: 'Low', text: '🟢 Low (ต่ำ)' },
-    { value: 'Medium', text: '🟡 Medium (ปานกลาง)' },
-    { value: 'High', text: '🔴 High (สูง)' },
-    { value: 'Critical', text: '🔥 Critical (วิกฤต)' },
+    { value: 'Low', text: 'Low' },
+    { value: 'Medium', text: 'Medium' },
+    { value: 'High', text: 'High' },
+    { value: 'Critical', text: 'Critical' },
   ];
 
   ngOnInit(): void {
@@ -142,6 +142,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       if (this.isViewOnly) {
         this.form.disable();
       }
+      this.form.markAsPristine();
       this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
     }))
       .subscribe({
@@ -150,6 +151,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
           if (data.customerName) {
             this.customerName.set(data.customerName);
           }
+          this.form.markAsPristine();
         },
         error: (err) => {
           console.error('Load project error:', err);
@@ -191,11 +193,14 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
     request$.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => {
-        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย');
-        // ✅ กลับไป project พร้อม customerId (ใช้ CustomerStateService)
-        const customerId = this.form.get('customerId')?.value;
-        if (customerId) this.customerState.setCustomer(customerId);
-        this.navigation.navigate(['/feature/pm/project']);
+        this.form.markAsPristine();
+        this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
+          this.form.markAsPristine();
+          // ✅ กลับไป project พร้อม customerId (ใช้ CustomerStateService)
+          const customerId = this.form.get('customerId')?.value;
+          if (customerId) this.customerState.setCustomer(customerId);
+          this.navigation.navigate(['/feature/pm/project']);
+        });
       },
       error: (err) => {
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

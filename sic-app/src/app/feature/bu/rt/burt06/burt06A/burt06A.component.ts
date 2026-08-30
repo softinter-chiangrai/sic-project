@@ -125,6 +125,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
             this.steps.push(this.createStepForm(step));
           });
           this.reorderSteps();
+          this.form.markAsPristine();
           this.isLoading.set(false);
           this.cdr.detectChanges();
         },
@@ -299,6 +300,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     request.subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.form.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
         this.router.navigate(['/feature/bu/approval-flow']);
       },

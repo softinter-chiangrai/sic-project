@@ -73,6 +73,7 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
     this.service.join(this.tokenForm.value.token!).subscribe({
       next: async () => {
         this.loading.set(false);
+        this.tokenForm.markAsPristine();
         await this.dialog.success('เข้าร่วมสำเร็จ', 'คุณได้เข้าร่วมธุรกิจเรียบร้อยแล้ว');
         this.router.navigate(['/management/business']);
       },

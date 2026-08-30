@@ -52,16 +52,12 @@ export const pmdt07EditResolver: ResolveFn<Pmdt07Form> = (route) => {
     const form = Pmdt07Form.createForm(fb);
 
     return service.getSpecification(id).pipe(
-        tap((data) => {
-            form.patchValue(data);
-            form.updateValueAndValidity();
-        }),
-        map(() => ({
-            specification: new SicFromData<PmSpecificationModel>(form)
+        map((data) => ({
+            specification: new SicFromData<PmSpecificationModel>(form, data)
         })),
-        catchError(() => {
-            router.navigate(['/feature/pm/specification']);
-            return EMPTY;
-        })
+    catchError(() => {
+        router.navigate(['/feature/pm/specification']);
+        return EMPTY;
+    })
     );
 };

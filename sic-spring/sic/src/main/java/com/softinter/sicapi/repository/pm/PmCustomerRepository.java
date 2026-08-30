@@ -38,6 +38,14 @@ public interface PmCustomerRepository extends JpaRepository<PmCustomer, UUID> {
            "LEFT JOIN FETCH p.country " +
            "LEFT JOIN FETCH c.district " +
            "LEFT JOIN FETCH c.subDistrict " +
+           "WHERE c.id = :id AND c.isDelete = false")
+    Optional<PmCustomer> findByIdWithFetch(@Param("id") UUID id);
+
+    @Query("SELECT c FROM PmCustomer c " +
+           "LEFT JOIN FETCH c.province p " +
+           "LEFT JOIN FETCH p.country " +
+           "LEFT JOIN FETCH c.district " +
+           "LEFT JOIN FETCH c.subDistrict " +
            "WHERE c.businessId = :businessId AND c.isDelete = false")
     Page<PmCustomer> findByBusinessIdWithFetch(@Param("businessId") UUID businessId,
                                                Pageable pageable);

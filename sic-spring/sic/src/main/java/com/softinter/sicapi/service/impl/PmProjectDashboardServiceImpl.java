@@ -90,10 +90,13 @@ public class PmProjectDashboardServiceImpl implements PmProjectDashboardService 
         response.setPhaseCount(phases.size());
 
         List<PmTask> tasks = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId);
-        response.setTaskCount(tasks.size());
+        List<PmTask> regularTasks = tasks.stream()
+                .filter(t -> !isBugTask(t))
+                .collect(Collectors.toList());
+        response.setTaskCount(regularTasks.size());
 
-        long completedTasks = tasks.stream()
-                .filter(t -> "Done".equalsIgnoreCase(t.getStatus()) || "Completed".equalsIgnoreCase(t.getStatus()))
+        long completedTasks = regularTasks.stream()
+                .filter(t -> isCompletedStatus(t.getStatus()))
                 .count();
         response.setTaskCompletedCount((int) completedTasks);
 
@@ -104,14 +107,27 @@ public class PmProjectDashboardServiceImpl implements PmProjectDashboardService 
                 .collect(Collectors.toList());
         response.setRecentPhases(recentPhases);
 
-        // Recent tasks (top 5)
-        List<PmProjectDashboardTaskSummary> recentTasks = tasks.stream()
+        // Recent tasks (top 5 - only regular tasks)
+        List<PmProjectDashboardTaskSummary> recentTasks = regularTasks.stream()
                 .limit(5)
                 .map(this::toTaskSummary)
                 .collect(Collectors.toList());
         response.setRecentTasks(recentTasks);
 
         return response;
+    }
+
+    private boolean isBugTask(PmTask task) {
+        if (task == null) return false;
+        String code = task.getTaskCode() != null ? task.getTaskCode().trim().toUpperCase() : "";
+        String name = task.getTaskName() != null ? task.getTaskName().trim().toUpperCase() : "";
+        return code.startsWith("BUG") || code.startsWith("BG-") || name.startsWith("[BUG]");
+    }
+
+    private boolean isCompletedStatus(String status) {
+        if (status == null) return false;
+        String s = status.trim();
+        return "Done".equalsIgnoreCase(s) || "Complete".equalsIgnoreCase(s) || "Completed".equalsIgnoreCase(s);
     }
 
     private PmProjectDashboardPhaseSummary toPhaseSummary(PmPhase phase) {

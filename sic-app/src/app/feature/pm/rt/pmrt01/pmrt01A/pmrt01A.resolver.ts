@@ -26,13 +26,8 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
   const navigation = inject(NavigationService); // ✅ ใช้ const
 
   return service.getCustomer(route.params['id']).pipe(
-    tap((data) => {
-      console.log('✅ Resolver loaded customer data:', data);
-      form.patchValue(data);
-      form.updateValueAndValidity();
-    }),
-    map(() => ({
-      customer: new SicFromData<CustomerModel>(form),
+    map((data) => ({
+      customer: new SicFromData<CustomerModel>(form, data),
     })),
     catchError(() => {
       navigation.navigate(['/feature/pm/customer']); // ✅ ใช้ navigation.navigate

@@ -87,7 +87,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
     @Override
     @Transactional(readOnly = true) 
     public PmCustomerResponse findById(UUID id) {
-        PmCustomer customer = PmCustomerRepository.findById(id)
+        PmCustomer customer = PmCustomerRepository.findByIdWithFetch(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + id));
         return toResponse(customer);
     }

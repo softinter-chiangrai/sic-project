@@ -51,7 +51,9 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { SicRequirementPreviewComponent } from './pmdt04-preview/pmdt04-preview.component';
 
 import { RequirementModel } from './pmdt04A.model';
-
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { Pmdt04AForm } from './pmdt04A.form';
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
@@ -123,7 +125,12 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private readonly auth = inject(AuthService);
 
   // ===== Form =====
-  form!: FormGroup;
+  formData!: SicFromData<RequirementModel>;
+
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
+
   isEdit = false;
   isViewOnly = false;
   reqId: string | null = null;
@@ -140,9 +147,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== View Mode =====
   viewMode: 'edit' | 'split' | 'preview' = 'split';
 
-  // ❌ ลบ descriptionContent และ acceptanceCriteriaContent signals แล้ว
-  // ใช้ form control โดยตรง
-
   // ===== Auto-save =====
   private autoSaveSubscription: Subscription | null = null;
   private formChangeSubscription: Subscription | null = null;
@@ -153,11 +157,12 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   // ===== CanDeactivate =====
-  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
+  pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
 
   // ===== Lifecycle =====
   ngOnInit(): void {
-    this.initForm();
+    const rawForm = Pmdt04AForm.createForm(this.fb);
+    this.formData = new SicFromData<RequirementModel>(rawForm);
     this.loadFlows();
 
     // Check if current route is view mode
@@ -176,9 +181,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         // New requirement - set default project from query params or customer state
         this.route.queryParams.subscribe((qParams) => {
           const pId = qParams['projectId'] || this.customerState.getProjectId();
-          console.log('🔍 [ngOnInit] pId found:', pId, 'Type:', typeof pId);
-          console.log('🔍 [ngOnInit] customerState projectId:', this.customerState.getProjectId(), 'Type:', typeof this.customerState.getProjectId());
-          console.log('🔍 [ngOnInit] customerState projectName:', this.customerState.getProjectName());
           
           if (pId) {
             this.form.patchValue({ projectId: pId });
@@ -186,10 +188,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               ? this.customerState.getProjectName() 
               : null;
             if (pName) {
-              console.log('🔍 [ngOnInit] Matching project name found in state:', pName);
               this.form.patchValue({ projectName: pName });
             } else {
-              console.log('🔍 [ngOnInit] No matching project name in state, fetching from API...');
               this.fetchProjectName(pId);
             }
           }
@@ -202,8 +202,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
       }
     });
-
-    // ❌ ไม่ต้อง sync signals แล้ว เพราะใช้ form control โดยตรง
 
     // Setup auto-save
     this.setupAutoSave();
@@ -219,41 +217,14 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.formChangeSubscription?.unsubscribe();
   }
 
-  // ===== Form Initialization =====
-  initForm(): void {
-    this.form = this.fb.group({
-      id: [null],
-      requirementCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required]],
-      requirementType: [null, [Validators.required]],
-      source: [null, [Validators.maxLength(100)]],
-      priority: ['Must', [Validators.required]],
-      businessValue: [null, [Validators.maxLength(255)]],
-      acceptanceCriteria: [null],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      createdBy: [null, [Validators.maxLength(100)]],
-      baConfirmStatus: ['Pending'],
-      customerConfirmStatus: ['Pending'],
-      version: ['v1.0'],
-      status: ['Draft'],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
-      uploadGroupId: [null],
-      uploadGroupData: [[]],
-    });
-  }
-
   // ===== Data Loading =====
   loadRequirement(id: string) {
     this.isLoading = true;
     this.service.getRequirement(id).subscribe({
       next: (data) => {
-        this.form.patchValue(data);
+        this.formData.formGroup.patchValue(data);
         this.isLoading = false;
-        this.form.markAsPristine();
+        this.formData.markAsPristine();
 
         if (this.isViewOnly) {
           this.form.disable();
@@ -498,16 +469,15 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       }
 
       const blob = await this.exportService.exportWithJasper(id, 'pdf');
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${this.form.value.requirementCode || 'requirement'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      this.dialog.success('ส่งออกสำเร็จ', 'ไฟล์ PDF จาก JasperReports ถูกดาวน์โหลดเรียบร้อย');
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(pdfUrl, '_blank');
+      if (!printWindow) {
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.target = '_blank';
+        a.click();
+      }
     } catch (error: any) {
       console.error('Export error:', error);
       this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
@@ -578,8 +548,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
       return;
     }
@@ -590,17 +560,17 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     this.isSaving = true;
-    const data = this.form.value as RequirementModel;
+    const data = this.formData.value as RequirementModel;
 
     // Set state
-    data.state = this.isEdit ? 3 : 4; // Modified or Added
+    data.state = this.isEdit ? SicEntityState.Modified : SicEntityState.Added;
     if (!this.isEdit) {
       data.rowVersion = 0;
     }
 
     this.service.save(data).subscribe({
       next: (response: any) => {
-        this.form.markAsPristine();
+        this.formData.markAsPristine();
         
         // Resolve the saved requirement ID and patch the entire response (including uploadGroupId)
         let savedId = data.id || this.reqId;

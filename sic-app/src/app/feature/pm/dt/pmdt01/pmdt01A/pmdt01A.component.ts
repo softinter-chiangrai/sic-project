@@ -119,6 +119,7 @@ export class Pmdt01AComponent implements OnInit {
       owner: ownerValues,
       color: data.color || '',
     });
+    this.form.markAsPristine();
   }
 
   onOwnerSelectionChanged(items: any[]) {
@@ -172,12 +173,15 @@ export class Pmdt01AComponent implements OnInit {
 
     request.subscribe({
       next: () => {
+        this.form.markAsPristine();
         this.dialog.success(
           'สำเร็จ',
           this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
-        );
-        this.router.navigate(['/feature/pm/phase'], {
-          queryParams: { projectId: this.projectId },
+        ).then(() => {
+          this.form.markAsPristine();
+          this.router.navigate(['/feature/pm/phase'], {
+            queryParams: { projectId: this.projectId },
+          });
         });
       },
       error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),

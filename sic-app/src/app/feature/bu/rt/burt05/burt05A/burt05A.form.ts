@@ -8,12 +8,14 @@ export class Burt05AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Burt05AModel>> {
     return fb.group<ToForm<Burt05AModel>>({
       id: fb.control(null),
-      projectCode: fb.control(null, [Validators.required]),
-      projectName: fb.control(null, [Validators.required]),
-      description: fb.control(null),
-      startDate: fb.control(null),
-      endDate: fb.control(null),
-      status: fb.control('ACTIVE'),
+      programCode: fb.control('', [Validators.required, Validators.maxLength(50)]),
+      programNameEn: fb.control('', [Validators.required, Validators.maxLength(255)]),
+      programNameLocal: fb.control('', [Validators.required, Validators.maxLength(255)]),
+      programIcon: fb.control(''),
+      routePath: fb.control('', [Validators.maxLength(500)]),
+      parentProgramId: fb.control(null),
+      sortOrder: fb.control(0),
+      isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -7,11 +7,13 @@ import { delay } from 'rxjs/operators';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { ToForm } from '../../../../../core/types/form.type';
 
 // ===== Model =====
 export interface BugModel {
@@ -42,31 +44,31 @@ export interface BugModel {
 
 // ===== Form =====
 class Pmdt17Form {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      bugCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required, Validators.maxLength(2000)]],
-      severity: ['Medium', [Validators.required]],
-      priority: ['High', [Validators.required]],
-      foundBy: [null, [Validators.maxLength(100)]],
-      assignedTo: [null, [Validators.maxLength(100)]],
-      relatedTestCase: [null],
-      relatedTestCaseName: [null],
-      relatedTask: [null],
-      relatedTaskName: [null],
-      relatedSpec: [null],
-      relatedSpecName: [null],
-      foundDate: [null, [Validators.required]],
-      fixDueDate: [null, [Validators.required]],
-      fixedDate: [null],
-      status: ['Open', [Validators.required]],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
+  static createForm(fb: FormBuilder): FormGroup<ToForm<BugModel>> {
+    return fb.group<ToForm<BugModel>>({
+      id: fb.control(null),
+      bugCode: fb.control(null, [Validators.required, Validators.maxLength(30)]),
+      title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
+      description: fb.control(null, [Validators.required, Validators.maxLength(2000)]),
+      severity: fb.control('Medium', [Validators.required]),
+      priority: fb.control('High', [Validators.required]),
+      foundBy: fb.control(null, [Validators.maxLength(100)]),
+      assignedTo: fb.control(null, [Validators.maxLength(100)]),
+      relatedTestCase: fb.control(null),
+      relatedTestCaseName: fb.control(null),
+      relatedTask: fb.control(null),
+      relatedTaskName: fb.control(null),
+      relatedSpec: fb.control(null),
+      relatedSpecName: fb.control(null),
+      foundDate: fb.control(null, [Validators.required]),
+      fixDueDate: fb.control(null, [Validators.required]),
+      fixedDate: fb.control(null),
+      status: fb.control('Open', [Validators.required]),
+      projectId: fb.control(null, [Validators.required]),
+      projectName: fb.control(null),
+      isActive: fb.control(true),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
     });
   }
 }
@@ -168,21 +170,27 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt13AService);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  form!: FormGroup;
+  formData!: SicFromData<BugModel>;
   isEdit = false;
   bugId: string | null = null;
   isLoading = false;
+
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
 
   // ===== Options =====
   severityOptions = ['Low', 'Medium', 'High', 'Critical'];
   priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
   statusOptions = ['Open', 'Fixing', 'Fixed', 'Retest', 'Closed', 'Reopen'];
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
-    this.initForm();
+    const rawForm = Pmdt17Form.createForm(this.fb);
+    this.formData = new SicFromData<BugModel>(rawForm);
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -194,16 +202,14 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  initForm(): void {
-    this.form = Pmdt17Form.createForm(this.fb);
-  }
-
   loadBug(id: string) {
     this.isLoading = true;
     this.service.getBug(id).subscribe({
       next: (data) => {
-        this.form.patchValue(data);
+        this.formData.formGroup.patchValue(data);
+        this.formData.markAsPristine();
         this.isLoading = false;
+        this.cdr.detectChanges();
         console.log('✅ โหลดข้อมูล Bug สำเร็จ:', data);
       },
       error: (error) => {
@@ -220,17 +226,19 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   }
 
   submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
       return;
     }
 
-    const data = this.form.value;
+    const data = this.formData.value;
+    data.state = this.isEdit ? SicEntityState.Modified : SicEntityState.Added;
+
     this.service.save(data).subscribe({
       next: () => {
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Bug ถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
+          this.formData.markAsPristine();
           this.router.navigate(['/feature/pm/bug']);
         });
       },

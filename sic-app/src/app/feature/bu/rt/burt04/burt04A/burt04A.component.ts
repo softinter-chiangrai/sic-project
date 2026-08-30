@@ -14,6 +14,10 @@ import { ComboboxRole } from '../burt04.model';
 import { burt04Service } from '../burt04.service';
 
 
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { Burt04AForm, Burt04AFormModel } from './burt04A.form';
+
 @Component({
   selector: 'app-burt04A',
   standalone: true,
@@ -31,7 +35,6 @@ import { burt04Service } from '../burt04.service';
 export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  // ✅ แก้ไข: เปลี่ยนจาก Pmrt29Service เป็น burt04Service
   private service = inject(burt04Service);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
@@ -46,16 +49,13 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   businessId = this.service.getBusinessId() || '';
   allRoles = signal<ComboboxRole[]>([]);
 
-  form: FormGroup = this.fb.group({
-    id: [null],
-    userId: [{ value: null, disabled: true }],
-    userName: [{ value: '', disabled: true }],
-    userEmail: [{ value: '', disabled: true }],
-    roleIds: [[], Validators.required],
-    isActive: [true],
-  });
+  formData!: SicFromData<Burt04AFormModel>;
 
-  pageDirty = () => this.form?.dirty ?? false;
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
+
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit() {
     if (!this.businessId) {
@@ -63,6 +63,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       this.router.navigate(['/feature/bu/burt04']);
       return;
     }
+    this.formData = new SicFromData<Burt04AFormModel>(Burt04AForm.createForm(this.fb));
     this.loadRoles();
 
     this.route.params.subscribe((params) => {
@@ -92,7 +93,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (member: any) => {
-          this.form.patchValue({
+          this.formData.formGroup.patchValue({
             id: member.id,
             userId: member.userId,
             userName: member.userName,
@@ -100,6 +101,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
             roleIds: member.roleIds || [],
             isActive: member.isActive,
           });
+          this.formData.markAsPristine();
         },
         error: (err: any) => {
           console.error('Load member error', err);
@@ -110,30 +112,25 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack() {
-    if (this.form.dirty) {
-      this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่บันทึก ต้องการออก?').then((ok) => {
-        if (ok) this.router.navigate(['/feature/bu/team']);
-      });
-    } else {
-      this.router.navigate(['/feature/bu/team']);
-    }
+    this.router.navigate(['/feature/bu/team']);
   }
 
   submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท');
       return;
     }
 
     this.isSaving.set(true);
-    const raw = this.form.getRawValue();
+    const raw = this.formData.formGroup.getRawValue();
 
     this.service
       .updateMember(raw.id, raw.roleIds, raw.isActive)
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: () => {
+          this.formData.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
           this.router.navigate(['/feature/bu/team']);
         },
@@ -144,3 +141,5 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 }
+
+export default Burt04AComponent;

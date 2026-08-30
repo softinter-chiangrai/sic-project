@@ -113,7 +113,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             task.setStatus(request.getStatus());
-            if ("Done".equalsIgnoreCase(request.getStatus()) || "Completed".equalsIgnoreCase(request.getStatus())) {
+            if (isCompletedStatus(request.getStatus())) {
                 if (task.getActualEnd() == null) {
                     task.setActualEnd(Instant.now());
                 }
@@ -156,6 +156,48 @@ public class TaskServiceImpl implements TaskService {
             assignee.setUserId(userId);
             taskAssigneeRepository.save(assignee);
         }
+    }
+
+    private boolean isBugTask(PmTask task) {
+        if (task == null) return false;
+        String code = task.getTaskCode() != null ? task.getTaskCode().trim().toUpperCase() : "";
+        String name = task.getTaskName() != null ? task.getTaskName().trim().toUpperCase() : "";
+        return code.startsWith("BUG") || code.startsWith("BG-") || name.startsWith("[BUG]");
+    }
+
+    private boolean isCompletedStatus(String status) {
+        if (status == null) return false;
+        String s = status.trim();
+        return "Done".equalsIgnoreCase(s) || "Complete".equalsIgnoreCase(s) || "Completed".equalsIgnoreCase(s);
+    }
+
+    // ===== PRIVATE: อัปเดตความคืบหน้าของ Phase (นับเฉพาะ Task ปกติ ไม่รวม Bug Task) =====
+    private void updatePhaseProgress(PmPhase phase) {
+        if (phase == null) return;
+        int total = 0, done = 0;
+        if (phase.getMilestones() != null) {
+            for (PmMilestone ms : phase.getMilestones()) {
+                if (ms.getIsDelete() != null && ms.getIsDelete()) continue;
+                if (ms.getWorkPackages() != null) {
+                    for (PmWorkPackage wp : ms.getWorkPackages()) {
+                        if (wp.getIsDelete() != null && wp.getIsDelete()) continue;
+                        if (wp.getTasks() != null) {
+                            for (PmTask task : wp.getTasks()) {
+                                if (task.getIsDelete() == null || !task.getIsDelete()) {
+                                    if (!isBugTask(task)) {
+                                        total++;
+                                        if (isCompletedStatus(task.getStatus())) done++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        int progress = total == 0 ? 0 : (done * 100 / total);
+        phase.setProgress(progress);
+        phaseRepository.save(phase);
     }
 
     // ===== PRIVATE: Entity → Response =====
@@ -208,24 +250,6 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return dto;
-    }
-
-    // ===== PRIVATE: อัปเดตความคืบหน้าของ Phase =====
-    private void updatePhaseProgress(PmPhase phase) {
-        int total = 0, done = 0;
-        for (PmMilestone ms : phase.getMilestones()) {
-            for (PmWorkPackage wp : ms.getWorkPackages()) {
-                for (PmTask task : wp.getTasks()) {
-                    if (!task.getIsDelete()) {
-                        total++;
-                        if ("Done".equals(task.getStatus())) done++;
-                    }
-                }
-            }
-        }
-        int progress = total == 0 ? 0 : (done * 100 / total);
-        phase.setProgress(progress);
-        phaseRepository.save(phase);
     }
 
     // ===== METHOD อื่น ๆ (GET, DELETE) =====

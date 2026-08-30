@@ -31,6 +31,11 @@ export class AuthService {
   async initializeAuth(): Promise<boolean> {
     if (!this.isBrowser) return false;
 
+    // If currently on callback page with code param, let handleCallback handle the exchange
+    if (window.location.pathname.includes('/auth/callback') && window.location.search.includes('code=')) {
+      return false;
+    }
+
     if (this.initialized) {
       return this.oauth.hasValidAccessToken();
     }
@@ -127,7 +132,17 @@ export class AuthService {
 
   async handleCallback(): Promise<boolean> {
     if (!this.isBrowser) return false;
-    return this.initializeAuth();
+    try {
+      if (!this.oauth.discoveryDocumentLoaded) {
+        await this.oauth.loadDiscoveryDocument();
+      }
+      await this.oauth.tryLoginCodeFlow();
+      this.initialized = true;
+      return this.oauth.hasValidAccessToken();
+    } catch (error) {
+      console.error('Error handling auth callback:', error);
+      return false;
+    }
   }
 
   async refreshToken(): Promise<boolean> {

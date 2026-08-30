@@ -178,6 +178,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   private ngControl: NgControl | null = null;
   private searchDebounceHandle: ReturnType<typeof setTimeout> | null = null;
   private loadSubscription: Subscription | null = null;
+  private valueSubscription: Subscription | null = null;
   private closeDropdownHandle: ReturnType<typeof setTimeout> | null = null;
   private readyHandle: ReturnType<typeof setTimeout> | null = null;
   private positionDropdownHandle: ReturnType<typeof setTimeout> | null = null;
@@ -241,6 +242,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     }
     this.languageChangeSubscription?.unsubscribe();
     this.loadSubscription?.unsubscribe();
+    this.valueSubscription?.unsubscribe();
   }
 
   get control() {
@@ -323,8 +325,14 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
       this.selectedText = this.resolveLabel(matched);
       this.inputText = this.selectedText;
     } else {
-      // Value not found in current options, fetch it
-      setTimeout(() => this.loadValueById(normalizedValue), 0);
+      // If we already have this selectedItem matching the value, just keep and refresh its label
+      if (this.selectedItem && this.resolveValue(this.selectedItem) === normalizedValue) {
+        this.selectedText = this.resolveLabel(this.selectedItem);
+        this.inputText = this.selectedText;
+      } else {
+        // Value not found in current options, fetch it
+        setTimeout(() => this.loadValueById(normalizedValue), 0);
+      }
     }
   }
 
@@ -835,6 +843,13 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
       if (!this.value) {
         this.selectedItem = null;
         this.selectedText = '';
+      } else if (this.selectedItem && this.resolveValue(this.selectedItem) === this.value) {
+        this.selectedText = this.resolveLabel(this.selectedItem);
+        if (!this.searchTerm || this.inputText === this.selectedText) {
+          this.inputText = this.selectedText;
+        }
+      } else if (this.apiUrl) {
+        this.loadValueById(this.value);
       }
       return;
     }
@@ -942,46 +957,46 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   }
 
   private loadValueById(value: any): void {
-    if (!this.apiUrl) {
+    if (!this.apiUrl || value === null || value === undefined) {
       return;
     }
 
-    this.cancelPendingLoad();
-    this.loading = true;
+    this.valueSubscription?.unsubscribe();
+    this.valueSubscription = null;
 
     const subscription = this.http.get<any[] | ComboboxPagingResponse<any>>(this.apiUrl, {
       params: this.buildParamsWithValue(value),
     }).subscribe({
       next: (response) => {
-        if (this.loadSubscription !== subscription) {
+        if (this.valueSubscription !== subscription) {
           return;
         }
 
         const items = Array.isArray(response) ? response : (response.data ?? []);
         if (items.length > 0) {
           const item = items[0];
-          setTimeout(() => {
-            this.selectedItem = item;
-            this.selectedText = this.resolveLabel(item);
-            this.inputText = this.selectedText;
-            this.loading = false;
-            this.cdr.markForCheck();
-          }, 0);
-        } else {
-          this.loading = false;
+          this.selectedItem = item;
+          this.selectedText = this.resolveLabel(item);
+          this.inputText = this.selectedText;
+
+          // Insert into options if not already present
+          const itemValue = this.resolveValue(item);
+          if (!this.options.some((opt) => this.resolveValue(opt) === itemValue)) {
+            this.options = [item, ...this.options];
+          }
+
+          this.cdr.markForCheck();
         }
-        this.loadSubscription = null;
+        this.valueSubscription = null;
       },
       error: () => {
-        if (this.loadSubscription !== subscription) {
-          return;
+        if (this.valueSubscription === subscription) {
+          this.valueSubscription = null;
         }
-        this.loading = false;
-        this.loadSubscription = null;
       },
     });
 
-    this.loadSubscription = subscription as any;
+    this.valueSubscription = subscription as any;
   }
 
   private cancelPendingLoad(): void {

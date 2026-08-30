@@ -9,6 +9,7 @@ import { finalize } from 'rxjs';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicProfileComponent } from '../../../../../core/component/sic-profile/sic-profile.component';
 import { SicRadioComponent } from '../../../../../core/component/sic-radio/sic-radio.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { CustomerModel } from './pmrt01A.model';
 import { Pmrt01AService } from './pmrt01A.service';
 
@@ -37,6 +38,7 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
     SicInputComponent,
     SicInputAreaComponent,
     SicInputPhoneComponent,
+    SicTiptapEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt01A.component.html',
@@ -71,7 +73,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     return 'images/profile.png';
   }
 
-  pageDirty = () => this.formCustomerData?.dirty ?? false;
+  pageDirty = () => this.formCustomerData?.isChanged ?? false;
 
   ngOnInit(): void {
     this.businessId = localStorage.getItem('businessId') || '';
@@ -120,6 +122,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: (data) => {
           this.formCustomerData.formGroup.patchValue(data);
           this.formCustomerData.formGroup.updateValueAndValidity();
+          this.formCustomerData.markAsPristine();
 
           // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
           this.cdr.detectChanges();

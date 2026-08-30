@@ -3,15 +3,17 @@ import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export interface Burt05AModel extends SicBaseStateModel {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
+  id?: string;
+  programCode: string;
+  programNameEn: string;
+  programNameLocal: string;
+  programIcon?: string;
+  routePath?: string;
+  parentProgramId?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
 }
 
 export interface Burt05APageData {
-  projectData: SicFromData<Burt05AModel>;
+  programData: SicFromData<Burt05AModel>;
 }

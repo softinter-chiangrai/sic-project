@@ -232,6 +232,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     if (this.isView) {
                         this.form.disable();
                     }
+                    this.form.markAsPristine();
                     this.isLoading = false;
                 },
                 error: () => {
@@ -338,8 +339,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         .pipe(finalize(() => (this.isSaving = false)))
                         .subscribe({
                             next: () => {
-                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย');
-                                this.navigateBack();
+                                this.form.markAsPristine();
+                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย').then(() => {
+                                    this.form.markAsPristine();
+                                    this.navigateBack();
+                                });
                             },
                             error: (err) => {
                                 this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
@@ -347,8 +351,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         });
                 } else {
                     this.isSaving = false;
-                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย');
-                    this.navigateBack();
+                    this.form.markAsPristine();
+                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
+                        this.form.markAsPristine();
+                        this.navigateBack();
+                    });
                 }
             },
             error: (err) => {

@@ -1,7 +1,8 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Component, computed, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
+import { Subscription, filter } from 'rxjs';
 import dayjs from '../../../../core/dayjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 
@@ -71,6 +72,8 @@ export class Pmdt02Component implements OnInit {
   private wpService = inject(Pmdt02BService);
   private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef);
+  private routerSub?: Subscription;
 
   // ===== SIGNALS =====
   phase = signal<PhaseResponse | null>(null);
@@ -86,6 +89,7 @@ export class Pmdt02Component implements OnInit {
   timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
 
   // ===== CUSTOM CALENDAR SIGNALS & SIDEBAR =====
+  rawCustomItems = signal<any[]>([]);
   customHolidays = signal<SicCalendarHoliday[]>([]);
   customEvents = signal<SicCalendarEvent[]>([]);
   selectedCalendarDate = signal<string>(dayjs().format('YYYY-MM-DD'));
@@ -103,6 +107,20 @@ export class Pmdt02Component implements OnInit {
 
   switchTab(tab: 'list' | 'calendar' | 'gantt' | 'kanban'): void {
     this.rightTab.set(tab);
+  }
+
+  // ===== BUG TASK & STATUS HELPERS =====
+  isBugTask(task?: { taskCode?: string; taskName?: string } | null): boolean {
+    if (!task) return false;
+    const code = (task.taskCode || '').trim().toUpperCase();
+    const name = (task.taskName || '').trim().toUpperCase();
+    return code.startsWith('BUG') || code.startsWith('BG-') || name.startsWith('[BUG]');
+  }
+
+  isTaskCompleted(status?: string): boolean {
+    if (!status) return false;
+    const s = status.trim().toLowerCase();
+    return ['done', 'complete', 'completed'].includes(s);
   }
 
   // ===== KANBAN DATA (ALL TASKS & WORKPACKAGES IN THIS PHASE) =====
@@ -125,6 +143,32 @@ export class Pmdt02Component implements OnInit {
       }
     }
     return tasks;
+  });
+
+  // Regular tasks (excluding Bug tasks)
+  regularPhaseTasks = computed<TaskResponse[]>(() => {
+    return this.allPhaseTasks().filter((t) => !this.isBugTask(t));
+  });
+
+  phaseTaskCount = computed<number>(() => {
+    const regular = this.regularPhaseTasks();
+    if (this.allPhaseTasks().length > 0) return regular.length;
+    return this.phase()?.taskCount ?? 0;
+  });
+
+  phaseTaskCompletedCount = computed<number>(() => {
+    const regular = this.regularPhaseTasks();
+    if (this.allPhaseTasks().length > 0) {
+      return regular.filter((t) => this.isTaskCompleted(t.status)).length;
+    }
+    return this.phase()?.taskCompletedCount ?? 0;
+  });
+
+  phaseProgress = computed<number>(() => {
+    const total = this.phaseTaskCount();
+    if (total === 0) return this.phase()?.progress ?? 0;
+    const completed = this.phaseTaskCompletedCount();
+    return Math.round((completed * 100) / total);
   });
 
   allWorkPackages = computed<WorkPackageResponse[]>(() => {
@@ -233,11 +277,12 @@ export class Pmdt02Component implements OnInit {
                 const tEnd = this.toDateString(task.endDate) || tStart;
                 if (selDate >= tStart && selDate <= tEnd) {
                   const visuals = this.getTaskVisuals(task);
+                  const assignee = this.getTaskAssigneeDisplay(task);
                   items.push({
                     id: task.id,
                     type: 'task',
                     title: `Task: ${task.taskName}`,
-                    subtitle: `ผู้รับผิดชอบ: ${task.assignedTo || '-'} | สถานะ: ${this.getStatusText(task.status)}`,
+                    subtitle: `ผู้รับผิดชอบ: ${assignee} | สถานะ: ${this.getStatusText(task.status)}`,
                     description: task.description,
                     color: task.color || visuals.color,
                     icon: visuals.icon,
@@ -251,8 +296,8 @@ export class Pmdt02Component implements OnInit {
       });
     }
 
-    // 5. Custom Items
-    const rawCustom = this.getRawCustomItems();
+    // 5. Custom Items (จาก Signal เพื่อให้เป็น Reactive 100%)
+    const rawCustom = this.rawCustomItems();
     rawCustom.forEach((cItem) => {
       if (cItem.date === selDate) {
         items.push({
@@ -363,14 +408,56 @@ export class Pmdt02Component implements OnInit {
 
   timelineStartDate = computed(() => {
     const p = this.phase();
-    if (p?.startDate) return this.toDateString(p.startDate);
-    return dayjs().format('YYYY-MM-DD');
+    if (!p) return dayjs().format('YYYY-MM-DD');
+
+    let minDate = p.startDate ? this.toDateString(p.startDate) : '';
+
+    p.milestones?.forEach((ms) => {
+      if (ms.dueDate) {
+        const msDue = this.toDateString(ms.dueDate);
+        if (!minDate || (msDue && msDue < minDate)) minDate = msDue;
+      }
+      ms.workPackages?.forEach((wp) => {
+        if (wp.startDate) {
+          const wpStart = this.toDateString(wp.startDate);
+          if (!minDate || (wpStart && wpStart < minDate)) minDate = wpStart;
+        }
+        wp.tasks?.forEach((task) => {
+          if (task.startDate) {
+            const taskStart = this.toDateString(task.startDate);
+            if (!minDate || (taskStart && taskStart < minDate)) minDate = taskStart;
+          }
+        });
+      });
+    });
+
+    return minDate || dayjs().format('YYYY-MM-DD');
   });
 
   timelineEndDate = computed(() => {
     const p = this.phase();
-    if (p?.endDate) return this.toDateString(p.endDate);
-    return dayjs().add(30, 'day').format('YYYY-MM-DD');
+    if (!p) return dayjs().add(30, 'day').format('YYYY-MM-DD');
+
+    let maxDate = p.endDate ? this.toDateString(p.endDate) : '';
+
+    p.milestones?.forEach((ms) => {
+      if (ms.dueDate) {
+        const msDue = this.toDateString(ms.dueDate);
+        if (!maxDate || (msDue && msDue > maxDate)) maxDate = msDue;
+      }
+      ms.workPackages?.forEach((wp) => {
+        if (wp.endDate) {
+          const wpEnd = this.toDateString(wp.endDate);
+          if (!maxDate || (wpEnd && wpEnd > maxDate)) maxDate = wpEnd;
+        }
+        wp.tasks?.forEach((task) => {
+          const taskEnd = this.toDateString(task.endDate || task.startDate);
+          if (!maxDate || (taskEnd && taskEnd > maxDate)) maxDate = taskEnd;
+        });
+      });
+    });
+
+    return maxDate || dayjs().add(30, 'day').format('YYYY-MM-DD');
   });
 
   // ===== LIFECYCLE =====
@@ -390,15 +477,32 @@ export class Pmdt02Component implements OnInit {
         }
       });
     });
+
+    // ฟัง NavigationEnd เมื่อกลับมาจากหน้าสร้าง/แก้ไข (เช่น Task, WP, Milestone) ให้อัปเดตข้อมูลอัตโนมัติ
+    this.routerSub = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        const phaseId = this.currentPhaseId();
+        if (phaseId && event.urlAfterRedirects && event.urlAfterRedirects.includes(`/feature/pm/phase/${phaseId}`)) {
+          this.loadPhaseDetail(phaseId, false);
+        }
+      });
   }
 
-  loadPhaseDetail(phaseId: string) {
-    this.isLoading.set(true);
+  ngOnDestroy() {
+    this.routerSub?.unsubscribe();
+  }
+
+  loadPhaseDetail(phaseId: string, showLoading = true) {
+    if (showLoading) {
+      this.isLoading.set(true);
+    }
     this.phaseService.getPhaseById(phaseId).subscribe({
       next: (data) => {
         this.phase.set(data);
         this.loadCustomItems();
         this.loadMilestones(phaseId);
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);
@@ -407,7 +511,12 @@ export class Pmdt02Component implements OnInit {
           queryParams: { projectId: this.projectId() },
         });
       },
-      complete: () => this.isLoading.set(false),
+      complete: () => {
+        if (showLoading) {
+          this.isLoading.set(false);
+        }
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -421,6 +530,7 @@ export class Pmdt02Component implements OnInit {
             milestones: milestones,
           });
           this.loadWorkPackagesForMilestones(milestones);
+          this.cdr.markForCheck();
         }
       },
       error: (err) => console.error(err),
@@ -434,15 +544,15 @@ export class Pmdt02Component implements OnInit {
         next: (workPackages) => {
           const current = this.phase();
           if (current?.milestones) {
-            const target = current.milestones.find((m) => m.id === ms.id);
-            if (target) {
-              target.workPackages = workPackages;
-              this.phase.set({ ...current });
-              // Automatically load tasks for each workpackage so Gantt chart has full tree
-              workPackages.forEach((wp) => {
-                this.loadTasksForWorkPackage(wp.id);
-              });
-            }
+            const updatedMilestones = current.milestones.map((m) =>
+              m.id === ms.id ? { ...m, workPackages: [...workPackages] } : m
+            );
+            this.phase.set({ ...current, milestones: updatedMilestones });
+            this.cdr.markForCheck();
+            // Automatically load tasks for each workpackage so Gantt chart and calendar sidebar have full tree
+            workPackages.forEach((wp) => {
+              this.loadTasksForWorkPackage(wp.id);
+            });
           }
         },
         error: (err) => console.error(`Failed to load WPs for milestone ${ms.id}`, err),
@@ -452,25 +562,23 @@ export class Pmdt02Component implements OnInit {
 
   private loadTasksForWorkPackage(wpId: string) {
     const current = this.phase();
-    if (!current) return;
-    let targetWp: WorkPackageResponse | null = null;
-    for (const ms of current.milestones || []) {
-      const found = ms.workPackages?.find((w) => w.id === wpId);
-      if (found) {
-        targetWp = found;
-        break;
-      }
-    }
-    if (!targetWp) return;
-    if (!targetWp.tasks || targetWp.tasks.length === 0) {
-      this.taskService.getTasksByWorkPackageId(wpId).subscribe({
-        next: (tasks) => {
-          targetWp!.tasks = tasks;
-          this.phase.set({ ...current });
-        },
-        error: (err) => console.error(`Failed to load tasks for WP ${wpId}`, err),
-      });
-    }
+    if (!current?.milestones) return;
+    this.taskService.getTasksByWorkPackageId(wpId).subscribe({
+      next: (tasks) => {
+        const latest = this.phase();
+        if (!latest?.milestones) return;
+        const updatedMilestones = latest.milestones.map((m) => {
+          if (!m.workPackages) return m;
+          const updatedWps = m.workPackages.map((wp) =>
+            wp.id === wpId ? { ...wp, tasks: [...tasks] } : wp
+          );
+          return { ...m, workPackages: updatedWps };
+        });
+        this.phase.set({ ...latest, milestones: updatedMilestones });
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error(`Failed to load tasks for WP ${wpId}`, err),
+    });
   }
 
   // ===== TOGGLE =====
@@ -681,10 +789,7 @@ export class Pmdt02Component implements OnInit {
   private reloadCurrentPhase(): void {
     const currentPhaseId = this.currentPhaseId();
     if (currentPhaseId) {
-      this.phaseService.getPhaseById(currentPhaseId).subscribe({
-        next: (data) => this.phase.set(data),
-        error: (err) => console.error('Failed to reload phase after task status update', err),
-      });
+      this.loadPhaseDetail(currentPhaseId, false);
     }
   }
 
@@ -907,6 +1012,7 @@ export class Pmdt02Component implements OnInit {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
+          this.rawCustomItems.set([...parsed]);
           const hList: SicCalendarHoliday[] = [];
           const eList: SicCalendarEvent[] = [];
           parsed.forEach((item: any) => {
@@ -930,8 +1036,14 @@ export class Pmdt02Component implements OnInit {
           });
           this.customHolidays.set(hList);
           this.customEvents.set(eList);
+          this.cdr.markForCheck();
+          return;
         }
       }
+      this.rawCustomItems.set([]);
+      this.customHolidays.set([]);
+      this.customEvents.set([]);
+      this.cdr.markForCheck();
     } catch (e) {
       console.error('Failed to load custom calendar items', e);
     }
@@ -943,20 +1055,14 @@ export class Pmdt02Component implements OnInit {
     try {
       localStorage.setItem(key, JSON.stringify(items));
       this.loadCustomItems();
+      this.cdr.markForCheck();
     } catch (e) {
       console.error('Failed to save custom calendar items', e);
     }
   }
 
   private getRawCustomItems(): any[] {
-    const key = this.getStorageKey();
-    if (!key) return [];
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    return this.rawCustomItems();
   }
 
   // ===== CALENDAR & TIMELINE EVENT HANDLERS =====

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -19,6 +19,9 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { environment } from '../../../../../../environments/environment';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { ToForm } from '../../../../../core/types/form.type';
 
 // ===== Model =====
 export interface ReviewCommentModel {
@@ -54,29 +57,28 @@ export interface DesignReviewModel {
 
 // ===== Form =====
 class Pmdt09AForm {
-  static createForm(fb: FormBuilder): FormGroup {
-    return fb.group({
-      id: [null],
-      reviewCode: [null, [Validators.required, Validators.maxLength(30)]],
-      title: [null, [Validators.required, Validators.maxLength(255)]],
-      description: [null, [Validators.required]],
-      reviewableType: [null],
-      reviewableId: [null, [Validators.required]],
-      reviewableName: [null],
-      projectId: [null, [Validators.required]],
-      projectName: [null],
-      reviewer: [null],
-      assignedTo: [null],
-      severity: ['Medium', [Validators.required]],
-      status: ['Open', [Validators.required]],
-      dueDate: [null, [Validators.required]],
-      figmaUrl: ['https://www.figma.com/proto/sample-ui-flow-demo'],
-      embedMode: ['prototype'],
-      approvalFlowId: [null],
-      comments: [[]],
-      isActive: [true],
-      state: [null],
-      rowVersion: [null],
+  static createForm(fb: FormBuilder): FormGroup<ToForm<DesignReviewModel>> {
+    return fb.group<ToForm<DesignReviewModel>>({
+      id: fb.control(null),
+      reviewCode: fb.control(null, [Validators.required, Validators.maxLength(30)]),
+      title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
+      description: fb.control(null, [Validators.required]),
+      reviewableType: fb.control(null),
+      reviewableId: fb.control(null, [Validators.required]),
+      reviewableName: fb.control(null),
+      projectId: fb.control(null, [Validators.required]),
+      projectName: fb.control(null),
+      reviewer: fb.control(null),
+      assignedTo: fb.control(null),
+      severity: fb.control('Medium', [Validators.required]),
+      status: fb.control('Open', [Validators.required]),
+      dueDate: fb.control(null, [Validators.required]),
+      figmaUrl: fb.control(null),
+      embedMode: fb.control('design'),
+      isActive: fb.control(true),
+      comments: fb.control([]),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
     });
   }
 }
@@ -84,20 +86,18 @@ class Pmdt09AForm {
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt09AService {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/pm/design-reviews`;
+  private http = inject(HttpClient);
 
-  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/projects/combobox`;
-  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/specifications/combobox`;
-  apiGetUsers = `${environment.apiBaseUrl}/api/users/available`;
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-project`;
+  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
+  apiGetComboboxSpecification = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
+  apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-requirement`;
+  apiGetComboboxTask = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-task`;
+  apiGetComboboxUser = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-user`;
+  apiGetUsers = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-user`;
   apiGetApprovalFlows = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/DESIGN_REVIEW`;
-
-  readonly reviewableTypeOptions = [
-    { value: 'SPECIFICATION', label: 'Specification' },
-    { value: 'REQUIREMENT', label: 'Requirement' },
-    { value: 'UI_SCREEN', label: 'UI Screen / Figma Mockup' },
-    { value: 'DIAGRAM', label: 'Diagram (DFD / ER / Architecture)' },
-  ];
+  apiGetLovSeverity = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-severity`;
+  apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-status`;
 
   readonly severityOptions = [
     { value: 'Low', label: 'Low (ต่ำ)' },
@@ -113,17 +113,26 @@ export class Pmdt09AService {
     { value: 'Closed', label: 'Closed (ปิดงาน)' },
   ];
 
-  save(data: any): Observable<any> {
-    console.log('📝 Saving design review to DB:', data);
-    return this.http.post<string>(this.baseUrl, data);
+  save(data: DesignReviewModel): Observable<any> {
+    console.log('📝 Saving design review:', data);
+    return this.http.post(`${environment.apiBaseUrl}/api/pm/design-reviews`, data);
   }
 
   getDesignReview(id: string): Observable<DesignReviewModel> {
-    return this.http.get<DesignReviewModel>(`${this.baseUrl}/${id}`);
+    return this.http.get<DesignReviewModel>(`${environment.apiBaseUrl}/api/pm/design-reviews/${id}`);
   }
 
-  addComment(reviewId: string, comment: { commentText: string; commentType?: string }): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${reviewId}/comments`, comment);
+  addComment(reviewId: string, text: string, type = 'GENERAL'): Observable<ReviewCommentModel> {
+    return this.http.post<ReviewCommentModel>(
+      `${environment.apiBaseUrl}/api/pm/design-reviews/${reviewId}/comments`,
+      { text, type }
+    );
+  }
+
+  deleteComment(reviewId: string, commentId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiBaseUrl}/api/pm/design-reviews/${reviewId}/comments/${commentId}`
+    );
   }
 }
 
@@ -144,7 +153,7 @@ export class Pmdt09AService {
     SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt09A.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [],
 })
 export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
@@ -157,10 +166,15 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private readonly fb = inject(FormBuilder);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('figmaIframe') figmaIframe?: ElementRef<HTMLIFrameElement>;
 
-  form!: FormGroup;
+  formData!: SicFromData<DesignReviewModel>;
+
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
 
   isEdit = false;
   reviewId: string | null = null;
@@ -182,10 +196,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   severityOptions = ['Low', 'Medium', 'High'];
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
-    this.initForm();
+    const rawForm = Pmdt09AForm.createForm(this.fb);
+    this.formData = new SicFromData<DesignReviewModel>(rawForm);
     this.loadFlows();
 
     this.route.params.subscribe((params) => {
@@ -274,7 +289,8 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   ngOnDestroy(): void {}
 
   initForm(): void {
-    this.form = Pmdt09AForm.createForm(this.fb);
+    const rawForm = Pmdt09AForm.createForm(this.fb);
+    this.formData = new SicFromData<DesignReviewModel>(rawForm);
   }
 
 
@@ -287,6 +303,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           formData.assignedTo = formData.assignedTo.split(',').map((s: string) => s.trim());
         }
         this.form.patchValue(formData);
+        this.form.markAsPristine();
         this.isLoading = false;
         this.updateEmbedUrl();
         this.loadApprovalFlowForReview(id);
@@ -377,8 +394,8 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
       
       const fieldLabels: Record<string, string> = {
         reviewCode: 'รหัส Design Review',
@@ -407,10 +424,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     this.isSaving = true;
-    const data = { ...this.form.value };
+    const data = { ...this.formData.value };
     if (Array.isArray(data.assignedTo)) {
-      data.assignedTo = data.assignedTo.join(', ');
+      data.assignedTo = (data.assignedTo as any[]).join(', ');
     }
+    data.state = this.isEdit ? SicEntityState.Modified : SicEntityState.Added;
 
     this.service.save(data).subscribe({
       next: (response: any) => {
@@ -430,7 +448,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               next: () => {
                 this.isSaving = false;
                 this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
-                  this.form.markAsPristine();
+                  this.formData.markAsPristine();
                   this.router.navigate(['/feature/pm/design-review']);
                 });
               },
@@ -442,7 +460,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         } else {
           this.isSaving = false;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
-            this.form.markAsPristine();
+            this.formData.markAsPristine();
             this.router.navigate(['/feature/pm/design-review']);
           });
         }

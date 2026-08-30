@@ -15,6 +15,11 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { Program } from '../burt05.model';
 import { burt05Service } from '../burt05.service';
 
+import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../../core/model/sic-entity-state';
+import { Burt05AForm } from './burt05A.form';
+import { Burt05AModel } from './burt05A.model';
+
 @Component({
   selector: 'app-burt05A',
   standalone: true,
@@ -40,7 +45,13 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
 
-  pageDirty = () => this.programForm?.dirty ?? false;
+  formData!: SicFromData<Burt05AModel>;
+
+  get programForm(): FormGroup {
+    return this.formData?.formGroup;
+  }
+
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   isLoading = signal(false);
   isSaving = signal(false);
@@ -67,18 +78,10 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     { value: 'None', text: 'ไม่มีสิทธิ์ (None)' },
   ];
 
-  programForm: FormGroup = this.fb.group({
-    programCode: ['', [Validators.required, Validators.maxLength(50)]],
-    programNameEn: ['', [Validators.required, Validators.maxLength(255)]],
-    programNameLocal: ['', [Validators.required, Validators.maxLength(255)]],
-    programIcon: [''],
-    routePath: ['', Validators.maxLength(500)],
-    parentProgramId: [null],
-    sortOrder: [0],
-    isActive: [true],
-  });
-
   ngOnInit() {
+    const rawForm = Burt05AForm.createForm(this.fb);
+    this.formData = new SicFromData<Burt05AModel>(rawForm);
+
     this.route.params.subscribe((params) => {
       const id = params['id'];
       const segments = this.route.snapshot.url;
@@ -109,7 +112,8 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.service.getProgram(id).subscribe({
       next: (program: Program) => {
-        this.programForm.patchValue(program);
+        this.formData.formGroup.patchValue(program);
+        this.formData.markAsPristine();
         this.isLoading.set(false);
       },
       error: (err: any) => {
@@ -136,7 +140,8 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       rolePrograms: this.service.getRoleProgramsByProgram(id),
     }).subscribe({
       next: ({ program, rolePrograms }) => {
-        this.programForm.patchValue(program);
+        this.formData.formGroup.patchValue(program);
+        this.formData.markAsPristine();
         this.programId.set(id);
 
         this.service.getRoles(businessId).subscribe({

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -11,6 +11,9 @@ import { SicInputAreaComponent } from '../../../../core/component/sic-input-area
 import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { SicFromData } from '../../../../core/model/sic-from-data';
+import { SicEntityState } from '../../../../core/model/sic-entity-state';
+import { ToForm } from '../../../../core/types/form.type';
 
 // ===== Model =====
 export interface TaskScheduleModel {
@@ -27,6 +30,31 @@ export interface TaskScheduleModel {
   dependency?: string;
   dependencyName?: string;
   comment?: string;
+  state?: number;
+  rowVersion?: number;
+}
+
+// ===== Form =====
+class Pmdt11Form {
+  static createForm(fb: FormBuilder): FormGroup<ToForm<TaskScheduleModel>> {
+    return fb.group<ToForm<TaskScheduleModel>>({
+      id: fb.control(null),
+      taskCode: fb.control(null),
+      taskName: fb.control(null),
+      projectName: fb.control(null),
+      assignedTo: fb.control(null),
+      startDate: fb.control(null, [Validators.required]),
+      endDate: fb.control(null, [Validators.required]),
+      actualStart: fb.control(null),
+      actualEnd: fb.control(null),
+      status: fb.control('Todo', [Validators.required]),
+      dependency: fb.control(null),
+      dependencyName: fb.control(null),
+      comment: fb.control(null, [Validators.maxLength(500)]),
+      state: fb.control(null),
+      rowVersion: fb.control(null),
+    });
+  }
 }
 
 // ===== Service =====
@@ -72,7 +100,7 @@ export class Pmdt11Service {
     SicInputAreaComponent,
   ],
   templateUrl: './pmdt11.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [],
 })
 export class Pmdt11Component implements OnInit, CanComponentDeactivate {
@@ -81,20 +109,26 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   readonly service = inject(Pmdt11Service);
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  form!: FormGroup;
+  formData!: SicFromData<TaskScheduleModel>;
   taskId: string | null = null;
   isLoading = false;
   taskCode = '';
   taskName = '';
 
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
+
   // ===== Options =====
   statusOptions = ['Todo', 'In Progress', 'Waiting Review', 'Waiting Fix', 'Done', 'Delayed', 'Blocked', 'Cancelled'];
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
-    this.initForm();
+    const rawForm = Pmdt11Form.createForm(this.fb);
+    this.formData = new SicFromData<TaskScheduleModel>(rawForm);
 
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -107,32 +141,16 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
     });
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      id: [null],
-      taskCode: [null],
-      taskName: [null],
-      projectName: [null],
-      assignedTo: [null],
-      startDate: [null, [Validators.required]],
-      endDate: [null, [Validators.required]],
-      actualStart: [null],
-      actualEnd: [null],
-      status: ['Todo', [Validators.required]],
-      dependency: [null],
-      dependencyName: [null],
-      comment: [null, [Validators.maxLength(500)]],
-    });
-  }
-
   loadTask(id: string) {
     this.isLoading = true;
     this.service.getTask(id).subscribe({
       next: (data) => {
         this.taskCode = data.taskCode;
         this.taskName = data.taskName;
-        this.form.patchValue(data);
+        this.formData.formGroup.patchValue(data);
+        this.formData.markAsPristine();
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isLoading = false;
@@ -148,23 +166,24 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   }
 
   submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+    if (this.formData.invalid) {
+      this.formData.markAllAsTouched();
+      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
       return;
     }
 
-    const data = this.form.value;
-    data.id = this.taskId;
+    const data = this.formData.value;
+    data.state = SicEntityState.Modified;
+
     this.service.updateSchedule(data).subscribe({
       next: () => {
-        this.dialog.success('อัปเดตสำเร็จ', 'กำหนดการงานถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
+        this.dialog.success('บันทึกสำเร็จ', 'อัปเดตกำหนดการเรียบร้อย').then(() => {
+          this.formData.markAsPristine();
           this.router.navigate(['/feature/pm/gantt']);
         });
       },
       error: (error) => {
-        this.dialog.error('อัปเดตไม่สำเร็จ', error);
+        this.dialog.error('บันทึกไม่สำเร็จ', error);
       },
     });
   }
