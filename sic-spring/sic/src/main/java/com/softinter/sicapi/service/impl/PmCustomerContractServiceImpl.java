@@ -261,13 +261,22 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             dto.setCustomerId(contract.getCustomerId());
         }
         // ถ้ามีความสัมพันธ์กับโครงการ
-        projectRepository.findByContractIdAndIsDeleteFalse(contract.getId())
-                .stream().findFirst()
-                .ifPresent(p -> {
-                    contract.setProjectId(p.getId());
-                    dto.setProjectId(p.getId());
-                    dto.setProjectName(p.getProjectName());
-                });
+        if (contract.getProjectId() != null) {
+            projectRepository.findById(contract.getProjectId())
+                    .ifPresent(p -> {
+                        dto.setProjectId(p.getId());
+                        dto.setProjectName(p.getProjectName());
+                    });
+        }
+        if (dto.getProjectId() == null) {
+            projectRepository.findByContractIdAndIsDeleteFalse(contract.getId())
+                    .stream().findFirst()
+                    .ifPresent(p -> {
+                        contract.setProjectId(p.getId());
+                        dto.setProjectId(p.getId());
+                        dto.setProjectName(p.getProjectName());
+                    });
+        }
         return dto;
     }
 }

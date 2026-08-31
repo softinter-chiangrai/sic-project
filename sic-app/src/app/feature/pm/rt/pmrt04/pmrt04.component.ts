@@ -15,6 +15,7 @@ import { finalize, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { ApprovalService } from '../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
@@ -38,6 +39,7 @@ export class Pmrt04Component implements OnInit {
   private dialog = inject(DialogService);
   private projectService = inject(Pmrt02Service);
   private contractService = inject(Pmrt04Service);
+  private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
 
   // ===== State =====
@@ -108,8 +110,10 @@ export class Pmrt04Component implements OnInit {
       this.filterCustomerId.set(project.customerId);
       this.filterCustomerName.set(project.customerName);
       if (contractsRes) {
-        this.contracts.set(contractsRes.data || []);
-        this.totalItems.set(contractsRes.pageable?.totalElements || contractsRes.data?.length || 0);
+        const items = contractsRes.data || [];
+        this.contracts.set(items);
+        this.totalItems.set(contractsRes.pageable?.totalElements || items.length || 0);
+        this.loadApprovalStatuses(items);
       }
     }
 
@@ -153,6 +157,24 @@ export class Pmrt04Component implements OnInit {
     ]);
   }
 
+  loadApprovalStatuses(contracts: Contract[]) {
+    contracts.forEach((contract) => {
+      if (!contract.id) return;
+      this.approvalService.getDocumentStatus('CONTRACT', contract.id).subscribe({
+        next: (approval) => {
+          this.contracts.update((list) =>
+            list.map((item) =>
+              item.id === contract.id ? { ...item, approvalStatus: approval.status } : item,
+            ),
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ ปล่อย null
+        },
+      });
+    });
+  }
+
   loadContracts() {
     this.isLoading.set(true);
 
@@ -193,6 +215,7 @@ export class Pmrt04Component implements OnInit {
           const total = response.pageable?.totalElements ?? (response as any).totalElements ?? 0;
           this.contracts.set(items);
           this.totalItems.set(total);
+          this.loadApprovalStatuses(items);
 
           if (this.filterCustomerId() && !this.filterCustomerName()) {
             const firstContract = items[0];
@@ -410,5 +433,27 @@ export class Pmrt04Component implements OnInit {
       currency: 'THB',
       minimumFractionDigits: 2,
     }).format(value);
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
   }
 }

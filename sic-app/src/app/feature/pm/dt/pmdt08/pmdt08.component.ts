@@ -107,6 +107,23 @@ export class Pmdt08Component implements OnInit {
     this.editForm = this.fb.group({
       content: ['', Validators.required],
     });
+
+    // ดึง projectId จาก queryParams หรือ params
+    this.route.queryParams.subscribe((params) => {
+      const pId = params['projectId'] || params['id'];
+      if (pId) {
+        this.projectId.set(pId);
+        this.loadPosts();
+      }
+    });
+
+    this.route.params.subscribe((params) => {
+      const pId = params['projectId'] || params['id'];
+      if (pId && !this.projectId()) {
+        this.projectId.set(pId);
+        this.loadPosts();
+      }
+    });
   }
 
   loadPosts(): void {

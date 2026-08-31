@@ -36,6 +36,7 @@ export interface Contract {
   paymentTerms: string;
   scopeSummary: string;
   signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  approvalStatus?: string;
   renewalStatus: string;
   parentContractId?: string;
   parentContractNo?: string;

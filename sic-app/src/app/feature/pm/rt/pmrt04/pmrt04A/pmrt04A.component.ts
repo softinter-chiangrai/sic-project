@@ -1,31 +1,32 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, Injectable, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
-import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
+import { Pmrt04AForm } from './pmrt04A.form';
 import { ContractModel } from './pmrt04A.model';
 import { Pmrt04AService } from './pmrt04A.service';
-import { Pmrt04AForm } from './pmrt04A.form';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 
-// ===== Component =====
 @Component({
   selector: 'app-pmrt04a',
   standalone: true,
@@ -40,8 +41,7 @@ import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
     SicDatepickerComponent,
   ],
   templateUrl: './pmrt04A.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
-  styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
@@ -49,27 +49,29 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   public service = inject(Pmrt04AService);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
-   private navigation = inject(NavigationService);
-   private projectService = inject(Pmrt02Service); 
-    private cdr = inject(ChangeDetectorRef); 
+  private navigation = inject(NavigationService);
+  private projectService = inject(Pmrt02Service);
+  private cdr = inject(ChangeDetectorRef);
 
-  formData!: SicFromData<any>;
+  formData!: SicFromData<ContractModel>;
   get form(): FormGroup {
     return this.formData?.formGroup;
   }
+
   isEdit = false;
   isView = false;
   contractId: string | null = null;
   isLoading = false;
   isSaving = false;
 
-  // ✅ เก็บ customerId และ projectId จาก Query Parameter
+  // Context info
   customerId: string | null = null;
+  customerName: string | null = null;
   projectId: string | null = null;
+  projectName: string | null = null;
 
   pageDirty = () => (this.isView ? false : (this.formData?.isChanged ?? false));
 
-  // pmrt04A.component.ts
   ngOnInit(): void {
     this.initForm();
 
@@ -77,7 +79,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       this.isView = true;
     }
 
-    // รับ projectId จาก queryParams (optional) เพื่อใช้ในกรณีสร้างใหม่
+    // รับ projectId จาก queryParams (ในกรณีสร้างใหม่)
     this.route.queryParams.subscribe((params) => {
       if (params['mode'] === 'view') {
         this.isView = true;
@@ -88,7 +90,14 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         this.projectService.getProject(projectId).subscribe({
           next: (project) => {
             this.customerId = project.customerId;
-            this.form.patchValue({ projectId, customerId: project.customerId });
+            this.customerName = project.customerName || null;
+            this.projectName = project.projectName || null;
+            this.form.patchValue({
+              projectId,
+              customerId: project.customerId,
+              projectName: project.projectName,
+              customerName: project.customerName,
+            });
             if (this.isView) {
               this.form.disable();
             }
@@ -99,19 +108,19 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       }
     });
 
-    // กรณีแก้ไขหรือดู: โหลดข้อมูลสัญญา ซึ่งจะได้ projectId และ customerId จาก data
+    // กรณีแก้ไขหรือดู: โหลดข้อมูลสัญญา
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
         this.isEdit = true;
         this.contractId = id;
-        this.loadContract(id); // ใน loadContract จะ set this.projectId = data.projectId
+        this.loadContract(id);
       }
     });
   }
 
   initForm(): void {
-    this.formData = new SicFromData<any>(Pmrt04AForm.createForm(this.fb));
+    this.formData = new SicFromData<ContractModel>(Pmrt04AForm.createForm(this.fb));
   }
 
   loadContract(id: string) {
@@ -132,16 +141,21 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           if (data.customerId) {
             this.customerId = data.customerId;
           }
+          if (data.customerName) {
+            this.customerName = data.customerName;
+          }
           if (data.projectId) {
             this.projectId = data.projectId;
+          }
+          if (data.projectName) {
+            this.projectName = data.projectName;
           }
           this.form.patchValue(data);
           if (this.isView) {
             this.form.disable();
           }
           this.formData.resetModel(this.form.getRawValue());
-          console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
-          this.cdr.detectChanges(); // ✅ อัปเดต View ทันที
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
@@ -166,20 +180,6 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   }
 
   submit() {
-    // ✅ เพิ่ม log เพื่อดูค่าฟอร์ม
-    console.log('📋 Form Value:', this.form.value);
-    console.log('✅ Form Valid?', this.form.valid);
-    console.log('❌ Form Errors:', this.form.errors);
-
-    // ✅ แสดง error ของแต่ละฟิลด์
-    Object.keys(this.form.controls).forEach((key) => {
-      const control = this.form.get(key);
-      if (control?.invalid) {
-        console.log(`❌ Field "${key}" is invalid:`, control.errors);
-        console.log(`   Value:`, control.value);
-      }
-    });
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
@@ -188,8 +188,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
     this.isSaving = true;
 
-    // ✅ ดึงค่าจากฟอร์ม
-    const data = { ...this.form.value } as ContractModel;
+    const data = { ...this.form.getRawValue() } as ContractModel;
     if (data.startDate) {
       data.startDate = DateTimeUtil.toInstantIsoString(data.startDate) || data.startDate;
     }
@@ -197,26 +196,25 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       data.endDate = DateTimeUtil.toInstantIsoString(data.endDate) || data.endDate;
     }
 
-    // ✅ สำคัญ: เพิ่ม customerId จาก queryParams ลงในข้อมูลที่ส่ง
     if (this.customerId) {
       data.customerId = this.customerId;
     } else {
-      // ถ้าไม่มี customerId ให้แจ้งเตือน
       this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
       this.isSaving = false;
       return;
     }
 
-    console.log('📤 Sending data with customerId:', data);
-
     this.service
       .save(data)
-      .pipe(finalize(() => (this.isSaving = false)))
+      .pipe(finalize(() => {
+        this.isSaving = false;
+        this.cdr.detectChanges();
+      }))
       .subscribe({
         next: () => {
+          this.formData.resetModel(this.form.getRawValue());
+          this.form.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
-            this.form.markAsPristine();
-            // ✅ กลับไปหน้ารายการสัญญาพร้อม projectId หรือ customerId
             if (this.projectId) {
               this.navigation.navigate(['/feature/pm/contract'], {
                 queryParams: { projectId: this.projectId },
@@ -229,7 +227,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           });
         },
         error: (error) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         },
       });
   }

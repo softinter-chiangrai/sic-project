@@ -108,6 +108,12 @@ export class Pmdt08AComponent implements OnInit {
         });
     } else {
       // สร้างโพสต์ใหม่
+      if (!this.projectId) {
+        this.isSubmitting = false;
+        this.dialog.warn('ไม่พบรหัสโครงการ', 'ไม่สามารถสร้างโพสต์ได้เนื่องจากไม่พบข้อมูลโครงการ');
+        return;
+      }
+
       const request = {
         targetId: this.projectId,
         subject: formValue.subject,
