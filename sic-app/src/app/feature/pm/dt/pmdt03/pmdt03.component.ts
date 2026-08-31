@@ -84,6 +84,7 @@ export class Pmdt03Component implements OnInit {
     { value: 'DELIVERY', text: 'DELIVERY' },
     { value: 'INVOICE', text: 'INVOICE' },
     { value: 'MA_RENEWAL', text: 'MA_RENEWAL' },
+    { value: 'CONTRACT', text: 'CONTRACT' },
   ];
 
   readonly statusSelectOptions = [
@@ -110,6 +111,7 @@ export class Pmdt03Component implements OnInit {
     'DELIVERY',
     'INVOICE',
     'MA_RENEWAL',
+    'CONTRACT',
   ];
 
   statusOptions = ['PENDING', 'APPROVED', 'REJECTED', 'NEED_REVISION', 'CANCELLED'];
@@ -322,6 +324,7 @@ export class Pmdt03Component implements OnInit {
       DELIVERY: 'bi-box-seam',
       INVOICE: 'bi-receipt',
       MA_RENEWAL: 'bi-clock-history',
+      CONTRACT: 'bi-file-earmark-text',
     };
     return map[type] || 'bi-file-earmark';
   }

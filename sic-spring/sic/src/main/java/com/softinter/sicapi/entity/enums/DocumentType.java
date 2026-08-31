@@ -8,6 +8,7 @@ public enum DocumentType {
     DELIVERY("Delivery"),
     INVOICE("Invoice"),
     MA_RENEWAL("MA Renewal"),
+    CONTRACT("Contract"),
     CHANGE_REQUEST("Change Request"),
     TEST_PLAN("Test Plan"),
     UAT("UAT");

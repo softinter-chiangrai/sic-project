@@ -55,7 +55,8 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
     return this.formData?.formGroup;
   }
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit() {
     if (!this.businessId) {
@@ -93,15 +94,14 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (member: any) => {
-          this.formData.formGroup.patchValue({
+          this.formData.patchValue({
             id: member.id,
             userId: member.userId,
             userName: member.userName,
             userEmail: member.userEmail,
             roleIds: member.roleIds || [],
             isActive: member.isActive,
-          });
-          this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
+          } as any);
         },
         error: (err: any) => {
           console.error('Load member error', err);
@@ -130,6 +130,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: () => {
+          this.isSaved = true;
           this.formData.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
           this.router.navigate(['/feature/bu/team']);

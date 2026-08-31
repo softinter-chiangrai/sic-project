@@ -63,13 +63,14 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     this.formData = new SicFromData<PmTestScenarioModel>(Pmdt12BForm.createForm(this.fb));
     const pId = this.customerState.getProjectId();
     if (pId) {
-      this.formData.form.patchValue({ projectId: pId });
+      this.formData.patchValue({ projectId: pId } as any);
       this.loadTasks(pId);
     } else {
       this.loadTasks();
@@ -227,6 +228,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.service.saveTestScenario(data).subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.isSaved = true;
         this.formData.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Test Scenario เรียบร้อยแล้ว').then(() => {
           this.onBack();

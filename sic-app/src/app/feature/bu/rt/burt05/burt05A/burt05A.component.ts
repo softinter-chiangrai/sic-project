@@ -51,7 +51,8 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     return this.formData?.formGroup;
   }
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   isLoading = signal(false);
   isSaving = signal(false);
@@ -112,8 +113,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.service.getProgram(id).subscribe({
       next: (program: Program) => {
-        this.formData.formGroup.patchValue(program);
-        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
+        this.formData.patchValue(program as any);
         this.isLoading.set(false);
       },
       error: (err: any) => {

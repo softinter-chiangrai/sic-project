@@ -65,7 +65,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     { label: 'Published (เผยแพร่แล้ว)', value: 'PUBLISHED' },
   ];
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt15AForm.createForm(this.fb);
@@ -73,7 +74,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     const queryProj = this.route.snapshot.queryParams['projectId'];
     if (queryProj) {
-      this.formData.form.controls['projectId'].setValue(queryProj);
+      this.formData.patchValue({ projectId: queryProj } as any);
     }
 
     const paramId = this.route.snapshot.params['id'];
@@ -189,6 +190,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving.set(true);
     this.service.save(payload).subscribe({
       next: () => {
+        this.isSaved = true;
         this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
         this.formData.markAsPristine();
         this.router.navigate(['/feature/pm/manual']);

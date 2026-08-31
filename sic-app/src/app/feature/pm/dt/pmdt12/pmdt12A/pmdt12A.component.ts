@@ -75,7 +75,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       : `${environment.apiBaseUrl}/api/business/combobox-members`;
   });
 
-  pageDirty = () => this.isView() ? false : (this.formData?.isChanged ?? false);
+  isSaved = false;
+  pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   priorityOptions = [
     { value: 'High', text: 'High' },
@@ -107,7 +108,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
     const pId = this.customerState.getProjectId();
     if (pId) {
-      this.formData.form.patchValue({ projectId: pId });
+      this.formData.patchValue({ projectId: pId } as any);
       this.loadTasks(pId);
       this.loadScenarios(pId);
     } else {
@@ -127,10 +128,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.route.queryParams.subscribe((queryParams) => {
       const scenarioId = queryParams['scenarioId'];
       if (scenarioId && !this.testCaseId) {
-        this.formData.form.patchValue({ scenarioId });
-      }
-      if (!this.testCaseId) {
-        this.formData.markAsPristine();
+        this.formData.patchValue({ scenarioId } as any);
       }
     });
   }
@@ -426,6 +424,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.service.saveTestCase(data).subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.isSaved = true;
         this.formData.markAsPristine();
 
         // Check if all test cases of this task now PASS, if so, move parent task to 'complete'

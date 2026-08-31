@@ -62,16 +62,39 @@
 .sic-toast-content {
   flex: 1;
   min-width: 0;
-  padding-top: 0.15rem;
+  padding-top: 0.05rem;
+}
+
+.sic-toast-title {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-active, #0f172a);
 }
 
 .sic-toast-message {
   margin: 0;
-  font-size: 0.825rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 400;
   line-height: 1.4;
-  color: var(--text-active, #0f172a);
+  color: var(--text, #334155);
   word-break: break-word;
+}
+
+.sic-toast-action-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.725rem;
+  font-weight: 500;
+  color: var(--crm-primary, #3b82f6);
+  margin-top: 0.35rem;
+  transition: transform 0.15s ease;
+}
+
+.sic-toast-item.sic-toast-clickable:hover .sic-toast-action-hint {
+  transform: translateX(2px);
 }
 
 /* Close button */

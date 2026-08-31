@@ -196,7 +196,8 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   severityOptions = ['Low', 'Medium', 'High'];
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt09AForm.createForm(this.fb);
@@ -221,19 +222,18 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const projectName = this.customerState.getProjectName();
 
         if (projectId) {
-          this.form.patchValue({
+          this.formData.patchValue({
             projectId: projectId,
             projectName: projectName || null,
-          });
+          } as any);
         }
 
         if (queryParams['requirementId']) {
-          this.form.patchValue({
+          this.formData.patchValue({
             reviewableType: 'Requirement',
             reviewableId: queryParams['requirementId'],
-          });
+          } as any);
         }
-        this.formData.markAsPristine();
       }
     });
 
@@ -448,6 +448,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             .subscribe({
               next: () => {
                 this.isSaving = false;
+                this.isSaved = true;
                 this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
                   this.formData.markAsPristine();
                   this.router.navigate(['/feature/pm/design-review']);
@@ -460,6 +461,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             });
         } else {
           this.isSaving = false;
+          this.isSaved = true;
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
             this.formData.markAsPristine();
             this.router.navigate(['/feature/pm/design-review']);

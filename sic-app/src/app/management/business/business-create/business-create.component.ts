@@ -42,7 +42,8 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   
   formBusinessData!: SicFromData<BusinessCreateModel>;
 
-  pageDirty = () => this.formBusinessData.dirty;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formBusinessData?.isChanged ?? false);
 
   ngOnInit(): void {
     const form:BusinessFormData = this.route.snapshot.data['form'];
@@ -86,6 +87,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
       const data = this.formBusinessData.value;
       this.service.save(data).subscribe({
       next: (response) => {
+        this.isSaved = true;
         this.dialog.success('Profile Saved', 'Your profile has been successfully saved.').then((confirmed) => {
           this.formBusinessData.markAsPristine();
           this.router.navigate(['feature']);

@@ -36,7 +36,8 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
 
   tokenForm!: FormGroup<ToForm<JoinModel>>;
 
-  pageDirty = () => this.tokenForm.dirty;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : this.tokenForm.dirty;
 
   ngOnInit(): void {
     const data: BusinessJoinFormData = this.route.snapshot.data['form'];
@@ -73,6 +74,7 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
     this.service.join(this.tokenForm.value.token!).subscribe({
       next: async () => {
         this.loading.set(false);
+        this.isSaved = true;
         this.tokenForm.markAsPristine();
         await this.dialog.success('เข้าร่วมสำเร็จ', 'คุณได้เข้าร่วมธุรกิจเรียบร้อยแล้ว');
         this.router.navigate(['/management/business']);

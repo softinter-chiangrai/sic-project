@@ -118,7 +118,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
 
-    pageDirty = () => this.isView ? false : (this.formData?.isChanged ?? false);
+    isSaved = false;
+    pageDirty = () => this.isView ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
     // ===== Methods =====
 
@@ -213,7 +214,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     if (data.targetType) {
                         this.selectedTargetType.set(data.targetType);
                     }
-                    this.form.patchValue(data);
+                    this.formData.patchValue(data);
                     if (data.assignees && data.assignees.length > 0) {
                         const assignees = data.assignees.map((a) => ({
                             userId: a.userId,
@@ -344,9 +345,9 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         .pipe(finalize(() => (this.isSaving = false)))
                         .subscribe({
                             next: () => {
+                                this.isSaved = true;
                                 this.form.markAsPristine();
                                 this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย').then(() => {
-                                    this.form.markAsPristine();
                                     this.navigateBack();
                                 });
                             },
@@ -356,9 +357,9 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         });
                 } else {
                     this.isSaving = false;
+                    this.isSaved = true;
                     this.form.markAsPristine();
                     this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
-                        this.form.markAsPristine();
                         this.navigateBack();
                     });
                 }

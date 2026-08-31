@@ -22,6 +22,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
+import { environment } from '../../../../../../environments/environment';
+import { ApprovalService } from '../../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt04AForm } from './pmrt04A.form';
 import { ContractModel } from './pmrt04A.model';
@@ -47,6 +49,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   public service = inject(Pmrt04AService);
+  private approvalService = inject(ApprovalService);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
   private navigation = inject(NavigationService);
@@ -70,7 +73,18 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   projectId: string | null = null;
   projectName: string | null = null;
 
-  pageDirty = () => (this.isView ? false : (this.formData?.isChanged ?? false));
+  // Approval Integration
+  selectedFlowId: string | null = null;
+  apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/CONTRACT`;
+
+  isSaved = false;
+
+  pageDirty = () => {
+    if (this.isView || this.isSaved) {
+      return false;
+    }
+    return this.formData?.isChanged ?? this.form?.dirty ?? false;
+  };
 
   ngOnInit(): void {
     this.initForm();
@@ -79,20 +93,29 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       this.isView = true;
     }
 
-    // รับ projectId จาก queryParams (ในกรณีสร้างใหม่)
+    // 1. รับค่า id จาก route params (ถ้ามี)
+    const id = this.route.snapshot.params['id'];
+    if (id) {
+      this.isEdit = true;
+      this.contractId = id;
+      this.loadContract(id);
+    }
+
+    // 2. รับ projectId และ customerId จาก queryParams
     this.route.queryParams.subscribe((params) => {
       if (params['mode'] === 'view') {
         this.isView = true;
       }
       const projectId = params['projectId'];
-      if (projectId) {
+      if (projectId && !this.contractId) {
         this.projectId = projectId;
         this.projectService.getProject(projectId).subscribe({
           next: (project) => {
             this.customerId = project.customerId;
             this.customerName = project.customerName || null;
             this.projectName = project.projectName || null;
-            this.form.patchValue({
+            // ✅ ใช้ formData.patchValue() — patch + re-snapshot อัตโนมัติ
+            this.formData.patchValue({
               projectId,
               customerId: project.customerId,
               projectName: project.projectName,
@@ -105,16 +128,6 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           },
           error: () => this.navigation.navigate(['/feature/pm/contract']),
         });
-      }
-    });
-
-    // กรณีแก้ไขหรือดู: โหลดข้อมูลสัญญา
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.contractId = id;
-        this.loadContract(id);
       }
     });
   }
@@ -150,11 +163,11 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           if (data.projectName) {
             this.projectName = data.projectName;
           }
-          this.form.patchValue(data);
+          // ✅ ใช้ formData.patchValue() — patch + re-snapshot ในครั้งเดียว
+          this.formData.patchValue(data);
           if (this.isView) {
             this.form.disable();
           }
-          this.formData.resetModel(this.form.getRawValue());
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -176,6 +189,12 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       });
     } else {
       this.navigation.navigate(['/feature/pm/contract']);
+    }
+  }
+
+  onApprovalStatusChange(event: any): void {
+    if (event?.status && this.contractId) {
+      this.loadContract(this.contractId);
     }
   }
 
@@ -206,29 +225,73 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
     this.service
       .save(data)
-      .pipe(finalize(() => {
-        this.isSaving = false;
-        this.cdr.detectChanges();
-      }))
       .subscribe({
-        next: () => {
+        next: (savedContractRes: any) => {
+          this.isSaved = true;
           this.formData.resetModel(this.form.getRawValue());
           this.form.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
-            if (this.projectId) {
-              this.navigation.navigate(['/feature/pm/contract'], {
-                queryParams: { projectId: this.projectId },
+
+          const savedId =
+            (typeof savedContractRes === 'string'
+              ? savedContractRes
+              : savedContractRes?.id) ||
+            data.id ||
+            this.contractId;
+
+          // ถ้ามีการเลือกกระบวนการอนุมัติ ให้ส่งเข้า Approval Flow
+          if (this.selectedFlowId && savedId) {
+            this.approvalService
+              .submitForApproval({
+                documentType: 'CONTRACT',
+                documentId: savedId,
+                documentCode: data.contractNo,
+                documentTitle: `สัญญา ${data.contractNo}`,
+                flowId: this.selectedFlowId,
+                comment: 'ส่งขออนุมัติสัญญา',
+              })
+              .pipe(
+                finalize(() => {
+                  this.isSaving = false;
+                  this.cdr.detectChanges();
+                }),
+              )
+              .subscribe({
+                next: () => {
+                  this.dialog
+                    .success(
+                      'บันทึกและส่งขออนุมัติสำเร็จ',
+                      `สัญญา ${data.contractNo} ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว`,
+                    )
+                    .then(() => {
+                      this.onBack();
+                    });
+                },
+                error: (err) => {
+                  console.error('Submit approval error:', err);
+                  this.dialog
+                    .success(
+                      'บันทึกสัญญาสำเร็จ',
+                      `สัญญาถูกบันทึกแล้ว แต่การส่งขออนุมัติเกิดข้อผิดพลาด: ${err.error?.message || 'ไม่สามารถส่งขออนุมัติได้'}`,
+                    )
+                    .then(() => {
+                      this.onBack();
+                    });
+                },
               });
-            } else {
-              this.navigation.navigate(['/feature/pm/contract'], {
-                queryParams: { customerId: this.customerId },
-              });
-            }
-          });
+          } else {
+            this.isSaving = false;
+            this.cdr.detectChanges();
+            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
+              this.onBack();
+            });
+          }
         },
         error: (error) => {
+          this.isSaving = false;
+          this.cdr.detectChanges();
           this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         },
       });
   }
 }
+

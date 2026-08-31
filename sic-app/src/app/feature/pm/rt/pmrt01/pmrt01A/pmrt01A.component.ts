@@ -73,7 +73,8 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     return 'images/profile.png';
   }
 
-  pageDirty = () => this.formCustomerData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formCustomerData?.isChanged ?? false);
 
   ngOnInit(): void {
     this.businessId = localStorage.getItem('businessId') || '';
@@ -120,9 +121,8 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
       )
       .subscribe({
         next: (data) => {
-          this.formCustomerData.formGroup.patchValue(data);
+          this.formCustomerData.patchValue(data);
           this.formCustomerData.formGroup.updateValueAndValidity();
-          this.formCustomerData.resetModel(this.formCustomerData.formGroup.getRawValue() as any);
 
           // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
           this.cdr.detectChanges();
@@ -189,8 +189,9 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     if (this.isEdit && this.customerId) {
       this.service.updateCustomer(this.customerId, data).subscribe({
         next: () => {
+          this.isSaved = true;
+          this.formCustomerData.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
-            this.formCustomerData.markAsPristine();
             this.navigation.navigate(['/feature/pm/customer']);
           });
         },
@@ -201,8 +202,9 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     } else {
       this.service.createCustomer(this.businessId, data).subscribe({
         next: () => {
+          this.isSaved = true;
+          this.formCustomerData.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
-            this.formCustomerData.markAsPristine();
             this.navigation.navigate(['/feature/pm/customer']);
           });
         },

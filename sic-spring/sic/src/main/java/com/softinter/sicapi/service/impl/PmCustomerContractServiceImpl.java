@@ -272,10 +272,40 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             projectRepository.findByContractIdAndIsDeleteFalse(contract.getId())
                     .stream().findFirst()
                     .ifPresent(p -> {
-                        contract.setProjectId(p.getId());
                         dto.setProjectId(p.getId());
                         dto.setProjectName(p.getProjectName());
                     });
+        }
+        // ถ้ายังไม่มี แต่มี parentContractId ให้ลองหาจาก parent contract
+        if (dto.getProjectId() == null && contract.getParentContractId() != null) {
+            contractRepository.findById(contract.getParentContractId()).ifPresent(parent -> {
+                if (parent.getProjectId() != null) {
+                    projectRepository.findById(parent.getProjectId()).ifPresent(p -> {
+                        dto.setProjectId(p.getId());
+                        dto.setProjectName(p.getProjectName());
+                    });
+                }
+                if (dto.getProjectId() == null) {
+                    projectRepository.findByContractIdAndIsDeleteFalse(parent.getId())
+                            .stream().findFirst()
+                            .ifPresent(p -> {
+                                dto.setProjectId(p.getId());
+                                dto.setProjectName(p.getProjectName());
+                            });
+                }
+            });
+        }
+        // ถ้าเป็น parent contract ที่ถูกต่อสัญญาไปแล้ว ให้หาจาก child contract ที่ชี้มา
+        if (dto.getProjectId() == null) {
+            contractRepository.findAll((root, query, cb) -> cb.and(
+                    cb.equal(root.get("parentContractId"), contract.getId()),
+                    cb.isFalse(root.get("isDelete"))
+            )).stream().filter(child -> child.getProjectId() != null).findFirst().ifPresent(child -> {
+                projectRepository.findById(child.getProjectId()).ifPresent(p -> {
+                    dto.setProjectId(p.getId());
+                    dto.setProjectName(p.getProjectName());
+                });
+            });
         }
         return dto;
     }

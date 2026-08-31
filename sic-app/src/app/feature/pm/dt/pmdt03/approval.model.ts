@@ -23,6 +23,7 @@ export type DocumentType =
     | 'DELIVERY'
     | 'INVOICE'
     | 'MA_RENEWAL'
+    | 'CONTRACT'
     | 'CHANGE_REQUEST'
     | 'TEST_PLAN'
     | 'UAT';

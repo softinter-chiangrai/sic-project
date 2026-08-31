@@ -186,7 +186,8 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
   priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
   statusOptions = ['Open', 'Fixing', 'Fixed', 'Retest', 'Closed', 'Reopen'];
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt17Form.createForm(this.fb);
@@ -206,8 +207,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading = true;
     this.service.getBug(id).subscribe({
       next: (data) => {
-        this.formData.formGroup.patchValue(data);
-        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
+        this.formData.patchValue(data);
         this.isLoading = false;
         this.cdr.detectChanges();
         console.log('✅ โหลดข้อมูล Bug สำเร็จ:', data);
@@ -237,6 +237,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
 
     this.service.save(data).subscribe({
       next: () => {
+        this.isSaved = true;
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Bug ถูกบันทึกเรียบร้อย').then(() => {
           this.formData.markAsPristine();
           this.router.navigate(['/feature/pm/bug']);

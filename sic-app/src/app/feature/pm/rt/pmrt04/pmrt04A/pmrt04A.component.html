@@ -50,18 +50,8 @@
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
-      <!-- Card 1: ข้อมูลทั่วไปของสัญญา -->
+      <!-- Single Unified Form Card -->
       <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
-        <div class="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
-          <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center font-semibold">
-            <i class="bi bi-info-circle"></i>
-          </div>
-          <div>
-            <h3 class="text-base font-semibold text-[var(--text-active)]">ข้อมูลพื้นฐานของสัญญา</h3>
-            <p class="text-xs text-[var(--text-muted)]">ระบุเลขที่สัญญา, ประเภท และระยะเวลาของสัญญา</p>
-          </div>
-        </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- Contract No -->
           <div>
@@ -136,41 +126,55 @@
               placeholder="เช่น จ่ายตามงวดงาน 3 งวด (30/40/30), ชำระรายเดือน"
             ></sic-input>
           </div>
+
+          <!-- Scope Summary (Full Width) -->
+          <div class="md:col-span-2">
+            <sic-tiptap-editor
+              label="สรุปขอบเขตงาน"
+              formControlName="scopeSummary"
+              minHeight="140px"
+              placeholder="ระบุขอบเขตงานหลักและรายละเอียดของสัญญานี้..."
+            ></sic-tiptap-editor>
+          </div>
+
+          <!-- Active Checkbox -->
+          <div class="md:col-span-2">
+            <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-[var(--text-active)] select-none">
+              <input
+                type="checkbox"
+                formControlName="isActive"
+                class="w-4 h-4 text-[var(--crm-primary)] rounded focus:ring-[var(--crm-primary)]/20"
+              />
+              <span>เปิดใช้งานสัญญา</span>
+            </label>
+          </div>
+
+          <!-- Approval Flow (Full Width, bottom of form) -->
+          @if (!isView) {
+            <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
+              <div class="text-sm font-medium text-[var(--text-active)] mb-3 flex items-center gap-2">
+                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                การอนุมัติ
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <sic-combobox
+                    label="กระบวนการอนุมัติ"
+                    [apiUrl]="apiGetApprovals"
+                    valueField="id"
+                    textField="flowName"
+                    placeholder="เลือกกระบวนการอนุมัติ"
+                    [clearable]="true"
+                    (selectionChanged)="selectedFlowId = $event?.id"
+                  ></sic-combobox>
+                </div>
+              </div>
+            </div>
+          }
         </div>
       </div>
 
-      <!-- Card 2: สรุปขอบเขตงาน & รายละเอียด -->
-      <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
-        <div class="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
-          <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center font-semibold">
-            <i class="bi bi-file-text"></i>
-          </div>
-          <div>
-            <h3 class="text-base font-semibold text-[var(--text-active)]">ขอบเขตงานและสถานะ</h3>
-            <p class="text-xs text-[var(--text-muted)]">สรุปขอบเขตงานสำคัญและเปิด-ปิดการใช้งานสัญญา</p>
-          </div>
-        </div>
 
-        <div>
-          <sic-tiptap-editor
-            label="สรุปขอบเขตงาน"
-            formControlName="scopeSummary"
-            minHeight="140px"
-            placeholder="ระบุขอบเขตงานหลักและรายละเอียดของสัญญานี้..."
-          ></sic-tiptap-editor>
-        </div>
-
-        <div class="pt-2">
-          <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-[var(--text-active)] select-none">
-            <input
-              type="checkbox"
-              formControlName="isActive"
-              class="w-4 h-4 text-[var(--crm-primary)] rounded focus:ring-[var(--crm-primary)]/20"
-            />
-            <span>เปิดใช้งานสัญญา</span>
-          </label>
-        </div>
-      </div>
 
       <!-- Actions Buttons Bar -->
       <div class="flex items-center justify-end gap-3 pt-2">

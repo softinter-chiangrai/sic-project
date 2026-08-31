@@ -2,7 +2,8 @@
   @for (toast of toastService.toasts(); track toast.id) {
     <div
       class="sic-toast-item sic-toast-item--{{ toast.type }}"
-      (click)="dismiss(toast.id)">
+      [class.sic-toast-clickable]="!!toast.linkUrl || !!toast.onClick"
+      (click)="onToastClick(toast)">
       
       <!-- Icon based on type -->
       <div class="sic-toast-icon-wrapper">
@@ -24,7 +25,13 @@
 
       <!-- Message Content -->
       <div class="sic-toast-content">
+        @if (toast.title) {
+          <h4 class="sic-toast-title">{{ toast.title }}</h4>
+        }
         <p class="sic-toast-message">{{ toast.message }}</p>
+        @if (toast.linkUrl || toast.onClick) {
+          <span class="sic-toast-action-hint">คลิกเพื่อดูรายละเอียด <i class="bi bi-arrow-right-short"></i></span>
+        }
       </div>
 
       <!-- Dismiss Button -->

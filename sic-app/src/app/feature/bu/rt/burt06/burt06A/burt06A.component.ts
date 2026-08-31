@@ -85,7 +85,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     return this.form.get('steps') as FormArray;
   }
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   stepValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -297,6 +298,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     request.subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.isSaved = true;
         this.form.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
         this.router.navigate(['/feature/bu/approval-flow']);

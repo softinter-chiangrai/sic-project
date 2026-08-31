@@ -82,9 +82,10 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   flows: ApprovalFlow[] = [];
   selectedFlowId: string | null = null;
   isLoadingFlows = false;
-  documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/MA_RENEWAL`;
+  documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/CONTRACT`;
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     this.initForm();
@@ -145,7 +146,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   loadFlows(): void {
     this.isLoadingFlows = true;
     this.approvalService
-      .getFlowsByDocumentType('MA_RENEWAL')
+      .getFlowsByDocumentType('CONTRACT')
       .pipe(
         finalize(() => {
           this.isLoadingFlows = false;
@@ -157,12 +158,12 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           this.flows = flows || [];
           if (this.flows.length === 1 && !this.selectedFlowId) {
             this.selectedFlowId = this.flows[0].id;
-            this.form.patchValue({ approvalFlowId: this.flows[0].id });
+            this.formData.patchValue({ approvalFlowId: this.flows[0].id });
           }
           this.cdr.detectChanges();
         },
         error: () => {
-          console.warn('ไม่สามารถโหลด Approval Flow สำหรับ MA_RENEWAL');
+          console.warn('ไม่สามารถโหลด Approval Flow สำหรับ CONTRACT');
         },
       });
   }
@@ -200,7 +201,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           const newEndDate = new Date(newStartDate);
           newEndDate.setFullYear(newEndDate.getFullYear() + 1);
 
-          this.form.patchValue({
+          this.formData.patchValue({
             newContractNo: this.computeRenewalContractNo(data.contractNo),
             newStartDate: newStartDate.toISOString().split('T')[0],
             newEndDate: newEndDate.toISOString().split('T')[0],
@@ -208,7 +209,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
             renewalStatus: 'ต่อแล้ว',
           });
 
-          this.formData.resetModel(this.form.getRawValue());
           // ✅ อัปเดต View หลังจาก patchValue
           this.ngZone.run(() => {
             this.cdr.detectChanges();
@@ -336,6 +336,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       startDate: DateTimeUtil.toInstantIsoString(formValue.newStartDate) || startDateStr,
       endDate: DateTimeUtil.toInstantIsoString(formValue.newEndDate) || endDateStr,
       contractValue: formValue.newContractValue,
+      signStatus: 'Draft',
       renewalStatus: formValue.renewalStatus,
       isActive: true,
     };
@@ -368,7 +369,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                 if (this.selectedFlowId && savedId) {
                   this.approvalService
                     .submitForApproval({
-                      documentType: 'MA_RENEWAL',
+                      documentType: 'CONTRACT',
                       documentId: savedId,
                       documentCode: newContract.contractNo,
                       documentTitle: `ต่ออายุสัญญา ${original.contractNo}`,
@@ -385,6 +386,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                     )
                     .subscribe({
                       next: () => {
+                        this.isSaved = true;
                         this.dialog
                           .success(
                             'ต่อสัญญาและส่งขออนุมัติสำเร็จ',
@@ -413,6 +415,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                     this.isSaving = false;
                     this.cdr.detectChanges();
                   });
+                  this.isSaved = true;
                   this.dialog
                     .success('ต่อสัญญาสำเร็จ', `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`)
                     .then(() => {

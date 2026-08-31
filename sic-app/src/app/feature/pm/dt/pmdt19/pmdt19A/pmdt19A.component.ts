@@ -60,24 +60,26 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     { label: 'User Manual (คู่มือการใช้งาน)', value: 'MANUAL' },
   ];
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt19AForm.createForm(this.fb);
     this.formData = new SicFromData<DocumentVersionModel>(rawForm);
 
     const projId = this.customerState.getProjectId();
-    if (projId) {
-      (this.formData.form.controls as any)['projectId']?.setValue(projId);
-    }
-
     const qType = this.route.snapshot.queryParams['documentType'];
     const qId = this.route.snapshot.queryParams['documentId'];
     const qCode = this.route.snapshot.queryParams['documentCode'];
 
-    if (qType) (this.formData.form.controls as any)['documentType']?.setValue(qType);
-    if (qId) (this.formData.form.controls as any)['documentId']?.setValue(qId);
-    if (qCode) (this.formData.form.controls as any)['documentCode']?.setValue(qCode);
+    if (projId || qType || qId || qCode) {
+      this.formData.patchValue({
+        ...(projId ? { projectId: projId } : {}),
+        ...(qType ? { documentType: qType } : {}),
+        ...(qId ? { documentId: qId } : {}),
+        ...(qCode ? { documentCode: qCode } : {}),
+      } as any);
+    }
 
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {
@@ -114,6 +116,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving.set(true);
     this.service.saveVersion(payload).subscribe({
       next: () => {
+        this.isSaved = true;
         this.dialog.success('สำเร็จ', 'บันทึกเวอร์ชันเอกสารเรียบร้อยแล้ว');
         this.formData.markAsPristine();
         this.router.navigate(['/feature/pm/version'], {

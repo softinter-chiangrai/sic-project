@@ -74,7 +74,8 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     { label: 'Confirmed (ลูกค้ายืนยันรับมอบ)', value: 'CONFIRMED' },
   ];
 
-  pageDirty = () => this.isView() ? false : (this.formData?.isChanged ?? false);
+  isSaved = false;
+  pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   ngOnInit(): void {
     const rawForm = Pmdt14AForm.createForm(this.fb);
@@ -87,7 +88,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
     const projId = this.customerState.getProjectId();
     if (projId) {
-      this.formData.form.controls['projectId']?.setValue(projId);
+      this.formData.patchValue({ projectId: projId } as any);
     }
 
     const paramId = this.route.snapshot.params['id'];
@@ -240,6 +241,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     this.service.save(payload).subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.isSaved = true;
         this.formData.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารการส่งมอบเรียบร้อย');
         this.router.navigate(['/feature/pm/delivery']);

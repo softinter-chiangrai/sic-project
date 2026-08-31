@@ -64,7 +64,8 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   );
 
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   constructor() {
     effect(() => {
@@ -82,7 +83,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     if (idParam) {
       this.id.set(idParam);
     } else {
-      this.formData.form.patchValue({ state: SicEntityState.Added });
+      this.formData.patchValue({ state: SicEntityState.Added } as any);
     }
   }
 
@@ -105,6 +106,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
 
     this.service.save(val).subscribe({
       next: () => {
+        this.isSaved = true;
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลข้อเสนอต่อสัญญา MA เรียบร้อย');
         this.formData.form.markAsPristine();
         this.router.navigate(['/feature/pm/renewal']);

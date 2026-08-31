@@ -30,11 +30,15 @@ export class SicFromData<TModel extends object & SicStateModel> {
   }
 
   get isChanged(): boolean {
-    return this.currentState === SicEntityState.Modified || this.currentState === SicEntityState.Added || this.currentState === SicEntityState.Deleted;
+    if (this.currentState === SicEntityState.Deleted) {
+      return true;
+    }
+    const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
+    return !this.isEqual(this.initialComparableValue, currentComparableValue);
   }
 
   get isNotChanged(): boolean {
-    return this.currentState === SicEntityState.Unchanged || this.currentState === SicEntityState.Detached;
+    return !this.isChanged;
   }
 
   get state(): SicEntityState {
@@ -98,6 +102,11 @@ export class SicFromData<TModel extends object & SicStateModel> {
     this.markAsPristine(model);
   }
 
+  patchValue(value: Partial<TModel>): void {
+    this.sourceFormGroup.patchValue(value, { emitEvent: false });
+    this.resetModel();
+  }
+
   destroy(): void {
     this.subscription.unsubscribe();
   }
@@ -111,15 +120,14 @@ export class SicFromData<TModel extends object & SicStateModel> {
       return;
     }
 
-    if (this.currentState === SicEntityState.Added) {
-      this.writeState(SicEntityState.Added);
-      return;
-    }
-
     const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
     const hasChanges = !this.isEqual(this.initialComparableValue, currentComparableValue);
 
-    this.writeState(hasChanges ? SicEntityState.Modified : SicEntityState.Unchanged);
+    if (this.initialModel && (this.initialModel as any).id) {
+      this.writeState(hasChanges ? SicEntityState.Modified : SicEntityState.Unchanged);
+    } else {
+      this.writeState(SicEntityState.Added);
+    }
   }
 
   private resolveInitialState(model: TModel): SicEntityState {
@@ -187,8 +195,22 @@ export class SicFromData<TModel extends object & SicStateModel> {
       return true;
     }
 
+    // Treat null, undefined, and empty string as equivalent in form inputs
+    const isEmptyValue = (v: unknown) => v === null || v === undefined || v === '';
+    if (isEmptyValue(left) && isEmptyValue(right)) {
+      return true;
+    }
+
     if (left instanceof Date && right instanceof Date) {
       return left.getTime() === right.getTime();
+    }
+
+    // Date comparison with string ISO
+    if (left instanceof Date && typeof right === 'string') {
+      return left.toISOString() === right || left.toISOString().substring(0, 10) === right;
+    }
+    if (typeof left === 'string' && right instanceof Date) {
+      return left === right.toISOString() || left === right.toISOString().substring(0, 10);
     }
 
     if (
@@ -211,10 +233,14 @@ export class SicFromData<TModel extends object & SicStateModel> {
     const leftEntries = Object.entries(left);
     const rightEntries = Object.entries(right);
 
-    if (leftEntries.length !== rightEntries.length) {
-      return false;
+    // Collect all unique keys from both left and right
+    const allKeys = new Set([...Object.keys(left), ...Object.keys(right)]);
+    for (const key of allKeys) {
+      if (!this.isEqual((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key])) {
+        return false;
+      }
     }
 
-    return leftEntries.every(([key, value]) => this.isEqual(value, (right as Record<string, unknown>)[key]));
+    return true;
   }
 }

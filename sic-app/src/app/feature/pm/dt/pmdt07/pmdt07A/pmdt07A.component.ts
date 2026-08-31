@@ -176,7 +176,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     private autoSaveEnabled = true;
     private autoSaveInterval = 30000;
 
-    pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
+    isSaved = false;
+    pageDirty = () => this.isViewOnly ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
     ngOnInit(): void {
         this.initForm();
@@ -215,24 +216,24 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.route.queryParams.subscribe(qParams => {
                     const pId = qParams['projectId'] || this.customerState.getProjectId();
                     if (pId) {
-                        this.form.patchValue({ projectId: pId });
+                        this.formData.patchValue({ projectId: pId } as any);
                         this.fetchProjectName(pId);
                     }
                     const reqId = qParams['requirementId'];
                     if (reqId) {
-                        this.form.patchValue({ 
+                        this.formData.patchValue({ 
                             requirementId: reqId,
                             generatedFromRequirementId: reqId 
-                        });
+                        } as any);
                     }
                     const diagId = qParams['diagramId'];
                     if (diagId) {
-                        this.form.patchValue({ generatedFromDiagramId: diagId });
+                        this.formData.patchValue({ generatedFromDiagramId: diagId } as any);
                     }
                 });
                 const userName = this.getUserNameFromToken();
-                if (userName) this.form.patchValue({ createdBy: userName });
-                this.form.patchValue({ createdDate: new Date().toISOString() });
+                if (userName) this.formData.patchValue({ createdBy: userName } as any);
+                this.formData.patchValue({ createdDate: new Date().toISOString() } as any);
 
                 // Pre-fill from AI Draft if available
                 if (aiDraft) {
@@ -653,6 +654,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     }
                 }
 
+                this.isSaved = true;
                 this.approvalService.submitForApproval({
                     documentType: 'SPECIFICATION',
                     documentId: savedId!,

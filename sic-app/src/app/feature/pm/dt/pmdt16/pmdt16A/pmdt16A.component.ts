@@ -71,19 +71,20 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/lov`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/projects/lov`;
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit() {
     const rawForm = Pmdt16AForm.createForm(this.fb);
     this.formData = new SicFromData<PmInvoiceModel>(rawForm);
 
     const projId = this.customerState.getProjectId();
-    if (projId) {
-      this.formData.form.controls['projectId']?.setValue(projId);
-    }
     const custId = this.customerState.getCustomerId();
-    if (custId) {
-      this.formData.form.controls['customerId']?.setValue(custId);
+    if (projId || custId) {
+      this.formData.patchValue({
+        ...(projId ? { projectId: projId } : {}),
+        ...(custId ? { customerId: custId } : {}),
+      } as any);
     }
 
     // Auto calculate VAT & Total
@@ -131,6 +132,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.service.save(this.formData.form.getRawValue()).subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.isSaved = true;
         this.formData.markAsPristine();
         this.dialog.success('สำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
         this.router.navigate(['/feature/pm/invoice']);

@@ -157,7 +157,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
   // ===== CanDeactivate =====
-  pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
+  isSaved = false;
+  pageDirty = () => this.isViewOnly ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   // ===== Lifecycle =====
   ngOnInit(): void {
@@ -183,13 +184,12 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           const pId = qParams['projectId'] || this.customerState.getProjectId();
           
           if (pId) {
-            this.form.patchValue({ projectId: pId });
             const pName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(pId)) 
               ? this.customerState.getProjectName() 
               : null;
-            if (pName) {
-              this.form.patchValue({ projectName: pName });
-            } else {
+            // ✅ ใช้ formData.patchValue() — patch + re-snapshot อัตโนมัติ ไม่ทำให้ isChanged = true
+            this.formData.patchValue({ projectId: pId, ...(pName ? { projectName: pName } : {}) } as any);
+            if (!pName) {
               this.fetchProjectName(pId);
             }
           }
@@ -198,7 +198,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         // Set default createdBy for new requirement
         const userName = this.getUserNameFromToken();
         if (userName) {
-          this.form.patchValue({ createdBy: userName });
+          // ✅ ใช้ formData.patchValue() แทน form.patchValue()
+          this.formData.patchValue({ createdBy: userName } as any);
         }
       }
     });
@@ -224,7 +225,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       next: (data) => {
         this.formData.formGroup.patchValue(data);
         this.isLoading = false;
-        this.formData.markAsPristine();
 
         if (this.isViewOnly) {
           this.form.disable();
@@ -236,21 +236,25 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             ? this.customerState.getProjectName() 
             : null;
           if (cachedName) {
-            this.form.patchValue({ projectName: cachedName });
+            // ✅ ใช้ formData.patchValue() — ไม่ทำให้ isChanged = true
+            this.formData.patchValue({ projectName: cachedName } as any);
           } else {
             this.fetchProjectName(data.projectId);
           }
+        } else {
+          // ✅ re-snapshot หลังโหลดข้อมูลเสร็จ
+          this.formData.resetModel(this.form.getRawValue());
         }
 
         // If loaded data doesn't have createdBy, set it from token
         if (!data.createdBy) {
           const userName = this.getUserNameFromToken();
           if (userName) {
-            this.form.patchValue({ createdBy: userName });
+            // ✅ ใช้ formData.patchValue()
+            this.formData.patchValue({ createdBy: userName } as any);
           }
         }
 
-        this.formData.resetModel(this.form.getRawValue());
         console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
       },
       error: (error) => {
@@ -273,8 +277,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           const name = project.projectName || project.name || project.text || project.projectNameTh || project.projectNameEn;
           console.log('🔍 [fetchProjectName] Matched project:', project, 'Resolved Name:', name);
           if (name) {
-            this.form.patchValue({ projectName: name });
-            this.formData.resetModel(this.form.getRawValue());
+            // ✅ ใช้ formData.patchValue() — patch + re-snapshot อัตโนมัติ
+            this.formData.patchValue({ projectName: name } as any);
             this.cdr.markForCheck();
           }
         } else {
@@ -346,15 +350,18 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         // Patch the entire returned response to update uploadGroupId and other fields
         if (response) {
-          this.form.patchValue(response);
+          // ✅ ใช้ formData.patchValue() — auto-save ไม่ควรทำให้ isChanged = true
+          this.formData.patchValue(response);
           const savedId = response.id;
           if (savedId) {
             this.reqId = savedId;
             this.isEdit = true;
           }
+        } else {
+          // ✅ re-snapshot หลัง auto-save สำเร็จ
+          this.formData.resetModel();
         }
 
-        this.form.markAsPristine({ onlySelf: true });
         this.cdr.markForCheck();
       },
       error: () => {
@@ -562,13 +569,17 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     this.service.save(data).subscribe({
       next: (response: any) => {
+        // ✅ re-snapshot ก่อน — เพื่อให้ isChanged = false
         this.formData.markAsPristine();
+        // ✅ flag isSaved = true ทันที — guard จะ bypass ไม่ถาม
+        this.isSaved = true;
         
         // Resolve the saved requirement ID and patch the entire response (including uploadGroupId)
         let savedId = data.id || this.reqId;
         if (response && response.id) {
           savedId = response.id;
-          this.form.patchValue(response);
+          // ✅ ใช้ formData.patchValue() แทน form.patchValue()
+          this.formData.patchValue(response);
           this.reqId = savedId;
           this.isEdit = true;
         }

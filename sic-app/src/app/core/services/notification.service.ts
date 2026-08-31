@@ -150,8 +150,13 @@ export class NotificationService {
     }
   }
 
-  showToastNotification(message: string, type: 'info' | 'success' | 'danger' | 'warning' = 'info', duration = 4000): void {
-    this.toastService.show(message, type, duration);
+  showToastNotification(
+    message: string,
+    type: 'info' | 'success' | 'danger' | 'warning' = 'info',
+    duration = 4000,
+    linkUrl?: string
+  ): void {
+    this.toastService.show(message, { type, duration, linkUrl });
   }
 
   handleIncomingNotification(notification: AppNotification): void {
@@ -160,12 +165,14 @@ export class NotificationService {
     this.unreadCount$.next(this.unreadCount$.getValue() + 1);
     this.newNotificationReceived$.next(notification);
 
-    // Show toast
-    const toastText = notification.title
-      ? `${notification.title}: ${notification.message || ''}`
-      : notification.message;
-    if (toastText) {
-      this.toastService.show(toastText, 'info', 4000);
+    // Show toast with clickable linkUrl and title
+    if (notification.message || notification.title) {
+      this.toastService.show(notification.message || '', {
+        title: notification.title,
+        type: 'info',
+        duration: 5000,
+        linkUrl: notification.linkUrl,
+      });
     }
   }
 }

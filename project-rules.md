@@ -257,6 +257,7 @@ export class ExampleComponent implements CanComponentDeactivate {
   formData!: SicFromData<ExampleModel>;
   id = signal<string | null>(null);
   isSaving = signal(false);
+  isSaved = false;
 
   // Load data using httpResource (auto-refetches when id changes)
   dataResource = httpResource<ExampleModel>(
@@ -267,7 +268,7 @@ export class ExampleComponent implements CanComponentDeactivate {
     { enabled: !!this.id() }
   );
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     this.formData = new SicFromData<ExampleModel>(ExampleForm.createForm(this.fb));
@@ -277,11 +278,11 @@ export class ExampleComponent implements CanComponentDeactivate {
       this.id.set(id);
     }
 
-    // Patch form when data loads
+    // Patch form when data loads (using formData.patchValue to auto-update snapshot baseline)
     effect(() => {
       const data = this.dataResource.value();
       if (data) {
-        this.formData.form.patchValue(data);
+        this.formData.patchValue(data);
       }
     });
   }
@@ -294,8 +295,11 @@ export class ExampleComponent implements CanComponentDeactivate {
     this.isSaving.set(true);
     this.service.save(this.formData.value).subscribe({
       next: () => {
-        this.dialog.success('Saved successfully');
-        this.router.navigate(['..']);
+        this.isSaved = true;
+        this.formData.markAsPristine();
+        this.dialog.success('Saved successfully').then(() => {
+          this.router.navigate(['..']);
+        });
       },
       error: (err) => this.dialog.error('Error', err.message),
       complete: () => this.isSaving.set(false),
@@ -522,7 +526,12 @@ translateLoader.setContext('EX', 'EXAMPLE');
 | `customerGuard` | Must select customer |
 | `projectGuard` | Must select project |
 | `requirementGuard` | Must select requirement |
-| `CanDeactivateGuard` | Prevent leaving dirty form |
+| `CanDeactivateGuard` | Prevent leaving dirty form (`pageDirty()`, `isChanged`, bypass on `isSaved`/`isSaving`/`isView`) |
+
+### CanDeactivateGuard & Form State Standards:
+1. **Programmatic Values:** When loading API data or pre-filling form values programmatically, ALWAYS use `this.formData.patchValue(data)`. This automatically updates the form and re-snapshots the pristine baseline without triggering false dirty warnings.
+2. **User Edits:** Changes typed/clicked by the user automatically set `formData.isChanged = true`.
+3. **Saving & Navigation:** Set `this.isSaved = true;` inside the successful save response block so navigation to other pages is never blocked.
 
 ---
 
@@ -727,6 +736,7 @@ ng generate class feature/pm/dt/example/example   # Form class
 16. **Mutations:** Use `HttpClient` directly and manage loading/error states with signals (e.g., `isSaving`, `errorMessage`)
 17. **Avoid Resolvers when possible:** Load data directly in components using `httpResource` or `toSignal` for better reactivity and simpler code
 18. **Backend Import Standards:** Always import classes at the top of the file (e.g., `import com.softinter.sicapi.dto.response.UserStatusResponse;`). Do NOT use inline fully qualified class names in code bodies (e.g., forbidden: `com.softinter.sicapi.dto.response.UserStatusResponse payload = com.softinter.sicapi.dto.response.UserStatusResponse.builder()`).
+19. **Form Dirty & Navigation Standard:** Always use `formData.patchValue()` for programmatic data loading/pre-fill, use `formData.isChanged` (via `SicFromData`) for dirty tracking, and set `isSaved = true` upon successful submission before navigating away.
 
 ---
 

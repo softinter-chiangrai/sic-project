@@ -60,7 +60,8 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   customerName = signal<string>('');
 
-  pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
+  isSaved = false;
+  pageDirty = () => this.isViewOnly ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   statusOptions = [
     { value: 'Prospect', text: 'Prospect' },
@@ -102,7 +103,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       const customerId = params['customerId'];
       const customerName = params['customerName'] || '';
       if (customerId) {
-        this.form.patchValue({ customerId: customerId });
+        this.formData.patchValue({ customerId: customerId });
         if (customerName) {
           this.customerName.set(customerName);
         }
@@ -153,11 +154,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     }))
       .subscribe({
         next: (data: ProjectModel) => {
-          this.form.patchValue(data);
+          this.formData.patchValue(data);
           if (data.customerName) {
             this.customerName.set(data.customerName);
           }
-          this.formData.resetModel(this.form.getRawValue());
         },
         error: (err) => {
           console.error('Load project error:', err);
@@ -199,9 +199,9 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
     request$.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => {
-        this.form.markAsPristine();
+        this.isSaved = true;
+        this.formData.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
-          this.form.markAsPristine();
           // ✅ กลับไป project พร้อม customerId (ใช้ CustomerStateService)
           const customerId = this.form.get('customerId')?.value;
           if (customerId) this.customerState.setCustomer(customerId);

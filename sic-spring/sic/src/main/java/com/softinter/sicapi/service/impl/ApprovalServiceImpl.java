@@ -41,6 +41,7 @@ import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
@@ -80,6 +81,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmSpecificationRepository specificationRepository;
     private final PmDesignReviewRepository designReviewRepository;
     private final PmDiagramTabRepository diagramTabRepository;
+    private final PmCustomerContractRepository customerContractRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -648,6 +650,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 designReviewRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Design Review not found: " + documentId));
                 break;
+            case "CONTRACT":
+                customerContractRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Contract not found: " + documentId));
+                break;
             case "DIAGRAM":
             case "DFD":
             case "ER":
@@ -688,6 +694,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     designReviewRepository.save(dr);
                 });
                 break;
+            case "CONTRACT":
+                customerContractRepository.findById(docId).ifPresent(contract -> {
+                    contract.setSignStatus("Sent");
+                    customerContractRepository.save(contract);
+                });
+                break;
             default:
                 break;
         }
@@ -724,6 +736,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 designReviewRepository.findById(docId).ifPresent(dr -> {
                     dr.setStatus("Resolved");
                     designReviewRepository.save(dr);
+                });
+                break;
+            case "CONTRACT":
+                customerContractRepository.findById(docId).ifPresent(contract -> {
+                    contract.setSignStatus("Signed");
+                    customerContractRepository.save(contract);
                 });
                 break;
             default:
@@ -795,6 +813,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     designReviewRepository.save(dr);
                 });
                 break;
+            case "CONTRACT":
+                customerContractRepository.findById(docId).ifPresent(contract -> {
+                    contract.setSignStatus("Draft");
+                    customerContractRepository.save(contract);
+                });
+                break;
             default:
                 break;
         }
@@ -827,6 +851,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 designReviewRepository.findById(docId).ifPresent(dr -> {
                     dr.setStatus("Open");
                     designReviewRepository.save(dr);
+                });
+                break;
+            case "CONTRACT":
+                customerContractRepository.findById(docId).ifPresent(contract -> {
+                    contract.setSignStatus("Draft");
+                    customerContractRepository.save(contract);
                 });
                 break;
             default:

@@ -124,7 +124,8 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   // ===== Options =====
   statusOptions = ['Todo', 'In Progress', 'Waiting Review', 'Waiting Fix', 'Done', 'Delayed', 'Blocked', 'Cancelled'];
 
-  pageDirty = () => this.formData?.isChanged ?? false;
+  isSaved = false;
+  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt11Form.createForm(this.fb);
@@ -147,8 +148,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
       next: (data) => {
         this.taskCode = data.taskCode;
         this.taskName = data.taskName;
-        this.formData.formGroup.patchValue(data);
-        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
+        this.formData.patchValue(data);
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -177,6 +177,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
 
     this.service.updateSchedule(data).subscribe({
       next: () => {
+        this.isSaved = true;
         this.dialog.success('บันทึกสำเร็จ', 'อัปเดตกำหนดการเรียบร้อย').then(() => {
           this.formData.markAsPristine();
           this.router.navigate(['/feature/pm/gantt']);

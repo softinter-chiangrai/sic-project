@@ -9,8 +9,12 @@ export interface CanComponentDeactivate {
   formData?: any;
   formGroup?: FormGroup | any;
   formCustomerData?: any;
+  formBusinessData?: any;
   isViewOnly?: boolean | Signal<boolean> | (() => boolean) | any;
   isView?: boolean | Signal<boolean> | (() => boolean) | any;
+  isSaved?: boolean | Signal<boolean> | (() => boolean) | any;
+  isSaving?: boolean | Signal<boolean> | (() => boolean) | any;
+  isSubmitting?: boolean | Signal<boolean> | (() => boolean) | any;
 }
 
 export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
@@ -28,8 +32,14 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     return false;
   };
 
-  // 1. If explicitly in view-only mode, never block navigation
-  if (resolveBoolean(component.isViewOnly) || resolveBoolean(component.isView)) {
+  // 1. If explicitly in view-only mode, saved successfully, or currently saving/submitting, never block navigation
+  if (
+    resolveBoolean(component.isViewOnly) ||
+    resolveBoolean(component.isView) ||
+    resolveBoolean(component.isSaved) ||
+    resolveBoolean(component.isSaving) ||
+    resolveBoolean(component.isSubmitting)
+  ) {
     return true;
   }
 
@@ -49,6 +59,12 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
       isDirty = component.formCustomerData.isChanged;
     } else if (typeof component.formCustomerData.dirty === 'boolean') {
       isDirty = component.formCustomerData.dirty;
+    }
+  } else if (component.formBusinessData) {
+    if (typeof component.formBusinessData.isChanged === 'boolean') {
+      isDirty = component.formBusinessData.isChanged;
+    } else if (typeof component.formBusinessData.dirty === 'boolean') {
+      isDirty = component.formBusinessData.dirty;
     }
   } else if (component.form && component.form instanceof FormGroup) {
     isDirty = component.form.dirty;
