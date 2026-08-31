@@ -55,6 +55,65 @@ public class PmDesignReviewController {
         ));
     }
 
+    // ===== Combobox Endpoints =====
+    @GetMapping("/combobox-specification")
+    @Operation(summary = "Get combobox specifications/reviewables for Design Review")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxSpecifications(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String value
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxSpecifications(businessId, projectId, type, value));
+    }
+
+    @GetMapping("/combobox-project")
+    @Operation(summary = "Get combobox projects for Design Review")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxProjects() {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxProjects(businessId));
+    }
+
+    @GetMapping("/combobox-requirement")
+    @Operation(summary = "Get combobox requirements for Design Review")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxRequirements(
+            @RequestParam(required = false) UUID projectId
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxRequirements(businessId, projectId));
+    }
+
+    @GetMapping("/combobox-task")
+    @Operation(summary = "Get combobox tasks for Design Review")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxTasks(
+            @RequestParam(required = false) UUID projectId
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxTasks(businessId, projectId));
+    }
+
+    @GetMapping("/combobox-user")
+    @Operation(summary = "Get combobox users for Design Review")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxUsers() {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxUsers(businessId));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get design review by ID")
     public ResponseEntity<PmDesignReviewResponse> getById(@PathVariable UUID id) {

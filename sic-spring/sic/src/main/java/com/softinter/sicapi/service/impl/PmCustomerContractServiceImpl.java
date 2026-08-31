@@ -260,53 +260,68 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         } else if (contract.getCustomerId() != null) {
             dto.setCustomerId(contract.getCustomerId());
         }
-        // ถ้ามีความสัมพันธ์กับโครงการ
-        if (contract.getProjectId() != null) {
-            projectRepository.findById(contract.getProjectId())
-                    .ifPresent(p -> {
-                        dto.setProjectId(p.getId());
-                        dto.setProjectName(p.getProjectName());
-                    });
-        }
-        if (dto.getProjectId() == null) {
-            projectRepository.findByContractIdAndIsDeleteFalse(contract.getId())
-                    .stream().findFirst()
-                    .ifPresent(p -> {
-                        dto.setProjectId(p.getId());
-                        dto.setProjectName(p.getProjectName());
-                    });
-        }
-        // ถ้ายังไม่มี แต่มี parentContractId ให้ลองหาจาก parent contract
-        if (dto.getProjectId() == null && contract.getParentContractId() != null) {
-            contractRepository.findById(contract.getParentContractId()).ifPresent(parent -> {
-                if (parent.getProjectId() != null) {
-                    projectRepository.findById(parent.getProjectId()).ifPresent(p -> {
-                        dto.setProjectId(p.getId());
-                        dto.setProjectName(p.getProjectName());
-                    });
-                }
-                if (dto.getProjectId() == null) {
-                    projectRepository.findByContractIdAndIsDeleteFalse(parent.getId())
-                            .stream().findFirst()
-                            .ifPresent(p -> {
-                                dto.setProjectId(p.getId());
-                                dto.setProjectName(p.getProjectName());
-                            });
-                }
-            });
-        }
-        // ถ้าเป็น parent contract ที่ถูกต่อสัญญาไปแล้ว ให้หาจาก child contract ที่ชี้มา
-        if (dto.getProjectId() == null) {
-            contractRepository.findAll((root, query, cb) -> cb.and(
-                    cb.equal(root.get("parentContractId"), contract.getId()),
-                    cb.isFalse(root.get("isDelete"))
-            )).stream().filter(child -> child.getProjectId() != null).findFirst().ifPresent(child -> {
-                projectRepository.findById(child.getProjectId()).ifPresent(p -> {
-                    dto.setProjectId(p.getId());
-                    dto.setProjectName(p.getProjectName());
-                });
-            });
+        // ค้นหาโครงการที่ผูกกับสัญญา (รองรับทั้งสัญญาตั้งต้นและสัญญาที่มีการต่ออายุ)
+        PmCustomerProject project = findProjectForContract(contract);
+        if (project != null) {
+            dto.setProjectId(project.getId());
+            dto.setProjectName(project.getProjectName());
         }
         return dto;
+    }
+
+    /**
+     * ค้นหาโครงการที่ผูกกับสัญญา โดยค้นหาทั้งจากตัวสัญญาเอง, สัญญาต้นทาง (Parent Chain), และสัญญาต่ออายุปลายทาง (Child Chain)
+     */
+    private PmCustomerProject findProjectForContract(PmCustomerContract contract) {
+        if (contract == null) return null;
+
+        // 1. ค้นหาโดยตรงจาก contractId ที่ Project ชี้มา
+        List<PmCustomerProject> directProjects = projectRepository.findByContractIdAndIsDeleteFalse(contract.getId());
+        if (!directProjects.isEmpty()) {
+            return directProjects.get(0);
+        }
+
+        // 2. ค้นหาย้อนขึ้นไปตามสาย Parent Contract (ถ้าเป็นฉบับต่ออายุ แล้วโครงการผูกไว้กับฉบับก่อนหน้า)
+        UUID currentParentId = contract.getParentContractId();
+        while (currentParentId != null) {
+            List<PmCustomerProject> parentProjects = projectRepository.findByContractIdAndIsDeleteFalse(currentParentId);
+            if (!parentProjects.isEmpty()) {
+                return parentProjects.get(0);
+            }
+            PmCustomerContract parent = contractRepository.findById(currentParentId).orElse(null);
+            currentParentId = (parent != null) ? parent.getParentContractId() : null;
+        }
+
+        // 3. ค้นหาลงไปตามสาย Child Contract (ถ้าเป็นฉบับเก่า แล้วโครงการถูกอัปเดตให้ชี้ไปที่ฉบับต่ออายุล่าสุด เช่น -R1, -R2)
+        UUID currentChildId = contract.getId();
+        while (currentChildId != null) {
+            final UUID parentIdToFind = currentChildId;
+            List<PmCustomerContract> children = contractRepository.findAll((root, query, cb) -> cb.and(
+                    cb.equal(root.get("parentContractId"), parentIdToFind),
+                    cb.isFalse(root.get("isDelete"))
+            ));
+
+            if (children.isEmpty()) {
+                break;
+            }
+
+            PmCustomerProject found = null;
+            for (PmCustomerContract child : children) {
+                List<PmCustomerProject> childProjects = projectRepository.findByContractIdAndIsDeleteFalse(child.getId());
+                if (!childProjects.isEmpty()) {
+                    found = childProjects.get(0);
+                    break;
+                }
+            }
+
+            if (found != null) {
+                return found;
+            }
+
+            // ถ้ายังไม่เจอ ให้ขยับลงไปดูลูกของลูกตัวแรก
+            currentChildId = children.get(0).getId();
+        }
+
+        return null;
     }
 }

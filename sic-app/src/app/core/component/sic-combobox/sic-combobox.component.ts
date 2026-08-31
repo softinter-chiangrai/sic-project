@@ -99,6 +99,15 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   @Input() emptyText = 'No data found';
   @Input() valueField = 'value';
   @Input() textField = 'text';
+  @Input()
+  set displayField(val: string) {
+    if (val) {
+      this.textField = val;
+    }
+  }
+  get displayField(): string {
+    return this.textField;
+  }
   @Input() disabled = false;
   @Input() readonly = false;
   @Input() clearable = true;

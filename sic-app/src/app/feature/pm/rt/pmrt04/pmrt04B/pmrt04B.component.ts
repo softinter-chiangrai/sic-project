@@ -315,6 +315,11 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติก่อนยืนยันการต่อสัญญา');
+      return;
+    }
+
     const formValue = this.form.value;
     const original = this.originalContract;
     if (!original) return;
@@ -331,6 +336,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     const newContract: ContractModel = {
       ...original,
       id: undefined,
+      projectId: original.projectId || this.customerState.getProjectId() || undefined,
+      customerId: original.customerId || this.customerState.getCustomerId() || undefined,
       contractNo: formValue.newContractNo || `${original.contractNo}-R`,
       parentContractId: original.id,
       startDate: DateTimeUtil.toInstantIsoString(formValue.newStartDate) || startDateStr,

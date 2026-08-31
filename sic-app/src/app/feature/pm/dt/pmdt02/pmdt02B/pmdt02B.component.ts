@@ -12,6 +12,7 @@ import { Pmdt02BForm } from './pmdt02B.form';
 import { WorkPackageModel, WorkPackageRequest, WorkPackageResponse } from './pmdt02B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
 
 @Component({
   selector: 'app-pmdt02B',
@@ -24,7 +25,8 @@ import { DialogService } from '../../../../../core/services/dialog.service';
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
-  ],
+    SicButtonComponent
+],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02B.component.html',
 })

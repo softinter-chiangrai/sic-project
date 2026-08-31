@@ -361,7 +361,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/design-review/new'], {
+    this.navigation.navigate(['/feature/pm/design-review'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }
@@ -388,7 +388,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/bug/new'], {
+    this.navigation.navigate(['/feature/pm/bug'], {
       queryParams: { projectId: projId, requirementId: reqId },
     });
   }

@@ -16,14 +16,6 @@
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-3">
-      <button sic-button variant="outline" (click)="onBack()">
-        ← ยกเลิก / กลับ
-      </button>
-      <button sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
-        {{ isSaving() ? 'กำลังบันทึก...' : '💾 บันทึกคู่มือ' }}
-      </button>
-    </div>
   </div>
 
   <!-- Main Meta Form -->
@@ -136,6 +128,16 @@
           </div>
         }
       </div>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ยกเลิก
+      </sic-button>
+      <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        <i class="bi bi-check-lg"></i> {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกคู่มือ' }}
+      </sic-button>
     </div>
   </form>
 </div>

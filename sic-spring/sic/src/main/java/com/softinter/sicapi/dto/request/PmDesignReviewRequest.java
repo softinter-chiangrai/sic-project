@@ -22,7 +22,6 @@ public class PmDesignReviewRequest {
     @NotNull(message = "Project ID is required")
     private UUID projectId;
 
-    @NotBlank(message = "Review item type is required")
     private String reviewableType;
 
     private UUID reviewableId;

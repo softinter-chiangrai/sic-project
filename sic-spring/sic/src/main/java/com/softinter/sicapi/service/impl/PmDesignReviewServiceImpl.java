@@ -7,6 +7,12 @@ import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDesignReview;
 import com.softinter.sicapi.entity.pm.PmReviewComment;
 
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.service.TaskService;
+import com.softinter.sicapi.service.SuUserBusinessService;
+
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmReviewCommentRepository;
@@ -37,6 +43,10 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final PmReviewCommentRepository reviewCommentRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final SuProfileRepository profileRepository;
+    private final PmSpecificationRepository specificationRepository;
+    private final PmRequirementRepository requirementRepository;
+    private final TaskService taskService;
+    private final SuUserBusinessService userBusinessService;
 
     @Override
     @Transactional(readOnly = true)
@@ -107,8 +117,8 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setReviewCode(request.getReviewCode());
         entity.setTitle(request.getTitle());
         entity.setDescription(request.getDescription());
-        entity.setReviewItemType(request.getReviewableType());
-        entity.setReviewItemId(request.getReviewableId() != null ? request.getReviewableId() : UUID.randomUUID());
+        entity.setReviewItemType(request.getReviewableType() != null && !request.getReviewableType().isBlank() ? request.getReviewableType() : "Specification");
+        entity.setReviewItemId(request.getReviewableId());
         entity.setReviewer(request.getReviewer());
         entity.setAssignedTo(request.getAssignedTo());
         entity.setSeverity(request.getSeverity());
@@ -217,6 +227,85 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         dto.setStatus(comment.getStatus());
         dto.setCreatedAt(comment.getCreatedDate());
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxSpecifications(UUID businessId, UUID projectId, String type, String value) {
+        if ("Requirement".equalsIgnoreCase(type)) {
+            if (value != null && !value.isBlank()) {
+                try {
+                    UUID reqId = UUID.fromString(value);
+                    return requirementRepository.findByIdAndBusinessId(reqId, businessId)
+                            .map(r -> List.of(new ComboboxResponse(r.getId().toString(), (r.getRequirementCode() != null ? r.getRequirementCode() + " - " : "") + r.getTitle())))
+                            .orElse(List.of());
+                } catch (IllegalArgumentException e) {
+                    return List.of();
+                }
+            }
+            List<com.softinter.sicapi.entity.pm.PmRequirement> list = projectId != null
+                    ? requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
+                    : requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+            return list.stream()
+                    .map(r -> new ComboboxResponse(r.getId().toString(), (r.getRequirementCode() != null ? r.getRequirementCode() + " - " : "") + r.getTitle()))
+                    .collect(Collectors.toList());
+        }
+
+        // Default or Specification
+        if (value != null && !value.isBlank()) {
+            try {
+                UUID specId = UUID.fromString(value);
+                return specificationRepository.findByIdAndBusinessIdAndIsDeleteFalse(specId, businessId)
+                        .map(s -> List.of(new ComboboxResponse(s.getId().toString(), (s.getSpecificationCode() != null ? s.getSpecificationCode() + " - " : "") + s.getTitle())))
+                        .orElse(List.of());
+            } catch (IllegalArgumentException e) {
+                return List.of();
+            }
+        }
+        List<com.softinter.sicapi.entity.pm.PmSpecification> specs = projectId != null
+                ? specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
+                : specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        return specs.stream()
+                .map(s -> new ComboboxResponse(s.getId().toString(), (s.getSpecificationCode() != null ? s.getSpecificationCode() + " - " : "") + s.getTitle()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxProjects(UUID businessId) {
+        return projectRepository.findByBusinessIdAndIsDeleteFalse(businessId).stream()
+                .map(p -> new ComboboxResponse(p.getId().toString(), p.getProjectName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxRequirements(UUID businessId, UUID projectId) {
+        List<com.softinter.sicapi.entity.pm.PmRequirement> list = projectId != null
+                ? requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
+                : requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        return list.stream()
+                .map(r -> new ComboboxResponse(r.getId().toString(), (r.getRequirementCode() != null ? r.getRequirementCode() + " - " : "") + r.getTitle()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxTasks(UUID businessId, UUID projectId) {
+        if (projectId == null) {
+            return List.of();
+        }
+        return taskService.getAllTasksByProjectId(projectId).stream()
+                .map(t -> new ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxUsers(UUID businessId) {
+        return userBusinessService.getAvailableUsers().stream()
+                .map(u -> new ComboboxResponse(u.getName(), u.getName()))
+                .collect(Collectors.toList());
     }
 }
 

@@ -20,14 +20,6 @@
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> ยกเลิก
-      </sic-button>
-      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
-        <i class="bi bi-check-lg"></i> บันทึกข้อมูล
-      </sic-button>
-    </div>
   </div>
 
   <form [formGroup]="formData.form" class="space-y-5">
@@ -124,6 +116,16 @@
         minHeight="140px"
         formControlName="resolutionSummary"
       ></sic-tiptap-editor>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ยกเลิก
+      </sic-button>
+      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
+        <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+      </sic-button>
     </div>
   </form>
 </div>

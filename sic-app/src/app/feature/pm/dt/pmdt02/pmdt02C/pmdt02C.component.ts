@@ -18,6 +18,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
 
 @Component({
   selector: 'app-pmdt02C',
@@ -31,7 +32,8 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
-  ],
+    SicButtonComponent
+],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02C.component.html',
 })

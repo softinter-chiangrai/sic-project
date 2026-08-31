@@ -151,7 +151,7 @@
           </sic-button>
         </div>
         <div class="flex-1">
-          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
             @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
             {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
           </sic-button>

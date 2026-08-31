@@ -20,20 +20,6 @@
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
-      </sic-button>
-      @if (isView()) {
-        <sic-button variant="primary" (click)="goToEditMode()">
-          <i class="bi bi-pencil"></i> แก้ไขเอกสาร
-        </sic-button>
-      } @else {
-        <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
-          <i class="bi bi-check-lg"></i> บันทึกเอกสาร
-        </sic-button>
-      }
-    </div>
   </div>
 
   <!-- Delivery Gate Check Results Panel -->
@@ -256,6 +242,22 @@
         [uploadGroupId]="formData.form.controls['attachmentGroupId']?.value || null"
         [maxFiles]="10">
       </sic-upload>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
+      </sic-button>
+      @if (isView()) {
+        <sic-button variant="primary" (click)="goToEditMode()">
+          <i class="bi bi-pencil"></i> แก้ไขเอกสาร
+        </sic-button>
+      } @else {
+        <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
+          <i class="bi bi-check-lg"></i> บันทึกเอกสาร
+        </sic-button>
+      }
     </div>
   </form>
 </div>

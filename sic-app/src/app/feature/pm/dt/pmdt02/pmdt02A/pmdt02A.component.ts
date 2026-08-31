@@ -12,6 +12,7 @@ import { Pmdt02AService } from './pmdt02A.service';
 import { Pmdt02AForm } from './pmdt02A.form';
 import { MilestoneModel, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
 
 @Component({
   selector: 'app-pmdt02A',
@@ -24,7 +25,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
-  ],
+    SicButtonComponent
+],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02A.component.html',
 })

@@ -39,7 +39,7 @@ export interface DesignReviewModel {
   description: string;
   projectId: string;
   projectName?: string;
-  reviewableType: string;
+  reviewableType?: string;
   reviewableId: string;
   reviewableName?: string;
   reviewer?: string;
@@ -49,6 +49,7 @@ export interface DesignReviewModel {
   dueDate: string;
   figmaUrl?: string;
   embedMode?: 'design' | 'prototype';
+  approvalFlowId?: string;
   isActive: boolean;
   comments?: ReviewCommentModel[];
   state?: number;
@@ -69,12 +70,13 @@ class Pmdt09AForm {
       projectId: fb.control(null, [Validators.required]),
       projectName: fb.control(null),
       reviewer: fb.control(null),
-      assignedTo: fb.control(null),
+      assignedTo: fb.control(null, [Validators.required]),
       severity: fb.control('Medium', [Validators.required]),
       status: fb.control('Open', [Validators.required]),
       dueDate: fb.control(null, [Validators.required]),
       figmaUrl: fb.control(null),
       embedMode: fb.control('design'),
+      approvalFlowId: fb.control(null),
       isActive: fb.control(true),
       comments: fb.control([]),
       state: fb.control(null),
@@ -149,12 +151,11 @@ export class Pmdt09AService {
     SicComboboxComponent,
     SicDatepickerComponent,
     SicInputComponent,
-    SicInputAreaComponent,
     SicTiptapEditorComponent,
   ],
   templateUrl: './pmdt09A.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
@@ -213,6 +214,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       } else {
         this.updateEmbedUrl();
       }
+      this.cdr.markForCheck();
     });
 
     // รับค่า queryParams หรือดึงจาก CustomerStateService เมื่อกดสร้างใหม่
@@ -235,19 +237,25 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           } as any);
         }
       }
+      this.cdr.markForCheck();
     });
 
     this.form.get('reviewableType')?.valueChanges.subscribe(() => {
       this.form.patchValue({ reviewableId: null });
+      this.cdr.markForCheck();
     });
 
     this.form.get('figmaUrl')?.valueChanges.subscribe(() => {
       this.updateEmbedUrl();
+      this.cdr.markForCheck();
     });
 
     this.form.get('embedMode')?.valueChanges.subscribe(() => {
       this.updateEmbedUrl();
+      this.cdr.markForCheck();
     });
+
+    this.cdr.markForCheck();
   }
 
   loadFlows(): void {
@@ -262,11 +270,20 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             this.selectedFlowId = flows[0].id;
             this.form.patchValue({ approvalFlowId: flows[0].id });
           }
+          this.cdr.markForCheck();
         },
         error: () => {
           this.isLoadingFlows = false;
+          this.cdr.markForCheck();
         },
       });
+  }
+
+  onFlowChange(event: any): void {
+    const flowId = event?.id ?? event?.value ?? event ?? null;
+    this.selectedFlowId = flowId;
+    this.form.patchValue({ approvalFlowId: flowId });
+    this.cdr.markForCheck();
   }
 
   loadApprovalFlowForReview(reviewId: string): void {
@@ -282,8 +299,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           this.selectedFlowId = flowId;
           this.form.patchValue({ approvalFlowId: flowId });
         }
+        this.cdr.markForCheck();
       },
-      error: () => {}
+      error: () => {
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -292,8 +312,8 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   initForm(): void {
     const rawForm = Pmdt09AForm.createForm(this.fb);
     this.formData = new SicFromData<DesignReviewModel>(rawForm);
+    this.cdr.markForCheck();
   }
-
 
   loadDesignReview(id: string) {
     this.isLoading = true;
@@ -309,12 +329,14 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.updateEmbedUrl();
         this.loadApprovalFlowForReview(id);
         console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.isLoading = false;
         console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Design Review รหัสนี้');
         this.router.navigate(['/feature/pm/design-review']);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -325,6 +347,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     if (!rawUrl || !rawUrl.trim()) {
       this.activeEmbedUrl = null;
       this.rawEmbedUrl = '';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -345,7 +368,9 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     setTimeout(() => {
       this.isFigmaLoading = false;
+      this.cdr.markForCheck();
     }, 1200);
+    this.cdr.markForCheck();
   }
 
   setEmbedMode(mode: 'design' | 'prototype'): void {
@@ -424,8 +449,16 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       return;
     }
 
+    if (!this.selectedFlowId) {
+      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติก่อนบันทึก');
+      return;
+    }
+
     this.isSaving = true;
     const data = { ...this.formData.value };
+    if (!data.reviewableType) {
+      data.reviewableType = 'Specification';
+    }
     if (Array.isArray(data.assignedTo)) {
       data.assignedTo = (data.assignedTo as any[]).join(', ');
     }

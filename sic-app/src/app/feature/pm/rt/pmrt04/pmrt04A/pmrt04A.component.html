@@ -193,7 +193,7 @@
             type="submit"
             variant="primary"
             [fullWidth]="false"
-            [disabled]="isSaving || form.invalid"
+            [disabled]="isSaving || form.invalid || !selectedFlowId"
           >
             @if (isSaving) {
               <i class="bi bi-arrow-repeat animate-spin"></i>

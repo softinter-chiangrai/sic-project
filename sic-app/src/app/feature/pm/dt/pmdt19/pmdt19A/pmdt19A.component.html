@@ -20,14 +20,6 @@
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> ยกเลิก
-      </sic-button>
-      <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
-        <i class="bi bi-check-lg"></i> บันทึกเวอร์ชัน
-      </sic-button>
-    </div>
   </div>
 
   <!-- Main Form -->
@@ -78,6 +70,16 @@
         formControlName="fileRefId"
         [maxFiles]="1">
       </sic-upload>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+      <sic-button variant="outline" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i> ยกเลิก
+      </sic-button>
+      <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
+        <i class="bi bi-check-lg"></i> บันทึกเวอร์ชัน
+      </sic-button>
     </div>
   </form>
 </div>

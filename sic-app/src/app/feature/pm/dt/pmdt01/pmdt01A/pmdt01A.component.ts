@@ -15,6 +15,7 @@ import { Pmdt01AForm } from './pmdt01A.form';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
 
 @Component({
   selector: 'app-pmdt01A',
@@ -28,7 +29,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicComboboxComponent,
     SicTiptapEditorComponent,
     RouterModule,
-  ],
+    SicButtonComponent
+],
   templateUrl: './pmdt01A.component.html',
 })
 export class Pmdt01AComponent implements OnInit {

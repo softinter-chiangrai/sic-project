@@ -100,7 +100,7 @@
 
         @if (!selectedFlowId && flows.length > 0) {
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            * กรุณาเลือกกระบวนการอนุมัติ (ถ้าต้องการ)
+            * กรุณาเลือกกระบวนการอนุมัติ
           </p>
         }
       </div>
@@ -266,16 +266,14 @@
         @if (isView) {
           <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
         } @else {
-          <sic-button type="submit" variant="primary" [disabled]="isSaving">
+          <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
             @if (isSaving) {
               <i class="bi bi-arrow-repeat animate-spin me-1"></i>
             }
             {{
               isSaving
                 ? 'กำลังบันทึก...'
-                : selectedFlowId
-                  ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
-                  : (isEdit ? 'บันทึก' : 'สร้าง')
+                : (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
             }}
           </sic-button>
           <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>

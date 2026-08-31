@@ -29,10 +29,10 @@ public class PmDesignReview extends BaseBusinessEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;
 
-    @Column(name = "review_item_type", nullable = false, length = 50)
+    @Column(name = "review_item_type", length = 50)
     private String reviewItemType;
 
-    @Column(name = "review_item_id", nullable = false)
+    @Column(name = "review_item_id")
     private UUID reviewItemId;
 
     @Column(name = "reviewer", length = 100)

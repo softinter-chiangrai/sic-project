@@ -217,7 +217,11 @@ export class NewDiagramDialogComponent implements OnInit {
   }
 
   get canSave(): boolean {
-    return this.name.trim().length > 0 && this.type.length > 0;
+    const basicValid = this.name.trim().length > 0 && this.type.length > 0;
+    if (this.editData) {
+      return basicValid && !!this.selectedFlowId;
+    }
+    return basicValid;
   }
 
   save(): void {
